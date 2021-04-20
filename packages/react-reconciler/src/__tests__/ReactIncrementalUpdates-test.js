@@ -62,15 +62,9 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushAndYieldThrough(['commit']);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      // TODO: should deferredUpdates flush sync with the default update?
-      expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
-      expect(Scheduler).toFlushWithoutYielding();
-    } else {
-      expect(state).toEqual({a: 'a'});
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
-    }
+    expect(state).toEqual({a: 'a'});
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
   });
 
   it('applies updates with equal priority in insertion order', () => {

@@ -1406,20 +1406,21 @@ describe('ReactHooksWithNoopRenderer', () => {
           setParentState(false);
         });
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          // TODO: Default updates do not interrupt transition updates, to
+          // prevent starvation. However, when sync default updates are enabled,
+          // continuous updates are treated like default updates. In this case,
+          // we probably don't want this behavior; continuous should be allowed
+          // to interrupt.
           expect(Scheduler).toFlushUntilNextPaint([
-            // TODO: why do the children render and fire effects?
             'Child two render',
             'Child one commit',
             'Child two commit',
-            'Parent false render',
-            'Parent false commit',
-          ]);
-        } else {
-          expect(Scheduler).toFlushUntilNextPaint([
-            'Parent false render',
-            'Parent false commit',
           ]);
         }
+        expect(Scheduler).toFlushUntilNextPaint([
+          'Parent false render',
+          'Parent false commit',
+        ]);
 
         // Schedule updates for children too (which should be ignored)
         setChildStates.forEach(setChildState => setChildState(2));

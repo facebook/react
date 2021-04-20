@@ -51,11 +51,7 @@ describe('ReactFlushSync', () => {
       // The passive effect will schedule a sync update and a normal update.
       // They should commit in two separate batches. First the sync one.
       expect(() => {
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          expect(Scheduler).toFlushUntilNextPaint(['1, 0', '1, 1']);
-        } else {
-          expect(Scheduler).toFlushUntilNextPaint(['1, 0']);
-        }
+        expect(Scheduler).toFlushUntilNextPaint(['1, 0']);
       }).toErrorDev('flushSync was called from inside a lifecycle method');
 
       // The remaining update is not sync
@@ -63,12 +59,7 @@ describe('ReactFlushSync', () => {
       expect(Scheduler).toHaveYielded([]);
 
       // Now flush it.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        // With sync default updates, passive effects are synchronously flushed.
-        expect(Scheduler).toHaveYielded([]);
-      } else {
-        expect(Scheduler).toFlushUntilNextPaint(['1, 1']);
-      }
+      expect(Scheduler).toFlushUntilNextPaint(['1, 1']);
     });
     expect(root).toMatchRenderedOutput('1, 1');
   });
