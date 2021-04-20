@@ -1405,18 +1405,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () => {
           setParentState(false);
         });
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          // TODO: Default updates do not interrupt transition updates, to
-          // prevent starvation. However, when sync default updates are enabled,
-          // continuous updates are treated like default updates. In this case,
-          // we probably don't want this behavior; continuous should be allowed
-          // to interrupt.
-          expect(Scheduler).toFlushUntilNextPaint([
-            'Child two render',
-            'Child one commit',
-            'Child two commit',
-          ]);
-        }
         expect(Scheduler).toFlushUntilNextPaint([
           'Parent false render',
           'Parent false commit',

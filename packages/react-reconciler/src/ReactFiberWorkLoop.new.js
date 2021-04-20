@@ -32,7 +32,6 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableStrictEffects,
   skipUnmountedBoundaries,
-  enableSyncDefaultUpdates,
   enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -139,10 +138,6 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
-  DefaultLane,
-  DefaultHydrationLane,
-  InputContinuousLane,
-  InputContinuousHydrationLane,
   NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
@@ -154,6 +149,7 @@ import {
   includesNonIdleWork,
   includesOnlyRetries,
   includesOnlyTransitions,
+  shouldTimeSlice,
   getNextLanes,
   markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
@@ -437,13 +433,6 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // TODO: Move this type conversion to the event priority module.
   const updateLane: Lane = (getCurrentUpdatePriority(): any);
   if (updateLane !== NoLane) {
-    if (
-      enableSyncDefaultUpdates &&
-      (updateLane === InputContinuousLane ||
-        updateLane === InputContinuousHydrationLane)
-    ) {
-      return DefaultLane;
-    }
     return updateLane;
   }
 
@@ -454,13 +443,6 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
   const eventLane: Lane = (getCurrentEventPriority(): any);
-  if (
-    enableSyncDefaultUpdates &&
-    (eventLane === InputContinuousLane ||
-      eventLane === InputContinuousHydrationLane)
-  ) {
-    return DefaultLane;
-  }
   return eventLane;
 }
 
@@ -811,13 +793,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     return null;
   }
 
-  let exitStatus =
-    enableSyncDefaultUpdates &&
-    (includesSomeLane(lanes, DefaultLane) ||
-      includesSomeLane(lanes, DefaultHydrationLane))
-      ? // Time slicing is disabled for default updates in this root.
-        renderRootSync(root, lanes)
-      : renderRootConcurrent(root, lanes);
+  let exitStatus = shouldTimeSlice(root, lanes)
+    ? renderRootConcurrent(root, lanes)
+    : // Time slicing is disabled for default updates in this root.
+      renderRootSync(root, lanes);
   if (exitStatus !== RootIncomplete) {
     if (exitStatus === RootErrored) {
       executionContext |= RetryAfterError;
