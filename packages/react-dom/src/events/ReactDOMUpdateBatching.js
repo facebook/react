@@ -88,13 +88,6 @@ export function discreteUpdates(fn, a, b, c, d) {
   }
 }
 
-// TODO: Replace with flushSync
-export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
-  if (!isInsideEventHandler) {
-    flushDiscreteUpdatesImpl();
-  }
-}
-
 export function setBatchingImplementation(
   _batchedUpdatesImpl,
   _discreteUpdatesImpl,

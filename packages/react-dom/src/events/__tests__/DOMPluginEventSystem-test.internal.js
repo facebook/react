@@ -656,7 +656,7 @@ describe('DOMPluginEventSystem', () => {
           document.body.removeChild(parentContainer);
         });
 
-        it('handle click events on dynamic portals', () => {
+        it('handle click events on dynamic portals', async () => {
           const log = [];
 
           function Parent() {
@@ -670,7 +670,7 @@ describe('DOMPluginEventSystem', () => {
                   ref.current,
                 ),
               );
-            });
+            }, []);
 
             return (
               <div ref={ref} onClick={() => log.push('parent')} id="parent">
@@ -679,17 +679,25 @@ describe('DOMPluginEventSystem', () => {
             );
           }
 
-          ReactDOM.render(<Parent />, container);
+          await act(async () => {
+            ReactDOM.render(<Parent />, container);
+          });
 
           const parent = container.lastChild;
           expect(parent.id).toEqual('parent');
-          dispatchClickEvent(parent);
+
+          await act(async () => {
+            dispatchClickEvent(parent);
+          });
 
           expect(log).toEqual(['parent']);
 
           const child = parent.lastChild;
           expect(child.id).toEqual('child');
-          dispatchClickEvent(child);
+
+          await act(async () => {
+            dispatchClickEvent(child);
+          });
 
           // we add both 'child' and 'parent' due to bubbling
           expect(log).toEqual(['parent', 'child', 'parent']);
@@ -697,7 +705,7 @@ describe('DOMPluginEventSystem', () => {
 
         // Slight alteration to the last test, to catch
         // a subtle difference in traversal.
-        it('handle click events on dynamic portals #2', () => {
+        it('handle click events on dynamic portals #2', async () => {
           const log = [];
 
           function Parent() {
@@ -711,7 +719,7 @@ describe('DOMPluginEventSystem', () => {
                   ref.current,
                 ),
               );
-            });
+            }, []);
 
             return (
               <div ref={ref} onClick={() => log.push('parent')} id="parent">
@@ -720,17 +728,25 @@ describe('DOMPluginEventSystem', () => {
             );
           }
 
-          ReactDOM.render(<Parent />, container);
+          await act(async () => {
+            ReactDOM.render(<Parent />, container);
+          });
 
           const parent = container.lastChild;
           expect(parent.id).toEqual('parent');
-          dispatchClickEvent(parent);
+
+          await act(async () => {
+            dispatchClickEvent(parent);
+          });
 
           expect(log).toEqual(['parent']);
 
           const child = parent.lastChild;
           expect(child.id).toEqual('child');
-          dispatchClickEvent(child);
+
+          await act(async () => {
+            dispatchClickEvent(child);
+          });
 
           // we add both 'child' and 'parent' due to bubbling
           expect(log).toEqual(['parent', 'child', 'parent']);
