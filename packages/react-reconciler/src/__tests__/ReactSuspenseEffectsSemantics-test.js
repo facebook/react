@@ -1286,6 +1286,116 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    it('should show nested host nodes if multiple boundaries resolve at the same time', async () => {
+      function App({innerChildren = null, outerChildren = null}) {
+        return (
+          <Suspense fallback={<Text text="OuterFallback" />}>
+            <Text text="Outer" />
+            {outerChildren}
+            <Suspense fallback={<Text text="InnerFallback" />}>
+              <Text text="Inner" />
+              {innerChildren}
+            </Suspense>
+          </Suspense>
+        );
+      }
+
+      // Mount
+      await ReactNoop.act(async () => {
+        ReactNoop.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Text:Outer render',
+        'Text:Inner render',
+        'Text:Outer create layout',
+        'Text:Inner create layout',
+        'Text:Outer create passive',
+        'Text:Inner create passive',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('Outer'), span('Inner')]);
+
+      // Suspend the inner Suspense subtree (only inner effects should be destroyed)
+      ReactNoop.act(() => {
+        ReactNoop.render(
+          <App innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />} />,
+        );
+      });
+      await advanceTimers(1000);
+      expect(Scheduler).toHaveYielded([
+        'Text:Outer render',
+        'Text:Inner render',
+        'Suspend:InnerAsync_1',
+        'Text:InnerFallback render',
+        'Text:Inner destroy layout',
+        'Text:InnerFallback create layout',
+      ]);
+      expect(Scheduler).toFlushAndYield(['Text:InnerFallback create passive']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Outer'),
+        spanHidden('Inner'),
+        span('InnerFallback'),
+      ]);
+
+      // Suspend the outer Suspense subtree (outer effects and inner fallback effects should be destroyed)
+      // (This check also ensures we don't destroy effects for mounted inner fallback.)
+      ReactNoop.act(() => {
+        ReactNoop.render(
+          <App
+            outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
+            innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />}
+          />,
+        );
+      });
+      await advanceTimers(1000);
+      expect(Scheduler).toHaveYielded([
+        'Text:Outer render',
+        'Suspend:OuterAsync_1',
+        'Text:Inner render',
+        'Suspend:InnerAsync_1',
+        'Text:InnerFallback render',
+        'Text:OuterFallback render',
+        'Text:Outer destroy layout',
+        'Text:InnerFallback destroy layout',
+        'Text:OuterFallback create layout',
+      ]);
+      expect(Scheduler).toFlushAndYield(['Text:OuterFallback create passive']);
+      expect(ReactNoop.getChildren()).toEqual([
+        spanHidden('Outer'),
+        spanHidden('Inner'),
+        spanHidden('InnerFallback'),
+        span('OuterFallback'),
+      ]);
+
+      // Resolve both suspended trees.
+      await ReactNoop.act(async () => {
+        await resolveText('OuterAsync_1');
+        await resolveText('InnerAsync_1');
+      });
+      expect(Scheduler).toHaveYielded([
+        'Text:Outer render',
+        'AsyncText:OuterAsync_1 render',
+        'Text:Inner render',
+        'AsyncText:InnerAsync_1 render',
+        'Text:OuterFallback destroy layout',
+        'Text:Outer create layout',
+        'AsyncText:OuterAsync_1 create layout',
+        'Text:Inner create layout',
+        'AsyncText:InnerAsync_1 create layout',
+        'Text:OuterFallback destroy passive',
+        'Text:InnerFallback destroy passive',
+        'AsyncText:OuterAsync_1 create passive',
+        'AsyncText:InnerAsync_1 create passive',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Outer'),
+        span('OuterAsync_1'),
+        span('Inner'),
+        span('InnerAsync_1'),
+      ]);
+    });
+
+    // @gate enableSuspenseLayoutEffectSemantics
+    // @gate enableCache
     it('should be cleaned up inside of a fallback that suspends', async () => {
       function App({fallbackChildren = null, outerChildren = null}) {
         return (

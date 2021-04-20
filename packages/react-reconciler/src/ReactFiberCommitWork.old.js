@@ -1025,8 +1025,8 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
   const current = finishedWork.alternate;
   const wasHidden = current !== null && current.memoizedState !== null;
 
-  // Only hide the top-most host nodes.
-  let hiddenHostSubtreeRoot = null;
+  // Only hide or unhide the top-most host nodes.
+  let hostSubtreeRoot = null;
 
   if (supportsMutation) {
     // We only have the top Fiber that was inserted but we need to recurse down its
@@ -1034,12 +1034,15 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
     let node: Fiber = finishedWork;
     while (true) {
       if (node.tag === HostComponent) {
-        const instance = node.stateNode;
-        if (isHidden && hiddenHostSubtreeRoot === null) {
-          hiddenHostSubtreeRoot = node;
-          hideInstance(instance);
-        } else {
-          unhideInstance(node.stateNode, node.memoizedProps);
+        if (hostSubtreeRoot === null) {
+          hostSubtreeRoot = node;
+
+          const instance = node.stateNode;
+          if (isHidden) {
+            hideInstance(instance);
+          } else {
+            unhideInstance(node.stateNode, node.memoizedProps);
+          }
         }
 
         if (enableSuspenseLayoutEffectSemantics && isModernRoot) {
@@ -1058,11 +1061,13 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
           }
         }
       } else if (node.tag === HostText) {
-        const instance = node.stateNode;
-        if (isHidden && hiddenHostSubtreeRoot === null) {
-          hideTextInstance(instance);
-        } else {
-          unhideTextInstance(instance, node.memoizedProps);
+        if (hostSubtreeRoot === null) {
+          const instance = node.stateNode;
+          if (isHidden) {
+            hideTextInstance(instance);
+          } else {
+            unhideTextInstance(instance, node.memoizedProps);
+          }
         }
       } else if (
         (node.tag === OffscreenComponent ||
@@ -1132,15 +1137,15 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
           return;
         }
 
-        if (hiddenHostSubtreeRoot === node) {
-          hiddenHostSubtreeRoot = null;
+        if (hostSubtreeRoot === node) {
+          hostSubtreeRoot = null;
         }
 
         node = node.return;
       }
 
-      if (hiddenHostSubtreeRoot === node) {
-        hiddenHostSubtreeRoot = null;
+      if (hostSubtreeRoot === node) {
+        hostSubtreeRoot = null;
       }
 
       node.sibling.return = node.return;
