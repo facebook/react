@@ -164,7 +164,7 @@ describe('ReactTransition', () => {
     let start;
     function App() {
       const [show, setShow] = useState(false);
-      const [_start, isPending] = useTransition();
+      const [isPending, _start] = useTransition();
       start = () => _start(() => setShow(true));
       return (
         <Suspense fallback={<Text text="Loading..." />}>
@@ -208,7 +208,7 @@ describe('ReactTransition', () => {
     async () => {
       let update;
       function App() {
-        const [startContentChange, isContentPending] = useTransition();
+        const [isContentPending, startContentChange] = useTransition();
         const [label, setLabel] = useState('A');
         const [contents, setContents] = useState('A');
         update = value => {

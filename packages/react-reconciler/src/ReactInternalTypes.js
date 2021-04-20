@@ -311,7 +311,7 @@ export type Dispatcher = {|
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useDeferredValue<T>(value: T): T,
-  useTransition(): [(() => void) => void, boolean],
+  useTransition(): [boolean, (() => void) => void],
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,

@@ -41,8 +41,8 @@ export default function InspectedElementErrorsAndWarningsTree({
   const refresh = useCacheRefresh();
 
   const [
-    startClearErrorsTransition,
     isErrorsTransitionPending,
+    startClearErrorsTransition,
   ] = useTransition();
   const clearErrorsForInspectedElement = () => {
     const {id} = inspectedElement;
@@ -60,8 +60,8 @@ export default function InspectedElementErrorsAndWarningsTree({
   };
 
   const [
-    startClearWarningsTransition,
     isWarningsTransitionPending,
+    startClearWarningsTransition,
   ] = useTransition();
   const clearWarningsForInspectedElement = () => {
     const {id} = inspectedElement;

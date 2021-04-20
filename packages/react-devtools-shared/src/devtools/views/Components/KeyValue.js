@@ -90,7 +90,7 @@ export default function KeyValue({
     isReadOnly = value[meta.readonly];
   }
 
-  const [startInspectPathsTransition, isInspectPathsPending] = useTransition();
+  const [isInspectPathsPending, startInspectPathsTransition] = useTransition();
   const toggleIsOpen = () => {
     if (isOpen) {
       setIsOpen(false);

@@ -467,12 +467,12 @@ function useDeferredValue<T>(value: T): T {
   return value;
 }
 
-function useTransition(): [(callback: () => void) => void, boolean] {
+function useTransition(): [boolean, (callback: () => void) => void] {
   resolveCurrentlyRenderingComponent();
   const startTransition = callback => {
     callback();
   };
-  return [startTransition, false];
+  return [false, startTransition];
 }
 
 function useOpaqueIdentifier(): OpaqueIDType {
