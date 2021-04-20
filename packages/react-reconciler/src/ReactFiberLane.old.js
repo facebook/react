@@ -614,12 +614,6 @@ export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
   root.pendingLanes |= SyncLane;
 }
 
-export function areLanesExpired(root: FiberRoot, lanes: Lanes) {
-  const SyncLaneIndex = 0;
-  const entanglements = root.entanglements;
-  return (entanglements[SyncLaneIndex] & lanes) !== NoLanes;
-}
-
 export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
   root.mutableReadLanes |= updateLane & root.pendingLanes;
 }

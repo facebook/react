@@ -163,7 +163,6 @@ import {
   markRootPinged,
   markRootExpired,
   markRootFinished,
-  areLanesExpired,
   getHighestPriorityLane,
   addFiberToLanesMap,
   movePendingFibersToMemoized,
@@ -840,9 +839,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       // synchronously to block concurrent data mutations, and we'll includes
       // all pending updates are included. If it still fails after the second
       // attempt, we'll give up and commit the resulting tree.
-      lanes = getLanesToRetrySynchronouslyOnError(root);
-      if (lanes !== NoLanes) {
-        exitStatus = renderRootSync(root, lanes);
+      const errorRetryLanes = getLanesToRetrySynchronouslyOnError(root);
+      if (errorRetryLanes !== NoLanes) {
+        lanes = errorRetryLanes;
+        exitStatus = renderRootSync(root, errorRetryLanes);
       }
     }
 
@@ -1007,21 +1007,29 @@ function performSyncWorkOnRoot(root) {
 
   flushPassiveEffects();
 
-  let lanes;
-  let exitStatus;
-  if (
-    root === workInProgressRoot &&
-    areLanesExpired(root, workInProgressRootRenderLanes)
+  let lanes = getNextLanes(root, NoLanes);
+  if (includesSomeLane(lanes, SyncLane)) {
+    if (
+      root === workInProgressRoot &&
+      includesSomeLane(lanes, workInProgressRootRenderLanes)
+    ) {
+      // There's a partial tree, and at least one of its lanes has expired. Finish
+      // rendering it before rendering the rest of the expired work.
+      lanes = workInProgressRootRenderLanes;
+    }
+  } else if (
+    !(
+      enableSyncDefaultUpdates &&
+      (includesSomeLane(lanes, DefaultLane) ||
+        includesSomeLane(lanes, DefaultHydrationLane))
+    )
   ) {
-    // There's a partial tree, and at least one of its lanes has expired. Finish
-    // rendering it before rendering the rest of the expired work.
-    lanes = workInProgressRootRenderLanes;
-    exitStatus = renderRootSync(root, lanes);
-  } else {
-    lanes = getNextLanes(root, NoLanes);
-    exitStatus = renderRootSync(root, lanes);
+    // There's no remaining sync work left.
+    ensureRootIsScheduled(root, now());
+    return null;
   }
 
+  let exitStatus = renderRootSync(root, lanes);
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
     executionContext |= RetryAfterError;
 
@@ -1039,8 +1047,9 @@ function performSyncWorkOnRoot(root) {
     // synchronously to block concurrent data mutations, and we'll includes
     // all pending updates are included. If it still fails after the second
     // attempt, we'll give up and commit the resulting tree.
-    lanes = getLanesToRetrySynchronouslyOnError(root);
-    if (lanes !== NoLanes) {
+    const errorRetryLanes = getLanesToRetrySynchronouslyOnError(root);
+    if (errorRetryLanes !== NoLanes) {
+      lanes = errorRetryLanes;
       exitStatus = renderRootSync(root, lanes);
     }
   }
@@ -1058,7 +1067,11 @@ function performSyncWorkOnRoot(root) {
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
   root.finishedLanes = lanes;
-  if (enableSyncDefaultUpdates && !includesSomeLane(lanes, SyncLane)) {
+  if (
+    enableSyncDefaultUpdates &&
+    (includesSomeLane(lanes, DefaultLane) ||
+      includesSomeLane(lanes, DefaultHydrationLane))
+  ) {
     finishConcurrentRender(root, exitStatus, lanes);
   } else {
     commitRoot(root);
@@ -1826,6 +1839,15 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
 
     return null;
+  } else {
+    if (__DEV__) {
+      if (lanes === NoLanes) {
+        console.error(
+          'root.finishedLanes should not be empty during a commit. This is a ' +
+            'bug in React.',
+        );
+      }
+    }
   }
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
