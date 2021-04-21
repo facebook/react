@@ -1569,15 +1569,10 @@ describe('useMutableSource', () => {
           mutateB('b0');
         });
         // Finish the current render
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          // Default sync will flush both without yielding
-          expect(Scheduler).toFlushUntilNextPaint(['c', 'a0']);
-        } else {
-          expect(Scheduler).toFlushUntilNextPaint(['c']);
-          // a0 will re-render because of the mutation update. But it should show
-          // the latest value, not the intermediate one, to avoid tearing with b.
-          expect(Scheduler).toFlushUntilNextPaint(['a0']);
-        }
+        expect(Scheduler).toFlushUntilNextPaint(['c']);
+        // a0 will re-render because of the mutation update. But it should show
+        // the latest value, not the intermediate one, to avoid tearing with b.
+        expect(Scheduler).toFlushUntilNextPaint(['a0']);
 
         expect(root).toMatchRenderedOutput('a0b0c');
         // We should be done.

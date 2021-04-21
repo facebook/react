@@ -713,16 +713,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (
-    enableSyncDefaultUpdates &&
-    (newCallbackPriority === DefaultLane ||
-      newCallbackPriority === DefaultHydrationLane)
-  ) {
-    newCallbackNode = scheduleCallback(
-      ImmediateSchedulerPriority,
-      performSyncWorkOnRoot.bind(null, root),
-    );
-  } else if (newCallbackPriority === SyncLane) {
+  if (newCallbackPriority === SyncLane) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
@@ -820,7 +811,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     return null;
   }
 
-  let exitStatus = renderRootConcurrent(root, lanes);
+  let exitStatus =
+    enableSyncDefaultUpdates &&
+    (includesSomeLane(lanes, DefaultLane) ||
+      includesSomeLane(lanes, DefaultHydrationLane))
+      ? // Time slicing is disabled for default updates in this root.
+        renderRootSync(root, lanes)
+      : renderRootConcurrent(root, lanes);
   if (exitStatus !== RootIncomplete) {
     if (exitStatus === RootErrored) {
       executionContext |= RetryAfterError;
@@ -1017,13 +1014,7 @@ function performSyncWorkOnRoot(root) {
       // rendering it before rendering the rest of the expired work.
       lanes = workInProgressRootRenderLanes;
     }
-  } else if (
-    !(
-      enableSyncDefaultUpdates &&
-      (includesSomeLane(lanes, DefaultLane) ||
-        includesSomeLane(lanes, DefaultHydrationLane))
-    )
-  ) {
+  } else {
     // There's no remaining sync work left.
     ensureRootIsScheduled(root, now());
     return null;
@@ -1067,15 +1058,7 @@ function performSyncWorkOnRoot(root) {
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
   root.finishedLanes = lanes;
-  if (
-    enableSyncDefaultUpdates &&
-    (includesSomeLane(lanes, DefaultLane) ||
-      includesSomeLane(lanes, DefaultHydrationLane))
-  ) {
-    finishConcurrentRender(root, exitStatus, lanes);
-  } else {
-    commitRoot(root);
-  }
+  commitRoot(root);
 
   // Before exiting, make sure there's a callback scheduled for the next
   // pending level.

@@ -440,12 +440,7 @@ describe('ReactExpiration', () => {
     flushNextRenderIfExpired();
     expect(Scheduler).toHaveYielded([]);
 
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      // TODO: Why is this flushed?
-      expect(ReactNoop).toMatchRenderedOutput('Hi');
-    } else {
-      expect(ReactNoop).toMatchRenderedOutput(null);
-    }
+    expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advance the time some more to expire the update.
     Scheduler.unstable_advanceTime(10000);
@@ -477,8 +472,6 @@ describe('ReactExpiration', () => {
     // Advancing by ~5 seconds should be sufficient to expire the update. (I
     // used a slightly larger number to allow for possible rounding.)
     Scheduler.unstable_advanceTime(6000);
-
-    ReactNoop.render('Hi');
     flushNextRenderIfExpired();
     expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
