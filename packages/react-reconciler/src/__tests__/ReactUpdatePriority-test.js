@@ -1,6 +1,8 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let ContinuousEventPriority;
+let startTransition;
 let useState;
 let useEffect;
 
@@ -11,6 +13,9 @@ describe('ReactUpdatePriority', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    ContinuousEventPriority = require('react-reconciler/constants')
+      .ContinuousEventPriority;
+    startTransition = React.unstable_startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
   });
@@ -77,5 +82,54 @@ describe('ReactUpdatePriority', () => {
     });
     // Now the idle update has flushed
     expect(Scheduler).toHaveYielded(['Idle: 2, Default: 2']);
+  });
+
+  // @gate experimental
+  test('continuous updates should interrupt transisions', async () => {
+    const root = ReactNoop.createRoot();
+
+    let setCounter;
+    let setIsHidden;
+    function App() {
+      const [counter, _setCounter] = useState(1);
+      const [isHidden, _setIsHidden] = useState(false);
+      setCounter = _setCounter;
+      setIsHidden = _setIsHidden;
+      if (isHidden) {
+        return <Text text={'(hidden)'} />;
+      }
+      return (
+        <>
+          <Text text={'A' + counter} />
+          <Text text={'B' + counter} />
+          <Text text={'C' + counter} />
+        </>
+      );
+    }
+
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['A1', 'B1', 'C1']);
+    expect(root).toMatchRenderedOutput('A1B1C1');
+
+    await ReactNoop.act(async () => {
+      startTransition(() => {
+        setCounter(2);
+      });
+      expect(Scheduler).toFlushAndYieldThrough(['A2']);
+      ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () => {
+        setIsHidden(true);
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      // Because the hide update has continous priority, it should interrupt the
+      // in-progress transition
+      '(hidden)',
+      // When the transition resumes, it's a no-op because the children are
+      // now hidden.
+      '(hidden)',
+    ]);
+    expect(root).toMatchRenderedOutput('(hidden)');
   });
 });

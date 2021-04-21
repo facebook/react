@@ -39,6 +39,7 @@ import {
   enableCache,
   enableSchedulingProfiler,
   enableUpdaterTracking,
+  enableSyncDefaultUpdates,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 
@@ -263,14 +264,23 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      // TODO: This applies to sync default updates, too. Which is probably what
-      // we want for default priority events, but not for continuous priority
-      // events like hover.
       (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
       return wipLanes;
     }
+  }
+
+  if (
+    // TODO: Check for root override, once that lands
+    enableSyncDefaultUpdates &&
+    (nextLanes & InputContinuousLane) !== NoLanes
+  ) {
+    // When updates are sync by default, we entangle continous priority updates
+    // and default updates, so they render in the same batch. The only reason
+    // they use separate lanes is because continuous updates should interrupt
+    // transitions, but default updates should not.
+    nextLanes |= pendingLanes & DefaultLane;
   }
 
   // Check for entangled lanes and add them to the batch.
@@ -465,6 +475,19 @@ export function includesOnlyRetries(lanes: Lanes) {
 }
 export function includesOnlyTransitions(lanes: Lanes) {
   return (lanes & TransitionLanes) === lanes;
+}
+
+export function shouldTimeSlice(root: FiberRoot, lanes: Lanes) {
+  if (!enableSyncDefaultUpdates) {
+    return true;
+  }
+  const SyncDefaultLanes =
+    InputContinuousHydrationLane |
+    InputContinuousLane |
+    DefaultHydrationLane |
+    DefaultLane;
+  // TODO: Check for root override, once that lands
+  return (lanes & SyncDefaultLanes) === NoLanes;
 }
 
 export function isTransitionLane(lane: Lane) {
