@@ -49,8 +49,10 @@ import {
   IdlePriority as IdleSchedulerPriority,
 } from './Scheduler';
 import {
-  flushSyncCallbackQueue,
+  flushSyncCallbacks,
+  flushSyncCallbacksOnlyInLegacyMode,
   scheduleSyncCallback,
+  scheduleLegacySyncCallback,
 } from './ReactFiberSyncTaskQueue.new';
 import {
   NoFlags as NoHookEffect,
@@ -561,7 +563,7 @@ export function scheduleUpdateOnFiber(
         // without immediately flushing it. We only do this for user-initiated
         // updates, to preserve historical behavior of legacy mode.
         resetRenderTimer();
-        flushSyncCallbackQueue();
+        flushSyncCallbacksOnlyInLegacyMode();
       }
     }
   } else {
@@ -698,13 +700,17 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   if (newCallbackPriority === SyncLane) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
-    scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
+    if (root.tag === LegacyRoot) {
+      scheduleLegacySyncCallback(performSyncWorkOnRoot.bind(null, root));
+    } else {
+      scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
+    }
     if (supportsMicrotasks) {
       // Flush the queue in a microtask.
-      scheduleMicrotask(flushSyncCallbackQueue);
+      scheduleMicrotask(flushSyncCallbacks);
     } else {
       // Flush the queue in an Immediate task.
-      scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbackQueue);
+      scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbacks);
     }
     newCallbackNode = null;
   } else {
@@ -1054,7 +1060,7 @@ export function flushRoot(root: FiberRoot, lanes: Lanes) {
     ensureRootIsScheduled(root, now());
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       resetRenderTimer();
-      flushSyncCallbackQueue();
+      flushSyncCallbacks();
     }
   }
 }
@@ -1085,7 +1091,7 @@ export function flushDiscreteUpdates() {
     // like `el.focus()`. Exit.
     return;
   }
-  flushSyncCallbackQueue();
+  flushSyncCallbacks();
   // If the discrete updates scheduled passive effects, flush them now so that
   // they fire before the next serial event.
   flushPassiveEffects();
@@ -1111,10 +1117,11 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
     return fn(a);
   } finally {
     executionContext = prevExecutionContext;
+    // If there were legacy sync updates, flush them at the end of the outer
+    // most batchedUpdates-like method.
     if (executionContext === NoContext) {
-      // Flush the immediate callbacks that were scheduled during this batch
       resetRenderTimer();
-      flushSyncCallbackQueue();
+      flushSyncCallbacksOnlyInLegacyMode();
     }
   }
 }
@@ -1126,10 +1133,11 @@ export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
     return fn(a);
   } finally {
     executionContext = prevExecutionContext;
+    // If there were legacy sync updates, flush them at the end of the outer
+    // most batchedUpdates-like method.
     if (executionContext === NoContext) {
-      // Flush the immediate callbacks that were scheduled during this batch
       resetRenderTimer();
-      flushSyncCallbackQueue();
+      flushSyncCallbacksOnlyInLegacyMode();
     }
   }
 }
@@ -1151,9 +1159,10 @@ export function discreteUpdates<A, B, C, D, R>(
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
     if (executionContext === NoContext) {
-      // Flush the immediate callbacks that were scheduled during this batch
       resetRenderTimer();
-      flushSyncCallbackQueue();
+      // TODO: This should only flush legacy sync updates. Not discrete updates
+      // in Concurrent Mode. Discrete updates will flush in a microtask.
+      flushSyncCallbacks();
     }
   }
 }
@@ -1166,10 +1175,13 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
     return fn(a);
   } finally {
     executionContext = prevExecutionContext;
+    // If there were legacy sync updates, flush them at the end of the outer
+    // most batchedUpdates-like method.
     if (executionContext === NoContext) {
-      // Flush the immediate callbacks that were scheduled during this batch
       resetRenderTimer();
-      flushSyncCallbackQueue();
+      // TODO: I think this call is redundant, because we flush inside
+      // scheduleUpdateOnFiber when LegacyUnbatchedContext is set.
+      flushSyncCallbacksOnlyInLegacyMode();
     }
   }
 }
@@ -1196,7 +1208,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
-      flushSyncCallbackQueue();
+      flushSyncCallbacks();
     } else {
       if (__DEV__) {
         console.error(
@@ -1226,7 +1238,7 @@ export function flushControlled(fn: () => mixed): void {
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
       resetRenderTimer();
-      flushSyncCallbackQueue();
+      flushSyncCallbacks();
     }
   }
 }
@@ -2098,7 +2110,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   // If layout work was scheduled, flush it now.
-  flushSyncCallbackQueue();
+  flushSyncCallbacks();
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -2224,7 +2236,7 @@ function flushPassiveEffectsImpl() {
 
   executionContext = prevExecutionContext;
 
-  flushSyncCallbackQueue();
+  flushSyncCallbacks();
 
   // If additional passive effects were scheduled, increment a counter. If this
   // exceeds the limit, we'll fire a warning.

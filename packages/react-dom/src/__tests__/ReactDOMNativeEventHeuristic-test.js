@@ -371,4 +371,54 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
   });
+
+  // @gate experimental
+  it('should not flush discrete events at the end of outermost batchedUpdates', async () => {
+    const root = ReactDOM.unstable_createRoot(container);
+
+    let target;
+    function Foo() {
+      const [count, setCount] = React.useState(0);
+      return (
+        <div
+          ref={el => {
+            target = el;
+            if (target !== null) {
+              el.onclick = () => {
+                ReactDOM.unstable_batchedUpdates(() => {
+                  setCount(count + 1);
+                });
+                Scheduler.unstable_yieldValue(
+                  container.textContent + ' [after batchedUpdates]',
+                );
+              };
+            }
+          }}>
+          Count: {count}
+        </div>
+      );
+    }
+
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(container.textContent).toEqual('Count: 0');
+
+    const pressEvent = document.createEvent('Event');
+    pressEvent.initEvent('click', true, true);
+    dispatchAndSetCurrentEvent(target, pressEvent);
+
+    expect(Scheduler).toHaveYielded(['Count: 0 [after batchedUpdates]']);
+    // TODO: There's a `flushDiscreteUpdates` call at the end of the event
+    // delegation listener that gets called even if no React event handlers are
+    // fired. Once that is removed, this will be 0, not 1.
+    // expect(container.textContent).toEqual('Count: 0');
+    expect(container.textContent).toEqual('Count: 1');
+
+    // Intentionally not using `act` so we can observe in between the click
+    // event and the microtask, without batching.
+    await null;
+
+    expect(container.textContent).toEqual('Count: 1');
+  });
 });

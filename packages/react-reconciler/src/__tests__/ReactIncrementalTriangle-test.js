@@ -432,9 +432,8 @@ describe('ReactIncrementalTriangle', () => {
         assertConsistentTree(activeLeafIndices);
       }
       // Flush remaining work
-      ReactNoop.act(() => {
-        Scheduler.unstable_flushAllWithoutAsserting();
-      });
+      Scheduler.unstable_flushAllWithoutAsserting();
+      ReactNoop.flushSync();
       assertConsistentTree(activeLeafIndices, expectedCounterAtEnd);
     }
 
