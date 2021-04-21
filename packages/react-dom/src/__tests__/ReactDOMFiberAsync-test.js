@@ -427,7 +427,7 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     // @gate experimental
-    it('ignores discrete events on a pending removed event listener', () => {
+    it('ignores discrete events on a pending removed event listener', async () => {
       const disableButtonRef = React.createRef();
       const submitButtonRef = React.createRef();
 
@@ -459,9 +459,9 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOM.unstable_createRoot(container);
-      root.render(<Form />);
-      // Flush
-      Scheduler.unstable_flushAll();
+      await act(async () => {
+        root.render(<Form />);
+      });
 
       const disableButton = disableButtonRef.current;
       expect(disableButton.tagName).toBe('BUTTON');
@@ -469,7 +469,9 @@ describe('ReactDOMFiberAsync', () => {
       // Dispatch a click event on the Disable-button.
       const firstEvent = document.createEvent('Event');
       firstEvent.initEvent('click', true, true);
-      disableButton.dispatchEvent(firstEvent);
+      await act(async () => {
+        disableButton.dispatchEvent(firstEvent);
+      });
 
       // There should now be a pending update to disable the form.
 
@@ -481,14 +483,16 @@ describe('ReactDOMFiberAsync', () => {
       const secondEvent = document.createEvent('Event');
       secondEvent.initEvent('click', true, true);
       // This should force the pending update to flush which disables the submit button before the event is invoked.
-      submitButton.dispatchEvent(secondEvent);
+      await act(async () => {
+        submitButton.dispatchEvent(secondEvent);
+      });
 
       // Therefore the form should never have been submitted.
       expect(formSubmitted).toBe(false);
     });
 
     // @gate experimental
-    it('uses the newest discrete events on a pending changed event listener', () => {
+    it('uses the newest discrete events on a pending changed event listener', async () => {
       const enableButtonRef = React.createRef();
       const submitButtonRef = React.createRef();
 
@@ -515,9 +519,9 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       const root = ReactDOM.unstable_createRoot(container);
-      root.render(<Form />);
-      // Flush
-      Scheduler.unstable_flushAll();
+      await act(async () => {
+        root.render(<Form />);
+      });
 
       const enableButton = enableButtonRef.current;
       expect(enableButton.tagName).toBe('BUTTON');
@@ -525,7 +529,9 @@ describe('ReactDOMFiberAsync', () => {
       // Dispatch a click event on the Enable-button.
       const firstEvent = document.createEvent('Event');
       firstEvent.initEvent('click', true, true);
-      enableButton.dispatchEvent(firstEvent);
+      await act(async () => {
+        enableButton.dispatchEvent(firstEvent);
+      });
 
       // There should now be a pending update to enable the form.
 
@@ -537,7 +543,9 @@ describe('ReactDOMFiberAsync', () => {
       const secondEvent = document.createEvent('Event');
       secondEvent.initEvent('click', true, true);
       // This should force the pending update to flush which enables the submit button before the event is invoked.
-      submitButton.dispatchEvent(secondEvent);
+      await act(async () => {
+        submitButton.dispatchEvent(secondEvent);
+      });
 
       // Therefore the form should have been submitted.
       expect(formSubmitted).toBe(true);
