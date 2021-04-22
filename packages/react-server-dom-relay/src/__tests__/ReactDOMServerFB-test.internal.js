@@ -38,7 +38,6 @@ describe('ReactDOMServerFB', () => {
     return result;
   }
 
-  // @gate experimental
   it('should be able to render basic HTML', async () => {
     const stream = ReactDOMServer.renderToStream(<div>hello world</div>, {
       onError(x) {
@@ -51,7 +50,6 @@ describe('ReactDOMServerFB', () => {
     );
   });
 
-  // @gate experimental
   it('emits all HTML as one unit if we wait until the end to start', async () => {
     let hasLoaded = false;
     let resolve;
@@ -87,7 +85,6 @@ describe('ReactDOMServerFB', () => {
     );
   });
 
-  // @gate experimental
   it('should throw an error when an error is thrown at the root', () => {
     const reportedErrors = [];
     const stream = ReactDOMServer.renderToStream(
@@ -113,7 +110,6 @@ describe('ReactDOMServerFB', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should throw an error when an error is thrown inside a fallback', () => {
     const reportedErrors = [];
     const stream = ReactDOMServer.renderToStream(
@@ -141,7 +137,6 @@ describe('ReactDOMServerFB', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should not throw an error when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
     const stream = ReactDOMServer.renderToStream(
@@ -162,7 +157,6 @@ describe('ReactDOMServerFB', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', () => {
     const stream = ReactDOMServer.renderToStream(
       <div>
