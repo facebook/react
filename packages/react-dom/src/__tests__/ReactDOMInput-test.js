@@ -95,9 +95,10 @@ describe('ReactDOMInput', () => {
         container,
       ),
     ).toErrorDev(
-      'Warning: You provided a `checked` prop to a form field without an `onChange` or `onChangeCapture` handler. ' +
-        'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
-        'Otherwise, set either `onChange`, `onChangeCapture` or `readOnly`.',
+      'Warning: You provided a `checked` prop to a form field without an `onChange` ' +
+        'or `onChangeCapture` handler. This will render a read-only field. If the field ' +
+        'should be mutable use `defaultChecked`. Otherwise, set either `onChange`, ' +
+        '`onChangeCapture` or `readOnly`.',
     );
   });
 

@@ -33,9 +33,9 @@ export function checkControlledValueProps(
     ) {
       console.error(
         'You provided a `value` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultValue`. Otherwise, ' +
-          'set either `onChange`, `onChangeCapture` or `readOnly`.',
+          '`onChange` or `onChangeCapture` handler. This will render a ' +
+          'read-only field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set either `onChange`, `onChangeCapture` or `readOnly`.',
       );
     }
 
@@ -50,7 +50,7 @@ export function checkControlledValueProps(
     ) {
       console.error(
         'You provided a `checked` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
+          '`onChange` or `onChangeCapture` handler. This will render a read-only field. If ' +
           'the field should be mutable use `defaultChecked`. Otherwise, ' +
           'set either `onChange`, `onChangeCapture` or `readOnly`.',
       );
