@@ -43,7 +43,7 @@ const forks = Object.freeze({
       // happens. Other bundles just require('object-assign') anyway.
       return null;
     }
-    if (entry === 'react') {
+    if (entry === 'react' || entry === 'react/unstable-shared-subset') {
       // Use the forked version that uses ES modules instead of CommonJS.
       return 'shared/forks/object-assign.inline-umd.js';
     }
@@ -64,8 +64,8 @@ const forks = Object.freeze({
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
-    if (entry === 'react') {
-      return 'react/src/ReactSharedInternals';
+    if (entry === 'react' || entry === 'react/unstable-shared-subset') {
+      return 'react/src/ReactSharedInternals.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -201,18 +201,6 @@ const forks = Object.freeze({
     return 'scheduler/src/SchedulerFeatureFlags';
   },
 
-  'scheduler/src/SchedulerHostConfig': (bundleType, entry, dependencies) => {
-    if (
-      entry === 'scheduler/unstable_mock' ||
-      entry === 'react-noop-renderer' ||
-      entry === 'react-noop-renderer/persistent' ||
-      entry === 'react-test-renderer'
-    ) {
-      return 'scheduler/src/forks/SchedulerHostConfig.mock';
-    }
-    return 'scheduler/src/forks/SchedulerHostConfig.default';
-  },
-
   'shared/consoleWithStackDev': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
@@ -289,6 +277,26 @@ const forks = Object.freeze({
     }
     // Otherwise, use the non-forked version.
     return 'react-reconciler/src/ReactFiberReconciler.old.js';
+  },
+
+  'react-reconciler/src/ReactEventPriorities': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (bundle.enableNewReconciler) {
+      switch (bundleType) {
+        case FB_WWW_DEV:
+        case FB_WWW_PROD:
+        case FB_WWW_PROFILING:
+          // Use the forked version of the reconciler
+          return 'react-reconciler/src/ReactEventPriorities.new.js';
+      }
+    }
+    // Otherwise, use the non-forked version.
+    return 'react-reconciler/src/ReactEventPriorities.old.js';
   },
 
   'react-reconciler/src/ReactFiberHotReloading': (

@@ -22,7 +22,7 @@ describe('ReactHooksInspectionIntegration', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
     ReactDebugTools = require('react-debug-tools');
   });
 
@@ -797,7 +797,7 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   // This test case is based on an open source bug report:
-  // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
+  // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
   it('should properly advance the current hook for useContext', () => {
     const MyContext = React.createContext(1);
 

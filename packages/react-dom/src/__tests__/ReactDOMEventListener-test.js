@@ -12,11 +12,13 @@
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
+  let ReactDOMServer;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
   });
 
   describe('Propagation', () => {
@@ -398,18 +400,49 @@ describe('ReactDOMEventListener', () => {
     const originalDocAddEventListener = document.addEventListener;
     const originalRootAddEventListener = container.addEventListener;
     document.addEventListener = function(type) {
-      throw new Error(
-        `Did not expect to add a document-level listener for the "${type}" event.`,
-      );
+      switch (type) {
+        case 'selectionchange':
+          break;
+        default:
+          throw new Error(
+            `Did not expect to add a document-level listener for the "${type}" event.`,
+          );
+      }
     };
-    container.addEventListener = function(type) {
-      if (type === 'mouseout' || type === 'mouseover') {
-        // We currently listen to it unconditionally.
+    container.addEventListener = function(type, fn, options) {
+      if (options && (options === true || options.capture)) {
         return;
       }
-      throw new Error(
-        `Did not expect to add a root-level listener for the "${type}" event.`,
-      );
+      switch (type) {
+        case 'abort':
+        case 'canplay':
+        case 'canplaythrough':
+        case 'durationchange':
+        case 'emptied':
+        case 'encrypted':
+        case 'ended':
+        case 'error':
+        case 'loadeddata':
+        case 'loadedmetadata':
+        case 'loadstart':
+        case 'pause':
+        case 'play':
+        case 'playing':
+        case 'progress':
+        case 'ratechange':
+        case 'seeked':
+        case 'seeking':
+        case 'stalled':
+        case 'suspend':
+        case 'timeupdate':
+        case 'volumechange':
+        case 'waiting':
+          throw new Error(
+            `Did not expect to add a root-level listener for the "${type}" event.`,
+          );
+        default:
+          break;
+      }
     };
 
     try {
@@ -765,5 +798,204 @@ describe('ReactDOMEventListener', () => {
     } finally {
       document.body.removeChild(container);
     }
+  });
+
+  it('should subscribe to scroll during updates', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div>
+          <div>
+            <div />
+          </div>
+        </div>,
+        container,
+      );
+
+      // Update to attach.
+      ReactDOM.render(
+        <div
+          className="grand"
+          onScroll={e => onScroll(e)}
+          onScrollCapture={e => onScrollCapture(e)}>
+          <div
+            className="parent"
+            onScroll={e => onScroll(e)}
+            onScrollCapture={e => onScrollCapture(e)}>
+            <div
+              className="child"
+              onScroll={e => onScroll(e)}
+              onScrollCapture={e => onScrollCapture(e)}
+              ref={ref}
+            />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
+      ]);
+
+      // Update to verify deduplication.
+      log.length = 0;
+      ReactDOM.render(
+        <div
+          className="grand"
+          // Note: these are intentionally inline functions so that
+          // we hit the reattachment codepath instead of bailing out.
+          onScroll={e => onScroll(e)}
+          onScrollCapture={e => onScrollCapture(e)}>
+          <div
+            className="parent"
+            onScroll={e => onScroll(e)}
+            onScrollCapture={e => onScrollCapture(e)}>
+            <div
+              className="child"
+              onScroll={e => onScroll(e)}
+              onScrollCapture={e => onScrollCapture(e)}
+              ref={ref}
+            />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
+      ]);
+
+      // Update to detach.
+      log.length = 0;
+      ReactDOM.render(
+        <div>
+          <div>
+            <div ref={ref} />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // Regression test.
+  it('should subscribe to scroll during hydration', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    const tree = (
+      <div
+        className="grand"
+        onScroll={onScroll}
+        onScrollCapture={onScrollCapture}>
+        <div
+          className="parent"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="child"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}
+            ref={ref}
+          />
+        </div>
+      </div>
+    );
+    document.body.appendChild(container);
+    try {
+      container.innerHTML = ReactDOMServer.renderToString(tree);
+      ReactDOM.hydrate(tree, container);
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
+      ]);
+
+      log.length = 0;
+      ReactDOM.render(
+        <div>
+          <div>
+            <div ref={ref} />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should not subscribe to selectionchange twice', () => {
+    const log = [];
+
+    const originalDocAddEventListener = document.addEventListener;
+    document.addEventListener = function(type, fn, options) {
+      switch (type) {
+        case 'selectionchange':
+          log.push(options);
+          break;
+        default:
+          throw new Error(
+            `Did not expect to add a document-level listener for the "${type}" event.`,
+          );
+      }
+    };
+    try {
+      ReactDOM.render(<input />, document.createElement('div'));
+      ReactDOM.render(<input />, document.createElement('div'));
+    } finally {
+      document.addEventListener = originalDocAddEventListener;
+    }
+
+    expect(log).toEqual([false]);
   });
 });

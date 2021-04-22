@@ -16,7 +16,6 @@ import type {
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
-import type {ReactDOMFundamentalComponentInstance} from '../shared/ReactDOMTypes';
 
 import {
   precacheFiberNode,
@@ -26,6 +25,7 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
+export {detachDeletedInstance} from './ReactDOMComponentTree';
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,
@@ -48,6 +48,7 @@ import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
+  getEventPriority,
 } from '../events/ReactDOMEventListener';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
@@ -64,12 +65,13 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
   enableSuspenseServerRenderer,
-  enableFundamentalAPI,
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
-import {listenToReactEvent} from '../events/DOMPluginEventSystem';
+import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = {
@@ -232,10 +234,13 @@ export function prepareForCommit(containerInfo: Container): Object | null {
   return activeInstance;
 }
 
-export function beforeActiveInstanceBlur(): void {
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object): void {
   if (enableCreateEventHandleAPI) {
     ReactBrowserEventEmitterSetEnabled(true);
-    dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
+    dispatchBeforeDetachedBlur(
+      (selectionInformation: any).focusedElem,
+      internalInstanceHandle,
+    );
     ReactBrowserEventEmitterSetEnabled(false);
   }
 }
@@ -371,6 +376,14 @@ export function createTextInstance(
   return textNode;
 }
 
+export function getCurrentEventPriority(): * {
+  const currentEvent = window.event;
+  if (currentEvent === undefined) {
+    return DefaultEventPriority;
+  }
+  return getEventPriority(currentEvent.type);
+}
+
 export const isPrimaryRenderer = true;
 export const warnsIfNotActing = true;
 // This initialization code may run even on server environments
@@ -381,6 +394,26 @@ export const scheduleTimeout: any =
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
+
+// -------------------
+//     Microtasks
+// -------------------
+export const supportsMicrotasks = true;
+export const scheduleMicrotask: any =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : typeof Promise !== 'undefined'
+    ? callback =>
+        Promise.resolve(null)
+          .then(callback)
+          .catch(handleErrorInNextTick)
+    : scheduleTimeout; // TODO: Determine the best fallback here.
+
+function handleErrorInNextTick(error) {
+  setTimeout(() => {
+    throw error;
+  });
+}
 
 // -------------------
 //     Mutation
@@ -499,12 +532,17 @@ function createEvent(type: DOMEventName, bubbles: boolean): Event {
   return event;
 }
 
-function dispatchBeforeDetachedBlur(target: HTMLElement): void {
+function dispatchBeforeDetachedBlur(
+  target: HTMLElement,
+  internalInstanceHandle: Object,
+): void {
   if (enableCreateEventHandleAPI) {
     const event = createEvent('beforeblur', true);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
     // can propagate through the React internal tree.
+    // $FlowFixMe: internal field
+    event._detachedInterceptFiber = internalInstanceHandle;
     target.dispatchEvent(event);
   }
 }
@@ -851,6 +889,12 @@ export function commitHydratedSuspenseInstance(
   retryIfBlockedOn(suspenseInstance);
 }
 
+export function shouldDeleteUnhydratedTailInstances(
+  parentType: string,
+): boolean {
+  return parentType !== 'head' || parentType !== 'body';
+}
+
 export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,
@@ -965,65 +1009,12 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function getFundamentalComponentInstance(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): Instance {
-  if (enableFundamentalAPI) {
-    const {currentFiber, impl, props, state} = fundamentalInstance;
-    const instance = impl.getInstance(null, props, state);
-    precacheFiberNode(currentFiber, instance);
-    return instance;
-  }
-  // Because of the flag above, this gets around the Flow error;
-  return (null: any);
-}
-
-export function mountFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, props, state} = fundamentalInstance;
-    const onMount = impl.onMount;
-    if (onMount !== undefined) {
-      onMount(null, instance, props, state);
-    }
-  }
-}
-
-export function shouldUpdateFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): boolean {
-  if (enableFundamentalAPI) {
-    const {impl, prevProps, props, state} = fundamentalInstance;
-    const shouldUpdate = impl.shouldUpdate;
-    if (shouldUpdate !== undefined) {
-      return shouldUpdate(null, prevProps, props, state);
-    }
-  }
-  return true;
-}
-
-export function updateFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, prevProps, props, state} = fundamentalInstance;
-    const onUpdate = impl.onUpdate;
-    if (onUpdate !== undefined) {
-      onUpdate(null, instance, prevProps, props, state);
-    }
-  }
-}
-
-export function unmountFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, props, state} = fundamentalInstance;
-    const onUnmount = impl.onUnmount;
-    if (onUnmount !== undefined) {
-      onUnmount(null, instance, props, state);
-    }
+export function errorHydratingContainer(parentContainer: Container): void {
+  if (__DEV__) {
+    console.error(
+      'An error occurred during hydration. The server HTML was replaced with client content in <%s>.',
+      parentContainer.nodeName.toLowerCase(),
+    );
   }
 }
 
@@ -1069,7 +1060,7 @@ export function makeOpaqueHydratingObject(
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  listenToReactEvent('onMouseEnter', portalInstance, null);
+  listenToAllSupportedEvents(portalInstance);
 }
 
 export function prepareScopeUpdate(

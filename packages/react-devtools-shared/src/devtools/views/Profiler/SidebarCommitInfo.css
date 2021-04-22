@@ -30,6 +30,7 @@
 .Interactions {
   margin: 0 0 0.5rem;
 }
+.NoInteractions,
 .Interaction {
   display: block;
   width: 100%;
@@ -43,6 +44,10 @@
 .Interaction:hover {
   outline: none;
   background-color: var(--color-background-hover);
+}
+
+.NoInteractions {
+  color: var(--color-dim);
 }
 
 .Label {
@@ -62,4 +67,20 @@
   justify-content: center;
   height: 100%;
   color: var(--color-dim);
+}
+
+.DurationsList {
+  list-style: none;
+  margin: 0.25rem 0 0 0;
+  padding: 0;
+  background: var(--color-background-inactive);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.DurationsListItem {
+  margin: 0.25rem 0 0 0;
+}
+.DurationsListItem:first-of-type {
+  margin: 0;
 }

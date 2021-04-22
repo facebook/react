@@ -8,12 +8,26 @@
  */
 
 import * as React from 'react';
-import {Fragment, useCallback, useEffect, useState} from 'react';
+import {
+  Fragment,
+  useCallback,
+  useLayoutEffect,
+  useEffect,
+  useState,
+} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {
   unstable_trace as trace,
   unstable_wrap as wrap,
 } from 'scheduler/tracing';
+
+function sleep(ms) {
+  const start = performance.now();
+  let now;
+  do {
+    now = performance.now();
+  } while (now - ms < start);
+}
 
 export default function InteractionTracing() {
   const [count, setCount] = useState(0);
@@ -67,6 +81,14 @@ export default function InteractionTracing() {
       );
     }
   }, [count, shouldCascade]);
+
+  useLayoutEffect(() => {
+    sleep(150);
+  });
+
+  useEffect(() => {
+    sleep(300);
+  });
 
   return (
     <Fragment>

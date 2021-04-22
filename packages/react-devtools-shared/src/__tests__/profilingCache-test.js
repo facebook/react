@@ -478,7 +478,7 @@ describe('ProfilingCache', () => {
     expect(commitData).not.toBeNull();
   });
 
-  it('should calculate self duration correctly for suspended views', async done => {
+  it('should calculate self duration correctly for suspended views', async () => {
     let data;
     const getData = () => {
       if (data) {
@@ -536,8 +536,6 @@ describe('ProfilingCache', () => {
     }
 
     expect(allCommitData).toHaveLength(2);
-
-    done();
   });
 
   it('should collect data for each rendered fiber', () => {

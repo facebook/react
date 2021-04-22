@@ -11,6 +11,7 @@ describe('StoreStressConcurrent', () => {
   let React;
   let ReactDOM;
   let act;
+  let actAsync;
   let bridge;
   let store;
   let print;
@@ -23,6 +24,9 @@ describe('StoreStressConcurrent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     act = require('./utils').act;
+    // TODO: Figure out recommendation for concurrent mode tests, then replace
+    // this helper with the real thing.
+    actAsync = require('./utils').actAsync;
 
     print = require('./storeSerializer').print;
   });
@@ -758,7 +762,7 @@ describe('StoreStressConcurrent', () => {
 
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -768,7 +772,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Stop forcing fallback.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -818,7 +822,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Stop forcing fallback. This reverts to primary content.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -829,13 +833,13 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[i]);
 
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await actAsync(async () => root.unmount());
         expect(print(store)).toBe('');
       }
     }
   });
 
-  it('should handle a stress test for Suspense without type change (Concurrent Mode)', () => {
+  it('should handle a stress test for Suspense without type change (Concurrent Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -1294,7 +1298,7 @@ describe('StoreStressConcurrent', () => {
 
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1304,7 +1308,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Stop forcing fallback.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1354,7 +1358,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Stop forcing fallback. This reverts to primary content.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),

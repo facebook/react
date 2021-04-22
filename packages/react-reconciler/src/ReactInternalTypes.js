@@ -19,22 +19,36 @@ import type {
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {SideEffectTag} from './ReactSideEffectTags';
-import type {SubtreeTag} from './ReactSubtreeTags';
-import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
-import type {HookType} from './ReactFiberHooks.old';
+import type {Flags} from './ReactFiberFlags';
+import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
+import type {Cache} from './ReactFiberCacheComponent.old';
 
-export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
+// Unwind Circular: moved from ReactFiberHooks.old
+export type HookType =
+  | 'useState'
+  | 'useReducer'
+  | 'useContext'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useCallback'
+  | 'useMemo'
+  | 'useImperativeHandle'
+  | 'useDebugValue'
+  | 'useDeferredValue'
+  | 'useTransition'
+  | 'useMutableSource'
+  | 'useOpaqueIdentifier'
+  | 'useCacheRefresh';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
-  observedBits: number,
   next: ContextDependency<mixed> | null,
+  memoizedValue: T,
   ...
 };
 
@@ -119,8 +133,8 @@ export type Fiber = {|
   mode: TypeOfMode,
 
   // Effect
-  effectTag: SideEffectTag,
-  subtreeTag: SubtreeTag,
+  flags: Flags,
+  subtreeFlags: Flags,
   deletions: Array<Fiber> | null,
 
   // Singly linked list fast path to the next fiber with side-effects.
@@ -207,20 +221,22 @@ type BaseFiberRootProperties = {|
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: *,
-  callbackPriority: LanePriority,
+  callbackPriority: Lane,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
 
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
-  expiredLanes: Lanes,
   mutableReadLanes: Lanes,
 
   finishedLanes: Lanes,
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
+
+  pooledCache: Cache | null,
+  pooledCacheLanes: Lanes,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -231,6 +247,13 @@ type ProfilingOnlyFiberRootProperties = {|
   interactionThreadID: number,
   memoizedInteractions: Set<Interaction>,
   pendingInteractionMap: Map<Lane | Lanes, Set<Interaction>>,
+|};
+
+// The following attributes are only used by DevTools and are only present in DEV builds.
+// They enable DevTools Profiler UI to show which Fiber(s) scheduled a given commit.
+type UpdaterTrackingOnlyFiberRootProperties = {|
+  memoizedUpdaters: Set<Fiber>,
+  pendingUpdatersLaneMap: LaneMap<Set<Fiber>>,
 |};
 
 export type SuspenseHydrationCallbacks = {
@@ -253,6 +276,7 @@ export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
+  ...UpdaterTrackingOnlyFiberRootProperties,
   ...
 };
 
@@ -260,20 +284,15 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
-  readContext<T>(
-    context: ReactContext<T>,
-    observedBits: void | number | boolean,
-  ): T,
+  getCacheForType?: <T>(resourceType: () => T) => T,
+  readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
     reducer: (S, A) => S,
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
-  useContext<T>(
-    context: ReactContext<T>,
-    observedBits: void | number | boolean,
-  ): T,
+  useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {|current: T|},
   useEffect(
     create: () => (() => void) | void,
@@ -291,16 +310,15 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
-  useTransition(
-    config: SuspenseConfig | void | null,
-  ): [(() => void) => void, boolean],
+  useDeferredValue<T>(value: T): T,
+  useTransition(): [boolean, (() => void) => void],
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
+  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
 
   unstable_isNewReconciler?: boolean,
 |};

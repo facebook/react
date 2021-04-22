@@ -46,6 +46,7 @@ process.on('unhandledRejection', err => {
 
 const {
   NODE_ES2015,
+  NODE_ESM,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -259,12 +260,15 @@ function getFormat(bundleType) {
     case RN_FB_PROD:
     case RN_FB_PROFILING:
       return `cjs`;
+    case NODE_ESM:
+      return `es`;
   }
 }
 
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
+    case NODE_ESM:
     case UMD_DEV:
     case NODE_DEV:
     case FB_WWW_DEV:
@@ -290,6 +294,7 @@ function isProductionBundleType(bundleType) {
 function isProfilingBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
+    case NODE_ESM:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case NODE_DEV:
@@ -577,6 +582,17 @@ async function createBundle(bundle, bundleType) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
       if (!shouldBundleDependencies && isProvidedByDependency) {
+        if (id.indexOf('/src/') !== -1) {
+          throw Error(
+            'You are trying to import ' +
+              id +
+              ' but ' +
+              externals.find(containsThisModule) +
+              ' is one of npm dependencies, ' +
+              'so it will not contain that source file. You probably want ' +
+              'to create a new bundle entry point for it instead.'
+          );
+        }
         return true;
       }
       return !!peerGlobals[id];
@@ -729,6 +745,7 @@ async function buildEverything() {
   for (const bundle of Bundles.bundles) {
     bundles.push(
       [bundle, NODE_ES2015],
+      [bundle, NODE_ESM],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
       [bundle, UMD_PROFILING],

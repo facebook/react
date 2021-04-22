@@ -32,7 +32,7 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
@@ -235,7 +235,7 @@ export function findDOMNode(
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentNameFromType(owner.type) || 'A component',
         );
       }
       owner.stateNode._warnedAboutRefsInRender = true;

@@ -26,10 +26,19 @@ describe('useMutableSourceHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    act = require('react-dom/test-utils').act;
+    act = require('react-dom/test-utils').unstable_concurrentAct;
     createMutableSource = React.unstable_createMutableSource;
     useMutableSource = React.unstable_useMutableSource;
   });
+
+  function dispatchAndSetCurrentEvent(el, event) {
+    try {
+      window.event = event;
+      el.dispatchEvent(event);
+    } finally {
+      window.event = undefined;
+    }
+  }
 
   const defaultGetSnapshot = source => source.value;
   const defaultSubscribe = (source, callback) => source.subscribe(callback);
@@ -205,7 +214,8 @@ describe('useMutableSourceHydration', () => {
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
     expect(Scheduler).toHaveYielded(['only:two']);
@@ -252,12 +262,19 @@ describe('useMutableSourceHydration', () => {
     });
     expect(() => {
       act(() => {
-        root.render(<TestComponent />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(<TestComponent />);
+          });
+        } else {
+          root.render(<TestComponent />);
+        }
         expect(Scheduler).toFlushAndYieldThrough(['a:one']);
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
     expect(Scheduler).toHaveYielded(['a:two', 'b:two']);
@@ -305,33 +322,56 @@ describe('useMutableSourceHydration', () => {
     });
     expect(() => {
       act(() => {
-        root.render(
-          <>
-            <Component
-              label="0"
-              getSnapshot={getSnapshotA}
-              mutableSource={mutableSource}
-              subscribe={subscribeA}
-            />
-            <Component
-              label="1"
-              getSnapshot={getSnapshotB}
-              mutableSource={mutableSource}
-              subscribe={subscribeB}
-            />
-          </>,
-        );
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(
+              <>
+                <Component
+                  label="0"
+                  getSnapshot={getSnapshotA}
+                  mutableSource={mutableSource}
+                  subscribe={subscribeA}
+                />
+                <Component
+                  label="1"
+                  getSnapshot={getSnapshotB}
+                  mutableSource={mutableSource}
+                  subscribe={subscribeB}
+                />
+              </>,
+            );
+          });
+        } else {
+          root.render(
+            <>
+              <Component
+                label="0"
+                getSnapshot={getSnapshotA}
+                mutableSource={mutableSource}
+                subscribe={subscribeA}
+              />
+              <Component
+                label="1"
+                getSnapshot={getSnapshotB}
+                mutableSource={mutableSource}
+                subscribe={subscribeB}
+              />
+            </>,
+          );
+        }
         expect(Scheduler).toFlushAndYieldThrough(['0:a:one']);
         source.valueB = 'b:two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
     expect(Scheduler).toHaveYielded(['0:a:one', '1:b:two']);
   });
 
   // @gate experimental
+  // @gate !enableSyncDefaultUpdates
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -371,22 +411,40 @@ describe('useMutableSourceHydration', () => {
         mutableSources: [mutableSource],
       },
     });
+
     expect(() => {
       act(() => {
-        root.render(<TestComponent flag={1} />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(<TestComponent flag={1} />);
+          });
+        } else {
+          root.render(<TestComponent flag={1} />);
+        }
         expect(Scheduler).toFlushAndYieldThrough([1]);
 
         // Render an update which will be higher priority than the hydration.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => root.render(<TestComponent flag={2} />),
-        );
+        // We can do this by scheduling the update inside a mouseover event.
+        const arbitraryElement = document.createElement('div');
+        const mouseOverEvent = document.createEvent('MouseEvents');
+        mouseOverEvent.initEvent('mouseover', true, true);
+        arbitraryElement.addEventListener('mouseover', () => {
+          root.render(<TestComponent flag={2} />);
+        });
+        dispatchAndSetCurrentEvent(arbitraryElement, mouseOverEvent);
+
         expect(Scheduler).toFlushAndYieldThrough([2]);
 
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Text content did not match. Server: "1" Client: "2"',
+      [
+        'Warning: An error occurred during hydration. ' +
+          'The server HTML was replaced with client content in <div>.',
+
+        'Warning: Text content did not match. Server: "1" Client: "2"',
+      ],
+      {withoutStack: 1},
     );
     expect(Scheduler).toHaveYielded([2, 'a:two']);
     expect(source.listenerCount).toBe(1);

@@ -54,7 +54,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       ReactDOM.render(<input type="text" value={0} />, container);
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` or `onChangeCapture` handler.',
     );
   });
 
@@ -62,7 +62,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       ReactDOM.render(<input type="text" value="" />, container);
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` or `onChangeCapture` handler.',
     );
   });
 
@@ -70,7 +70,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       ReactDOM.render(<input type="text" value="0" />, container);
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` or `onChangeCapture` handler.',
     );
   });
 
@@ -78,7 +78,7 @@ describe('ReactDOMInput', () => {
     expect(() =>
       ReactDOM.render(<input type="checkbox" checked={false} />, container),
     ).toErrorDev(
-      'Warning: You provided a `checked` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `checked` prop to a form field without an `onChange` or `onChangeCapture` handler.',
     );
   });
 
@@ -95,9 +95,10 @@ describe('ReactDOMInput', () => {
         container,
       ),
     ).toErrorDev(
-      'Warning: You provided a `checked` prop to a form field without an `onChange` handler. ' +
-        'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
-        'Otherwise, set either `onChange` or `readOnly`.',
+      'Warning: You provided a `checked` prop to a form field without an `onChange` ' +
+        'or `onChangeCapture` handler. This will render a read-only field. If the field ' +
+        'should be mutable use `defaultChecked`. Otherwise, set either `onChange`, ' +
+        '`onChangeCapture` or `readOnly`.',
     );
   });
 
@@ -125,7 +126,7 @@ describe('ReactDOMInput', () => {
     expect(() => {
       node = ReactDOM.render(<input type="text" value="lion" />, container);
     }).toErrorDev(
-      'Warning: You provided a `value` prop to a form field without an `onChange` handler.',
+      'Warning: You provided a `value` prop to a form field without an `onChange` or `onChangeCapture` handler.',
     );
 
     setUntrackedValue.call(node, 'giraffe');
@@ -308,7 +309,7 @@ describe('ReactDOMInput', () => {
       stub = ReactDOM.render(<Stub />, container);
     }).toErrorDev(
       'You provided a `value` prop to a form field ' +
-        'without an `onChange` handler.',
+        'without an `onChange` or `onChangeCapture` handler.',
     );
     const node = ReactDOM.findDOMNode(stub);
     stub.setState({value: '0.98'});
@@ -375,7 +376,7 @@ describe('ReactDOMInput', () => {
       stub = ReactDOM.render(<Stub />, container);
     }).toErrorDev(
       'You provided a `value` prop to a form field ' +
-        'without an `onChange` handler.',
+        'without an `onChange` or `onChangeCapture` handler.',
     );
     const node = ReactDOM.findDOMNode(stub);
     stub.setState({value: '3'});
@@ -1172,9 +1173,9 @@ describe('ReactDOMInput', () => {
       ),
     ).toErrorDev(
       'Warning: You provided a `value` prop to a form ' +
-        'field without an `onChange` handler. This will render a read-only ' +
+        'field without an `onChange` or `onChangeCapture` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
-        'Otherwise, set either `onChange` or `readOnly`.\n' +
+        'Otherwise, set either `onChange`, `onChangeCapture` or `readOnly`.\n' +
         '    in input (at **)',
     );
   });

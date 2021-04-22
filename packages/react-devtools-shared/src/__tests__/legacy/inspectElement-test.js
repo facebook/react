@@ -7,18 +7,16 @@
  * @flow
  */
 
-import type {InspectedElementPayload} from 'react-devtools-shared/src/backend/types';
-import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('InspectedElementContext', () => {
   let React;
   let ReactDOM;
-  let hydrate;
-  let meta;
   let bridge: FrontendBridge;
   let store: Store;
+
+  let backendAPI;
 
   const act = (callback: Function) => {
     callback();
@@ -26,52 +24,32 @@ describe('InspectedElementContext', () => {
     jest.runAllTimers(); // Flush Bridge operations
   };
 
-  function dehydrateHelper(
-    dehydratedData: DehydratedData | null,
-  ): Object | null {
-    if (dehydratedData !== null) {
-      return hydrate(
-        dehydratedData.data,
-        dehydratedData.cleaned,
-        dehydratedData.unserializable,
-      );
-    } else {
-      return null;
-    }
-  }
-
   async function read(
     id: number,
-    path?: Array<string | number>,
+    path?: Array<string | number> = null,
   ): Promise<Object> {
-    return new Promise((resolve, reject) => {
-      const rendererID = ((store.getRendererIDForElement(id): any): number);
+    const rendererID = ((store.getRendererIDForElement(id): any): number);
+    const promise = backendAPI
+      .inspectElement({
+        bridge,
+        id,
+        path,
+        rendererID,
+      })
+      .then(data =>
+        backendAPI.convertInspectedElementBackendToFrontend(data.value),
+      );
 
-      const onInspectedElement = (payload: InspectedElementPayload) => {
-        bridge.removeListener('inspectedElement', onInspectedElement);
+    jest.runOnlyPendingTimers();
 
-        if (payload.type === 'full-data' && payload.value !== null) {
-          payload.value.context = dehydrateHelper(payload.value.context);
-          payload.value.props = dehydrateHelper(payload.value.props);
-          payload.value.state = dehydrateHelper(payload.value.state);
-        }
-
-        resolve(payload);
-      };
-
-      bridge.addListener('inspectedElement', onInspectedElement);
-      bridge.send('inspectElement', {id, path, rendererID});
-
-      jest.runOnlyPendingTimers();
-    });
+    return promise;
   }
 
   beforeEach(() => {
     bridge = global.bridge;
     store = global.store;
 
-    hydrate = require('react-devtools-shared/src/hydration').hydrate;
-    meta = require('react-devtools-shared/src/hydration').meta;
+    backendAPI = require('react-devtools-shared/src/backendAPI');
 
     // Redirect all React/ReactDOM requires to the v15 UMD.
     // We use the UMD because Jest doesn't enable us to mock deep imports (e.g. "react/lib/Something").
@@ -84,7 +62,7 @@ describe('InspectedElementContext', () => {
     ReactDOM = require('react-dom');
   });
 
-  it('should inspect the currently selected element', async done => {
+  it('should inspect the currently selected element', async () => {
     const Example = () => null;
 
     act(() =>
@@ -94,12 +72,23 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
     const inspectedElement = await read(id);
 
-    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
-
-    done();
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": Object {},
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": Object {
+          "a": 1,
+          "b": "abc",
+        },
+        "state": null,
+      }
+    `);
   });
 
-  it('should support simple data types', async done => {
+  it('should support simple data types', async () => {
     const Example = () => null;
 
     act(() =>
@@ -124,25 +113,32 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
     const inspectedElement = await read(id);
 
-    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
-
-    const {props} = inspectedElement.value;
-    expect(props.boolean_false).toBe(false);
-    expect(props.boolean_true).toBe(true);
-    expect(Number.isFinite(props.infinity)).toBe(false);
-    expect(props.integer_zero).toEqual(0);
-    expect(props.integer_one).toEqual(1);
-    expect(props.float).toEqual(1.23);
-    expect(props.string).toEqual('abc');
-    expect(props.string_empty).toEqual('');
-    expect(props.nan).toBeNaN();
-    expect(props.value_null).toBeNull();
-    expect(props.value_undefined).toBeUndefined();
-
-    done();
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": Object {},
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": Object {
+          "boolean_false": false,
+          "boolean_true": true,
+          "float": 1.23,
+          "infinity": Infinity,
+          "integer_one": 1,
+          "integer_zero": 0,
+          "nan": NaN,
+          "string": "abc",
+          "string_empty": "",
+          "value_null": null,
+          "value_undefined": undefined,
+        },
+        "state": null,
+      }
+    `);
   });
 
-  it('should support complex data types', async done => {
+  it('should support complex data types', async () => {
     const Immutable = require('immutable');
 
     const Example = () => null;
@@ -211,8 +207,6 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
     const inspectedElement = await read(id);
 
-    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
-
     const {
       anonymous_fn,
       array_buffer,
@@ -233,7 +227,9 @@ describe('InspectedElementContext', () => {
       set_of_sets,
       symbol,
       typed_array,
-    } = inspectedElement.value.props;
+    } = inspectedElement.props;
+
+    const {meta} = require('react-devtools-shared/src/hydration');
 
     expect(anonymous_fn[meta.inspectable]).toBe(false);
     expect(anonymous_fn[meta.name]).toBe('function');
@@ -338,11 +334,9 @@ describe('InspectedElementContext', () => {
     expect(typed_array[0]).toBe(100);
     expect(typed_array[1]).toBe(-100);
     expect(typed_array[2]).toBe(0);
-
-    done();
   });
 
-  it('should support objects with no prototype', async done => {
+  it('should support objects with no prototype', async () => {
     const Example = () => null;
 
     const object = Object.create(null);
@@ -360,17 +354,18 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
     const inspectedElement = await read(id);
 
-    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
-    expect(inspectedElement.value.props.object).toEqual({
-      boolean: true,
-      number: 123,
-      string: 'abc',
-    });
-
-    done();
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "object": Object {
+          "boolean": true,
+          "number": 123,
+          "string": "abc",
+        },
+      }
+    `);
   });
 
-  it('should support objects with overridden hasOwnProperty', async done => {
+  it('should support objects with overridden hasOwnProperty', async () => {
     const Example = () => null;
 
     const object = {
@@ -388,16 +383,56 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
     const inspectedElement = await read(id);
 
-    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
-    expect(inspectedElement.value.props.object).toEqual({
-      name: 'blah',
-      hasOwnProperty: true,
-    });
-
-    done();
+    // TRICKY: Don't use toMatchInlineSnapshot() for this test!
+    // Our snapshot serializer relies on hasOwnProperty() for feature detection.
+    expect(inspectedElement.props.object.name).toBe('blah');
+    expect(inspectedElement.props.object.hasOwnProperty).toBe(true);
   });
 
-  it('should support custom objects with enumerable properties and getters', async done => {
+  it('should not consume iterables while inspecting', async () => {
+    const Example = () => null;
+
+    function* generator() {
+      yield 1;
+      yield 2;
+    }
+
+    const iteratable = generator();
+
+    act(() =>
+      ReactDOM.render(
+        <Example iteratable={iteratable} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": Object {},
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": Object {
+          "iteratable": Dehydrated {
+            "preview_short": Generator,
+            "preview_long": Generator,
+          },
+        },
+        "state": null,
+      }
+    `);
+
+    // Inspecting should not consume the iterable.
+    expect(iteratable.next().value).toEqual(1);
+    expect(iteratable.next().value).toEqual(2);
+    expect(iteratable.next().value).toBeUndefined();
+  });
+
+  it('should support custom objects with enumerable properties and getters', async () => {
     class CustomData {
       _number = 42;
       get number() {
@@ -427,12 +462,175 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
     const inspectedElement = await read(id);
 
-    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
-
-    done();
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": Object {},
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": Object {
+          "data": Object {
+            "_number": 42,
+            "number": 42,
+          },
+        },
+        "state": null,
+      }
+    `);
   });
 
-  it('should not dehydrate nested values until explicitly requested', async done => {
+  it('should support objects with with inherited keys', async () => {
+    const Example = () => null;
+
+    const base = Object.create(Object.prototype, {
+      enumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+    });
+
+    const object = Object.create(base, {
+      enumerableString: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableString: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      123: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbol')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbol')]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+    });
+
+    act(() =>
+      ReactDOM.render(<Example data={object} />, document.createElement('div')),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": Object {},
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": Object {
+          "data": Object {
+            "123": 3,
+            "Symbol(enumerableSymbol)": 3,
+            "Symbol(enumerableSymbolBase)": 1,
+            "enumerableString": 2,
+            "enumerableStringBase": 1,
+          },
+        },
+        "state": null,
+      }
+    `);
+  });
+
+  it('should allow component prop value and value`s prototype has same name params.', async () => {
+    const testData = Object.create(
+      {
+        a: undefined,
+        b: Infinity,
+        c: NaN,
+        d: 'normal',
+      },
+      {
+        a: {
+          value: undefined,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        b: {
+          value: Infinity,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        c: {
+          value: NaN,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        d: {
+          value: 'normal',
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+      },
+    );
+
+    const Example = ({data}) => null;
+    act(() =>
+      ReactDOM.render(
+        <Example data={testData} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "data": Object {
+          "a": undefined,
+          "b": Infinity,
+          "c": NaN,
+          "d": "normal",
+        },
+      }
+    `);
+  });
+
+  it('should not dehydrate nested values until explicitly requested', async () => {
     const Example = () => null;
 
     act(() =>
@@ -459,15 +657,52 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
 
     let inspectedElement = await read(id);
-    expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "nestedObject": Object {
+          "a": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {b: {…}},
+          },
+        },
+      }
+    `);
 
     inspectedElement = await read(id, ['props', 'nestedObject', 'a']);
-    expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "nestedObject": Object {
+          "a": Object {
+            "b": Object {
+              "c": Dehydrated {
+                "preview_short": Array(1),
+                "preview_long": [{…}],
+              },
+            },
+          },
+        },
+      }
+    `);
 
     inspectedElement = await read(id, ['props', 'nestedObject', 'a', 'b', 'c']);
-    expect(inspectedElement).toMatchSnapshot(
-      '3: Inspect props.nestedObject.a.b.c',
-    );
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "nestedObject": Object {
+          "a": Object {
+            "b": Object {
+              "c": Array [
+                Object {
+                  "d": Dehydrated {
+                    "preview_short": {…},
+                    "preview_long": {e: {…}},
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }
+    `);
 
     inspectedElement = await read(id, [
       'props',
@@ -478,11 +713,23 @@ describe('InspectedElementContext', () => {
       0,
       'd',
     ]);
-    expect(inspectedElement).toMatchSnapshot(
-      '4: Inspect props.nestedObject.a.b.c.0.d',
-    );
-
-    done();
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "nestedObject": Object {
+          "a": Object {
+            "b": Object {
+              "c": Array [
+                Object {
+                  "d": Object {
+                    "e": Object {},
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }
+    `);
   });
 
   it('should enable inspected values to be stored as global variables', () => {
@@ -514,28 +761,30 @@ describe('InspectedElementContext', () => {
     spyOn(console, 'log').and.callFake(logSpy);
 
     // Should store the whole value (not just the hydrated parts)
-    bridge.send('storeAsGlobal', {
-      count: 1,
+    backendAPI.storeAsGlobal({
+      bridge,
       id,
       path: ['props', 'nestedObject'],
       rendererID,
     });
+
     jest.runOnlyPendingTimers();
-    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
-    expect(global.$reactTemp1).toBe(nestedObject);
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp0');
+    expect(global.$reactTemp0).toBe(nestedObject);
 
     logSpy.mockReset();
 
     // Should store the nested property specified (not just the outer value)
-    bridge.send('storeAsGlobal', {
-      count: 2,
+    backendAPI.storeAsGlobal({
+      bridge,
       id,
       path: ['props', 'nestedObject', 'a', 'b'],
       rendererID,
     });
+
     jest.runOnlyPendingTimers();
-    expect(logSpy).toHaveBeenCalledWith('$reactTemp2');
-    expect(global.$reactTemp2).toBe(nestedObject.a.b);
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
+    expect(global.$reactTemp1).toBe(nestedObject.a.b);
   });
 
   it('should enable inspected values to be copied to the clipboard', () => {
@@ -564,11 +813,13 @@ describe('InspectedElementContext', () => {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
 
     // Should copy the whole value (not just the hydrated parts)
-    bridge.send('copyElementPath', {
+    backendAPI.copyInspectedElementPath({
+      bridge,
       id,
       path: ['props', 'nestedObject'],
       rendererID,
     });
+
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
@@ -578,11 +829,13 @@ describe('InspectedElementContext', () => {
     global.mockClipboardCopy.mockReset();
 
     // Should copy the nested property specified (not just the outer value)
-    bridge.send('copyElementPath', {
+    backendAPI.copyInspectedElementPath({
+      bridge,
       id,
       path: ['props', 'nestedObject', 'a', 'b'],
       rendererID,
     });
+
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
@@ -640,7 +893,8 @@ describe('InspectedElementContext', () => {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
 
     // Should copy the whole value (not just the hydrated parts)
-    bridge.send('copyElementPath', {
+    backendAPI.copyInspectedElementPath({
+      bridge,
       id,
       path: ['props'],
       rendererID,
@@ -651,7 +905,8 @@ describe('InspectedElementContext', () => {
     global.mockClipboardCopy.mockReset();
 
     // Should copy the nested property specified (not just the outer value)
-    bridge.send('copyElementPath', {
+    backendAPI.copyInspectedElementPath({
+      bridge,
       id,
       path: ['props', 'bigInt'],
       rendererID,
@@ -665,7 +920,8 @@ describe('InspectedElementContext', () => {
     global.mockClipboardCopy.mockReset();
 
     // Should copy the nested property specified (not just the outer value)
-    bridge.send('copyElementPath', {
+    backendAPI.copyInspectedElementPath({
+      bridge,
       id,
       path: ['props', 'typedArray'],
       rendererID,

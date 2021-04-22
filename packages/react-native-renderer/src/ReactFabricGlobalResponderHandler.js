@@ -12,11 +12,21 @@ import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateI
 
 const ReactFabricGlobalResponderHandler = {
   onChange: function(from: any, to: any, blockNativeResponder: boolean) {
-    if (to !== null) {
-      const tag = to.stateNode.canonical._nativeTag;
-      UIManager.setJSResponder(tag, blockNativeResponder);
+    const fromOrTo = from || to;
+    const fromOrToStateNode = fromOrTo && fromOrTo.stateNode;
+    const isFabric = !!(
+      fromOrToStateNode && fromOrToStateNode.canonical._internalInstanceHandle
+    );
+
+    if (isFabric) {
+      // Noop for now until setJSResponder/clearJSResponder are supported in Fabric
     } else {
-      UIManager.clearJSResponder();
+      if (to !== null) {
+        const tag = to.stateNode.canonical._nativeTag;
+        UIManager.setJSResponder(tag, blockNativeResponder);
+      } else {
+        UIManager.clearJSResponder();
+      }
     }
   },
 };

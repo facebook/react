@@ -26,11 +26,13 @@ module.exports = {
     trustedTypes: true,
 
     // Scheduler profiling
-    SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
 
     TaskController: true,
+
+    // jest
+    jest: true,
   },
   parserOptions: {
     ecmaVersion: 5,

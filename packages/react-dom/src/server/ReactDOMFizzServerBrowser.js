@@ -13,20 +13,63 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFizzServer';
 
-function renderToReadableStream(children: ReactNodeList): ReadableStream {
+import {
+  createResponseState,
+  createRootFormatContext,
+} from './ReactDOMServerFormatConfig';
+
+type Options = {
+  identifierPrefix?: string,
+  namespaceURI?: string,
+  progressiveChunkSize?: number,
+  signal?: AbortSignal,
+  onReadyToStream?: () => void,
+  onCompleteAll?: () => void,
+  onError?: (error: mixed) => void,
+};
+
+function renderToReadableStream(
+  children: ReactNodeList,
+  options?: Options,
+): ReadableStream {
   let request;
-  return new ReadableStream({
+  if (options && options.signal) {
+    const signal = options.signal;
+    const listener = () => {
+      abort(request);
+      signal.removeEventListener('abort', listener);
+    };
+    signal.addEventListener('abort', listener);
+  }
+  const stream = new ReadableStream({
     start(controller) {
-      request = createRequest(children, controller);
+      request = createRequest(
+        children,
+        controller,
+        createResponseState(options ? options.identifierPrefix : undefined),
+        createRootFormatContext(options ? options.namespaceURI : undefined),
+        options ? options.progressiveChunkSize : undefined,
+        options ? options.onError : undefined,
+        options ? options.onCompleteAll : undefined,
+        options ? options.onReadyToStream : undefined,
+      );
       startWork(request);
     },
     pull(controller) {
-      startFlowing(request);
+      // Pull is called immediately even if the stream is not passed to anything.
+      // That's buffering too early. We want to start buffering once the stream
+      // is actually used by something so we can give it the best result possible
+      // at that point.
+      if (stream.locked) {
+        startFlowing(request);
+      }
     },
     cancel(reason) {},
   });
+  return stream;
 }
 
 export {renderToReadableStream};

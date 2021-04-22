@@ -14,17 +14,14 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {registerDirectEvent} from '../EventRegistry';
 import {IS_REPLAYED} from 'react-dom/src/events/EventSystemFlags';
-import {
-  SyntheticEvent,
-  MouseEventInterface,
-  PointerEventInterface,
-} from '../SyntheticEvent';
+import {SyntheticMouseEvent, SyntheticPointerEvent} from '../SyntheticEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
   isContainerMarkedAsRoot,
 } from '../../client/ReactDOMComponentTree';
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
+import type {KnownReactSyntheticEvent} from '../ReactSyntheticEventType';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
@@ -122,12 +119,12 @@ function extractEvents(
     return;
   }
 
-  let eventInterface = MouseEventInterface;
+  let SyntheticEventCtor = SyntheticMouseEvent;
   let leaveEventType = 'onMouseLeave';
   let enterEventType = 'onMouseEnter';
   let eventTypePrefix = 'mouse';
   if (domEventName === 'pointerout' || domEventName === 'pointerover') {
-    eventInterface = PointerEventInterface;
+    SyntheticEventCtor = SyntheticPointerEvent;
     leaveEventType = 'onPointerLeave';
     enterEventType = 'onPointerEnter';
     eventTypePrefix = 'pointer';
@@ -136,34 +133,32 @@ function extractEvents(
   const fromNode = from == null ? win : getNodeFromInstance(from);
   const toNode = to == null ? win : getNodeFromInstance(to);
 
-  const leave = new SyntheticEvent(
+  const leave = new SyntheticEventCtor(
     leaveEventType,
     eventTypePrefix + 'leave',
     from,
     nativeEvent,
     nativeEventTarget,
-    eventInterface,
   );
   leave.target = fromNode;
   leave.relatedTarget = toNode;
 
-  let enter = new SyntheticEvent(
-    enterEventType,
-    eventTypePrefix + 'enter',
-    to,
-    nativeEvent,
-    nativeEventTarget,
-    eventInterface,
-  );
-  enter.target = toNode;
-  enter.relatedTarget = fromNode;
+  let enter: KnownReactSyntheticEvent | null = null;
 
-  // If we are not processing the first ancestor, then we
-  // should not process the same nativeEvent again, as we
-  // will have already processed it in the first ancestor.
+  // We should only process this nativeEvent if we are processing
+  // the first ancestor. Next time, we will ignore the event.
   const nativeTargetInst = getClosestInstanceFromNode((nativeEventTarget: any));
-  if (nativeTargetInst !== targetInst) {
-    enter = null;
+  if (nativeTargetInst === targetInst) {
+    const enterEvent: KnownReactSyntheticEvent = new SyntheticEventCtor(
+      enterEventType,
+      eventTypePrefix + 'enter',
+      to,
+      nativeEvent,
+      nativeEventTarget,
+    );
+    enterEvent.target = toNode;
+    enterEvent.relatedTarget = fromNode;
+    enter = enterEvent;
   }
 
   accumulateEnterLeaveTwoPhaseListeners(dispatchQueue, leave, enter, from, to);

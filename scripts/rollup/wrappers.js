@@ -5,6 +5,7 @@ const reactVersion = require('../../package.json').version;
 
 const {
   NODE_ES2015,
+  NODE_ESM,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -39,6 +40,17 @@ ${license}
  */
 
 'use strict';
+
+${source}`;
+  },
+
+  /***************** NODE_ESM *****************/
+  [NODE_ESM](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
 
 ${source}`;
   },
@@ -280,6 +292,20 @@ ${source}
 
   /***************** NODE_PROD (reconciler only) *****************/
   [NODE_PROD](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+module.exports = function $$$reconciler($$$hostConfig) {
+    var exports = {};
+${source}
+    return exports;
+};`;
+  },
+
+  /***************** NODE_PROFILING (reconciler only) *****************/
+  [NODE_PROFILING](source, globalName, filename, moduleType) {
     return `/** @license React v${reactVersion}
  * ${filename}
  *

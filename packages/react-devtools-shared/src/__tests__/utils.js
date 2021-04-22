@@ -14,7 +14,10 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ElementType} from 'react-devtools-shared/src/types';
 
-export function act(callback: Function): void {
+export function act(
+  callback: Function,
+  recursivelyFlush: boolean = true,
+): void {
   const {act: actTestRenderer} = require('react-test-renderer');
   const {act: actDOM} = require('react-dom/test-utils');
 
@@ -24,13 +27,15 @@ export function act(callback: Function): void {
     });
   });
 
-  // Flush Bridge operations
-  while (jest.getTimerCount() > 0) {
-    actDOM(() => {
-      actTestRenderer(() => {
-        jest.runAllTimers();
+  if (recursivelyFlush) {
+    // Flush Bridge operations
+    while (jest.getTimerCount() > 0) {
+      actDOM(() => {
+        actTestRenderer(() => {
+          jest.runAllTimers();
+        });
       });
-    });
+    }
   }
 }
 
@@ -212,4 +217,38 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
     // Apply the new exported-then-imported data so tests can re-run assertions.
     profilerStore.profilingData = profilingDataFrontend;
   });
+}
+
+/**
+ * Runs `fn` while preventing console error and warnings that partially match any given `errorOrWarningMessages` from appearing in the console.
+ * @param errorOrWarningMessages Messages are matched partially (i.e. indexOf), pre-formatting.
+ * @param fn
+ */
+export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
+  errorOrWarningMessages: string[],
+  fn: () => T,
+): T {
+  let resetIgnoredErrorOrWarningMessages = true;
+  try {
+    global._ignoredErrorOrWarningMessages = errorOrWarningMessages;
+    const maybeThenable = fn();
+    if (
+      maybeThenable !== undefined &&
+      typeof maybeThenable.then === 'function'
+    ) {
+      resetIgnoredErrorOrWarningMessages = false;
+      return maybeThenable.then(
+        () => {
+          global._ignoredErrorOrWarningMessages = [];
+        },
+        () => {
+          global._ignoredErrorOrWarningMessages = [];
+        },
+      );
+    }
+  } finally {
+    if (resetIgnoredErrorOrWarningMessages) {
+      global._ignoredErrorOrWarningMessages = [];
+    }
+  }
 }

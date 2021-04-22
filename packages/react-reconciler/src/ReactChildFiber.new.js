@@ -9,20 +9,17 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
-import type {BlockComponent} from 'react/src/ReactBlock';
-import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
 
-import getComponentName from 'shared/getComponentName';
-import {Deletion, Placement} from './ReactSideEffectTags';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {Placement, ChildDeletion} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
-  REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionComponent,
@@ -32,12 +29,11 @@ import {
   ForwardRef,
   Fragment,
   SimpleMemoComponent,
-  Block,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
-  enableBlocksAPI,
   enableLazyElements,
 } from 'shared/ReactFeatureFlags';
 
@@ -51,7 +47,7 @@ import {
 } from './ReactFiber.new';
 import {emptyRefsObject} from './ReactFiberClassComponent.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictLegacyMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -87,7 +83,7 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasKeyUseWarning[componentName]) {
       return;
@@ -101,8 +97,6 @@ if (__DEV__) {
     );
   };
 }
-
-const isArray = Array.isArray;
 
 function coerceRef(
   returnFiber: Fiber,
@@ -119,7 +113,7 @@ function coerceRef(
       // TODO: Clean this up once we turn on the string ref warning for
       // everyone, because the strict mode case will no longer be relevant
       if (
-        (returnFiber.mode & StrictMode || warnAboutStringRefs) &&
+        (returnFiber.mode & StrictLegacyMode || warnAboutStringRefs) &&
         // We warn in ReactElement.js if owner and self are equal for string refs
         // because these cannot be automatically converted to an arrow function
         // using a codemod. Therefore, we don't have to warn about string refs again.
@@ -129,7 +123,8 @@ function coerceRef(
           element._owner.stateNode !== element._self
         )
       ) {
-        const componentName = getComponentName(returnFiber.type) || 'Component';
+        const componentName =
+          getComponentNameFromFiber(returnFiber) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
             console.error(
@@ -221,22 +216,21 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
-  if (returnFiber.type !== 'textarea') {
-    invariant(
-      false,
-      'Objects are not valid as a React child (found: %s). ' +
-        'If you meant to render a collection of children, use an array ' +
-        'instead.',
-      Object.prototype.toString.call(newChild) === '[object Object]'
-        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-        : newChild,
-    );
-  }
+  const childString = Object.prototype.toString.call(newChild);
+  invariant(
+    false,
+    'Objects are not valid as a React child (found: %s). ' +
+      'If you meant to render a collection of children, use an array ' +
+      'instead.',
+    childString === '[object Object]'
+      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+      : childString,
+  );
 }
 
 function warnOnFunctionType(returnFiber: Fiber) {
   if (__DEV__) {
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasFunctionTypeWarning[componentName]) {
       return;
@@ -251,20 +245,10 @@ function warnOnFunctionType(returnFiber: Fiber) {
   }
 }
 
-// We avoid inlining this to avoid potential deopts from using try/catch.
-/** @noinline */
-function resolveLazyType<T, P>(
-  lazyComponent: LazyComponent<T, P>,
-): LazyComponent<T, P> | T {
-  try {
-    // If we can, let's peek at the resulting type.
-    const payload = lazyComponent._payload;
-    const init = lazyComponent._init;
-    return init(payload);
-  } catch (x) {
-    // Leave it in place and let it throw again in the begin phase.
-    return lazyComponent;
-  }
+function resolveLazy(lazyType) {
+  const payload = lazyType._payload;
+  const init = lazyType._init;
+  return init(payload);
 }
 
 // This wrapper function exists because I expect to clone the code in each path
@@ -277,28 +261,13 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Noop.
       return;
     }
-    // Deletions are added in reversed order so we add it to the front.
-    // At this point, the return fiber's effect list is empty except for
-    // deletions, so we can just append the deletion to the list. The remaining
-    // effects aren't added until the complete phase. Once we implement
-    // resuming, this may not be true.
-    // TODO (effects) Get rid of effects list update here.
-    const last = returnFiber.lastEffect;
-    if (last !== null) {
-      last.nextEffect = childToDelete;
-      returnFiber.lastEffect = childToDelete;
-    } else {
-      returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
-    }
     const deletions = returnFiber.deletions;
     if (deletions === null) {
       returnFiber.deletions = [childToDelete];
-      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
-      returnFiber.effectTag |= Deletion;
+      returnFiber.flags |= ChildDeletion;
     } else {
       deletions.push(childToDelete);
     }
-    childToDelete.nextEffect = null;
   }
 
   function deleteRemainingChildren(
@@ -365,7 +334,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
-        newFiber.effectTag = Placement;
+        newFiber.flags |= Placement;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
@@ -373,7 +342,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     } else {
       // This is an insertion.
-      newFiber.effectTag = Placement;
+      newFiber.flags |= Placement;
       return lastPlacedIndex;
     }
   }
@@ -382,7 +351,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
     if (shouldTrackSideEffects && newFiber.alternate === null) {
-      newFiber.effectTag = Placement;
+      newFiber.flags |= Placement;
     }
     return newFiber;
   }
@@ -412,11 +381,32 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     lanes: Lanes,
   ): Fiber {
+    const elementType = element.type;
+    if (elementType === REACT_FRAGMENT_TYPE) {
+      return updateFragment(
+        returnFiber,
+        current,
+        element.props.children,
+        lanes,
+        element.key,
+      );
+    }
     if (current !== null) {
       if (
-        current.elementType === element.type ||
+        current.elementType === elementType ||
         // Keep this check inline so it only runs on the false path:
-        (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false)
+        (__DEV__
+          ? isCompatibleFamilyForHotReloading(current, element)
+          : false) ||
+        // Lazy types should reconcile their resolved type.
+        // We need to do this after the Hot Reloading check above,
+        // because hot reloading has different semantics than prod because
+        // it doesn't resuspend. So we can't let the call below suspend.
+        (enableLazyElements &&
+          typeof elementType === 'object' &&
+          elementType !== null &&
+          elementType.$$typeof === REACT_LAZY_TYPE &&
+          resolveLazy(elementType) === current.type)
       ) {
         // Move based on index
         const existing = useFiber(current, element.props);
@@ -427,28 +417,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           existing._debugOwner = element._owner;
         }
         return existing;
-      } else if (enableBlocksAPI && current.tag === Block) {
-        // The new Block might not be initialized yet. We need to initialize
-        // it in case initializing it turns out it would match.
-        let type = element.type;
-        if (type.$$typeof === REACT_LAZY_TYPE) {
-          type = resolveLazyType(type);
-        }
-        if (
-          type.$$typeof === REACT_BLOCK_TYPE &&
-          ((type: any): BlockComponent<any, any>)._render ===
-            (current.type: BlockComponent<any, any>)._render
-        ) {
-          // Same as above but also update the .type field.
-          const existing = useFiber(current, element.props);
-          existing.return = returnFiber;
-          existing.type = type;
-          if (__DEV__) {
-            existing._debugSource = element._source;
-            existing._debugOwner = element._owner;
-          }
-          return existing;
-        }
       }
     }
     // Insert
@@ -602,15 +570,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           if (newChild.key === key) {
-            if (newChild.type === REACT_FRAGMENT_TYPE) {
-              return updateFragment(
-                returnFiber,
-                oldFiber,
-                newChild.props.children,
-                lanes,
-                key,
-              );
-            }
             return updateElement(returnFiber, oldFiber, newChild, lanes);
           } else {
             return null;
@@ -673,15 +632,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
             ) || null;
-          if (newChild.type === REACT_FRAGMENT_TYPE) {
-            return updateFragment(
-              returnFiber,
-              matchedFiber,
-              newChild.props.children,
-              lanes,
-              newChild.key,
-            );
-          }
           return updateElement(returnFiber, matchedFiber, newChild, lanes);
         }
         case REACT_PORTAL_TYPE: {
@@ -1152,66 +1102,44 @@ function ChildReconciler(shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        switch (child.tag) {
-          case Fragment: {
-            if (element.type === REACT_FRAGMENT_TYPE) {
-              deleteRemainingChildren(returnFiber, child.sibling);
-              const existing = useFiber(child, element.props.children);
-              existing.return = returnFiber;
-              if (__DEV__) {
-                existing._debugSource = element._source;
-                existing._debugOwner = element._owner;
-              }
-              return existing;
+        const elementType = element.type;
+        if (elementType === REACT_FRAGMENT_TYPE) {
+          if (child.tag === Fragment) {
+            deleteRemainingChildren(returnFiber, child.sibling);
+            const existing = useFiber(child, element.props.children);
+            existing.return = returnFiber;
+            if (__DEV__) {
+              existing._debugSource = element._source;
+              existing._debugOwner = element._owner;
             }
-            break;
+            return existing;
           }
-          case Block:
-            if (enableBlocksAPI) {
-              let type = element.type;
-              if (type.$$typeof === REACT_LAZY_TYPE) {
-                type = resolveLazyType(type);
-              }
-              if (type.$$typeof === REACT_BLOCK_TYPE) {
-                // The new Block might not be initialized yet. We need to initialize
-                // it in case initializing it turns out it would match.
-                if (
-                  ((type: any): BlockComponent<any, any>)._render ===
-                  (child.type: BlockComponent<any, any>)._render
-                ) {
-                  deleteRemainingChildren(returnFiber, child.sibling);
-                  const existing = useFiber(child, element.props);
-                  existing.type = type;
-                  existing.return = returnFiber;
-                  if (__DEV__) {
-                    existing._debugSource = element._source;
-                    existing._debugOwner = element._owner;
-                  }
-                  return existing;
-                }
-              }
+        } else {
+          if (
+            child.elementType === elementType ||
+            // Keep this check inline so it only runs on the false path:
+            (__DEV__
+              ? isCompatibleFamilyForHotReloading(child, element)
+              : false) ||
+            // Lazy types should reconcile their resolved type.
+            // We need to do this after the Hot Reloading check above,
+            // because hot reloading has different semantics than prod because
+            // it doesn't resuspend. So we can't let the call below suspend.
+            (enableLazyElements &&
+              typeof elementType === 'object' &&
+              elementType !== null &&
+              elementType.$$typeof === REACT_LAZY_TYPE &&
+              resolveLazy(elementType) === child.type)
+          ) {
+            deleteRemainingChildren(returnFiber, child.sibling);
+            const existing = useFiber(child, element.props);
+            existing.ref = coerceRef(returnFiber, child, element);
+            existing.return = returnFiber;
+            if (__DEV__) {
+              existing._debugSource = element._source;
+              existing._debugOwner = element._owner;
             }
-          // We intentionally fallthrough here if enableBlocksAPI is not on.
-          // eslint-disable-next-lined no-fallthrough
-          default: {
-            if (
-              child.elementType === element.type ||
-              // Keep this check inline so it only runs on the false path:
-              (__DEV__
-                ? isCompatibleFamilyForHotReloading(child, element)
-                : false)
-            ) {
-              deleteRemainingChildren(returnFiber, child.sibling);
-              const existing = useFiber(child, element.props);
-              existing.ref = coerceRef(returnFiber, child, element);
-              existing.return = returnFiber;
-              if (__DEV__) {
-                existing._debugSource = element._source;
-                existing._debugOwner = element._owner;
-              }
-              return existing;
-            }
-            break;
+            return existing;
           }
         }
         // Didn't match.
@@ -1303,9 +1231,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     // Handle object types
-    const isObject = typeof newChild === 'object' && newChild !== null;
-
-    if (isObject) {
+    if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(
@@ -1338,6 +1264,26 @@ function ChildReconciler(shouldTrackSideEffects) {
             );
           }
       }
+
+      if (isArray(newChild)) {
+        return reconcileChildrenArray(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      if (getIteratorFn(newChild)) {
+        return reconcileChildrenIterator(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
@@ -1349,28 +1295,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           lanes,
         ),
       );
-    }
-
-    if (isArray(newChild)) {
-      return reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (getIteratorFn(newChild)) {
-      return reconcileChildrenIterator(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (isObject) {
-      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (__DEV__) {
@@ -1395,7 +1319,6 @@ function ChildReconciler(shouldTrackSideEffects) {
         // Intentionally fall through to the next case, which handles both
         // functions and classes
         // eslint-disable-next-lined no-fallthrough
-        case Block:
         case FunctionComponent:
         case ForwardRef:
         case SimpleMemoComponent: {
@@ -1404,7 +1327,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             '%s(...): Nothing was returned from render. This usually means a ' +
               'return statement is missing. Or, to render nothing, ' +
               'return null.',
-            getComponentName(returnFiber.type) || 'Component',
+            getComponentNameFromFiber(returnFiber) || 'Component',
           );
         }
       }

@@ -17,8 +17,6 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {CurrentDispatcherRef} from './types';
 
 import {
-  BLOCK_NUMBER,
-  BLOCK_SYMBOL_STRING,
   FORWARD_REF_NUMBER,
   FORWARD_REF_SYMBOL_STRING,
   LAZY_NUMBER,
@@ -31,9 +29,9 @@ import {
   SUSPENSE_LIST_SYMBOL_STRING,
 } from './ReactSymbols';
 
-// These methods are safe to import from shared;
-// there is no React-specific logic here.
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+// The shared console patching code is DEV-only.
+// We can't use it since DevTools only ships production builds.
+import {disableLogs, reenableLogs} from './DevToolsConsolePatching';
 
 let prefix;
 export function describeBuiltInComponentFrame(
@@ -85,14 +83,16 @@ export function describeNativeComponentFrame(
   Error.prepareStackTrace = undefined;
 
   reentry = true;
-  let previousDispatcher;
-  if (__DEV__) {
-    previousDispatcher = currentDispatcherRef.current;
-    // Set the dispatcher in DEV because this might be call in the render function
-    // for warnings.
-    currentDispatcherRef.current = null;
-    disableLogs();
-  }
+
+  // Override the dispatcher so effects scheduled by this shallow render are thrown away.
+  //
+  // Note that unlike the code this was forked from (in ReactComponentStackFrame)
+  // DevTools should override the dispatcher even when DevTools is compiled in production mode,
+  // because the app itself may be in development mode and log errors/warnings.
+  const previousDispatcher = currentDispatcherRef.current;
+  currentDispatcherRef.current = null;
+  disableLogs();
+
   try {
     // This should throw.
     if (construct) {
@@ -188,10 +188,8 @@ export function describeNativeComponentFrame(
 
     Error.prepareStackTrace = previousPrepareStackTrace;
 
-    if (__DEV__) {
-      currentDispatcherRef.current = previousDispatcher;
-      reenableLogs();
-    }
+    currentDispatcherRef.current = previousDispatcher;
+    reenableLogs();
   }
   // Fallback to just using the name if we couldn't make it throw.
   const name = fn ? fn.displayName || fn.name : '';
@@ -272,14 +270,6 @@ export function describeUnknownElementTypeFrameInDEV(
         // Memo may contain any component type so we recursively resolve it.
         return describeUnknownElementTypeFrameInDEV(
           type.type,
-          source,
-          ownerFn,
-          currentDispatcherRef,
-        );
-      case BLOCK_NUMBER:
-      case BLOCK_SYMBOL_STRING:
-        return describeFunctionComponentFrame(
-          type._render,
           source,
           ownerFn,
           currentDispatcherRef,

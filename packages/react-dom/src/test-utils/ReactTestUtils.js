@@ -18,26 +18,25 @@ import {
 import {SyntheticEvent} from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import act from './ReactTestUtilsAct';
+import {act} from './ReactTestUtilsPublicAct';
+import {unstable_concurrentAct} from './ReactTestUtilsInternalAct';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
+import isArray from 'shared/isArray';
 
 // Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
-const [
-  getInstanceFromNode,
-  /* eslint-disable no-unused-vars */
-  getNodeFromInstance,
-  getFiberCurrentPropsFromNode,
-  /* eslint-enable no-unused-vars */
-  enqueueStateRestore,
-  restoreStateIfNeeded,
-  /* eslint-disable no-unused-vars */
-  flushPassiveEffects,
-  IsThisRendererActing,
-  /* eslint-enable no-unused-vars */
-] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+const EventInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+const getInstanceFromNode = EventInternals[0];
+const getNodeFromInstance = EventInternals[1];
+const getFiberCurrentPropsFromNode = EventInternals[2];
+const enqueueStateRestore = EventInternals[3];
+const restoreStateIfNeeded = EventInternals[4];
+// const flushPassiveEffects = EventInternals[5];
+// TODO: This is related to `act`, not events. Move to separate key?
+// const IsThisRendererActing = EventInternals[6];
 
 function Event(suffix) {}
 
@@ -99,7 +98,7 @@ function validateClassInstance(inst, methodName) {
   }
   let received;
   const stringified = '' + inst;
-  if (Array.isArray(inst)) {
+  if (isArray(inst)) {
     received = 'an array';
   } else if (inst && inst.nodeType === ELEMENT_NODE && inst.tagName) {
     received = 'a DOM node';
@@ -199,7 +198,7 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
       }
       const classList = className.split(/\s+/);
 
-      if (!Array.isArray(classNames)) {
+      if (!isArray(classNames)) {
         invariant(
           classNames !== undefined,
           'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
@@ -367,7 +366,7 @@ function executeDispatch(event, listener, inst) {
 function executeDispatchesInOrder(event) {
   const dispatchListeners = event._dispatchListeners;
   const dispatchInstances = event._dispatchInstances;
-  if (Array.isArray(dispatchListeners)) {
+  if (isArray(dispatchListeners)) {
     for (let i = 0; i < dispatchListeners.length; i++) {
       if (event.isPropagationStopped()) {
         break;
@@ -728,4 +727,5 @@ export {
   nativeTouchData,
   Simulate,
   act,
+  unstable_concurrentAct,
 };

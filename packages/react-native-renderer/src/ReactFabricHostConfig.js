@@ -14,7 +14,7 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethods,
-  ReactNativeBaseComponentViewConfig,
+  ViewConfig,
   TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
 
@@ -24,6 +24,8 @@ import {create, diff} from './ReactNativeAttributePayload';
 import invariant from 'shared/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
+
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 // Modules provided by RN:
 import {
@@ -103,13 +105,13 @@ if (registerEventHandler) {
  */
 class ReactFabricHostComponent {
   _nativeTag: number;
-  viewConfig: ReactNativeBaseComponentViewConfig<>;
+  viewConfig: ViewConfig;
   currentProps: Props;
   _internalInstanceHandle: Object;
 
   constructor(
     tag: number,
-    viewConfig: ReactNativeBaseComponentViewConfig<>,
+    viewConfig: ViewConfig,
     props: Props,
     internalInstanceHandle: Object,
   ) {
@@ -179,12 +181,13 @@ class ReactFabricHostComponent {
 }
 
 // eslint-disable-next-line no-unused-expressions
-(ReactFabricHostComponent.prototype: NativeMethods);
+(ReactFabricHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -339,6 +342,10 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
+export function getCurrentEventPriority(): * {
+  return DefaultEventPriority;
+}
+
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
 
@@ -435,30 +442,6 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function getFundamentalComponentInstance(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function mountFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function shouldUpdateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function updateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function cloneFundamentalInstance(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
 export function getInstanceFromNode(node: any) {
   throw new Error('Not yet implemented.');
 }
@@ -481,7 +464,7 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function beforeActiveInstanceBlur() {
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }
 
@@ -490,5 +473,9 @@ export function afterActiveInstanceBlur() {
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
+  // noop
+}
+
+export function detachDeletedInstance(node: Instance): void {
   // noop
 }

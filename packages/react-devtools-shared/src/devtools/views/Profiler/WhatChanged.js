@@ -9,10 +9,29 @@
 
 import * as React from 'react';
 import {useContext} from 'react';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import {ProfilerContext} from '../Profiler/ProfilerContext';
 import {StoreContext} from '../context';
 
 import styles from './WhatChanged.css';
+
+function hookIndicesToString(indices: Array<number>): string {
+  // This is debatable but I think 1-based might ake for a nicer UX.
+  const numbers = indices.map(value => value + 1);
+
+  switch (numbers.length) {
+    case 0:
+      return 'No hooks changed';
+    case 1:
+      return `Hook ${numbers[0]} changed`;
+    case 2:
+      return `Hooks ${numbers[0]} and ${numbers[1]} changed`;
+    default:
+      return `Hooks ${numbers.slice(0, numbers.length - 1).join(', ')} and ${
+        numbers[numbers.length - 1]
+      } changed`;
+  }
+}
 
 type Props = {|
   fiberID: number,
@@ -44,7 +63,16 @@ export default function WhatChanged({fiberID}: Props) {
     return null;
   }
 
-  if (changeDescription.isFirstMount) {
+  const {
+    context,
+    didHooksChange,
+    hooks,
+    isFirstMount,
+    props,
+    state,
+  } = changeDescription;
+
+  if (isFirstMount) {
     return (
       <div className={styles.Component}>
         <label className={styles.Label}>Why did this render?</label>
@@ -57,21 +85,21 @@ export default function WhatChanged({fiberID}: Props) {
 
   const changes = [];
 
-  if (changeDescription.context === true) {
+  if (context === true) {
     changes.push(
       <div key="context" className={styles.Item}>
         • Context changed
       </div>,
     );
   } else if (
-    typeof changeDescription.context === 'object' &&
-    changeDescription.context !== null &&
-    changeDescription.context.length !== 0
+    typeof context === 'object' &&
+    context !== null &&
+    context.length !== 0
   ) {
     changes.push(
       <div key="context" className={styles.Item}>
         • Context changed:
-        {changeDescription.context.map(key => (
+        {context.map(key => (
           <span key={key} className={styles.Key}>
             {key}
           </span>
@@ -80,22 +108,27 @@ export default function WhatChanged({fiberID}: Props) {
     );
   }
 
-  if (changeDescription.didHooksChange) {
-    changes.push(
-      <div key="hooks" className={styles.Item}>
-        • Hooks changed
-      </div>,
-    );
+  if (didHooksChange) {
+    if (enableProfilerChangedHookIndices && Array.isArray(hooks)) {
+      changes.push(
+        <div key="hooks" className={styles.Item}>
+          • {hookIndicesToString(hooks)}
+        </div>,
+      );
+    } else {
+      changes.push(
+        <div key="hooks" className={styles.Item}>
+          • Hooks changed
+        </div>,
+      );
+    }
   }
 
-  if (
-    changeDescription.props !== null &&
-    changeDescription.props.length !== 0
-  ) {
+  if (props !== null && props.length !== 0) {
     changes.push(
       <div key="props" className={styles.Item}>
         • Props changed:
-        {changeDescription.props.map(key => (
+        {props.map(key => (
           <span key={key} className={styles.Key}>
             {key}
           </span>
@@ -104,14 +137,11 @@ export default function WhatChanged({fiberID}: Props) {
     );
   }
 
-  if (
-    changeDescription.state !== null &&
-    changeDescription.state.length !== 0
-  ) {
+  if (state !== null && state.length !== 0) {
     changes.push(
       <div key="state" className={styles.Item}>
         • State changed:
-        {changeDescription.state.map(key => (
+        {state.map(key => (
           <span key={key} className={styles.Key}>
             {key}
           </span>

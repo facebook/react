@@ -21,8 +21,6 @@ export {
   unmountComponentAtNode,
   createRoot,
   createRoot as unstable_createRoot,
-  createBlockingRoot,
-  createBlockingRoot as unstable_createBlockingRoot,
   unstable_flushControlled,
   unstable_scheduleHydration,
   unstable_runWithPriority,

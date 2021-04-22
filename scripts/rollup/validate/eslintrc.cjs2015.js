@@ -26,7 +26,6 @@ module.exports = {
     trustedTypes: true,
 
     // Scheduler profiling
-    SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
 
@@ -42,6 +41,7 @@ module.exports = {
 
     // jest
     expect: true,
+    jest: true,
   },
   parserOptions: {
     ecmaVersion: 2015,

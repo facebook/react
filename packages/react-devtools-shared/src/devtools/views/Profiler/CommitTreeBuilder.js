@@ -11,8 +11,10 @@ import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from 'react-devtools-shared/src/constants';
 import {utfDecodeString} from 'react-devtools-shared/src/utils';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
@@ -114,7 +116,7 @@ export function getCommitTree({
   }
 
   throw Error(
-    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit ${commitIndex}`,
+    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit "${commitIndex}"`,
   );
 }
 
@@ -192,9 +194,7 @@ function updateTree(
 
         if (nodes.has(id)) {
           throw new Error(
-            'Commit tree already contains fiber ' +
-              id +
-              '. This is a bug in React DevTools.',
+            `Commit tree already contains fiber "${id}". This is a bug in React DevTools.`,
           );
         }
 
@@ -267,9 +267,7 @@ function updateTree(
 
           if (!nodes.has(id)) {
             throw new Error(
-              'Commit tree does not contain fiber ' +
-                id +
-                '. This is a bug in React DevTools.',
+              `Commit tree does not contain fiber "${id}". This is a bug in React DevTools.`,
             );
           }
 
@@ -293,6 +291,9 @@ function updateTree(
           }
         }
         break;
+      }
+      case TREE_OPERATION_REMOVE_ROOT: {
+        throw Error('Operation REMOVE_ROOT is not supported while profiling.');
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
         id = ((operations[i + 1]: any): number);
@@ -329,8 +330,23 @@ function updateTree(
         i += 3;
         break;
       }
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+        id = operations[i + 1];
+        const numErrors = operations[i + 2];
+        const numWarnings = operations[i + 3];
+
+        i += 4;
+
+        if (__DEBUG__) {
+          debug(
+            'Warnings and Errors update',
+            `fiber ${id} has ${numErrors} errors and ${numWarnings} warnings`,
+          );
+        }
+        break;
+
       default:
-        throw Error(`Unsupported Bridge operation ${operation}`);
+        throw Error(`Unsupported Bridge operation "${operation}"`);
     }
   }
 

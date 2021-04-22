@@ -8,9 +8,9 @@
 'use strict';
 
 export default function(babel, opts = {}) {
-  if (typeof babel.getEnv === 'function') {
+  if (typeof babel.env === 'function') {
     // Only available in Babel 7.
-    const env = babel.getEnv();
+    const env = babel.env();
     if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
@@ -226,8 +226,8 @@ export default function(babel, opts = {}) {
       case 'React.useRef':
       case 'useContext':
       case 'React.useContext':
-      case 'useImperativeMethods':
-      case 'React.useImperativeMethods':
+      case 'useImperativeHandle':
+      case 'React.useImperativeHandle':
       case 'useDebugValue':
       case 'React.useDebugValue':
         return true;
@@ -331,6 +331,38 @@ export default function(babel, opts = {}) {
       );
     }
     return args;
+  }
+
+  function findHOCCallPathsAbove(path) {
+    const calls = [];
+    while (true) {
+      if (!path) {
+        return calls;
+      }
+      const parentPath = path.parentPath;
+      if (!parentPath) {
+        return calls;
+      }
+      if (
+        // hoc(_c = function() { })
+        parentPath.node.type === 'AssignmentExpression' &&
+        path.node === parentPath.node.right
+      ) {
+        // Ignore registrations.
+        path = parentPath;
+        continue;
+      }
+      if (
+        // hoc1(hoc2(...))
+        parentPath.node.type === 'CallExpression' &&
+        path.node !== parentPath.node.callee
+      ) {
+        calls.push(parentPath);
+        path = parentPath;
+        continue;
+      }
+      return calls; // Stop at other types.
+    }
   }
 
   const seenForRegistration = new WeakSet();
@@ -630,13 +662,16 @@ export default function(babel, opts = {}) {
             // Result: let Foo = () => {}; __signature(Foo, ...);
           } else {
             // let Foo = hoc(() => {})
-            path.replaceWith(
-              t.callExpression(
-                sigCallID,
-                createArgumentsForSignature(node, signature, path.scope),
-              ),
-            );
-            // Result: let Foo = hoc(__signature(() => {}, ...))
+            const paths = [path, ...findHOCCallPathsAbove(path)];
+            paths.forEach(p => {
+              p.replaceWith(
+                t.callExpression(
+                  sigCallID,
+                  createArgumentsForSignature(p.node, signature, p.scope),
+                ),
+              );
+            });
+            // Result: let Foo = __signature(hoc(__signature(() => {}, ...)), ...)
           }
         },
       },

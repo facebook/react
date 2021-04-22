@@ -9,6 +9,134 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.12.4 (April 19, 2021)
+#### Bugfix
+* Remove `@octokit/rest` depedency because of a problem with transitive dependencies ([bvaughn](https://github.com/bvaughn) in [#21317](https://github.com/facebook/react/pull/21317))
+
+## 4.12.3 (April 19, 2021)
+#### Bugfix
+* Wrapped quotation marks around Fiber ids or indices for all DevTools errors to better support GitHub fuzzy error search ([bvaughn](https://github.com/bvaughn) in [#21314](https://github.com/facebook/react/pull/21314))
+
+## 4.12.2 (April 16, 2021)
+#### Bugfix
+* DevTools reliably suppresses console logs when generating component stacks ([bvaughn](https://github.com/bvaughn) in [#21301](https://github.com/facebook/react/pull/21301))
+
+## 4.12.1 (April 14, 2021)
+Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
+#### Bugfix
+* Fixed `react-devtools-inline` bug in frontend `initialize` method ([bvaughn](https://github.com/bvaughn) in [#21265](https://github.com/facebook/react/pull/21265))
+
+## 4.12.0 (April 12, 2021)
+Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
+#### Feature
+* Added `createBridge` and `createStore` exports to the `react-devtools-inline/frontend` entrypoint to support advanced use cases ([bvaughn](https://github.com/bvaughn) in [#21032](https://github.com/facebook/react/pull/21032))
+
+## 4.11.1 (April 11, 2021)
+#### Bugfix
+* Fixed broken import in `react-devtools-inline` for feature flags file ([bvaughn](https://github.com/bvaughn) in [#21237](https://github.com/facebook/react/pull/21237))
+
+## 4.11.0 (April 9, 2021)
+#### Bugfix
+* `$r` should contain hooks property when it is `forwardRef` or `memo` component  ([meowtec](https://github.com/meowtec) in [#20626](https://github.com/facebook/react/pull/20626))
+* Ensure `sync-xhr` is allowed before reload and profile ([ChrisDobby](https://github.com/ChrisDobby) in [#20879](https://github.com/facebook/react/pull/20879))
+* Bump electron version from 9.1.0 to 11.1.0 for darwin-arm64 builds ([jaiwanth-v](https://github.com/jaiwanth-v) in [#20496](https://github.com/facebook/react/pull/20496))
+* Fixed primitive hook badge colors for light theme ([bvaughn](https://github.com/bvaughn) in [#21034](https://github.com/facebook/react/pull/21034))
+* Increased minimum Chrome/Firefox versions from 51/54 to 60/55 to reduce polyfill code. ([bvaughn](https://github.com/bvaughn) in [#21185](https://github.com/facebook/react/pull/21185))
+* Fix can't expand prop value in some scenario ([iChenLei](https://github.com/iChenLei) in [#20534](https://github.com/facebook/react/pull/20534))
+* Flush updated passive warning/error info after delay ([bvaughn](https://github.com/bvaughn) in [#20931](https://github.com/facebook/react/pull/20931))
+* Patch console methods even when only show-inline-warnings/errors enabled ([bvaughn](https://github.com/bvaughn) in [#20688](https://github.com/facebook/react/pull/20688))
+* React Native fixes for new inline errors feature ([bvaughn](https://github.com/bvaughn) in [#20502](https://github.com/facebook/react/pull/20502))
+* Fixed invalid work tag constants that affected a certain range of React versions ([bvaughn](https://github.com/bvaughn) in [#20362](https://github.com/facebook/react/pull/20362))
+
+#### Features
+* Improve Profiler commit-selector UX ([bvaughn](https://github.com/bvaughn) in [#20943](https://github.com/facebook/react/pull/20943))
+* Swap `log` with `cbrt` for commit bar height ([bvaughn](https://github.com/bvaughn) in [#20952](https://github.com/facebook/react/pull/20952))
+* Integrate with new experimental React Suspense features to improve props loading and inspection UX ([bvaughn](https://github.com/bvaughn) in [#20548](https://github.com/facebook/react/pull/20548), [#20789](https://github.com/facebook/react/pull/20789), [#20458](https://github.com/facebook/react/pull/20458))
+* Expose DEV-mode warnings in devtools UI ([eps1lon](https://github.com/eps1lon) in [#20463](https://github.com/facebook/react/pull/20463))
+* Display shortcuts for prev/next search result ([eps1lon](https://github.com/eps1lon) in [#20470](https://github.com/facebook/react/pull/20470))
+* Increase the clickable area of the prop value ([TryingToImprove](https://github.com/TryingToImprove) in [#20428](https://github.com/facebook/react/pull/20428))
+
+#### Experimental features
+The following features are only enabled when used with (experimental) builds of React:
+* Shows which fibers scheduled the current update ([bvaughn](https://github.com/bvaughn) in [#21171](https://github.com/facebook/react/pull/21171))
+* Add commit and post-commit durations to Profiler UI ([bvaughn](https://github.com/bvaughn) in [#20984](https://github.com/facebook/react/pull/20984), [#21183](https://github.com/facebook/react/pull/21183))
+* Show which hooks (indices) changed when profiling ([bvaughn](https://github.com/bvaughn) in [#20998](https://github.com/facebook/react/pull/20998))
+
+###### Improve Profiler commit-selector UX
+
+![Video demonstrating tooltip with commit duration and time](https://user-images.githubusercontent.com/29597/110225725-30a1f480-7eb6-11eb-9825-4c762ffde0bb.gif)
+
+![Graphic illustrating Profiler bar heights using different scales](https://user-images.githubusercontent.com/29597/110361997-bafd6c00-800e-11eb-92d8-d411e6c79d84.png)
+
+###### Expose DEV-mode warnings in devtools UI
+![Inline warnings and errors](https://user-images.githubusercontent.com/29597/114225729-adeed800-9940-11eb-8df2-34d8b0ead3b8.png)
+
+###### Shows which fibers scheduled the current update
+![Shows which fibers scheduled the current update](https://user-images.githubusercontent.com/29597/114225931-eee6ec80-9940-11eb-90cc-fe6630fbfc08.gif)
+
+###### Add commit and post-commit durations to Profiler UI
+![Add commit and post-commit durations to Profiler UI](https://user-images.githubusercontent.com/29597/114225991-00c88f80-9941-11eb-84df-e2af04ecef1c.gif)
+
+###### Show which hooks (indices) changed when profiling
+![Show which hooks (indices) changed when profiling](https://user-images.githubusercontent.com/29597/114225838-d37be180-9940-11eb-93f8-93e0115421c8.png)
+
+
+## 4.10.1 (November 12, 2020)
+#### Bugfix
+* Fixed invalid internal work tag mappings ([bvaughn](https://github.com/bvaughn) in [#20362](https://github.com/facebook/react/pull/20362))
+
+## 4.10.0 (November 12, 2020)
+#### Features
+* Make DevTools Websocket retry delay configurable ([bvaughn](https://github.com/bvaughn) in [#20107](https://github.com/facebook/react/pull/20107))
+#### Bugfix
+* Fix error loading source maps for devtools extension ([sytranvn](https://github.com/sytranvn) in [#20079](https://github.com/facebook/react/pull/20079))
+* Remove css-sourcemap for `react-devtools-inline` ([sean9keenan](https://github.com/sean9keenan) in [#20170](https://github.com/facebook/react/pull/20170))
+* Decrease NPM update notification/prompt for standalone DevTools ([recurx](https://github.com/recurx) in [#20078](https://github.com/facebook/react/pull/20078))
+
+## 4.9.0 (October 19, 2020)
+#### Features
+* [Improved DevTools editing interface](#improved-devtools-editing-interface) ([bvaughn](https://github.com/bvaughn) in [#19774](https://github.com/facebook/react/pull/19774))
+* Add ⎇ + arrow key navigation ([bvaughn](https://github.com/bvaughn) in [#19741](https://github.com/facebook/react/pull/19741))
+* Add checkbox toggle for boolean values ([mdaj06](https://github.com/mdaj06) in [#19714](https://github.com/facebook/react/pull/19714))
+* Show symbols used as keys in state ([omarsy](https://github.com/omarsy) in [#19786](https://github.com/facebook/react/pull/19786))
+* Add new (unstable) `SuspenseList` component type ([bpernick](https://github.com/bpernick) in [#19684](https://github.com/facebook/react/pull/19684))
+
+#### Bugfix
+* Show proper icon/tooltip for restricted browser pages ([sktguha](https://github.com/sktguha) in [#20023](https://github.com/facebook/react/pull/20023))
+* Fix emoji character shown in Chrome developer tools panel ([bvaughn](https://github.com/bvaughn) in [#19603](https://github.com/facebook/react/pull/19603))
+* Don't open two tabs in Firefox when clicking on troubleshooting instructions ([unbyte](https://github.com/unbyte) in [#19632](https://github.com/facebook/react/pull/19632))
+* Support inner component `_debugOwner` in memo ([bvaughn](https://github.com/bvaughn) in [#19556](https://github.com/facebook/react/pull/19556))
+* Proxied methods should be safely dehydrated for display ([@pfongkye](https://github.com/pfongkye) in [b6e1d08](https://github.com/facebook/react/commit/b6e1d08)
+* Property list values should show whitespace ([sammarks](https://github.com/sammarks) in [#19640](https://github.com/facebook/react/pull/19640))
+* Fix crash when inspecting document.all ([omarsy](https://github.com/omarsy) in [#19619](https://github.com/facebook/react/pull/19619))
+* Don't call generators during inspection since they may be stateful ([todortotev](https://github.com/todortotev) in [#19831](https://github.com/facebook/react/pull/19831))
+* Fix bad null check in DevTools highlight code ([bvaughn](https://github.com/bvaughn) in [#20010](https://github.com/facebook/react/pull/20010))
+* Handled a missing suspense fiber when suspense is filtered on the profiler ([IDrissAitHafid](https://github.com/IDrissAitHafid) in [#ISSUE](https://github.com/facebook/react/pull/ISSUE))
+* Fixed unfound node error when Suspense is filtered ([IDrissAitHafid](https://github.com/IDrissAitHafid) in [#20019](https://github.com/facebook/react/pull/20019))
+* Always overrides the dispatcher when shallow rendering ([bvaughn](https://github.com/bvaughn) in [#20011](https://github.com/facebook/react/pull/20011))
+* Frevent phishing attacks ([iamwilson](https://github.com/iamwilson) in [#19934](https://github.com/facebook/react/pull/19934))
+
+### Other
+* Enable source maps for DevTools production builds ([jpribyl ](https://github.com/jpribyl ) in [#19773](https://github.com/facebook/react/pull/19773))
+* Drop support for IE 11 ([bvaughn](https://github.com/bvaughn) in [#19875](https://github.com/facebook/react/pull/19875))
+* Remove ReactJS.org version check "cheat" ([sktguha](https://github.com/sktguha) in [#19939](https://github.com/facebook/react/pull/19939))
+* Update outdated links and fix two broken links ([sktguha](https://github.com/sktguha) in [#19985](https://github.com/facebook/react/pull/19985))
+* Remove support for deprecated/unreleased React Flare event system ([trueadm](https://github.com/trueadm) in [#19520](https://github.com/facebook/react/pull/19520))
+
+###### Improved DevTools editing interface
+
+**Improved parsing**
+Value parsing logic has been relaxed so as to no longer require quotes around strings or double quotes:
+![looser parsing logic](https://user-images.githubusercontent.com/29597/93407442-36504300-f860-11ea-90e8-5ad54c9b8b34.gif)
+
+**Modifying arrays**
+New values can be added to array props/state/hooks now. Existing values can also be deleted:
+![adding and removing values from an array](https://user-images.githubusercontent.com/29597/93407457-3ea87e00-f860-11ea-8b85-a41904e6c25f.gif)
+
+**Modifying objects**
+New keys can be added to object props/state/hooks now. Existing keys can be renamed or deleted entirely:
+![adding/renaming/removing object properties](https://user-images.githubusercontent.com/29597/93407464-449e5f00-f860-11ea-909b-49dafb56f6c5.gif)
+
 ## 4.8.2 (July 15, 2020)
 #### Bugfix
 * Fix broken `Suspense` heuristic ([bvaughn](https://github.com/bvaughn) in [#19373](https://github.com/facebook/react/pull/19373))
