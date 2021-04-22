@@ -308,7 +308,7 @@ describe('ReactDOMInput', () => {
       stub = ReactDOM.render(<Stub />, container);
     }).toErrorDev(
       'You provided a `value` prop to a form field ' +
-        'without an `onChange` handler.',
+        'without an `onChange` or `onChangeCapture` handler.',
     );
     const node = ReactDOM.findDOMNode(stub);
     stub.setState({value: '0.98'});
@@ -375,7 +375,7 @@ describe('ReactDOMInput', () => {
       stub = ReactDOM.render(<Stub />, container);
     }).toErrorDev(
       'You provided a `value` prop to a form field ' +
-        'without an `onChange` handler.',
+        'without an `onChange` or `onChangeCapture` handler.',
     );
     const node = ReactDOM.findDOMNode(stub);
     stub.setState({value: '3'});
@@ -1172,9 +1172,9 @@ describe('ReactDOMInput', () => {
       ),
     ).toErrorDev(
       'Warning: You provided a `value` prop to a form ' +
-        'field without an `onChange` handler. This will render a read-only ' +
+        'field without an `onChange` or `onChangeCapture` handler. This will render a read-only ' +
         'field. If the field should be mutable use `defaultValue`. ' +
-        'Otherwise, set either `onChange` or `readOnly`.\n' +
+        'Otherwise, set either `onChange`, `onChangeCapture` or `readOnly`.\n' +
         '    in input (at **)',
     );
   });
