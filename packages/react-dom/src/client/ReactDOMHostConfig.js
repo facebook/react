@@ -892,7 +892,7 @@ export function commitHydratedSuspenseInstance(
 export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
-  return parentType !== 'head' || parentType !== 'body';
+  return parentType !== 'head' && parentType !== 'body';
 }
 
 export function didNotMatchHydratedContainerTextInstance(
