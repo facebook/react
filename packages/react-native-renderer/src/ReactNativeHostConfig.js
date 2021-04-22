@@ -27,6 +27,7 @@ import {
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import * as SchedulerPackage from 'scheduler';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -536,3 +537,5 @@ export function preparePortalMount(portalInstance: Instance): void {
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
+
+export const Scheduler = SchedulerPackage;

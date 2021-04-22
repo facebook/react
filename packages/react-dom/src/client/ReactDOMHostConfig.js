@@ -16,6 +16,7 @@ import type {
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
+import * as SchedulerPackage from 'scheduler';
 
 import {
   precacheFiberNode,
@@ -1219,3 +1220,5 @@ export function setupIntersectionObserver(
     },
   };
 }
+
+export const Scheduler = SchedulerPackage;

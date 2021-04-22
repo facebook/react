@@ -8,6 +8,7 @@
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
+import * as SchedulerPackage from 'scheduler';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
@@ -469,3 +470,5 @@ export function preparePortalMount(portalInstance: any): void {
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
+
+export const Scheduler = SchedulerPackage;

@@ -54,7 +54,8 @@ import {
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
+const isDevToolsPresent =
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined';
 import {
   resolveClassForHotReloading,
   resolveFunctionForHotReloading,

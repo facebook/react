@@ -33,6 +33,7 @@ import {
   TextInputState,
   deepFreezeAndThrowOnMutationInDev,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import * as SchedulerPackage from 'scheduler';
 
 const {
   createNode,
@@ -479,3 +480,8 @@ export function preparePortalMount(portalInstance: Instance): void {
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
+
+export const Scheduler =
+  typeof global.nativeRuntimeScheduler !== 'undefined'
+    ? global.nativeRuntimeScheduler
+    : SchedulerPackage;

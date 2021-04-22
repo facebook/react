@@ -11,7 +11,7 @@
 // Scheduler dependency. Notice that we're intentionally not using named imports
 // because Rollup would use dynamic dispatch for CommonJS interop named imports.
 // When we switch to ESM, we can delete this module.
-import * as Scheduler from 'scheduler';
+import {Scheduler} from './ReactFiberHostConfig';
 import {__interactionsRef} from 'scheduler/tracing';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';

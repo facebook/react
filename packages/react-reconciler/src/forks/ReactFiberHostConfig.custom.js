@@ -81,6 +81,7 @@ export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
 // -------------------
 export const supportsMicrotasks = $$$hostConfig.supportsMicrotasks;
 export const scheduleMicrotask = $$$hostConfig.scheduleMicrotask;
+export const Scheduler = $$$hostConfig.Scheduler;
 
 // -------------------
 //      Test selectors

@@ -40,7 +40,7 @@ import {
   LowPriority as LowSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,
-} from 'react-reconciler/src/Scheduler';
+} from 'scheduler';
 import {
   DiscreteEventPriority,
   ContinuousEventPriority,

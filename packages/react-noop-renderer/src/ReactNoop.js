@@ -49,6 +49,7 @@ export const {
   getRoot,
   // TODO: Remove this after callers migrate to alternatives.
   unstable_runWithPriority,
+  Scheduler,
 } = createReactNoop(
   ReactFiberReconciler, // reconciler
   true, // useMutation

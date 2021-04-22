@@ -10,6 +10,7 @@
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import * as SchedulerPackage from 'scheduler';
 
 export type Type = string;
 export type Props = Object;
@@ -358,3 +359,5 @@ export function getInstanceFromScope(scopeInstance: Object): null | Object {
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
+
+export const Scheduler = SchedulerPackage;

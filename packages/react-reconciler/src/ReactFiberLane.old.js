@@ -41,7 +41,6 @@ import {
   enableUpdaterTracking,
   enableSyncDefaultUpdates,
 } from 'shared/ReactFeatureFlags';
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 
 // Lane values below should be kept in sync with getLabelsForLanes(), used by react-devtools-scheduling-profiler.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -781,9 +780,6 @@ export function addFiberToLanesMap(
   if (!enableUpdaterTracking) {
     return;
   }
-  if (!isDevToolsPresent) {
-    return;
-  }
   const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
   while (lanes > 0) {
     const index = laneToIndex(lanes);
@@ -798,9 +794,6 @@ export function addFiberToLanesMap(
 
 export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
   if (!enableUpdaterTracking) {
-    return;
-  }
-  if (!isDevToolsPresent) {
     return;
   }
   const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;

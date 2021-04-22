@@ -14,11 +14,13 @@ let React;
 let ReactFiberReconciler;
 let ConcurrentRoot;
 let DefaultEventPriority;
+let Scheduler;
 
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    Scheduler = require('scheduler');
     ReactFiberReconciler = require('react-reconciler');
     ConcurrentRoot = require('react-reconciler/src/ReactRootTags')
       .ConcurrentRoot;
@@ -62,6 +64,7 @@ describe('ReactFiberHostContext', () => {
         return DefaultEventPriority;
       },
       supportsMutation: true,
+      Scheduler,
     });
 
     const container = Renderer.createContainer(
@@ -122,6 +125,7 @@ describe('ReactFiberHostContext', () => {
         return DefaultEventPriority;
       },
       supportsMutation: true,
+      Scheduler,
     });
 
     const container = Renderer.createContainer(

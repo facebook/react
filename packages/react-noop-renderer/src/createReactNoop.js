@@ -20,6 +20,7 @@ import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
+import * as SchedulerPackage from 'scheduler';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import {
@@ -399,6 +400,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return currentEventPriority;
     },
 
+    Scheduler: SchedulerPackage,
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,

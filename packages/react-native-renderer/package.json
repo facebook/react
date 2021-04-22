@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "object-assign": "^4.1.1",
-    "scheduler": "^0.11.0"
+    "scheduler": "^0.20.1"
   },
   "peerDependencies": {
     "react": "^17.0.0"
