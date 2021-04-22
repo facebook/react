@@ -161,7 +161,7 @@ const BUFFERING = 0;
 const FLOWING = 1;
 const CLOSED = 2;
 
-type Request = {
+export opaque type Request = {
   +destination: Destination,
   +responseState: ResponseState,
   +progressiveChunkSize: number,
@@ -1361,7 +1361,7 @@ function retryTask(request: Request, task: Task): void {
   }
 }
 
-function performWork(request: Request): void {
+export function performWork(request: Request): void {
   if (request.status === CLOSED) {
     return;
   }

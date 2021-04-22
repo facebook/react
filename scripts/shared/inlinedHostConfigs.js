@@ -83,7 +83,11 @@ module.exports = [
   },
   {
     shortName: 'dom-relay',
-    entryPoints: ['react-server-dom-relay', 'react-server-dom-relay/server'],
+    entryPoints: [
+      'react-server-dom-relay',
+      'react-server-dom-relay/server',
+      'react-server-dom-relay/src/ReactDOMServerFB',
+    ],
     paths: ['react-dom', 'react-server-dom-relay'],
     isFlowTyped: true,
     isServerSupported: true,
