@@ -1160,9 +1160,6 @@ export function discreteUpdates<A, B, C, D, R>(
     ReactCurrentBatchConfig.transition = prevTransition;
     if (executionContext === NoContext) {
       resetRenderTimer();
-      // TODO: This should only flush legacy sync updates. Not discrete updates
-      // in Concurrent Mode. Discrete updates will flush in a microtask.
-      flushSyncCallbacks();
     }
   }
 }

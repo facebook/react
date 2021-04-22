@@ -357,6 +357,9 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     const pressEvent = document.createEvent('Event');
     pressEvent.initEvent('click', true, true);
     dispatchAndSetCurrentEvent(target.current, pressEvent);
+    // Intentionally not using `act` so we can observe in between the press
+    // event and the microtask, without batching.
+    await null;
     // If this is 2, that means the `setCount` calls were not batched.
     expect(container.textContent).toEqual('Count: 1');
 
@@ -409,11 +412,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     dispatchAndSetCurrentEvent(target, pressEvent);
 
     expect(Scheduler).toHaveYielded(['Count: 0 [after batchedUpdates]']);
-    // TODO: There's a `flushDiscreteUpdates` call at the end of the event
-    // delegation listener that gets called even if no React event handlers are
-    // fired. Once that is removed, this will be 0, not 1.
-    // expect(container.textContent).toEqual('Count: 0');
-    expect(container.textContent).toEqual('Count: 1');
+    expect(container.textContent).toEqual('Count: 0');
 
     // Intentionally not using `act` so we can observe in between the click
     // event and the microtask, without batching.
