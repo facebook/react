@@ -797,6 +797,73 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should recover the outer context when an error happens inside a provider', async () => {
+    const ContextA = React.createContext('A0');
+    const ContextB = React.createContext('B0');
+
+    function PrintA() {
+      return (
+        <ContextA.Consumer>{value => <Text text={value} />}</ContextA.Consumer>
+      );
+    }
+
+    class PrintB extends React.Component {
+      static contextType = ContextB;
+      render() {
+        return <Text text={this.context} />;
+      }
+    }
+
+    function Throws() {
+      const value = React.useContext(ContextA);
+      throw new Error(value);
+    }
+
+    const loggedErrors = [];
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <div>
+          <PrintA />
+          <div>
+            <ContextA.Provider value="A0.1">
+              <Suspense
+                fallback={
+                  <b>
+                    <Text text="Loading..." />
+                  </b>
+                }>
+                <ContextA.Provider value="A0.1.1">
+                  <Throws />
+                </ContextA.Provider>
+              </Suspense>
+              <PrintB />
+            </ContextA.Provider>
+          </div>
+          <PrintA />
+        </div>,
+        writable,
+        {
+          onError(x) {
+            loggedErrors.push(x);
+          },
+        },
+      );
+      startWriting();
+    });
+    expect(loggedErrors.length).toBe(1);
+    expect(loggedErrors[0].message).toEqual('A0.1.1');
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        A0
+        <div>
+          <b>Loading...</b>B0
+        </div>
+        A0
+      </div>,
+    );
+  });
+
+  // @gate experimental
   it('client renders a boundary if it errors before finishing the fallback', async () => {
     function App({isClient}) {
       return (

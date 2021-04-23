@@ -1174,6 +1174,13 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       // Restore all active ReactContexts to what they were before.
       switchContext(previousContext);
     } else {
+      // Restore the context. We assume that this will be restored by the inner
+      // functions in case nothing throws so we don't use "finally" here.
+      task.blockedSegment.formatContext = previousFormatContext;
+      task.legacyContext = previousLegacyContext;
+      task.context = previousContext;
+      // Restore all active ReactContexts to what they were before.
+      switchContext(previousContext);
       // We assume that we don't need the correct context.
       // Let's terminate the rest of the tree and don't render any siblings.
       throw x;
