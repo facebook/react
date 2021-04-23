@@ -1382,18 +1382,6 @@ function detachFiberAfterEffects(fiber: Fiber) {
     fiber.deletions = null;
     fiber.sibling = null;
 
-    // The `stateNode` is cyclical because on host nodes it points to the host
-    // tree, which has its own pointers to children, parents, and siblings.
-    // The other host nodes also point back to fibers, so we should detach that
-    // one, too.
-    if (fiber.tag === HostComponent) {
-      const hostInstance: Instance = fiber.stateNode;
-      if (hostInstance !== null) {
-        detachDeletedInstance(hostInstance);
-      }
-    }
-    fiber.stateNode = null;
-
     // I'm intentionally not clearing the `return` field in this level. We
     // already disconnect the `return` pointer at the root of the deleted
     // subtree (in `detachFiberMutation`). Besides, `return` by itself is not
@@ -1412,6 +1400,15 @@ function detachFiberAfterEffects(fiber: Fiber) {
       // The purpose of this branch is to be super aggressive so we can measure
       // if there's any difference in memory impact. If there is, that could
       // indicate a React leak we don't know about.
+
+      // For host components, disconnect host instance -> fiber pointer.
+      if (fiber.tag === HostComponent) {
+        const hostInstance: Instance = fiber.stateNode;
+        if (hostInstance !== null) {
+          detachDeletedInstance(hostInstance);
+        }
+      }
+
       fiber.return = null;
       fiber.dependencies = null;
       fiber.memoizedProps = null;
