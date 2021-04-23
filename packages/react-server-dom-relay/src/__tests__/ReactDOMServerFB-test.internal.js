@@ -45,9 +45,7 @@ describe('ReactDOMServerFB', () => {
       },
     });
     const result = readResult(stream);
-    expect(result).toMatchInlineSnapshot(
-      `"<div data-reactroot=\\"\\">hello world</div>"`,
-    );
+    expect(result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   it('emits all HTML as one unit if we wait until the end to start', async () => {
@@ -81,7 +79,7 @@ describe('ReactDOMServerFB', () => {
 
     const result = readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div data-reactroot=\\"\\"><!--$-->Done<!-- --><!--/$--></div>"`,
+      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
     );
   });
 

@@ -65,9 +65,7 @@ describe('ReactDOMFizzServer', () => {
     );
     startWriting();
     jest.runAllTimers();
-    expect(output.result).toMatchInlineSnapshot(
-      `"<div data-reactroot=\\"\\">hello world</div>"`,
-    );
+    expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   // @gate experimental
@@ -84,7 +82,7 @@ describe('ReactDOMFizzServer', () => {
     // Then React starts writing.
     startWriting();
     expect(output.result).toMatchInlineSnapshot(
-      `"<!doctype html><html><head><title>test</title><head><body><div data-reactroot=\\"\\">hello world</div>"`,
+      `"<!doctype html><html><head><title>test</title><head><body><div>hello world</div>"`,
     );
   });
 
@@ -132,7 +130,7 @@ describe('ReactDOMFizzServer', () => {
     // Then React starts writing.
     startWriting();
     expect(output.result).toMatchInlineSnapshot(
-      `"<!doctype html><html><head><title>test</title><head><body><div data-reactroot=\\"\\"><!--$-->Done<!-- --><!--/$--></div>"`,
+      `"<!doctype html><html><head><title>test</title><head><body><div><!--$-->Done<!-- --><!--/$--></div>"`,
     );
   });
 
