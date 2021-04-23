@@ -24,6 +24,7 @@ export function checkControlledValueProps(
       !(
         hasReadOnlyValue[props.type] ||
         props.onChange ||
+        props.onChangeCapture ||
         props.onInput ||
         props.readOnly ||
         props.disabled ||
@@ -41,6 +42,7 @@ export function checkControlledValueProps(
     if (
       !(
         props.onChange ||
+        props.onChangeCapture ||
         props.readOnly ||
         props.disabled ||
         props.checked == null
