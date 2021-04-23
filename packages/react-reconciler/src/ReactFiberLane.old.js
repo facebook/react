@@ -300,16 +300,15 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     // bother waiting until the root is complete.
     (wipLanes & suspendedLanes) === NoLanes
   ) {
-    const nextLane = getHighestPriorityLane(nextLanes);
-    const wipLane = getHighestPriorityLane(wipLanes);
+    getHighestPriorityLanes(wipLanes);
+    const wipLanePriority = return_highestLanePriority;
     if (
-      // Tests whether the next lane is equal or lower priority than the wip
-      // one. This works because the bits decrease in priority as you go left.
-      nextLane >= wipLane ||
+      nextLanePriority <= wipLanePriority ||
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
+      (nextLanePriority === DefaultLanePriority &&
+        wipLanePriority === TransitionPriority)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
       return wipLanes;
