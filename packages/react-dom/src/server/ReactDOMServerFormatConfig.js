@@ -32,7 +32,6 @@ import {
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
-  ROOT_ATTRIBUTE_NAME,
 } from '../shared/DOMProperty';
 import {isUnitlessNumber} from '../shared/CSSProperty';
 
@@ -64,7 +63,6 @@ export type ResponseState = {
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
-  hasEmittedRoot: boolean,
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
@@ -81,7 +79,6 @@ export function createResponseState(
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
-    hasEmittedRoot: false,
   };
 }
 
@@ -102,7 +99,7 @@ type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
-  insertionMode: InsertionMode, // svg/html/mathml/table
+  insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
 };
 
@@ -511,19 +508,6 @@ const endOfStartTagSelfClosing = stringToPrecomputedChunk('/>');
 const idAttr = stringToPrecomputedChunk(' id="');
 const attrEnd = stringToPrecomputedChunk('"');
 
-const reactRootAttribute = stringToPrecomputedChunk(
-  ' ' + ROOT_ATTRIBUTE_NAME + '=""',
-);
-function pushReactRoot(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-): void {
-  if (!responseState.hasEmittedRoot) {
-    responseState.hasEmittedRoot = true;
-    target.push(reactRootAttribute);
-  }
-}
-
 function pushID(
   target: Array<Chunk | PrecomputedChunk>,
   responseState: ResponseState,
@@ -657,7 +641,6 @@ function pushStartSelect(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -772,7 +755,6 @@ function pushStartOption(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTag);
   return children;
@@ -860,7 +842,6 @@ function pushInput(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTagSelfClosing);
   return null;
@@ -925,7 +906,6 @@ function pushStartTextArea(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTag);
 
@@ -1002,7 +982,6 @@ function pushSelfClosing(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTagSelfClosing);
   return null;
@@ -1039,7 +1018,6 @@ function pushStartMenuItem(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTag);
   return null;
@@ -1078,7 +1056,6 @@ function pushStartGenericElement(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -1143,7 +1120,6 @@ function pushStartCustomElement(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -1185,7 +1161,6 @@ function pushStartPreformattedElement(
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
-  pushReactRoot(target, responseState);
 
   target.push(endOfStartTag);
 
