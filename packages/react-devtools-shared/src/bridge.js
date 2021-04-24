@@ -20,6 +20,19 @@ import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-share
 
 const BATCH_DURATION = 100;
 
+// This message specifies the version of the DevTools protocol currently supported by the backend,
+// as well as the earliest NPM version (e.g. "4.13.0") that protocol is supported by on the frontend.
+// This enables an older frontend to display an upgrade message to users for a newer, unsupported backend.
+export type BridgeProtocol = {|
+  // Version supported by the current frontend/backend.
+  version: number,
+
+  // NPM version range that also supports this version.
+  // Note that 'maxNpmVersion' is only set when the version is bumped.
+  minNpmVersion: string,
+  maxNpmVersion: string | null,
+|};
+
 type ElementAndRendererID = {|id: number, rendererID: RendererID|};
 
 type Message = {|
@@ -117,6 +130,7 @@ type UpdateConsolePatchSettingsParams = {|
 |};
 
 type BackendEvents = {|
+  bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
@@ -144,6 +158,7 @@ type FrontendEvents = {|
   clearNativeElementHighlight: [],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
+  getBridgeProtocol: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],

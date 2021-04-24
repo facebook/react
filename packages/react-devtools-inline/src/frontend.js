@@ -67,7 +67,10 @@ export function initialize(
     },
   });
 
-  const store: Store = new Store(bridge, {supportsTraceUpdates: true});
+  const store: Store = new Store(bridge, {
+    checkBridgeProtocolCompatibility: true,
+    supportsTraceUpdates: true,
+  });
 
   const ForwardRef = forwardRef<Props, mixed>((props, ref) => (
     <DevTools ref={ref} bridge={bridge} store={store} {...props} />
