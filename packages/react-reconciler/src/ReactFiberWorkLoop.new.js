@@ -353,8 +353,7 @@ let nestedPassiveUpdateCount: number = 0;
 // during the commit phase. This enables them to be traced across components
 // that spawn new work during render. E.g. hidden boundaries, suspended SSR
 // hydration or SuspenseList.
-// TODO: Can use a bitmask instead of an array
-let spawnedWorkDuringRender: null | Array<Lane | Lanes> = null;
+let spawnedWorkDuringRender: null | Lanes = null;
 
 // If two updates are scheduled within the same event, we should treat their
 // event times as simultaneous, even if the actual clock time has advanced
@@ -1985,13 +1984,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       if (spawnedWorkDuringRender !== null) {
         const expirationTimes = spawnedWorkDuringRender;
         spawnedWorkDuringRender = null;
-        for (let i = 0; i < expirationTimes.length; i++) {
-          scheduleInteractions(
-            root,
-            expirationTimes[i],
-            root.memoizedInteractions,
-          );
-        }
+        scheduleInteractions(root, expirationTimes, root.memoizedInteractions);
       }
       schedulePendingInteractions(root, remainingLanes);
     }
@@ -3021,9 +3014,9 @@ export function markSpawnedWork(lane: Lane | Lanes) {
     return;
   }
   if (spawnedWorkDuringRender === null) {
-    spawnedWorkDuringRender = [lane];
+    spawnedWorkDuringRender = lane;
   } else {
-    spawnedWorkDuringRender.push(lane);
+    spawnedWorkDuringRender = mergeLanes(spawnedWorkDuringRender, lane);
   }
 }
 
