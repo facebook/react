@@ -23,33 +23,6 @@
   margin: 0 0 0.5rem;
 }
 
-.NoInteractions {
-  color: var(--color-dim);
-}
-
-.Interactions {
-  margin: 0 0 0.5rem;
-}
-.NoInteractions,
-.Interaction {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  color: var(--color-text);
-}
-.Interaction:focus,
-.Interaction:hover {
-  outline: none;
-  background-color: var(--color-background-hover);
-}
-
-.NoInteractions {
-  color: var(--color-dim);
-}
-
 .Label {
   overflow: hidden;
   text-overflow: ellipsis;

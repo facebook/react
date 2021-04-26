@@ -805,24 +805,6 @@ const bundles = [
     global: 'ReactFreshRuntime',
     externals: [],
   },
-
-  {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'scheduler/tracing',
-    global: 'SchedulerTracing',
-    externals: [],
-  },
 ];
 
 // Based on deep-freeze by substack (public domain)

@@ -102,7 +102,6 @@ import type {
   SerializedElement,
   WorkTagMap,
 } from './types';
-import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {
   ComponentFilter,
   ElementType,
@@ -2136,6 +2135,22 @@ export function attach(
     // We don't patch any methods so there is no cleanup.
   }
 
+  function rootSupportsProfiling(root) {
+    if (root.memoizedInteractions != null) {
+      // v16 builds include this field for the scheduler/tracing API.
+      return true;
+    } else if (
+      root.current != null &&
+      root.current.hasOwnProperty('treeBaseDuration')
+    ) {
+      // The scheduler/tracing API was removed in v17 though
+      // so we need to check a non-root Fiber.
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function flushInitialOperations() {
     const localPendingOperationsQueue = pendingOperationsQueue;
 
@@ -2161,21 +2176,14 @@ export function attach(
         currentRootID = getFiberID(getPrimaryFiber(root.current));
         setRootPseudoKey(currentRootID, root.current);
 
-        // Checking root.memoizedInteractions handles multi-renderer edge-case-
-        // where some v16 renderers support profiling and others don't.
-        if (isProfiling && root.memoizedInteractions != null) {
-          // If profiling is active, store commit time and duration, and the current interactions.
+        // Handle multi-renderer edge-case where only some v16 renderers support profiling.
+        if (isProfiling && rootSupportsProfiling(root)) {
+          // If profiling is active, store commit time and duration.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
             changeDescriptions: recordChangeDescriptions ? new Map() : null,
             durations: [],
             commitTime: getCurrentTime() - profilingStartTime,
-            interactions: Array.from(root.memoizedInteractions).map(
-              (interaction: Interaction) => ({
-                ...interaction,
-                timestamp: interaction.timestamp - profilingStartTime,
-              }),
-            ),
             maxActualDuration: 0,
             priorityLevel: null,
             updaters: getUpdatersList(root),
@@ -2205,8 +2213,7 @@ export function attach(
   }
 
   function handlePostCommitFiberRoot(root) {
-    const isProfilingSupported = root.memoizedInteractions != null;
-    if (isProfiling && isProfilingSupported) {
+    if (isProfiling && rootSupportsProfiling(root)) {
       if (currentCommitProfilingMetadata !== null) {
         const {effectDuration, passiveEffectDuration} = getEffectDurations(
           root,
@@ -2233,23 +2240,16 @@ export function attach(
       traceUpdatesForNodes.clear();
     }
 
-    // Checking root.memoizedInteractions handles multi-renderer edge-case-
-    // where some v16 renderers support profiling and others don't.
-    const isProfilingSupported = root.memoizedInteractions != null;
+    // Handle multi-renderer edge-case where only some v16 renderers support profiling.
+    const isProfilingSupported = rootSupportsProfiling(root);
 
     if (isProfiling && isProfilingSupported) {
-      // If profiling is active, store commit time and duration, and the current interactions.
+      // If profiling is active, store commit time and duration.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
         changeDescriptions: recordChangeDescriptions ? new Map() : null,
         durations: [],
         commitTime: getCurrentTime() - profilingStartTime,
-        interactions: Array.from(root.memoizedInteractions).map(
-          (interaction: Interaction) => ({
-            ...interaction,
-            timestamp: interaction.timestamp - profilingStartTime,
-          }),
-        ),
         maxActualDuration: 0,
         priorityLevel:
           priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
@@ -3386,7 +3386,6 @@ export function attach(
     commitTime: number,
     durations: Array<number>,
     effectDuration: number | null,
-    interactions: Array<Interaction>,
     maxActualDuration: number,
     passiveEffectDuration: number | null,
     priorityLevel: string | null,
@@ -3419,8 +3418,6 @@ export function attach(
       (commitProfilingMetadata, rootID) => {
         const commitData: Array<CommitDataBackend> = [];
         const initialTreeBaseDurations: Array<[number, number]> = [];
-        const allInteractions: Map<number, Interaction> = new Map();
-        const interactionCommits: Map<number, Array<number>> = new Map();
 
         const displayName =
           (displayNamesByRootID !== null && displayNamesByRootID.get(rootID)) ||
@@ -3444,30 +3441,12 @@ export function attach(
             changeDescriptions,
             durations,
             effectDuration,
-            interactions,
             maxActualDuration,
             passiveEffectDuration,
             priorityLevel,
             commitTime,
             updaters,
           } = commitProfilingData;
-
-          const interactionIDs: Array<number> = [];
-
-          interactions.forEach(interaction => {
-            if (!allInteractions.has(interaction.id)) {
-              allInteractions.set(interaction.id, interaction);
-            }
-
-            interactionIDs.push(interaction.id);
-
-            const commitIndices = interactionCommits.get(interaction.id);
-            if (commitIndices != null) {
-              commitIndices.push(commitIndex);
-            } else {
-              interactionCommits.set(interaction.id, [commitIndex]);
-            }
-          });
 
           const fiberActualDurations: Array<[number, number]> = [];
           const fiberSelfDurations: Array<[number, number]> = [];
@@ -3486,7 +3465,6 @@ export function attach(
             effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
-            interactionIDs,
             passiveEffectDuration,
             priorityLevel,
             timestamp: commitTime,
@@ -3498,8 +3476,6 @@ export function attach(
           commitData,
           displayName,
           initialTreeBaseDurations,
-          interactionCommits: Array.from(interactionCommits.entries()),
-          interactions: Array.from(allInteractions.entries()),
           rootID,
         });
       },

@@ -7,7 +7,5 @@
  * @flow
  */
 
-'use strict';
-
-export * from './src/Tracing';
-export * from './src/TracingSubscriptions';
+// This placeholder is to support a legacy/regression test in ReactFresh-test.
+// Without this mock, jest.mock('scheduler/tracing') throws.

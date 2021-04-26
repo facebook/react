@@ -14,7 +14,6 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
-import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type BundleType =
@@ -165,7 +164,6 @@ export type CommitDataBackend = {|
   fiberActualDurations: Array<[number, number]>,
   // Tuple of fiber ID and computed "self" duration
   fiberSelfDurations: Array<[number, number]>,
-  interactionIDs: Array<number>,
   // Only available in certain (newer) React builds,
   passiveEffectDuration: number | null,
   priorityLevel: string | null,
@@ -178,9 +176,6 @@ export type ProfilingDataForRootBackend = {|
   displayName: string,
   // Tuple of Fiber ID and base duration
   initialTreeBaseDurations: Array<[number, number]>,
-  // Tuple of Interaction ID and commit indices
-  interactionCommits: Array<[number, Array<number>]>,
-  interactions: Array<[number, Interaction]>,
   rootID: number,
 |};
 

@@ -18,7 +18,6 @@ let readText;
 let resolveText;
 let ReactNoop;
 let Scheduler;
-let SchedulerTracing;
 let Suspense;
 let useState;
 let useReducer;
@@ -43,7 +42,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    SchedulerTracing = require('scheduler/tracing');
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
@@ -1795,71 +1793,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-    });
-
-    // @gate enableSchedulerTracing
-    it('does not flush non-discrete passive effects when flushing sync (with tracing)', () => {
-      const onInteractionScheduledWorkCompleted = jest.fn();
-      const onWorkCanceled = jest.fn();
-      SchedulerTracing.unstable_subscribe({
-        onInteractionScheduledWorkCompleted,
-        onInteractionTraced: jest.fn(),
-        onWorkCanceled,
-        onWorkScheduled: jest.fn(),
-        onWorkStarted: jest.fn(),
-        onWorkStopped: jest.fn(),
-      });
-
-      let _updateCount;
-      function Counter(props) {
-        const [count, updateCount] = useState(0);
-        _updateCount = updateCount;
-        useEffect(() => {
-          expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions([
-            tracingEvent,
-          ]);
-          Scheduler.unstable_yieldValue(`Will set count to 1`);
-          updateCount(1);
-        }, []);
-        return <Text text={'Count: ' + count} />;
-      }
-
-      const tracingEvent = {id: 0, name: 'hello', timestamp: 0};
-      // we explicitly wait for missing act() warnings here since
-      // it's a lot harder to simulate this condition inside an act scope
-      expect(() => {
-        SchedulerTracing.unstable_trace(
-          tracingEvent.name,
-          tracingEvent.timestamp,
-          () => {
-            ReactNoop.render(<Counter count={0} />, () =>
-              Scheduler.unstable_yieldValue('Sync effect'),
-            );
-          },
-        );
-        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toErrorDev(['An update to Counter ran an effect']);
-
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
-
-      // A flush sync doesn't cause the passive effects to fire.
-      act(() => {
-        ReactNoop.flushSync(() => {
-          _updateCount(2);
-        });
-      });
-
-      expect(Scheduler).toHaveYielded([
-        'Will set count to 1',
-        'Count: 2',
-        'Count: 1',
-      ]);
-
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(onWorkCanceled).toHaveBeenCalledTimes(0);
     });
 
     it(

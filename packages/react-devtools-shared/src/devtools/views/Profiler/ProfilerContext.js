@@ -19,7 +19,7 @@ import {StoreContext} from '../context';
 
 import type {ProfilingDataFrontend} from './types';
 
-export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
+export type TabID = 'flame-chart' | 'ranked-chart';
 
 export type Context = {|
   // Which tab is selected in the Profiler UI?
@@ -64,10 +64,6 @@ export type Context = {|
   selectedFiberID: number | null,
   selectedFiberName: string | null,
   selectFiber: (id: number | null, name: string | null) => void,
-
-  // Which interaction is currently selected in the Interactions graph?
-  selectedInteractionID: number | null,
-  selectInteraction: (id: number | null) => void,
 |};
 
 const ProfilerContext = createContext<Context>(((null: any): Context));
@@ -216,9 +212,6 @@ function ProfilerContextController({children}: Props) {
     null,
   );
   const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
-  const [selectedInteractionID, selectInteraction] = useState<number | null>(
-    null,
-  );
 
   if (isProfiling) {
     batchedUpdates(() => {
@@ -228,9 +221,6 @@ function ProfilerContextController({children}: Props) {
       if (selectedFiberID !== null) {
         selectFiberID(null);
         selectFiberName(null);
-      }
-      if (selectedInteractionID !== null) {
-        selectInteraction(null);
       }
     });
   }
@@ -262,9 +252,6 @@ function ProfilerContextController({children}: Props) {
       selectedFiberID,
       selectedFiberName,
       selectFiber,
-
-      selectedInteractionID,
-      selectInteraction,
     }),
     [
       selectedTabID,
@@ -293,9 +280,6 @@ function ProfilerContextController({children}: Props) {
       selectedFiberID,
       selectedFiberName,
       selectFiber,
-
-      selectedInteractionID,
-      selectInteraction,
     ],
   );
 

@@ -20,14 +20,12 @@ import {
   createLaneMap,
 } from './ReactFiberLane.new';
 import {
-  enableSchedulerTracing,
   enableSuspenseCallback,
   enableCache,
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
-import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 
@@ -66,11 +64,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
     this.mutableSourceEagerHydrationData = null;
   }
 
-  if (enableSchedulerTracing) {
-    this.interactionThreadID = unstable_getThreadID();
-    this.memoizedInteractions = new Set();
-    this.pendingInteractionMap = new Map();
-  }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
   }
