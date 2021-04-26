@@ -257,7 +257,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     enableSyncDefaultUpdates &&
     (nextLanes & InputContinuousLane) !== NoLanes
   ) {
-    // When updates are sync by default, we entangle continous priority updates
+    // When updates are sync by default, we entangle continuous priority updates
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
     // transitions, but default updates should not.
