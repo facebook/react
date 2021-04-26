@@ -53,7 +53,7 @@ export const enableSuspenseLayoutEffectSemantics = false;
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 
-export const enableStrictEffects = false;
+export const enableStrictEffects = __DEV__;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 
