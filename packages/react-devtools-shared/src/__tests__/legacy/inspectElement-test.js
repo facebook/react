@@ -207,133 +207,119 @@ describe('InspectedElementContext', () => {
     const id = ((store.getElementIDAtIndex(0): any): number);
     const inspectedElement = await read(id);
 
-    const {
-      anonymous_fn,
-      array_buffer,
-      array_of_arrays,
-      big_int,
-      bound_fn,
-      data_view,
-      date,
-      fn,
-      html_element,
-      immutable,
-      map,
-      map_of_maps,
-      object_of_objects,
-      react_element,
-      regexp,
-      set,
-      set_of_sets,
-      symbol,
-      typed_array,
-    } = inspectedElement.props;
-
-    const {meta} = require('react-devtools-shared/src/hydration');
-
-    expect(anonymous_fn[meta.inspectable]).toBe(false);
-    expect(anonymous_fn[meta.name]).toBe('function');
-    expect(anonymous_fn[meta.type]).toBe('function');
-    expect(anonymous_fn[meta.preview_long]).toBe('ƒ () {}');
-    expect(anonymous_fn[meta.preview_short]).toBe('ƒ () {}');
-
-    expect(array_buffer[meta.size]).toBe(3);
-    expect(array_buffer[meta.inspectable]).toBe(false);
-    expect(array_buffer[meta.name]).toBe('ArrayBuffer');
-    expect(array_buffer[meta.type]).toBe('array_buffer');
-    expect(array_buffer[meta.preview_short]).toBe('ArrayBuffer(3)');
-    expect(array_buffer[meta.preview_long]).toBe('ArrayBuffer(3)');
-
-    expect(array_of_arrays[0][meta.size]).toBe(2);
-    expect(array_of_arrays[0][meta.inspectable]).toBe(true);
-    expect(array_of_arrays[0][meta.name]).toBe('Array');
-    expect(array_of_arrays[0][meta.type]).toBe('array');
-    expect(array_of_arrays[0][meta.preview_long]).toBe('[Array(3), Array(0)]');
-    expect(array_of_arrays[0][meta.preview_short]).toBe('Array(2)');
-
-    expect(big_int[meta.inspectable]).toBe(false);
-    expect(big_int[meta.name]).toBe('123');
-    expect(big_int[meta.type]).toBe('bigint');
-
-    expect(bound_fn[meta.inspectable]).toBe(false);
-    expect(bound_fn[meta.name]).toBe('bound exampleFunction');
-    expect(bound_fn[meta.type]).toBe('function');
-    expect(bound_fn[meta.preview_long]).toBe('ƒ bound exampleFunction() {}');
-    expect(bound_fn[meta.preview_short]).toBe('ƒ bound exampleFunction() {}');
-
-    expect(data_view[meta.size]).toBe(3);
-    expect(data_view[meta.inspectable]).toBe(false);
-    expect(data_view[meta.name]).toBe('DataView');
-    expect(data_view[meta.type]).toBe('data_view');
-
-    expect(date[meta.inspectable]).toBe(false);
-    expect(date[meta.type]).toBe('date');
-
-    expect(fn[meta.inspectable]).toBe(false);
-    expect(fn[meta.name]).toBe('exampleFunction');
-    expect(fn[meta.type]).toBe('function');
-    expect(fn[meta.preview_long]).toBe('ƒ exampleFunction() {}');
-    expect(fn[meta.preview_short]).toBe('ƒ exampleFunction() {}');
-
-    expect(html_element[meta.inspectable]).toBe(false);
-    expect(html_element[meta.name]).toBe('DIV');
-    expect(html_element[meta.type]).toBe('html_element');
-
-    expect(immutable[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(immutable[meta.name]).toBe('Map');
-    expect(immutable[meta.type]).toBe('iterator');
-
-    expect(map[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(map[meta.name]).toBe('Map');
-    expect(map[meta.type]).toBe('iterator');
-    expect(map[0][meta.type]).toBe('array');
-
-    expect(map_of_maps[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(map_of_maps[meta.name]).toBe('Map');
-    expect(map_of_maps[meta.type]).toBe('iterator');
-    expect(map_of_maps[0][meta.type]).toBe('array');
-
-    expect(object_of_objects.inner[meta.size]).toBe(3);
-    expect(object_of_objects.inner[meta.inspectable]).toBe(true);
-    expect(object_of_objects.inner[meta.name]).toBe('');
-    expect(object_of_objects.inner[meta.type]).toBe('object');
-    expect(object_of_objects.inner[meta.preview_long]).toBe(
-      '{boolean: true, number: 123, string: "abc"}',
-    );
-    expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
-
-    expect(react_element[meta.inspectable]).toBe(false);
-    expect(react_element[meta.name]).toBe('span');
-    expect(react_element[meta.type]).toBe('react_element');
-
-    expect(regexp[meta.inspectable]).toBe(false);
-    expect(regexp[meta.name]).toBe('/abc/giu');
-    expect(regexp[meta.preview_long]).toBe('/abc/giu');
-    expect(regexp[meta.preview_short]).toBe('/abc/giu');
-    expect(regexp[meta.type]).toBe('regexp');
-
-    expect(set[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(set[meta.name]).toBe('Set');
-    expect(set[meta.type]).toBe('iterator');
-    expect(set[0]).toBe('abc');
-    expect(set[1]).toBe(123);
-
-    expect(set_of_sets[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(set_of_sets[meta.name]).toBe('Set');
-    expect(set_of_sets[meta.type]).toBe('iterator');
-    expect(set_of_sets['0'][meta.inspectable]).toBe(true);
-
-    expect(symbol[meta.inspectable]).toBe(false);
-    expect(symbol[meta.name]).toBe('Symbol(symbol)');
-    expect(symbol[meta.type]).toBe('symbol');
-
-    expect(typed_array[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(typed_array[meta.size]).toBe(3);
-    expect(typed_array[meta.name]).toBe('Int8Array');
-    expect(typed_array[meta.type]).toBe('typed_array');
-    expect(typed_array[0]).toBe(100);
-    expect(typed_array[1]).toBe(-100);
-    expect(typed_array[2]).toBe(0);
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "anonymous_fn": Dehydrated {
+          "preview_short": ƒ () {},
+          "preview_long": ƒ () {},
+        },
+        "array_buffer": Dehydrated {
+          "preview_short": ArrayBuffer(3),
+          "preview_long": ArrayBuffer(3),
+        },
+        "array_of_arrays": Array [
+          Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": [Array(3), Array(0)],
+          },
+        ],
+        "big_int": Dehydrated {
+          "preview_short": 123n,
+          "preview_long": 123n,
+        },
+        "bound_fn": Dehydrated {
+          "preview_short": ƒ bound exampleFunction() {},
+          "preview_long": ƒ bound exampleFunction() {},
+        },
+        "data_view": Dehydrated {
+          "preview_short": DataView(3),
+          "preview_long": DataView(3),
+        },
+        "date": Dehydrated {
+          "preview_short": Thu Jan 01 1970 00:00:00 GMT+0000 (Coordinated Universal Time),
+          "preview_long": Thu Jan 01 1970 00:00:00 GMT+0000 (Coordinated Universal Time),
+        },
+        "fn": Dehydrated {
+          "preview_short": ƒ exampleFunction() {},
+          "preview_long": ƒ exampleFunction() {},
+        },
+        "html_element": Dehydrated {
+          "preview_short": <div />,
+          "preview_long": <div />,
+        },
+        "immutable": Object {
+          "0": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["a", List(3)],
+          },
+          "1": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["b", 123],
+          },
+          "2": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["c", Map(2)],
+          },
+        },
+        "map": Object {
+          "0": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["name", "Brian"],
+          },
+          "1": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["food", "sushi"],
+          },
+        },
+        "map_of_maps": Object {
+          "0": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["first", Map(2)],
+          },
+          "1": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["second", Map(2)],
+          },
+        },
+        "object_of_objects": Object {
+          "inner": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {boolean: true, number: 123, string: "abc"},
+          },
+        },
+        "react_element": Dehydrated {
+          "preview_short": <span />,
+          "preview_long": <span />,
+        },
+        "regexp": Dehydrated {
+          "preview_short": /abc/giu,
+          "preview_long": /abc/giu,
+        },
+        "set": Object {
+          "0": "abc",
+          "1": 123,
+        },
+        "set_of_sets": Object {
+          "0": Dehydrated {
+            "preview_short": Set(3),
+            "preview_long": Set(3) {"a", "b", "c"},
+          },
+          "1": Dehydrated {
+            "preview_short": Set(3),
+            "preview_long": Set(3) {1, 2, 3},
+          },
+        },
+        "symbol": Dehydrated {
+          "preview_short": Symbol(symbol),
+          "preview_long": Symbol(symbol),
+        },
+        "typed_array": Object {
+          "0": 100,
+          "1": -100,
+          "2": 0,
+        },
+      }
+    `);
   });
 
   it('should support objects with no prototype', async () => {
