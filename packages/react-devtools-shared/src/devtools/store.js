@@ -29,10 +29,17 @@ import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
 import {printStore} from './utils';
 import ProfilerStore from './ProfilerStore';
+import {
+  BRIDGE_PROTOCOL,
+  currentBridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
 
 import type {Element} from './views/Components/types';
 import type {ComponentFilter, ElementType} from '../types';
-import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {
+  FrontendBridge,
+  BridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -51,6 +58,7 @@ const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
 type Config = {|
+  checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
   supportsNativeInspection?: boolean,
   supportsReloadAndProfile?: boolean,
@@ -76,6 +84,7 @@ export default class Store extends EventEmitter<{|
   supportsNativeStyleEditor: [],
   supportsProfiling: [],
   supportsReloadAndProfile: [],
+  unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
 |}> {
   _bridge: FrontendBridge;
@@ -119,6 +128,10 @@ export default class Store extends EventEmitter<{|
 
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
 
+  // Older backends don't support an explicit bridge protocol,
+  // so we should timeout eventually and show a downgrade message.
+  _onBridgeProtocolTimeoutID: TimeoutID | null = null;
+
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
   _ownersMap: Map<number, Set<number>> = new Map();
@@ -147,6 +160,7 @@ export default class Store extends EventEmitter<{|
   _supportsReloadAndProfile: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
+  _unsupportedBridgeProtocol: BridgeProtocol | null = null;
   _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
@@ -217,6 +231,20 @@ export default class Store extends EventEmitter<{|
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
+
+    // Verify that the frontend version is compatible with the connected backend.
+    // See github.com/facebook/react/issues/21326
+    if (config != null && config.checkBridgeProtocolCompatibility) {
+      // Older backends don't support an explicit bridge protocol,
+      // so we should timeout eventually and show a downgrade message.
+      this._onBridgeProtocolTimeoutID = setTimeout(
+        this.onBridgeProtocolTimeout,
+        10000,
+      );
+
+      bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
+      bridge.send('getBridgeProtocol');
+    }
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -383,6 +411,10 @@ export default class Store extends EventEmitter<{|
 
   get supportsTraceUpdates(): boolean {
     return this._supportsTraceUpdates;
+  }
+
+  get unsupportedBridgeProtocol(): BridgeProtocol | null {
+    return this._unsupportedBridgeProtocol;
   }
 
   get unsupportedRendererVersionDetected(): boolean {
@@ -1168,6 +1200,12 @@ export default class Store extends EventEmitter<{|
       'unsupportedRendererVersion',
       this.onBridgeUnsupportedRendererVersion,
     );
+    bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
+
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
   };
 
   onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
@@ -1186,5 +1224,31 @@ export default class Store extends EventEmitter<{|
     this._unsupportedRendererVersionDetected = true;
 
     this.emit('unsupportedRendererVersionDetected');
+  };
+
+  onBridgeProtocol = (bridgeProtocol: BridgeProtocol) => {
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
+
+    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+      this._unsupportedBridgeProtocol = bridgeProtocol;
+    } else {
+      // If we should happen to get a response after timing out...
+      this._unsupportedBridgeProtocol = null;
+    }
+
+    this.emit('unsupportedBridgeProtocolDetected');
+  };
+
+  onBridgeProtocolTimeout = () => {
+    this._onBridgeProtocolTimeoutID = null;
+
+    // If we timed out, that indicates the backend predates the bridge protocol,
+    // so we can set a fake version (0) to trigger the downgrade message.
+    this._unsupportedBridgeProtocol = BRIDGE_PROTOCOL[0];
+
+    this.emit('unsupportedBridgeProtocolDetected');
   };
 }
