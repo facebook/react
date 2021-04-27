@@ -861,10 +861,15 @@ function renderContextProvider(
 function renderLazyComponent(
   request: Request,
   task: Task,
-  type: LazyComponentType<any, any>,
+  lazyComponent: LazyComponentType<any, any>,
   props: Object,
+  ref: any,
 ): void {
-  throw new Error('Not yet implemented element type.');
+  const payload = lazyComponent._payload;
+  const init = lazyComponent._init;
+  const Component = init(payload);
+  const resolvedProps = resolveDefaultProps(Component, props);
+  return renderElement(request, task, Component, resolvedProps, ref);
 }
 
 function renderElement(
