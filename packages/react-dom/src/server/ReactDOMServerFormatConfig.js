@@ -321,7 +321,9 @@ function pushStyle(
           valueChunk = stringToChunk('' + styleValue);
         }
       } else {
-        valueChunk = stringToChunk(('' + styleValue).trim());
+        valueChunk = stringToChunk(
+          escapeTextForBrowser(('' + styleValue).trim()),
+        );
       }
     }
     if (isFirst) {
