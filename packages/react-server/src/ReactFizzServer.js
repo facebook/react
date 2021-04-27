@@ -102,6 +102,7 @@ import {
   disableModulePatternComponents,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
+  enableLazyElements,
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -1023,8 +1024,16 @@ function renderNodeDestructive(
             'Render them conditionally so that they only appear on the client render.',
         );
       // eslint-disable-next-line-no-fallthrough
-      case REACT_LAZY_TYPE:
-        throw new Error('Not yet implemented node type.');
+      case REACT_LAZY_TYPE: {
+        if (enableLazyElements) {
+          const lazyNode: LazyComponentType<any, any> = (node: any);
+          const payload = lazyNode._payload;
+          const init = lazyNode._init;
+          const resolvedNode = init(payload);
+          renderNodeDestructive(request, task, resolvedNode);
+          return;
+        }
+      }
     }
 
     if (isArray(node)) {
