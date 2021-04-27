@@ -419,7 +419,7 @@ const _flushCallback = function() {
 };
 
 function requestHostCallback(cb) {
-  if (_callback !== null) {
+  if (typeof _callback === 'function') {
     // Protect against re-entrancy.
     setTimeout(requestHostCallback, 0, cb);
   } else {
