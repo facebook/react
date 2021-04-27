@@ -28,7 +28,9 @@ async function getBuildIdForCommit(sha) {
 
     const {statuses, state} = await statusesResponse.json();
     if (state === 'failure') {
-      throw new Error(`Base commit is broken: ${sha}`);
+      const error = new Error(`Base commit is broken: ${sha}`);
+      error.code = 64;
+      throw error;
     }
     for (let i = 0; i < statuses.length; i++) {
       const status = statuses[i];

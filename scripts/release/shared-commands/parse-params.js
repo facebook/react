@@ -48,7 +48,7 @@ module.exports = async () => {
     params.build = await getBuildIdForCommit(params.commit);
   } catch (error) {
     console.error(theme.error(error));
-    process.exit(1);
+    process.exit(error.code || 1);
   }
 
   return params;
