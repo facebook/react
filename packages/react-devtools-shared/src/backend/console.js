@@ -144,7 +144,7 @@ export function patch({
         if (consoleSettingsRef.appendComponentStack) {
           const lastArg = args.length > 0 ? args[args.length - 1] : null;
           const alreadyHasComponentStack =
-            lastArg !== null && isStringComponentStack(lastArg);
+            typeof lastArg === 'string' && isStringComponentStack(lastArg);
 
           // If we are ever called with a string that already has a component stack,
           // e.g. a React error/warning, don't append a second stack.
