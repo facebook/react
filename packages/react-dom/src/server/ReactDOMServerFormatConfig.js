@@ -810,6 +810,11 @@ function pushInput(
 
   target.push(startChunkForTag('input'));
 
+  let value = null;
+  let defaultValue = null;
+  let checked = null;
+  let defaultChecked = null;
+
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -827,14 +832,16 @@ function pushInput(
           );
         // eslint-disable-next-line-no-fallthrough
         case 'defaultChecked':
-          // Previously "checked" would win but now it's enumeration order dependent.
-          // There's a warning in either case.
-          pushAttribute(target, responseState, 'checked', propValue);
+          defaultChecked = propValue;
           break;
         case 'defaultValue':
-          // Previously "value" would win but now it's enumeration order dependent.
-          // There's a warning in either case.
-          pushAttribute(target, responseState, 'value', propValue);
+          defaultValue = propValue;
+          break;
+        case 'checked':
+          checked = propValue;
+          break;
+        case 'value':
+          value = propValue;
           break;
         default:
           pushAttribute(target, responseState, propKey, propValue);
@@ -842,6 +849,18 @@ function pushInput(
       }
     }
   }
+
+  if (checked !== null) {
+    pushAttribute(target, responseState, 'checked', checked);
+  } else if (defaultChecked !== null) {
+    pushAttribute(target, responseState, 'checked', defaultChecked);
+  }
+  if (value !== null) {
+    pushAttribute(target, responseState, 'value', value);
+  } else if (defaultValue !== null) {
+    pushAttribute(target, responseState, 'value', defaultValue);
+  }
+
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
@@ -877,6 +896,7 @@ function pushStartTextArea(
   target.push(startChunkForTag('textarea'));
 
   let value = null;
+  let defaultValue = null;
   let children = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
@@ -889,10 +909,10 @@ function pushStartTextArea(
           children = propValue;
           break;
         case 'value':
-        case 'defaultValue':
-          // Previously "checked" would win but now it's enumeration order dependent.
-          // There's a warning in either case.
           value = propValue;
+          break;
+        case 'defaultValue':
+          defaultValue = propValue;
           break;
         case 'dangerouslySetInnerHTML':
           invariant(
@@ -906,6 +926,10 @@ function pushStartTextArea(
       }
     }
   }
+  if (value === null && defaultValue !== null) {
+    value = defaultValue;
+  }
+
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
