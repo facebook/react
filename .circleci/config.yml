@@ -173,19 +173,8 @@ jobs:
           command: |
               git fetch origin master
               cd ./scripts/release && yarn && cd ../../
-              # Don't exit immediately but handle the exit code
-              set +e
               scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
-              if [ $? -eq 0 ]
-              then
-                mv ./build2 ./base-build
-              elif [ $? -eq 64 ]
-              then
-                echo "Ignoring broken base build"
-                exit 0
-              else
-                exit $?
-              fi
+              mv ./build2 ./base-build
       - persist_to_workspace:
           root: .
           paths:
