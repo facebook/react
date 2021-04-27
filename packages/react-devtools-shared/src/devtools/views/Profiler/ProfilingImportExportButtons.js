@@ -85,6 +85,7 @@ export default function ProfilingImportExportButtons() {
           );
         } catch (error) {
           modalDialogDispatch({
+            id: 'ProfilingImportExportButtons',
             type: 'SHOW',
             title: 'Import failed',
             content: (
