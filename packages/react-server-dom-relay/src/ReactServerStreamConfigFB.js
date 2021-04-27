@@ -17,6 +17,8 @@ export type Destination = {
 export type PrecomputedChunk = string;
 export type Chunk = string;
 
+export const isPrimaryStreamConfig = true;
+
 export function scheduleWork(callback: () => void) {
   // We don't schedule work in this model, and instead expect performWork to always be called repeatedly.
 }
