@@ -12,6 +12,8 @@ export type Destination = ReadableStreamController;
 export type PrecomputedChunk = Uint8Array;
 export type Chunk = Uint8Array;
 
+export const isPrimaryStreamConfig = true;
+
 export function scheduleWork(callback: () => void) {
   callback();
 }
