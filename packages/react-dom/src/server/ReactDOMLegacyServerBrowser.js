@@ -51,6 +51,11 @@ function renderToString(
       fatalError = error;
     },
   };
+
+  let readyToStream = false;
+  function onReadyToStream() {
+    readyToStream = true;
+  }
   const request = createRequest(
     children,
     destination,
@@ -59,7 +64,7 @@ function renderToString(
     Infinity,
     onError,
     undefined,
-    undefined,
+    onReadyToStream,
   );
   startWork(request);
   // If anything suspended and is still pending, we'll abort it before writing.
@@ -69,6 +74,13 @@ function renderToString(
   if (didFatal) {
     throw fatalError;
   }
+  invariant(
+    readyToStream,
+    'A React component suspended while rendering, but no fallback UI was specified.\n' +
+      '\n' +
+      'Add a <Suspense fallback=...> component higher in the tree to ' +
+      'provide a loading indicator or placeholder to display.',
+  );
   return result;
 }
 
