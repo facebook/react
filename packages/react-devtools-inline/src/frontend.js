@@ -21,7 +21,10 @@ import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 export function createStore(bridge: FrontendBridge): Store {
-  return new Store(bridge, {supportsTraceUpdates: true});
+  return new Store(bridge, {
+    checkBridgeProtocolCompatibility: true,
+    supportsTraceUpdates: true,
+  });
 }
 
 export function createBridge(

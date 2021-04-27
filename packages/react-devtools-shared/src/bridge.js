@@ -20,6 +20,49 @@ import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-share
 
 const BATCH_DURATION = 100;
 
+// This message specifies the version of the DevTools protocol currently supported by the backend,
+// as well as the earliest NPM version (e.g. "4.13.0") that protocol is supported by on the frontend.
+// This enables an older frontend to display an upgrade message to users for a newer, unsupported backend.
+export type BridgeProtocol = {|
+  // Version supported by the current frontend/backend.
+  version: number,
+
+  // NPM version range that also supports this version.
+  // Note that 'maxNpmVersion' is only set when the version is bumped.
+  minNpmVersion: string,
+  maxNpmVersion: string | null,
+|};
+
+// Bump protocol version whenever a backwards breaking change is made
+// in the messages sent between BackendBridge and FrontendBridge.
+// This mapping is embedded in both frontend and backend builds.
+//
+// The backend protocol will always be the latest entry in the BRIDGE_PROTOCOL array.
+//
+// When an older frontend connects to a newer backend,
+// the backend can send the minNpmVersion and the frontend can display an NPM upgrade prompt.
+//
+// When a newer frontend connects with an older protocol version,
+// the frontend can use the embedded minNpmVersion/maxNpmVersion values to display a downgrade prompt.
+export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
+  // This version technically never existed,
+  // but a backwards breaking change was added in 4.11,
+  // so the safest guess to downgrade the frontend would be to version 4.10.
+  {
+    version: 0,
+    minNpmVersion: '<4.11.0',
+    maxNpmVersion: '<4.11.0',
+  },
+  {
+    version: 1,
+    minNpmVersion: '4.13.0',
+    maxNpmVersion: null,
+  },
+];
+
+export const currentBridgeProtocol: BridgeProtocol =
+  BRIDGE_PROTOCOL[BRIDGE_PROTOCOL.length - 1];
+
 type ElementAndRendererID = {|id: number, rendererID: RendererID|};
 
 type Message = {|
@@ -119,6 +162,7 @@ type UpdateConsolePatchSettingsParams = {|
 |};
 
 export type BackendEvents = {|
+  bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
@@ -150,6 +194,7 @@ type FrontendEvents = {|
   clearWarningsForFiberID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
+  getBridgeProtocol: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],
