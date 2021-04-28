@@ -22,7 +22,8 @@ import type {BridgeProtocol} from 'react-devtools-shared/src/bridge';
 type DAILOG_STATE = 'dialog-not-shown' | 'show-dialog' | 'dialog-shown';
 
 const DEVTOOLS_VERSION = process.env.DEVTOOLS_VERSION;
-const INSTRUCTIONS_FB_URL = 'https://fburl.com/devtools-bridge-protocol';
+const INSTRUCTIONS_FB_URL =
+  'https://fb.me/devtools-unsupported-bridge-protocol';
 
 export default function UnsupportedBridgeProtocolDialog(_: {||}) {
   const {dispatch} = useContext(ModalDialogContext);
