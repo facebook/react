@@ -120,6 +120,7 @@ export default function InspectedElementWrapper(_: Props) {
     // Instead we can show a warning to the user.
     if (nearestSuspenseElement === null) {
       modalDialogDispatch({
+        id: 'InspectedElement',
         type: 'SHOW',
         content: <CannotSuspendWarningMessage />,
       });

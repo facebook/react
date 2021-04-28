@@ -21,10 +21,13 @@ import type {BridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 const DEVTOOLS_VERSION = process.env.DEVTOOLS_VERSION;
 const INSTRUCTIONS_FB_URL = 'https://fburl.com/devtools-bridge-protocol';
+const MODAL_DIALOG_ID = 'UnsupportedBridgeProtocolDialog';
 
 export default function UnsupportedBridgeProtocolDialog(_: {||}) {
-  const {dispatch, isVisible} = useContext(ModalDialogContext);
+  const {dialogs, dispatch} = useContext(ModalDialogContext);
   const store = useContext(StoreContext);
+
+  const isVisible = !!dialogs.find(dialog => dialog.id === MODAL_DIALOG_ID);
 
   useEffect(() => {
     const updateDialog = () => {
@@ -32,6 +35,7 @@ export default function UnsupportedBridgeProtocolDialog(_: {||}) {
         if (store.unsupportedBridgeProtocol !== null) {
           dispatch({
             canBeDismissed: false,
+            id: MODAL_DIALOG_ID,
             type: 'SHOW',
             content: (
               <DialogContent
@@ -42,7 +46,10 @@ export default function UnsupportedBridgeProtocolDialog(_: {||}) {
         }
       } else {
         if (store.unsupportedBridgeProtocol === null) {
-          dispatch({type: 'HIDE'});
+          dispatch({
+            type: 'HIDE',
+            id: MODAL_DIALOG_ID,
+          });
         }
       }
     };
