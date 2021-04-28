@@ -56,7 +56,6 @@ export function getCommitTree({
   const commitTrees = ((rootToCommitTreeMap.get(
     rootID,
   ): any): Array<CommitTree>);
-
   if (commitIndex < commitTrees.length) {
     return commitTrees[commitIndex];
   }
@@ -72,52 +71,46 @@ export function getCommitTree({
   }
 
   const {operations} = dataForRoot;
+  if (operations.length <= commitIndex) {
+    throw Error(
+      `getCommitTree(): Invalid commit "${commitIndex}" for root "${rootID}". There are only "${operations.length}" commits.`,
+    );
+  }
 
-  // Commits are generated sequentially and cached.
-  // If this is the very first commit, start with the cached snapshot and apply the first mutation.
-  // Otherwise load (or generate) the previous commit and append a mutation to it.
-  if (commitIndex === 0) {
-    const nodes = new Map();
+  let commitTree: CommitTree = ((null: any): CommitTree);
+  for (let index = commitTrees.length; index <= commitIndex; index++) {
+    // Commits are generated sequentially and cached.
+    // If this is the very first commit, start with the cached snapshot and apply the first mutation.
+    // Otherwise load (or generate) the previous commit and append a mutation to it.
+    if (index === 0) {
+      const nodes = new Map();
 
-    // Construct the initial tree.
-    recursivelyInitializeTree(rootID, 0, nodes, dataForRoot);
+      // Construct the initial tree.
+      recursivelyInitializeTree(rootID, 0, nodes, dataForRoot);
 
-    // Mutate the tree
-    if (operations != null && commitIndex < operations.length) {
-      const commitTree = updateTree({nodes, rootID}, operations[commitIndex]);
+      // Mutate the tree
+      if (operations != null && index < operations.length) {
+        commitTree = updateTree({nodes, rootID}, operations[index]);
+
+        if (__DEBUG__) {
+          __printTree(commitTree);
+        }
+
+        commitTrees.push(commitTree);
+      }
+    } else {
+      const previousCommitTree = commitTrees[index - 1];
+      commitTree = updateTree(previousCommitTree, operations[index]);
 
       if (__DEBUG__) {
         __printTree(commitTree);
       }
 
       commitTrees.push(commitTree);
-      return commitTree;
-    }
-  } else {
-    const previousCommitTree = getCommitTree({
-      commitIndex: commitIndex - 1,
-      profilerStore,
-      rootID,
-    });
-
-    if (operations != null && commitIndex < operations.length) {
-      const commitTree = updateTree(
-        previousCommitTree,
-        operations[commitIndex],
-      );
-
-      if (__DEBUG__) {
-        __printTree(commitTree);
-      }
-
-      commitTrees.push(commitTree);
-      return commitTree;
     }
   }
 
-  throw Error(
-    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit "${commitIndex}"`,
-  );
+  return commitTree;
 }
 
 function recursivelyInitializeTree(
