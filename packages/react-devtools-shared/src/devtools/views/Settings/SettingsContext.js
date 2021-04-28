@@ -385,6 +385,13 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-modal-background', documentElements);
   updateStyleHelper(
     theme,
+    'color-bridge-version-npm-background',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-bridge-version-npm-text', documentElements);
+  updateStyleHelper(theme, 'color-bridge-version-number', documentElements);
+  updateStyleHelper(
+    theme,
     'color-primitive-hook-badge-background',
     documentElements,
   );

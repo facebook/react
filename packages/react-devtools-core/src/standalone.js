@@ -217,7 +217,10 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  store = new Store(bridge, {supportsNativeInspection: false});
+  store = new Store(bridge, {
+    checkBridgeProtocolCompatibility: true,
+    supportsNativeInspection: false,
+  });
 
   log('Connected');
   reload();

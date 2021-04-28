@@ -69,6 +69,9 @@
   --light-color-expand-collapse-toggle: #777d88;
   --light-color-link: #0000ff;
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
+  --light-color-bridge-version-npm-background: #eff0f1;
+  --light-color-bridge-version-npm-text: #000000;
+  --light-color-bridge-version-number: #0088fa;
   --light-color-primitive-hook-badge-background: #e5e5e5;
   --light-color-primitive-hook-badge-text: #5f6673;
   --light-color-record-active: #fc3a4b;
@@ -158,6 +161,9 @@
   --dark-color-expand-collapse-toggle: #8f949d;
   --dark-color-link: #61dafb;
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
+  --dark-color-bridge-version-npm-background: rgba(0, 0, 0, 0.25);
+  --dark-color-bridge-version-npm-text: #ffffff;
+  --dark-color-bridge-version-number: yellow;
   --dark-color-primitive-hook-badge-background: rgba(0, 0, 0, 0.25);
   --dark-color-primitive-hook-badge-text: rgba(255, 255, 255, 0.7);
   --dark-color-record-active: #fc3a4b;

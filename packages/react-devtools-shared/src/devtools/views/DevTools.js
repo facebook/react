@@ -25,6 +25,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
+import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
 import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
@@ -226,6 +227,7 @@ export default function DevTools({
                 </TreeContextController>
               </ViewElementSourceContext.Provider>
             </SettingsContextController>
+            <UnsupportedBridgeProtocolDialog />
             {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
             {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
           </ModalDialogContextController>

@@ -9,6 +9,7 @@
 
 import type {Container} from './ReactDOMHostConfig';
 import type {RootType} from './ReactDOMRoot';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
@@ -184,10 +185,8 @@ function legacyRenderSubtreeIntoContainer(
     warnOnInvalidCallback(callback === undefined ? null : callback, 'render');
   }
 
-  // TODO: Without `any` type, Flow says "Property cannot be accessed on any
-  // member of intersection type." Whyyyyyy.
-  let root: RootType = (container._reactRootContainer: any);
-  let fiberRoot;
+  let root = container._reactRootContainer;
+  let fiberRoot: FiberRoot;
   if (!root) {
     // Initial mount
     root = container._reactRootContainer = legacyCreateRootFromDOMContainer(

@@ -26,6 +26,7 @@ import {
   toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
+import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
@@ -176,6 +177,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
+    bridge.addListener('getBridgeProtocol', this.getBridgeProtocol);
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
@@ -307,6 +309,10 @@ export default class Agent extends EventEmitter<{|
     }
     return null;
   }
+
+  getBridgeProtocol = () => {
+    this._bridge.send('bridgeProtocol', currentBridgeProtocol);
+  };
 
   getProfilingData = ({rendererID}: {|rendererID: RendererID|}) => {
     const renderer = this._rendererInterfaces[rendererID];
