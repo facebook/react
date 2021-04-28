@@ -20,7 +20,8 @@ import styles from './UnsupportedBridgeProtocolDialog.css';
 import type {BridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 const DEVTOOLS_VERSION = process.env.DEVTOOLS_VERSION;
-const INSTRUCTIONS_FB_URL = 'https://fburl.com/devtools-bridge-protocol';
+const INSTRUCTIONS_FB_URL =
+  'https://fb.me/devtools-unsupported-bridge-protocol';
 const MODAL_DIALOG_ID = 'UnsupportedBridgeProtocolDialog';
 
 export default function UnsupportedBridgeProtocolDialog(_: {||}) {
