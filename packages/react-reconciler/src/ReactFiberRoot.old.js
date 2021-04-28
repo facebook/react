@@ -99,6 +99,7 @@ export function createFiberRoot(
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   strictModeLevelOverride: null | number,
+  concurrentUpdatesByDefaultOverride: null | boolean,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(containerInfo, tag, hydrate): any);
   if (enableSuspenseCallback) {
@@ -107,7 +108,11 @@ export function createFiberRoot(
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber(tag, strictModeLevelOverride);
+  const uninitializedFiber = createHostRootFiber(
+    tag,
+    strictModeLevelOverride,
+    concurrentUpdatesByDefaultOverride,
+  );
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 

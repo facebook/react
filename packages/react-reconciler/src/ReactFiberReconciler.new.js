@@ -249,6 +249,7 @@ export function createContainer(
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   strictModeLevelOverride: null | number,
+  concurrentUpdatesByDefaultOverride: null | boolean,
 ): OpaqueRoot {
   return createFiberRoot(
     containerInfo,
@@ -256,6 +257,7 @@ export function createContainer(
     hydrate,
     hydrationCallbacks,
     strictModeLevelOverride,
+    concurrentUpdatesByDefaultOverride,
   );
 }
 

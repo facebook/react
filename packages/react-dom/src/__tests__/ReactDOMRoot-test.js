@@ -13,6 +13,7 @@ let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactDOMServer = require('react-dom/server');
 let Scheduler = require('scheduler');
+let act;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -24,6 +25,7 @@ describe('ReactDOMRoot', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
+    act = require('react-dom/test-utils').unstable_concurrentAct;
   });
 
   if (!__EXPERIMENTAL__) {
@@ -315,5 +317,38 @@ describe('ReactDOMRoot', () => {
         "root.unmount() to empty a root's container.",
       {withoutStack: true},
     );
+  });
+
+  // @gate experimental
+  it('opts-in to concurrent default updates', async () => {
+    const root = ReactDOM.unstable_createRoot(container, {
+      unstable_concurrentUpdatesByDefault: true,
+    });
+
+    function Foo({value}) {
+      Scheduler.unstable_yieldValue(value);
+      return <div>{value}</div>;
+    }
+
+    await act(async () => {
+      root.render(<Foo value="a" />);
+    });
+
+    expect(container.textContent).toEqual('a');
+
+    await act(async () => {
+      root.render(<Foo value="b" />);
+
+      expect(Scheduler).toHaveYielded(['a']);
+      expect(container.textContent).toEqual('a');
+
+      expect(Scheduler).toFlushAndYieldThrough(['b']);
+      if (gate(flags => flags.allowConcurrentByDefault)) {
+        expect(container.textContent).toEqual('a');
+      } else {
+        expect(container.textContent).toEqual('b');
+      }
+    });
+    expect(container.textContent).toEqual('b');
   });
 });
