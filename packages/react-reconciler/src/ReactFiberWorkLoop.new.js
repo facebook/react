@@ -245,7 +245,6 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactCurrentBatchConfig,
   IsSomeRendererActing,
 } = ReactSharedInternals;
 
@@ -1063,14 +1062,11 @@ export function flushDiscreteUpdates() {
 
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
   try {
-    ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DefaultEventPriority);
     return fn();
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
   }
 }
 
@@ -1114,14 +1110,11 @@ export function discreteUpdates<A, B, C, D, R>(
   d: D,
 ): R {
   const previousPriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
   try {
-    ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
     return fn(a, b, c, d);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
     if (executionContext === NoContext) {
       resetRenderTimer();
     }
@@ -1149,12 +1142,20 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
 
 export function flushSync<A, R>(fn: A => R, a: A): R {
   const prevExecutionContext = executionContext;
+  if ((prevExecutionContext & (RenderContext | CommitContext)) !== NoContext) {
+    if (__DEV__) {
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' +
+          'flush when React is already rendering. Consider moving this call to ' +
+          'a scheduler task or micro task.',
+      );
+    }
+    return fn(a);
+  }
   executionContext |= BatchedContext;
 
-  const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
   try {
-    ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
     if (fn) {
       return fn(a);
@@ -1163,37 +1164,23 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     }
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
-    if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
-      flushSyncCallbacks();
-    } else {
-      if (__DEV__) {
-        console.error(
-          'flushSync was called from inside a lifecycle method. React cannot ' +
-            'flush when React is already rendering. Consider moving this call to ' +
-            'a scheduler task or micro task.',
-        );
-      }
-    }
+    flushSyncCallbacks();
   }
 }
 
 export function flushControlled(fn: () => mixed): void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
   try {
-    ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
     fn();
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
 
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1688,13 +1675,10 @@ function commitRoot(root) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
   const previousUpdateLanePriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
   try {
-    ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
     commitRootImpl(root, previousUpdateLanePriority);
   } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
   }
 
@@ -1816,8 +1800,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     NoFlags;
 
   if (subtreeHasEffects || rootHasEffect) {
-    const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 0;
     const previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
 
@@ -1899,7 +1881,6 @@ function commitRootImpl(root, renderPriorityLevel) {
 
     // Reset the priority to the previous non-sync value.
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
   } else {
     // No effects.
     root.current = finishedWork;
@@ -1995,21 +1976,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     return null;
   }
 
-  // If the passive effects are the result of a discrete render, flush them
-  // synchronously at the end of the current task so that the result is
-  // immediately observable. Otherwise, we assume that they are not
-  // order-dependent and do not need to be observed by external systems, so we
-  // can wait until after paint.
-  // TODO: We can optimize this by not scheduling the callback earlier. Since we
-  // currently schedule the callback in multiple places, will wait until those
-  // are consolidated.
-  if (
-    includesSomeLane(pendingPassiveEffectsLanes, SyncLane) &&
-    root.tag !== LegacyRoot
-  ) {
-    flushPassiveEffects();
-  }
-
   // If layout work was scheduled, flush it now.
   flushSyncCallbacks();
 
@@ -2036,15 +2002,12 @@ export function flushPassiveEffects(): boolean {
   if (rootWithPendingPassiveEffects !== null) {
     const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
-    const prevTransition = ReactCurrentBatchConfig.transition;
     const previousPriority = getCurrentUpdatePriority();
     try {
-      ReactCurrentBatchConfig.transition = 0;
       setCurrentUpdatePriority(priority);
       return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdatePriority(previousPriority);
-      ReactCurrentBatchConfig.transition = prevTransition;
     }
   }
   return false;
