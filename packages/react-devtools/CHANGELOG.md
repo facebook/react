@@ -9,6 +9,24 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.13.0 (April 28, 2021)
+#### Features
+* Add Bridge protocol version backend/frontend ([bvaughn](https://github.com/bvaughn) in [#21331](https://github.com/facebook/react/pull/21331))
+
+#### Bugfix
+* DevTools iterates over siblings during mount (rather than recursing) to avoid stack overflow errors ([bvaughn](https://github.com/bvaughn) in [#21377](https://github.com/facebook/react/pull/21377))
+* Multiple error dialogs can be visible at once ([bvaughn](https://github.com/bvaughn) in [#21370](https://github.com/facebook/react/pull/21370))
+* Console patching should handle Symbols without erroring ([bvaughn](https://github.com/bvaughn) in [#21368](https://github.com/facebook/react/pull/21368))
+
+###### Bridge protocol version backend/frontend
+During initialization, DevTools now checks to ensure it's compatible with the ["backend"](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md#overview) that's embedded within a renderer like React Native. If the two aren't compatible, upgrade instructions will be shown:
+
+<img width="400" height="233" alt="Dialog displaying downgrade instructions for the React DevTools frontend to connect to an older backend version" src="https://user-images.githubusercontent.com/29597/115997927-f77f2a00-a5b2-11eb-9098-20042b664cea.png">
+    
+<img width="400" height="233" alt="Dialog displaying upgrade instructions for the React DevTools frontend to connect to a newer backend version" src="https://user-images.githubusercontent.com/29597/115997965-167dbc00-a5b3-11eb-9cbc-082c65077a6e.png">
+
+Learn more about this change at [fb.me/devtools-unsupported-bridge-protocol](https://fb.me/devtools-unsupported-bridge-protocol)
+
 ## 4.12.4 (April 19, 2021)
 #### Bugfix
 * Remove `@octokit/rest` depedency because of a problem with transitive dependencies ([bvaughn](https://github.com/bvaughn) in [#21317](https://github.com/facebook/react/pull/21317))
@@ -28,7 +46,7 @@ Although this release is being made for all NPM packages, only the `react-devtoo
 
 ## 4.12.0 (April 12, 2021)
 Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
-#### Feature
+#### Features
 * Added `createBridge` and `createStore` exports to the `react-devtools-inline/frontend` entrypoint to support advanced use cases ([bvaughn](https://github.com/bvaughn) in [#21032](https://github.com/facebook/react/pull/21032))
 
 ## 4.11.1 (April 11, 2021)
@@ -85,7 +103,7 @@ The following features are only enabled when used with (experimental) builds of 
 * Replaced Facebook-internal fburl.com link with public fb.me link for Bridge protocol mismatch info page ([bvaughn](https://github.com/bvaughn) in [#21344](https://github.com/facebook/react/pull/21344))
 
 ## 4.10.2 (April 27, 2021)
-#### Feature
+#### Features
 * Added Bridge protocol check and warning dialog if embedded DevTools backend is incompatible with DevTools UI ([bvaughn](https://github.com/bvaughn) in [#21344](https://github.com/facebook/react/pull/21344))
 
 ## 4.10.1 (November 12, 2020)
