@@ -691,6 +691,7 @@ function pushStartOption(
   let children = null;
   let value = null;
   let selected = null;
+  let innerHTML = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -716,10 +717,8 @@ function pushStartOption(
           }
           break;
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
-            '`dangerouslySetInnerHTML` does not work on <option>.',
-          );
+          innerHTML = propValue;
+          break;
         // eslint-disable-next-line-no-fallthrough
         case 'value':
           value = propValue;
@@ -760,6 +759,7 @@ function pushStartOption(
   }
 
   target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
   return children;
 }
 
