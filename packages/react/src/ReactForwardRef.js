@@ -57,9 +57,6 @@ export function forwardRef<Props, ElementType: React$ElementType>(
       },
       set: function(name) {
         ownName = name;
-        if (render.displayName == null) {
-          render.displayName = name;
-        }
       },
     });
   }
