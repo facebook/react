@@ -73,6 +73,7 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2', 'C:2']);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('flushThrough flushes until the expected values is yielded', () => {
     function Child(props) {
       Scheduler.unstable_yieldValue(props.children);
@@ -87,9 +88,19 @@ describe('ReactTestRendererAsync', () => {
         </>
       );
     }
-    const renderer = ReactTestRenderer.create(<Parent step={1} />, {
-      unstable_isConcurrent: true,
-    });
+
+    let renderer;
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        renderer = ReactTestRenderer.create(<Parent step={1} />, {
+          unstable_isConcurrent: true,
+        });
+      });
+    } else {
+      renderer = ReactTestRenderer.create(<Parent step={1} />, {
+        unstable_isConcurrent: true,
+      });
+    }
 
     // Flush the first two siblings
     expect(Scheduler).toFlushAndYieldThrough(['A:1', 'B:1']);
@@ -101,6 +112,7 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('supports high priority interruptions', () => {
     function Child(props) {
       Scheduler.unstable_yieldValue(props.children);
@@ -124,9 +136,18 @@ describe('ReactTestRendererAsync', () => {
       }
     }
 
-    const renderer = ReactTestRenderer.create(<Example step={1} />, {
-      unstable_isConcurrent: true,
-    });
+    let renderer;
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        renderer = ReactTestRenderer.create(<Example step={1} />, {
+          unstable_isConcurrent: true,
+        });
+      });
+    } else {
+      renderer = ReactTestRenderer.create(<Example step={1} />, {
+        unstable_isConcurrent: true,
+      });
+    }
 
     // Flush the some of the changes, but don't commit
     expect(Scheduler).toFlushAndYieldThrough(['A:1']);

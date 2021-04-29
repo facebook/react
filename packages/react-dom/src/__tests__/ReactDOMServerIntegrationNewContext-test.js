@@ -161,11 +161,11 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('readContext() in different components', async render => {
-      function readContext(Ctx, observedBits) {
+      function readContext(Ctx) {
         const dispatcher =
           React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
             .ReactCurrentDispatcher.current;
-        return dispatcher.readContext(Ctx, observedBits);
+        return dispatcher.readContext(Ctx);
       }
 
       class Cls extends React.Component {

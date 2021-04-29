@@ -43,19 +43,23 @@ import {
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
+import isArray from 'shared/isArray';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
 const {IsSomeRendererActing} = ReactSharedInternals;
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isConcurrent: boolean,
+  unstable_strictModeLevel: number,
+  unstable_concurrentUpdatesByDefault: boolean,
   ...
 };
 
@@ -157,7 +161,7 @@ function flatten(arr) {
     while (n.i < n.array.length) {
       const el = n.array[n.i];
       n.i += 1;
-      if (Array.isArray(el)) {
+      if (isArray(el)) {
         stack.push(n);
         stack.push({i: 0, array: el});
         break;
@@ -343,7 +347,7 @@ class ReactTestInstance {
   findByType(type: any): ReactTestInstance {
     return expectOne(
       this.findAllByType(type, {deep: false}),
-      `with node type: "${getComponentName(type) || 'Unknown'}"`,
+      `with node type: "${getComponentNameFromType(type) || 'Unknown'}"`,
     );
   }
 
@@ -433,12 +437,23 @@ function propsMatch(props: Object, filter: Object): boolean {
 function create(element: React$Element<any>, options: TestRendererOptions) {
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
+  let strictModeLevel = null;
+  let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
     if (options.unstable_isConcurrent === true) {
       isConcurrent = true;
+    }
+    if (options.unstable_strictModeLevel !== undefined) {
+      strictModeLevel = options.unstable_strictModeLevel;
+    }
+    if (allowConcurrentByDefault) {
+      if (options.unstable_concurrentUpdatesByDefault !== undefined) {
+        concurrentUpdatesByDefault =
+          options.unstable_concurrentUpdatesByDefault;
+      }
     }
   }
   let container = {
@@ -451,6 +466,8 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     isConcurrent ? ConcurrentRoot : LegacyRoot,
     false,
     null,
+    strictModeLevel,
+    concurrentUpdatesByDefault,
   );
   invariant(root != null, 'something went wrong');
   updateContainer(element, root, null, null);

@@ -83,6 +83,7 @@ jobs:
   yarn_flow:
     docker: *docker
     environment: *environment
+    parallelism: 5
 
     steps:
       - checkout
@@ -375,6 +376,23 @@ jobs:
             cp ./scripts/release/ci-npmrc ~/.npmrc
             scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
+  # We don't always keep the reconciler forks in sync (otherwise it we wouldn't
+  # have forked it) but during periods when they are meant to be in sync, we
+  # use this job to confirm there are no differences.
+  sync_reconciler_forks:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Confirm reconciler forks are the same
+          command: |
+            yarn replace-fork
+            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, disable this CI check." && false)
+
+
 workflows:
   version: 2
   stable:
@@ -382,9 +400,6 @@ workflows:
     jobs:
       - setup
       - yarn_lint:
-          requires:
-            - setup
-      - yarn_flow:
           requires:
             - setup
       - RELEASE_CHANNEL_stable_yarn_build:
@@ -426,6 +441,14 @@ workflows:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - setup
+      - yarn_flow:
+          requires:
+            - setup
+      # NOTE: This job is only enabled when we want the forks to be in sync.
+      # When the forks intentionally diverge, comment out the job to disable it.
+      - sync_reconciler_forks:
+          requires:
+            - setup
       - yarn_test:
           requires:
             - setup
@@ -439,14 +462,14 @@ workflows:
                 - "-r=stable --env=production"
                 - "-r=experimental --env=development"
                 - "-r=experimental --env=production"
-                - "-r=www-classic --env=development"
-                - "-r=www-classic --env=production"
-                - "-r=www-classic --env=development --variant"
-                - "-r=www-classic --env=production --variant"
-                - "-r=www-modern --env=development"
-                - "-r=www-modern --env=production"
-                - "-r=www-modern --env=development --variant"
-                - "-r=www-modern --env=production --variant"
+                - "-r=www-classic --env=development --variant=false"
+                - "-r=www-classic --env=production --variant=false"
+                - "-r=www-classic --env=development --variant=true"
+                - "-r=www-classic --env=production --variant=true"
+                - "-r=www-modern --env=development --variant=false"
+                - "-r=www-modern --env=production --variant=false"
+                - "-r=www-modern --env=development --variant=true"
+                - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
@@ -474,14 +497,14 @@ workflows:
                 - "--project=devtools -r=experimental"
 
                 # TODO: Update test config to support www build tests
-                # - "-r=www-classic --env=development"
-                # - "-r=www-classic --env=production"
-                # - "-r=www-classic --env=development --variant"
-                # - "-r=www-classic --env=production --variant"
-                # - "-r=www-modern --env=development"
-                # - "-r=www-modern --env=production"
-                # - "-r=www-modern --env=development --variant"
-                # - "-r=www-modern --env=production --variant"
+                # - "-r=www-classic --env=development --variant=false"
+                # - "-r=www-classic --env=production --variant=false"
+                # - "-r=www-classic --env=development --variant=true"
+                # - "-r=www-classic --env=production --variant=true"
+                # - "-r=www-modern --env=development --variant=false"
+                # - "-r=www-modern --env=production --variant=false"
+                # - "-r=www-modern --env=development --variant=true"
+                # - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
       - get_base_build:
@@ -530,7 +553,11 @@ workflows:
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
-            - setup
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Next channel
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: experimental
           dist_tag: experimental
@@ -540,9 +567,8 @@ workflows:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     triggers:
       - schedule:
-          # At 16:00 UTC (11 am Eastern, 8 am Pacific) on every weekday (Monday
-          # through Friday)
-          cron: "0 16 * * 1-5"
+          # At 10 minutes past 16:00 on Mon, Tue, Wed, Thu, and Fri
+          cron: "10 16 * * 1,2,3,4,5"
           filters:
             branches:
               only:
@@ -553,14 +579,18 @@ workflows:
           name: Publish to Next channel
           requires:
             - setup
-          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          commit_sha: << pipeline.git.revision >>
           release_channel: stable
           dist_tag: next
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
-            - setup
-          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Next channel
+          commit_sha: << pipeline.git.revision >>
           release_channel: experimental
           dist_tag: experimental
 

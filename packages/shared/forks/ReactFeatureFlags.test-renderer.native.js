@@ -19,7 +19,7 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = false;
 export const enableProfilerNestedUpdatePhase = false;
 export const enableProfilerNestedUpdateScheduledHook = false;
-export const enableSchedulerTracing = __PROFILE__;
+export const enableUpdaterTracking = false;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
@@ -27,7 +27,6 @@ export const enableCache = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
-export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = false;
@@ -46,19 +45,21 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
+export const deletedTreeCleanUpLevel = 1;
+export const enableSuspenseLayoutEffectSemantics = false;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
-export const decoupleUpdatePriorityFromScheduler = false;
-export const enableDiscreteEventFlushingChange = false;
 
-export const enableDoubleInvokingEffects = false;
+export const enableStrictEffects = false;
+export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableTransitionEntanglement = false;
-export const enableDiscreteEventMicroTasks = false;
+export const enableLazyContextPropagation = false;
+export const enableSyncDefaultUpdates = false;
+export const allowConcurrentByDefault = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

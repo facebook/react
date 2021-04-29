@@ -64,7 +64,7 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   // will have already removed conflicting files.
   //
   // In CI, merging is handled automatically by CircleCI's workspace feature.
-  spawnSync('rsync', ['-ar', experimentalDir + '/', stableDir + '/']);
+  mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
   // Now restore the combined directory back to its original name
   // TODO: Currently storing artifacts as `./build2` so that it doesn't conflict
@@ -144,6 +144,13 @@ function crossDeviceRenameSync(source, destination) {
   return fse.moveSync(source, destination, {overwrite: true});
 }
 
+/*
+ * Grabs the built packages in ${tmp_build_dir}/node_modules and updates the
+ * `version` key in their package.json to 0.0.0-${commitHash} for the commit
+ * you're building. Also updates the dependencies and peerDependencies
+ * to match this version for all of the 'React' packages
+ * (packages available in this repo).
+ */
 function updatePackageVersions(modulesDir, version) {
   const allReactModuleNames = fs.readdirSync('packages');
   for (const moduleName of fs.readdirSync(modulesDir)) {
@@ -155,9 +162,10 @@ function updatePackageVersions(modulesDir, version) {
       // Update version
       packageInfo.version = version;
 
-      // Update dependency versions
       if (packageInfo.dependencies) {
         for (const dep of Object.keys(packageInfo.dependencies)) {
+          // if it's a react package (available in the current repo), update the version
+          // TODO: is this too broad? Assumes all of the packages were built.
           if (allReactModuleNames.includes(dep)) {
             packageInfo.dependencies[dep] = version;
           }
@@ -185,4 +193,24 @@ function updateTheReactVersionThatDevToolsReads(version) {
     './packages/shared/ReactVersion.js',
     `export default '${version}';\n`
   );
+}
+
+/**
+ * cross-platform alternative to `rsync -ar`
+ * @param {string} source
+ * @param {string} destination
+ */
+function mergeDirsSync(source, destination) {
+  for (const sourceFileBaseName of fs.readdirSync(source)) {
+    const sourceFileName = path.join(source, sourceFileBaseName);
+    const targetFileName = path.join(destination, sourceFileBaseName);
+
+    const sourceFile = fs.statSync(sourceFileName);
+    if (sourceFile.isDirectory()) {
+      fse.ensureDirSync(targetFileName);
+      mergeDirsSync(sourceFileName, targetFileName);
+    } else {
+      fs.copyFileSync(sourceFileName, targetFileName);
+    }
+  }
 }

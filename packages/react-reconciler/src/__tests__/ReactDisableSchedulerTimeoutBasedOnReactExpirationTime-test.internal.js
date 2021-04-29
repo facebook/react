@@ -45,6 +45,7 @@ describe('ReactSuspenseList', () => {
     return Component;
   }
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('appends rendering tasks to the end of the priority queue', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -63,7 +64,13 @@ describe('ReactSuspenseList', () => {
     root.render(<App show={false} />);
     expect(Scheduler).toFlushAndYield([]);
 
-    root.render(<App show={true} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        root.render(<App show={true} />);
+      });
+    } else {
+      root.render(<App show={true} />);
+    }
     expect(Scheduler).toFlushAndYield([
       'Suspend! [A]',
       'Suspend! [B]',

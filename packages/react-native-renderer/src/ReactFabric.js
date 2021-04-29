@@ -9,7 +9,7 @@
 
 import type {HostComponent} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {ElementRef} from 'react';
+import type {ElementRef, Element, ElementType} from 'react';
 
 import './ReactFabricInjection';
 
@@ -19,7 +19,6 @@ import {
   batchedEventUpdates,
   batchedUpdates as batchedUpdatesImpl,
   discreteUpdates,
-  flushDiscreteUpdates,
   createContainer,
   updateContainer,
   injectIntoDevTools,
@@ -43,12 +42,12 @@ import {
 } from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
-function findHostInstance_DEPRECATED(
-  componentOrHandle: any,
+function findHostInstance_DEPRECATED<TElementType: ElementType>(
+  componentOrHandle: ?(ElementRef<TElementType> | number),
 ): ?ElementRef<HostComponent<mixed>> {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
@@ -60,7 +59,7 @@ function findHostInstance_DEPRECATED(
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentNameFromType(owner.type) || 'A component',
         );
       }
 
@@ -70,10 +69,14 @@ function findHostInstance_DEPRECATED(
   if (componentOrHandle == null) {
     return null;
   }
+  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
   if (componentOrHandle._nativeTag) {
+    // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
     return componentOrHandle;
   }
+  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
   if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
+    // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
     return componentOrHandle.canonical;
   }
   let hostInstance;
@@ -93,6 +96,7 @@ function findHostInstance_DEPRECATED(
     // Fabric
     return (hostInstance: any).canonical;
   }
+  // $FlowFixMe[incompatible-return]
   return hostInstance;
 }
 
@@ -107,7 +111,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentNameFromType(owner.type) || 'A component',
         );
       }
 
@@ -194,20 +198,21 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
 }
 
 function render(
-  element: React$Element<any>,
-  containerTag: any,
-  callback: ?Function,
-) {
+  element: Element<ElementType>,
+  containerTag: number,
+  callback: ?() => void,
+): ?ElementRef<ElementType> {
   let root = roots.get(containerTag);
 
   if (!root) {
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
-    root = createContainer(containerTag, LegacyRoot, false, null);
+    root = createContainer(containerTag, LegacyRoot, false, null, null, null);
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
 
+  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
   return getPublicRootInstance(root);
 }
 
@@ -236,7 +241,6 @@ function createPortal(
 setBatchingImplementation(
   batchedUpdatesImpl,
   discreteUpdates,
-  flushDiscreteUpdates,
   batchedEventUpdates,
 );
 

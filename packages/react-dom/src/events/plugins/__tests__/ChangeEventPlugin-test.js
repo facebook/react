@@ -685,7 +685,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     // @gate experimental
-    it('is async for non-input events', async () => {
+    it('is sync for non-input events', async () => {
       const root = ReactDOM.unstable_createRoot(container);
       let input;
 
@@ -724,21 +724,11 @@ describe('ChangeEventPlugin', () => {
       input.dispatchEvent(
         new Event('click', {bubbles: true, cancelable: true}),
       );
-      // Nothing should have changed
-      expect(Scheduler).toHaveYielded([]);
-      expect(input.value).toBe('initial');
 
-      // Flush callbacks.
-      // Now the click update has flushed.
-      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
-        // Flush microtask queue.
-        await null;
-        expect(Scheduler).toHaveYielded(['render: ']);
-        expect(input.value).toBe('');
-      } else {
-        expect(Scheduler).toFlushAndYield(['render: ']);
-        expect(input.value).toBe('');
-      }
+      // Flush microtask queue.
+      await null;
+      expect(Scheduler).toHaveYielded(['render: ']);
+      expect(input.value).toBe('');
     });
 
     // @gate experimental
@@ -771,11 +761,12 @@ describe('ChangeEventPlugin', () => {
         mouseOverEvent.initEvent('mouseover', true, true);
         target.current.dispatchEvent(mouseOverEvent);
 
-        // 3s should be enough to expire the updates
-        Scheduler.unstable_advanceTime(3000);
-        expect(Scheduler).toFlushExpired([]);
-        expect(container.textContent).toEqual('hovered');
+        // Flush discrete updates
+        ReactDOM.flushSync();
+        // Since mouse enter/leave is not discrete, should not have updated yet
+        expect(container.textContent).toEqual('not hovered');
       });
+      expect(container.textContent).toEqual('hovered');
     });
   });
 });

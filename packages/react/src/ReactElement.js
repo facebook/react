@@ -5,13 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 const RESERVED_PROPS = {
   key: true,
@@ -104,7 +103,9 @@ function warnIfStringRefCannotBeAutoConverted(config) {
       config.__self &&
       ReactCurrentOwner.current.stateNode !== config.__self
     ) {
-      const componentName = getComponentName(ReactCurrentOwner.current.type);
+      const componentName = getComponentNameFromType(
+        ReactCurrentOwner.current.type,
+      );
 
       if (!didWarnAboutStringRefs[componentName]) {
         console.error(

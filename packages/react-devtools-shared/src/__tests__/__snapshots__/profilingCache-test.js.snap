@@ -26,6 +26,7 @@ Object {
     },
   },
   "duration": 16,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 16,
     2 => 16,
@@ -38,9 +39,18 @@ Object {
     3 => 1,
     5 => 1,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 16,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -63,6 +73,7 @@ Object {
     },
   },
   "duration": 15,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 15,
     2 => 15,
@@ -75,9 +86,18 @@ Object {
     3 => 3,
     4 => 2,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 15,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -93,6 +113,7 @@ Object {
     },
   },
   "duration": 3,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 3,
     3 => 3,
@@ -101,9 +122,18 @@ Object {
     5 => 3,
     3 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 18,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -140,6 +170,7 @@ Object {
     },
   },
   "duration": 12,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 12,
     2 => 12,
@@ -154,9 +185,18 @@ Object {
     4 => 1,
     5 => 1,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 12,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -195,6 +235,7 @@ Object {
     },
   },
   "duration": 13,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     3 => 0,
     4 => 1,
@@ -209,9 +250,18 @@ Object {
     2 => 10,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 25,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -236,6 +286,7 @@ Object {
     },
   },
   "duration": 10,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     3 => 0,
     2 => 10,
@@ -246,9 +297,18 @@ Object {
     2 => 10,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 35,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -266,6 +326,7 @@ Object {
     },
   },
   "duration": 10,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     2 => 10,
     1 => 10,
@@ -274,9 +335,18 @@ Object {
     2 => 10,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 45,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -329,6 +399,7 @@ Object {
             ],
           ],
           "duration": 12,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -373,9 +444,18 @@ Object {
               1,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 12,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -423,6 +503,7 @@ Object {
             ],
           ],
           "duration": 13,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -467,9 +548,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 25,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -497,6 +587,7 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -525,9 +616,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 35,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -545,6 +645,7 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -565,15 +666,22 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 45,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -714,7 +822,7 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 4,
+  "version": 5,
 }
 `;
 
@@ -792,6 +900,7 @@ Object {
             ],
           ],
           "duration": 11,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -828,9 +937,18 @@ Object {
               1,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 11,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -868,6 +986,7 @@ Object {
             ],
           ],
           "duration": 11,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -904,9 +1023,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 22,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -954,6 +1082,7 @@ Object {
             ],
           ],
           "duration": 13,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -998,15 +1127,22 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 35,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -1142,7 +1278,7 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 4,
+  "version": 5,
 }
 `;
 
@@ -1183,6 +1319,7 @@ Object {
         },
       },
       "duration": 13,
+      "effectDuration": null,
       "fiberActualDurations": Map {
         3 => 0,
         4 => 1,
@@ -1197,9 +1334,18 @@ Object {
         2 => 10,
         1 => 0,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": null,
       "priorityLevel": "Immediate",
       "timestamp": 13,
+      "updaters": Array [
+        Object {
+          "displayName": "Anonymous",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
     Object {
       "changeDescriptions": Map {
@@ -1221,6 +1367,7 @@ Object {
         },
       },
       "duration": 10,
+      "effectDuration": null,
       "fiberActualDurations": Map {
         3 => 0,
         2 => 10,
@@ -1231,9 +1378,18 @@ Object {
         2 => 10,
         1 => 0,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": null,
       "priorityLevel": "Immediate",
       "timestamp": 34,
+      "updaters": Array [
+        Object {
+          "displayName": "Anonymous",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
     Object {
       "changeDescriptions": Map {
@@ -1248,6 +1404,7 @@ Object {
         },
       },
       "duration": 10,
+      "effectDuration": null,
       "fiberActualDurations": Map {
         2 => 10,
         1 => 10,
@@ -1256,9 +1413,18 @@ Object {
         2 => 10,
         1 => 0,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": null,
       "priorityLevel": "Immediate",
       "timestamp": 44,
+      "updaters": Array [
+        Object {
+          "displayName": "Anonymous",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
   ],
   "displayName": "Parent",
@@ -1269,8 +1435,6 @@ Object {
     4 => 1,
     5 => 1,
   },
-  "interactionCommits": Map {},
-  "interactions": Map {},
   "operations": Array [
     Array [
       1,
@@ -1419,6 +1583,7 @@ Object {
         },
       },
       "duration": 11,
+      "effectDuration": null,
       "fiberActualDurations": Map {
         11 => 11,
         12 => 11,
@@ -1431,15 +1596,22 @@ Object {
         13 => 0,
         14 => 1,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": null,
       "priorityLevel": "Normal",
       "timestamp": 24,
+      "updaters": Array [
+        Object {
+          "displayName": "Anonymous",
+          "hocDisplayNames": null,
+          "id": 11,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
   ],
   "displayName": "Parent",
   "initialTreeBaseDurations": Map {},
-  "interactionCommits": Map {},
-  "interactions": Map {},
   "operations": Array [
     Array [
       1,
@@ -1511,11 +1683,21 @@ Object {
     Object {
       "changeDescriptions": Map {},
       "duration": 0,
+      "effectDuration": null,
       "fiberActualDurations": Map {},
       "fiberSelfDurations": Map {},
-      "interactionIDs": Array [],
+      "passiveEffectDuration": null,
       "priorityLevel": "Normal",
       "timestamp": 34,
+      "updaters": Array [
+        Object {
+          "displayName": "Anonymous",
+          "hocDisplayNames": null,
+          "id": 6,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
   ],
   "displayName": "Parent",
@@ -1525,8 +1707,6 @@ Object {
     8 => 0,
     9 => 1,
   },
-  "interactionCommits": Map {},
-  "interactions": Map {},
   "operations": Array [
     Array [
       1,
@@ -1636,6 +1816,7 @@ Object {
             ],
           ],
           "duration": 13,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -1680,9 +1861,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 13,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -1710,6 +1900,7 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -1738,9 +1929,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 34,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -1758,6 +1958,7 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -1778,9 +1979,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 44,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
@@ -1806,8 +2016,6 @@ Object {
           1,
         ],
       ],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -1977,6 +2185,7 @@ Object {
             ],
           ],
           "duration": 11,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               11,
@@ -2013,15 +2222,22 @@ Object {
               1,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 24,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 11,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -2090,11 +2306,21 @@ Object {
         Object {
           "changeDescriptions": Array [],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [],
           "fiberSelfDurations": Array [],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 34,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 6,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
@@ -2116,8 +2342,6 @@ Object {
           1,
         ],
       ],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -2187,7 +2411,7 @@ Object {
       ],
     },
   ],
-  "version": 4,
+  "version": 5,
 }
 `;
 
@@ -2197,6 +2421,7 @@ Object {
     Object {
       "changeDescriptions": Map {},
       "duration": 0,
+      "effectDuration": null,
       "fiberActualDurations": Map {
         1 => 0,
         2 => 0,
@@ -2205,15 +2430,22 @@ Object {
         1 => 0,
         2 => 0,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": null,
       "priorityLevel": "Normal",
       "timestamp": 0,
+      "updaters": Array [
+        Object {
+          "displayName": "Anonymous",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
   ],
   "displayName": "Suspense",
   "initialTreeBaseDurations": Map {},
-  "interactionCommits": Map {},
-  "interactions": Map {},
   "operations": Array [
     Array [
       1,
@@ -2262,6 +2494,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 0,
     2 => 0,
@@ -2272,9 +2505,18 @@ Object {
     2 => 0,
     3 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2292,6 +2534,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     3 => 0,
     2 => 0,
@@ -2302,9 +2545,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2320,15 +2572,25 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     3 => 0,
   },
   "fiberSelfDurations": Map {
     3 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Component",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "type": 5,
+    },
+  ],
 }
 `;
 
@@ -2344,15 +2606,25 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     3 => 0,
   },
   "fiberSelfDurations": Map {
     3 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Component",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "type": 5,
+    },
+  ],
 }
 `;
 
@@ -2368,6 +2640,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     3 => 0,
     2 => 0,
@@ -2378,9 +2651,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2403,6 +2685,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -2431,9 +2714,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -2451,6 +2743,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -2479,9 +2772,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -2497,6 +2799,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -2509,9 +2812,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Component",
+              "hocDisplayNames": null,
+              "id": 3,
+              "key": null,
+              "type": 5,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -2527,6 +2839,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -2539,9 +2852,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Component",
+              "hocDisplayNames": null,
+              "id": 3,
+              "key": null,
+              "type": 5,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -2557,6 +2879,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               3,
@@ -2585,15 +2908,22 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Component",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -2677,7 +3007,7 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 4,
+  "version": 5,
 }
 `;
 
@@ -2721,6 +3051,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 0,
     2 => 0,
@@ -2739,9 +3070,18 @@ Object {
     6 => 0,
     7 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2793,6 +3133,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -2809,9 +3150,18 @@ Object {
     3 => 0,
     2 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "LegacyContextProvider",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "type": 1,
+    },
+  ],
 }
 `;
 
@@ -2857,6 +3207,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -2875,9 +3226,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2924,6 +3284,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -2942,9 +3303,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2990,6 +3360,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -3008,9 +3379,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Anonymous",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -3073,6 +3453,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -3133,9 +3514,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3199,6 +3589,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3251,9 +3642,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "LegacyContextProvider",
+              "hocDisplayNames": null,
+              "id": 2,
+              "key": null,
+              "type": 1,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3311,6 +3711,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3371,9 +3772,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3432,6 +3842,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3492,9 +3903,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3552,6 +3972,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3612,15 +4033,22 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Anonymous",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "LegacyContextProvider",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -3827,322 +4255,6 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 4,
-}
-`;
-
-exports[`ProfilingCache should report every traced interaction: Interactions 1`] = `
-Array [
-  Object {
-    "__count": 1,
-    "id": 0,
-    "name": "mount: one child",
-    "timestamp": 0,
-  },
-  Object {
-    "__count": 0,
-    "id": 1,
-    "name": "update: two children",
-    "timestamp": 11,
-  },
-]
-`;
-
-exports[`ProfilingCache should report every traced interaction: imported data 1`] = `
-Object {
-  "dataForRoots": Array [
-    Object {
-      "commitData": Array [
-        Object {
-          "changeDescriptions": Array [
-            Array [
-              2,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              4,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-          ],
-          "duration": 11,
-          "fiberActualDurations": Array [
-            Array [
-              1,
-              11,
-            ],
-            Array [
-              2,
-              11,
-            ],
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              4,
-              1,
-            ],
-          ],
-          "fiberSelfDurations": Array [
-            Array [
-              1,
-              0,
-            ],
-            Array [
-              2,
-              10,
-            ],
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              4,
-              1,
-            ],
-          ],
-          "interactionIDs": Array [
-            0,
-          ],
-          "priorityLevel": "Normal",
-          "timestamp": 11,
-        },
-        Object {
-          "changeDescriptions": Array [
-            Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
-              5,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              2,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [
-                  "count",
-                ],
-                "state": null,
-              },
-            ],
-          ],
-          "duration": 11,
-          "fiberActualDurations": Array [
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              5,
-              1,
-            ],
-            Array [
-              2,
-              11,
-            ],
-            Array [
-              1,
-              11,
-            ],
-          ],
-          "fiberSelfDurations": Array [
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              5,
-              1,
-            ],
-            Array [
-              2,
-              10,
-            ],
-            Array [
-              1,
-              0,
-            ],
-          ],
-          "interactionIDs": Array [
-            1,
-          ],
-          "priorityLevel": "Immediate",
-          "timestamp": 22,
-        },
-      ],
-      "displayName": "Parent",
-      "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [
-        Array [
-          0,
-          Array [
-            0,
-          ],
-        ],
-        Array [
-          1,
-          Array [
-            1,
-          ],
-        ],
-      ],
-      "interactions": Array [
-        Array [
-          0,
-          Object {
-            "__count": 1,
-            "id": 0,
-            "name": "mount: one child",
-            "timestamp": 0,
-          },
-        ],
-        Array [
-          1,
-          Object {
-            "__count": 0,
-            "id": 1,
-            "name": "update: two children",
-            "timestamp": 11,
-          },
-        ],
-      ],
-      "operations": Array [
-        Array [
-          1,
-          1,
-          15,
-          6,
-          80,
-          97,
-          114,
-          101,
-          110,
-          116,
-          5,
-          67,
-          104,
-          105,
-          108,
-          100,
-          1,
-          48,
-          1,
-          1,
-          11,
-          1,
-          1,
-          4,
-          1,
-          11000,
-          1,
-          2,
-          5,
-          1,
-          0,
-          1,
-          0,
-          4,
-          2,
-          11000,
-          1,
-          3,
-          5,
-          2,
-          2,
-          2,
-          3,
-          4,
-          3,
-          0,
-          1,
-          4,
-          8,
-          2,
-          2,
-          2,
-          0,
-          4,
-          4,
-          1000,
-        ],
-        Array [
-          1,
-          1,
-          8,
-          5,
-          67,
-          104,
-          105,
-          108,
-          100,
-          1,
-          49,
-          1,
-          5,
-          5,
-          2,
-          2,
-          1,
-          2,
-          4,
-          5,
-          1000,
-          4,
-          2,
-          12000,
-          3,
-          2,
-          3,
-          3,
-          5,
-          4,
-          4,
-          1,
-          12000,
-        ],
-      ],
-      "rootID": 1,
-      "snapshots": Array [],
-    },
-  ],
-  "version": 4,
+  "version": 5,
 }
 `;

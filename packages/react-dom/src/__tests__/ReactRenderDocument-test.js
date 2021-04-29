@@ -368,10 +368,29 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
-    it('renders over an existing text child without throwing', () => {
+    it('cannot render over an existing text child at the root', () => {
       const container = document.createElement('div');
       container.textContent = 'potato';
       expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toErrorDev(
+        'Expected server HTML to contain a matching <div> in <div>.',
+      );
+      // This creates an unfortunate double text case.
+      expect(container.textContent).toBe('potatoparsnip');
+    });
+
+    it('renders over an existing nested text child without throwing', () => {
+      const container = document.createElement('div');
+      const wrapper = document.createElement('div');
+      wrapper.textContent = 'potato';
+      container.appendChild(wrapper);
+      expect(() =>
+        ReactDOM.hydrate(
+          <div>
+            <div>parsnip</div>
+          </div>,
+          container,
+        ),
+      ).toErrorDev(
         'Expected server HTML to contain a matching <div> in <div>.',
       );
       expect(container.textContent).toBe('parsnip');

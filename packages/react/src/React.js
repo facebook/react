@@ -58,7 +58,6 @@ import {
 } from './ReactElementValidator';
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
-import {createFundamental} from './ReactFundamental';
 import {startTransition} from './ReactStartTransition';
 
 // TODO: Move this branching into the other module instead and just re-export.
@@ -116,8 +115,6 @@ export {
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   REACT_CACHE_TYPE as unstable_Cache,
-  // enableFundamentalAPI
-  createFundamental as unstable_createFundamental,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
   useOpaqueIdentifier as unstable_useOpaqueIdentifier,

@@ -7,10 +7,18 @@
   display: flex;
   align-items: flex-end;
 }
+.Outer:hover {
+  background-color: var(--color-background);
+}
 
-.Inner {
+.Inner,
+.InnerSelected {
   width: 100%;
-  min-height: 5px;
+  min-height: 2px;
   background-color: var(--color-commit-did-not-render-fill);
   color: var(--color-commit-did-not-render-fill-text);
+}
+
+.InnerSelected {
+  background-color: var(--color-button-active);
 }

@@ -22,6 +22,7 @@ describe('ReactInterleavedUpdates', () => {
     return text;
   }
 
+  // @gate experimental || !enableSyncDefaultUpdates
   test('update during an interleaved event is not processed during the current render', async () => {
     const updaters = [];
 
@@ -55,13 +56,25 @@ describe('ReactInterleavedUpdates', () => {
     expect(root).toMatchRenderedOutput('000');
 
     await ReactNoop.act(async () => {
-      updateChildren(1);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          updateChildren(1);
+        });
+      } else {
+        updateChildren(1);
+      }
       // Partially render the children. Only the first one.
       expect(Scheduler).toFlushAndYieldThrough([1]);
 
       // In an interleaved event, schedule an update on each of the children.
       // Including the two that haven't rendered yet.
-      updateChildren(2);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          updateChildren(2);
+        });
+      } else {
+        updateChildren(2);
+      }
 
       // We should continue rendering without including the interleaved updates.
       expect(Scheduler).toFlushUntilNextPaint([1, 1]);
@@ -73,6 +86,7 @@ describe('ReactInterleavedUpdates', () => {
   });
 
   // @gate experimental
+  // @gate !enableSyncDefaultUpdates
   test('low priority update during an interleaved event is not processed during the current render', async () => {
     // Same as previous test, but the interleaved update is lower priority than
     // the in-progress render.

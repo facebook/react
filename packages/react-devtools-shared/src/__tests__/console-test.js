@@ -453,4 +453,16 @@ describe('console', () => {
       '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
+
+  it('should correctly log Symbols', () => {
+    const Component = ({children}) => {
+      fakeConsole.warn('Symbol:', Symbol(''));
+      return null;
+    };
+
+    act(() => ReactDOM.render(<Component />, document.createElement('div')));
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('Symbol:');
+  });
 });

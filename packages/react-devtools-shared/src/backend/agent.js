@@ -26,6 +26,7 @@ import {
   toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
+import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
@@ -38,6 +39,7 @@ import type {
   RendererInterface,
 } from './types';
 import type {ComponentFilter} from '../types';
+import {isSynchronousXHRSupported} from './utils';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -70,8 +72,7 @@ type CopyElementParams = {|
 
 type InspectElementParams = {|
   id: number,
-  inspectedPaths: Object,
-  forceUpdate: boolean,
+  path: Array<string | number> | null,
   rendererID: number,
   requestID: number,
 |};
@@ -176,6 +177,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
+    bridge.addListener('getBridgeProtocol', this.getBridgeProtocol);
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
@@ -222,6 +224,7 @@ export default class Agent extends EventEmitter<{|
       isBackendStorageAPISupported = true;
     } catch (error) {}
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
+    bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
 
     setupHighlighter(bridge, this);
     setupTraceUpdates(this);
@@ -307,6 +310,10 @@ export default class Agent extends EventEmitter<{|
     return null;
   }
 
+  getBridgeProtocol = () => {
+    this._bridge.send('bridgeProtocol', currentBridgeProtocol);
+  };
+
   getProfilingData = ({rendererID}: {|rendererID: RendererID|}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -332,8 +339,7 @@ export default class Agent extends EventEmitter<{|
 
   inspectElement = ({
     id,
-    inspectedPaths,
-    forceUpdate,
+    path,
     rendererID,
     requestID,
   }: InspectElementParams) => {
@@ -343,7 +349,7 @@ export default class Agent extends EventEmitter<{|
     } else {
       this._bridge.send(
         'inspectedElement',
-        renderer.inspectElement(requestID, id, inspectedPaths, forceUpdate),
+        renderer.inspectElement(requestID, id, path),
       );
 
       // When user selects an element, stop trying to restore the selection,

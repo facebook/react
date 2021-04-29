@@ -16,14 +16,24 @@ import {
   startFlowing,
 } from 'react-server/src/ReactFlightServer';
 
+type Options = {
+  onError?: (error: mixed) => void,
+};
+
 function renderToReadableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
+  options?: Options,
 ): ReadableStream {
   let request;
   return new ReadableStream({
     start(controller) {
-      request = createRequest(model, controller, webpackMap);
+      request = createRequest(
+        model,
+        controller,
+        webpackMap,
+        options ? options.onError : undefined,
+      );
       startWork(request);
     },
     pull(controller) {

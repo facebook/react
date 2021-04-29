@@ -29,10 +29,17 @@ import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
 import {printStore} from './utils';
 import ProfilerStore from './ProfilerStore';
+import {
+  BRIDGE_PROTOCOL,
+  currentBridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
 
 import type {Element} from './views/Components/types';
 import type {ComponentFilter, ElementType} from '../types';
-import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {
+  FrontendBridge,
+  BridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -51,6 +58,7 @@ const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
 type Config = {|
+  checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
   supportsNativeInspection?: boolean,
   supportsReloadAndProfile?: boolean,
@@ -76,6 +84,7 @@ export default class Store extends EventEmitter<{|
   supportsNativeStyleEditor: [],
   supportsProfiling: [],
   supportsReloadAndProfile: [],
+  unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
 |}> {
   _bridge: FrontendBridge;
@@ -111,7 +120,17 @@ export default class Store extends EventEmitter<{|
   // If not, features like reload-and-profile will not work correctly and must be disabled.
   _isBackendStorageAPISupported: boolean = false;
 
+  // Can DevTools use sync XHR requests?
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  // This current limitation applies only to web extension builds
+  // and will need to be reconsidered in the future if we add support for reload to React Native.
+  _isSynchronousXHRSupported: boolean = false;
+
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
+
+  // Older backends don't support an explicit bridge protocol,
+  // so we should timeout eventually and show a downgrade message.
+  _onBridgeProtocolTimeoutID: TimeoutID | null = null;
 
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
@@ -141,6 +160,7 @@ export default class Store extends EventEmitter<{|
   _supportsReloadAndProfile: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
+  _unsupportedBridgeProtocol: BridgeProtocol | null = null;
   _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
@@ -195,11 +215,15 @@ export default class Store extends EventEmitter<{|
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+      this.onBackendStorageAPISupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.addListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -207,6 +231,20 @@ export default class Store extends EventEmitter<{|
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
+
+    // Verify that the frontend version is compatible with the connected backend.
+    // See github.com/facebook/react/issues/21326
+    if (config != null && config.checkBridgeProtocolCompatibility) {
+      // Older backends don't support an explicit bridge protocol,
+      // so we should timeout eventually and show a downgrade message.
+      this._onBridgeProtocolTimeoutID = setTimeout(
+        this.onBridgeProtocolTimeout,
+        10000,
+      );
+
+      bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
+      bridge.send('getBridgeProtocol');
+    }
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -359,15 +397,24 @@ export default class Store extends EventEmitter<{|
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
+
   get supportsReloadAndProfile(): boolean {
     // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
-    // And if so, can the backend use the localStorage API?
-    // Both of these are required for the reload-and-profile feature to work.
-    return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+    // And if so, can the backend use the localStorage API and sync XHR?
+    // All of these are currently required for the reload-and-profile feature to work.
+    return (
+      this._supportsReloadAndProfile &&
+      this._isBackendStorageAPISupported &&
+      this._isSynchronousXHRSupported
+    );
   }
 
   get supportsTraceUpdates(): boolean {
     return this._supportsTraceUpdates;
+  }
+
+  get unsupportedBridgeProtocol(): BridgeProtocol | null {
+    return this._unsupportedBridgeProtocol;
   }
 
   get unsupportedRendererVersionDetected(): boolean {
@@ -779,7 +826,7 @@ export default class Store extends EventEmitter<{|
 
           if (this._idToElement.has(id)) {
             throw Error(
-              `Cannot add node ${id} because a node with that id is already in the Store.`,
+              `Cannot add node "${id}" because a node with that id is already in the Store.`,
             );
           }
 
@@ -842,7 +889,7 @@ export default class Store extends EventEmitter<{|
 
             if (!this._idToElement.has(parentID)) {
               throw Error(
-                `Cannot add child ${id} to parent ${parentID} because parent node was not found in the Store.`,
+                `Cannot add child "${id}" to parent "${parentID}" because parent node was not found in the Store.`,
               );
             }
 
@@ -894,7 +941,7 @@ export default class Store extends EventEmitter<{|
 
             if (!this._idToElement.has(id)) {
               throw Error(
-                `Cannot remove node ${id} because no matching node was found in the Store.`,
+                `Cannot remove node "${id}" because no matching node was found in the Store.`,
               );
             }
 
@@ -903,7 +950,7 @@ export default class Store extends EventEmitter<{|
             const element = ((this._idToElement.get(id): any): Element);
             const {children, ownerID, parentID, weight} = element;
             if (children.length > 0) {
-              throw new Error(`Node ${id} was removed before its children.`);
+              throw new Error(`Node "${id}" was removed before its children.`);
             }
 
             this._idToElement.delete(id);
@@ -926,7 +973,7 @@ export default class Store extends EventEmitter<{|
               parentElement = ((this._idToElement.get(parentID): any): Element);
               if (parentElement === undefined) {
                 throw Error(
-                  `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`,
+                  `Cannot remove node "${id}" from parent "${parentID}" because no matching node was found in the Store.`,
                 );
               }
               const index = parentElement.children.indexOf(id);
@@ -987,7 +1034,7 @@ export default class Store extends EventEmitter<{|
 
           if (!this._idToElement.has(id)) {
             throw Error(
-              `Cannot reorder children for node ${id} because no matching node was found in the Store.`,
+              `Cannot reorder children for node "${id}" because no matching node was found in the Store.`,
             );
           }
 
@@ -1040,7 +1087,7 @@ export default class Store extends EventEmitter<{|
           haveErrorsOrWarningsChanged = true;
           break;
         default:
-          throw Error(`Unsupported Bridge operation ${operation}`);
+          throw Error(`Unsupported Bridge operation "${operation}"`);
       }
     }
 
@@ -1130,16 +1177,45 @@ export default class Store extends EventEmitter<{|
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
 
-    this._bridge.removeListener('operations', this.onBridgeOperations);
-    this._bridge.removeListener('shutdown', this.onBridgeShutdown);
-    this._bridge.removeListener(
-      'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+    const bridge = this._bridge;
+    bridge.removeListener('operations', this.onBridgeOperations);
+    bridge.removeListener(
+      'overrideComponentFilters',
+      this.onBridgeOverrideComponentFilters,
     );
+    bridge.removeListener('shutdown', this.onBridgeShutdown);
+    bridge.removeListener(
+      'isBackendStorageAPISupported',
+      this.onBackendStorageAPISupported,
+    );
+    bridge.removeListener(
+      'isNativeStyleEditorSupported',
+      this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.removeListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
+    );
+    bridge.removeListener(
+      'unsupportedRendererVersion',
+      this.onBridgeUnsupportedRendererVersion,
+    );
+    bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
+
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
   };
 
-  onBridgeStorageSupported = (isBackendStorageAPISupported: boolean) => {
+  onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+
+    this.emit('supportsReloadAndProfile');
+  };
+
+  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+    this._isSynchronousXHRSupported = isSynchronousXHRSupported;
 
     this.emit('supportsReloadAndProfile');
   };
@@ -1148,5 +1224,31 @@ export default class Store extends EventEmitter<{|
     this._unsupportedRendererVersionDetected = true;
 
     this.emit('unsupportedRendererVersionDetected');
+  };
+
+  onBridgeProtocol = (bridgeProtocol: BridgeProtocol) => {
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
+
+    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+      this._unsupportedBridgeProtocol = bridgeProtocol;
+    } else {
+      // If we should happen to get a response after timing out...
+      this._unsupportedBridgeProtocol = null;
+    }
+
+    this.emit('unsupportedBridgeProtocolDetected');
+  };
+
+  onBridgeProtocolTimeout = () => {
+    this._onBridgeProtocolTimeoutID = null;
+
+    // If we timed out, that indicates the backend predates the bridge protocol,
+    // so we can set a fake version (0) to trigger the downgrade message.
+    this._unsupportedBridgeProtocol = BRIDGE_PROTOCOL[0];
+
+    this.emit('unsupportedBridgeProtocolDetected');
   };
 }

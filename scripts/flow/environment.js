@@ -18,6 +18,8 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
+declare var queueMicrotask: (fn: Function) => void;
+
 declare module 'create-react-class' {
   declare var exports: React$CreateClass;
 }

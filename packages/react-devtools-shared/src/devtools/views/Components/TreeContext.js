@@ -34,12 +34,8 @@ import {
   useMemo,
   useReducer,
   useRef,
+  unstable_startTransition as startTransition,
 } from 'react';
-import {
-  unstable_next as next,
-  unstable_runWithPriority as runWithPriority,
-  unstable_UserBlockingPriority as UserBlockingPriority,
-} from 'scheduler';
 import {createRegExp} from '../utils';
 import {BridgeContext, StoreContext} from '../context';
 import Store from '../../store';
@@ -923,11 +919,10 @@ function TreeContextController({
 
   const dispatchWrapper = useCallback(
     (action: Action) => {
-      // Run the first update at "user-blocking" priority in case dispatch is called from a non-React event.
-      // In this case, the current (and "next") priorities would both be "normal",
-      // and suspense would potentially block both updates.
-      runWithPriority(UserBlockingPriority, () => dispatch(action));
-      next(() => dispatch({type: 'UPDATE_INSPECTED_ELEMENT_ID'}));
+      dispatch(action);
+      startTransition(() => {
+        dispatch({type: 'UPDATE_INSPECTED_ELEMENT_ID'});
+      });
     },
     [dispatch],
   );

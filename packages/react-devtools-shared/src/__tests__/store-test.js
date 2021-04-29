@@ -853,7 +853,7 @@ describe('Store', () => {
     expect(store).toMatchSnapshot('1: mount');
   });
 
-  it('should show the right display names for special component types', async done => {
+  it('should show the right display names for special component types', async () => {
     const MyComponent = (props, ref) => null;
     const ForwardRefComponent = React.forwardRef(MyComponent);
     const MyComponent2 = (props, ref) => null;
@@ -905,8 +905,6 @@ describe('Store', () => {
     act(() => ReactDOM.render(<App />, container));
 
     expect(store).toMatchSnapshot();
-
-    done();
   });
 
   describe('Lazy', () => {
@@ -933,7 +931,7 @@ describe('Store', () => {
       LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
     });
 
-    it('should support Lazy components (legacy render)', async done => {
+    it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -952,11 +950,9 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components in (createRoot)', async done => {
+    it('should support Lazy components in (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOM.unstable_createRoot(container);
 
@@ -976,11 +972,9 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -992,11 +986,9 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOM.unstable_createRoot(container);
 
@@ -1009,8 +1001,6 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
   });
 
@@ -1075,40 +1065,110 @@ describe('Store', () => {
       `);
     });
 
-    // This is not great, but it seems safer than potentially flushing between commits.
-    // Our logic for determining how to handle e.g. suspended trees or error boundaries
-    // is built on the assumption that we're evaluating the results of a commit, not an in-progress render.
-    it('during passive get counted (but not until the next commit)', () => {
-      function Example() {
-        React.useEffect(() => {
-          console.error('test-only: passive error');
-          console.warn('test-only: passive warning');
-        });
-        return null;
+    describe('during passive effects', () => {
+      function flushPendingBridgeOperations() {
+        jest.runOnlyPendingTimers();
       }
-      const container = document.createElement('div');
 
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example />, container));
+      // Gross abstraction around pending passive warning/error delay.
+      function flushPendingPassiveErrorAndWarningCounts() {
+        jest.advanceTimersByTime(1000);
+      }
+
+      it('are counted (after a delay)', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            ReactDOM.render(<Example />, container);
+          }, false);
+        });
+        flushPendingBridgeOperations();
+        expect(store).toMatchInlineSnapshot(`
+          [root]
+              <Example>
+        `);
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 1, ⚠ 1
+          [root]
+              <Example> ✕⚠
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
       });
 
-      expect(store).toMatchInlineSnapshot(`
-        [root]
-            <Example>
-      `);
+      it('are flushed early when there is a new commit', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
 
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example rerender={1} />, container));
+        function Noop() {
+          return null;
+        }
+
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            ReactDOM.render(
+              <>
+                <Example />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            [root]
+                <Example>
+          `);
+
+          // Before warnings and errors have flushed, flush another commit.
+          act(() => {
+            ReactDOM.render(
+              <>
+                <Example />
+                <Noop />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            ✕ 1, ⚠ 1
+            [root]
+                <Example> ✕⚠
+                <Noop>
+          `);
+        });
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 2, ⚠ 2
+          [root]
+              <Example> ✕⚠
+              <Noop>
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
       });
-
-      expect(store).toMatchInlineSnapshot(`
-        ✕ 1, ⚠ 1
-        [root]
-            <Example> ✕⚠
-      `);
-
-      act(() => ReactDOM.unmountComponentAtNode(container));
-      expect(store).toMatchInlineSnapshot(``);
     });
 
     it('from react get counted', () => {

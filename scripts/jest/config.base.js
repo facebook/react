@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = {
+  globalSetup: require.resolve('./setupGlobal.js'),
   haste: {
     hasteImplModulePath: require.resolve('./noHaste.js'),
   },

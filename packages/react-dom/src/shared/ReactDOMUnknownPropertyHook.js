@@ -14,12 +14,12 @@ import {
 } from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 let validateProperty = () => {};
 
 if (__DEV__) {
   const warnedProperties = {};
-  const hasOwnProperty = Object.prototype.hasOwnProperty;
   const EVENT_NAME_REGEX = /^on./;
   const INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
   const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');

@@ -13,6 +13,7 @@ import {
 } from '../events/EventRegistry';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import {
   getValueForAttribute,
@@ -53,8 +54,8 @@ import {
   createDangerousStringForStyles,
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
-} from '../shared/CSSPropertyOperations';
-import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
+} from './CSSPropertyOperations';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
@@ -85,8 +86,6 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
-
-const {html: HTML_NAMESPACE} = Namespaces;
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -445,7 +444,7 @@ export function createElement(
         !isCustomComponentTag &&
         Object.prototype.toString.call(domElement) ===
           '[object HTMLUnknownElement]' &&
-        !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
+        !hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
         console.error(
