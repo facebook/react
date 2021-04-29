@@ -480,7 +480,13 @@ export function renderWithHooks<Props, SecondArg>(
     if (
       current !== null &&
       (current.flags & StaticMaskEffect) !==
-        (workInProgress.flags & StaticMaskEffect)
+        (workInProgress.flags & StaticMaskEffect) &&
+      // Disable this warning in legacy mode, because legacy Suspense is weird
+      // and creates false positives. To make this work in legacy mode, we'd
+      // need to mark fibers that commit in an incomplete state, somehow. For
+      // now I'll disable the warning that most of the bugs that would trigger
+      // it are either exclusive to concurrent mode or exist in both.
+      (current.mode & ConcurrentMode) !== NoMode
     ) {
       console.error(
         'Internal React error: Expected static flag was missing. Please ' +
