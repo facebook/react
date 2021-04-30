@@ -12,18 +12,15 @@ No. The APIs being tested here are unstable and some of them have still not been
 
 There are also known bugs and inefficiencies in master so **don't use this fixture for demonstration purposes either yet**. Until they are fixed, this fixture is **not** indicative of React async rendering performance.
 
-## How do I run this fixture?
+## Setup
 
-```shell
-# 1: Build react from source
-cd /path/to/react
+To reference a local build of React, first run `yarn build` at the root
+of the React project. Then:
+
+```
+cd fixtures/concurrent/time-slicing
 yarn
-yarn build react-dom/index,react/index,react-cache,scheduler --type=NODE
-
-# 2: Install fixture dependencies
-cd fixtures/unstable-async/time-slicing/
-yarn
-
-# 3: Run the app
 yarn start
 ```
+
+
