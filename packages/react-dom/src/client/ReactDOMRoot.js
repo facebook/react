@@ -28,6 +28,7 @@ export type RootOptions = {
     ...
   },
   unstable_strictModeLevel?: number,
+  unstable_concurrentUpdatesByDefault?: boolean,
   ...
 };
 
@@ -52,6 +53,7 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
 function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
@@ -126,12 +128,21 @@ function createRootImpl(
       ? options.unstable_strictModeLevel
       : null;
 
+  let concurrentUpdatesByDefaultOverride = null;
+  if (allowConcurrentByDefault) {
+    concurrentUpdatesByDefaultOverride =
+      options != null && options.unstable_concurrentUpdatesByDefault != null
+        ? options.unstable_concurrentUpdatesByDefault
+        : null;
+  }
+
   const root = createContainer(
     container,
     tag,
     hydrate,
     hydrationCallbacks,
     strictModeLevelOverride,
+    concurrentUpdatesByDefaultOverride,
   );
   markContainerAsRoot(root.current, container);
 
