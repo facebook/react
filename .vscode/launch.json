@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Jest Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/node_modules/jest/bin/jest.js",
+        "--runInBand",
+        "--config",
+        "./scripts/jest/config.source-www.js",
+        "packages/react/src/__tests__/ReactChildren-test.js"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "RELEASE_CHANNEL": "experimental",
+        "VARIANT": "true"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "port": 9229
+    }
+  ]
+}
