@@ -302,9 +302,9 @@ export function useReducer<S, I, A>(
           update = update.next;
         } while (update !== null);
 
-				if (workInProgressHook !== null) {
-					workInProgressHook.memoizedState = newState;
-				}
+        if (workInProgressHook !== null) {
+          workInProgressHook.memoizedState = newState;
+        }
 
         return [newState, dispatch];
       }
@@ -328,9 +328,9 @@ export function useReducer<S, I, A>(
     if (__DEV__) {
       isInHookUserCodeInDev = false;
     }
-		if (workInProgressHook !== null) {
-			workInProgressHook.memoizedState = initialState;
-		}
+    if (workInProgressHook !== null) {
+      workInProgressHook.memoizedState = initialState;
+    }
     const queue: UpdateQueue<A> = (workInProgressHook.queue = {
       last: null,
       dispatch: null,
@@ -369,9 +369,9 @@ function useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T {
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
-	if (workInProgressHook !== null) {
-		workInProgressHook.memoizedState = [nextValue, nextDeps];
-	}
+  if (workInProgressHook !== null) {
+    workInProgressHook.memoizedState = [nextValue, nextDeps];
+  }
   return nextValue;
 }
 
@@ -384,9 +384,9 @@ function useRef<T>(initialValue: T): {|current: T|} {
     if (__DEV__) {
       Object.seal(ref);
     }
-		if (workInProgressHook !== null) {
-			workInProgressHook.memoizedState = ref;
-		}
+    if (workInProgressHook !== null) {
+      workInProgressHook.memoizedState = ref;
+    }
     return ref;
   } else {
     return previousRef;
