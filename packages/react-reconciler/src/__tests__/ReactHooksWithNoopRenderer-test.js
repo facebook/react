@@ -3784,4 +3784,49 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Render: 0']);
   });
+
+  it('reducer-closure', () => {
+    let setLimit;
+    let increment;
+    function Test() {
+      const [limit, _setLimit] = useState(5);
+      const [count, _increment] = useReducer((state, action) => {
+        return state < limit ? state + 1 : state;
+      }, 1);
+      setLimit = _setLimit;
+      increment = _increment;
+
+      return <Text text={`Render: ${count}`} />;
+    }
+
+    act(() => {
+      ReactNoop.render(<Test />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 1']);
+
+    act(() => {
+      increment();
+      increment();
+      increment();
+      increment();
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 5']);
+
+    act(() => {
+      increment();
+    });
+    act(() => {
+      increment();
+    });
+
+    expect(Scheduler).toHaveYielded([]);
+
+    act(() => {
+      setLimit(10);
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 5']);
+  });
 });
