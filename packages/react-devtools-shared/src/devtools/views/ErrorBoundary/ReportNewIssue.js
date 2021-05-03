@@ -11,6 +11,10 @@ import * as React from 'react';
 import Icon from '../Icon';
 import styles from './shared.css';
 
+function encodeURIWrapper(string: string): string {
+  return encodeURI(string).replace(/#/g, '%23');
+}
+
 type Props = {|
   callStack: string | null,
   componentStack: string | null,
@@ -28,26 +32,40 @@ export default function ReportNewIssue({
   }
 
   const title = `Error: "${errorMessage || ''}"`;
-  const label = 'Component: Developer Tools';
+  const labels = ['Component: Developer Tools', 'Status: Unconfirmed'];
 
-  let body = 'Describe what you were doing when the bug occurred:';
-  body += '\n1. ';
-  body += '\n2. ';
-  body += '\n3. ';
-  body += '\n\n---------------------------------------------';
-  body += '\nPlease do not remove the text below this line';
-  body += '\n---------------------------------------------';
-  body += `\n\nDevTools version: ${process.env.DEVTOOLS_VERSION || ''}`;
-  if (callStack) {
-    body += `\n\nCall stack: ${callStack.trim()}`;
-  }
-  if (componentStack) {
-    body += `\n\nComponent stack: ${componentStack.trim()}`;
-  }
+  const body = `
+<!-- Please answer both questions below before submitting this issue. -->
 
-  bugURL += `/issues/new?labels=${encodeURI(label)}&title=${encodeURI(
-    title,
-  )}&body=${encodeURI(body)}`;
+### Which website or app were you using when the bug happened?
+
+Please provide a link to the URL of the website (if it is public), a CodeSandbox (https://codesandbox.io/s/new) example that reproduces the bug, or a project on GitHub that we can checkout and run locally.
+
+### What were you doing on the website or app when the bug happened?
+
+If possible, please describe how to reproduce this bug on the website or app mentioned above:
+1. <!-- FILL THIS IN -->
+2. <!-- FILL THIS IN -->
+3. <!-- FILL THIS IN -->
+
+<!--------------------------------------------------->
+<!-- Please do not remove the text below this line -->
+<!--------------------------------------------------->
+
+### Generated information
+
+DevTools version: ${process.env.DEVTOOLS_VERSION || ''}
+
+Call stack:
+${callStack || '(not available)'}
+
+Component stack:
+${componentStack || '(not available)'}
+  `;
+
+  bugURL += `/issues/new?labels=${encodeURIWrapper(
+    labels.join(','),
+  )}&title=${encodeURIWrapper(title)}&body=${encodeURIWrapper(body.trim())}`;
 
   return (
     <div className={styles.GitHubLinkRow}>
