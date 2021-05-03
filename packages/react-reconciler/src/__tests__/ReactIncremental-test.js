@@ -1863,18 +1863,11 @@ describe('ReactIncremental', () => {
         </div>
       </Intl>,
     );
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'Intl {}',
-        'ShowLocale {"locale":"fr"}',
-        'ShowBoth {"locale":"fr"}',
-      ]),
-    ).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Intl, ShowBoth, ShowLocale',
-    );
+    expect(Scheduler).toFlushAndYield([
+      'Intl {}',
+      'ShowLocale {"locale":"fr"}',
+      'ShowBoth {"locale":"fr"}',
+    ]);
 
     ReactNoop.render(
       <Intl locale="de">
@@ -1921,28 +1914,21 @@ describe('ReactIncremental', () => {
         <ShowBoth />
       </Intl>,
     );
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'ShowLocale {"locale":"sv"}',
-        'ShowBoth {"locale":"sv"}',
-        'Intl {}',
-        'ShowLocale {"locale":"en"}',
-        'Router {}',
-        'Indirection {}',
-        'ShowLocale {"locale":"en"}',
-        'ShowRoute {"route":"/about"}',
-        'ShowNeither {}',
-        'Intl {}',
-        'ShowBoth {"locale":"ru","route":"/about"}',
-        'ShowBoth {"locale":"en","route":"/about"}',
-        'ShowBoth {"locale":"en"}',
-      ]),
-    ).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Router, ShowRoute',
-    );
+    expect(Scheduler).toFlushAndYield([
+      'ShowLocale {"locale":"sv"}',
+      'ShowBoth {"locale":"sv"}',
+      'Intl {}',
+      'ShowLocale {"locale":"en"}',
+      'Router {}',
+      'Indirection {}',
+      'ShowLocale {"locale":"en"}',
+      'ShowRoute {"route":"/about"}',
+      'ShowNeither {}',
+      'Intl {}',
+      'ShowBoth {"locale":"ru","route":"/about"}',
+      'ShowBoth {"locale":"en","route":"/about"}',
+      'ShowBoth {"locale":"en"}',
+    ]);
   });
 
   it('does not leak own context into context provider', () => {
@@ -1968,19 +1954,12 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Recurse />);
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'Recurse {}',
-        'Recurse {"n":2}',
-        'Recurse {"n":1}',
-        'Recurse {"n":0}',
-      ]),
-    ).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Recurse',
-    );
+    expect(Scheduler).toFlushAndYield([
+      'Recurse {}',
+      'Recurse {"n":2}',
+      'Recurse {"n":1}',
+      'Recurse {"n":0}',
+    ]);
   });
 
   if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
@@ -2020,10 +1999,6 @@ describe('ReactIncremental', () => {
           "If you can't use a class try assigning the prototype on the function as a workaround. " +
           '`Recurse.prototype = React.Component.prototype`. ' +
           "Don't use an arrow function since it cannot be called with `new` by React.",
-        'Legacy context API has been detected within a strict-mode tree.\n\n' +
-          'The old API will be supported in all 16.x releases, but applications ' +
-          'using it should migrate to the new version.\n\n' +
-          'Please update the following components: Recurse',
       ]);
     });
   }
@@ -2092,18 +2067,11 @@ describe('ReactIncremental', () => {
       'ShowLocale {"locale":"fr"}',
     ]);
 
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'ShowLocale {"locale":"fr"}',
-        'Intl {}',
-        'ShowLocale {"locale":"ru"}',
-      ]),
-    ).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Intl, ShowLocale',
-    );
+    expect(Scheduler).toFlushAndYield([
+      'ShowLocale {"locale":"fr"}',
+      'Intl {}',
+      'ShowLocale {"locale":"ru"}',
+    ]);
   });
 
   it('reads context when setState is below the provider', () => {
@@ -2186,21 +2154,14 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Intl>,
     );
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'Intl:read {}',
-        'Intl:provide {"locale":"fr"}',
-        'IndirectionFn {}',
-        'IndirectionClass {}',
-        'ShowLocaleClass:read {"locale":"fr"}',
-        'ShowLocaleFn:read {"locale":"fr"}',
-      ]),
-    ).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Intl, ShowLocaleClass, ShowLocaleFn',
-    );
+    expect(Scheduler).toFlushAndYield([
+      'Intl:read {}',
+      'Intl:provide {"locale":"fr"}',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
 
     statefulInst.setState({x: 1});
     expect(Scheduler).toFlushWithoutYielding();
@@ -2287,21 +2248,14 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Stateful>,
     );
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'Intl:read {}',
-        'Intl:provide {"locale":"fr"}',
-        'IndirectionFn {}',
-        'IndirectionClass {}',
-        'ShowLocaleClass:read {"locale":"fr"}',
-        'ShowLocaleFn:read {"locale":"fr"}',
-      ]),
-    ).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Intl, ShowLocaleClass, ShowLocaleFn',
-    );
+    expect(Scheduler).toFlushAndYield([
+      'Intl:read {}',
+      'Intl:provide {"locale":"fr"}',
+      'IndirectionFn {}',
+      'IndirectionClass {}',
+      'ShowLocaleClass:read {"locale":"fr"}',
+      'ShowLocaleFn:read {"locale":"fr"}',
+    ]);
 
     statefulInst.setState({locale: 'gr'});
     expect(Scheduler).toFlushAndYield([
@@ -2356,12 +2310,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Child',
-    );
+    expect(Scheduler).toFlushWithoutYielding();
 
     // Trigger an update in the middle of the tree
     instance.setState({});
@@ -2407,12 +2356,7 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: ContextProvider',
-    );
+    expect(Scheduler).toFlushWithoutYielding();
 
     // Trigger an update in the middle of the tree
     // This is necessary to reproduce the error as it currently exists.
@@ -2454,27 +2398,16 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<MyComponent />);
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([
-        'render',
-        'componentDidMount',
-        'shouldComponentUpdate',
-        'render',
-        'componentDidUpdate',
-        'shouldComponentUpdate',
-        'render',
-        'componentDidUpdate',
-      ]),
-    ).toErrorDev(
-      [
-        'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
-        'Legacy context API has been detected within a strict-mode tree.\n\n' +
-          'The old API will be supported in all 16.x releases, but applications ' +
-          'using it should migrate to the new version.\n\n' +
-          'Please update the following components: MyComponent',
-      ],
-      {withoutStack: 1},
-    );
+    expect(Scheduler).toFlushAndYield([
+      'render',
+      'componentDidMount',
+      'shouldComponentUpdate',
+      'render',
+      'componentDidUpdate',
+      'shouldComponentUpdate',
+      'render',
+      'componentDidUpdate',
+    ]);
   });
 
   xit('should reuse memoized work if pointers are updated before calling lifecycles', () => {
@@ -2604,12 +2537,7 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() => expect(Scheduler).toFlushAndYield(['count:0'])).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Child, TopContextProvider',
-    );
+    expect(Scheduler).toFlushAndYield(['count:0']);
     instance.updateCount();
     expect(Scheduler).toFlushAndYield(['count:1']);
   });
@@ -2664,12 +2592,7 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() => expect(Scheduler).toFlushAndYield(['count:0'])).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
-    );
+    expect(Scheduler).toFlushAndYield(['count:0']);
     instance.updateCount();
     expect(Scheduler).toFlushAndYield(['count:1']);
   });
@@ -2733,12 +2656,7 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() => expect(Scheduler).toFlushAndYield(['count:0'])).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
-    );
+    expect(Scheduler).toFlushAndYield(['count:0']);
     instance.updateCount();
     expect(Scheduler).toFlushWithoutYielding();
   });
@@ -2814,14 +2732,7 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['count:0, name:brian']),
-    ).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but applications ' +
-        'using it should migrate to the new version.\n\n' +
-        'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
-    );
+    expect(Scheduler).toFlushAndYield(['count:0, name:brian']);
     topInstance.updateCount();
     expect(Scheduler).toFlushWithoutYielding();
     middleInstance.updateName('not brian');
@@ -2933,7 +2844,11 @@ describe('ReactIncremental', () => {
           return this.state.didError ? null : <Thing />;
         }
       }
-      ReactNoop.render(<Boundary />);
+      ReactNoop.render(
+        <React.StrictMode>
+          <Boundary />
+        </React.StrictMode>,
+      );
       expect(() => {
         expect(Scheduler).toFlushWithoutYielding();
       }).toErrorDev([

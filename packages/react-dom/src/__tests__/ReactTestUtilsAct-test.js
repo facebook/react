@@ -97,16 +97,10 @@ describe('ReactTestUtils.act()', () => {
     });
 
     // @gate experimental
-    it('warns in concurrent mode', () => {
-      expect(() => {
-        const root = ReactDOM.unstable_createRoot(
-          document.createElement('div'),
-        );
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
+    it('does not warn in concurrent mode', () => {
+      const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+      root.render(<App />);
+      Scheduler.unstable_flushAll();
     });
   });
 });

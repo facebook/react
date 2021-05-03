@@ -1286,12 +1286,7 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      'Legacy context API has been detected within a strict-mode tree.\n\n' +
-        'The old API will be supported in all 16.x releases, but ' +
-        'applications using it should migrate to the new version.\n\n' +
-        'Please update the following components: Connector, Provider',
-    );
+    expect(Scheduler).toFlushWithoutYielding();
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop.getChildren()).toEqual([span('a')]);
@@ -1843,10 +1838,6 @@ describe('ReactIncrementalErrorHandling', () => {
           "If you can't use a class try assigning the prototype on the function as a workaround. " +
           '`Provider.prototype = React.Component.prototype`. ' +
           "Don't use an arrow function since it cannot be called with `new` by React.",
-        'Legacy context API has been detected within a strict-mode tree.\n\n' +
-          'The old API will be supported in all 16.x releases, but ' +
-          'applications using it should migrate to the new version.\n\n' +
-          'Please update the following components: Provider',
       ]);
     });
   }

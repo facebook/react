@@ -402,12 +402,7 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['render']),
-    ).toErrorDev(
-      'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield(['render']);
 
     ReactNoop.flushSync(() => {
       instance.setState({a: 'a'});

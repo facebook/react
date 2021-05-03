@@ -50,34 +50,11 @@ describe('ReactStrictMode', () => {
     }
 
     // @gate experimental
-    it('should support overriding default via createRoot option', () => {
+    it('should default to not strict', () => {
       act(() => {
         const container = document.createElement('div');
-        const root = ReactDOM.createRoot(container, {
-          unstable_strictModeLevel: 0,
-        });
+        const root = ReactDOM.createRoot(container);
         root.render(<Component label="A" />);
-      });
-
-      expect(log).toEqual([
-        'A: render',
-        'A: useLayoutEffect mount',
-        'A: useEffect mount',
-      ]);
-    });
-
-    // @gate experimental
-    it('should disable strict mode if level 0 is specified', () => {
-      act(() => {
-        const container = document.createElement('div');
-        const root = ReactDOM.createRoot(container, {
-          unstable_strictModeLevel: 0,
-        });
-        root.render(
-          <React.StrictMode unstable_level={0}>
-            <Component label="A" />
-          </React.StrictMode>,
-        );
       });
 
       expect(log).toEqual([
@@ -156,9 +133,7 @@ describe('ReactStrictMode', () => {
       it('should allow level to be increased with nesting', () => {
         act(() => {
           const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container, {
-            unstable_strictModeLevel: 0,
-          });
+          const root = ReactDOM.createRoot(container);
           root.render(
             <>
               <Component label="A" />
@@ -197,9 +172,7 @@ describe('ReactStrictMode', () => {
       it('should not allow level to be decreased with nesting', () => {
         act(() => {
           const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container, {
-            unstable_strictModeLevel: 2,
-          });
+          const root = ReactDOM.createRoot(container);
           root.render(
             <>
               <Component label="A" />
@@ -217,23 +190,10 @@ describe('ReactStrictMode', () => {
 
         expect(log).toEqual([
           'A: render',
-          'A: render',
           'B: render',
           'B: render',
           'C: render',
           'C: render',
-          'A: useLayoutEffect mount',
-          'B: useLayoutEffect mount',
-          'C: useLayoutEffect mount',
-          'A: useEffect mount',
-          'B: useEffect mount',
-          'C: useEffect mount',
-          'A: useLayoutEffect unmount',
-          'B: useLayoutEffect unmount',
-          'C: useLayoutEffect unmount',
-          'A: useEffect unmount',
-          'B: useEffect unmount',
-          'C: useEffect unmount',
           'A: useLayoutEffect mount',
           'B: useLayoutEffect mount',
           'C: useLayoutEffect mount',
