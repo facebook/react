@@ -440,8 +440,6 @@ export function createHostRootFiber(
     } else {
       if (enableStrictEffects && createRootStrictEffectsByDefault) {
         mode |= StrictLegacyMode | StrictEffectsMode;
-      } else {
-        mode |= StrictLegacyMode;
       }
     }
     if (
