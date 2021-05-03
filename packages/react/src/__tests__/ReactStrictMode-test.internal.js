@@ -66,52 +66,12 @@ describe('ReactStrictMode', () => {
 
     if (__DEV__) {
       // @gate experimental
-      it('should default to level 1 (legacy mode)', () => {
+      it('should include legacy + strict effects mode', () => {
         act(() => {
           const container = document.createElement('div');
           const root = ReactDOM.createRoot(container);
           root.render(
             <React.StrictMode>
-              <Component label="A" />
-            </React.StrictMode>,
-          );
-        });
-
-        expect(log).toEqual([
-          'A: render',
-          'A: render',
-          'A: useLayoutEffect mount',
-          'A: useEffect mount',
-        ]);
-      });
-
-      // @gate experimental
-      it('should support level 1 (legacy mode)', () => {
-        act(() => {
-          const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container);
-          root.render(
-            <React.StrictMode unstable_level={1}>
-              <Component label="A" />
-            </React.StrictMode>,
-          );
-        });
-
-        expect(log).toEqual([
-          'A: render',
-          'A: render',
-          'A: useLayoutEffect mount',
-          'A: useEffect mount',
-        ]);
-      });
-
-      // @gate experimental
-      it('should support level 2 (legacy + strict effects mode)', () => {
-        act(() => {
-          const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container);
-          root.render(
-            <React.StrictMode unstable_level={2}>
               <Component label="A" />
             </React.StrictMode>,
           );
@@ -137,12 +97,8 @@ describe('ReactStrictMode', () => {
           root.render(
             <>
               <Component label="A" />
-              <React.StrictMode unstable_level={1}>
-                <Component label="B" />
-                <React.StrictMode unstable_level={2}>
-                  <Component label="C" />
-                </React.StrictMode>
-                ,
+              <React.StrictMode>
+                <Component label="B" />,
               </React.StrictMode>
               ,
             </>,
@@ -153,53 +109,14 @@ describe('ReactStrictMode', () => {
           'A: render',
           'B: render',
           'B: render',
-          'C: render',
-          'C: render',
           'A: useLayoutEffect mount',
           'B: useLayoutEffect mount',
-          'C: useLayoutEffect mount',
           'A: useEffect mount',
           'B: useEffect mount',
-          'C: useEffect mount',
-          'C: useLayoutEffect unmount',
-          'C: useEffect unmount',
-          'C: useLayoutEffect mount',
-          'C: useEffect mount',
-        ]);
-      });
-
-      // @gate experimental
-      it('should not allow level to be decreased with nesting', () => {
-        act(() => {
-          const container = document.createElement('div');
-          const root = ReactDOM.createRoot(container);
-          root.render(
-            <>
-              <Component label="A" />
-              <React.StrictMode unstable_level={1}>
-                <Component label="B" />
-                <React.StrictMode unstable_level={0}>
-                  <Component label="C" />
-                </React.StrictMode>
-                ,
-              </React.StrictMode>
-              ,
-            </>,
-          );
-        });
-
-        expect(log).toEqual([
-          'A: render',
-          'B: render',
-          'B: render',
-          'C: render',
-          'C: render',
-          'A: useLayoutEffect mount',
+          'B: useLayoutEffect unmount',
+          'B: useEffect unmount',
           'B: useLayoutEffect mount',
-          'C: useLayoutEffect mount',
-          'A: useEffect mount',
           'B: useEffect mount',
-          'C: useEffect mount',
         ]);
       });
     }

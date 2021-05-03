@@ -487,21 +487,7 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-
-        // Legacy strict mode (<StrictMode> without any level prop) defaults to level 1.
-        const level =
-          pendingProps.unstable_level == null ? 1 : pendingProps.unstable_level;
-
-        // Levels cascade; higher levels inherit all lower level modes.
-        // It is explicitly not supported to lower a mode with nesting, only to increase it.
-        if (level >= 1) {
-          mode |= StrictLegacyMode;
-        }
-        if (enableStrictEffects) {
-          if (level >= 2) {
-            mode |= StrictEffectsMode;
-          }
-        }
+        mode |= StrictLegacyMode | StrictEffectsMode;
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);
