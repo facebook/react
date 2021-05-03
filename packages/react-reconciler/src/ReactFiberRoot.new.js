@@ -98,7 +98,6 @@ export function createFiberRoot(
   tag: RootTag,
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
-  strictModeLevelOverride: null | number,
   concurrentUpdatesByDefaultOverride: null | boolean,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(containerInfo, tag, hydrate): any);
@@ -110,7 +109,6 @@ export function createFiberRoot(
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber(
     tag,
-    strictModeLevelOverride,
     concurrentUpdatesByDefaultOverride,
   );
   root.current = uninitializedFiber;

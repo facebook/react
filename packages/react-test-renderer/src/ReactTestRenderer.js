@@ -58,7 +58,6 @@ const {IsSomeRendererActing} = ReactSharedInternals;
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isConcurrent: boolean,
-  unstable_strictModeLevel: number,
   unstable_concurrentUpdatesByDefault: boolean,
   ...
 };
@@ -437,7 +436,6 @@ function propsMatch(props: Object, filter: Object): boolean {
 function create(element: React$Element<any>, options: TestRendererOptions) {
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
-  let strictModeLevel = null;
   let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
@@ -445,9 +443,6 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     }
     if (options.unstable_isConcurrent === true) {
       isConcurrent = true;
-    }
-    if (options.unstable_strictModeLevel !== undefined) {
-      strictModeLevel = options.unstable_strictModeLevel;
     }
     if (allowConcurrentByDefault) {
       if (options.unstable_concurrentUpdatesByDefault !== undefined) {
@@ -466,7 +461,6 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     isConcurrent ? ConcurrentRoot : LegacyRoot,
     false,
     null,
-    strictModeLevel,
     concurrentUpdatesByDefault,
   );
   invariant(root != null, 'something went wrong');
