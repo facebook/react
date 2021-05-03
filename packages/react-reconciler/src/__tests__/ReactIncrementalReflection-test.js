@@ -78,12 +78,7 @@ describe('ReactIncrementalReflection', () => {
     expect(instances[0]._isMounted()).toBe(false);
 
     // Render the rest and commit the updates.
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['componentDidMount: true']),
-    ).toErrorDev(
-      'Using UNSAFE_componentWillMount in strict mode is not recommended',
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield(['componentDidMount: true']);
 
     expect(instances[0]._isMounted()).toBe(true);
   });
@@ -120,12 +115,7 @@ describe('ReactIncrementalReflection', () => {
     }
 
     ReactNoop.render(<Foo mount={true} />);
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['Component']),
-    ).toErrorDev(
-      'Using UNSAFE_componentWillMount in strict mode is not recommended',
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield(['Component']);
 
     expect(instances[0]._isMounted()).toBe(true);
 
@@ -238,15 +228,7 @@ describe('ReactIncrementalReflection', () => {
     // not find any host nodes in it.
     expect(findInstance(classInstance)).toBe(null);
 
-    expect(() =>
-      expect(Scheduler).toFlushAndYield([['componentDidMount', span()]]),
-    ).toErrorDev(
-      [
-        'Using UNSAFE_componentWillMount in strict mode is not recommended',
-        'Using UNSAFE_componentWillUpdate in strict mode is not recommended',
-      ],
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield([['componentDidMount', span()]]);
 
     const hostSpan = classInstance.span;
     expect(hostSpan).toBeDefined();

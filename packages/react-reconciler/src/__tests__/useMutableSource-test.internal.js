@@ -1836,9 +1836,14 @@ describe('useMutableSource', () => {
           return null;
         }
 
+        // TODO The mechanism for this type of detection relies on StrictMode double rendering.
         expect(() => {
           act(() => {
-            ReactNoop.render(<MutateDuringRead />);
+            ReactNoop.render(
+              <React.StrictMode>
+                <MutateDuringRead />
+              </React.StrictMode>,
+            );
           });
         }).toThrow(
           'A mutable source was mutated while the MutateDuringRead component ' +

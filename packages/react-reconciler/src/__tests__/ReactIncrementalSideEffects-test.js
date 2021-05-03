@@ -1308,9 +1308,7 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      'Warning: A string ref, "bar", has been found within a strict mode tree.',
-    );
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(fooInstance.refs.bar.test).toEqual('test');
   });

@@ -520,11 +520,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           </>,
         );
         expect(() =>
-          expect(Scheduler).toFlushAndYield(
-            __DEV__
-              ? ['Foo [0]', 'Bar', 'Foo [2]']
-              : ['Foo [0]', 'Bar', 'Foo [1]'],
-          ),
+          expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
         ).toErrorDev([
           'Cannot update a component (`Foo`) while rendering a ' +
             'different component (`Bar`). To locate the bad setState() call inside `Bar`',
@@ -539,11 +535,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             <Bar triggerUpdate={true} />
           </>,
         );
-        expect(Scheduler).toFlushAndYield(
-          __DEV__
-            ? ['Foo [2]', 'Bar', 'Foo [4]']
-            : ['Foo [1]', 'Bar', 'Foo [2]'],
-        );
+        expect(Scheduler).toFlushAndYield(['Foo [1]', 'Bar', 'Foo [2]']);
       });
     });
 
@@ -1765,16 +1757,11 @@ describe('ReactHooksWithNoopRenderer', () => {
         return <Text text={'Count: ' + count} />;
       }
 
-      // we explicitly wait for missing act() warnings here since
-      // it's a lot harder to simulate this condition inside an act scope
-      expect(() => {
-        ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.unstable_yieldValue('Sync effect'),
-        );
-        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toErrorDev(['An update to Counter ran an effect']);
-
+      ReactNoop.render(<Counter count={0} />, () =>
+        Scheduler.unstable_yieldValue('Sync effect'),
+      );
+      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       // A flush sync doesn't cause the passive effects to fire.
       // So we haven't added the other update yet.
       act(() => {

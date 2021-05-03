@@ -282,7 +282,6 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
       `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
       `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
@@ -366,7 +365,6 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
       `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`, // debugRenderPhaseSideEffectsForStrictMode
       `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
