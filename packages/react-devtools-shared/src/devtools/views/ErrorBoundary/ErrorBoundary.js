@@ -9,12 +9,14 @@
 
 import * as React from 'react';
 import {Component, Suspense} from 'react';
+import Store from 'react-devtools-shared/src/devtools/store';
 import ErrorView from './ErrorView';
 import SearchingGitHubIssues from './SearchingGitHubIssues';
 import SuspendingErrorView from './SuspendingErrorView';
 
 type Props = {|
   children: React$Node,
+  store: Store,
 |};
 
 type State = {|
@@ -42,13 +44,6 @@ export default class ErrorBoundary extends Component<Props, State> {
         ? error.message
         : '' + error;
 
-    return {
-      errorMessage,
-      hasError: true,
-    };
-  }
-
-  componentDidCatch(error: any, {componentStack}: any) {
     const callStack =
       typeof error === 'object' &&
       error !== null &&
@@ -59,10 +54,25 @@ export default class ErrorBoundary extends Component<Props, State> {
             .join('\n')
         : null;
 
-    this.setState({
+    return {
       callStack,
+      errorMessage,
+      hasError: true,
+    };
+  }
+
+  componentDidCatch(error: any, {componentStack}: any) {
+    this.setState({
       componentStack,
     });
+  }
+
+  componentDidMount() {
+    this.props.store.addListener('error', this._onStoreError);
+  }
+
+  componentWillUnmount() {
+    this.props.store.removeListener('error', this._onStoreError);
   }
 
   render() {
@@ -88,4 +98,10 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return children;
   }
+
+  _onStoreError = (error: Error) => {
+    if (!this.state.hasError) {
+      this.setState(ErrorBoundary.getDerivedStateFromError(error));
+    }
+  };
 }
