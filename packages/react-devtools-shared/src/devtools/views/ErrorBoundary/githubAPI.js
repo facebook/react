@@ -14,9 +14,7 @@ export type GitHubIssue = {|
 
 const GITHUB_ISSUES_API = 'https://api.github.com/search/issues';
 
-export async function searchGitHubIssues(
-  message: string,
-): Promise<GitHubIssue | null> {
+export function searchGitHubIssuesURL(message: string): string {
   // Remove Fiber IDs from error message (as those will be unique).
   message = message.replace(/"[0-9]+"/g, '');
 
@@ -29,13 +27,19 @@ export async function searchGitHubIssues(
     'repo:facebook/react',
   ];
 
-  const response = await fetch(
+  return (
     GITHUB_ISSUES_API +
-      '?q=' +
-      encodeURIComponent(message) +
-      '%20' +
-      filters.map(encodeURIComponent).join('%20'),
+    '?q=' +
+    encodeURIComponent(message) +
+    '%20' +
+    filters.map(encodeURIComponent).join('%20')
   );
+}
+
+export async function searchGitHubIssues(
+  message: string,
+): Promise<GitHubIssue | null> {
+  const response = await fetch(searchGitHubIssuesURL(message));
   const data = await response.json();
   if (data.items.length > 0) {
     const item = data.items[0];
