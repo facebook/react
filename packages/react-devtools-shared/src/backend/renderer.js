@@ -393,7 +393,7 @@ export function getInternalReactConstants(
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const {type, tag} = fiber;
+    const {elementType, type, tag} = fiber;
 
     let resolvedType = type;
     if (typeof type === 'object' && type !== null) {
@@ -432,7 +432,11 @@ export function getInternalReactConstants(
         return 'Lazy';
       case MemoComponent:
       case SimpleMemoComponent:
-        return getDisplayName(resolvedType, 'Anonymous');
+        return (
+          (elementType && elementType.displayName) ||
+          (type && type.displayName) ||
+          getDisplayName(resolvedType, 'Anonymous')
+        );
       case SuspenseComponent:
         return 'Suspense';
       case LegacyHiddenComponent:
