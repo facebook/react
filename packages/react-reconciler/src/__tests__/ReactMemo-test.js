@@ -553,6 +553,24 @@ describe('memo', () => {
       );
     });
 
+    it('should pass displayName to an anonymous inner component so it shows up in component stacks', () => {
+      const MemoComponent = React.memo(props => {
+        return <div {...props} />;
+      });
+      MemoComponent.displayName = 'Memo';
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Memo`, but its value is `undefined`.\n' +
+          '    in Memo (at **)',
+      );
+    });
+
     it('should honor a outer displayName when wrapped component and memo component set displayName at the same time.', () => {
       function Component(props) {
         return <div {...props} />;

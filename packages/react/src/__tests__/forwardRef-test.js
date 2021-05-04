@@ -250,10 +250,10 @@ describe('forwardRef', () => {
   it('should honor a displayName if set on the forwardRef wrapper in warnings', () => {
     const Component = props => <div {...props} />;
 
-    const RefForwardingComponent = React.forwardRef((props, ref) => (
-      <Component {...props} forwardedRef={ref} />
-    ));
-    RefForwardingComponent.displayName = 'Outer';
+    const RefForwardingComponent = React.forwardRef(function Inner(props, ref) {
+      <Component {...props} forwardedRef={ref} />;
+    });
+    RefForwardingComponent.displayName = 'Custom';
 
     RefForwardingComponent.propTypes = {
       optional: PropTypes.string,
@@ -270,11 +270,36 @@ describe('forwardRef', () => {
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
     ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`Outer`, but its value is `undefined`.',
-      // There's no component stack in this warning because the inner function is anonymous.
-      // If we wanted to support this (for the Error frames / source location)
-      // we could do this by updating ReactComponentStackFrame.
-      {withoutStack: true},
+        '`Custom`, but its value is `undefined`.\n' +
+        '    in Inner (at **)',
+    );
+  });
+
+  it('should pass displayName to an anonymous inner component so it shows up in component stacks', () => {
+    const Component = props => <div {...props} />;
+
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
+      <Component {...props} forwardedRef={ref} />
+    ));
+    RefForwardingComponent.displayName = 'Custom';
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toErrorDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`Custom`, but its value is `undefined`.\n' +
+        '    in Custom (at **)',
     );
   });
 
