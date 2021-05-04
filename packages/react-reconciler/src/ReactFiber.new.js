@@ -422,12 +422,19 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
 export function createHostRootFiber(
   tag: RootTag,
+  isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode;
-    if (enableStrictEffects && createRootStrictEffectsByDefault) {
+    if (isStrictMode === true) {
+      mode |= StrictLegacyMode;
+
+      if (enableStrictEffects) {
+        mode |= StrictEffectsMode;
+      }
+    } else if (enableStrictEffects && createRootStrictEffectsByDefault) {
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (

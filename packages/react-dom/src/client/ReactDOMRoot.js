@@ -27,6 +27,7 @@ export type RootOptions = {
     mutableSources?: Array<MutableSource<any>>,
     ...
   },
+  unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   ...
 };
@@ -122,6 +123,7 @@ function createRootImpl(
       options.hydrationOptions != null &&
       options.hydrationOptions.mutableSources) ||
     null;
+  const isStrictMode = options != null && options.unstable_strictMode === true;
 
   let concurrentUpdatesByDefaultOverride = null;
   if (allowConcurrentByDefault) {
@@ -136,6 +138,7 @@ function createRootImpl(
     tag,
     hydrate,
     hydrationCallbacks,
+    isStrictMode,
     concurrentUpdatesByDefaultOverride,
   );
   markContainerAsRoot(root.current, container);

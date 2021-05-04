@@ -722,7 +722,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (!root) {
         const container = {rootID: rootID, pendingChildren: [], children: []};
         rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(container, tag, false, null);
+        root = NoopRenderer.createContainer(container, tag, false, null, null);
         roots.set(rootID, root);
       }
       return root.current.stateNode.containerInfo;
@@ -739,6 +739,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         container,
         ConcurrentRoot,
         false,
+        null,
         null,
       );
       return {
@@ -765,6 +766,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         container,
         LegacyRoot,
         false,
+        null,
         null,
       );
       return {

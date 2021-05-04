@@ -66,6 +66,28 @@ describe('ReactStrictMode', () => {
 
     if (__DEV__) {
       // @gate experimental
+      it('should support enabling strict mode via createRoot option', () => {
+        act(() => {
+          const container = document.createElement('div');
+          const root = ReactDOM.createRoot(container, {
+            unstable_strictMode: true,
+          });
+          root.render(<Component label="A" />);
+        });
+
+        expect(log).toEqual([
+          'A: render',
+          'A: render',
+          'A: useLayoutEffect mount',
+          'A: useEffect mount',
+          'A: useLayoutEffect unmount',
+          'A: useEffect unmount',
+          'A: useLayoutEffect mount',
+          'A: useEffect mount',
+        ]);
+      });
+
+      // @gate experimental
       it('should include legacy + strict effects mode', () => {
         act(() => {
           const container = document.createElement('div');
