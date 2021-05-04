@@ -437,7 +437,7 @@ function propsMatch(props: Object, filter: Object): boolean {
 function create(element: React$Element<any>, options: TestRendererOptions) {
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
-  let strictModeLevel = null;
+  let isStrictMode = false;
   let concurrentUpdatesByDefault = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
@@ -447,7 +447,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
       isConcurrent = true;
     }
     if (options.unstable_strictMode === true) {
-      strictModeLevel = 2;
+      isStrictMode = true;
     }
     if (allowConcurrentByDefault) {
       if (options.unstable_concurrentUpdatesByDefault !== undefined) {
@@ -466,7 +466,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     isConcurrent ? ConcurrentRoot : LegacyRoot,
     false,
     null,
-    strictModeLevel,
+    isStrictMode,
     concurrentUpdatesByDefault,
   );
   invariant(root != null, 'something went wrong');

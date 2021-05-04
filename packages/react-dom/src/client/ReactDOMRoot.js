@@ -123,8 +123,7 @@ function createRootImpl(
       options.hydrationOptions != null &&
       options.hydrationOptions.mutableSources) ||
     null;
-  const strictModeLevelOverride =
-    options != null && options.unstable_strictMode === true ? 2 : null;
+  const isStrictMode = options != null && options.unstable_strictMode === true;
 
   let concurrentUpdatesByDefaultOverride = null;
   if (allowConcurrentByDefault) {
@@ -139,7 +138,7 @@ function createRootImpl(
     tag,
     hydrate,
     hydrationCallbacks,
-    strictModeLevelOverride,
+    isStrictMode,
     concurrentUpdatesByDefaultOverride,
   );
   markContainerAsRoot(root.current, container);
