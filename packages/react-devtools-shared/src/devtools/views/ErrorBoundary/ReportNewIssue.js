@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import Icon from '../Icon';
+import {searchGitHubIssuesURL} from './githubAPI';
 import styles from './shared.css';
 
 function encodeURIWrapper(string: string): string {
@@ -30,6 +31,9 @@ export default function ReportNewIssue({
   if (!bugURL) {
     return null;
   }
+
+  const gitHubAPISearch =
+    errorMessage !== null ? searchGitHubIssuesURL(errorMessage) : '(none)';
 
   const title = `Error: "${errorMessage || ''}"`;
   const labels = ['Component: Developer Tools', 'Status: Unconfirmed'];
@@ -57,10 +61,13 @@ If possible, please describe how to reproduce this bug on the website or app men
 DevTools version: ${process.env.DEVTOOLS_VERSION || ''}
 
 Call stack:
-${callStack || '(not available)'}
+${callStack || '(none)'}
 
 Component stack:
-${componentStack || '(not available)'}
+${componentStack || '(none)'}
+
+GitHub URL search query:
+${gitHubAPISearch}
   `;
 
   bugURL += `/issues/new?labels=${encodeURIWrapper(
