@@ -487,6 +487,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     // Regression test for https://github.com/facebook/react/issues/14705
+    // @gate !experimental && www
     it('does not pollute later renders when stream destroyed', () => {
       const LoggedInUser = React.createContext('default');
 
@@ -529,6 +530,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     // Regression test for https://github.com/facebook/react/issues/14705
+    // @gate !experimental && www
     it('frees context value reference when stream destroyed', () => {
       const LoggedInUser = React.createContext('default');
 
