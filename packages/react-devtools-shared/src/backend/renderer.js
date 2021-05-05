@@ -534,6 +534,7 @@ export function attach(
     HostText,
     IncompleteClassComponent,
     IndeterminateComponent,
+    LegacyHiddenComponent,
     MemoComponent,
     OffscreenComponent,
     SimpleMemoComponent,
@@ -841,6 +842,7 @@ export function attach(
       case HostPortal:
       case HostText:
       case Fragment:
+      case LegacyHiddenComponent:
       case OffscreenComponent:
         return true;
       case HostRoot:
