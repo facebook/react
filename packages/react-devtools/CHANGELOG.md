@@ -9,6 +9,15 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.13.1 (April 28, 2021)
+#### Bugfix
+* Improve display name logic for `React.memo` components ([bvaughn](https://github.com/bvaughn) in [#21392](https://github.com/facebook/react/pull/21392))
+* Fixed potential runtime error with Suspense in versions <= 17 ([bvaughn](https://github.com/bvaughn) in [#21432](https://github.com/facebook/react/pull/21432))
+* Errors thrown in the Store are no longer silent ([bvaughn](https://github.com/bvaughn) in [#21426](https://github.com/facebook/react/pull/21426))
+
+#### Misc
+* Improved bug report template ([bvaughn](https://github.com/bvaughn) in [#21413](https://github.com/facebook/react/pull/21413)), [#21421](https://github.com/facebook/react/pull/21421))
+
 ## 4.13.0 (April 28, 2021)
 #### Features
 * Add Bridge protocol version backend/frontend ([bvaughn](https://github.com/bvaughn) in [#21331](https://github.com/facebook/react/pull/21331))
