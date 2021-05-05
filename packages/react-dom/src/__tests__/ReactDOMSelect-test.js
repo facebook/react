@@ -442,10 +442,15 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
-    expect(markup).not.toContain('<option selected="" value="gorilla"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(false);
   });
 
   it('should support server-side rendering with defaultValue', () => {
@@ -456,10 +461,15 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
-    expect(markup).not.toContain('<option selected="" value="gorilla"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(false);
   });
 
   it('should support server-side rendering with dangerouslySetInnerHTML', () => {
@@ -487,10 +497,15 @@ describe('ReactDOMSelect', () => {
         />
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
-    expect(markup).not.toContain('<option selected="" value="gorilla"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(false);
   });
 
   it('should support server-side rendering with multiple', () => {
@@ -501,10 +516,15 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).toContain('<option selected="" value="gorilla"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(true);
   });
 
   it('should not control defaultValue if re-adding options', () => {
