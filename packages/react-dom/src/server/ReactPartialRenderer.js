@@ -188,6 +188,7 @@ let didWarnDefaultChecked = false;
 let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
+let didWarnInvalidOptionInnerHTML = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
 const didWarnAboutModulePatternComponent = {};
@@ -334,7 +335,8 @@ function flattenOptionChildren(children: mixed): ?string {
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
-          'Only strings and numbers are supported as <option> children.',
+          'Cannot infer the option value of complex children. ' +
+            'Pass a `value` prop or use a plain string as children to <option>.',
         );
       }
     }
@@ -1507,13 +1509,23 @@ class ReactDOMServerRenderer {
     } else if (tag === 'option') {
       let selected = null;
       const selectValue = this.currentSelectValue;
-      const optionChildren = flattenOptionChildren(props.children);
       if (selectValue != null) {
         let value;
         if (props.value != null) {
           value = props.value + '';
         } else {
-          value = optionChildren;
+          if (__DEV__) {
+            if (props.dangerouslySetInnerHTML != null) {
+              if (!didWarnInvalidOptionInnerHTML) {
+                didWarnInvalidOptionInnerHTML = true;
+                console.error(
+                  'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
+                    'which value should be selected.',
+                );
+              }
+            }
+          }
+          value = flattenOptionChildren(props.children);
         }
         selected = false;
         if (isArray(selectValue)) {
@@ -1531,12 +1543,10 @@ class ReactDOMServerRenderer {
         props = Object.assign(
           {
             selected: undefined,
-            children: undefined,
           },
           props,
           {
             selected: selected,
-            children: optionChildren,
           },
         );
       }

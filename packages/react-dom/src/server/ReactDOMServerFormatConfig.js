@@ -563,6 +563,7 @@ let didWarnDefaultChecked = false;
 let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
+let didWarnInvalidOptionInnerHTML = false;
 let didWarnSelectedSetOnOption = false;
 
 function checkSelectProp(props, propName) {
@@ -667,7 +668,8 @@ function flattenOptionChildren(children: mixed): string {
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
-          'Only strings and numbers are supported as <option> children.',
+          'Cannot infer the option value of complex children. ' +
+            'Pass a `value` prop or use a plain string as children to <option>.',
         );
       }
     }
@@ -736,7 +738,18 @@ function pushStartOption(
     if (value !== null) {
       stringValue = '' + value;
     } else {
-      stringValue = children = flattenOptionChildren(children);
+      if (__DEV__) {
+        if (innerHTML !== null) {
+          if (!didWarnInvalidOptionInnerHTML) {
+            didWarnInvalidOptionInnerHTML = true;
+            console.error(
+              'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
+                'which value should be selected.',
+            );
+          }
+        }
+      }
+      stringValue = flattenOptionChildren(children);
     }
     if (isArray(selectedValue)) {
       // multiple

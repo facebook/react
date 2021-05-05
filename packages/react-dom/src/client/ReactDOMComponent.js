@@ -29,7 +29,6 @@ import {
   restoreControlledState as ReactDOMInputRestoreControlledState,
 } from './ReactDOMInput';
 import {
-  getHostProps as ReactDOMOptionGetHostProps,
   postMountWrapper as ReactDOMOptionPostMountWrapper,
   validateProps as ReactDOMOptionValidateProps,
 } from './ReactDOMOption';
@@ -535,7 +534,7 @@ export function setInitialProperties(
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
-      props = ReactDOMOptionGetHostProps(domElement, rawProps);
+      props = rawProps;
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
@@ -613,11 +612,6 @@ export function diffProperties(
     case 'input':
       lastProps = ReactDOMInputGetHostProps(domElement, lastRawProps);
       nextProps = ReactDOMInputGetHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-    case 'option':
-      lastProps = ReactDOMOptionGetHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMOptionGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
