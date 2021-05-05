@@ -676,7 +676,10 @@ export default class Agent extends EventEmitter<{|
 
   onHookOperations = (operations: Array<number>) => {
     if (__DEBUG__) {
-      debug('onHookOperations', operations);
+      debug(
+        'onHookOperations',
+        `(${operations.length}) [${operations.join(', ')}]`,
+      );
     }
 
     // TODO:
