@@ -21,12 +21,20 @@ const ReactFabricGlobalResponderHandler = {
     if (isFabric) {
       if (from) {
         // equivalent to clearJSResponder
-        nativeFabricUIManager.setIsJSResponder(from.stateNode.node, false, blockNativeResponder || false);
+        nativeFabricUIManager.setIsJSResponder(
+          from.stateNode.node,
+          false,
+          blockNativeResponder || false,
+        );
       }
 
       if (to) {
         // equivalent to setJSResponder
-        nativeFabricUIManager.setIsJSResponder(to.stateNode.node, true, blockNativeResponder || false);
+        nativeFabricUIManager.setIsJSResponder(
+          to.stateNode.node,
+          true,
+          blockNativeResponder || false,
+        );
       }
     } else {
       if (to !== null) {
