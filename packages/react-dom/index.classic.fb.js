@@ -19,22 +19,22 @@ Object.assign((__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: any), {
 });
 
 export {
-  createPortal,
-  unstable_batchedUpdates,
-  flushSync,
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  version,
+  createPortal,
+  createRoot,
+  createRoot as unstable_createRoot,
   findDOMNode,
+  flushSync,
   hydrate,
   render,
   unmountComponentAtNode,
-  createRoot,
-  createRoot as unstable_createRoot,
-  unstable_flushControlled,
-  unstable_scheduleHydration,
-  unstable_runWithPriority,
-  unstable_renderSubtreeIntoContainer,
-  unstable_createPortal,
+  unstable_batchedUpdates,
   unstable_createEventHandle,
+  unstable_createPortal, // Temporary alias
+  unstable_flushControlled,
   unstable_isNewReconciler,
+  unstable_renderSubtreeIntoContainer,
+  unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+  unstable_scheduleHydration,
+  version,
 } from './src/client/ReactDOM';
