@@ -51,8 +51,14 @@ const run = async ({build, cwd, releaseChannel}) => {
 };
 
 module.exports = async ({build, commit, cwd, releaseChannel}) => {
+  let buildLabel;
+  if (commit !== null) {
+    buildLabel = theme`commit {commit ${commit}} (build {build ${build}})`;
+  } else {
+    buildLabel = theme`build {build ${build}}`;
+  }
   return logPromise(
     run({build, cwd, releaseChannel}),
-    theme`Downloading artifacts from Circle CI for commit {commit ${commit}} (build {build ${build}})`
+    theme`Downloading artifacts from Circle CI for ${buildLabel}`
   );
 };
