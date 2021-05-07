@@ -70,9 +70,10 @@ body:
     description: |
       Please do not edit this field.
     render: text
-- type: input
+- type: textarea
   id: automated_github_query_string
   attributes:
     label: GitHub query string (automated)
     description: |
       Please do not edit this field.
+    render: text
