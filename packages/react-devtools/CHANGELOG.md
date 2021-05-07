@@ -9,6 +9,10 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.13.2 (May 7, 2021)
+#### Misc
+* Improved bug report template to use new [GitHub issue forms](https://gh-community.github.io/issue-template-feedback/structured/) ([bvaughn](https://github.com/bvaughn) in [#21450](https://github.com/facebook/react/pull/21450))
+
 ## 4.13.1 (April 28, 2021)
 #### Bugfix
 * Improve display name logic for `React.memo` components ([bvaughn](https://github.com/bvaughn) in [#21392](https://github.com/facebook/react/pull/21392))
