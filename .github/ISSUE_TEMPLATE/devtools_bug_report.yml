@@ -1,4 +1,4 @@
-name: "DevTools bug report"
+name: "⚛️ 🛠 DevTools bug report"
 description: "Report a problem with React DevTools"
 title: "[DevTools Bug]: "
 labels: ["Component: Developer Tools", "Type: Bug", "Status: Unconfirmed"]
