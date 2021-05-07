@@ -54,6 +54,7 @@ module.exports = {
       __EXTENSION__: false,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      'process.env.DEVTOOLS_PACKAGE': `"react-devtools-core"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
     }),
