@@ -23,6 +23,7 @@ import {
   ContextProvider,
   ClassComponent,
   DehydratedFragment,
+  SuspenseComponent,
 } from './ReactWorkTags';
 import {
   NoLanes,
@@ -284,6 +285,14 @@ function propagateContextChange_eager<T>(
       // this fiber to indicate that a context has changed.
       scheduleWorkOnParentPath(parentSuspense, renderLanes);
       nextFiber = fiber.sibling;
+    } else if (
+      fiber.tag === SuspenseComponent &&
+      workInProgress.tag === ContextProvider
+    ) {
+      // We don't know if it will have any context consumers in it.
+      // Schedule this fiber as having work on its children.
+      scheduleWorkOnParentPath(fiber.child, renderLanes);
+      nextFiber = fiber.child;
     } else {
       // Traverse down.
       nextFiber = fiber.child;
@@ -363,7 +372,17 @@ function propagateContextChanges<T>(
             if (alternate !== null) {
               alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
             }
-            scheduleWorkOnParentPath(consumer.return, renderLanes);
+
+            if (workInProgress.tag === SuspenseComponent) {
+              // This is intentionally passing this fiber as the parent
+              // because we want to schedule this fiber as having work
+              // on its children. We'll use the childLanes on
+              // this fiber to indicate that a context has changed.
+              const primaryChildFragment = workInProgress.child;
+              scheduleWorkOnParentPath(primaryChildFragment, renderLanes);
+            } else {
+              scheduleWorkOnParentPath(consumer.return, renderLanes);
+            }
 
             if (!forcePropagateEntireTree) {
               // During lazy propagation, when we find a match, we can defer
