@@ -23,11 +23,10 @@ describe('ReactDOMNestedEvents', () => {
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
     TestUtils = require('react-dom/test-utils');
-    act = TestUtils.unstable_concurrentAct;
+    act = TestUtils.concurrentAct;
     useState = React.useState;
   });
 
-  // @gate experimental
   test('nested event dispatches should not cause updates to flush', async () => {
     const buttonRef = React.createRef(null);
     function App() {
@@ -58,7 +57,7 @@ describe('ReactDOMNestedEvents', () => {
 
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     await act(async () => {
       root.render(<App />);

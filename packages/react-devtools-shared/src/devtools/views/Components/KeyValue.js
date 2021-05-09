@@ -8,12 +8,7 @@
  */
 
 import * as React from 'react';
-import {
-  unstable_useTransition as useTransition,
-  useContext,
-  useRef,
-  useState,
-} from 'react';
+import {useContext, useRef, useState, useTransition} from 'react';
 import EditableName from './EditableName';
 import EditableValue from './EditableValue';
 import NewArrayValue from './NewArrayValue';

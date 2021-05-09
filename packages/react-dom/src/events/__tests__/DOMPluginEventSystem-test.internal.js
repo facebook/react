@@ -67,7 +67,7 @@ describe('DOMPluginEventSystem', () => {
           ReactDOM = require('react-dom');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
-          act = require('react-dom/test-utils').unstable_concurrentAct;
+          act = require('react-dom/test-utils').concurrentAct;
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -1255,7 +1255,7 @@ describe('DOMPluginEventSystem', () => {
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
             ReactTestUtils = require('react-dom/test-utils');
-            act = ReactTestUtils.unstable_concurrentAct;
+            act = ReactTestUtils.concurrentAct;
           });
 
           // @gate experimental
@@ -1951,7 +1951,7 @@ describe('DOMPluginEventSystem', () => {
 
             // Increase counter
             if (gate(flags => flags.enableSyncDefaultUpdates)) {
-              React.unstable_startTransition(() => {
+              React.startTransition(() => {
                 root.render(<Test counter={1} />);
               });
             } else {

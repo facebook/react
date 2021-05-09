@@ -80,7 +80,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('react-dom/test-utils').concurrentAct;
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
@@ -94,15 +94,15 @@ describe('ReactDOMServerPartialHydration', () => {
   function LegacyHiddenDiv({children, mode}) {
     return (
       <div hidden={mode === 'hidden'}>
-        <React.unstable_LegacyHidden
+        <React.LegacyHidden
           mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </React.unstable_LegacyHidden>
+        </React.LegacyHidden>
       </div>
     );
   }
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
     let suspend = false;
     let resolve;
@@ -161,7 +161,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('calls the hydration callbacks after hydration or deletion', async () => {
     let suspend = false;
     let resolve;
@@ -252,7 +252,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -310,7 +310,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
-  // @gate experimental || www
+  // @gate enableSuspenseServerRenderer || www
   it('warns and replaces the boundary content in legacy mode', async () => {
     let suspend = false;
     let resolve;
@@ -390,7 +390,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('can insert siblings before the dehydrated boundary', () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -449,7 +449,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.firstChild.textContent).toBe('First');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('can delete the dehydrated boundary before it is hydrated', () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -506,7 +506,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('blocks updates to hydrate the content first if props have changed', async () => {
     let suspend = false;
     let resolve;
@@ -578,7 +578,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('blocks updates to hydrate the content first if props changed at idle priority', async () => {
     let suspend = false;
     let resolve;
@@ -652,7 +652,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('shows the fallback if props have changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -722,7 +722,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('shows the fallback of the outer if fallback is missing', async () => {
     // This is the same exact test as above but with a nested Suspense without a fallback.
     // This should be a noop.
@@ -796,7 +796,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('clears nested suspense boundaries if they did not hydrate yet', async () => {
     let suspend = false;
     let resolve;
@@ -869,7 +869,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi Hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('hydrates first if props changed but we are able to resolve within a timeout', async () => {
     let suspend = false;
     let resolve;
@@ -917,7 +917,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
 
     // Render an update with a long timeout.
-    React.unstable_startTransition(() =>
+    React.startTransition(() =>
       root.render(<App text="Hi" className="hi" />),
     );
 
@@ -949,7 +949,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('warns but works if setState is called before commit in a dehydrated component', async () => {
     let suspend = false;
     let resolve;
@@ -1018,7 +1018,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('blocks the update to hydrate first if context has changed', async () => {
     let suspend = false;
     let resolve;
@@ -1103,7 +1103,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('shows the fallback if context has changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -1187,7 +1187,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('replaces the fallback with client content if it is not rendered by the server', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1236,7 +1236,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('replaces the fallback within the suspended time if there is a nested suspense', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1296,7 +1296,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('replaces the fallback within the suspended time if there is a nested suspense in a nested suspense', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1358,7 +1358,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('shows inserted items in a SuspenseList before content is hydrated', async () => {
     let suspend = false;
     let resolve;
@@ -1444,7 +1444,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(spanB);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('shows is able to hydrate boundaries even if others in a list are pending', async () => {
     let suspend = false;
     let resolve;
@@ -1519,7 +1519,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('ALoading B');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('clears server boundaries when SuspenseList runs out of time hydrating', async () => {
     let suspend = false;
     let resolve;
@@ -1585,13 +1585,13 @@ describe('ReactDOMServerPartialHydration', () => {
     const root = ReactDOM.createRoot(container, {hydrate: true});
 
     // Increase hydration priority to higher than "offscreen".
-    ReactDOM.unstable_scheduleHydration(b);
+    ReactDOM.scheduleHydration(b);
 
     suspend = true;
 
     await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           root.render(<App />);
         });
 
@@ -1622,7 +1622,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(b);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('clears server boundaries when SuspenseList suspends last row hydrating', async () => {
     let suspend = false;
     let resolve;
@@ -1679,7 +1679,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('AB');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('can client render nested boundaries', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -1734,7 +1734,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.lastChild.data).toBe('unrelated comment');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('can hydrate TWO suspense boundaries', async () => {
     const ref1 = React.createRef();
     const ref2 = React.createRef();
@@ -1774,7 +1774,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref2.current).toBe(span2);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('regenerates if it cannot hydrate before changes to props/context expire', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1856,7 +1856,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(newSpan.className).toBe('hi');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('does not invoke an event on a hydrated node until it commits', async () => {
     let suspend = false;
     let resolve;
@@ -1938,7 +1938,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('does not invoke an event on a hydrated event handle until it commits', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -2022,7 +2022,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('invokes discrete events on nested suspense boundaries in a root (legacy system)', async () => {
     let suspend = false;
     let resolve;
@@ -2104,7 +2104,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('invokes discrete events on nested suspense boundaries in a root (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -2190,7 +2190,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('does not invoke the parent of dehydrated boundary event', async () => {
     let suspend = false;
     let resolve;
@@ -2266,7 +2266,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
     let suspend = false;
     let resolve;
@@ -2345,7 +2345,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(parentContainer);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('blocks only on the last continuous event (legacy system)', async () => {
     let suspend1 = false;
     let resolve1;
@@ -2450,7 +2450,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('finishes normal pri work before continuing to hydrate a retry', async () => {
     let suspend = false;
     let resolve;
@@ -2532,7 +2532,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('regression test: does not overfire non-bubbling browser events', async () => {
     let suspend = false;
     let resolve;
@@ -2623,7 +2623,7 @@ describe('ReactDOMServerPartialHydration', () => {
   // follow up.
   //
   // @gate FIXME
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('hydrates a hidden subtree outside of a Suspense boundary', async () => {
     const ref = React.createRef();
 
@@ -2650,7 +2650,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental
+  // @gate enableSuspenseServerRenderer
   it('renders a hidden LegacyHidden component inside a Suspense boundary', async () => {
     const ref = React.createRef();
 
@@ -2679,7 +2679,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental
   it('renders a visible LegacyHidden component', async () => {
     const ref = React.createRef();
 

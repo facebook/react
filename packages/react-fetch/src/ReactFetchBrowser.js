@@ -9,7 +9,7 @@
 
 import type {Wakeable} from 'shared/ReactTypes';
 
-import {unstable_getCacheForType} from 'react';
+import {getCacheForType} from 'react';
 
 const Pending = 0;
 const Resolved = 1;
@@ -36,7 +36,7 @@ type Record = PendingRecord | ResolvedRecord | RejectedRecord;
 const nativeFetch = window.fetch;
 
 function getRecordMap(): Map<string, Record> {
-  return unstable_getCacheForType(createRecordMap);
+  return getCacheForType(createRecordMap);
 }
 
 function createRecordMap(): Map<string, Record> {

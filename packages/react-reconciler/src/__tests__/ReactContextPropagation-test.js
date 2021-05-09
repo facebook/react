@@ -19,9 +19,9 @@ describe('ReactLazyContextPropagation', () => {
     useState = React.useState;
     useContext = React.useContext;
     Suspense = React.Suspense;
-    SuspenseList = React.unstable_SuspenseList;
+    SuspenseList = React.SuspenseList;
 
-    getCacheForType = React.unstable_getCacheForType;
+    getCacheForType = React.getCacheForType;
 
     caches = [];
     seededCache = null;
@@ -340,7 +340,6 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('0');
   });
 
-  // @gate enableCache
   test('context is propagated across retries', async () => {
     const root = ReactNoop.createRoot();
 
@@ -401,7 +400,6 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate enableCache
   test('multiple contexts are propagated across retries', async () => {
     // Same as previous test, but with multiple context providers
     const root = ReactNoop.createRoot();
@@ -481,7 +479,6 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BBB');
   });
 
-  // @gate enableCache
   test('context is propagated across retries (legacy)', async () => {
     const root = ReactNoop.createLegacyRoot();
 
@@ -542,9 +539,8 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
   test('context is propagated through offscreen trees', async () => {
-    const LegacyHidden = React.unstable_LegacyHidden;
+    const LegacyHidden = React.LegacyHidden;
 
     const root = ReactNoop.createRoot();
 
@@ -588,10 +584,9 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
   test('multiple contexts are propagated across through offscreen trees', async () => {
     // Same as previous test, but with multiple context providers
-    const LegacyHidden = React.unstable_LegacyHidden;
+    const LegacyHidden = React.LegacyHidden;
 
     const root = ReactNoop.createRoot();
 
@@ -649,8 +644,6 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BBB');
   });
 
-  // @gate enableCache
-  // @gate experimental
   test('contexts are propagated through SuspenseList', async () => {
     // This kinda tests an implementation detail. SuspenseList has an early
     // bailout that doesn't use `bailoutOnAlreadyFinishedWork`. It probably
@@ -746,8 +739,6 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
-  // @gate enableCache
   test('nested bailouts across retries', async () => {
     // Lazy context propagation will stop propagating when it hits the first
     // match. If we bail out again inside that tree, we must resume propagating.
@@ -816,12 +807,11 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
   test('nested bailouts through offscreen trees', async () => {
     // Lazy context propagation will stop propagating when it hits the first
     // match. If we bail out again inside that tree, we must resume propagating.
 
-    const LegacyHidden = React.unstable_LegacyHidden;
+    const LegacyHidden = React.LegacyHidden;
 
     const Context = React.createContext('A');
 

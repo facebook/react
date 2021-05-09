@@ -38,7 +38,7 @@ const {IsSomeRendererActing} = ReactSharedInternals;
 
 let actingUpdatesScopeDepth = 0;
 
-export function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
+export function concurrentAct(scope: () => Thenable<mixed> | void) {
   if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',

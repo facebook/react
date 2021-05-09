@@ -604,7 +604,7 @@ let actingUpdatesScopeDepth = 0;
 // building an app with React.
 // TODO: Migrate our tests to use ReactNoop. Although we would need to figure
 // out a solution for Relay, which has some Concurrent Mode tests.
-function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
+function concurrentAct(scope: () => Thenable<mixed> | void) {
   if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',
@@ -714,5 +714,5 @@ export {
   /* eslint-disable-next-line camelcase */
   batchedUpdates as unstable_batchedUpdates,
   act,
-  unstable_concurrentAct,
+  concurrentAct,
 };

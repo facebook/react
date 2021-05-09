@@ -20,7 +20,7 @@ describe('Store component filters', () => {
   let utils;
 
   const act = (callback: Function) => {
-    TestUtils.unstable_concurrentAct(() => {
+    TestUtils.concurrentAct(() => {
       callback();
     });
     jest.runAllTimers(); // Flush Bridge operations

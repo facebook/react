@@ -119,14 +119,13 @@ describe('ReactDOMServerSelectiveHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.unstable_concurrentAct;
+    act = ReactTestUtils.concurrentAct;
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
 
-  // @gate experimental
   it('hydrates the target boundary synchronously during a click', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -189,7 +188,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates at higher pri if sync did not work first time', async () => {
     let suspend = false;
     let resolve;
@@ -277,7 +275,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates at higher pri for secondary discrete events', async () => {
     let suspend = false;
     let resolve;
@@ -628,7 +625,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates the hovered targets as higher priority for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -731,7 +727,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -817,7 +812,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -858,8 +852,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toHaveYielded([]);
 
     // Increase priority of B and then C.
-    ReactDOM.unstable_scheduleHydration(spanB);
-    ReactDOM.unstable_scheduleHydration(spanC);
+    ReactDOM.scheduleHydration(spanB);
+    ReactDOM.scheduleHydration(spanC);
 
     // We should prioritize hydrating C first because the last added
     // gets highest priority followed by the next added.

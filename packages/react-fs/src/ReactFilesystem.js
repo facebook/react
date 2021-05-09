@@ -9,7 +9,7 @@
 
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 
-import {unstable_getCacheForType} from 'react';
+import {getCacheForType} from 'react';
 import * as fs from 'fs/promises';
 import {isAbsolute, normalize} from 'path';
 
@@ -101,7 +101,7 @@ export function access(path: string, mode?: number): void {
   if (mode == null) {
     mode = 0; // fs.constants.F_OK
   }
-  const map = unstable_getCacheForType(createAccessMap);
+  const map = getCacheForType(createAccessMap);
   let accessCache = map.get(path);
   if (!accessCache) {
     accessCache = [];
@@ -134,7 +134,7 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
   if (options && options.bigint) {
     bigint = true;
   }
-  const map = unstable_getCacheForType(createLstatMap);
+  const map = getCacheForType(createLstatMap);
   let lstatCache = map.get(path);
   if (!lstatCache) {
     lstatCache = [];
@@ -182,7 +182,7 @@ export function readdir(
       withFileTypes = true;
     }
   }
-  const map = unstable_getCacheForType(createReaddirMap);
+  const map = getCacheForType(createReaddirMap);
   let readdirCache = map.get(path);
   if (!readdirCache) {
     readdirCache = [];
@@ -223,7 +223,7 @@ export function readFile(
       },
 ): string | Buffer {
   checkPathInDev(path);
-  const map = unstable_getCacheForType(createReadFileMap);
+  const map = getCacheForType(createReadFileMap);
   let record = map.get(path);
   if (!record) {
     const thenable = fs.readFile(path);
@@ -281,7 +281,7 @@ export function readlink(
       encoding = options.encoding;
     }
   }
-  const map = unstable_getCacheForType(createReadlinkMap);
+  const map = getCacheForType(createReadlinkMap);
   let readlinkCache = map.get(path);
   if (!readlinkCache) {
     readlinkCache = [];
@@ -322,7 +322,7 @@ export function realpath(
       encoding = options.encoding;
     }
   }
-  const map = unstable_getCacheForType(createRealpathMap);
+  const map = getCacheForType(createRealpathMap);
   let realpathCache = map.get(path);
   if (!realpathCache) {
     realpathCache = [];
@@ -356,7 +356,7 @@ export function stat(path: string, options?: {bigint?: boolean}): mixed {
   if (options && options.bigint) {
     bigint = true;
   }
-  const map = unstable_getCacheForType(createStatMap);
+  const map = getCacheForType(createStatMap);
   let statCache = map.get(path);
   if (!statCache) {
     statCache = [];

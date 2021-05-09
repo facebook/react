@@ -11,7 +11,7 @@ describe('ReactOffscreen', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    LegacyHidden = React.unstable_LegacyHidden;
+    LegacyHidden = React.LegacyHidden;
     useState = React.useState;
   });
 
@@ -20,7 +20,6 @@ describe('ReactOffscreen', () => {
     return <span prop={props.text} />;
   }
 
-  // @gate experimental
   it('unstable-defer-without-hiding should never toggle the visibility of its children', async () => {
     function App({mode}) {
       return (
@@ -79,7 +78,6 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental
   it('does not defer in legacy mode', async () => {
     let setState;
     function Foo() {
@@ -124,7 +122,6 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental
   it('does defer in concurrent mode', async () => {
     let setState;
     function Foo() {

@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.unstable_concurrentAct;
+    act = ReactTestUtils.concurrentAct;
     Scheduler = require('scheduler');
   });
 
@@ -30,10 +30,10 @@ describe('ReactUpdates', () => {
   function LegacyHiddenDiv({children, mode}) {
     return (
       <div hidden={mode === 'hidden'}>
-        <React.unstable_LegacyHidden
+        <React.LegacyHidden
           mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </React.unstable_LegacyHidden>
+        </React.LegacyHidden>
       </div>
     );
   }
@@ -1300,7 +1300,6 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  // @gate experimental
   it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
     const container = document.createElement('div');
 
@@ -1332,7 +1331,7 @@ describe('ReactUpdates', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     let hiddenDiv;
     act(() => {
       root.render(<Foo />);

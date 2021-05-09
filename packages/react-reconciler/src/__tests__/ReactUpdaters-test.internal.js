@@ -153,7 +153,6 @@ describe('updaters', () => {
     expect(allSchedulerTypes).toEqual([[null], [SchedulingComponent]]);
   });
 
-  // @gate experimental
   it('should cover cascading updates', async () => {
     let triggerActiveCascade = null;
     let triggerPassiveCascade = null;
@@ -183,7 +182,7 @@ describe('updaters', () => {
       return count;
     };
 
-    const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+    const root = ReactDOM.createRoot(document.createElement('div'));
     await ReactTestUtils.act(async () => {
       root.render(<Parent />);
       expect(Scheduler).toFlushAndYieldThrough([
@@ -292,7 +291,6 @@ describe('updaters', () => {
     done();
   });
 
-  // @gate experimental
   it('should cover error handling', async () => {
     let triggerError = null;
 
@@ -329,7 +327,7 @@ describe('updaters', () => {
       throw new Error('Hello');
     };
 
-    const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+    const root = ReactDOM.createRoot(document.createElement('div'));
     await ReactTestUtils.act(async () => {
       root.render(<Parent shouldError={false} />);
     });
@@ -349,7 +347,6 @@ describe('updaters', () => {
     Scheduler.unstable_flushAll();
   });
 
-  // @gate experimental
   it('should distinguish between updaters in the case of interleaved work', async () => {
     const {
       FunctionComponent,
@@ -368,7 +365,7 @@ describe('updaters', () => {
     const LowPriorityUpdater = () => {
       const [count, setCount] = React.useState(0);
       triggerLowPriorityUpdate = () => {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           setCount(prevCount => prevCount + 1);
         });
       };
@@ -380,7 +377,7 @@ describe('updaters', () => {
       return null;
     };
 
-    const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+    const root = ReactDOM.createRoot(document.createElement('div'));
     root.render(
       <React.Fragment>
         <SyncPriorityUpdater />

@@ -162,7 +162,7 @@ describe('SchedulingProfiler', () => {
     }
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo />);
       });
 
@@ -519,7 +519,7 @@ describe('SchedulingProfiler', () => {
       return didMount;
     }
 
-    ReactTestRenderer.unstable_concurrentAct(() => {
+    ReactTestRenderer.concurrentAct(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
@@ -554,7 +554,7 @@ describe('SchedulingProfiler', () => {
       return didRender;
     }
 
-    ReactTestRenderer.unstable_concurrentAct(() => {
+    ReactTestRenderer.concurrentAct(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 

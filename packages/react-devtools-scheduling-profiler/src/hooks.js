@@ -7,11 +7,7 @@
  * @flow
  */
 
-import {
-  unstable_createMutableSource as createMutableSource,
-  unstable_useMutableSource as useMutableSource,
-  useLayoutEffect,
-} from 'react';
+import {createMutableSource, useLayoutEffect, useMutableSource} from 'react';
 
 import {
   updateDisplayDensity,

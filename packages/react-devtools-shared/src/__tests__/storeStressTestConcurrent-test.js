@@ -67,7 +67,7 @@ describe('StoreStressConcurrent', () => {
     // 1. Render a normal version of [a, b, c, d, e].
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     act(() => root.render(<Parent>{[a, b, c, d, e]}</Parent>));
     expect(store).toMatchInlineSnapshot(
       `
@@ -151,7 +151,7 @@ describe('StoreStressConcurrent', () => {
       // Ensure fresh mount.
       container = document.createElement('div');
       // $FlowFixMe
-      root = ReactDOM.unstable_createRoot(container);
+      root = ReactDOM.createRoot(container);
 
       // Verify mounting 'abcde'.
       act(() => root.render(<Parent>{cases[i]}</Parent>));
@@ -181,7 +181,7 @@ describe('StoreStressConcurrent', () => {
     // There'll be no unmounting until the very end.
     container = document.createElement('div');
     // $FlowFixMe
-    root = ReactDOM.unstable_createRoot(container);
+    root = ReactDOM.createRoot(container);
     for (let i = 0; i < cases.length; i++) {
       // Verify mounting 'abcde'.
       act(() => root.render(<Parent>{cases[i]}</Parent>));
@@ -247,7 +247,7 @@ describe('StoreStressConcurrent', () => {
     const snapshots = [];
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     for (let i = 0; i < steps.length; i++) {
       act(() => root.render(<Root>{steps[i]}</Root>));
       // We snapshot each step once so it doesn't regress.
@@ -320,7 +320,7 @@ describe('StoreStressConcurrent', () => {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() => root.render(<Root>{steps[i]}</Root>));
         expect(print(store)).toMatch(snapshots[i]);
         act(() => root.render(<Root>{steps[j]}</Root>));
@@ -337,7 +337,7 @@ describe('StoreStressConcurrent', () => {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -409,7 +409,7 @@ describe('StoreStressConcurrent', () => {
     const snapshots = [];
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     for (let i = 0; i < steps.length; i++) {
       act(() =>
         root.render(
@@ -536,7 +536,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -582,7 +582,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -640,7 +640,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -690,7 +690,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -744,7 +744,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -898,7 +898,7 @@ describe('StoreStressConcurrent', () => {
     const snapshots = [];
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     for (let i = 0; i < steps.length; i++) {
       act(() =>
         root.render(
@@ -1055,7 +1055,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1107,7 +1107,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1174,7 +1174,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1226,7 +1226,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1278,7 +1278,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>

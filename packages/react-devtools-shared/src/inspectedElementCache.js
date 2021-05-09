@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  unstable_getCacheForType,
-  unstable_startTransition as startTransition,
-} from 'react';
+import {getCacheForType, startTransition} from 'react';
 import Store from './devtools/store';
 import {inspectElement as inspectElementMutableSource} from './inspectedElementMutableSource';
 
@@ -60,7 +57,7 @@ function createMap(): InspectedElementMap {
 }
 
 function getRecordMap(): WeakMap<Element, Record<InspectedElementFrontend>> {
-  return unstable_getCacheForType(createMap);
+  return getCacheForType(createMap);
 }
 
 function createCacheSeed(

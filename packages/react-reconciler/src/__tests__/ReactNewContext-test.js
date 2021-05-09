@@ -47,10 +47,10 @@ describe('ReactNewContext', () => {
   function LegacyHiddenDiv({children, mode}) {
     return (
       <div hidden={mode === 'hidden'}>
-        <React.unstable_LegacyHidden
+        <React.LegacyHidden
           mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </React.unstable_LegacyHidden>
+        </React.LegacyHidden>
       </div>
     );
   }
@@ -667,7 +667,6 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
-      // @gate experimental
       it("context consumer doesn't bail out inside hidden subtree", () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
@@ -828,7 +827,6 @@ describe('ReactNewContext', () => {
       );
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('warns if multiple renderers concurrently render the same context', () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
@@ -848,7 +846,7 @@ describe('ReactNewContext', () => {
       }
 
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactNoop.render(<App value={1} />);
         });
       } else {

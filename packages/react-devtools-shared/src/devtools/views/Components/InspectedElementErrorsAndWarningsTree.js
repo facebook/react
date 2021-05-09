@@ -8,11 +8,7 @@
  */
 
 import * as React from 'react';
-import {
-  useContext,
-  unstable_useCacheRefresh as useCacheRefresh,
-  unstable_useTransition as useTransition,
-} from 'react';
+import {useCacheRefresh, useContext, useTransition} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Store from '../../store';

@@ -46,9 +46,9 @@ describe('InspectedElement', () => {
     ReactDOM = require('react-dom');
     PropTypes = require('prop-types');
     TestUtils = require('react-dom/test-utils');
-    TestUtilsAct = TestUtils.unstable_concurrentAct;
+    TestUtilsAct = TestUtils.concurrentAct;
     TestRenderer = utils.requireTestRenderer();
-    TestRendererAct = TestUtils.unstable_concurrentAct;
+    TestRendererAct = TestUtils.concurrentAct;
 
     BridgeContext = require('react-devtools-shared/src/devtools/views/context')
       .BridgeContext;

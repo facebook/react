@@ -72,7 +72,7 @@ export const Portal = REACT_PORTAL_TYPE;
 export const Profiler = REACT_PROFILER_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
 export const Suspense = REACT_SUSPENSE_TYPE;
-export const unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
+export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 
 export {isValidElementType};
 
@@ -143,6 +143,6 @@ export function isStrictMode(object: any) {
 export function isSuspense(object: any) {
   return typeOf(object) === REACT_SUSPENSE_TYPE;
 }
-export function unstable_isSuspenseList(object: any) {
+export function isSuspenseList(object: any) {
   return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
 }

@@ -29,7 +29,7 @@ describe('ReactFresh', () => {
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').unstable_concurrentAct;
+      act = require('react-dom/test-utils').concurrentAct;
       createReactClass = require('create-react-class/factory')(
         React.Component,
         React.isValidElement,
@@ -80,10 +80,10 @@ describe('ReactFresh', () => {
   function LegacyHiddenDiv({children, mode}) {
     return (
       <div hidden={mode === 'hidden'}>
-        <React.unstable_LegacyHidden
+        <React.LegacyHidden
           mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </React.unstable_LegacyHidden>
+        </React.LegacyHidden>
       </div>
     );
   }
@@ -2437,7 +2437,7 @@ describe('ReactFresh', () => {
         };
       });
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;
@@ -3782,7 +3782,7 @@ describe('ReactFresh', () => {
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').unstable_concurrentAct;
+      act = require('react-dom/test-utils').concurrentAct;
 
       // Important! Inject into the global hook *after* ReactDOM runs:
       ReactFreshRuntime = require('react-refresh/runtime');

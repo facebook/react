@@ -22,7 +22,7 @@ describe('ReactHooksInspectionIntegration', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = ReactTestRenderer.concurrentAct;
     ReactDebugTools = require('react-debug-tools');
   });
 
@@ -366,10 +366,9 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useTransition hook', () => {
     function Foo(props) {
-      React.unstable_useTransition();
+      React.useTransition();
       const memoizedValue = React.useMemo(() => 'hello', []);
       return <div>{memoizedValue}</div>;
     }
@@ -394,10 +393,9 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useDeferredValue hook', () => {
     function Foo(props) {
-      React.unstable_useDeferredValue('abc', {
+      React.useDeferredValue('abc', {
         timeoutMs: 500,
       });
       const [state] = React.useState(() => 'hello', []);
@@ -424,10 +422,9 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useOpaqueIdentifier hook', () => {
     function Foo(props) {
-      const id = React.unstable_useOpaqueIdentifier();
+      const id = React.useOpaqueIdentifier();
       const [state] = React.useState(() => 'hello', []);
       return <div id={id}>{state}</div>;
     }
@@ -452,10 +449,9 @@ describe('ReactHooksInspectionIntegration', () => {
     });
   });
 
-  // @gate experimental
   it('should support composite useOpaqueIdentifier hook in concurrent mode', () => {
     function Foo(props) {
-      const id = React.unstable_useOpaqueIdentifier();
+      const id = React.useOpaqueIdentifier();
       const [state] = React.useState(() => 'hello', []);
       return <div id={id}>{state}</div>;
     }
@@ -848,9 +844,9 @@ describe('ReactHooksInspectionIntegration', () => {
 
   if (__EXPERIMENTAL__) {
     it('should support composite useMutableSource hook', () => {
-      const mutableSource = React.unstable_createMutableSource({}, () => 1);
+      const mutableSource = React.createMutableSource({}, () => 1);
       function Foo(props) {
-        React.unstable_useMutableSource(
+        React.useMutableSource(
           mutableSource,
           () => 'snapshot',
           () => {},

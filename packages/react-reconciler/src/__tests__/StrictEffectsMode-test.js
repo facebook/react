@@ -20,7 +20,7 @@ describe('StrictEffectsMode', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = ReactTestRenderer.concurrentAct;
   });
 
   function supportsDoubleInvokeEffects() {

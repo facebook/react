@@ -382,7 +382,7 @@ describe(preprocessData, () => {
     });
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should process a sample createRoot render sequence', () => {
     function App() {
       const [didMount, setDidMount] = React.useState(false);

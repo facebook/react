@@ -59,8 +59,8 @@ export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
 export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Flight experiments
-export const enableLazyElements = __EXPERIMENTAL__;
-export const enableCache = __EXPERIMENTAL__;
+export const enableLazyElements = true;
+export const enableCache = true;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;

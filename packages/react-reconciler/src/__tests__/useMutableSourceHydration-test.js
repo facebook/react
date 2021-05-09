@@ -26,9 +26,9 @@ describe('useMutableSourceHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    act = require('react-dom/test-utils').unstable_concurrentAct;
-    createMutableSource = React.unstable_createMutableSource;
-    useMutableSource = React.unstable_useMutableSource;
+    act = require('react-dom/test-utils').concurrentAct;
+    createMutableSource = React.createMutableSource;
+    useMutableSource = React.useMutableSource;
   });
 
   function dispatchAndSetCurrentEvent(el, event) {
@@ -140,7 +140,6 @@ describe('useMutableSourceHydration', () => {
     return <div>{`${label}:${snapshot}`}</div>;
   }
 
-  // @gate experimental
   it('should render and hydrate', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -164,7 +163,7 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {
+    const root = ReactDOM.createRoot(container, {
       hydrate: true,
       hydrationOptions: {
         mutableSources: [mutableSource],
@@ -177,7 +176,6 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(1);
   });
 
-  // @gate experimental
   it('should detect a tear before hydrating a component', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -201,7 +199,7 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {
+    const root = ReactDOM.createRoot(container, {
       hydrate: true,
       hydrationOptions: {
         mutableSources: [mutableSource],
@@ -222,7 +220,6 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(1);
   });
 
-  // @gate experimental
   it('should detect a tear between hydrating components', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -254,7 +251,7 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['a:one', 'b:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {
+    const root = ReactDOM.createRoot(container, {
       hydrate: true,
       hydrationOptions: {
         mutableSources: [mutableSource],
@@ -263,7 +260,7 @@ describe('useMutableSourceHydration', () => {
     expect(() => {
       act(() => {
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             root.render(<TestComponent />);
           });
         } else {
@@ -281,7 +278,6 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(2);
   });
 
-  // @gate experimental
   it('should detect a tear between hydrating components reading from different parts of a source', () => {
     const source = createComplexSource('a:one', 'b:one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -314,7 +310,7 @@ describe('useMutableSourceHydration', () => {
     container.innerHTML = htmlString;
     expect(Scheduler).toHaveYielded(['0:a:one', '1:b:one']);
 
-    const root = ReactDOM.unstable_createRoot(container, {
+    const root = ReactDOM.createRoot(container, {
       hydrate: true,
       hydrationOptions: {
         mutableSources: [mutableSource],
@@ -323,7 +319,7 @@ describe('useMutableSourceHydration', () => {
     expect(() => {
       act(() => {
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             root.render(
               <>
                 <Component
@@ -370,7 +366,6 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['0:a:one', '1:b:two']);
   });
 
-  // @gate experimental
   // @gate !enableSyncDefaultUpdates
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
@@ -405,7 +400,7 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded([1, 'a:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.unstable_createRoot(container, {
+    const root = ReactDOM.createRoot(container, {
       hydrate: true,
       hydrationOptions: {
         mutableSources: [mutableSource],
@@ -415,7 +410,7 @@ describe('useMutableSourceHydration', () => {
     expect(() => {
       act(() => {
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             root.render(<TestComponent flag={1} />);
           });
         } else {

@@ -31,7 +31,7 @@ describe('ReactHooks', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = ReactTestRenderer.concurrentAct;
   });
 
   if (__DEV__) {

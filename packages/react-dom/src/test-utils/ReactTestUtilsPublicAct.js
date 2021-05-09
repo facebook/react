@@ -38,7 +38,7 @@ const {IsSomeRendererActing} = ReactSharedInternals;
 
 // TODO: Remove support for the mock scheduler build, which was only added for
 // the purposes of internal testing. Internal tests should use
-// `unstable_concurrentAct` instead.
+// `concurrentAct` instead.
 const isSchedulerMocked =
   typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
 const flushWork =

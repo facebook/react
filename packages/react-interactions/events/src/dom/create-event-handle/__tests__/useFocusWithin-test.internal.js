@@ -29,7 +29,7 @@ function initializeModules(hasPointerEvents) {
   ReactDOM = require('react-dom');
   ReactTestRenderer = require('react-test-renderer');
   Scheduler = require('scheduler');
-  act = ReactTestRenderer.unstable_concurrentAct;
+  act = ReactTestRenderer.concurrentAct;
 
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.

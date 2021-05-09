@@ -1,8 +1,10 @@
 /** @flow */
 
 import {createElement} from 'react';
-// $FlowFixMe Flow does not yet know about createRoot()
-import {unstable_createRoot as createRoot} from 'react-dom';
+import {
+  // $FlowFixMe Flow does not yet know about createRoot()
+  createRoot,
+} from 'react-dom';
 import {
   activate as activateBackend,
   initialize as initializeBackend,

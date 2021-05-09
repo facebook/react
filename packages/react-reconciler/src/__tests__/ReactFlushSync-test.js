@@ -14,7 +14,7 @@ describe('ReactFlushSync', () => {
     Scheduler = require('scheduler');
     useState = React.useState;
     useEffect = React.useEffect;
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
   });
 
   function Text({text}) {
@@ -22,7 +22,6 @@ describe('ReactFlushSync', () => {
     return text;
   }
 
-  // @gate experimental || !enableSyncDefaultUpdates
   test('changes priority of updates in useEffect', async () => {
     function App() {
       const [syncState, setSyncState] = useState(0);
@@ -39,7 +38,7 @@ describe('ReactFlushSync', () => {
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           root.render(<App />);
         });
       } else {
@@ -64,7 +63,6 @@ describe('ReactFlushSync', () => {
     expect(root).toMatchRenderedOutput('1, 1');
   });
 
-  // @gate experimental
   test('nested with startTransition', async () => {
     let setSyncState;
     let setState;

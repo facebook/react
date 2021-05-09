@@ -100,7 +100,6 @@ describe('SchedulingProfiler labels', () => {
     );
   });
 
-  // @gate experimental
   // @gate enableSchedulingProfiler
   it('regression test DefaultLane', () => {
     const container = document.createElement('div');
@@ -114,7 +113,6 @@ describe('SchedulingProfiler labels', () => {
     });
   });
 
-  // @gate experimental
   // @gate enableSchedulingProfiler
   // @gate !enableLegacyFBSupport
   it('regression test InputDiscreteLane', () => {
@@ -144,7 +142,6 @@ describe('SchedulingProfiler labels', () => {
     );
   });
 
-  // @gate experimental
   // @gate enableSchedulingProfiler
   it('regression test InputContinuousLane', () => {
     const container = document.createElement('div');

@@ -111,11 +111,11 @@ export {
   startTransition,
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
-  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  getCacheForType as unstable_getCacheForType,
-  useCacheRefresh as unstable_useCacheRefresh,
-  REACT_CACHE_TYPE as unstable_Cache,
+  REACT_LEGACY_HIDDEN_TYPE as LegacyHidden,
+  REACT_CACHE_TYPE as Cache,
+  getCacheForType,
+  useCacheRefresh,
+  useOpaqueIdentifier,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
-  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 };

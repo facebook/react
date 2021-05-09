@@ -29,7 +29,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
-      concurrentRoot = ReactDOM.unstable_createRoot(dom);
+      concurrentRoot = ReactDOM.createRoot(dom);
       concurrentRoot.render(el);
     };
 
@@ -96,20 +96,17 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    // @gate experimental
     it('does not warn in concurrent mode', () => {
-      const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+      const root = ReactDOM.createRoot(document.createElement('div'));
       root.render(<App />);
       Scheduler.unstable_flushAll();
     });
 
-    // @gate experimental
     it('warns in concurrent mode if root is strict', () => {
       expect(() => {
-        const root = ReactDOM.unstable_createRoot(
-          document.createElement('div'),
-          {unstable_strictMode: true},
-        );
+        const root = ReactDOM.createRoot(document.createElement('div'), {
+          unstable_strictMode: true,
+        });
         root.render(<App />);
         Scheduler.unstable_flushAll();
       }).toErrorDev([
@@ -665,7 +662,7 @@ function runActTests(label, render, unmount, rerender) {
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // trigger a suspendy update with a delay
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             act(() => {
               rerender(<App suspend={true} />);
             });

@@ -11,7 +11,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 
 import * as http from 'http';
 import * as https from 'https';
-import {unstable_getCacheForType} from 'react';
+import {getCacheForType} from 'react';
 
 type FetchResponse = {|
   // Properties
@@ -75,7 +75,7 @@ type RejectedRecord = {|
 type Record<V> = PendingRecord | ResolvedRecord<V> | RejectedRecord;
 
 function getRecordMap(): Map<string, Record<FetchResponse>> {
-  return unstable_getCacheForType(createRecordMap);
+  return getCacheForType(createRecordMap);
 }
 
 function createRecordMap(): Map<string, Record<FetchResponse>> {

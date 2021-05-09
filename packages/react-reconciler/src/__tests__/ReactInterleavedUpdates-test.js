@@ -12,7 +12,7 @@ describe('ReactInterleavedUpdates', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
   });
@@ -22,7 +22,6 @@ describe('ReactInterleavedUpdates', () => {
     return text;
   }
 
-  // @gate experimental || !enableSyncDefaultUpdates
   test('update during an interleaved event is not processed during the current render', async () => {
     const updaters = [];
 
@@ -57,7 +56,7 @@ describe('ReactInterleavedUpdates', () => {
 
     await ReactNoop.act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           updateChildren(1);
         });
       } else {
@@ -69,7 +68,7 @@ describe('ReactInterleavedUpdates', () => {
       // In an interleaved event, schedule an update on each of the children.
       // Including the two that haven't rendered yet.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           updateChildren(2);
         });
       } else {
@@ -85,7 +84,6 @@ describe('ReactInterleavedUpdates', () => {
     expect(root).toMatchRenderedOutput('222');
   });
 
-  // @gate experimental
   // @gate !enableSyncDefaultUpdates
   test('low priority update during an interleaved event is not processed during the current render', async () => {
     // Same as previous test, but the interleaved update is lower priority than

@@ -9,7 +9,7 @@
 
 import type {Wakeable} from 'shared/ReactTypes';
 
-import {unstable_getCacheForType} from 'react';
+import {getCacheForType} from 'react';
 import {Pool as PostgresPool} from 'pg';
 import {prepareValue} from 'pg/lib/utils';
 import invariant from 'shared/invariant';
@@ -79,7 +79,7 @@ type NestedMap = Map<any, Record | NestedMap>;
 
 Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const pool = this.pool;
-  const outerMap = unstable_getCacheForType(this.createRecordMap);
+  const outerMap = getCacheForType(this.createRecordMap);
 
   let innerMap: NestedMap = outerMap;
   let key = query;

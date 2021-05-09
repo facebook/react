@@ -492,12 +492,11 @@ describe('ReactDOMServerHydration', () => {
     expect(element.textContent).toBe('Hello world');
   });
 
-  // @gate experimental
   it('does not re-enter hydration after committing the first one', () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<div />);
     Scheduler.unstable_flushAll();
     root.render(null);

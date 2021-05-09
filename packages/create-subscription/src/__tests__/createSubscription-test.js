@@ -268,7 +268,6 @@ describe('createSubscription', () => {
     expect(Scheduler).toFlushAndYield(['b-1']);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
     const log = [];
 
@@ -327,7 +326,7 @@ describe('createSubscription', () => {
 
     // Start React update, but don't finish
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Parent observed={observableB} />);
       });
     } else {
@@ -362,7 +361,6 @@ describe('createSubscription', () => {
     ]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should not drop values emitted between updates', () => {
     const log = [];
 
@@ -421,7 +419,7 @@ describe('createSubscription', () => {
 
     // Start React update, but don't finish
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Parent observed={observableB} />);
       });
     } else {

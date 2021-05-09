@@ -34,7 +34,7 @@ import {
   useMemo,
   useReducer,
   useRef,
-  unstable_startTransition as startTransition,
+  startTransition,
 } from 'react';
 import {createRegExp} from '../utils';
 import {BridgeContext, StoreContext} from '../context';
