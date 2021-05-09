@@ -23,6 +23,7 @@ export const {
   getPendingChildren,
   getOrCreateRootContainer,
   createRoot,
+  createBlockingRoot,
   createLegacyRoot,
   getChildrenAsJSX,
   getPendingChildrenAsJSX,

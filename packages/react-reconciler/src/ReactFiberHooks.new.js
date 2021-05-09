@@ -34,7 +34,7 @@ import {
 
 import {
   NoMode,
-  ConcurrentMode,
+  BlockingMode,
   DebugTracingMode,
   StrictEffectsMode,
 } from './ReactTypeOfMode';
@@ -1829,7 +1829,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
 
     const setId = mountState(id)[1];
 
-    if ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode) {
+    if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
       if (
         __DEV__ &&
         enableStrictEffects &&

@@ -171,6 +171,13 @@ describe('ReactSuspenseFuzz', () => {
       ReactNoop.renderLegacySyncRoot(null);
 
       resetCache();
+      const batchedBlockingRoot = ReactNoop.createBlockingRoot();
+      batchedBlockingRoot.render(children);
+      resolveAllTasks();
+      const batchedSyncOutput = batchedBlockingRoot.getChildrenAsJSX();
+      expect(batchedSyncOutput).toEqual(expectedOutput);
+
+      resetCache();
       const concurrentRoot = ReactNoop.createRoot();
       concurrentRoot.render(children);
       resolveAllTasks();

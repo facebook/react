@@ -106,6 +106,7 @@ import {
   NoMode,
   StrictLegacyMode,
   ProfileMode,
+  BlockingMode,
   ConcurrentMode,
 } from './ReactTypeOfMode';
 import {
@@ -391,7 +392,7 @@ export function getCurrentTime() {
 export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
-  if ((mode & ConcurrentMode) === NoMode) {
+  if ((mode & BlockingMode) === NoMode) {
     return (SyncLane: Lane);
   } else if ((mode & ConcurrentMode) === NoMode) {
     return getCurrentPriorityLevel() === ImmediateSchedulerPriority
@@ -482,7 +483,7 @@ function requestRetryLane(fiber: Fiber) {
 
   // Special cases
   const mode = fiber.mode;
-  if ((mode & ConcurrentMode) === NoMode) {
+  if ((mode & BlockingMode) === NoMode) {
     return (SyncLane: Lane);
   } else if ((mode & ConcurrentMode) === NoMode) {
     return getCurrentPriorityLevel() === ImmediateSchedulerPriority
@@ -676,7 +677,7 @@ export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
     // Requires some refactoring. Not a big deal though since it's rare for
     // concurrent apps to have more than a single root.
     workInProgressRoot !== null &&
-    (fiber.mode & ConcurrentMode) !== NoMode &&
+    (fiber.mode & BlockingMode) !== NoMode &&
     // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
     // then don't treat this as an interleaved update. This pattern is
     // accompanied by a warning but we haven't fully deprecated it yet. We can
@@ -2624,7 +2625,7 @@ function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
       return;
     }
 
-    if (!(fiber.mode & ConcurrentMode)) {
+    if (!(fiber.mode & (BlockingMode | ConcurrentMode))) {
       return;
     }
 
@@ -3003,7 +3004,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       didWarnAboutUnmockedScheduler === false &&
       Scheduler.unstable_flushAllWithoutAsserting === undefined
     ) {
-      if (fiber.mode & ConcurrentMode) {
+      if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         console.error(
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +

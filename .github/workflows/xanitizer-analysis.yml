@@ -1,0 +1,86 @@
+# This workflow downloads and installs the latest version of Xanitizer, builds your project, runs a Xanitizer security analysis on it,
+# and then archives the findings list reports and uploads the findings into the GitHub code scanning alert section of your repository.
+#
+# Documentation for the `RIGS-IT/xanitizer-action` is located here: https://github.com/RIGS-IT/xanitizer-action
+#
+# To use this basic workflow, you will need to complete the following setup steps:
+#
+# 1. The underlying Xanitizer, used in this workflow, needs a separate license file.
+#    Licenses are free of charge for open source projects and for educational usage.
+#    To get more information about the Xanitizer licenses and how to obtain a license file,
+#    please consult https://www.xanitizer.com/xanitizer-pricing/.
+#
+# 2. The content of the license file has to be stored as a GitHub secret (e.g. XANITIZER_LICENSE) on this repository.
+#    Please consult https://docs.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets for details.
+#
+# 3. Reference the GitHub secret in the step using the `RIGS-IT/xanitizer-action` GitHub action.
+#    Example:
+#    - name: Xanitizer Security Analysis
+#      uses: RIGS-IT/xanitizer-action@v1
+#      with:
+#        license: ${{ secrets.XANITIZER_LICENSE }}
+#
+# 4. As a static application security testing (SAST) tool,
+#    Xanitizer requires that all dependencies of the artifacts being analyzed can be resolved successfully.
+#    So you have to install all used libraries and build your project before running the security analysis,
+#    e.g. via `mvn compile` for Java or `npm install` for JavaScript
+
+name: "Xanitizer Security Analysis"
+
+on:
+  # Run the workflow on each push
+  push:
+  # Run the workflow each day at 5 am
+  # schedule:
+  # - cron: '0 5 * * *'
+  # Run the workflow manually
+  workflow_dispatch:
+
+jobs:
+  xanitizer-security-analysis:
+    # Xanitizer runs on ubuntu-latest and windows-latest.
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Set up the correct Java version for your project
+      # Please comment out, if your project does not contain Java source code.
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      # Compile the code for Java projects and get all libraries, e.g. via Maven
+      # Please adapt, if your project uses another build system to compile Java source code.
+      # Please comment out, if your project does not contain Java source code.
+      - name: Compile Java code
+        run: mvn -B compile
+
+      # Install all dependent libraries for JavaScript/TypeScript projects, e.g. via npm
+      # Please adapt to run `npm install` in the correct directories.
+      # Please adapt, if your project uses another package manager for getting JavaScript libraries.
+      # Please comment out, if your project does not use a package manager for getting JavaScript libraries.
+      - name: Install JavaScript libraries
+        run: npm install
+
+      # Run the security analysis with default settings
+      - name: Xanitizer Security Analysis
+        uses: RIGS-IT/xanitizer-action@v1
+        with:
+          license: ${{ secrets.XANITIZER_LICENSE }}
+
+      # Archiving the findings list reports
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Xanitizer-Reports
+          path: |
+            *-Findings-List.pdf
+            *-Findings-List.sarif
+
+      # Uploads the findings into the GitHub code scanning alert section using the upload-sarif action
+      - uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: Xanitizer-Findings-List.sarif
