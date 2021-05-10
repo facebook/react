@@ -403,6 +403,7 @@ export function markStarvedLanesAsExpired(
   // expiration time. If so, we'll assume the update is being starved and mark
   // it as expired to force it to finish.
   let lanes = pendingLanes;
+  let expiredLanes = 0;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
@@ -421,10 +422,14 @@ export function markStarvedLanesAsExpired(
       }
     } else if (expirationTime <= currentTime) {
       // This lane expired
-      root.expiredLanes |= lane;
+      expiredLanes |= lane;
     }
 
     lanes &= ~lane;
+  }
+
+  if (expiredLanes !== 0) {
+    markRootExpired(root, expiredLanes);
   }
 }
 
@@ -456,12 +461,6 @@ export function includesOnlyTransitions(lanes: Lanes) {
 }
 
 export function shouldTimeSlice(root: FiberRoot, lanes: Lanes) {
-  if ((lanes & root.expiredLanes) !== NoLanes) {
-    // At least one of these lanes expired. To prevent additional starvation,
-    // finish rendering without yielding execution.
-    return false;
-  }
-
   if (
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
@@ -469,12 +468,12 @@ export function shouldTimeSlice(root: FiberRoot, lanes: Lanes) {
     // Concurrent updates by default always use time slicing.
     return true;
   }
-
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
     DefaultLane;
+  // TODO: Check for root override, once that lands
   return (lanes & SyncDefaultLanes) === NoLanes;
 }
 
@@ -620,6 +619,14 @@ export function markRootPinged(
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
+export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
+  const entanglements = root.entanglements;
+  const SyncLaneIndex = 0;
+  entanglements[SyncLaneIndex] |= expiredLanes;
+  root.entangledLanes |= SyncLane;
+  root.pendingLanes |= SyncLane;
+}
+
 export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
   root.mutableReadLanes |= updateLane & root.pendingLanes;
 }
@@ -633,7 +640,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.suspendedLanes = 0;
   root.pingedLanes = 0;
 
-  root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;

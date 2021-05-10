@@ -155,7 +155,7 @@ import {
   markRootUpdated,
   markRootSuspended as markRootSuspended_dontCallThisOneDirectly,
   markRootPinged,
-  markRootEntangled,
+  markRootExpired,
   markRootFinished,
   getHighestPriorityLane,
   addFiberToLanesMap,
@@ -767,17 +767,22 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     return null;
   }
 
-  // We disable time-slicing in some cases: if the work has been CPU-bound
-  // for too long ("expired" work, to prevent starvation), or we're in
-  // sync-updates-by-default mode.
   // TODO: We only check `didTimeout` defensively, to account for a Scheduler
   // bug we're still investigating. Once the bug in Scheduler is fixed,
   // we can remove this, since we track expiration ourselves.
-  let exitStatus =
-    shouldTimeSlice(root, lanes) &&
-    (disableSchedulerTimeoutInWorkLoop || !didTimeout)
-      ? renderRootConcurrent(root, lanes)
-      : renderRootSync(root, lanes);
+  if (!disableSchedulerTimeoutInWorkLoop && didTimeout) {
+    // Something expired. Flush synchronously until there's no expired
+    // work left.
+    markRootExpired(root, lanes);
+    // This will schedule a synchronous callback.
+    ensureRootIsScheduled(root, now());
+    return null;
+  }
+
+  let exitStatus = shouldTimeSlice(root, lanes)
+    ? renderRootConcurrent(root, lanes)
+    : // Time slicing is disabled for default updates in this root.
+      renderRootSync(root, lanes);
   if (exitStatus !== RootIncomplete) {
     if (exitStatus === RootErrored) {
       executionContext |= RetryAfterError;
@@ -965,7 +970,16 @@ function performSyncWorkOnRoot(root) {
   flushPassiveEffects();
 
   let lanes = getNextLanes(root, NoLanes);
-  if (!includesSomeLane(lanes, SyncLane)) {
+  if (includesSomeLane(lanes, SyncLane)) {
+    if (
+      root === workInProgressRoot &&
+      includesSomeLane(lanes, workInProgressRootRenderLanes)
+    ) {
+      // There's a partial tree, and at least one of its lanes has expired. Finish
+      // rendering it before rendering the rest of the expired work.
+      lanes = workInProgressRootRenderLanes;
+    }
+  } else {
     // There's no remaining sync work left.
     ensureRootIsScheduled(root, now());
     return null;
@@ -1018,9 +1032,11 @@ function performSyncWorkOnRoot(root) {
   return null;
 }
 
+// TODO: Do we still need this API? I think we can delete it. Was only used
+// internally.
 export function flushRoot(root: FiberRoot, lanes: Lanes) {
   if (lanes !== NoLanes) {
-    markRootEntangled(root, mergeLanes(lanes, SyncLane));
+    markRootExpired(root, lanes);
     ensureRootIsScheduled(root, now());
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       resetRenderTimer();
