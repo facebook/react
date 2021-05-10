@@ -280,20 +280,6 @@ jobs:
       - run: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
-  RELEASE_CHANNEL_stable_yarn_lint_build:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: yarn lint-build
-      - run: scripts/circleci/check_minified_errors.sh
-
   yarn_test:
     docker: *docker
     environment: *environment
@@ -405,9 +391,6 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_build:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_lint_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
@@ -419,9 +402,6 @@ workflows:
       - yarn_build:
           requires:
             - setup
-      - yarn_lint_build:
-          requires:
-            - yarn_build
       - build_devtools_and_process_artifacts:
           requires:
             - yarn_build
@@ -521,6 +501,9 @@ workflows:
                 - master
           requires:
             - get_base_build
+            - yarn_build_combined
+      - yarn_lint_build:
+          requires:
             - yarn_build_combined
   fuzz_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
