@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  forget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+          cache-dependency-path: forget/yarn.lock
+      - run: yarn install --immutable --immutable-cache
+        working-directory: forget
+      - run: yarn prettier --check .
+        working-directory: forget
+      - run: yarn build
+        working-directory: forget
+      - run: yarn test
+        working-directory: forget

@@ -1,0 +1,8 @@
+.DS_Store
+node_modules
+.watchmanconfig
+dist
+package-lock.json
+.vscode
+!packages/playground/.vscode
+.spr.yml

@@ -1,0 +1,99 @@
+body {
+  background-color: #f0f2f5;
+  padding: 0;
+  margin: 0;
+}
+
+.App {
+  font-family: -apple-system, BlinkMacSystemFont;
+  text-align: center;
+}
+
+.Header {
+  box-sizing: border-box;
+  position: fixed;
+  width: 100%;
+  height: 72px;
+  line-height: 72px;
+  background-color: white;
+  padding: 0 12px;
+}
+
+.Demo2 {
+  padding: 16px;
+}
+
+.Demo2 .Header {
+  position: relative;
+}
+
+.Demo2 .Feeds {
+  padding-top: 16px;
+}
+
+.Feeds {
+  padding: 16px;
+  padding-top: 72px;
+}
+
+.Icon {
+  font-size: 2em;
+  font-weight: 800;
+  margin: 0 12px;
+}
+
+.Search {
+  flex: 1;
+  padding: 16px;
+  margin: 12px;
+  border-radius: 50px;
+  outline: none;
+  border: none;
+  background-color: rgb(240, 242, 245);
+}
+
+.Load {
+  margin: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  outline: none;
+  border: none;
+  background-color: rgb(240, 242, 245);
+}
+
+.Feed {
+  padding: 16px;
+}
+
+.FeedItem {
+  display: block;
+  width: 100%;
+  height: 64px;
+  line-height: 64px;
+  background-color: rgb(14, 165, 233);
+  color: white;
+  border-radius: 6px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.FeedItem.large {
+  height: 80px;
+  line-height: 80px;
+}
+
+.FeedItem.small {
+  height: 64px;
+  line-height: 64px;
+}
+
+.row {
+  display: flex;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}

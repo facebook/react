@@ -1,0 +1,19 @@
+.Plain {
+  width: 320px;
+  background-color: white;
+  padding: 24px 18px;
+  border-radius: 8px;
+  margin-top: 96px;
+  box-shadow: 0px 0.8px 2px rgba(0, 0, 0, 0.032),
+    0px 2.7px 6.7px rgba(0, 0, 0, 0.048), 0px 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.Plain input[type="checkbox"] {
+  margin-right: 4px;
+}
+
+.Plain .Select .badge {
+  position: relative;
+  transform: translate(-50%, -50%) !important;
+  top: -39px;
+}

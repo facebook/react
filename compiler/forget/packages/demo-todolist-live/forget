@@ -1,0 +1,58 @@
+#!/bin/bash
+
+#############################################################
+#                                                           
+#  Forget Shell Driver
+#       
+#  Usage:        
+#  $ forget <src> <dist>
+#               
+#############################################################
+
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+function cleanup() {
+  for file in "$1"/*    
+  do
+    file=$file;
+    fullname="$(basename $file)"
+    name="${fullname%*.}"
+
+    if [ "$name" != "useMemoCache.js" ]; then
+      echo "[Forget] cleanup: ${file}"
+      rm $file
+    fi
+  done
+}
+
+function traverse() {
+  for file in "$1"/*    
+  do
+    dir="$(dirname $file)"
+    fullname="$(basename $file)"
+    ext="${fullname##*.}"
+    name="${fullname%.*}"
+    maybeExt="${name##*.}"
+
+    # echo "dir=$dir"
+    # echo "file=$file"
+    # echo "fullname=$fullname"
+    # echo "name=$name"
+    # echo "ext=$ext"
+    # echo "maybeExt=$maybeExt"
+
+    source=$file;
+    output="${2}/${fullname}"
+
+    if [ "$maybeExt" != "memo" ]; then
+      echo "[Forget] compile: ${source} -> ${output}"
+      npx babel ${source} --out-file ${output};
+      before=$(cat ${output})
+      echo -e "import { useMemoCache } from \"./useMemoCache\";\n${before}" > $output
+    fi
+  done
+}
+
+cleanup "$2"
+traverse "$1" "$2"

@@ -1,0 +1,376 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+  margin: 20px;
+  padding: 0;
+  /* React dark bg */
+  background-color: #24272e;
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 22px;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+
+h3 {
+  margin-top: 0;
+  font-size: 18px;
+}
+
+h4 {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+h5 {
+  margin-top: 0;
+  font-size: 14px;
+}
+
+h6 {
+  margin-top: 0;
+  font-size: 12px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+button {
+  margin: 5px;
+}
+li {
+  list-style-type: none;
+}
+ul,
+li {
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+}
+
+.column {
+  flex-direction: column;
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.TodoListApp {
+  transform: scale(1.05);
+  transform-origin: top;
+}
+
+/* copy from neo.css */
+.Neo {
+  font-family: "Optimistic Display App", "Open Sans", -apple-system,
+    BlinkMacSystemFont, "Helvetica Neue", sans-serif !important;
+}
+
+.Neo code {
+  font-family: "Iosevka SS05";
+  padding-right: 6px;
+}
+
+.TodoListApp {
+  min-width: 320px;
+  max-width: 320px;
+  position: relative;
+  /* overflow: hidden; */
+  color: white;
+  padding: 16px;
+  border-radius: 24px;
+  margin-top: 96px;
+  /* for Neo1 */
+  background: linear-gradient(
+    209.21deg,
+    rgb(8, 126, 164) 13.57%,
+    rgb(4, 89, 117) 98.38%
+  );
+  box-shadow: 0px 0.8px 2px rgba(0, 0, 0, 0.032),
+    0px 2.7px 6.7px rgba(0, 0, 0, 0.048), 0px 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.TodoListApp header {
+  height: auto;
+  position: relative;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.TodoListApp .FilterCountBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fffc;
+  font-size: 14.5px;
+  height: 40px;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: -40px;
+}
+
+.TodoListApp .FilterCountBanner .badge {
+  margin: 0 6px;
+}
+
+input[type="color"].ColorPicker {
+  width: auto;
+  height: 40px;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+
+.ColorPicker span {
+  line-height: 32px;
+  position: absolute;
+  top: 0;
+  right: 6px;
+  font-size: 14px;
+  /* click through */
+  pointer-events: none;
+}
+
+.AddTodo,
+.Todo,
+.VisibilityFilter {
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  border-radius: 24px;
+  font-size: 17px;
+  color: #fffd;
+  background-color: #0001;
+  padding: 0px 18px;
+  min-height: 56px;
+  margin-bottom: 12px;
+  flex-wrap: nowrap;
+}
+
+.VisibilityFilter {
+  min-height: auto;
+  margin: 0px;
+  padding: 0 12px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.AddTodo {
+  margin-bottom: 0px;
+}
+
+/* .Todo:last-of-type {
+  margin-bottom: 0px;
+} */
+
+.Todo:hover,
+.AddTodo:hover {
+  background-color: #0002;
+}
+
+.Todo:focus-within,
+.AddTodo:focus-within {
+  background-color: #0003;
+  box-shadow: rgb(255 255 255 / 20%) 0px 0px 0px 0.5px inset;
+}
+
+.Todo input,
+.AddTodo input {
+  width: 100%;
+  flex: 1 1;
+  color: rgb(235, 236, 240);
+  background-color: transparent;
+  border: none;
+  outline: 0px;
+}
+
+.Todo input,
+.Todo .TodoBody,
+.AddTodo input {
+  padding: 18px 0;
+}
+
+.Select {
+  display: flex;
+  justify-content: space-evenly;
+  flex: 1;
+  align-items: center;
+  flex-wrap: nowrap;
+  border: none;
+  border-radius: 18px;
+}
+
+.AddTodo button,
+.Select button {
+  cursor: pointer;
+  height: 40px;
+  width: auto;
+  border: none;
+  border-radius: 18px;
+  padding: 0 14px;
+  transition: all 0.3s ease;
+  color: #fffb;
+  margin-right: -9px;
+  /* For Neo1 */
+  background: linear-gradient(
+    209.21deg,
+    rgba(4, 89, 117, 0.133) 0%,
+    rgba(4, 89, 117, 0.933) 100%
+  );
+  box-shadow: rgb(255 255 255 / 20%) 0px 0px 0px 0.5px inset,
+    rgb(23 0 102 / 20%) 0px 20px 40px, rgb(0 0 0 / 10%) 0px 1px 3px;
+}
+
+.Select button {
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #fff7;
+  font-size: 14.5px;
+  padding: 0 4px;
+}
+
+.Select button.selected {
+  color: #fffc;
+}
+
+.Select button:hover {
+  color: #fffc;
+}
+
+.AddTodo button:hover {
+  color: #fffc;
+  box-shadow: rgb(255 255 255 / 20%) 0px 0px 0px 0.5px inset,
+    rgb(23 0 102 / 30%) 0px 40px 80px, rgb(0 0 0 / 30%) 0px 10px 30px;
+}
+
+.AddTodo form,
+.Todo form,
+.Todo .TodoBody {
+  display: flex;
+  cursor: pointer;
+  flex: 1;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+
+.AddTodo input::placeholder {
+  color: #fff7;
+}
+
+.Todo .done {
+  text-decoration: line-through;
+  font-style: italic;
+  color: #fff7;
+}
+
+.Todo .Checkbox {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0px;
+  border: none;
+  cursor: pointer;
+  background-color: transparent;
+  border-radius: 50%;
+  border: 0.5px solid #fff3;
+  margin: 0px;
+  margin-right: 12px;
+}
+
+.Todo .Checkbox.done {
+  border: 0.5px solid #fff5;
+}
+
+.Todo .Checkbox.done::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  border-radius: 50%;
+  background-color: #fffc;
+}
+
+.tail {
+  margin-left: 8px;
+  justify-content: flex-end;
+}
+
+.VisibilityFilter {
+  flex: 1;
+}
+
+.VisibilityFilter .tail {
+  margin-left: 0px;
+  display: flex;
+}
+
+/* 
+ * https://getbootstrap.com/docs/5.1/components/badge/ 
+ */
+
+.badge {
+  /* so width won't change when bumping. */
+  font-family: "Iosevka SS05", menlo, monospace;
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+}
+
+.rounded-pill {
+  border-radius: 50rem !important;
+}
+
+.badge-danger {
+  color: #fff;
+  background-color: #dc3545;
+}
+
+.badge-warning {
+  color: #212529;
+  background-color: #ffc107;
+}

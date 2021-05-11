@@ -1,0 +1,4 @@
+/packages/demo-*
+/dist/
+**/__tests__/fixtures/**/*.expect.md
+**/.next
