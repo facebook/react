@@ -48,7 +48,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pendingLanes = NoLanes;
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
-  this.expiredLanes = NoLanes;
   this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
 
