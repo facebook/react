@@ -23,7 +23,7 @@ export const enableSuspenseLayoutEffectSemantics = __VARIANT__;
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //
-// NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
+// NOTE: This feature will only work in DEV mode; all callsites are wrapped with __DEV__.
 export const enableDebugTracing = __EXPERIMENTAL__;
 export const enableUpdaterTracking = false;
 

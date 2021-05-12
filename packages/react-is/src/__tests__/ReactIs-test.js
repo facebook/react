@@ -186,22 +186,13 @@ describe('ReactIs', () => {
     expect(ReactIs.isSuspense(<div />)).toBe(false);
   });
 
-  // @gate experimental
   it('should identify suspense list', () => {
-    expect(ReactIs.isValidElementType(React.unstable_SuspenseList)).toBe(true);
-    expect(ReactIs.typeOf(<React.unstable_SuspenseList />)).toBe(
-      ReactIs.unstable_SuspenseList,
-    );
-    expect(
-      ReactIs.unstable_isSuspenseList(<React.unstable_SuspenseList />),
-    ).toBe(true);
-    expect(
-      ReactIs.unstable_isSuspenseList({type: ReactIs.unstable_SuspenseList}),
-    ).toBe(false);
-    expect(ReactIs.unstable_isSuspenseList('React.unstable_SuspenseList')).toBe(
-      false,
-    );
-    expect(ReactIs.unstable_isSuspenseList(<div />)).toBe(false);
+    expect(ReactIs.isValidElementType(React.SuspenseList)).toBe(true);
+    expect(ReactIs.typeOf(<React.SuspenseList />)).toBe(ReactIs.SuspenseList);
+    expect(ReactIs.isSuspenseList(<React.SuspenseList />)).toBe(true);
+    expect(ReactIs.isSuspenseList({type: ReactIs.SuspenseList})).toBe(false);
+    expect(ReactIs.isSuspenseList('React.SuspenseList')).toBe(false);
+    expect(ReactIs.isSuspenseList(<div />)).toBe(false);
   });
 
   it('should identify profile root', () => {

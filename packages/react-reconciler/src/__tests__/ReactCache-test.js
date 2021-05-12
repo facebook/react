@@ -22,7 +22,7 @@ describe('ReactCache', () => {
     Suspense = React.Suspense;
     getCacheForType = React.unstable_getCacheForType;
     useCacheRefresh = React.unstable_useCacheRefresh;
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
     useState = React.useState;
 
     caches = [];

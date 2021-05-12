@@ -149,7 +149,6 @@ describe('SchedulingProfiler', () => {
   });
 
   // @gate enableSchedulingProfiler
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should mark render yields', async () => {
     function Bar() {
       Scheduler.unstable_yieldValue('Bar');
@@ -162,7 +161,7 @@ describe('SchedulingProfiler', () => {
     }
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo />);
       });
 

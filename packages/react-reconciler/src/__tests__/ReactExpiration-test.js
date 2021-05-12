@@ -25,7 +25,7 @@ describe('ReactExpiration', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
 
@@ -115,10 +115,10 @@ describe('ReactExpiration', () => {
     // Flush the sync task.
     ReactNoop.flushSync();
   }
-  // @gate experimental || !enableSyncDefaultUpdates
+
   it('increases priority of updates as time progresses', () => {
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<span prop="done" />);
       });
     } else {
@@ -142,7 +142,6 @@ describe('ReactExpiration', () => {
     expect(ReactNoop.getChildren()).toEqual([span('done')]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('two updates of like priority in the same event always flush within the same batch', () => {
     class TextClass extends React.Component {
       componentDidMount() {
@@ -166,7 +165,7 @@ describe('ReactExpiration', () => {
     // First, show what happens for updates in two separate events.
     // Schedule an update.
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<TextClass text="A" />);
       });
     } else {
@@ -201,7 +200,6 @@ describe('ReactExpiration', () => {
     expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it(
     'two updates of like priority in the same event always flush within the ' +
       "same batch, even if there's a sync update in between",
@@ -228,7 +226,7 @@ describe('ReactExpiration', () => {
       // First, show what happens for updates in two separate events.
       // Schedule an update.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactNoop.render(<TextClass text="A" />);
         });
       } else {
@@ -269,7 +267,6 @@ describe('ReactExpiration', () => {
     },
   );
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('cannot update at the same expiration time that is already rendering', () => {
     const store = {text: 'initial'};
     const subscribers = [];
@@ -307,7 +304,7 @@ describe('ReactExpiration', () => {
 
     // Initial mount
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<App />);
       });
     } else {
@@ -326,7 +323,7 @@ describe('ReactExpiration', () => {
 
     // Partial update
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         subscribers.forEach(s => s.setState({text: '1'}));
       });
     } else {
@@ -347,7 +344,6 @@ describe('ReactExpiration', () => {
     ]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('stops yielding if CPU-bound update takes too long to finish', () => {
     const root = ReactNoop.createRoot();
     function App() {
@@ -363,7 +359,7 @@ describe('ReactExpiration', () => {
     }
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.render(<App />);
       });
     } else {
@@ -381,7 +377,6 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('root expiration is measured from the time of the first update', () => {
     Scheduler.unstable_advanceTime(10000);
 
@@ -398,7 +393,7 @@ describe('ReactExpiration', () => {
       );
     }
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.render(<App />);
       });
     } else {
@@ -416,7 +411,6 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should measure expiration times relative to module initialization', () => {
     // Tests an implementation detail where expiration times are computed using
     // bitwise operations.
@@ -433,7 +427,7 @@ describe('ReactExpiration', () => {
     ReactNoop = require('react-noop-renderer');
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render('Hi');
       });
     } else {
@@ -453,7 +447,6 @@ describe('ReactExpiration', () => {
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should measure callback timeout relative to current time, not start-up time', () => {
     // Corresponds to a bugfix: https://github.com/facebook/react/pull/15479
     // The bug wasn't caught by other tests because we use virtual times that
@@ -463,7 +456,7 @@ describe('ReactExpiration', () => {
     Scheduler.unstable_advanceTime(10000);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render('Hi');
       });
     } else {
@@ -481,7 +474,6 @@ describe('ReactExpiration', () => {
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('prevents starvation by sync updates by disabling time slicing if too much time has elapsed', async () => {
     let updateSyncPri;
     let updateNormalPri;
@@ -513,7 +505,7 @@ describe('ReactExpiration', () => {
     // First demonstrate what happens when there's no starvation
     await ReactNoop.act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           updateNormalPri();
         });
       } else {
@@ -537,7 +529,7 @@ describe('ReactExpiration', () => {
     // Do the same thing, but starve the first update
     await ReactNoop.act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           updateNormalPri();
         });
       } else {
@@ -628,7 +620,6 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('Sync pri: 2, Idle pri: 2');
   });
 
-  // @gate experimental
   it('when multiple lanes expire, we can finish the in-progress one without including the others', async () => {
     let setA;
     let setB;
@@ -677,7 +668,6 @@ describe('ReactExpiration', () => {
     });
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('updates do not expire while they are IO-bound', async () => {
     const {Suspense} = React;
 
@@ -701,7 +691,7 @@ describe('ReactExpiration', () => {
 
     await ReactNoop.act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           root.render(<App step={1} />);
         });
       } else {
@@ -734,7 +724,6 @@ describe('ReactExpiration', () => {
     });
   });
 
-  // @gate experimental
   it('flushSync should not affect expired work', async () => {
     let setA;
     let setB;
@@ -778,7 +767,6 @@ describe('ReactExpiration', () => {
     });
   });
 
-  // @gate experimental
   it('passive effects of expired update flush after paint', async () => {
     function App({step}) {
       useEffect(() => {

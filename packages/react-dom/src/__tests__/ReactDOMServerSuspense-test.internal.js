@@ -93,7 +93,6 @@ describe('ReactDOMServerSuspense', () => {
       : children;
   }
 
-  // @gate experimental || www
   it('should render the children when no promise is thrown', async () => {
     const c = await serverRender(
       <div>
@@ -105,7 +104,6 @@ describe('ReactDOMServerSuspense', () => {
     expect(getVisibleChildren(c)).toEqual(<div>Children</div>);
   });
 
-  // @gate experimental || www
   it('should render the fallback when a promise thrown', async () => {
     const c = await serverRender(
       <div>
@@ -117,7 +115,6 @@ describe('ReactDOMServerSuspense', () => {
     expect(getVisibleChildren(c)).toEqual(<div>Fallback</div>);
   });
 
-  // @gate experimental || www
   it('should work with nested suspense components', async () => {
     const c = await serverRender(
       <div>
@@ -140,7 +137,6 @@ describe('ReactDOMServerSuspense', () => {
     );
   });
 
-  // @gate experimental
   it('server renders a SuspenseList component and its children', async () => {
     const example = (
       <React.SuspenseList>

@@ -55,11 +55,11 @@ export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
 
 // SSR experiments
-export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
-export const enableSelectiveHydration = __EXPERIMENTAL__;
+export const enableSuspenseServerRenderer = true;
+export const enableSelectiveHydration = true;
 
 // Flight experiments
-export const enableLazyElements = __EXPERIMENTAL__;
+export const enableLazyElements = true;
 export const enableCache = __EXPERIMENTAL__;
 
 // Only used in www builds.

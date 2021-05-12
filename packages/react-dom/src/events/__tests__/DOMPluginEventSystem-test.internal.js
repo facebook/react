@@ -575,7 +575,6 @@ describe('DOMPluginEventSystem', () => {
           expect(log).toEqual(['second', 'first']);
         });
 
-        // @gate experimental
         it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
           let suspend = false;
           let resolve;
@@ -1951,7 +1950,7 @@ describe('DOMPluginEventSystem', () => {
 
             // Increase counter
             if (gate(flags => flags.enableSyncDefaultUpdates)) {
-              React.unstable_startTransition(() => {
+              React.startTransition(() => {
                 root.render(<Test counter={1} />);
               });
             } else {

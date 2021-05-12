@@ -38,7 +38,7 @@ describe('ReactDOMFizzServer', () => {
     }
     Stream = require('stream');
     Suspense = React.Suspense;
-    SuspenseList = React.unstable_SuspenseList;
+    SuspenseList = React.SuspenseList;
     PropTypes = require('prop-types');
 
     textCache = new Map();
@@ -313,7 +313,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App isClient={true} />);
     Scheduler.unstable_flushAll();
 
@@ -405,7 +405,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App isClient={true} />);
     Scheduler.unstable_flushAll();
 
@@ -481,7 +481,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
 
@@ -563,7 +563,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
 
@@ -635,7 +635,7 @@ describe('ReactDOMFizzServer', () => {
       startWriting();
     });
 
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App showMore={false} />);
     Scheduler.unstable_flushAll();
 
@@ -703,7 +703,7 @@ describe('ReactDOMFizzServer', () => {
     // We're still showing a fallback.
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
 
@@ -1294,7 +1294,7 @@ describe('ReactDOMFizzServer', () => {
     // We're still showing a fallback.
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App isClient={true} />);
     Scheduler.unstable_flushAll();
 

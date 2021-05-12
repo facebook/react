@@ -356,18 +356,18 @@ describe('Store', () => {
       };
       const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
-          <React.unstable_SuspenseList revealOrder="forwards" tail="collapsed">
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
             <Component key="A" />
             <React.Suspense fallback={<Loading />}>
               {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
             </React.Suspense>
             <Component key="C" />
-          </React.unstable_SuspenseList>
+          </React.SuspenseList>
         </React.Fragment>
       );
 
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       act(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
@@ -984,7 +984,7 @@ describe('Store', () => {
 
     it('should support Lazy components in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));
@@ -1020,7 +1020,7 @@ describe('Store', () => {
 
     it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));

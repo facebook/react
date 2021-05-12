@@ -362,7 +362,6 @@ describe('Concurrent Mode', () => {
     Scheduler = require('scheduler');
   });
 
-  // @gate experimental
   it('should warn about unsafe legacy lifecycle methods anywhere in a StrictMode tree', () => {
     function StrictRoot() {
       return (
@@ -405,7 +404,7 @@ describe('Concurrent Mode', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<StrictRoot />);
     expect(() => Scheduler.unstable_flushAll()).toErrorDev(
       [
@@ -436,7 +435,6 @@ Please update the following components: App`,
     Scheduler.unstable_flushAll();
   });
 
-  // @gate experimental
   it('should coalesce warnings by lifecycle name', () => {
     function StrictRoot() {
       return (
@@ -468,7 +466,7 @@ Please update the following components: App`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<StrictRoot />);
 
     expect(() => {
@@ -526,7 +524,6 @@ Please update the following components: Parent`,
     Scheduler.unstable_flushAll();
   });
 
-  // @gate experimental
   it('should warn about components not present during the initial render', () => {
     function StrictRoot({foo}) {
       return <React.StrictMode>{foo ? <Foo /> : <Bar />}</React.StrictMode>;
@@ -545,7 +542,7 @@ Please update the following components: Parent`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<StrictRoot foo={true} />);
     expect(() =>
       Scheduler.unstable_flushAll(),

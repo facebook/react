@@ -1475,7 +1475,6 @@ describe('ReactLazy', () => {
   });
 
   // @gate enableLazyElements
-  // @gate experimental || !enableSyncDefaultUpdates
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1536,7 +1535,7 @@ describe('ReactLazy', () => {
 
     // Swap the position of A and B
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(<Parent swap={true} />);
       });
     } else {

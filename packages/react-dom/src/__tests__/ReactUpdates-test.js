@@ -1332,7 +1332,7 @@ describe('ReactUpdates', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     let hiddenDiv;
     act(() => {
       root.render(<Foo />);

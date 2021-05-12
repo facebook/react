@@ -262,7 +262,6 @@ describe('useSubscription', () => {
     expect(subscriptions).toHaveLength(2);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
     const log = [];
 
@@ -333,7 +332,7 @@ describe('useSubscription', () => {
     // Start React update, but don't finish
     act(() => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           renderer.update(<Parent observed={observableB} />);
         });
       } else {
@@ -370,7 +369,6 @@ describe('useSubscription', () => {
     ]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should not drop values emitted between updates', () => {
     const log = [];
 
@@ -442,7 +440,7 @@ describe('useSubscription', () => {
     // Start React update, but don't finish
     act(() => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           renderer.update(<Parent observed={observableB} />);
         });
       } else {
@@ -576,7 +574,6 @@ describe('useSubscription', () => {
     Scheduler.unstable_flushAll();
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('should not tear if a mutation occurs during a concurrent update', () => {
     const input = document.createElement('input');
 
@@ -625,7 +622,7 @@ describe('useSubscription', () => {
       // This update will not be eagerly evaluated,
       // but useSubscription() should eagerly close over the updated value to avoid tearing.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           mutate('C');
         });
       } else {
@@ -633,7 +630,7 @@ describe('useSubscription', () => {
       }
       expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           mutate('D');
         });
       } else {

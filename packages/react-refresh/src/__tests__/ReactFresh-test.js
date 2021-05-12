@@ -2437,7 +2437,7 @@ describe('ReactFresh', () => {
         };
       });
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;

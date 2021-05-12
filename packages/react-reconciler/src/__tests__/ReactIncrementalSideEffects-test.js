@@ -384,7 +384,6 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('does not update child nodes if a flush is aborted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -411,7 +410,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo text="World" />);
       });
     } else {
@@ -640,14 +639,13 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('can update a completed tree before it has a chance to commit', () => {
     function Foo(props) {
       Scheduler.unstable_yieldValue('Foo');
       return <span prop={props.step} />;
     }
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={1} />);
       });
     } else {
@@ -662,7 +660,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={2} />);
       });
     } else {
@@ -675,7 +673,7 @@ describe('ReactIncrementalSideEffects', () => {
     // new props
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={3} />);
       });
     } else {

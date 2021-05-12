@@ -828,7 +828,6 @@ describe('ReactNewContext', () => {
       );
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('warns if multiple renderers concurrently render the same context', () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
@@ -848,7 +847,7 @@ describe('ReactNewContext', () => {
       }
 
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactNoop.render(<App value={1} />);
         });
       } else {

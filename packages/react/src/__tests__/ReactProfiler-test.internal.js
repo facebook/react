@@ -186,7 +186,6 @@ describe(`onRender`, () => {
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('is not invoked until the commit phase', () => {
     const callback = jest.fn();
 
@@ -196,7 +195,7 @@ describe(`onRender`, () => {
     };
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactTestRenderer.create(
           <React.Profiler id="test" onRender={callback}>
             <Yield value="first" />
@@ -690,7 +689,6 @@ describe(`onRender`, () => {
     expect(onRender.mock.calls[2][1]).toBe('update');
   });
 
-  // @gate experimental
   it('is properly distinguish updates and nested-updates when there is more than sync remaining work', () => {
     loadModules({
       useNoopRenderer: true,
@@ -709,7 +707,7 @@ describe(`onRender`, () => {
     const onRender = jest.fn();
 
     // Schedule low-priority work.
-    React.unstable_startTransition(() =>
+    React.startTransition(() =>
       ReactNoop.render(
         <React.Profiler id="root" onRender={onRender}>
           <Component />
@@ -734,7 +732,6 @@ describe(`onRender`, () => {
   });
 
   describe('with regard to interruptions', () => {
-    // @gate experimental || !enableSyncDefaultUpdates
     it('should accumulate actual time after a scheduling interruptions', () => {
       const callback = jest.fn();
 
@@ -748,7 +745,7 @@ describe(`onRender`, () => {
 
       // Render partially, but run out of time before completing.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactTestRenderer.create(
             <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={2} />
@@ -781,7 +778,6 @@ describe(`onRender`, () => {
       expect(call[5]).toBe(10); // commit time
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('should not include time between frames', () => {
       const callback = jest.fn();
 
@@ -796,7 +792,7 @@ describe(`onRender`, () => {
       // Render partially, but don't finish.
       // This partial render should take 5ms of simulated time.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactTestRenderer.create(
             <React.Profiler id="outer" onRender={callback}>
               <Yield renderTime={5} />
@@ -847,7 +843,6 @@ describe(`onRender`, () => {
       expect(outerCall[5]).toBe(87); // commit time
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('should report the expected times when a high-pri update replaces a mount in-progress', () => {
       const callback = jest.fn();
 
@@ -863,7 +858,7 @@ describe(`onRender`, () => {
       // This partial render should take 10ms of simulated time.
       let renderer;
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           renderer = ReactTestRenderer.create(
             <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={10} />
@@ -914,7 +909,6 @@ describe(`onRender`, () => {
       expect(callback).toHaveBeenCalledTimes(0);
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('should report the expected times when a high-priority update replaces a low-priority update', () => {
       const callback = jest.fn();
 
@@ -951,7 +945,7 @@ describe(`onRender`, () => {
       // Render a partially update, but don't finish.
       // This partial render should take 3ms of simulated time.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           renderer.update(
             <React.Profiler id="test" onRender={callback}>
               <Yield renderTime={3} />
@@ -1008,7 +1002,6 @@ describe(`onRender`, () => {
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('should report the expected times when a high-priority update interrupts a low-priority update', () => {
       const callback = jest.fn();
 
@@ -1076,7 +1069,7 @@ describe(`onRender`, () => {
       // Render a partially update, but don't finish.
       // This partial render will take 10ms of actual render time.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           first.setState({renderTime: 10});
         });
       } else {

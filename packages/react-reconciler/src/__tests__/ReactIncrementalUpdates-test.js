@@ -131,7 +131,6 @@ describe('ReactIncrementalUpdates', () => {
     expect(instance.state).toEqual({c: 'c', d: 'd'});
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('can abort an update, schedule additional updates, and resume', () => {
     let instance;
     class Foo extends React.Component {
@@ -162,7 +161,7 @@ describe('ReactIncrementalUpdates', () => {
 
     // Schedule some async updates
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         instance.setState(createUpdate('a'));
         instance.setState(createUpdate('b'));
         instance.setState(createUpdate('c'));
@@ -184,7 +183,7 @@ describe('ReactIncrementalUpdates', () => {
         instance.setState(createUpdate('e'));
         instance.setState(createUpdate('f'));
       });
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         instance.setState(createUpdate('g'));
       });
 
@@ -229,7 +228,6 @@ describe('ReactIncrementalUpdates', () => {
     }
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('can abort an update, schedule a replaceState, and resume', () => {
     let instance;
     class Foo extends React.Component {
@@ -260,7 +258,7 @@ describe('ReactIncrementalUpdates', () => {
 
     // Schedule some async updates
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         instance.setState(createUpdate('a'));
         instance.setState(createUpdate('b'));
         instance.setState(createUpdate('c'));
@@ -285,7 +283,7 @@ describe('ReactIncrementalUpdates', () => {
         // reaching into the updater.
         instance.updater.enqueueReplaceState(instance, createUpdate('f'));
       });
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         instance.setState(createUpdate('g'));
       });
 
@@ -543,7 +541,6 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('regression: does not expire soon due to layout effects in the last batch', () => {
     const {useState, useLayoutEffect} = React;
 
@@ -561,7 +558,7 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.act(() => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactNoop.render(<App />);
         });
       } else {
@@ -577,7 +574,7 @@ describe('ReactIncrementalUpdates', () => {
 
       Scheduler.unstable_advanceTime(10000);
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           setCount(2);
         });
       } else {
@@ -588,7 +585,6 @@ describe('ReactIncrementalUpdates', () => {
     });
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('regression: does not expire soon due to previous flushSync', () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -603,7 +599,7 @@ describe('ReactIncrementalUpdates', () => {
     Scheduler.unstable_advanceTime(10000);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Text text="B" />);
       });
     } else {
@@ -613,7 +609,6 @@ describe('ReactIncrementalUpdates', () => {
     expect(Scheduler).toHaveYielded([]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('regression: does not expire soon due to previous expired work', () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -621,7 +616,7 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Text text="A" />);
       });
     } else {
@@ -634,7 +629,7 @@ describe('ReactIncrementalUpdates', () => {
     Scheduler.unstable_advanceTime(10000);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Text text="B" />);
       });
     } else {
@@ -644,7 +639,6 @@ describe('ReactIncrementalUpdates', () => {
     expect(Scheduler).toHaveYielded([]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
     const {useState, useLayoutEffect} = React;
 
@@ -678,7 +672,7 @@ describe('ReactIncrementalUpdates', () => {
 
     await ReactNoop.act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           pushToLog('A');
         });
       } else {
@@ -707,7 +701,6 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput('ABCD');
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('when rebasing, does not exclude updates that were already committed, regardless of priority (classes)', async () => {
     let pushToLog;
     class App extends React.Component {
@@ -740,7 +733,7 @@ describe('ReactIncrementalUpdates', () => {
 
     await ReactNoop.act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           pushToLog('A');
         });
       } else {

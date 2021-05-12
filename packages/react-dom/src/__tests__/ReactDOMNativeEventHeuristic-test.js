@@ -42,7 +42,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
   }
 
-  // @gate experimental
   it('ignores discrete events on a pending removed element', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -66,7 +65,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(() => {
       root.render(<Form />);
     });
@@ -88,7 +87,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // We'll assume that the browser won't let the user click it.
   });
 
-  // @gate experimental
   it('ignores discrete events on a pending removed event listener', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -125,7 +123,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<Form />);
     // Flush
     Scheduler.unstable_flushAll();
@@ -157,7 +155,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(formSubmitted).toBe(false);
   });
 
-  // @gate experimental
   it('uses the newest discrete events on a pending changed event listener', async () => {
     const enableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -188,7 +185,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<Form />);
     // Flush
     Scheduler.unstable_flushAll();
@@ -220,9 +217,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(formSubmitted).toBe(true);
   });
 
-  // @gate experimental
   it('mouse over should be user-blocking but not discrete', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -251,9 +247,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(container.textContent).toEqual('hovered');
   });
 
-  // @gate experimental
   it('mouse enter should be user-blocking but not discrete', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -284,9 +279,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(container.textContent).toEqual('hovered');
   });
 
-  // @gate experimental
   it('continuous native events flush as expected', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo({hovered}) {
@@ -324,9 +318,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(container.textContent).toEqual('hovered');
   });
 
-  // @gate experimental
   it('should batch inside native events', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -375,9 +368,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
   });
 
-  // @gate experimental
   it('should not flush discrete events at the end of outermost batchedUpdates', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     let target;
     function Foo() {

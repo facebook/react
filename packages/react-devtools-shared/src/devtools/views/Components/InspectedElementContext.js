@@ -10,7 +10,7 @@
 import * as React from 'react';
 import {
   createContext,
-  unstable_startTransition as startTransition,
+  startTransition,
   unstable_useCacheRefresh as useCacheRefresh,
   useCallback,
   useContext,
