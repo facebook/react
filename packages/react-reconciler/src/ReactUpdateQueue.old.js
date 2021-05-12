@@ -580,7 +580,12 @@ export function processUpdateQueue<State>(
           instance,
         );
         const callback = update.callback;
-        if (callback !== null) {
+        if (
+          callback !== null &&
+          // If the update was already committed, we should not queue its
+          // callback again.
+          update.lane !== NoLane
+        ) {
           workInProgress.flags |= Callback;
           const effects = queue.effects;
           if (effects === null) {
