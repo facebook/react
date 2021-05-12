@@ -495,9 +495,8 @@ describe('ChangeEventPlugin', () => {
   });
 
   describe('concurrent mode', () => {
-    // @gate experimental
     it('text input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -538,9 +537,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('changed [!]');
     });
 
-    // @gate experimental
     it('checkbox input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -594,9 +592,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.checked).toBe(false);
     });
 
-    // @gate experimental
     it('textarea', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       let textarea;
 
       class ControlledTextarea extends React.Component {
@@ -637,9 +634,8 @@ describe('ChangeEventPlugin', () => {
       expect(textarea.value).toBe('changed [!]');
     });
 
-    // @gate experimental
     it('parent of input', () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -684,9 +680,8 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('changed [!]');
     });
 
-    // @gate experimental
     it('is sync for non-input events', async () => {
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -731,12 +726,11 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('');
     });
 
-    // @gate experimental
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
       const {unstable_concurrentAct: act} = TestUtils;
       const {useState} = React;
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       const target = React.createRef(null);
       function Foo() {

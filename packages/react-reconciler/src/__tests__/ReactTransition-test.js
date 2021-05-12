@@ -32,9 +32,9 @@ describe('ReactTransition', () => {
     Scheduler = require('scheduler');
     useState = React.useState;
     useLayoutEffect = React.useLayoutEffect;
-    useTransition = React.unstable_useTransition;
+    useTransition = React.useTransition;
     Suspense = React.Suspense;
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
     getCacheForType = React.unstable_getCacheForType;
     act = ReactNoop.act;
 
@@ -158,7 +158,6 @@ describe('ReactTransition', () => {
     }
   }
 
-  // @gate experimental
   // @gate enableCache
   test('isPending works even if called from outside an input event', async () => {
     let start;
@@ -200,7 +199,6 @@ describe('ReactTransition', () => {
     expect(root).toMatchRenderedOutput('Async');
   });
 
-  // @gate experimental
   // @gate enableCache
   test(
     'when multiple transitions update the same queue, only the most recent ' +
@@ -320,7 +318,6 @@ describe('ReactTransition', () => {
   );
 
   // Same as previous test, but for class update queue.
-  // @gate experimental
   // @gate enableCache
   test(
     'when multiple transitions update the same queue, only the most recent ' +
@@ -445,7 +442,6 @@ describe('ReactTransition', () => {
     },
   );
 
-  // @gate experimental
   // @gate enableCache
   test(
     'when multiple transitions update overlapping queues, all the transitions ' +
@@ -551,7 +547,6 @@ describe('ReactTransition', () => {
     },
   );
 
-  // @gate experimental
   // @gate enableCache
   test('interrupt a refresh transition if a new transition is scheduled', async () => {
     const root = ReactNoop.createRoot();
@@ -607,7 +602,6 @@ describe('ReactTransition', () => {
     expect(root).toMatchRenderedOutput('Updated');
   });
 
-  // @gate experimental
   // @gate enableCache
   test(
     "interrupt a refresh transition when something suspends and we've " +
@@ -669,7 +663,7 @@ describe('ReactTransition', () => {
         expect(Scheduler).toFlushAndYieldThrough(['A']);
 
         // Now schedule a second transition. We won't interrupt the first one.
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           setShouldHideInParent(true);
         });
         // Continue rendering the first transition.
@@ -710,7 +704,6 @@ describe('ReactTransition', () => {
     },
   );
 
-  // @gate experimental
   // @gate enableCache
   test(
     'interrupt a refresh transition when something suspends and a parent ' +
@@ -776,8 +769,6 @@ describe('ReactTransition', () => {
     },
   );
 
-  // @gate experimental
-  // @gate enableCache
   it('should render normal pri updates scheduled after transitions before transitions', async () => {
     let updateTransitionPri;
     let updateNormalPri;
@@ -833,7 +824,6 @@ describe('ReactTransition', () => {
     expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
   });
 
-  // @gate experimental
   // @gate enableCache
   it('should render normal pri updates before transition suspense retries', async () => {
     let updateTransitionPri;
@@ -898,8 +888,6 @@ describe('ReactTransition', () => {
     expect(root).toMatchRenderedOutput('Async, Normal pri: 1');
   });
 
-  // @gate experimental
-  // @gate enableCache
   it('should not interrupt transitions with normal pri updates', async () => {
     let updateNormalPri;
     let updateTransitionPri;

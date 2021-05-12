@@ -21,7 +21,6 @@ export {
   unmountComponentAtNode,
   unstable_batchedUpdates,
   unstable_createEventHandle,
-  unstable_createPortal, // Temporary alias
   unstable_flushControlled,
   unstable_isNewReconciler,
   unstable_renderSubtreeIntoContainer,

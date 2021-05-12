@@ -128,7 +128,6 @@ describe('ReactFlightDOM', () => {
     });
   });
 
-  // @gate experimental
   it('should resolve the root', async () => {
     const {Suspense} = React;
 
@@ -171,7 +170,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -180,7 +179,6 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate experimental
   it('should not get confused by $', async () => {
     const {Suspense} = React;
 
@@ -210,14 +208,13 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
-  // @gate experimental
   it('should not get confused by @', async () => {
     const {Suspense} = React;
 
@@ -247,14 +244,13 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  // @gate experimental
   it('should progressively reveal server components', async () => {
     let reportedErrors = [];
     const {Suspense} = React;
@@ -383,7 +379,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
@@ -454,7 +450,6 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([]);
   });
 
-  // @gate experimental
   it('should preserve state of client components on refetch', async () => {
     const {Suspense} = React;
 
@@ -483,7 +478,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const stream1 = getTestStream();
     ReactServerDOMWriter.pipeToNodeWritable(

@@ -17,7 +17,7 @@ export {
   StrictMode,
   Suspense,
   SuspenseList,
-  SuspenseList as unstable_SuspenseList,
+  SuspenseList as unstable_SuspenseList, // TODO: Remove once call sights updated to SuspenseList
   cloneElement,
   createContext,
   createElement,
@@ -30,7 +30,7 @@ export {
   lazy,
   memo,
   startTransition,
-  startTransition as unstable_startTransition,
+  startTransition as unstable_startTransition, // TODO: Remove once call sights updated to startTransition
   unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
@@ -42,7 +42,7 @@ export {
   useContext,
   useDebugValue,
   useDeferredValue,
-  useDeferredValue as unstable_useDeferredValue,
+  useDeferredValue as unstable_useDeferredValue, // TODO: Remove once call sights updated to useDeferredValue
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
@@ -53,7 +53,7 @@ export {
   useRef,
   useState,
   useTransition,
-  useTransition as unstable_useTransition,
+  useTransition as unstable_useTransition, // TODO: Remove once call sights updated to useTransition
   version,
 } from './src/React';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

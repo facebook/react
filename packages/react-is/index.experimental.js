@@ -23,7 +23,7 @@ export {
   Profiler,
   StrictMode,
   Suspense,
-  unstable_SuspenseList,
+  SuspenseList,
   isAsyncMode,
   isConcurrentMode,
   isContextConsumer,
@@ -37,5 +37,5 @@ export {
   isProfiler,
   isStrictMode,
   isSuspense,
-  unstable_isSuspenseList,
+  isSuspenseList,
 } from './src/ReactIs';

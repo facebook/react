@@ -366,10 +366,9 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useTransition hook', () => {
     function Foo(props) {
-      React.unstable_useTransition();
+      React.useTransition();
       const memoizedValue = React.useMemo(() => 'hello', []);
       return <div>{memoizedValue}</div>;
     }
@@ -394,10 +393,9 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useDeferredValue hook', () => {
     function Foo(props) {
-      React.unstable_useDeferredValue('abc', {
+      React.useDeferredValue('abc', {
         timeoutMs: 500,
       });
       const [state] = React.useState(() => 'hello', []);
@@ -424,7 +422,6 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useOpaqueIdentifier hook', () => {
     function Foo(props) {
       const id = React.unstable_useOpaqueIdentifier();
@@ -452,7 +449,6 @@ describe('ReactHooksInspectionIntegration', () => {
     });
   });
 
-  // @gate experimental
   it('should support composite useOpaqueIdentifier hook in concurrent mode', () => {
     function Foo(props) {
       const id = React.unstable_useOpaqueIdentifier();
@@ -846,37 +842,40 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  if (__EXPERIMENTAL__) {
-    it('should support composite useMutableSource hook', () => {
-      const mutableSource = React.unstable_createMutableSource({}, () => 1);
-      function Foo(props) {
-        React.unstable_useMutableSource(
-          mutableSource,
-          () => 'snapshot',
-          () => {},
-        );
-        React.useMemo(() => 'memo', []);
-        return <div />;
-      }
-      const renderer = ReactTestRenderer.create(<Foo />);
-      const childFiber = renderer.root.findByType(Foo)._currentFiber();
-      const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toEqual([
-        {
-          id: 0,
-          isStateEditable: false,
-          name: 'MutableSource',
-          value: 'snapshot',
-          subHooks: [],
-        },
-        {
-          id: 1,
-          isStateEditable: false,
-          name: 'Memo',
-          value: 'memo',
-          subHooks: [],
-        },
-      ]);
-    });
-  }
+  it('should support composite useMutableSource hook', () => {
+    const createMutableSource =
+      React.createMutableSource || React.unstable_createMutableSource;
+    const useMutableSource =
+      React.useMutableSource || React.unstable_useMutableSource;
+
+    const mutableSource = createMutableSource({}, () => 1);
+    function Foo(props) {
+      useMutableSource(
+        mutableSource,
+        () => 'snapshot',
+        () => {},
+      );
+      React.useMemo(() => 'memo', []);
+      return <div />;
+    }
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        id: 0,
+        isStateEditable: false,
+        name: 'MutableSource',
+        value: 'snapshot',
+        subHooks: [],
+      },
+      {
+        id: 1,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'memo',
+        subHooks: [],
+      },
+    ]);
+  });
 });

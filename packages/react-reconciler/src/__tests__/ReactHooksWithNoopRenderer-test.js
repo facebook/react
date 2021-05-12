@@ -52,8 +52,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
-    useTransition = React.unstable_useTransition;
-    useDeferredValue = React.unstable_useDeferredValue;
+    useTransition = React.useTransition;
+    useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
     act = ReactNoop.act;
     ContinuousEventPriority = require('react-reconciler/constants')
@@ -149,7 +149,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     return Promise.resolve().then(() => {});
   }
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('resumes after an interruption', () => {
     function Counter(props, ref) {
       const [count, updateCount] = useState(0);
@@ -166,7 +165,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     // Schedule some updates
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         // TODO: Batched updates need to be inside startTransition?
         ReactNoop.batchedUpdates(() => {
           counter.current.updateCount(1);
@@ -691,7 +690,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('discards render phase updates if something suspends', async () => {
       const thenable = {then() {}};
       function Foo({signal}) {
@@ -728,7 +726,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           root.render(<Foo signal={false} />);
         });
       } else {
@@ -739,7 +737,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // Rendering again should suspend again.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           root.render(<Foo signal={false} />);
         });
       } else {
@@ -748,7 +746,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYield(['Suspend!']);
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('discards render phase updates if something suspends, but not other updates in the same component', async () => {
       const thenable = {then() {}};
       function Foo({signal}) {
@@ -792,7 +789,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       await ReactNoop.act(async () => {
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             root.render(<Foo signal={false} />);
             setLabel('B');
           });
@@ -806,7 +803,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
         // Rendering again should suspend again.
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             root.render(<Foo signal={false} />);
           });
         } else {
@@ -817,7 +814,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         // Flip the signal back to "cancel" the update. However, the update to
         // label should still proceed. It shouldn't have been dropped.
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             root.render(<Foo signal={true} />);
           });
         } else {
@@ -864,13 +861,12 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     // TODO: This should probably warn
-    // @gate experimental
     it('calling startTransition inside render phase', async () => {
       function App() {
         const [counter, setCounter] = useState(0);
 
         if (counter === 0) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             setCounter(c => c + 1);
           });
         }
@@ -1315,7 +1311,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('does not warn about state updates for unmounted components with pending passive unmounts for alternates', () => {
       let setParentState = null;
       const setChildStates = [];
@@ -1383,7 +1378,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
         // Schedule another update for children, and partially process it.
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             setChildStates.forEach(setChildState => setChildState(2));
           });
         } else {
@@ -1685,7 +1680,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('updates have async priority even if effects are flushed early', () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
@@ -1707,7 +1701,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
         // Rendering again should flush the previous commit's effects
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             ReactNoop.render(<Counter count={1} />, () =>
               Scheduler.unstable_yieldValue('Sync effect'),
             );
@@ -3127,8 +3121,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(totalRefUpdates).toBe(2); // Should not increase since last time
     });
   });
+
   describe('useTransition', () => {
-    // @gate experimental
     it('delays showing loading state until after timeout', async () => {
       let transition;
       function App() {
@@ -3190,7 +3184,6 @@ describe('ReactHooksWithNoopRenderer', () => {
   });
 
   describe('useDeferredValue', () => {
-    // @gate experimental
     it('defers text value', async () => {
       function TextBox({text}) {
         return <AsyncText text={text} />;
@@ -3694,9 +3687,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     ]);
   });
 
-  // @gate experimental
   it('regression: SuspenseList causes unmounts to be dropped on deletion', async () => {
-    const SuspenseList = React.unstable_SuspenseList;
+    const SuspenseList = React.SuspenseList;
 
     function Row({label}) {
       useEffect(() => {

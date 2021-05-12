@@ -34,7 +34,6 @@ describe('ReactIncrementalReflection', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('handles isMounted even when the initial render is deferred', () => {
     const instances = [];
 
@@ -65,7 +64,7 @@ describe('ReactIncrementalReflection', () => {
     }
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo />);
       });
     } else {
@@ -83,7 +82,6 @@ describe('ReactIncrementalReflection', () => {
     expect(instances[0]._isMounted()).toBe(true);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('handles isMounted when an unmount is deferred', () => {
     const instances = [];
 
@@ -120,7 +118,7 @@ describe('ReactIncrementalReflection', () => {
     expect(instances[0]._isMounted()).toBe(true);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo mount={false} />);
       });
     } else {
@@ -138,7 +136,6 @@ describe('ReactIncrementalReflection', () => {
     expect(instances[0]._isMounted()).toBe(false);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('finds no node before insertion and correct node before deletion', () => {
     let classInstance = null;
 
@@ -210,7 +207,7 @@ describe('ReactIncrementalReflection', () => {
     }
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={0} />);
       });
     } else {
@@ -250,7 +247,7 @@ describe('ReactIncrementalReflection', () => {
     // The next step will render a new host node but won't get committed yet.
     // We expect this to mutate the original Fiber.
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={2} />);
       });
     } else {
@@ -277,7 +274,7 @@ describe('ReactIncrementalReflection', () => {
 
     // Render to null but don't commit it yet.
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={3} />);
       });
     } else {

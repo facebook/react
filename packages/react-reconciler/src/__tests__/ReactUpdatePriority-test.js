@@ -15,7 +15,7 @@ describe('ReactUpdatePriority', () => {
     Scheduler = require('scheduler');
     ContinuousEventPriority = require('react-reconciler/constants')
       .ContinuousEventPriority;
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
   });
@@ -84,7 +84,6 @@ describe('ReactUpdatePriority', () => {
     expect(Scheduler).toHaveYielded(['Idle: 2, Default: 2']);
   });
 
-  // @gate experimental
   test('continuous updates should interrupt transisions', async () => {
     const root = ReactNoop.createRoot();
 

@@ -96,7 +96,6 @@ describe('ReactSuspense', () => {
     }
   }
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('suspends rendering and continues later', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -128,7 +127,7 @@ describe('ReactSuspense', () => {
     // Navigate the shell to now render the child content.
     // This should suspend.
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(<Foo renderBar={true} />);
       });
     } else {
@@ -201,7 +200,6 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('interrupts current render if promise resolves before current render phase', () => {
     let didResolve = false;
     const listeners = [];
@@ -244,7 +242,7 @@ describe('ReactSuspense', () => {
 
     // The update will suspend.
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(
           <>
             <Suspense fallback={<Text text="Loading..." />}>
@@ -289,7 +287,6 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
-  // @gate experimental
   // @gate !enableSyncDefaultUpdates
   it(
     'interrupts current render when something suspends with a ' +
@@ -331,7 +328,7 @@ describe('ReactSuspense', () => {
 
       // Schedule another update. This will have lower priority because it's
       // a transition.
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(<App shouldSuspend={false} step={2} />);
       });
 
