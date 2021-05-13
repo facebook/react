@@ -1272,7 +1272,7 @@ describe('DOMPluginEventSystem', () => {
               return <div ref={divRef}>Hello world</div>;
             }
             const output = ReactDOMServer.renderToString(<Test />);
-            expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
+            expect(output).toBe(`<div>Hello world</div>`);
           });
 
           // @gate experimental
@@ -1293,9 +1293,7 @@ describe('DOMPluginEventSystem', () => {
               );
             }
             const output = ReactDOMServer.renderToString(<Test />);
-            expect(output).toBe(
-              `<div data-reactroot=""><span>Hello world</span></div>`,
-            );
+            expect(output).toBe(`<div><span>Hello world</span></div>`);
             container.innerHTML = output;
             ReactDOM.hydrate(<Test />, container);
             Scheduler.unstable_flushAll();

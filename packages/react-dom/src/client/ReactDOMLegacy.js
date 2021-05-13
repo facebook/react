@@ -18,7 +18,6 @@ import {
   unmarkContainerAsRoot,
 } from './ReactDOMComponentTree';
 import {createLegacyRoot, isValidContainer} from './ReactDOMRoot';
-import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
@@ -41,7 +40,6 @@ import {has as hasInstance} from 'shared/ReactInstanceMap';
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let topLevelUpdateWarnings;
-let warnedAboutHydrateAPI = false;
 
 if (__DEV__) {
   topLevelUpdateWarnings = (container: Container) => {
@@ -102,57 +100,21 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
-function shouldHydrateDueToLegacyHeuristic(container) {
-  const rootElement = getReactRootElementInContainer(container);
-  return !!(
-    rootElement &&
-    rootElement.nodeType === ELEMENT_NODE &&
-    rootElement.hasAttribute(ROOT_ATTRIBUTE_NAME)
-  );
-}
-
 function legacyCreateRootFromDOMContainer(
   container: Container,
   forceHydrate: boolean,
 ): RootType {
-  const shouldHydrate =
-    forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
   // First clear any existing content.
-  if (!shouldHydrate) {
-    let warned = false;
+  if (!forceHydrate) {
     let rootSibling;
     while ((rootSibling = container.lastChild)) {
-      if (__DEV__) {
-        if (
-          !warned &&
-          rootSibling.nodeType === ELEMENT_NODE &&
-          (rootSibling: any).hasAttribute(ROOT_ATTRIBUTE_NAME)
-        ) {
-          warned = true;
-          console.error(
-            'render(): Target node has markup rendered by React, but there ' +
-              'are unrelated nodes as well. This is most commonly caused by ' +
-              'white-space inserted around server-rendered markup.',
-          );
-        }
-      }
       container.removeChild(rootSibling);
-    }
-  }
-  if (__DEV__) {
-    if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
-      warnedAboutHydrateAPI = true;
-      console.warn(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v18. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
     }
   }
 
   return createLegacyRoot(
     container,
-    shouldHydrate
+    forceHydrate
       ? {
           hydrate: true,
         }

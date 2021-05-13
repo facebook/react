@@ -228,7 +228,7 @@ describe('ReactScope', () => {
       }
       const html = ReactDOMServer.renderToString(<Test />);
       expect(html).toBe(
-        '<div data-reactroot=""><div>DIV</div><span>SPAN</span><a>A</a><div>Outside content!</div></div>',
+        '<div><div>DIV</div><span>SPAN</span><a>A</a><div>Outside content!</div></div>',
       );
       container.innerHTML = html;
       ReactDOM.hydrate(<Test />, container);
