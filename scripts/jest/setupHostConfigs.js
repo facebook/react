@@ -1,6 +1,49 @@
 'use strict';
 
+const fs = require('fs');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
+
+function resolveEntryFork(resolvedEntry, isFBBundle) {
+  // Pick which entry point fork to use:
+  // .modern.fb.js
+  // .classic.fb.js
+  // .fb.js
+  // .stable.js
+  // .experimental.js
+  // .js
+
+  if (isFBBundle) {
+    const resolvedFBEntry = resolvedEntry.replace(
+      '.js',
+      __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
+    );
+    if (fs.existsSync(resolvedFBEntry)) {
+      return resolvedFBEntry;
+    }
+    const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    if (fs.existsSync(resolvedGenericFBEntry)) {
+      return resolvedGenericFBEntry;
+    }
+    // Even if it's a FB bundle we fallthrough to pick stable or experimental if we don't have an FB fork.
+  }
+  const resolvedForkedEntry = resolvedEntry.replace(
+    '.js',
+    __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
+  );
+  if (fs.existsSync(resolvedForkedEntry)) {
+    return resolvedForkedEntry;
+  }
+  // Just use the plain .js one.
+  return resolvedEntry;
+}
+
+jest.mock('react', () => {
+  const resolvedEntryPoint = resolveEntryFork(
+    require.resolve('react'),
+    global.__WWW__
+  );
+  return jest.requireActual(resolvedEntryPoint);
+});
 
 jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
   return jest.requireActual(
@@ -85,7 +128,11 @@ inlinedHostConfigs.forEach(rendererInfo => {
   rendererInfo.entryPoints.forEach(entryPoint => {
     jest.mock(entryPoint, () => {
       mockAllConfigs(rendererInfo);
-      return jest.requireActual(entryPoint);
+      const resolvedEntryPoint = resolveEntryFork(
+        require.resolve(entryPoint),
+        global.__WWW__
+      );
+      return jest.requireActual(resolvedEntryPoint);
     });
   });
 });
