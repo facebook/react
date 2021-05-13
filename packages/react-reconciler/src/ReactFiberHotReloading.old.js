@@ -318,6 +318,7 @@ function scheduleFibersWithFamiliesRecursively(
     if (needsRemount) {
       fiber._debugNeedsRemount = true;
     }
+
     if (needsRemount || needsRender) {
       scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
     }
