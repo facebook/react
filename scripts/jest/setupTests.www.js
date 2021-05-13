@@ -19,3 +19,5 @@ jest.mock('shared/ReactFeatureFlags', () => {
 
   return wwwFlags;
 });
+
+global.__WWW__ = true;

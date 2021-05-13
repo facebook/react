@@ -30,7 +30,7 @@ module.exports = Object.assign({}, baseConfig, {
   ],
   setupFiles: [
     ...baseConfig.setupFiles,
-    require.resolve('./setupHostConfigs.js'),
     require.resolve('./setupTests.www.js'),
+    require.resolve('./setupHostConfigs.js'),
   ],
 });
