@@ -638,6 +638,10 @@ export function attach(
     // We should clean up Fibers like this when flushing; see recordPendingErrorsAndWarnings().
     const fiberID = getFiberID(getPrimaryFiber(fiber));
 
+    if (__DEBUG__) {
+      debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
+    }
+
     // Mark this Fiber as needed its warning/error count updated during the next flush.
     fibersWithChangedErrorOrWarningCounts.add(fiberID);
 
@@ -702,16 +706,15 @@ export function attach(
     if (__DEBUG__) {
       const displayName =
         fiber.tag + ':' + (getDisplayNameForFiber(fiber) || 'null');
-      const id = getFiberID(fiber);
+
+      const id = getFiberIDSafe(fiber) || '-';
       const parentDisplayName = parentFiber
         ? parentFiber.tag +
           ':' +
           (getDisplayNameForFiber(parentFiber) || 'null')
         : '';
-      const parentID = parentFiber ? getFiberID(parentFiber) : '';
-      // NOTE: calling getFiberID or getPrimaryFiber is unsafe here
-      // because it will put them in the map. For now, we'll omit them.
-      // TODO: better debugging story for this.
+      const parentID = parentFiber ? getFiberIDSafe(parentFiber) || '-' : '';
+
       console.log(
         `[renderer] %c${name} %c${displayName} (${id}) %c${
           parentFiber ? `${parentDisplayName} (${parentID})` : ''
@@ -978,6 +981,23 @@ export function attach(
 
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
+
+  function getFiberIDSafe(fiber: Fiber): number | null {
+    let primaryFiber = null;
+    if (primaryFibers.has(fiber)) {
+      primaryFiber = fiber;
+    }
+    const {alternate} = fiber;
+    if (alternate != null && primaryFibers.has(alternate)) {
+      primaryFiber = alternate;
+    }
+
+    if (primaryFiber && fiberToIDMap.has(primaryFiber)) {
+      return ((fiberToIDMap.get(primaryFiber): any): number);
+    }
+
+    return null;
+  }
 
   function getFiberID(primaryFiber: Fiber): number {
     if (!fiberToIDMap.has(primaryFiber)) {
@@ -1641,6 +1661,7 @@ export function attach(
         pendingRealUnmountedIDs.push(id);
       }
     }
+
     fiberToIDMap.delete(primaryFiber);
     idToFiberMap.delete(id);
     primaryFibers.delete(primaryFiber);
@@ -3815,6 +3836,41 @@ export function attach(
     traceUpdatesEnabled = isEnabled;
   }
 
+  function handleClonedForForceRemount(oldFiber: Fiber, newFiber: Fiber): void {
+    if (__DEBUG__) {
+      console.log(
+        '[renderer] handleClonedForForceRemount',
+        getDisplayNameForFiber(oldFiber),
+        '(' + getFiberID(getPrimaryFiber(oldFiber)),
+        '->',
+        getFiberID(getPrimaryFiber(newFiber)) + ')',
+      );
+    }
+
+    let primaryFiber = null;
+    if (primaryFibers.has(oldFiber)) {
+      primaryFiber = oldFiber;
+    }
+    const {alternate} = oldFiber;
+    if (alternate != null && primaryFibers.has(alternate)) {
+      primaryFiber = alternate;
+    }
+
+    // Fast Refresh is about to (synchronously) clone and replace this part of the tree.
+    // In order to avoid these Fibers from leaking on the DevTools side,
+    // and possibly remaining visible in the Components tab as well,
+    // queue up unmount operations to send on the next commit.
+    if (primaryFiber) {
+      recordUnmount(primaryFiber, false);
+      unmountFiberChildrenRecursively(primaryFiber);
+
+      const fiberID = ((fiberToIDMap.get(primaryFiber): any): number);
+      fiberToIDMap.delete(primaryFiber);
+      idToFiberMap.delete(fiberID);
+      primaryFibers.delete(primaryFiber);
+    }
+  }
+
   return {
     cleanup,
     clearErrorsAndWarnings,
@@ -3831,6 +3887,7 @@ export function attach(
     getOwnersList,
     getPathForElement,
     getProfilingData,
+    handleClonedForForceRemount,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,
