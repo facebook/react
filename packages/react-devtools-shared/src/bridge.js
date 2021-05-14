@@ -50,8 +50,8 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
   // so the safest guess to downgrade the frontend would be to version 4.10.
   {
     version: 0,
-    minNpmVersion: '<4.11.0',
-    maxNpmVersion: '<4.11.0',
+    minNpmVersion: '"<4.11.0"',
+    maxNpmVersion: '"<4.11.0"',
   },
   {
     version: 1,
