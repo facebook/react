@@ -337,11 +337,6 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
-    `
-      function _Component() {
-        useState();
-      }
-    `,
   ],
   invalid: [
     {
@@ -911,6 +906,14 @@ const tests = {
         }
       `,
       errors: [functionError('useState', '_internalFunction')],
+    },
+    {
+      code: `
+        function _Component() {
+          useState();
+        }
+      `,
+      errors: [functionError('useState', '_Component')],
     },
   ],
 };
