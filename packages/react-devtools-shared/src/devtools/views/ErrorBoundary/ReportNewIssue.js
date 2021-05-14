@@ -40,7 +40,7 @@ export default function ReportNewIssue({
   const gitHubAPISearch =
     errorMessage !== null ? searchGitHubIssuesURL(errorMessage) : '(none)';
 
-  const title = `[DevTools Error] ${errorMessage || ''}`;
+  const title = `[DevTools Bug] ${errorMessage || ''}`;
 
   const parameters = [
     `template=${TEMPLATE}`,
