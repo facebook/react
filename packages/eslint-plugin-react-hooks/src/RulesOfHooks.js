@@ -47,7 +47,13 @@ function isHook(node) {
 
 function isComponentName(node) {
   if (node.type === 'Identifier') {
-    return !/^[a-z]/.test(node.name);
+    if (node.name[0] === '_') {
+      // _Foo is a valid component name, but _foo is not
+      // so we have to ignore the underscore
+      return !/^[a-z]/.test(node.name[1]);
+    } else {
+      return !/^[a-z]/.test(node.name[0]);
+    }
   } else {
     return false;
   }

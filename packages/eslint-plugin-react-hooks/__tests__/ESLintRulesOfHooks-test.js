@@ -337,6 +337,11 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    `
+      function _Component() {
+        useState();
+      }
+    `,
   ],
   invalid: [
     {
@@ -380,7 +385,7 @@ const tests = {
     },
     {
       code: `
-        // This is a false positive (it's valid) that unfortunately 
+        // This is a false positive (it's valid) that unfortunately
         // we cannot avoid. Prefer to rename it to not start with "use"
         class Foo extends Component {
           render() {
@@ -886,6 +891,26 @@ const tests = {
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
+    },
+    {
+      code: `
+        function Component() {
+          function _internalFunction() {
+            useState();
+          }
+        }
+      `,
+      errors: [functionError('useState', '_internalFunction')],
+    },
+    {
+      code: `
+        function _Component() {
+          function _internalFunction() {
+            useState();
+          }
+        }
+      `,
+      errors: [functionError('useState', '_internalFunction')],
     },
   ],
 };
