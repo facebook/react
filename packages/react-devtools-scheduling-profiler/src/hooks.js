@@ -8,9 +8,11 @@
  */
 
 import {
+  // $FlowFixMe
   unstable_createMutableSource as createMutableSource,
-  unstable_useMutableSource as useMutableSource,
   useLayoutEffect,
+  // $FlowFixMe
+  unstable_useMutableSource as useMutableSource,
 } from 'react';
 
 import {

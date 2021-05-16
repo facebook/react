@@ -355,12 +355,25 @@ export function setSignature(
   getCustomHooks?: () => Array<Function>,
 ): void {
   if (__DEV__) {
-    allSignaturesByType.set(type, {
-      forceReset,
-      ownKey: key,
-      fullKey: null,
-      getCustomHooks: getCustomHooks || (() => []),
-    });
+    if (!allSignaturesByType.has(type)) {
+      allSignaturesByType.set(type, {
+        forceReset,
+        ownKey: key,
+        fullKey: null,
+        getCustomHooks: getCustomHooks || (() => []),
+      });
+    }
+    // Visit inner types because we might not have signed them.
+    if (typeof type === 'object' && type !== null) {
+      switch (getProperty(type, '$$typeof')) {
+        case REACT_FORWARD_REF_TYPE:
+          setSignature(type.render, key, forceReset, getCustomHooks);
+          break;
+        case REACT_MEMO_TYPE:
+          setSignature(type.type, key, forceReset, getCustomHooks);
+          break;
+      }
+    }
   } else {
     throw new Error(
       'Unexpected call to React Refresh in a production environment.',
@@ -609,57 +622,58 @@ export function _getMountedRootCount() {
 // function Hello() {
 //   const [foo, setFoo] = useState(0);
 //   const value = useCustomHook();
-//   _s(); /* Second call triggers collecting the custom Hook list.
+//   _s(); /* Call without arguments triggers collecting the custom Hook list.
 //          * This doesn't happen during the module evaluation because we
 //          * don't want to change the module order with inline requires.
 //          * Next calls are noops. */
 //   return <h1>Hi</h1>;
 // }
 //
-// /* First call specifies the signature: */
+// /* Call with arguments attaches the signature to the type: */
 // _s(
 //   Hello,
 //   'useState{[foo, setFoo]}(0)',
 //   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
 // );
-type SignatureStatus = 'needsSignature' | 'needsCustomHooks' | 'resolved';
 export function createSignatureFunctionForTransform() {
   if (__DEV__) {
-    // We'll fill in the signature in two steps.
-    // First, we'll know the signature itself. This happens outside the component.
-    // Then, we'll know the references to custom Hooks. This happens inside the component.
-    // After that, the returned function will be a fast path no-op.
-    let status: SignatureStatus = 'needsSignature';
     let savedType;
     let hasCustomHooks;
+    let didCollectHooks = false;
     return function<T>(
       type: T,
       key: string,
       forceReset?: boolean,
       getCustomHooks?: () => Array<Function>,
-    ): T {
-      switch (status) {
-        case 'needsSignature':
-          if (type !== undefined) {
-            // If we received an argument, this is the initial registration call.
-            savedType = type;
-            hasCustomHooks = typeof getCustomHooks === 'function';
-            setSignature(type, key, forceReset, getCustomHooks);
-            // The next call we expect is from inside a function, to fill in the custom Hooks.
-            status = 'needsCustomHooks';
-          }
-          break;
-        case 'needsCustomHooks':
-          if (hasCustomHooks) {
-            collectCustomHooksForSignature(savedType);
-          }
-          status = 'resolved';
-          break;
-        case 'resolved':
-          // Do nothing. Fast path for all future renders.
-          break;
+    ): T | void {
+      if (typeof key === 'string') {
+        // We're in the initial phase that associates signatures
+        // with the functions. Note this may be called multiple times
+        // in HOC chains like _s(hoc1(_s(hoc2(_s(actualFunction))))).
+        if (!savedType) {
+          // We're in the innermost call, so this is the actual type.
+          savedType = type;
+          hasCustomHooks = typeof getCustomHooks === 'function';
+        }
+        // Set the signature for all types (even wrappers!) in case
+        // they have no signatures of their own. This is to prevent
+        // problems like https://github.com/facebook/react/issues/20417.
+        if (
+          type != null &&
+          (typeof type === 'function' || typeof type === 'object')
+        ) {
+          setSignature(type, key, forceReset, getCustomHooks);
+        }
+        return type;
+      } else {
+        // We're in the _s() call without arguments, which means
+        // this is the time to collect custom Hook signatures.
+        // Only do this once. This path is hot and runs *inside* every render!
+        if (!didCollectHooks && hasCustomHooks) {
+          didCollectHooks = true;
+          collectCustomHooksForSignature(savedType);
+        }
       }
-      return type;
     };
   } else {
     throw new Error(

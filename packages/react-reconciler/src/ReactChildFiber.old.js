@@ -12,7 +12,7 @@ import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {Placement, ChildDeletion} from './ReactFiberFlags';
 import {
   getIteratorFn,
@@ -31,6 +31,7 @@ import {
   SimpleMemoComponent,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
   enableLazyElements,
@@ -82,7 +83,7 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasKeyUseWarning[componentName]) {
       return;
@@ -96,8 +97,6 @@ if (__DEV__) {
     );
   };
 }
-
-const isArray = Array.isArray;
 
 function coerceRef(
   returnFiber: Fiber,
@@ -124,7 +123,8 @@ function coerceRef(
           element._owner.stateNode !== element._self
         )
       ) {
-        const componentName = getComponentName(returnFiber.type) || 'Component';
+        const componentName =
+          getComponentNameFromFiber(returnFiber) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
             console.error(
@@ -216,23 +216,21 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
-  if (returnFiber.type !== 'textarea') {
-    const childString = Object.prototype.toString.call(newChild);
-    invariant(
-      false,
-      'Objects are not valid as a React child (found: %s). ' +
-        'If you meant to render a collection of children, use an array ' +
-        'instead.',
-      childString === '[object Object]'
-        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-        : childString,
-    );
-  }
+  const childString = Object.prototype.toString.call(newChild);
+  invariant(
+    false,
+    'Objects are not valid as a React child (found: %s). ' +
+      'If you meant to render a collection of children, use an array ' +
+      'instead.',
+    childString === '[object Object]'
+      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+      : childString,
+  );
 }
 
 function warnOnFunctionType(returnFiber: Fiber) {
   if (__DEV__) {
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasFunctionTypeWarning[componentName]) {
       return;
@@ -1233,9 +1231,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     // Handle object types
-    const isObject = typeof newChild === 'object' && newChild !== null;
-
-    if (isObject) {
+    if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(
@@ -1268,6 +1264,26 @@ function ChildReconciler(shouldTrackSideEffects) {
             );
           }
       }
+
+      if (isArray(newChild)) {
+        return reconcileChildrenArray(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      if (getIteratorFn(newChild)) {
+        return reconcileChildrenIterator(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
@@ -1279,28 +1295,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           lanes,
         ),
       );
-    }
-
-    if (isArray(newChild)) {
-      return reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (getIteratorFn(newChild)) {
-      return reconcileChildrenIterator(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (isObject) {
-      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (__DEV__) {
@@ -1333,7 +1327,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             '%s(...): Nothing was returned from render. This usually means a ' +
               'return statement is missing. Or, to render nothing, ' +
               'return null.',
-            getComponentName(returnFiber.type) || 'Component',
+            getComponentNameFromFiber(returnFiber) || 'Component',
           );
         }
       }

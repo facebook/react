@@ -27,7 +27,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 // this feature flag only impacts StrictEffectsMode.
 export const enableStrictEffects = false;
 
-// If TRUE, trees rendered with createRoot (and createBlockingRoot) APIs will be StrictEffectsMode.
+// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
 // If FALSE, these trees will be StrictLegacyMode.
 export const createRootStrictEffectsByDefault = false;
 
@@ -51,15 +51,15 @@ export const enableProfilerNestedUpdatePhase = false;
 // This callback accepts the component type (class instance or function) the update is scheduled for.
 export const enableProfilerNestedUpdateScheduledHook = false;
 
-// Trace which interactions trigger each commit.
-export const enableSchedulerTracing = __PROFILE__;
+// Track which Fiber(s) schedule render work.
+export const enableUpdaterTracking = __PROFILE__;
 
 // SSR experiments
-export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
-export const enableSelectiveHydration = __EXPERIMENTAL__;
+export const enableSuspenseServerRenderer = true;
+export const enableSelectiveHydration = true;
 
 // Flight experiments
-export const enableLazyElements = __EXPERIMENTAL__;
+export const enableLazyElements = true;
 export const enableCache = __EXPERIMENTAL__;
 
 // Only used in www builds.
@@ -112,6 +112,24 @@ export const disableNativeComponentFrames = false;
 // If there are no still-mounted boundaries, the errors should be rethrown.
 export const skipUnmountedBoundaries = false;
 
+// When a node is unmounted, recurse into the Fiber subtree and clean out
+// references. Each level cleans up more fiber fields than the previous level.
+// As far as we know, React itself doesn't leak, but because the Fiber contains
+// cycles, even a single leak in product code can cause us to retain large
+// amounts of memory.
+//
+// The long term plan is to remove the cycles, but in the meantime, we clear
+// additional fields to mitigate.
+//
+// It's an enum so that we can experiment with different levels of
+// aggressiveness.
+export const deletedTreeCleanUpLevel = 1;
+
+// Destroy layout effects for components that are hidden because something suspended in an update
+// and recreate them when they are shown again (after the suspended boundary has resolved).
+// Note that this should be an uncommon use case and can be avoided by using the transition API.
+export const enableSuspenseLayoutEffectSemantics = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
@@ -142,19 +160,14 @@ export const enableLegacyFBSupport = false;
 // new behavior.
 export const deferRenderPhaseUpdateToNextBatch = true;
 
-// Replacement for runWithPriority in React internals.
-export const decoupleUpdatePriorityFromScheduler = false;
-
-export const enableDiscreteEventFlushingChange = false;
-
 export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-export const enableDiscreteEventMicroTasks = false;
+export const enableLazyContextPropagation = false;
 
-export const enableSyncMicroTasks = false;
+export const enableSyncDefaultUpdates = true;
 
-export const enableNativeEventPriorityInference = false;
+export const allowConcurrentByDefault = false;

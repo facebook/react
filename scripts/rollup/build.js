@@ -582,6 +582,17 @@ async function createBundle(bundle, bundleType) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
       if (!shouldBundleDependencies && isProvidedByDependency) {
+        if (id.indexOf('/src/') !== -1) {
+          throw Error(
+            'You are trying to import ' +
+              id +
+              ' but ' +
+              externals.find(containsThisModule) +
+              ' is one of npm dependencies, ' +
+              'so it will not contain that source file. You probably want ' +
+              'to create a new bundle entry point for it instead.'
+          );
+        }
         return true;
       }
       return !!peerGlobals[id];

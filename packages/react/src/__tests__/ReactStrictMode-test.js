@@ -362,9 +362,15 @@ describe('Concurrent Mode', () => {
     Scheduler = require('scheduler');
   });
 
-  // @gate experimental
-  it('should warn about unsafe legacy lifecycle methods anywhere in the tree', () => {
-    class AsyncRoot extends React.Component {
+  it('should warn about unsafe legacy lifecycle methods anywhere in a StrictMode tree', () => {
+    function StrictRoot() {
+      return (
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    }
+    class App extends React.Component {
       UNSAFE_componentWillMount() {}
       UNSAFE_componentWillUpdate() {}
       render() {
@@ -398,8 +404,8 @@ describe('Concurrent Mode', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
-    root.render(<AsyncRoot />);
+    const root = ReactDOM.createRoot(container);
+    root.render(<StrictRoot />);
     expect(() => Scheduler.unstable_flushAll()).toErrorDev(
       [
         /* eslint-disable max-len */
@@ -407,7 +413,7 @@ describe('Concurrent Mode', () => {
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
-Please update the following components: AsyncRoot`,
+Please update the following components: App`,
         `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
@@ -418,20 +424,26 @@ Please update the following components: Bar, Foo`,
 
 * Move data fetching code or side effects to componentDidUpdate.
 
-Please update the following components: AsyncRoot`,
+Please update the following components: App`,
         /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );
 
     // Dedupe
-    root.render(<AsyncRoot />);
+    root.render(<App />);
     Scheduler.unstable_flushAll();
   });
 
-  // @gate experimental
   it('should coalesce warnings by lifecycle name', () => {
-    class AsyncRoot extends React.Component {
+    function StrictRoot() {
+      return (
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    }
+    class App extends React.Component {
       UNSAFE_componentWillMount() {}
       UNSAFE_componentWillUpdate() {}
       render() {
@@ -454,8 +466,8 @@ Please update the following components: AsyncRoot`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
-    root.render(<AsyncRoot />);
+    const root = ReactDOM.createRoot(container);
+    root.render(<StrictRoot />);
 
     expect(() => {
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
@@ -465,7 +477,7 @@ Please update the following components: AsyncRoot`,
 
 * Move code with side effects to componentDidMount, and set initial state in the constructor.
 
-Please update the following components: AsyncRoot`,
+Please update the following components: App`,
           `Warning: Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
 
 * Move data fetching code or side effects to componentDidUpdate.
@@ -476,7 +488,7 @@ Please update the following components: Child`,
 
 * Move data fetching code or side effects to componentDidUpdate.
 
-Please update the following components: AsyncRoot`,
+Please update the following components: App`,
           /* eslint-enable max-len */
         ],
         {withoutStack: true},
@@ -508,16 +520,13 @@ Please update the following components: Parent`,
       {withoutStack: true},
     );
     // Dedupe
-    root.render(<AsyncRoot />);
+    root.render(<StrictRoot />);
     Scheduler.unstable_flushAll();
   });
 
-  // @gate experimental
   it('should warn about components not present during the initial render', () => {
-    class AsyncRoot extends React.Component {
-      render() {
-        return this.props.foo ? <Foo /> : <Bar />;
-      }
+    function StrictRoot({foo}) {
+      return <React.StrictMode>{foo ? <Foo /> : <Bar />}</React.StrictMode>;
     }
     class Foo extends React.Component {
       UNSAFE_componentWillMount() {}
@@ -533,8 +542,8 @@ Please update the following components: Parent`,
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
-    root.render(<AsyncRoot foo={true} />);
+    const root = ReactDOM.createRoot(container);
+    root.render(<StrictRoot foo={true} />);
     expect(() =>
       Scheduler.unstable_flushAll(),
     ).toErrorDev(
@@ -542,7 +551,7 @@ Please update the following components: Parent`,
       {withoutStack: true},
     );
 
-    root.render(<AsyncRoot foo={false} />);
+    root.render(<StrictRoot foo={false} />);
     expect(() =>
       Scheduler.unstable_flushAll(),
     ).toErrorDev(
@@ -551,9 +560,9 @@ Please update the following components: Parent`,
     );
 
     // Dedupe
-    root.render(<AsyncRoot foo={true} />);
+    root.render(<StrictRoot foo={true} />);
     Scheduler.unstable_flushAll();
-    root.render(<AsyncRoot foo={false} />);
+    root.render(<StrictRoot foo={false} />);
     Scheduler.unstable_flushAll();
   });
 

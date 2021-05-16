@@ -153,6 +153,40 @@ iframe.onload = () => {
 };
 ```
 
+### Advanced integration with custom "wall"
+
+Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/).
+
+```js
+import {
+  createBridge,
+  createStore,
+  initialize as createDevTools,
+} from "react-devtools-inline/frontend";
+
+// Custom Wall implementation enables serializing data
+// using an API other than window.postMessage()
+// For example...
+const wall = {
+  emit() {},
+  listen(listener) {
+    wall._listener = listener;
+  },
+  async send(event, payload) {
+    const response = await fetch(...).json();
+    wall._listener(response);
+  },
+};
+
+// Create a Bridge and Store that use the custom Wall.
+const bridge = createBridge(target, wall);
+const store = createStore(bridge);
+const DevTools = createDevTools(target, { bridge, store });
+
+// Render DevTools with it.
+<DevTools {...otherProps} />;
+```
+
 ## Local development
 You can also build and test this package from source.
 

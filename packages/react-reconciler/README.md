@@ -216,13 +216,19 @@ This is a property (not a function) that should be set to `true` if your rendere
 
 #### `getCurrentEventPriority`
 
-To implement this method, you'll need some constants available on the _returned_ `Renderer` object:
+To implement this method, you'll need some constants available on the special `react-reconciler/constants` entry point:
 
 ```js
+import {
+  DiscreteEventPriority,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+} from 'react-reconciler/constants';
+
 const HostConfig = {
   // ...
   getCurrentEventPriority() {
-    return MyRenderer.DefaultEventPriority;
+    return DefaultEventPriority;
   },
   // ...
 }
@@ -232,11 +238,11 @@ const MyRenderer = Reconciler(HostConfig);
 
 The constant you return depends on which event, if any, is being handled right now. (In the browser, you can check this using `window.event && window.event.type`).
 
-* **Discrete events:** If the active event is _directly caused by the user_ (such as mouse and keyboard events) and _each event in a sequence is intentional_ (e.g. `click`), return `MyRenderer.DiscreteEventPriority`. This tells React that they should interrupt any background work and cannot be batched across time.
+* **Discrete events:** If the active event is _directly caused by the user_ (such as mouse and keyboard events) and _each event in a sequence is intentional_ (e.g. `click`), return `DiscreteEventPriority`. This tells React that they should interrupt any background work and cannot be batched across time.
 
-* **Continuous events:** If the active event is _directly caused by the user_ but _the user can't distinguish between individual events in a sequence_ (e.g. `mouseover`), return `MyRenderer.ContinuousEventPriority`. This tells React they should interrupt any background work but can be batched across time.
+* **Continuous events:** If the active event is _directly caused by the user_ but _the user can't distinguish between individual events in a sequence_ (e.g. `mouseover`), return `ContinuousEventPriority`. This tells React they should interrupt any background work but can be batched across time.
 
-* **Other events / No active event:** In all other cases, return `MyRenderer.DefaultEventPriority`. This tells React that this event is considered background work, and interactive events will be prioritized over it.
+* **Other events / No active event:** In all other cases, return `DefaultEventPriority`. This tells React that this event is considered background work, and interactive events will be prioritized over it.
 
 You can consult the `getCurrentEventPriority()` implementation in `ReactDOMHostConfig.js` for a reference implementation.
 
@@ -312,11 +318,11 @@ This method should make the `instance` invisible without removing it from the tr
 
 Same as `hideInstance`, but for nodes created by `createTextInstance`.
 
-#### `unhideInstance(instance)`
+#### `unhideInstance(instance, props)`
 
 This method should make the `instance` visible, undoing what `hideInstance` did.
 
-#### `unhideTextInstance(textInstance)`
+#### `unhideTextInstance(textInstance, text)`
 
 Same as `unhideInstance`, but for nodes created by `createTextInstance`.
 

@@ -9,6 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import {dehydrate} from '../hydration';
+import isArray from 'shared/isArray';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
@@ -61,9 +62,9 @@ export function copyWithDelete(
   index: number = 0,
 ): Object | Array<any> {
   const key = path[index];
-  const updated = Array.isArray(obj) ? obj.slice() : {...obj};
+  const updated = isArray(obj) ? obj.slice() : {...obj};
   if (index + 1 === path.length) {
-    if (Array.isArray(updated)) {
+    if (isArray(updated)) {
       updated.splice(((key: any): number), 1);
     } else {
       delete updated[key];
@@ -84,12 +85,12 @@ export function copyWithRename(
   index: number = 0,
 ): Object | Array<any> {
   const oldKey = oldPath[index];
-  const updated = Array.isArray(obj) ? obj.slice() : {...obj};
+  const updated = isArray(obj) ? obj.slice() : {...obj};
   if (index + 1 === oldPath.length) {
     const newKey = newPath[index];
     // $FlowFixMe number or string is fine here
     updated[newKey] = updated[oldKey];
-    if (Array.isArray(updated)) {
+    if (isArray(updated)) {
       updated.splice(((oldKey: any): number), 1);
     } else {
       delete updated[oldKey];
@@ -111,10 +112,30 @@ export function copyWithSet(
     return value;
   }
   const key = path[index];
-  const updated = Array.isArray(obj) ? obj.slice() : {...obj};
+  const updated = isArray(obj) ? obj.slice() : {...obj};
   // $FlowFixMe number or string is fine here
   updated[key] = copyWithSet(obj[key], path, value, index + 1);
   return updated;
+}
+
+export function getEffectDurations(root: Object) {
+  // Profiling durations are only available for certain builds.
+  // If available, they'll be stored on the HostRoot.
+  let effectDuration = null;
+  let passiveEffectDuration = null;
+  const hostRoot = root.current;
+  if (hostRoot != null) {
+    const stateNode = hostRoot.stateNode;
+    if (stateNode != null) {
+      effectDuration =
+        stateNode.effectDuration != null ? stateNode.effectDuration : null;
+      passiveEffectDuration =
+        stateNode.passiveEffectDuration != null
+          ? stateNode.passiveEffectDuration
+          : null;
+    }
+  }
+  return {effectDuration, passiveEffectDuration};
 }
 
 export function serializeToString(data: any): string {
@@ -182,4 +203,12 @@ export function format(
   formatted = formatted.replace(/%{2,2}/g, '%');
 
   return '' + formatted;
+}
+
+export function isSynchronousXHRSupported(): boolean {
+  return !!(
+    window.document &&
+    window.document.featurePolicy &&
+    window.document.featurePolicy.allowsFeature('sync-xhr')
+  );
 }

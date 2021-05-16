@@ -12,10 +12,6 @@ import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 
-// Intentionally not named imports because Rollup would use dynamic dispatch for
-// CommonJS interop named imports.
-import * as Scheduler from 'scheduler';
-
 import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
@@ -29,71 +25,33 @@ import {
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
-import {
-  type EventSystemFlags,
-  IS_CAPTURE_PHASE,
-  IS_LEGACY_FB_SUPPORT_MODE,
-} from './EventSystemFlags';
+import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
-import {
-  enableLegacyFBSupport,
-  decoupleUpdatePriorityFromScheduler,
-  enableNewReconciler,
-} from 'shared/ReactFeatureFlags';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
-import {
-  flushDiscreteUpdatesIfNeeded,
-  discreteUpdates,
-} from './ReactDOMUpdateBatching';
+import {discreteUpdates} from './ReactDOMUpdateBatching';
 
 import {
-  InputDiscreteLanePriority as InputDiscreteLanePriority_old,
-  InputContinuousLanePriority as InputContinuousLanePriority_old,
-  DefaultLanePriority as DefaultLanePriority_old,
-  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
-  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
-  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_old,
-} from 'react-reconciler/src/ReactFiberLane.old';
+  getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
+  IdlePriority as IdleSchedulerPriority,
+  ImmediatePriority as ImmediateSchedulerPriority,
+  LowPriority as LowSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+} from 'react-reconciler/src/Scheduler';
 import {
-  InputDiscreteLanePriority as InputDiscreteLanePriority_new,
-  InputContinuousLanePriority as InputContinuousLanePriority_new,
-  DefaultLanePriority as DefaultLanePriority_new,
-  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
-  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
-  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_new,
-} from 'react-reconciler/src/ReactFiberLane.new';
-import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
-import {getCurrentPriorityLevel as getCurrentPriorityLevel_new} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
+  DiscreteEventPriority,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+  IdleEventPriority,
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
+} from 'react-reconciler/src/ReactEventPriorities';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const InputDiscreteLanePriority = enableNewReconciler
-  ? InputDiscreteLanePriority_new
-  : InputDiscreteLanePriority_old;
-const InputContinuousLanePriority = enableNewReconciler
-  ? InputContinuousLanePriority_new
-  : InputContinuousLanePriority_old;
-const DefaultLanePriority = enableNewReconciler
-  ? DefaultLanePriority_new
-  : DefaultLanePriority_old;
-const getCurrentUpdateLanePriority = enableNewReconciler
-  ? getCurrentUpdateLanePriority_new
-  : getCurrentUpdateLanePriority_old;
-const setCurrentUpdateLanePriority = enableNewReconciler
-  ? setCurrentUpdateLanePriority_new
-  : setCurrentUpdateLanePriority_old;
-const schedulerPriorityToLanePriority = enableNewReconciler
-  ? schedulerPriorityToLanePriority_new
-  : schedulerPriorityToLanePriority_old;
-const getCurrentPriorityLevel = enableNewReconciler
-  ? getCurrentPriorityLevel_new
-  : getCurrentPriorityLevel_old;
-
-const {
-  unstable_UserBlockingPriority: UserBlockingPriority,
-  unstable_runWithPriority: runWithPriority,
-} = Scheduler;
+const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -129,13 +87,13 @@ export function createEventListenerWrapperWithPriority(
   const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
-    case InputDiscreteLanePriority:
+    case DiscreteEventPriority:
       listenerWrapper = dispatchDiscreteEvent;
       break;
-    case InputContinuousLanePriority:
+    case ContinuousEventPriority:
       listenerWrapper = dispatchContinuousEvent;
       break;
-    case DefaultLanePriority:
+    case DefaultEventPriority:
     default:
       listenerWrapper = dispatchEvent;
       break;
@@ -154,14 +112,6 @@ function dispatchDiscreteEvent(
   container,
   nativeEvent,
 ) {
-  if (
-    !enableLegacyFBSupport ||
-    // If we are in Legacy FB support mode, it means we've already
-    // flushed for this event and we don't need to do it again.
-    (eventSystemFlags & IS_LEGACY_FB_SUPPORT_MODE) === 0
-  ) {
-    flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
-  }
   discreteUpdates(
     dispatchEvent,
     domEventName,
@@ -177,35 +127,15 @@ function dispatchContinuousEvent(
   container,
   nativeEvent,
 ) {
-  if (decoupleUpdatePriorityFromScheduler) {
-    const previousPriority = getCurrentUpdateLanePriority();
-    try {
-      // TODO: Double wrapping is necessary while we decouple Scheduler priority.
-      setCurrentUpdateLanePriority(InputContinuousLanePriority);
-      runWithPriority(
-        UserBlockingPriority,
-        dispatchEvent.bind(
-          null,
-          domEventName,
-          eventSystemFlags,
-          container,
-          nativeEvent,
-        ),
-      );
-    } finally {
-      setCurrentUpdateLanePriority(previousPriority);
-    }
-  } else {
-    runWithPriority(
-      UserBlockingPriority,
-      dispatchEvent.bind(
-        null,
-        domEventName,
-        eventSystemFlags,
-        container,
-        nativeEvent,
-      ),
-    );
+  const previousPriority = getCurrentUpdatePriority();
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 0;
+  try {
+    setCurrentUpdatePriority(ContinuousEventPriority);
+    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
   }
 }
 
@@ -417,7 +347,7 @@ export function getEventPriority(domEventName: DOMEventName): * {
     case 'popstate':
     case 'select':
     case 'selectstart':
-      return InputDiscreteLanePriority;
+      return DiscreteEventPriority;
     case 'drag':
     case 'dragenter':
     case 'dragexit':
@@ -437,17 +367,30 @@ export function getEventPriority(domEventName: DOMEventName): * {
     // eslint-disable-next-line no-fallthrough
     case 'mouseenter':
     case 'mouseleave':
-      return InputContinuousLanePriority;
+    case 'pointerenter':
+    case 'pointerleave':
+      return ContinuousEventPriority;
     case 'message': {
       // We might be in the Scheduler callback.
       // Eventually this mechanism will be replaced by a check
       // of the current priority on the native scheduler.
-      const schedulerPriority = getCurrentPriorityLevel();
-      // TODO: Inline schedulerPriorityToLanePriority into this file
-      // when we delete the enableNativeEventPriorityInference flag.
-      return schedulerPriorityToLanePriority(schedulerPriority);
+      const schedulerPriority = getCurrentSchedulerPriorityLevel();
+      switch (schedulerPriority) {
+        case ImmediateSchedulerPriority:
+          return DiscreteEventPriority;
+        case UserBlockingSchedulerPriority:
+          return ContinuousEventPriority;
+        case NormalSchedulerPriority:
+        case LowSchedulerPriority:
+          // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
+          return DefaultEventPriority;
+        case IdleSchedulerPriority:
+          return IdleEventPriority;
+        default:
+          return DefaultEventPriority;
+      }
     }
     default:
-      return DefaultLanePriority;
+      return DefaultEventPriority;
   }
 }

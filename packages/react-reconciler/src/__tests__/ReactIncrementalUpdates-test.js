@@ -13,11 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
-
-// Copied from ReactFiberLanes. Don't do this!
-// This is hard coded directly to avoid needing to import, and
-// we'll remove this as we replace runWithPriority with React APIs.
-const InputContinuousLanePriority = 10;
+let ContinuousEventPriority;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -26,10 +22,21 @@ describe('ReactIncrementalUpdates', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    ContinuousEventPriority = require('react-reconciler/constants')
+      .ContinuousEventPriority;
   });
 
   function span(prop) {
     return {type: 'span', children: [], prop, hidden: false};
+  }
+
+  function flushNextRenderIfExpired() {
+    // This will start rendering the next level of work. If the work hasn't
+    // expired yet, React will exit without doing anything. If it has expired,
+    // it will schedule a sync task.
+    Scheduler.unstable_flushExpired();
+    // Flush the sync task.
+    ReactNoop.flushSync();
   }
 
   it('applies updates in order of priority', () => {
@@ -54,6 +61,7 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushAndYieldThrough(['commit']);
+
     expect(state).toEqual({a: 'a'});
     expect(Scheduler).toFlushWithoutYielding();
     expect(state).toEqual({a: 'a', b: 'b', c: 'c'});
@@ -152,31 +160,72 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    instance.setState(createUpdate('a'));
-    instance.setState(createUpdate('b'));
-    instance.setState(createUpdate('c'));
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        instance.setState(createUpdate('a'));
+        instance.setState(createUpdate('b'));
+        instance.setState(createUpdate('c'));
+      });
+    } else {
+      instance.setState(createUpdate('a'));
+      instance.setState(createUpdate('b'));
+      instance.setState(createUpdate('c'));
+    }
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
     // Schedule some more updates at different priorities
-    instance.setState(createUpdate('d'));
-    ReactNoop.flushSync(() => {
-      instance.setState(createUpdate('e'));
-      instance.setState(createUpdate('f'));
-    });
-    instance.setState(createUpdate('g'));
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      instance.setState(createUpdate('d'));
+      ReactNoop.flushSync(() => {
+        instance.setState(createUpdate('e'));
+        instance.setState(createUpdate('f'));
+      });
+      React.startTransition(() => {
+        instance.setState(createUpdate('g'));
+      });
 
-    // The sync updates should have flushed, but not the async ones
-    expect(Scheduler).toHaveYielded(['e', 'f']);
-    expect(ReactNoop.getChildren()).toEqual([span('ef')]);
+      // The sync updates should have flushed, but not the async ones
+      expect(Scheduler).toHaveYielded(['e', 'f']);
+      expect(ReactNoop.getChildren()).toEqual([span('ef')]);
 
-    // Now flush the remaining work. Even though e and f were already processed,
-    // they should be processed again, to ensure that the terminal state
-    // is deterministic.
-    expect(Scheduler).toFlushAndYield(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
-    expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
+      // Now flush the remaining work. Even though e and f were already processed,
+      // they should be processed again, to ensure that the terminal state
+      // is deterministic.
+      // TODO: should d, e, f be flushed again first?
+      expect(Scheduler).toFlushAndYield([
+        'd',
+        'e',
+        'f',
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+        'f',
+        'g',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
+    } else {
+      instance.setState(createUpdate('d'));
+      ReactNoop.flushSync(() => {
+        instance.setState(createUpdate('e'));
+        instance.setState(createUpdate('f'));
+      });
+      instance.setState(createUpdate('g'));
+
+      // The sync updates should have flushed, but not the async ones
+      expect(Scheduler).toHaveYielded(['e', 'f']);
+      expect(ReactNoop.getChildren()).toEqual([span('ef')]);
+
+      // Now flush the remaining work. Even though e and f were already processed,
+      // they should be processed again, to ensure that the terminal state
+      // is deterministic.
+      expect(Scheduler).toFlushAndYield(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+      expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
+    }
   });
 
   it('can abort an update, schedule a replaceState, and resume', () => {
@@ -208,34 +257,79 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     // Schedule some async updates
-    instance.setState(createUpdate('a'));
-    instance.setState(createUpdate('b'));
-    instance.setState(createUpdate('c'));
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        instance.setState(createUpdate('a'));
+        instance.setState(createUpdate('b'));
+        instance.setState(createUpdate('c'));
+      });
+    } else {
+      instance.setState(createUpdate('a'));
+      instance.setState(createUpdate('b'));
+      instance.setState(createUpdate('c'));
+    }
 
     // Begin the updates but don't flush them yet
     expect(Scheduler).toFlushAndYieldThrough(['a', 'b', 'c']);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    // Schedule some more updates at different priorities{
-    instance.setState(createUpdate('d'));
-    ReactNoop.flushSync(() => {
-      instance.setState(createUpdate('e'));
-      // No longer a public API, but we can test that it works internally by
-      // reaching into the updater.
-      instance.updater.enqueueReplaceState(instance, createUpdate('f'));
-    });
-    instance.setState(createUpdate('g'));
+    // Schedule some more updates at different priorities
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      instance.setState(createUpdate('d'));
 
-    // The sync updates should have flushed, but not the async ones. Update d
-    // was dropped and replaced by e.
-    expect(Scheduler).toHaveYielded(['e', 'f']);
-    expect(ReactNoop.getChildren()).toEqual([span('f')]);
+      ReactNoop.flushSync(() => {
+        instance.setState(createUpdate('e'));
+        // No longer a public API, but we can test that it works internally by
+        // reaching into the updater.
+        instance.updater.enqueueReplaceState(instance, createUpdate('f'));
+      });
+      React.startTransition(() => {
+        instance.setState(createUpdate('g'));
+      });
 
-    // Now flush the remaining work. Even though e and f were already processed,
-    // they should be processed again, to ensure that the terminal state
-    // is deterministic.
-    expect(Scheduler).toFlushAndYield(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
-    expect(ReactNoop.getChildren()).toEqual([span('fg')]);
+      // The sync updates should have flushed, but not the async ones.
+      // TODO: should 'd' have flushed?
+      // TODO: should 'f' have flushed? I don't know what enqueueReplaceState is.
+      expect(Scheduler).toHaveYielded(['e', 'f']);
+      expect(ReactNoop.getChildren()).toEqual([span('f')]);
+
+      // Now flush the remaining work. Even though e and f were already processed,
+      // they should be processed again, to ensure that the terminal state
+      // is deterministic.
+      expect(Scheduler).toFlushAndYield([
+        'd',
+        'e',
+        'f',
+        'a',
+        'b',
+        'c',
+        'd',
+        'e',
+        'f',
+        'g',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('fg')]);
+    } else {
+      instance.setState(createUpdate('d'));
+      ReactNoop.flushSync(() => {
+        instance.setState(createUpdate('e'));
+        // No longer a public API, but we can test that it works internally by
+        // reaching into the updater.
+        instance.updater.enqueueReplaceState(instance, createUpdate('f'));
+      });
+      instance.setState(createUpdate('g'));
+
+      // The sync updates should have flushed, but not the async ones. Update d
+      // was dropped and replaced by e.
+      expect(Scheduler).toHaveYielded(['e', 'f']);
+      expect(ReactNoop.getChildren()).toEqual([span('f')]);
+
+      // Now flush the remaining work. Even though e and f were already processed,
+      // they should be processed again, to ensure that the terminal state
+      // is deterministic.
+      expect(Scheduler).toFlushAndYield(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+      expect(ReactNoop.getChildren()).toEqual([span('fg')]);
+    }
   });
 
   it('passes accumulation of previous updates to replaceState updater function', () => {
@@ -306,12 +400,7 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    expect(() =>
-      expect(Scheduler).toFlushAndYield(['render']),
-    ).toErrorDev(
-      'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield(['render']);
 
     ReactNoop.flushSync(() => {
       instance.setState({a: 'a'});
@@ -468,8 +557,15 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     ReactNoop.act(() => {
-      ReactNoop.render(<App />);
-      expect(Scheduler).toFlushExpired([]);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<App />);
+        });
+      } else {
+        ReactNoop.render(<App />);
+      }
+      flushNextRenderIfExpired();
+      expect(Scheduler).toHaveYielded([]);
       expect(Scheduler).toFlushAndYield([
         'Render: 0',
         'Commit: 0',
@@ -477,9 +573,15 @@ describe('ReactIncrementalUpdates', () => {
       ]);
 
       Scheduler.unstable_advanceTime(10000);
-
-      setCount(2);
-      expect(Scheduler).toFlushExpired([]);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          setCount(2);
+        });
+      } else {
+        setCount(2);
+      }
+      flushNextRenderIfExpired();
+      expect(Scheduler).toHaveYielded([]);
     });
   });
 
@@ -496,8 +598,15 @@ describe('ReactIncrementalUpdates', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    ReactNoop.render(<Text text="B" />);
-    expect(Scheduler).toFlushExpired([]);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Text text="B" />);
+      });
+    } else {
+      ReactNoop.render(<Text text="B" />);
+    }
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
   });
 
   it('regression: does not expire soon due to previous expired work', () => {
@@ -506,14 +615,28 @@ describe('ReactIncrementalUpdates', () => {
       return text;
     }
 
-    ReactNoop.render(<Text text="A" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Text text="A" />);
+      });
+    } else {
+      ReactNoop.render(<Text text="A" />);
+    }
     Scheduler.unstable_advanceTime(10000);
-    expect(Scheduler).toFlushExpired(['A']);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded(['A']);
 
     Scheduler.unstable_advanceTime(10000);
 
-    ReactNoop.render(<Text text="B" />);
-    expect(Scheduler).toFlushExpired([]);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Text text="B" />);
+      });
+    } else {
+      ReactNoop.render(<Text text="B" />);
+    }
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
   });
 
   it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
@@ -530,14 +653,8 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + log);
         if (log === 'B') {
           // Right after B commits, schedule additional updates.
-          // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-          ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
-            Scheduler.unstable_runWithPriority(
-              Scheduler.unstable_UserBlockingPriority,
-              () => {
-                pushToLog('C');
-              },
-            ),
+          ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
+            pushToLog('C'),
           );
           setLog(prevLog => prevLog + 'D');
         }
@@ -554,16 +671,16 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput('');
 
     await ReactNoop.act(async () => {
-      pushToLog('A');
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          pushToLog('A');
+        });
+      } else {
+        pushToLog('A');
+      }
 
-      // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-      ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => {
-            pushToLog('B');
-          },
-        ),
+      ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
+        pushToLog('B'),
       );
     });
     expect(Scheduler).toHaveYielded([
@@ -595,14 +712,8 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
         if (this.state.log === 'B') {
           // Right after B commits, schedule additional updates.
-          // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-          ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
-            Scheduler.unstable_runWithPriority(
-              Scheduler.unstable_UserBlockingPriority,
-              () => {
-                this.pushToLog('C');
-              },
-            ),
+          ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
+            this.pushToLog('C'),
           );
           this.pushToLog('D');
         }
@@ -621,15 +732,15 @@ describe('ReactIncrementalUpdates', () => {
     expect(root).toMatchRenderedOutput('');
 
     await ReactNoop.act(async () => {
-      pushToLog('A');
-      // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-      ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => {
-            pushToLog('B');
-          },
-        ),
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          pushToLog('A');
+        });
+      } else {
+        pushToLog('A');
+      }
+      ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
+        pushToLog('B'),
       );
     });
     expect(Scheduler).toHaveYielded([

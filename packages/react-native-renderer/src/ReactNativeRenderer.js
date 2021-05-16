@@ -19,7 +19,6 @@ import {
   batchedUpdates as batchedUpdatesImpl,
   batchedEventUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
   createContainer,
   updateContainer,
   injectIntoDevTools,
@@ -46,7 +45,7 @@ import {
 } from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -63,7 +62,7 @@ function findHostInstance_DEPRECATED(
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentNameFromType(owner.type) || 'A component',
         );
       }
 
@@ -96,6 +95,7 @@ function findHostInstance_DEPRECATED(
     // Fabric
     return (hostInstance: any).canonical;
   }
+  // $FlowFixMe[incompatible-return]
   return hostInstance;
 }
 
@@ -110,7 +110,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentNameFromType(owner.type) || 'A component',
         );
       }
 
@@ -203,7 +203,7 @@ function render(
   if (!root) {
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
-    root = createContainer(containerTag, LegacyRoot, false, null, null);
+    root = createContainer(containerTag, LegacyRoot, false, null, false, null);
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
@@ -240,7 +240,6 @@ function createPortal(
 setBatchingImplementation(
   batchedUpdatesImpl,
   discreteUpdates,
-  flushDiscreteUpdates,
   batchedEventUpdates,
 );
 

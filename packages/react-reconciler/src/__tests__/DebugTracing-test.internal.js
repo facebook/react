@@ -16,8 +16,8 @@ describe('DebugTracing', () => {
 
   let logs;
 
-  const DEFAULT_LANE_STRING = '0b0000000000000000000000010000000';
-  const RETRY_LANE_STRING = '0b0000000100000000000000000000000';
+  const DEFAULT_LANE_STRING = '0b0000000000000000000000000010000';
+  const RETRY_LANE_STRING = '0b0000000010000000000000000000000';
 
   beforeEach(() => {
     jest.resetModules();
@@ -282,7 +282,6 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
       `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
       `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
@@ -366,7 +365,6 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
       `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`, // debugRenderPhaseSideEffectsForStrictMode
       `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
     ]);
   });

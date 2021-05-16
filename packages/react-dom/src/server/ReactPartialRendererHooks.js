@@ -219,10 +219,7 @@ function getCacheForType<T>(resourceType: () => T): T {
   invariant(false, 'Not implemented.');
 }
 
-function readContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
+function readContext<T>(context: ReactContext<T>): T {
   const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
@@ -238,10 +235,7 @@ function readContext<T>(
   return context[threadID];
 }
 
-function useContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
+function useContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
   }
@@ -473,12 +467,12 @@ function useDeferredValue<T>(value: T): T {
   return value;
 }
 
-function useTransition(): [(callback: () => void) => void, boolean] {
+function useTransition(): [boolean, (callback: () => void) => void] {
   resolveCurrentlyRenderingComponent();
   const startTransition = callback => {
     callback();
   };
-  return [startTransition, false];
+  return [false, startTransition];
 }
 
 function useOpaqueIdentifier(): OpaqueIDType {

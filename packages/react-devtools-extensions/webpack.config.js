@@ -17,6 +17,8 @@ const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
 
+const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
+
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
@@ -40,7 +42,7 @@ module.exports = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
-      'react-devtools-feature-flags': resolveFeatureFlags('extension'),
+      'react-devtools-feature-flags': resolveFeatureFlags(featureFlagTarget),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
@@ -56,6 +58,7 @@ module.exports = {
       __EXTENSION__: true,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,

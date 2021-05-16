@@ -414,6 +414,7 @@ function cancelHostTimeout(): void {
 
 function shouldYieldToHost(): boolean {
   if (
+    (expectedNumberOfYields === 0 && yieldedValues === null) ||
     (expectedNumberOfYields !== -1 &&
       yieldedValues !== null &&
       yieldedValues.length >= expectedNumberOfYields) ||

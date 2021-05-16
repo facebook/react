@@ -14,6 +14,18 @@ There are also known bugs and inefficiencies in master so **don't use this fixtu
 
 ## How do I run this fixture?
 
+### From npm version
+
+```
+# 1: Install fixture dependencies
+cd fixtures/unstable-async/time-slicing/
+yarn
+
+# 2: Run the app
+yarn start
+```
+
+### From React source code
 ```shell
 # 1: Build react from source
 cd /path/to/react
@@ -23,6 +35,9 @@ yarn build react-dom/index,react/index,react-cache,scheduler --type=NODE
 # 2: Install fixture dependencies
 cd fixtures/unstable-async/time-slicing/
 yarn
+
+# 3: Copy React source code over
+yarn copy-source
 
 # 3: Run the app
 yarn start

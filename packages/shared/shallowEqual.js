@@ -8,8 +8,7 @@
  */
 
 import is from './objectIs';
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+import hasOwnProperty from './hasOwnProperty';
 
 /**
  * Performs equality by iterating through keys on an object and returning false

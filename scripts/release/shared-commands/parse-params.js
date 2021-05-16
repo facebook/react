@@ -3,10 +3,18 @@
 'use strict';
 
 const commandLineArgs = require('command-line-args');
-const getBuildIdForCommit = require('../get-build-id-for-commit');
+const getBuildIdForCommit = require('./get-build-id-for-commit');
 const theme = require('../theme');
+const {logPromise} = require('../utils');
 
 const paramDefinitions = [
+  {
+    name: 'build',
+    type: String,
+    description:
+      'CI build ID corresponding to the "process_artifacts_combined" task.',
+    defaultValue: null,
+  },
   {
     name: 'commit',
     type: String,
@@ -39,13 +47,20 @@ module.exports = async () => {
     process.exit(1);
   }
 
-  if (params.commit === null) {
-    console.error(theme.error`No --commit param specified.`);
+  if (params.build === null && params.commit === null) {
+    console.error(
+      theme.error`Either a --commit or --build param must be specified.`
+    );
     process.exit(1);
   }
 
   try {
-    params.build = await getBuildIdForCommit(params.commit);
+    if (params.build === null) {
+      params.build = await logPromise(
+        getBuildIdForCommit(params.commit),
+        theme`Getting build ID for commit "${params.commit}"`
+      );
+    }
   } catch (error) {
     console.error(theme.error(error));
     process.exit(1);

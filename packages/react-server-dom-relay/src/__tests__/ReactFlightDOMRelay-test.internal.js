@@ -72,7 +72,6 @@ describe('ReactFlightDOMRelay', () => {
     });
   });
 
-  // @gate experimental
   it('can render a client component using a module reference and render there', () => {
     function UserClient(props) {
       return (
@@ -105,7 +104,6 @@ describe('ReactFlightDOMRelay', () => {
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
   });
 
-  // @gate experimental
   it('can reasonably handle different element types', () => {
     const {
       forwardRef,

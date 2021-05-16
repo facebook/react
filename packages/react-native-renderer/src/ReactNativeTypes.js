@@ -94,7 +94,7 @@ export type PartialViewConfig = $ReadOnly<{
   validAttributes?: PartialAttributeConfiguration,
 }>;
 
-export type NativeMethods = {
+export type NativeMethods = $ReadOnly<{|
   blur(): void,
   focus(): void,
   measure(callback: MeasureOnSuccessCallback): void,
@@ -105,8 +105,7 @@ export type NativeMethods = {
     onFail?: () => void,
   ): void,
   setNativeProps(nativeProps: {...}): void,
-  ...
-};
+|}>;
 
 export type HostComponent<T> = AbstractComponent<T, $ReadOnly<NativeMethods>>;
 

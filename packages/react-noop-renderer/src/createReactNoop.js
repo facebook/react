@@ -21,16 +21,14 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import isArray from 'shared/isArray';
 import {
+  DefaultEventPriority,
+  IdleEventPriority,
   ConcurrentRoot,
-  BlockingRoot,
   LegacyRoot,
-} from 'react-reconciler/src/ReactRootTags';
+} from 'react-reconciler/constants';
 
-import {
-  enableNativeEventPriorityInference,
-  enableDiscreteEventMicroTasks,
-} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
@@ -376,7 +374,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     cancelTimeout: clearTimeout,
     noTimeout: -1,
 
-    supportsMicrotasks: enableDiscreteEventMicroTasks,
+    supportsMicrotasks: true,
     scheduleMicrotask:
       typeof queueMicrotask === 'function'
         ? queueMicrotask
@@ -428,6 +426,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     getInstanceFromScope() {
       throw new Error('Not yet implemented.');
     },
+
+    detachDeletedInstance() {},
   };
 
   const hostConfig = useMutation
@@ -593,7 +593,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  let currentEventPriority = NoopRenderer.DefaultEventPriority;
+  let currentEventPriority = DefaultEventPriority;
 
   function childToJSX(child, text) {
     if (text !== null) {
@@ -605,7 +605,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (typeof child === 'string') {
       return child;
     }
-    if (Array.isArray(child)) {
+    if (isArray(child)) {
       if (child.length === 0) {
         return null;
       }
@@ -619,7 +619,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
       return children;
     }
-    if (Array.isArray(child.children)) {
+    if (isArray(child.children)) {
       // This is an instance.
       const instance: Instance = (child: any);
       const children = childToJSX(instance.children, instance.text);
@@ -669,7 +669,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (children === null) {
       return null;
     }
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
         type: REACT_FRAGMENT_TYPE,
@@ -688,7 +688,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (children === null) {
       return null;
     }
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
         type: REACT_FRAGMENT_TYPE,
@@ -738,33 +738,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const fiberRoot = NoopRenderer.createContainer(
         container,
         ConcurrentRoot,
-        false,
-        null,
-        null,
-      );
-      return {
-        _Scheduler: Scheduler,
-        render(children: ReactNodeList) {
-          NoopRenderer.updateContainer(children, fiberRoot, null, null);
-        },
-        getChildren() {
-          return getChildren(container);
-        },
-        getChildrenAsJSX() {
-          return getChildrenAsJSX(container);
-        },
-      };
-    },
-
-    createBlockingRoot() {
-      const container = {
-        rootID: '' + idCounter++,
-        pendingChildren: [],
-        children: [],
-      };
-      const fiberRoot = NoopRenderer.createContainer(
-        container,
-        BlockingRoot,
         false,
         null,
         null,
@@ -937,19 +910,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     discreteUpdates: NoopRenderer.discreteUpdates,
 
     idleUpdates<T>(fn: () => T): T {
-      if (enableNativeEventPriorityInference) {
-        const prevEventPriority = currentEventPriority;
-        currentEventPriority = NoopRenderer.IdleEventPriority;
-        try {
-          fn();
-        } finally {
-          currentEventPriority = prevEventPriority;
-        }
-      } else {
-        return Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_IdlePriority,
-          fn,
-        );
+      const prevEventPriority = currentEventPriority;
+      currentEventPriority = IdleEventPriority;
+      try {
+        fn();
+      } finally {
+        currentEventPriority = prevEventPriority;
       }
     },
 

@@ -14,7 +14,8 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
+import isArray from 'shared/isArray';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -51,7 +52,6 @@ import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
 import {
   createMarkupForCustomAttribute,
   createMarkupForProperty,
-  createMarkupForRoot,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
 import {
@@ -63,7 +63,7 @@ import {
   setCurrentPartialRenderer,
 } from './ReactPartialRendererHooks';
 import {
-  Namespaces,
+  HTML_NAMESPACE,
   getIntrinsicNamespace,
   getChildNamespace,
 } from '../shared/DOMNamespaces';
@@ -77,6 +77,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 export type ServerOptions = {
   identifierPrefix?: string,
@@ -186,6 +187,7 @@ let didWarnDefaultChecked = false;
 let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
+let didWarnInvalidOptionInnerHTML = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
 const didWarnAboutModulePatternComponent = {};
@@ -259,7 +261,7 @@ function warnNoop(
   if (__DEV__) {
     const constructor = publicInstance.constructor;
     const componentName =
-      (constructor && getComponentName(constructor)) || 'ReactClass';
+      (constructor && getComponentNameFromType(constructor)) || 'ReactClass';
     const warningKey = componentName + '.' + callerName;
     if (didWarnAboutNoopUpdateForComponent[warningKey]) {
       return;
@@ -332,7 +334,8 @@ function flattenOptionChildren(children: mixed): ?string {
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
-          'Only strings and numbers are supported as <option> children.',
+          'Cannot infer the option value of complex children. ' +
+            'Pass a `value` prop or use a plain string as children to <option>.',
         );
       }
     }
@@ -340,7 +343,6 @@ function flattenOptionChildren(children: mixed): ?string {
   return content;
 }
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
   children: null,
@@ -385,15 +387,6 @@ function createOpenTagMarkup(
     }
   }
 
-  // For static pages, no need to put React ID and checksum. Saves lots of
-  // bytes.
-  if (makeStaticMarkup) {
-    return ret;
-  }
-
-  if (isRootElement) {
-    ret += ' ' + createMarkupForRoot();
-  }
   return ret;
 }
 
@@ -404,7 +397,7 @@ function validateRenderResult(child, type) {
       '%s(...): Nothing was returned from render. This usually means a ' +
         'return statement is missing. Or, to render nothing, ' +
         'return null.',
-      getComponentName(type) || 'Component',
+      getComponentNameFromType(type) || 'Component',
     );
   }
 }
@@ -467,7 +460,8 @@ function resolve(
       if (typeof Component.getDerivedStateFromProps === 'function') {
         if (__DEV__) {
           if (inst.state === null || inst.state === undefined) {
-            const componentName = getComponentName(Component) || 'Unknown';
+            const componentName =
+              getComponentNameFromType(Component) || 'Unknown';
             if (!didWarnAboutUninitializedState[componentName]) {
               console.error(
                 '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
@@ -491,7 +485,8 @@ function resolve(
 
         if (__DEV__) {
           if (partialState === undefined) {
-            const componentName = getComponentName(Component) || 'Unknown';
+            const componentName =
+              getComponentNameFromType(Component) || 'Unknown';
             if (!didWarnAboutUndefinedDerivedState[componentName]) {
               console.error(
                 '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
@@ -513,7 +508,8 @@ function resolve(
           Component.prototype &&
           typeof Component.prototype.render === 'function'
         ) {
-          const componentName = getComponentName(Component) || 'Unknown';
+          const componentName =
+            getComponentNameFromType(Component) || 'Unknown';
 
           if (!didWarnAboutBadClass[componentName]) {
             console.error(
@@ -535,7 +531,8 @@ function resolve(
         // Support for module components is deprecated and is removed behind a flag.
         // Whether or not it would crash later, we want to show a good message in DEV first.
         if (inst != null && inst.render != null) {
-          const componentName = getComponentName(Component) || 'Unknown';
+          const componentName =
+            getComponentNameFromType(Component) || 'Unknown';
           if (!didWarnAboutModulePatternComponent[componentName]) {
             console.error(
               'The <%s /> component appears to be a function component that returns a class instance. ' +
@@ -583,7 +580,8 @@ function resolve(
             warnAboutDeprecatedLifecycles &&
             inst.componentWillMount.__suppressDeprecationWarning !== true
           ) {
-            const componentName = getComponentName(Component) || 'Unknown';
+            const componentName =
+              getComponentNameFromType(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
               console.warn(
@@ -665,7 +663,7 @@ function resolve(
           console.error(
             '%s uses the legacy childContextTypes API which is no longer supported. ' +
               'Use React.createContext() instead.',
-            getComponentName(Component) || 'Unknown',
+            getComponentNameFromType(Component) || 'Unknown',
           );
         }
       }
@@ -678,7 +676,7 @@ function resolve(
             invariant(
               contextKey in childContextTypes,
               '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-              getComponentName(Component) || 'Unknown',
+              getComponentNameFromType(Component) || 'Unknown',
               contextKey,
             );
           }
@@ -687,7 +685,7 @@ function resolve(
             console.error(
               '%s.getChildContext(): childContextTypes must be defined in order to ' +
                 'use getChildContext().',
-              getComponentName(Component) || 'Unknown',
+              getComponentNameFromType(Component) || 'Unknown',
             );
           }
         }
@@ -742,7 +740,7 @@ class ReactDOMServerRenderer {
       type: null,
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
-      domNamespace: Namespaces.html,
+      domNamespace: HTML_NAMESPACE,
       children: flatChildren,
       childIndex: 0,
       context: emptyObject,
@@ -1298,7 +1296,7 @@ class ReactDOMServerRenderer {
             "it's defined in, or you might have mixed up default and " +
             'named imports.';
         }
-        const ownerName = owner ? getComponentName(owner) : null;
+        const ownerName = owner ? getComponentNameFromType(owner) : null;
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
@@ -1319,18 +1317,21 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
-    const tag = element.type.toLowerCase();
+    const tag = element.type;
 
     let namespace = parentNamespace;
-    if (parentNamespace === Namespaces.html) {
+    if (parentNamespace === HTML_NAMESPACE) {
       namespace = getIntrinsicNamespace(tag);
     }
 
+    let props = element.props;
+
     if (__DEV__) {
-      if (namespace === Namespaces.html) {
+      if (namespace === HTML_NAMESPACE) {
+        const isCustomComponent = isCustomComponentFn(tag, props);
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        if (tag !== element.type) {
+        if (!isCustomComponent && tag.toLowerCase() !== element.type) {
           console.error(
             '<%s /> is using incorrect casing. ' +
               'Use PascalCase for React components, ' +
@@ -1343,7 +1344,6 @@ class ReactDOMServerRenderer {
 
     validateDangerousTag(tag);
 
-    let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
         checkControlledValueProps('input', props);
@@ -1431,7 +1431,7 @@ class ReactDOMServerRenderer {
             defaultValue == null,
             'If you supply `defaultValue` on a <textarea>, do not pass children.',
           );
-          if (Array.isArray(textareaChildren)) {
+          if (isArray(textareaChildren)) {
             invariant(
               textareaChildren.length <= 1,
               '<textarea> can only have at most one child.',
@@ -1460,14 +1460,14 @@ class ReactDOMServerRenderer {
           if (props[propName] == null) {
             continue;
           }
-          const isArray = Array.isArray(props[propName]);
-          if (props.multiple && !isArray) {
+          const propNameIsArray = isArray(props[propName]);
+          if (props.multiple && !propNameIsArray) {
             console.error(
               'The `%s` prop supplied to <select> must be an array if ' +
                 '`multiple` is true.',
               propName,
             );
-          } else if (!props.multiple && isArray) {
+          } else if (!props.multiple && propNameIsArray) {
             console.error(
               'The `%s` prop supplied to <select> must be a scalar ' +
                 'value if `multiple` is false.',
@@ -1499,16 +1499,26 @@ class ReactDOMServerRenderer {
     } else if (tag === 'option') {
       let selected = null;
       const selectValue = this.currentSelectValue;
-      const optionChildren = flattenOptionChildren(props.children);
       if (selectValue != null) {
         let value;
         if (props.value != null) {
           value = props.value + '';
         } else {
-          value = optionChildren;
+          if (__DEV__) {
+            if (props.dangerouslySetInnerHTML != null) {
+              if (!didWarnInvalidOptionInnerHTML) {
+                didWarnInvalidOptionInnerHTML = true;
+                console.error(
+                  'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
+                    'which value should be selected.',
+                );
+              }
+            }
+          }
+          value = flattenOptionChildren(props.children);
         }
         selected = false;
-        if (Array.isArray(selectValue)) {
+        if (isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
             if ('' + selectValue[j] === value) {
@@ -1523,12 +1533,10 @@ class ReactDOMServerRenderer {
         props = Object.assign(
           {
             selected: undefined,
-            children: undefined,
           },
           props,
           {
             selected: selected,
-            children: optionChildren,
           },
         );
       }

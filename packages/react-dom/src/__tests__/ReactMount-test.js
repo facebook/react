@@ -123,16 +123,12 @@ describe('ReactMount', () => {
     expect(instance1 === instance2).toBe(true);
   });
 
-  it('should warn if mounting into left padded rendered markup', () => {
+  it('does not warn if mounting into left padded rendered markup', () => {
     const container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
-    expect(() =>
-      ReactDOM.hydrate(<div />, container),
-    ).toErrorDev(
-      'Did not expect server HTML to contain the text node " " in <container>.',
-      {withoutStack: true},
-    );
+    // This should probably ideally warn but we ignore extra markup at the root.
+    ReactDOM.hydrate(<div />, container);
   });
 
   it('should warn if mounting into right padded rendered markup', () => {

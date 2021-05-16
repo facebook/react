@@ -25,8 +25,6 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "tracing.js",
-    "tracing-profiling.js",
     "unstable_mock.js",
     "unstable_no_dom.js",
     "unstable_post_task.js",

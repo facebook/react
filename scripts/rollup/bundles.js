@@ -238,14 +238,9 @@ const bundles = [
 
   /******* React DOM Server *******/
   {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: __EXPERIMENTAL__
+      ? [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD]
+      : [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
@@ -285,6 +280,13 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
+    externals: ['react', 'react-dom/server'],
+  },
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-relay/src/ReactDOMServerFB',
+    global: 'ReactDOMServer',
     externals: ['react', 'react-dom/server'],
   },
 
@@ -604,12 +606,21 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* Reflection *******/
+  /******* Reconciler Reflection *******/
   {
     moduleType: RENDERER_UTILS,
     bundleTypes: [NODE_DEV, NODE_PROD],
     entry: 'react-reconciler/reflection',
     global: 'ReactFiberTreeReflection',
+    externals: [],
+  },
+
+  /******* Reconciler Constants *******/
+  {
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    entry: 'react-reconciler/constants',
+    global: 'ReactReconcilerConstants',
     externals: [],
   },
 
@@ -792,24 +803,6 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-refresh/runtime',
     global: 'ReactFreshRuntime',
-    externals: [],
-  },
-
-  {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'scheduler/tracing',
-    global: 'SchedulerTracing',
     externals: [],
   },
 ];
