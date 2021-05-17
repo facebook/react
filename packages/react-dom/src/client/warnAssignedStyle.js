@@ -10,28 +10,27 @@ let warnAssignedStyle = () => {};
 if (__DEV__) {
   let warnedForInvalidFontFamily = false;
 
-  const isFontFamilyValid = function(currentValue, assignedValue) {
+  const isStyleValueValid = function(currentValue, assignedValue) {
     return currentValue === assignedValue;
   };
 
-  const warnInvalidFontFamilyValue = function(value) {
+  const warnInvalidStyleValue = function(name, value) {
     if (warnedForInvalidFontFamily) {
       return;
     }
 
     warnedForInvalidFontFamily = true;
     console.warn(
-      "`%s` isn't valid value for fontFamily property. Did you forget to add quotes?",
+      "`%s` isn't valid value for `%s` property.",
       value,
+      name
     );
   };
 
   warnAssignedStyle = function(node, name, value) {
-    if (
-      name === 'fontFamily' &&
-      !isFontFamilyValid(node.style.fontFamily, value)
+    if (!isStyleValueValid(node.style[name], value)
     ) {
-      warnInvalidFontFamilyValue(value);
+      warnInvalidStyleValue(name, value);
     }
   };
 }
