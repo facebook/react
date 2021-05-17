@@ -38,10 +38,17 @@ import {
 
 import {enableIsInputPending} from '../SchedulerFeatureFlags';
 
-const perf = window.performance;
+let getCurrentTime;
+const hasPerformanceNow =
+  typeof performance === 'object' && typeof performance.now === 'function';
 
-function getCurrentTime() {
-  return perf.now();
+if (hasPerformanceNow) {
+  const localPerformance = performance;
+  getCurrentTime = () => localPerformance.now();
+} else {
+  const localDate = Date;
+  const initialTime = localDate.now();
+  getCurrentTime = () => localDate.now() - initialTime;
 }
 
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
@@ -78,33 +85,11 @@ var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
-const setTimeout = window.setTimeout;
-const clearTimeout = window.clearTimeout;
-
-if (typeof console !== 'undefined') {
-  // TODO: Scheduler no longer requires these methods to be polyfilled. But
-  // maybe we want to continue warning if they don't exist, to preserve the
-  // option to rely on it in the future?
-  const requestAnimationFrame = window.requestAnimationFrame;
-  const cancelAnimationFrame = window.cancelAnimationFrame;
-
-  if (typeof requestAnimationFrame !== 'function') {
-    // Using console['error'] to evade Babel and ESLint
-    console['error'](
-      "This browser doesn't support requestAnimationFrame. " +
-        'Make sure that you load a ' +
-        'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
-    );
-  }
-  if (typeof cancelAnimationFrame !== 'function') {
-    // Using console['error'] to evade Babel and ESLint
-    console['error'](
-      "This browser doesn't support cancelAnimationFrame. " +
-        'Make sure that you load a ' +
-        'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
-    );
-  }
-}
+const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
+const localClearTimeout =
+  typeof clearTimeout === 'function' ? clearTimeout : null;
+const localSetImmediate =
+  typeof setImmediate !== 'undefined' ? setImmediate : null; // IE and Node.js + jsdom
 
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
@@ -425,7 +410,7 @@ function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
 }
 
-let isTaskLoopRunning = false;
+let isMessageLoopRunning = false;
 let scheduledHostCallback = null;
 let taskTimeoutID = -1;
 
@@ -527,43 +512,70 @@ const performWorkUntilDeadline = () => {
       hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
     } finally {
       if (hasMoreWork) {
-        // If there's more work, schedule the next browser task at the end of
-        // the preceding one.
-        postTask(performWorkUntilDeadline);
+        // If there's more work, schedule the next message event at the end
+        // of the preceding one.
+        schedulePerformWorkUntilDeadline();
       } else {
-        isTaskLoopRunning = false;
+        isMessageLoopRunning = false;
         scheduledHostCallback = null;
       }
     }
   } else {
-    isTaskLoopRunning = false;
+    isMessageLoopRunning = false;
   }
   // Yielding to the browser will give it a chance to paint, so we can
   // reset this.
   needsPaint = false;
 };
 
-function postTask(callback) {
-  // Use experimental Chrome Scheduler postTask API.
-  global.scheduler.postTask(callback);
+let schedulePerformWorkUntilDeadline;
+if (typeof localSetImmediate === 'function') {
+  // Node.js and old IE.
+  // There's a few reasons for why we prefer setImmediate.
+  //
+  // Unlike MessageChannel, it doesn't prevent a Node.js process from exiting.
+  // (Even though this is a DOM fork of the Scheduler, you could get here
+  // with a mix of Node.js 15+, which has a MessageChannel, and jsdom.)
+  // https://github.com/facebook/react/issues/20756
+  //
+  // But also, it runs earlier which is the semantic we want.
+  // If other browsers ever implement it, it's better to use it.
+  // Although both of these would be inferior to native scheduling.
+  schedulePerformWorkUntilDeadline = () => {
+    localSetImmediate(performWorkUntilDeadline);
+  };
+} else if (typeof MessageChannel !== 'undefined') {
+  // DOM and Worker environments.
+  // We prefer MessageChannel because of the 4ms setTimeout clamping.
+  const channel = new MessageChannel();
+  const port = channel.port2;
+  channel.port1.onmessage = performWorkUntilDeadline;
+  schedulePerformWorkUntilDeadline = () => {
+    port.postMessage(null);
+  };
+} else {
+  // We should only fallback here in non-browser environments.
+  schedulePerformWorkUntilDeadline = () => {
+    localSetTimeout(performWorkUntilDeadline, 0);
+  };
 }
 
 function requestHostCallback(callback) {
   scheduledHostCallback = callback;
-  if (!isTaskLoopRunning) {
-    isTaskLoopRunning = true;
-    postTask(performWorkUntilDeadline);
+  if (!isMessageLoopRunning) {
+    isMessageLoopRunning = true;
+    schedulePerformWorkUntilDeadline();
   }
 }
 
 function requestHostTimeout(callback, ms) {
-  taskTimeoutID = setTimeout(() => {
+  taskTimeoutID = localSetTimeout(() => {
     callback(getCurrentTime());
   }, ms);
 }
 
 function cancelHostTimeout() {
-  clearTimeout(taskTimeoutID);
+  localClearTimeout(taskTimeoutID);
   taskTimeoutID = -1;
 }
 

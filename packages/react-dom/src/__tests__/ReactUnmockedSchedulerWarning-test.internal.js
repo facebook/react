@@ -17,7 +17,7 @@ function App() {
 
 beforeEach(() => {
   jest.resetModules();
-  jest.mock('scheduler', () => require('scheduler/unstable_no_dom'));
+  jest.unmock('scheduler');
   React = require('react');
   ReactDOM = require('react-dom');
   ReactFeatureFlags = require('shared/ReactFeatureFlags');

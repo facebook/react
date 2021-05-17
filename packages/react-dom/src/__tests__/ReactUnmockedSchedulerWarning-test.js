@@ -16,9 +16,7 @@ function App() {
 
 beforeEach(() => {
   jest.resetModules();
-  jest.mock('scheduler', () =>
-    require.requireActual('scheduler/unstable_no_dom'),
-  );
+  jest.unmock('scheduler');
   React = require('react');
   ReactDOM = require('react-dom');
 });

@@ -26,6 +26,8 @@ module.exports = {
     require: true,
     globalThis: true,
     global: true,
+    // Internet Explorer
+    setImmediate: true,
     // Trusted Types
     trustedTypes: true,
 

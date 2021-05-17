@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -16,21 +17,16 @@ let UserBlockingPriority;
 let NormalPriority;
 
 describe('SchedulerNoDOM', () => {
-  // If Scheduler runs in a non-DOM environment, it falls back to a naive
-  // implementation using setTimeout. This only meant to be used for testing
-  // purposes, like with jest's fake timer API.
+  // Scheduler falls back to a naive implementation using setTimeout.
+  // This is only meant to be used for testing purposes, like with jest's fake timer API.
   beforeEach(() => {
     jest.resetModules();
     jest.useFakeTimers();
-
-    // Un-mock scheduler
-    jest.mock('scheduler', () =>
-      require.requireActual('scheduler/unstable_no_dom'),
-    );
+    delete global.setImmediate;
+    jest.unmock('scheduler');
 
     Scheduler = require('scheduler');
     scheduleCallback = Scheduler.unstable_scheduleCallback;
-    ImmediatePriority = Scheduler.unstable_ImmediatePriority;
     UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
     NormalPriority = Scheduler.unstable_NormalPriority;
   });
@@ -97,5 +93,36 @@ describe('SchedulerNoDOM', () => {
     // swallowed.
     expect(() => jest.runAllTimers()).toThrow('Oops C');
     expect(log).toEqual(['B', 'C']);
+  });
+});
+
+// See: https://github.com/facebook/react/pull/13088
+describe('does not crash non-node SSR environments', () => {
+  it('if setTimeout is undefined', () => {
+    jest.resetModules();
+    const originalSetTimeout = global.setTimeout;
+    try {
+      delete global.setTimeout;
+      jest.unmock('scheduler');
+      expect(() => {
+        require('scheduler');
+      }).not.toThrow();
+    } finally {
+      global.setTimeout = originalSetTimeout;
+    }
+  });
+
+  it('if clearTimeout is undefined', () => {
+    jest.resetModules();
+    const originalClearTimeout = global.clearTimeout;
+    try {
+      delete global.clearTimeout;
+      jest.unmock('scheduler');
+      expect(() => {
+        require('scheduler');
+      }).not.toThrow();
+    } finally {
+      global.clearTimeout = originalClearTimeout;
+    }
   });
 });

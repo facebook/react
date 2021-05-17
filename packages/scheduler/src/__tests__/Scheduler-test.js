@@ -32,11 +32,9 @@ let NormalPriority;
 describe('SchedulerBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
-
-    // Un-mock scheduler
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
-
     runtime = installMockBrowserRuntime();
+    jest.unmock('scheduler');
+
     performance = global.performance;
     Scheduler = require('scheduler');
     cancelCallback = Scheduler.unstable_cancelCallback;
@@ -68,21 +66,16 @@ describe('SchedulerBrowser', () => {
       },
     };
 
-    const window = {};
-    global.window = window;
+    // Delete node provide setImmediate so we fall through to MessageChannel.
+    delete global.setImmediate;
 
-    // TODO: Scheduler no longer requires these methods to be polyfilled. But
-    // maybe we want to continue warning if they don't exist, to preserve the
-    // option to rely on it in the future?
-    window.requestAnimationFrame = window.cancelAnimationFrame = () => {};
-
-    window.setTimeout = (cb, delay) => {
+    global.setTimeout = (cb, delay) => {
       const id = timerIDCounter++;
       log(`Set Timer`);
       // TODO
       return id;
     };
-    window.clearTimeout = id => {
+    global.clearTimeout = id => {
       // TODO
     };
 
