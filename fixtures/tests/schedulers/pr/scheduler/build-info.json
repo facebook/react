@@ -1,8 +1,0 @@
-{
-  "branch": "17.0.1",
-  "buildNumber": "222790",
-  "checksum": "addb3df",
-  "commit": "8e5adfbd7",
-  "environment": "ci",
-  "reactVersion": "17.0.0-8e5adfbd7"
-}
