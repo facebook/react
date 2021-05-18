@@ -21,6 +21,7 @@ type Props = {|
 
 type State = {|
   callStack: string | null,
+  canDismiss: boolean,
   componentStack: string | null,
   errorMessage: string | null,
   hasError: boolean,
@@ -28,6 +29,7 @@ type State = {|
 
 const InitialState: State = {
   callStack: null,
+  canDismiss: false,
   componentStack: null,
   errorMessage: null,
   hasError: false,
@@ -77,13 +79,20 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   render() {
     const {children} = this.props;
-    const {callStack, componentStack, errorMessage, hasError} = this.state;
+    const {
+      callStack,
+      canDismiss,
+      componentStack,
+      errorMessage,
+      hasError,
+    } = this.state;
 
     if (hasError) {
       return (
         <ErrorView
           callStack={callStack}
           componentStack={componentStack}
+          dismissError={canDismiss ? this._dismissError : null}
           errorMessage={errorMessage}>
           <Suspense fallback={<SearchingGitHubIssues />}>
             <SuspendingErrorView
@@ -99,9 +108,16 @@ export default class ErrorBoundary extends Component<Props, State> {
     return children;
   }
 
+  _dismissError = () => {
+    this.setState(InitialState);
+  };
+
   _onStoreError = (error: Error) => {
     if (!this.state.hasError) {
-      this.setState(ErrorBoundary.getDerivedStateFromError(error));
+      this.setState({
+        ...ErrorBoundary.getDerivedStateFromError(error),
+        canDismiss: true,
+      });
     }
   };
 }
