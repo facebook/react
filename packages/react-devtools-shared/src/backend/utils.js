@@ -163,43 +163,53 @@ export function format(
   maybeMessage: any,
   ...inputArgs: $ReadOnlyArray<any>
 ): string {
-  if (typeof maybeMessage !== 'string') {
-    return [maybeMessage, ...inputArgs].join(' ');
-  }
-
-  const re = /(%?)(%([jds]))/g;
   const args = inputArgs.slice();
-  let formatted: string = maybeMessage;
 
-  if (args.length) {
-    formatted = formatted.replace(re, (match, escaped, ptn, flag) => {
-      let arg = args.shift();
-      switch (flag) {
-        case 's':
-          arg += '';
-          break;
-        case 'd':
-        case 'i':
-          arg = parseInt(arg, 10).toString();
-          break;
-        case 'f':
-          arg = parseFloat(arg).toString();
-          break;
-      }
-      if (!escaped) {
-        return arg;
-      }
-      args.unshift(arg);
-      return match;
-    });
+  // Symbols cannot be concatenated with Strings.
+  let formatted: string =
+    typeof maybeMessage === 'symbol'
+      ? maybeMessage.toString()
+      : '' + maybeMessage;
+
+  // If the first argument is a string, check for substitutions.
+  if (typeof maybeMessage === 'string') {
+    if (args.length) {
+      const REGEXP = /(%?)(%([jds]))/g;
+
+      formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
+        let arg = args.shift();
+        switch (flag) {
+          case 's':
+            arg += '';
+            break;
+          case 'd':
+          case 'i':
+            arg = parseInt(arg, 10).toString();
+            break;
+          case 'f':
+            arg = parseFloat(arg).toString();
+            break;
+        }
+        if (!escaped) {
+          return arg;
+        }
+        args.unshift(arg);
+        return match;
+      });
+    }
   }
 
-  // arguments remain after formatting
+  // Arguments that remain after formatting.
   if (args.length) {
-    formatted += ' ' + args.join(' ');
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+
+      // Symbols cannot be concatenated with Strings.
+      formatted += ' ' + (typeof arg === 'symbol' ? arg.toString() : arg);
+    }
   }
 
-  // update escaped %% values
+  // Update escaped %% values.
   formatted = formatted.replace(/%{2,2}/g, '%');
 
   return '' + formatted;
