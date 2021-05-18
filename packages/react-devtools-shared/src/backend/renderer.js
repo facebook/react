@@ -636,7 +636,7 @@ export function attach(
     // Fortunately we would only leak Fibers that have errors/warnings associated with them,
     // which is hopefully only a small set and only in DEV mode– but this is still not great.
     // We should clean up Fibers like this when flushing; see recordPendingErrorsAndWarnings().
-    const fiberID = getFiberID(getPrimaryFiber(fiber));
+    const fiberID = getOrGenerateFiberID(fiber);
 
     if (__DEBUG__) {
       debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
@@ -707,17 +707,19 @@ export function attach(
       const displayName =
         fiber.tag + ':' + (getDisplayNameForFiber(fiber) || 'null');
 
-      const id = getFiberIDSafe(fiber) || '-';
+      const maybeID = getFiberIDUnsafe(fiber) || '<no id>';
       const parentDisplayName = parentFiber
         ? parentFiber.tag +
           ':' +
           (getDisplayNameForFiber(parentFiber) || 'null')
         : '';
-      const parentID = parentFiber ? getFiberIDSafe(parentFiber) || '-' : '';
+      const maybeParentID = parentFiber
+        ? getFiberIDUnsafe(parentFiber) || '<no-id>'
+        : '';
 
       console.log(
-        `[renderer] %c${name} %c${displayName} (${id}) %c${
-          parentFiber ? `${parentDisplayName} (${parentID})` : ''
+        `[renderer] %c${name} %c${displayName} (${maybeID}) %c${
+          parentFiber ? `${parentDisplayName} (${maybeParentID})` : ''
         } %c${extraString}`,
         'color: red; font-weight: bold;',
         'color: blue;',
@@ -800,9 +802,15 @@ export function attach(
       throw Error('Cannot modify filter preferences while profiling');
     }
 
+    unmountAndRemountAllRoots(() => {
+      applyComponentFilters(componentFilters);
+    });
+  }
+
+  function unmountAndRemountAllRoots(callback?: Function) {
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getFiberID(getPrimaryFiber(root.current));
+      currentRootID = getOrGenerateFiberID(root.current);
       // The TREE_OPERATION_REMOVE_ROOT operation serves two purposes:
       // 1. It avoids sending unnecessary bridge traffic to clear a root.
       // 2. It preserves Fiber IDs when remounting (below) which in turn ID to error/warning mapping.
@@ -811,14 +819,16 @@ export function attach(
       currentRootID = -1;
     });
 
-    applyComponentFilters(componentFilters);
+    if (typeof callback === 'function') {
+      callback();
+    }
 
     // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getFiberID(getPrimaryFiber(root.current));
+      currentRootID = getOrGenerateFiberID(root.current);
       setRootPseudoKey(currentRootID, root.current);
       mountFiberRecursively(root.current, null, false, false);
       flushPendingEvents(root);
@@ -949,25 +959,16 @@ export function attach(
     }
   }
 
-  // This is a slightly annoying indirection.
-  // It is currently necessary because DevTools wants to use unique objects as keys for instances.
-  // However fibers have two versions.
-  // We use this set to remember first encountered fiber for each conceptual instance.
-  function getPrimaryFiber(fiber: Fiber): Fiber {
-    if (primaryFibers.has(fiber)) {
-      return fiber;
-    }
-    const {alternate} = fiber;
-    if (alternate != null && primaryFibers.has(alternate)) {
-      return alternate;
-    }
-    primaryFibers.add(fiber);
-    return fiber;
-  }
-
+  // Map of one or more Fibers in a pair to their unique id number.
+  // We track both Fibers to support Fast Refresh,
+  // which may forcefully replace one of the pair as part of hot reloading.
+  // In that case it's still important to be able to locate the previous ID during subsequent renders.
   const fiberToIDMap: Map<Fiber, number> = new Map();
-  const idToFiberMap: Map<number, Fiber> = new Map();
-  const primaryFibers: Set<Fiber> = new Set();
+
+  // Map of id to one (arbitrary) Fiber in a pair.
+  // This Map is used to e.g. get the display name for a Fiber or schedule an update,
+  // operations that should be the same whether the current and work-in-progress Fiber is used.
+  const idToArbitraryFiberMap: Map<number, Fiber> = new Map();
 
   // When profiling is supported, we store the latest tree base durations for each Fiber.
   // This is so that we can quickly capture a snapshot of those values if profiling starts.
@@ -982,30 +983,77 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
-  function getFiberIDSafe(fiber: Fiber): number | null {
-    let primaryFiber = null;
-    if (primaryFibers.has(fiber)) {
-      primaryFiber = fiber;
+  function getOrGenerateFiberID(fiber: Fiber): number {
+    let id = null;
+    if (fiberToIDMap.has(fiber)) {
+      id = fiberToIDMap.get(fiber);
+    } else {
+      const {alternate} = fiber;
+      if (alternate !== null && fiberToIDMap.has(alternate)) {
+        id = fiberToIDMap.get(alternate);
+      }
     }
+
+    if (id === null) {
+      id = getUID();
+    }
+
+    // This refinement is for Flow purposes only.
+    const refinedID = ((id: any): number);
+
+    // Make sure we're tracking this Fiber
+    // e.g. if it just mounted or an error was logged during initial render.
+    if (!fiberToIDMap.has(fiber)) {
+      fiberToIDMap.set(fiber, refinedID);
+      idToArbitraryFiberMap.set(refinedID, fiber);
+    }
+
+    // Also make sure we're tracking its alternate,
+    // e.g. in case this is the first update after mount.
     const {alternate} = fiber;
-    if (alternate != null && primaryFibers.has(alternate)) {
-      primaryFiber = alternate;
+    if (alternate !== null) {
+      if (!fiberToIDMap.has(alternate)) {
+        fiberToIDMap.set(alternate, refinedID);
+      }
     }
 
-    if (primaryFiber && fiberToIDMap.has(primaryFiber)) {
-      return ((fiberToIDMap.get(primaryFiber): any): number);
-    }
+    return refinedID;
+  }
 
+  function getFiberIDThrows(fiber: Fiber): number {
+    const maybeID = getFiberIDUnsafe(fiber);
+    if (maybeID !== null) {
+      return maybeID;
+    }
+    throw Error(
+      `Could not find ID for Fiber "${getDisplayNameForFiber(fiber) || ''}"`,
+    );
+  }
+
+  function getFiberIDUnsafe(fiber: Fiber): number | null {
+    if (fiberToIDMap.has(fiber)) {
+      return ((fiberToIDMap.get(fiber): any): number);
+    } else {
+      const {alternate} = fiber;
+      if (alternate !== null && fiberToIDMap.has(alternate)) {
+        return ((fiberToIDMap.get(alternate): any): number);
+      }
+    }
     return null;
   }
 
-  function getFiberID(primaryFiber: Fiber): number {
-    if (!fiberToIDMap.has(primaryFiber)) {
-      const id = getUID();
-      fiberToIDMap.set(primaryFiber, id);
-      idToFiberMap.set(id, primaryFiber);
+  function untrackFiberID(fiber: Fiber) {
+    const fiberID = getFiberIDUnsafe(fiber);
+    if (fiberID !== null) {
+      idToArbitraryFiberMap.delete(fiberID);
     }
-    return ((fiberToIDMap.get(primaryFiber): any): number);
+
+    fiberToIDMap.delete(fiber);
+
+    const {alternate} = fiber;
+    if (alternate !== null) {
+      fiberToIDMap.delete(alternate);
+    }
   }
 
   function getChangeDescription(
@@ -1066,7 +1114,7 @@ export function attach(
     switch (getElementTypeForFiber(fiber)) {
       case ElementTypeClass:
         if (idToContextsMap !== null) {
-          const id = getFiberID(getPrimaryFiber(fiber));
+          const id = getFiberIDThrows(fiber);
           const contexts = getContextsForFiber(fiber);
           if (contexts !== null) {
             idToContextsMap.set(id, contexts);
@@ -1122,7 +1170,7 @@ export function attach(
     switch (getElementTypeForFiber(fiber)) {
       case ElementTypeClass:
         if (idToContextsMap !== null) {
-          const id = getFiberID(getPrimaryFiber(fiber));
+          const id = getFiberIDThrows(fiber);
           const prevContexts = idToContextsMap.has(id)
             ? idToContextsMap.get(id)
             : null;
@@ -1390,15 +1438,13 @@ export function attach(
     clearPendingErrorsAndWarningsAfterDelay();
 
     fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
-      const fiber = idToFiberMap.get(fiberID);
+      const fiber = idToArbitraryFiberMap.get(fiberID);
       if (fiber != null) {
         // Don't send updates for Fibers that didn't mount due to e.g. Suspense or an error boundary.
         // We may also need to clean up after ourselves to avoid leaks.
         // See inline comments in onErrorOrWarning() for more info.
         if (isFiberMountedImpl(fiber) !== MOUNTED) {
-          fiberToIDMap.delete(fiber);
-          idToFiberMap.delete(fiberID);
-          primaryFibers.delete(fiber);
+          untrackFiberID(fiber);
           return;
         }
 
@@ -1559,7 +1605,7 @@ export function attach(
     }
 
     const isRoot = fiber.tag === HostRoot;
-    const id = getFiberID(getPrimaryFiber(fiber));
+    const id = getOrGenerateFiberID(fiber);
 
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
@@ -1582,11 +1628,8 @@ export function attach(
       const elementType = getElementTypeForFiber(fiber);
       const {_debugOwner} = fiber;
 
-      const ownerID =
-        _debugOwner != null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
-      const parentID = parentFiber
-        ? getFiberID(getPrimaryFiber(parentFiber))
-        : 0;
+      const ownerID = _debugOwner != null ? getFiberIDThrows(_debugOwner) : 0;
+      const parentID = parentFiber ? getFiberIDThrows(parentFiber) : 0;
 
       const displayNameStringID = getStringID(displayName);
 
@@ -1621,6 +1664,20 @@ export function attach(
       );
     }
 
+    const unsafeID = getFiberIDUnsafe(fiber);
+    if (fiber._debugNeedsRemount) {
+      if (unsafeID === null) {
+        // This inidicates a case we can't recover from:
+        // Fast Refresh has force remounted a component in a way that we don't have an id for.
+        // We could throw but that's a bad user experience.
+        // Or we could ignore the unmount but then Store might end up with a duplicate node.
+        // So a fallback is to completely reset the Store.
+        // This is costly but since Fast Refresh is only used in DEV builds, it should be okay.
+        setTimeout(unmountAndRemountAllRoots, 0);
+        return;
+      }
+    }
+
     if (trackedPathMatchFiber !== null) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
@@ -1633,9 +1690,7 @@ export function attach(
       }
     }
 
-    const isRoot = fiber.tag === HostRoot;
-    const primaryFiber = getPrimaryFiber(fiber);
-    if (!fiberToIDMap.has(primaryFiber)) {
+    if (unsafeID === null) {
       // If we've never seen this Fiber, it might be inside of a legacy render Suspense fragment (so the store is not even aware of it).
       // In that case we can just ignore it or it will cause errors later on.
       // One example of this is a Lazy component that never resolves before being unmounted.
@@ -1643,10 +1698,12 @@ export function attach(
       // TODO: This is fragile and can obscure actual bugs.
       //
       // Calling getPrimaryFiber() lazily adds fibers to the Map, so clean up after ourselves before returning.
-      primaryFibers.delete(primaryFiber);
       return;
     }
-    const id = getFiberID(primaryFiber);
+
+    // Flow refinement.
+    const id = ((unsafeID: any): number);
+    const isRoot = fiber.tag === HostRoot;
     if (isRoot) {
       // Roots must be removed only after all children (pending and simulated) have been removed.
       // So we track it separately.
@@ -1662,14 +1719,14 @@ export function attach(
       }
     }
 
-    fiberToIDMap.delete(primaryFiber);
-    idToFiberMap.delete(id);
-    primaryFibers.delete(primaryFiber);
+    if (!fiber._debugNeedsRemount) {
+      untrackFiberID(fiber);
 
-    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-    if (isProfilingSupported) {
-      idToRootMap.delete(id);
-      idToTreeBaseDurationMap.delete(id);
+      const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+      if (isProfilingSupported) {
+        idToRootMap.delete(id);
+        idToTreeBaseDurationMap.delete(id);
+      }
     }
   }
 
@@ -1696,6 +1753,9 @@ export function attach(
       const shouldIncludeInTree = !shouldFilterFiber(fiber);
       if (shouldIncludeInTree) {
         recordMount(fiber, parentFiber);
+      } else {
+        // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
+        getOrGenerateFiberID(fiber);
       }
 
       if (traceUpdatesEnabled) {
@@ -1806,7 +1866,7 @@ export function attach(
   }
 
   function recordProfilingDurations(fiber: Fiber) {
-    const id = getFiberID(getPrimaryFiber(fiber));
+    const id = getFiberIDThrows(fiber);
     const {actualDuration, treeBaseDuration} = fiber;
 
     idToTreeBaseDurationMap.set(id, treeBaseDuration || 0);
@@ -1894,7 +1954,7 @@ export function attach(
       return;
     }
     pushOperation(TREE_OPERATION_REORDER_CHILDREN);
-    pushOperation(getFiberID(getPrimaryFiber(fiber)));
+    pushOperation(getFiberIDThrows(fiber));
     pushOperation(numChildren);
     for (let i = 0; i < nextChildren.length; i++) {
       pushOperation(nextChildren[i]);
@@ -1906,7 +1966,7 @@ export function attach(
     nextChildren: Array<number>,
   ) {
     if (!shouldFilterFiber(fiber)) {
-      nextChildren.push(getFiberID(getPrimaryFiber(fiber)));
+      nextChildren.push(getFiberIDThrows(fiber));
     } else {
       let child = fiber.child;
       const isTimedOutSuspense =
@@ -1944,6 +2004,8 @@ export function attach(
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
 
+    const id = getOrGenerateFiberID(nextFiber);
+
     if (traceUpdatesEnabled) {
       const elementType = getElementTypeForFiber(nextFiber);
       if (traceNearestHostComponentUpdate) {
@@ -1969,8 +2031,7 @@ export function attach(
 
     if (
       mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id ===
-        getFiberID(getPrimaryFiber(nextFiber)) &&
+      mostRecentlyInspectedElement.id === id &&
       didFiberRender(prevFiber, nextFiber)
     ) {
       // If this Fiber has updated, clear cached inspected data.
@@ -2114,7 +2175,7 @@ export function attach(
           // we should fall back to recursively marking the nearest host descendants for highlight.
           if (traceNearestHostComponentUpdate) {
             const hostFibers = findAllCurrentHostFibers(
-              getFiberID(getPrimaryFiber(nextFiber)),
+              getFiberIDThrows(nextFiber),
             );
             hostFibers.forEach(hostFiber => {
               traceUpdatesForNodes.add(hostFiber.stateNode);
@@ -2198,7 +2259,7 @@ export function attach(
       }
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
       hook.getFiberRoots(rendererID).forEach(root => {
-        currentRootID = getFiberID(getPrimaryFiber(root.current));
+        currentRootID = getOrGenerateFiberID(root.current);
         setRootPseudoKey(currentRootID, root.current);
 
         // Handle multi-renderer edge-case where only some v16 renderers support profiling.
@@ -2253,7 +2314,7 @@ export function attach(
     const current = root.current;
     const alternate = current.alternate;
 
-    currentRootID = getFiberID(getPrimaryFiber(current));
+    currentRootID = getOrGenerateFiberID(current);
 
     // Before the traversals, remember to start tracking
     // our path in case we have selection to restore.
@@ -2399,7 +2460,7 @@ export function attach(
   }
 
   function getDisplayNameForFiberID(id) {
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
   }
 
@@ -2414,7 +2475,7 @@ export function attach(
           fiber = fiber.return;
         }
       }
-      return getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
+      return getFiberIDThrows(((fiber: any): Fiber));
     }
     return null;
   }
@@ -2484,7 +2545,7 @@ export function attach(
   // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
   // BEGIN copied code
   function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return null;
@@ -2646,7 +2707,7 @@ export function attach(
   }
 
   function prepareViewElementSource(id: number): void {
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -2680,7 +2741,7 @@ export function attach(
   function fiberToSerializedElement(fiber: Fiber): SerializedElement {
     return {
       displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
-      id: getFiberID(getPrimaryFiber(fiber)),
+      id: getFiberIDThrows(fiber),
       key: fiber.key,
       type: getElementTypeForFiber(fiber),
     };
@@ -3011,7 +3072,7 @@ export function attach(
   function updateSelectedElement(inspectedElement: InspectedElement): void {
     const {hooks, id, props} = inspectedElement;
 
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -3529,7 +3590,7 @@ export function attach(
     idToContextsMap = new Map();
 
     hook.getFiberRoots(rendererID).forEach(root => {
-      const rootID = getFiberID(getPrimaryFiber(root.current));
+      const rootID = getFiberIDThrows(root.current);
       ((displayNamesByRootID: any): DisplayNamesByRootID).set(
         rootID,
         getDisplayNameForRoot(root.current),
@@ -3572,8 +3633,8 @@ export function attach(
 
   const forceFallbackForSuspenseIDs = new Set();
   function shouldSuspendFiberAccordingToSet(fiber) {
-    const id = getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
-    return forceFallbackForSuspenseIDs.has(id);
+    const maybeID = getFiberIDUnsafe(((fiber: any): Fiber));
+    return maybeID !== null && forceFallbackForSuspenseIDs.has(maybeID);
   }
 
   function overrideSuspense(id, forceFallback) {
@@ -3598,7 +3659,7 @@ export function attach(
         setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
       }
     }
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber != null) {
       scheduleUpdate(fiber);
     }
@@ -3749,7 +3810,7 @@ export function attach(
       case HostRoot:
         // Roots don't have a real displayName, index, or key.
         // Instead, we'll use the pseudo key (childDisplayName:indexWithThatName).
-        const id = getFiberID(getPrimaryFiber(fiber));
+        const id = getFiberIDThrows(fiber);
         const pseudoKey = rootPseudoKeys.get(id);
         if (pseudoKey === undefined) {
           throw new Error('Expected mounted root to have known pseudo key.');
@@ -3774,7 +3835,7 @@ export function attach(
   // The return path will contain Fibers that are "invisible" to the store
   // because their keys and indexes are important to restoring the selection.
   function getPathForElement(id: number): Array<PathFrame> | null {
-    let fiber = idToFiberMap.get(id);
+    let fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       return null;
     }
@@ -3805,7 +3866,7 @@ export function attach(
       return null;
     }
     return {
-      id: getFiberID(getPrimaryFiber(fiber)),
+      id: getFiberIDThrows(fiber),
       isFullMatch: trackedPathMatchDepth === trackedPath.length - 1,
     };
   }
@@ -3836,41 +3897,6 @@ export function attach(
     traceUpdatesEnabled = isEnabled;
   }
 
-  function handleClonedForForceRemount(oldFiber: Fiber, newFiber: Fiber): void {
-    if (__DEBUG__) {
-      console.log(
-        '[renderer] handleClonedForForceRemount',
-        getDisplayNameForFiber(oldFiber),
-        '(' + getFiberID(getPrimaryFiber(oldFiber)),
-        '->',
-        getFiberID(getPrimaryFiber(newFiber)) + ')',
-      );
-    }
-
-    let primaryFiber = null;
-    if (primaryFibers.has(oldFiber)) {
-      primaryFiber = oldFiber;
-    }
-    const {alternate} = oldFiber;
-    if (alternate != null && primaryFibers.has(alternate)) {
-      primaryFiber = alternate;
-    }
-
-    // Fast Refresh is about to (synchronously) clone and replace this part of the tree.
-    // In order to avoid these Fibers from leaking on the DevTools side,
-    // and possibly remaining visible in the Components tab as well,
-    // queue up unmount operations to send on the next commit.
-    if (primaryFiber) {
-      recordUnmount(primaryFiber, false);
-      unmountFiberChildrenRecursively(primaryFiber);
-
-      const fiberID = ((fiberToIDMap.get(primaryFiber): any): number);
-      fiberToIDMap.delete(primaryFiber);
-      idToFiberMap.delete(fiberID);
-      primaryFibers.delete(primaryFiber);
-    }
-  }
-
   return {
     cleanup,
     clearErrorsAndWarnings,
@@ -3887,7 +3913,6 @@ export function attach(
     getOwnersList,
     getPathForElement,
     getProfilingData,
-    handleClonedForForceRemount,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,

@@ -323,7 +323,6 @@ export type RendererInterface = {
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<SerializedElement> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
-  handleClonedForForceRemount: (oldFiber: Fiber, newFiber: Fiber) => void,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   handlePostCommitFiberRoot: (fiber: Object) => void,
@@ -396,13 +395,6 @@ export type DevToolsHook = {
     commitPriority?: number,
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
-  ) => void,
-
-  // Added in v17.x to improve Fast Refresh + DevTools integration
-  onClonedForForceRemount: (
-    rendererID: RendererID,
-    oldFiber: Fiber,
-    newFiber: Fiber,
   ) => void,
   ...
 };

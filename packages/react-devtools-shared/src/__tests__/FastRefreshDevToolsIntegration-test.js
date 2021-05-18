@@ -131,17 +131,40 @@ describe('Fast Refresh', () => {
       };
 
       function Child() {
-        return null;
+        return <div />;
       };
 
       export default Parent;
     `);
-
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Parent>
             <Child key="A">
     `);
+
+    let element = container.firstChild;
+    expect(container.firstChild).not.toBe(null);
+
+    patch(`
+      function Parent() {
+        return <Child key="A" />;
+      };
+
+      function Child() {
+        return <div />;
+      };
+
+      export default Parent;
+    `);
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <Parent>
+            <Child key="A">
+    `);
+
+    // State is preserved; this verifies that Fast Refresh is wired up.
+    expect(container.firstChild).toBe(element);
+    element = container.firstChild;
 
     patch(`
       function Parent() {
@@ -149,7 +172,7 @@ describe('Fast Refresh', () => {
       };
 
       function Child() {
-        return null;
+        return <div />;
       };
 
       export default Parent;
@@ -159,6 +182,9 @@ describe('Fast Refresh', () => {
         ▾ <Parent>
             <Child key="B">
     `);
+
+    // State is reset because hooks changed.
+    expect(container.firstChild).not.toBe(element);
   });
 
   it('should not break when there are warnings in between patching', () => {
@@ -168,10 +194,8 @@ describe('Fast Refresh', () => {
 
       export default function Component() {
         const [state, setState] = useState(1);
-
         console.warn("Expected warning during render");
-
-        return <div />;
+        return null;
       }
     `);
     });
@@ -180,57 +204,57 @@ describe('Fast Refresh', () => {
       [root]
           <Component> ⚠
     `);
-
-    let element = container.firstChild;
-
-    withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
-      patch(`
-      const {useState} = React;
-
-      export default function Component() {
-        const [state, setState] = useState(1);
-
-        console.warn("Expected warning during render");
-
-        return <div id="one" />;
-      }
-    `);
-    });
-
-    // This is the same component type, so the warning count carries over.
-    expect(store).toMatchInlineSnapshot(`
-      ✕ 0, ⚠ 2
-      [root]
-          <Component> ⚠
-    `);
-
-    // State is preserved; this verifies that Fast Refresh is wired up.
-    expect(container.firstChild).toBe(element);
-    element = container.firstChild;
 
     withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
       patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
-        const [state, setState] = useState(3);
-        useEffect(() => {});
-
+        const [state, setState] = useState(1);
         console.warn("Expected warning during render");
-
-        return <div id="one" />;
+        return null;
       }
     `);
     });
+    expect(store).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 2
+      [root]
+          <Component> ⚠
+    `);
 
-    // This is a new component type, so the warning count has been reset.
+    withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
+      patch(`
+      const {useEffect, useState} = React;
+
+      export default function Component() {
+        const [state, setState] = useState(1);
+        useEffect(() => {});
+        console.warn("Expected warning during render");
+        return null;
+      }
+    `);
+    });
     expect(store).toMatchInlineSnapshot(`
       ✕ 0, ⚠ 1
       [root]
           <Component> ⚠
     `);
 
-    // State is reset because hooks changed.
-    expect(container.firstChild).not.toBe(element);
+    withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
+      patch(`
+      const {useEffect, useState} = React;
+
+      export default function Component() {
+        const [state, setState] = useState(1);
+        console.warn("Expected warning during render");
+        return null;
+      }
+    `);
+    });
+    expect(store).toMatchInlineSnapshot(`
+      ✕ 0, ⚠ 1
+      [root]
+          <Component> ⚠
+    `);
   });
 });

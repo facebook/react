@@ -1007,11 +1007,6 @@ export function attach(
   const getProfilingData = () => {
     throw new Error('getProfilingData not supported by this renderer');
   };
-  const handleClonedForForceRemount = () => {
-    throw new Error(
-      'handleClonedForForceRemount not supported by this renderer',
-    );
-  };
   const handleCommitFiberRoot = () => {
     throw new Error('handleCommitFiberRoot not supported by this renderer');
   };
@@ -1089,7 +1084,6 @@ export function attach(
     getOwnersList,
     getPathForElement,
     getProfilingData,
-    handleClonedForForceRemount,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,

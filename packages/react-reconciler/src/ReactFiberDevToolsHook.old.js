@@ -166,28 +166,3 @@ export function onCommitUnmount(fiber: Fiber) {
     }
   }
 }
-
-export function onClonedForForceRemount(
-  oldWorkInProgress: Fiber,
-  newWorkInProgress: Fiber,
-) {
-  if (
-    injectedHook &&
-    typeof injectedHook.onClonedForForceRemount === 'function'
-  ) {
-    try {
-      injectedHook.onClonedForForceRemount(
-        rendererID,
-        oldWorkInProgress,
-        newWorkInProgress,
-      );
-    } catch (err) {
-      if (__DEV__) {
-        if (!hasLoggedError) {
-          hasLoggedError = true;
-          console.error('React instrumentation encountered an error: %s', err);
-        }
-      }
-    }
-  }
-}

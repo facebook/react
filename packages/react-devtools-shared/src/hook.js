@@ -261,13 +261,6 @@ export function installHook(target: any): DevToolsHook | null {
     return roots[rendererID];
   }
 
-  function onClonedForForceRemount(rendererID, oldFiber, newFiber) {
-    const rendererInterface = rendererInterfaces.get(rendererID);
-    if (rendererInterface != null) {
-      rendererInterface.handleClonedForForceRemount(oldFiber, newFiber);
-    }
-  }
-
   function onCommitFiberUnmount(rendererID, fiber) {
     const rendererInterface = rendererInterfaces.get(rendererID);
     if (rendererInterface != null) {
@@ -313,7 +306,6 @@ export function installHook(target: any): DevToolsHook | null {
 
     // Fast Refresh for web relies on this.
     renderers,
-    onClonedForForceRemount,
 
     emit,
     getFiberRoots,

@@ -33,10 +33,6 @@ import type {UpdateQueue} from './ReactUpdateQueue.old';
 import checkPropTypes from 'shared/checkPropTypes';
 
 import {
-  isDevToolsPresent,
-  onClonedForForceRemount,
-} from './ReactFiberDevToolsHook.old';
-import {
   IndeterminateComponent,
   FunctionComponent,
   ClassComponent,
@@ -3198,21 +3194,19 @@ function beginWork(
 
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
-      const clonedWorkInProgress = createFiberFromTypeAndProps(
-        workInProgress.type,
-        workInProgress.key,
-        workInProgress.pendingProps,
-        workInProgress._debugOwner || null,
-        workInProgress.mode,
-        workInProgress.lanes,
-      );
-
-      if (isDevToolsPresent) {
-        onClonedForForceRemount(workInProgress, clonedWorkInProgress);
-      }
-
       // This will restart the begin phase with a new fiber.
-      return remountFiber(current, workInProgress, clonedWorkInProgress);
+      return remountFiber(
+        current,
+        workInProgress,
+        createFiberFromTypeAndProps(
+          workInProgress.type,
+          workInProgress.key,
+          workInProgress.pendingProps,
+          workInProgress._debugOwner || null,
+          workInProgress.mode,
+          workInProgress.lanes,
+        ),
+      );
     }
   }
 
