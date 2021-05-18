@@ -1221,15 +1221,18 @@ export function attach(
   }
 
   function isEffect(memoizedState) {
+    if (memoizedState === null || typeof memoizedState !== 'object') {
+      return false;
+    }
+    const {deps} = memoizedState;
+    const hasOwnProperty = Object.prototype.hasOwnProperty.bind(memoizedState);
     return (
-      memoizedState !== null &&
-      typeof memoizedState === 'object' &&
-      memoizedState.hasOwnProperty('tag') &&
-      memoizedState.hasOwnProperty('create') &&
-      memoizedState.hasOwnProperty('destroy') &&
-      memoizedState.hasOwnProperty('deps') &&
-      (memoizedState.deps === null || isArray(memoizedState.deps)) &&
-      memoizedState.hasOwnProperty('next')
+      hasOwnProperty('create') &&
+      hasOwnProperty('destroy') &&
+      hasOwnProperty('deps') &&
+      hasOwnProperty('next') &&
+      hasOwnProperty('tag') &&
+      (deps === null || isArray(deps))
     );
   }
 
