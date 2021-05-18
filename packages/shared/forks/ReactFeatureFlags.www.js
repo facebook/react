@@ -15,7 +15,6 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  debugRenderPhaseSideEffectsForStrictMode,
   disableInputAttributeSyncing,
   enableTrustedTypesIntegration,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
@@ -40,6 +39,7 @@ export const {
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
 
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;

@@ -41,7 +41,6 @@ export const deferRenderPhaseUpdateToNextBatch = !__VARIANT__;
 
 // These are already tested in both modes using the build type dimension,
 // so we don't need to use __VARIANT__ to get extra coverage.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
