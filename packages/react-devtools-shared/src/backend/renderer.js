@@ -631,8 +631,8 @@ export function attach(
 
     // Note that by calling these functions we may be creating the ID for the first time.
     // If the Fiber is then never mounted, we are responsible for cleaning up after ourselves.
-    // This is important because getPrimaryFiber() stores a Fiber in the primaryFibers Set.
-    // If a Fiber never mounts, and we don't clean up after this code, we could leak.
+    // This is important because getOrGenerateFiberID() stores a Fiber in a couple of local Maps.
+    // If the Fiber never mounts and we don't clean up after this code, we could leak.
     // Fortunately we would only leak Fibers that have errors/warnings associated with them,
     // which is hopefully only a small set and only in DEV mode– but this is still not great.
     // We should clean up Fibers like this when flushing; see recordPendingErrorsAndWarnings().
@@ -983,6 +983,8 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
+  // Returns the unique ID for a Fiber or generates and caches a new one if the Fiber hasn't been seen before.
+  // Once this method has been called for a Fiber, untrackFiberID() should always be called later to avoid leaking.
   function getOrGenerateFiberID(fiber: Fiber): number {
     let id = null;
     if (fiberToIDMap.has(fiber)) {
@@ -1020,6 +1022,7 @@ export function attach(
     return refinedID;
   }
 
+  // Returns an ID if one has already been generated for the Fiber or throws.
   function getFiberIDThrows(fiber: Fiber): number {
     const maybeID = getFiberIDUnsafe(fiber);
     if (maybeID !== null) {
@@ -1030,6 +1033,8 @@ export function attach(
     );
   }
 
+  // Returns an ID if one has already been generated for the Fiber or null if one has not been generated.
+  // Use this method while e.g. logging to avoid over-retaining Fibers.
   function getFiberIDUnsafe(fiber: Fiber): number | null {
     if (fiberToIDMap.has(fiber)) {
       return ((fiberToIDMap.get(fiber): any): number);
@@ -1042,6 +1047,8 @@ export function attach(
     return null;
   }
 
+  // Removes a Fiber (and its alternate) from the Maps used to track their id.
+  // This method should always be called when a Fiber is unmounting.
   function untrackFiberID(fiber: Fiber) {
     const fiberID = getFiberIDUnsafe(fiber);
     if (fiberID !== null) {
@@ -1696,8 +1703,6 @@ export function attach(
       // One example of this is a Lazy component that never resolves before being unmounted.
       //
       // TODO: This is fragile and can obscure actual bugs.
-      //
-      // Calling getPrimaryFiber() lazily adds fibers to the Map, so clean up after ourselves before returning.
       return;
     }
 
