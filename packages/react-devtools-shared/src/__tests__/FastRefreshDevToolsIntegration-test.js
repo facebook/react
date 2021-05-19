@@ -188,13 +188,13 @@ describe('Fast Refresh', () => {
   });
 
   it('should not break when there are warnings in between patching', () => {
-    withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
       render(`
       const {useState} = React;
 
       export default function Component() {
         const [state, setState] = useState(1);
-        console.warn("Expected warning during render");
+        console.warn("Expected: warning during render");
         return null;
       }
     `);
@@ -205,13 +205,13 @@ describe('Fast Refresh', () => {
           <Component> ⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
       patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
         const [state, setState] = useState(1);
-        console.warn("Expected warning during render");
+        console.warn("Expected: warning during render");
         return null;
       }
     `);
@@ -222,31 +222,33 @@ describe('Fast Refresh', () => {
           <Component> ⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
       patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
         const [state, setState] = useState(1);
-        useEffect(() => {});
-        console.warn("Expected warning during render");
+        useEffect(() => {
+          console.error("Expected: error during effect");
+        });
+        console.warn("Expected: warning during render");
         return null;
       }
     `);
     });
     expect(store).toMatchInlineSnapshot(`
-      ✕ 0, ⚠ 1
+      ✕ 1, ⚠ 1
       [root]
-          <Component> ⚠
+          <Component> ✕⚠
     `);
 
-    withErrorsOrWarningsIgnored(['Expected warning during render'], () => {
+    withErrorsOrWarningsIgnored(['Expected:'], () => {
       patch(`
       const {useEffect, useState} = React;
 
       export default function Component() {
         const [state, setState] = useState(1);
-        console.warn("Expected warning during render");
+        console.warn("Expected: warning during render");
         return null;
       }
     `);
@@ -257,4 +259,6 @@ describe('Fast Refresh', () => {
           <Component> ⚠
     `);
   });
+
+  // TODO (bvaughn) Write a test that checks in between the steps of patch
 });

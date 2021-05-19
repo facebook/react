@@ -717,7 +717,7 @@ export function attach(
         ? getFiberIDUnsafe(parentFiber) || '<no-id>'
         : '';
 
-      console.log(
+      console.groupCollapsed(
         `[renderer] %c${name} %c${displayName} (${maybeID}) %c${
           parentFiber ? `${parentDisplayName} (${maybeParentID})` : ''
         } %c${extraString}`,
@@ -726,6 +726,13 @@ export function attach(
         'color: purple;',
         'color: black;',
       );
+      console.log(
+        new Error().stack
+          .split('\n')
+          .slice(1)
+          .join('\n'),
+      );
+      console.groupEnd();
     }
   };
 
@@ -996,7 +1003,9 @@ export function attach(
       }
     }
 
+    let didGenerateID = false;
     if (id === null) {
+      didGenerateID = true;
       id = getUID();
     }
 
@@ -1016,6 +1025,17 @@ export function attach(
     if (alternate !== null) {
       if (!fiberToIDMap.has(alternate)) {
         fiberToIDMap.set(alternate, refinedID);
+      }
+    }
+
+    if (__DEBUG__) {
+      if (didGenerateID) {
+        debug(
+          'getOrGenerateFiberID()',
+          fiber,
+          fiber.return,
+          'Generated a new UID',
+        );
       }
     }
 
@@ -1050,17 +1070,59 @@ export function attach(
   // Removes a Fiber (and its alternate) from the Maps used to track their id.
   // This method should always be called when a Fiber is unmounting.
   function untrackFiberID(fiber: Fiber) {
-    const fiberID = getFiberIDUnsafe(fiber);
-    if (fiberID !== null) {
-      idToArbitraryFiberMap.delete(fiberID);
+    if (__DEBUG__) {
+      debug('untrackFiberID()', fiber, fiber.return, 'schedule after delay');
     }
 
-    fiberToIDMap.delete(fiber);
+    // Untrack Fibers after a slight delay in order to support a Fast Refresh edge case:
+    // 1. Component type is updated and Fast Refresh schedules an update+remount.
+    // 2. flushPendingErrorsAndWarningsAfterDelay() runs, sees the old Fiber is no longer mounted
+    //    (it's been disconnected by Fast Refresh), and calls untrackFiberID() to clear it from the Map.
+    // 3. React flushes pending passive effects before it runs the next render,
+    //    which logs an error or warning, which causes a new ID to be generated for this Fiber.
+    // 4. DevTools now tries to unmount the old Component with the new ID.
+    //
+    // The underlying problem here is the premature clearing of the Fiber ID,
+    // but DevTools has no way to detect that a given Fiber has been scheduled for Fast Refresh.
+    // (The "_debugNeedsRemount" flag won't necessarily be set.)
+    //
+    // The best we can do is to delay untracking by a small amount,
+    // and give React time to process the Fast Refresh delay.
 
-    const {alternate} = fiber;
-    if (alternate !== null) {
-      fiberToIDMap.delete(alternate);
+    untrackFibersSet.add(fiber);
+
+    if (untrackFibersTimeoutID === null) {
+      untrackFibersTimeoutID = setTimeout(untrackFibers, 1000);
     }
+  }
+
+  const untrackFibersSet: Set<Fiber> = new Set();
+  let untrackFibersTimeoutID: TimeoutID | null = null;
+
+  function untrackFibers() {
+    if (untrackFibersTimeoutID !== null) {
+      clearTimeout(untrackFibersTimeoutID);
+      untrackFibersTimeoutID = null;
+    }
+
+    untrackFibersSet.forEach(fiber => {
+      const fiberID = getFiberIDUnsafe(fiber);
+      if (fiberID !== null) {
+        idToArbitraryFiberMap.delete(fiberID);
+
+        // Also clear any errors/warnings associated with this fiber.
+        clearErrorsForFiberID(fiberID);
+        clearWarningsForFiberID(fiberID);
+      }
+
+      fiberToIDMap.delete(fiber);
+
+      const {alternate} = fiber;
+      if (alternate !== null) {
+        fiberToIDMap.delete(alternate);
+      }
+    });
+    untrackFibersSet.clear();
   }
 
   function getChangeDescription(
@@ -1610,12 +1672,12 @@ export function attach(
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
+    const isRoot = fiber.tag === HostRoot;
+    const id = getOrGenerateFiberID(fiber);
+
     if (__DEBUG__) {
       debug('recordMount()', fiber, parentFiber);
     }
-
-    const isRoot = fiber.tag === HostRoot;
-    const id = getOrGenerateFiberID(fiber);
 
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
@@ -1748,6 +1810,9 @@ export function attach(
     // This reduces the chance of stack overflow for wide trees (e.g. lists with many items).
     let fiber: Fiber | null = firstChild;
     while (fiber !== null) {
+      // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
+      getOrGenerateFiberID(fiber);
+
       if (__DEBUG__) {
         debug('mountFiberRecursively()', fiber, parentFiber);
       }
@@ -1761,9 +1826,6 @@ export function attach(
       const shouldIncludeInTree = !shouldFilterFiber(fiber);
       if (shouldIncludeInTree) {
         recordMount(fiber, parentFiber);
-      } else {
-        // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
-        getOrGenerateFiberID(fiber);
       }
 
       if (traceUpdatesEnabled) {
@@ -2008,11 +2070,11 @@ export function attach(
     parentFiber: Fiber | null,
     traceNearestHostComponentUpdate: boolean,
   ): boolean {
+    const id = getOrGenerateFiberID(nextFiber);
+
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
-
-    const id = getOrGenerateFiberID(nextFiber);
 
     if (traceUpdatesEnabled) {
       const elementType = getElementTypeForFiber(nextFiber);
@@ -2321,6 +2383,10 @@ export function attach(
   function handleCommitFiberRoot(root, priorityLevel) {
     const current = root.current;
     const alternate = current.alternate;
+
+    // Flush any pending Fibers that we are untracking before processing the new commit.
+    // If we don't do this, we might end up double-deleting Fibers in some cases (like Legacy Suspense).
+    untrackFibers();
 
     currentRootID = getOrGenerateFiberID(current);
 
