@@ -8,7 +8,9 @@
  */
 
 import * as React from 'react';
+import {useContext} from 'react';
 import ErrorBoundary from '../ErrorBoundary';
+import {TreeStateContext} from './TreeContext';
 import styles from './InspectedElementErrorBoundary.css';
 
 type WrapperProps = {|
@@ -18,9 +20,14 @@ type WrapperProps = {|
 export default function InspectedElementErrorBoundaryWrapper({
   children,
 }: WrapperProps) {
+  // Key on the selected element ID so that changing the selected element automatically hides the boundary.
+  // This seems best since an error inspecting one element isn't likely to be relevant to another element.
+  const {selectedElementID} = useContext(TreeStateContext);
   return (
     <div className={styles.Wrapper}>
-      <ErrorBoundary canDismiss={true}>{children}</ErrorBoundary>
+      <ErrorBoundary key={selectedElementID} canDismiss={true}>
+        {children}
+      </ErrorBoundary>
     </div>
   );
 }
