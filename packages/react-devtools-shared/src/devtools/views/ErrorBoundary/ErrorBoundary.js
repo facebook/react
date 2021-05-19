@@ -16,7 +16,8 @@ import SuspendingErrorView from './SuspendingErrorView';
 
 type Props = {|
   children: React$Node,
-  store: Store,
+  canDismiss?: boolean,
+  store?: Store,
 |};
 
 type State = {|
@@ -70,18 +71,24 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidMount() {
-    this.props.store.addListener('error', this._onStoreError);
+    const {store} = this.props;
+    if (store != null) {
+      store.addListener('error', this._onStoreError);
+    }
   }
 
   componentWillUnmount() {
-    this.props.store.removeListener('error', this._onStoreError);
+    const {store} = this.props;
+    if (store != null) {
+      store.removeListener('error', this._onStoreError);
+    }
   }
 
   render() {
-    const {children} = this.props;
+    const {canDismiss: canDismissProp, children} = this.props;
     const {
       callStack,
-      canDismiss,
+      canDismiss: canDismissState,
       componentStack,
       errorMessage,
       hasError,
@@ -92,7 +99,9 @@ export default class ErrorBoundary extends Component<Props, State> {
         <ErrorView
           callStack={callStack}
           componentStack={componentStack}
-          dismissError={canDismiss ? this._dismissError : null}
+          dismissError={
+            canDismissProp || canDismissState ? this._dismissError : null
+          }
           errorMessage={errorMessage}>
           <Suspense fallback={<SearchingGitHubIssues />}>
             <SuspendingErrorView
