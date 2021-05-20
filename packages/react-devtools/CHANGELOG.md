@@ -9,6 +9,10 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.13.4 (May 20, 2021)
+#### Bugfix
+* Fix edge-case Fast Refresh bug that caused Fibers with warnings/errors to be untracked prematurely (which broke componentinspection in DevTools) ([bvaughn](https://github.com/bvaughn) in [#21536](https://github.com/facebook/react/pull/21536))
+
 ## 4.13.3 (May 19, 2021)
 #### Misc
 * Updated `react` and `react-dom` API imports in preparation for upcoming stable release ([bvaughn](https://github.com/bvaughn) in [#21488](https://github.com/facebook/react/pull/21488))
