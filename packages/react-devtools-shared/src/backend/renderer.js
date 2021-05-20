@@ -564,50 +564,82 @@ export function attach(
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
 
-  // Set of Fibers (IDs) with recently changed number of error/warning messages.
-  const fibersWithChangedErrorOrWarningCounts: Set<number> = new Set();
+  // Tracks Fibers with recently changed number of error/warning messages.
+  // These collections store the Fiber rather than the ID,
+  // in order to avoid generating an ID for Fibers that never get mounted
+  // (due to e.g. Suspense or error boundaries).
+  // onErrorOrWarning() adds Fibers and recordPendingErrorsAndWarnings() later clears them.
+  const fibersWithChangedErrorOrWarningCounts: Set<Fiber> = new Set();
+  const pendingFiberToErrorsMap: Map<Fiber, Map<string, number>> = new Map();
+  const pendingFiberToWarningsMap: Map<Fiber, Map<string, number>> = new Map();
 
   // Mapping of fiber IDs to error/warning messages and counts.
-  const fiberToErrorsMap: Map<number, Map<string, number>> = new Map();
-  const fiberToWarningsMap: Map<number, Map<string, number>> = new Map();
+  const fiberIDToErrorsMap: Map<number, Map<string, number>> = new Map();
+  const fiberIDToWarningsMap: Map<number, Map<string, number>> = new Map();
 
   function clearErrorsAndWarnings() {
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const id of fiberToErrorsMap.keys()) {
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      updateMostRecentlyInspectedElementIfNecessary(id);
+    for (const id of fiberIDToErrorsMap.keys()) {
+      const fiber = idToArbitraryFiberMap.get(id);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+        updateMostRecentlyInspectedElementIfNecessary(id);
+      }
     }
 
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const id of fiberToWarningsMap.keys()) {
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      updateMostRecentlyInspectedElementIfNecessary(id);
+    for (const id of fiberIDToWarningsMap.keys()) {
+      const fiber = idToArbitraryFiberMap.get(id);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+        updateMostRecentlyInspectedElementIfNecessary(id);
+      }
     }
 
-    fiberToErrorsMap.clear();
-    fiberToWarningsMap.clear();
+    fiberIDToErrorsMap.clear();
+    fiberIDToWarningsMap.clear();
 
     flushPendingEvents();
   }
 
-  function clearErrorsForFiberID(id: number) {
-    if (fiberToErrorsMap.has(id)) {
-      fiberToErrorsMap.delete(id);
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      flushPendingEvents();
-    }
+  function clearMessageCountHelper(
+    fiberID: number,
+    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    fiberIDToMessageCountMap: Map<number, Map<string, number>>,
+  ) {
+    const fiber = idToArbitraryFiberMap.get(fiberID);
+    if (fiber != null) {
+      // Throw out any pending changes.
+      pendingFiberToErrorsMap.delete(fiber);
 
-    updateMostRecentlyInspectedElementIfNecessary(id);
+      if (fiberIDToMessageCountMap.has(fiberID)) {
+        fiberIDToMessageCountMap.delete(fiberID);
+
+        // If previous flushed counts have changed, schedule an update too.
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+        flushPendingEvents();
+
+        updateMostRecentlyInspectedElementIfNecessary(fiberID);
+      } else {
+        fibersWithChangedErrorOrWarningCounts.delete(fiber);
+      }
+    }
   }
 
-  function clearWarningsForFiberID(id: number) {
-    if (fiberToWarningsMap.has(id)) {
-      fiberToWarningsMap.delete(id);
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      flushPendingEvents();
-    }
+  function clearErrorsForFiberID(fiberID: number) {
+    clearMessageCountHelper(
+      fiberID,
+      pendingFiberToErrorsMap,
+      fiberIDToErrorsMap,
+    );
+  }
 
-    updateMostRecentlyInspectedElementIfNecessary(id);
+  function clearWarningsForFiberID(fiberID: number) {
+    clearMessageCountHelper(
+      fiberID,
+      pendingFiberToWarningsMap,
+      fiberIDToWarningsMap,
+    );
   }
 
   function updateMostRecentlyInspectedElementIfNecessary(
@@ -628,35 +660,23 @@ export function attach(
     args: $ReadOnlyArray<any>,
   ): void {
     const message = format(...args);
-
-    // Note that by calling these functions we may be creating the ID for the first time.
-    // If the Fiber is then never mounted, we are responsible for cleaning up after ourselves.
-    // This is important because getOrGenerateFiberID() stores a Fiber in a couple of local Maps.
-    // If the Fiber never mounts and we don't clean up after this code, we could leak.
-    // Fortunately we would only leak Fibers that have errors/warnings associated with them,
-    // which is hopefully only a small set and only in DEV mode– but this is still not great.
-    // We should clean up Fibers like this when flushing; see recordPendingErrorsAndWarnings().
-    const fiberID = getOrGenerateFiberID(fiber);
-
     if (__DEBUG__) {
       debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
     }
 
     // Mark this Fiber as needed its warning/error count updated during the next flush.
-    fibersWithChangedErrorOrWarningCounts.add(fiberID);
+    fibersWithChangedErrorOrWarningCounts.add(fiber);
 
-    // Update the error/warning messages and counts for the Fiber.
-    const fiberMap = type === 'error' ? fiberToErrorsMap : fiberToWarningsMap;
-    const messageMap = fiberMap.get(fiberID);
+    // Track the warning/error for later.
+    const fiberMap =
+      type === 'error' ? pendingFiberToErrorsMap : pendingFiberToWarningsMap;
+    const messageMap = fiberMap.get(fiber);
     if (messageMap != null) {
       const count = messageMap.get(message) || 0;
       messageMap.set(message, count + 1);
     } else {
-      fiberMap.set(fiberID, new Map([[message, 1]]));
+      fiberMap.set(fiber, new Map([[message, 1]]));
     }
-
-    // If this Fiber is currently being inspected, mark it as needing an udpate as well.
-    updateMostRecentlyInspectedElementIfNecessary(fiberID);
 
     // Passive effects may trigger errors or warnings too;
     // In this case, we should wait until the rest of the passive effects have run,
@@ -1497,53 +1517,94 @@ export function attach(
 
   function reevaluateErrorsAndWarnings() {
     fibersWithChangedErrorOrWarningCounts.clear();
-    fiberToErrorsMap.forEach((countMap, fiberID) => {
-      fibersWithChangedErrorOrWarningCounts.add(fiberID);
+    fiberIDToErrorsMap.forEach((countMap, fiberID) => {
+      const fiber = idToArbitraryFiberMap.get(fiberID);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+      }
     });
-    fiberToWarningsMap.forEach((countMap, fiberID) => {
-      fibersWithChangedErrorOrWarningCounts.add(fiberID);
+    fiberIDToWarningsMap.forEach((countMap, fiberID) => {
+      const fiber = idToArbitraryFiberMap.get(fiberID);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+      }
     });
     recordPendingErrorsAndWarnings();
+  }
+
+  function mergeMapsAndGetCountHelper(
+    fiber: Fiber,
+    fiberID: number,
+    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    fiberIDToMessageCountMap: Map<number, Map<string, number>>,
+  ): number {
+    let newCount = 0;
+
+    let messageCountMap = fiberIDToMessageCountMap.get(fiberID);
+
+    const pendingMessageCountMap = pendingFiberToMessageCountMap.get(fiber);
+    if (pendingMessageCountMap != null) {
+      if (messageCountMap == null) {
+        messageCountMap = pendingMessageCountMap;
+
+        fiberIDToMessageCountMap.set(fiberID, pendingMessageCountMap);
+      } else {
+        // This Flow refinement should not be necessary and yet...
+        const refinedMessageCountMap = ((messageCountMap: any): Map<
+          string,
+          number,
+        >);
+
+        pendingMessageCountMap.forEach((pendingCount, message) => {
+          const previousCount = refinedMessageCountMap.get(message) || 0;
+          refinedMessageCountMap.set(message, previousCount + pendingCount);
+        });
+      }
+    }
+
+    if (!shouldFilterFiber(fiber)) {
+      if (messageCountMap != null) {
+        messageCountMap.forEach(count => {
+          newCount += count;
+        });
+      }
+    }
+
+    pendingFiberToMessageCountMap.delete(fiber);
+
+    return newCount;
   }
 
   function recordPendingErrorsAndWarnings() {
     clearPendingErrorsAndWarningsAfterDelay();
 
-    fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
-      const fiber = idToArbitraryFiberMap.get(fiberID);
-      if (fiber != null) {
+    fibersWithChangedErrorOrWarningCounts.forEach(fiber => {
+      const fiberID = getFiberIDUnsafe(fiber);
+      if (fiberID === null) {
         // Don't send updates for Fibers that didn't mount due to e.g. Suspense or an error boundary.
-        // We may also need to clean up after ourselves to avoid leaks.
-        // See inline comments in onErrorOrWarning() for more info.
-        if (isFiberMountedImpl(fiber) !== MOUNTED) {
-          untrackFiberID(fiber);
-          return;
-        }
-
-        let errorCount = 0;
-        let warningCount = 0;
-
-        if (!shouldFilterFiber(fiber)) {
-          const errorCountsMap = fiberToErrorsMap.get(fiberID);
-          const warningCountsMap = fiberToWarningsMap.get(fiberID);
-
-          if (errorCountsMap != null) {
-            errorCountsMap.forEach(count => {
-              errorCount += count;
-            });
-          }
-          if (warningCountsMap != null) {
-            warningCountsMap.forEach(count => {
-              warningCount += count;
-            });
-          }
-        }
+      } else {
+        const errorCount = mergeMapsAndGetCountHelper(
+          fiber,
+          fiberID,
+          pendingFiberToErrorsMap,
+          fiberIDToErrorsMap,
+        );
+        const warningCount = mergeMapsAndGetCountHelper(
+          fiber,
+          fiberID,
+          pendingFiberToWarningsMap,
+          fiberIDToWarningsMap,
+        );
 
         pushOperation(TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS);
         pushOperation(fiberID);
         pushOperation(errorCount);
         pushOperation(warningCount);
       }
+
+      // Always clean up so that we don't leak.
+      pendingFiberToErrorsMap.delete(fiber);
+      pendingFiberToWarningsMap.delete(fiber);
     });
     fibersWithChangedErrorOrWarningCounts.clear();
   }
@@ -3012,8 +3073,8 @@ export function attach(
       rootType = fiberRoot._debugRootType;
     }
 
-    const errors = fiberToErrorsMap.get(id) || new Map();
-    const warnings = fiberToWarningsMap.get(id) || new Map();
+    const errors = fiberIDToErrorsMap.get(id) || new Map();
+    const warnings = fiberIDToWarningsMap.get(id) || new Map();
 
     return {
       id,

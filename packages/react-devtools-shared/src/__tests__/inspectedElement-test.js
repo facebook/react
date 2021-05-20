@@ -1946,15 +1946,11 @@ describe('InspectedElement', () => {
   });
 
   describe('inline errors and warnings', () => {
-    // Some actions require the Fiber id.
-    // In those instances you might want to make assertions based on the ID instead of the index.
-    function getErrorsAndWarningsForElement(id: number) {
-      const index = ((store.getIndexOfElementID(id): any): number);
-      return getErrorsAndWarningsForElementAtIndex(index);
-    }
-
     async function getErrorsAndWarningsForElementAtIndex(index) {
       const id = ((store.getElementIDAtIndex(index): any): number);
+      if (id == null) {
+        throw Error(`Element at index "${index}"" not found in store`);
+      }
 
       let errors = null;
       let warnings = null;
@@ -2222,8 +2218,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       let data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
@@ -2260,8 +2256,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
@@ -2319,8 +2315,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       let data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
@@ -2357,8 +2353,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
