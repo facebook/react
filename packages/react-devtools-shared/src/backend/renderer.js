@@ -1516,7 +1516,10 @@ export function attach(
         // We may also need to clean up after ourselves to avoid leaks.
         // See inline comments in onErrorOrWarning() for more info.
         if (isFiberMountedImpl(fiber) !== MOUNTED) {
-          untrackFiberID(fiber);
+          // HACK Cleaning up "unmounted" Fibers here can cause problems with Fast Refresh.
+          // Since warnings and errors are generally used in DEV mode,
+          // it may be better to ignore this kind of potential leak case rather than break Fast Refresh.
+          // untrackFiberID(fiber);
           return;
         }
 
