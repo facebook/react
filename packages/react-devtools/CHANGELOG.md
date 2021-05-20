@@ -12,6 +12,7 @@
 ## 4.13.4 (May 20, 2021)
 #### Bugfix
 * Fix edge-case Fast Refresh bug that caused Fibers with warnings/errors to be untracked prematurely (which broke componentinspection in DevTools) ([bvaughn](https://github.com/bvaughn) in [#21536](https://github.com/facebook/react/pull/21536))
+* Revert force deep re-mount when Fast Refresh detected (was no longer necessary) ([bvaughn](https://github.com/bvaughn) in [#21539](https://github.com/facebook/react/pull/21539))
 
 ## 4.13.3 (May 19, 2021)
 #### Misc
