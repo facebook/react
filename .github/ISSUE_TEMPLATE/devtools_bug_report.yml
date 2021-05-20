@@ -7,7 +7,9 @@ body:
   attributes:
     label: Website or app
     description: |
-      Which website or app were you using when the bug happened? This should be a public URL, GitHub repo, or Code Sandbox app so the React team can reproduce the error being reported. (Please no localhost URLs.)
+      Which website or app were you using when the bug happened?
+
+      This should be a public URL, GitHub repo, or Code Sandbox app so the React team can reproduce the error being reported. (Please no localhost URLs.)
     placeholder: |
       e.g. website URL, public GitHub repo, or Code Sandbox app
   validations:
@@ -18,7 +20,7 @@ body:
     description: |
       What were you doing on the website or app when the bug happened? Detailed information helps maintainers reproduce and fix bugs.
 
-      Issues filed without repro steps may be closed.
+      Issues filed without repro steps will be closed.
     placeholder: |
       Example bug report:
       1. Log in with username/password
