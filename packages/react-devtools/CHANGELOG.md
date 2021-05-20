@@ -128,6 +128,10 @@ The following features are only enabled when used with (experimental) builds of 
 ###### Show which hooks (indices) changed when profiling
 ![Show which hooks (indices) changed when profiling](https://user-images.githubusercontent.com/29597/114225838-d37be180-9940-11eb-93f8-93e0115421c8.png)
 
+## 4.10.4 (May 20, 2021)
+#### Bugfix
+* Ported passive effects sync flushing/bubbling bugfix ([bvaughn](https://github.com/bvaughn) in [#21540](https://github.com/facebook/react/pull/21540))
+
 ## 4.10.3 (April 27, 2021)
 #### Bugfix
 * Replaced Facebook-internal fburl.com link with public fb.me link for Bridge protocol mismatch info page ([bvaughn](https://github.com/bvaughn) in [#21344](https://github.com/facebook/react/pull/21344))
