@@ -72,11 +72,9 @@ function asyncRimRaf(filepath) {
 }
 
 function resolvePath(filepath) {
-  if (filepath[0] === '~') {
-    return path.join(process.env.HOME, filepath.slice(1));
-  } else {
-    return path.resolve(filepath);
-  }
+
+  return filepath[0] === '~' ? path.join(process.env.HOME, filepath.slice(1)) : path.resolve(filepath);
+  
 }
 
 module.exports = {
