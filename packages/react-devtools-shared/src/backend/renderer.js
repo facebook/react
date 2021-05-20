@@ -829,12 +829,6 @@ export function attach(
       throw Error('Cannot modify filter preferences while profiling');
     }
 
-    unmountAndRemountAllRoots(() => {
-      applyComponentFilters(componentFilters);
-    });
-  }
-
-  function unmountAndRemountAllRoots(callback?: Function) {
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getOrGenerateFiberID(root.current);
@@ -846,9 +840,7 @@ export function attach(
       currentRootID = -1;
     });
 
-    if (typeof callback === 'function') {
-      callback();
-    }
+    applyComponentFilters(componentFilters);
 
     // Reset pseudo counters so that new path selections will be persisted.
     rootDisplayNameCounter.clear();
@@ -1797,20 +1789,6 @@ export function attach(
       );
     }
 
-    const unsafeID = getFiberIDUnsafe(fiber);
-    if (fiber._debugNeedsRemount) {
-      if (unsafeID === null) {
-        // This inidicates a case we can't recover from:
-        // Fast Refresh has force remounted a component in a way that we don't have an id for.
-        // We could throw but that's a bad user experience.
-        // Or we could ignore the unmount but then Store might end up with a duplicate node.
-        // So a fallback is to completely reset the Store.
-        // This is costly but since Fast Refresh is only used in DEV builds, it should be okay.
-        setTimeout(unmountAndRemountAllRoots, 0);
-        return;
-      }
-    }
-
     if (trackedPathMatchFiber !== null) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
@@ -1823,10 +1801,13 @@ export function attach(
       }
     }
 
+    const unsafeID = getFiberIDUnsafe(fiber);
     if (unsafeID === null) {
       // If we've never seen this Fiber, it might be inside of a legacy render Suspense fragment (so the store is not even aware of it).
       // In that case we can just ignore it or it will cause errors later on.
       // One example of this is a Lazy component that never resolves before being unmounted.
+      //
+      // This also might indicate a Fast Refresh force-remount scenario.
       //
       // TODO: This is fragile and can obscure actual bugs.
       return;
