@@ -46,7 +46,7 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 4;
 export const enableSuspenseLayoutEffectSemantics = false;
 
 export const enableNewReconciler = false;
@@ -59,7 +59,7 @@ export const enableUseRefAccessWarning = false;
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
-export const enableSyncDefaultUpdates = false;
+export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 
 // Flow magic to verify the exports of this file match the original version.
