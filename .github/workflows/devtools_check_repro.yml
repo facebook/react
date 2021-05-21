@@ -13,17 +13,23 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const user = context.payload.sender.login;
-            const body = context.payload.comment
-              ? context.payload.comment.body
-              : context.payload.issue.body;
+            const URL_REGEXP = /### Website or app[\r\n]+([^#]+)###/m;
+            const REPRO_STEPS_REGEXP = /### Repro steps[\r\n]+([^#]+)###/m;
+            const LABEL_NEEDS_MORE_INFORMATION = "Resolution: Needs More Information";
+            const LABEL_UNCONFIRMED = "Status: Unconfirmed";
 
             function debug(...args) {
               core.info(args.map(JSON.stringify).join(' '));
             }
 
-            const URL_REGEXP = /### Website or app[\r\n]+([^#]+)###/m;
-            const REPRO_STEPS_REGEXP = /### Repro steps[\r\n]+([^#]+)###/m;
+            if (context.payload.comment) {
+              debug('Ignoring comment update.');
+              return;
+            }
+
+            const user = context.payload.sender.login;
+            const issue = context.payload.issue;
+            const body = issue.body;
 
             const urlMatch = body.match(URL_REGEXP);
             const reproStepsMatch = body.match(REPRO_STEPS_REGEXP);
@@ -39,6 +45,125 @@ jobs:
             debug(`found URL "${url}"`);
             debug(`found repro steps "${reproSteps}"`);
 
+            function formatComment(comment) {
+              return comment
+                .split("\n")
+                .map((line) => line.trim())
+                .join("\n")
+                .trim();
+            }
+
+            async function getGitHubActionComments() {
+              debug(`Loading existing comments...`);
+
+              const comments = await github.issues.listComments({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+
+              return comments.data.filter(comment => {
+                debug(`comment by user: "${comment.user.login}"`);
+                return comment.user.login === 'github-actions[bot]';
+              });
+            }
+
+            async function getIssueLabels() {
+              const issues = await github.issues.listLabelsOnIssue({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+
+              return issues.data;
+            }
+
+            async function closeWithComment(comment) {
+              if (issue.state !== 'open') {
+                debug(`Issue is not open`);
+                return;
+              }
+
+              const labels = await getIssueLabels();
+              const label = labels.find(label => label.name === LABEL_UNCONFIRMED);
+              if (!label) {
+                debug(`Issue was not opened via DevTools bug report template`);
+                return;
+              }
+
+              const comments = await getGitHubActionComments();
+              if (comments.length > 0) {
+                debug(`Already commented on issue; won't comment again`);
+                return;
+              }
+
+              debug(`Missing required information`);
+
+              await github.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: [LABEL_NEEDS_MORE_INFORMATION],
+              });
+
+              await github.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: formatComment(comment),
+              });
+
+              await github.issues.update({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'closed',
+              });
+            }
+
+            async function openWithComment(comment) {
+              if (issue.state !== 'closed') {
+                debug(`Issue is already open`);
+                return;
+              }
+
+              const labels = await getIssueLabels();
+              const label = labels.find(label => label.name === LABEL_NEEDS_MORE_INFORMATION);
+              if (!label) {
+                debug(`Issue was not tagged as needs information`);
+                return;
+              }
+
+              const comments = await getGitHubActionComments();
+              if (comments.length === 0) {
+                debug(`Issue was closed by someone else; won't reopen`);
+                return;
+              }
+
+              debug(`Re-opening closed issue`);
+
+              await github.issues.removeLabel({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: LABEL_NEEDS_MORE_INFORMATION,
+              });
+
+              await github.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: formatComment(comment),
+              });
+
+              await github.issues.update({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+              });
+            }
+
             const PROBABLY_NOT_A_URL_REGEX = /(^Chrome$|^Firefox$| Website)/i;
 
             const COMMENT_HEADER = `
@@ -53,75 +178,32 @@ jobs:
               Issues without repros are automatically closed but we will re-open if you update with repro info.
             `.trim();
 
-            let commentToAdd = null;
-
             if (url.includes("/localhost")) {
-              commentToAdd = `
+              closeWithComment(`
                 ${COMMENT_HEADER}
 
                 Unfortunately the URL you provided ("localhost") is not publicly accessible. (This means that we will not be able to reproduce the problem you're reporting.)
 
                 ${COMMENT_FOOTER}
-              `;
+              `);
             } else if (url.length < 10 || url.match(PROBABLY_NOT_A_URL_REGEX)) {
-              commentToAdd = `
+              closeWithComment(`
                 ${COMMENT_HEADER}
 
                 It looks like you forgot to specify a valid URL. (This means that we will not be able to reproduce the problem you're reporting.)
 
                 ${COMMENT_FOOTER}
-              `;
+              `);
             } else if (reproSteps.length < 25) {
-              commentToAdd = `
+              closeWithComment(`
                 ${COMMENT_HEADER}
 
                 Unfortunately, it doesn't look like this issue has enough info for one of us to reproduce and fix it though.
 
                 ${COMMENT_FOOTER}
-              `;
-            }
-
-            debug(`Missing required information? ${!!commentToAdd}`);
-
-            if (commentToAdd !== null) {
-              const comments = await github.issues.listComments({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-              });
-
-              debug(`Searching ${comments.data.length} existing comments...`);
-
-              if (comments.data.some(comment => {
-                debug(`comment by user: "${comment.user.login}"`);
-
-                return comment.user.login === 'github-actions[bot]';
-              })) {
-                return;
-              }
-
-              await github.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: commentToAdd
-                  .split("\n")
-                  .map((line) => line.trim())
-                  .join("\n")
-                  .trim(),
-              });
-
-              await github.issues.addLabels({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                labels: ["Resolution: Needs More Information"],
-              });
-
-              await github.issues.update({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                state: 'closed',
-              });
+              `);
+            } else {
+              openWithComment(`
+                Thank you for providing repro steps! Re-opening issue now for triage.
+              `);
             }
