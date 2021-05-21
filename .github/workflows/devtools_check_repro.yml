@@ -1,0 +1,127 @@
+name: DevTools Check for bug repro
+on:
+  issues:
+    types: [opened, edited]
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  check-repro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const user = context.payload.sender.login;
+            const body = context.payload.comment
+              ? context.payload.comment.body
+              : context.payload.issue.body;
+
+            function debug(...args) {
+              core.info(args.map(JSON.stringify).join(' '));
+            }
+
+            const URL_REGEXP = /### Website or app[\r\n]+([^#]+)###/m;
+            const REPRO_STEPS_REGEXP = /### Repro steps[\r\n]+([^#]+)###/m;
+
+            const urlMatch = body.match(URL_REGEXP);
+            const reproStepsMatch = body.match(REPRO_STEPS_REGEXP);
+
+            const url = urlMatch !== null ? urlMatch[1].trim() : null;
+            const reproSteps = reproStepsMatch !== null ? reproStepsMatch[1].trim() : null;
+
+            if (!url || !reproSteps) {
+              debug('This issue is not a DevTools bug report.');
+              return;
+            }
+
+            debug(`found URL "${url}"`);
+            debug(`found repro steps "${reproSteps}"`);
+
+            const PROBABLY_NOT_A_URL_REGEX = /(^Chrome$|^Firefox$| Website)/i;
+
+            const COMMENT_HEADER = `
+              @${user}: We're sorry you've seen this error. ❤️
+            `.trim();
+
+            const COMMENT_FOOTER = `
+              Please help us by providing a link to a CodeSandbox (https://codesandbox.io/s/new), a repository on GitHub, or a minimal code example that reproduces the problem. (Screenshots or videos can also be helpful if they help provide context on how to repro the bug.)
+
+              Here are some tips for providing a minimal example: https://stackoverflow.com/help/mcve
+
+              Issues without repros are automatically closed but we will re-open if you update with repro info.
+            `.trim();
+
+            let commentToAdd = null;
+
+            if (url.includes("/localhost")) {
+              commentToAdd = `
+                ${COMMENT_HEADER}
+
+                Unfortunately the URL you provided ("localhost") is not publicly accessible. (This means that we will not be able to reproduce the problem you're reporting.)
+
+                ${COMMENT_FOOTER}
+              `;
+            } else if (url.length < 10 || url.match(PROBABLY_NOT_A_URL_REGEX)) {
+              commentToAdd = `
+                ${COMMENT_HEADER}
+
+                It looks like you forgot to specify a valid URL. (This means that we will not be able to reproduce the problem you're reporting.)
+
+                ${COMMENT_FOOTER}
+              `;
+            } else if (reproSteps.length < 25) {
+              commentToAdd = `
+                ${COMMENT_HEADER}
+
+                Unfortunately, it doesn't look like this issue has enough info for one of us to reproduce and fix it though.
+
+                ${COMMENT_FOOTER}
+              `;
+            }
+
+            debug(`Missing required information? ${!!commentToAdd}`);
+
+            if (commentToAdd !== null) {
+              const comments = await github.issues.listComments({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+              });
+
+              debug(`Searching ${comments.data.length} existing comments...`);
+
+              if (comments.data.some(comment => {
+                debug(`comment by user: "${comment.user.login}"`);
+
+                return comment.user.login === 'github-actions[bot]';
+              })) {
+                return;
+              }
+
+              await github.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentToAdd
+                  .split("\n")
+                  .map((line) => line.trim())
+                  .join("\n")
+                  .trim(),
+              });
+
+              await github.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ["Resolution: Needs More Information"],
+              });
+
+              await github.issues.update({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'closed',
+              });
+            }
