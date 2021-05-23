@@ -189,6 +189,8 @@ export function printOperationsArray(operations: Array<number>) {
 
           i++; // key
 
+          i++; // isErrorBoundary
+
           logs.push(
             `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`,
           );

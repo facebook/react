@@ -2380,4 +2380,62 @@ describe('InspectedElement', () => {
       `);
     });
   });
+
+  describe('error boundary', () => {
+    it('can toggle error', async () => {
+      class ErrorBoundary extends React.Component<any> {
+        state = {hasError: false};
+        static getDerivedStateFromError(error) {
+          return {hasError: true};
+        }
+        render() {
+          const {hasError} = this.state;
+          return hasError ? 'has-error' : this.props.children;
+        }
+      }
+      const Example = () => 'example';
+
+      await utils.actAsync(() =>
+        ReactDOM.render(
+          <ErrorBoundary>
+            <Example />
+          </ErrorBoundary>,
+          document.createElement('div'),
+        ),
+      );
+
+      const errorBoundaryID = ((store.getElementIDAtIndex(0): any): number);
+      const toggleError = async forceError => {
+        await withErrorsOrWarningsIgnored(['ErrorBoundary'], async () => {
+          await utils.actAsync(() => {
+            bridge.send('overrideError', {
+              id: errorBoundaryID,
+              rendererID: store.getRendererIDForElement(errorBoundaryID),
+              forceError,
+            });
+          });
+        });
+
+        TestUtilsAct(() => {
+          jest.runOnlyPendingTimers();
+        });
+      };
+
+      let inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.canToggleError).toBe(true);
+      expect(inspectedElement.isErrored).toBe(false);
+
+      await toggleError(true);
+
+      inspectedElement = await inspectElementAtIndex(0);
+      expect(inspectedElement.canToggleError).toBe(true);
+      expect(inspectedElement.isErrored).toBe(true);
+
+      await toggleError(false);
+
+      inspectedElement = await inspectElementAtIndex(0);
+      expect(inspectedElement.canToggleError).toBe(true);
+      expect(inspectedElement.isErrored).toBe(false);
+    });
+  });
 });

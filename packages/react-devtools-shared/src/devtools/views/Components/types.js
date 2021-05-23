@@ -31,6 +31,9 @@ export type Element = {|
   // Should the elements children be visible in the tree?
   isCollapsed: boolean,
 
+  // Is the element an errory boundary?
+  isErrorBoundary: boolean,
+
   // Owner (if available)
   ownerID: number,
 
@@ -75,6 +78,10 @@ export type InspectedElement = {|
   canEditHooksAndRenamePaths: boolean,
   canEditFunctionPropsDeletePaths: boolean,
   canEditFunctionPropsRenamePaths: boolean,
+
+  // Is this Error, and can its value be overridden now?
+  isErrored: boolean,
+  canToggleError: boolean,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,

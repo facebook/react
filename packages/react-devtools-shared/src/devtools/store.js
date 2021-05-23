@@ -837,6 +837,7 @@ export default class Store extends EventEmitter<{|
             );
           }
 
+          let isErrorBoundary: boolean = false;
           let ownerID: number = 0;
           let parentID: number = ((null: any): number);
           if (type === ElementTypeRoot) {
@@ -864,6 +865,7 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
+              isErrorBoundary: false,
               key: null,
               ownerID: 0,
               parentID: 0,
@@ -885,6 +887,9 @@ export default class Store extends EventEmitter<{|
 
             const keyStringID = operations[i];
             const key = stringTable[keyStringID];
+            i++;
+
+            isErrorBoundary = ((operations[i]: any): number) > 0;
             i++;
 
             if (__DEBUG__) {
@@ -919,6 +924,7 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames,
               id,
               isCollapsed: this._collapseNodesByDefault,
+              isErrorBoundary,
               key,
               ownerID,
               parentID: parentElement.id,

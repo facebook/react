@@ -120,6 +120,7 @@ type ReactPriorityLevelsType = {|
 |};
 
 type ReactTypeOfSideEffectType = {|
+  DidCapture: number,
   NoFlags: number,
   PerformedWork: number,
   Placement: number,
@@ -147,6 +148,7 @@ export function getInternalReactConstants(
   ReactTypeOfWork: WorkTagMap,
 |} {
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
+    DidCapture: 0b10000000,
     NoFlags: 0b00,
     PerformedWork: 0b01,
     Placement: 0b10,
@@ -519,7 +521,13 @@ export function attach(
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
   } = getInternalReactConstants(version);
-  const {Incomplete, NoFlags, PerformedWork, Placement} = ReactTypeOfSideEffect;
+  const {
+    DidCapture,
+    Incomplete,
+    NoFlags,
+    PerformedWork,
+    Placement,
+  } = ReactTypeOfSideEffect;
   const {
     CacheComponent,
     ClassComponent,
@@ -557,9 +565,13 @@ export function attach(
     overrideProps,
     overridePropsDeletePath,
     overridePropsRenamePath,
+    setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
   } = renderer;
+  const supportsTogglingError =
+    typeof setErrorHandler === 'function' &&
+    typeof scheduleUpdate === 'function';
   const supportsTogglingSuspense =
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
@@ -584,6 +596,9 @@ export function attach(
       if (fiber != null) {
         fibersWithChangedErrorOrWarningCounts.add(fiber);
         updateMostRecentlyInspectedElementIfNecessary(id);
+        if (forceErrorForFiberIDs.has(id)) {
+          overrideError(id, false);
+        }
       }
     }
 
@@ -627,6 +642,7 @@ export function attach(
   }
 
   function clearErrorsForFiberID(fiberID: number) {
+    forceErrorForFiberIDs.delete(fiberID);
     clearMessageCountHelper(
       fiberID,
       pendingFiberToErrorsMap,
@@ -1724,6 +1740,23 @@ export function attach(
     return stringID;
   }
 
+  function isErrorBoundary(fiber: Fiber): boolean {
+    const {tag, type} = fiber;
+
+    switch (tag) {
+      case ClassComponent:
+      case IncompleteClassComponent:
+        const instance = fiber.stateNode;
+        return (
+          typeof type.getDerivedStateFromError === 'function' ||
+          (instance !== null &&
+            typeof instance.componentDidCatch === 'function')
+        );
+      default:
+        return false;
+    }
+  }
+
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
     const isRoot = fiber.tag === HostRoot;
     const id = getOrGenerateFiberID(fiber);
@@ -1776,6 +1809,7 @@ export function attach(
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
       pushOperation(keyStringID);
+      pushOperation(isErrorBoundary(fiber) ? 1 : 0);
     }
 
     if (isProfilingSupported) {
@@ -3062,6 +3096,9 @@ export function attach(
 
     const errors = fiberIDToErrorsMap.get(id) || new Map();
     const warnings = fiberIDToWarningsMap.get(id) || new Map();
+    const isErrored =
+      (fiber.flags & DidCapture) !== NoFlags ||
+      forceErrorForFiberIDs.get(id) === true;
 
     return {
       id,
@@ -3079,6 +3116,17 @@ export function attach(
         typeof overridePropsDeletePath === 'function',
       canEditFunctionPropsRenamePaths:
         typeof overridePropsRenamePath === 'function',
+
+      canToggleError:
+        supportsTogglingError &&
+        // If it's showing the real content, we can always flip it into an
+        // error state.
+        (!isErrored ||
+          // If it's showing an error state because we previously forced it to,
+          // allow toggling it back to remove the error boundary.
+          forceErrorForFiberIDs.get(id) === true),
+      // Is this error boundary in error state.
+      isErrored,
 
       canToggleSuspense:
         supportsTogglingSuspense &&
@@ -3747,7 +3795,57 @@ export function attach(
   }
 
   // React will switch between these implementations depending on whether
-  // we have any manually suspended Fibers or not.
+  // we have any manually suspended/errored-out Fibers or not.
+  function shouldErrorFiberAlwaysNull() {
+    return null;
+  }
+
+  const forceErrorForFiberIDs = new Map();
+  function shouldErrorFiberAccordingToMap(fiber) {
+    if (typeof setErrorHandler !== 'function') {
+      throw new Error(
+        'Expected overrideError() to not get called for earlier React versions.',
+      );
+    }
+
+    const id = getOrGenerateFiberID(fiber);
+    let status = null;
+    if (forceErrorForFiberIDs.has(id)) {
+      status = forceErrorForFiberIDs.get(id);
+      if (status === false) {
+        clearErrorsForFiberID(id);
+      }
+
+      if (forceErrorForFiberIDs.size === 0) {
+        // Last override is gone. Switch React back to fast path.
+        setErrorHandler(shouldErrorFiberAlwaysNull);
+      }
+    }
+    return status;
+  }
+
+  function overrideError(id, forceError) {
+    if (
+      typeof setErrorHandler !== 'function' ||
+      typeof scheduleUpdate !== 'function'
+    ) {
+      throw new Error(
+        'Expected overrideError() to not get called for earlier React versions.',
+      );
+    }
+
+    forceErrorForFiberIDs.set(id, forceError);
+
+    if (forceErrorForFiberIDs.size === 1) {
+      // First override is added. Switch React to slower path.
+      setErrorHandler(shouldErrorFiberAccordingToMap);
+    }
+
+    const fiber = idToArbitraryFiberMap.get(id);
+    if (fiber != null) {
+      scheduleUpdate(fiber);
+    }
+  }
 
   function shouldSuspendFiberAlwaysFalse() {
     return false;
@@ -4042,6 +4140,7 @@ export function attach(
     logElementToConsole,
     prepareViewAttributeSource,
     prepareViewElementSource,
+    overrideError,
     overrideSuspense,
     overrideValueAtPath,
     renamePath,

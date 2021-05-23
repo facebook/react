@@ -17,6 +17,7 @@ import {ModalDialogContext} from '../ModalDialog';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
+import CannotThrowWarningMessage from './CannotThrowWarningMessage';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
@@ -92,14 +93,64 @@ export default function InspectedElementWrapper(_: Props) {
     (canViewElementSourceFunction === null ||
       canViewElementSourceFunction(inspectedElement));
 
+  const isErrored = inspectedElement != null && inspectedElement.isErrored;
+
   const isSuspended =
     element !== null &&
     element.type === ElementTypeSuspense &&
     inspectedElement != null &&
     inspectedElement.state != null;
 
+  const canToggleError =
+    inspectedElement != null && inspectedElement.canToggleError;
+
   const canToggleSuspense =
     inspectedElement != null && inspectedElement.canToggleSuspense;
+
+  const toggleErrored = useCallback(() => {
+    let nearestErrorBoundary = null;
+    let currentElement = element;
+    while (currentElement !== null) {
+      if (currentElement.isErrorBoundary) {
+        nearestErrorBoundary = currentElement;
+        break;
+      } else if (currentElement.parentID > 0) {
+        currentElement = store.getElementByID(currentElement.parentID);
+      } else {
+        currentElement = null;
+      }
+    }
+
+    // If we didn't find an error boundary ancestor, we can't throw.
+    // Instead we can show a warning to the user.
+    if (nearestErrorBoundary === null) {
+      modalDialogDispatch({
+        id: 'InspectedElement',
+        type: 'SHOW',
+        content: <CannotThrowWarningMessage />,
+      });
+    } else {
+      const nearestErrorBoundaryID = nearestErrorBoundary.id;
+
+      if (nearestErrorBoundary !== element) {
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: nearestErrorBoundaryID,
+        });
+      }
+
+      const rendererID = store.getRendererIDForElement(nearestErrorBoundaryID);
+
+      // Toggle error.
+      if (rendererID !== null) {
+        bridge.send('overrideError', {
+          id: nearestErrorBoundaryID,
+          rendererID,
+          forceError: !isErrored,
+        });
+      }
+    }
+  }, [bridge, dispatch, element, isErrored, modalDialogDispatch, store]);
 
   // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
   const toggleSuspended = useCallback(() => {
@@ -177,6 +228,19 @@ export default function InspectedElementWrapper(_: Props) {
           </div>
         </div>
 
+        {canToggleError && (
+          <Toggle
+            className={styles.IconButton}
+            isChecked={isErrored}
+            onChange={toggleErrored}
+            title={
+              isErrored
+                ? 'Clear the forced error'
+                : 'Force the selected component into an errored state'
+            }>
+            <ButtonIcon type="error" />
+          </Toggle>
+        )}
         {canToggleSuspense && (
           <Toggle
             className={styles.IconButton}

@@ -407,6 +407,8 @@ export function attach(
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
       pushOperation(keyStringID);
+      // isErrorBoundary not supported in legacy renderer
+      pushOperation(0);
     }
   }
 
@@ -800,6 +802,10 @@ export function attach(
       canEditFunctionPropsDeletePaths: false,
       canEditFunctionPropsRenamePaths: false,
 
+      // Toggle error boundary did not exist in legacy versions
+      canToggleError: false,
+      isErrored: false,
+
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
 
@@ -1016,6 +1022,9 @@ export function attach(
   const handlePostCommitFiberRoot = () => {
     throw new Error('handlePostCommitFiberRoot not supported by this renderer');
   };
+  const overrideError = () => {
+    throw new Error('overrideError not supported by this renderer');
+  };
   const overrideSuspense = () => {
     throw new Error('overrideSuspense not supported by this renderer');
   };
@@ -1089,6 +1098,7 @@ export function attach(
     handlePostCommitFiberRoot,
     inspectElement,
     logElementToConsole,
+    overrideError,
     overrideSuspense,
     overrideValueAtPath,
     renamePath,

@@ -976,6 +976,41 @@ describe('Store', () => {
     `);
   });
 
+  it('should detect if element is an error boundary', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {hasError: false};
+      static getDerivedStateFromError(error) {
+        return {hasError: true};
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+    class ClassComponent extends React.Component {
+      render() {
+        return null;
+      }
+    }
+    const FunctionalComponent = () => null;
+
+    const App = () => (
+      <React.Fragment>
+        <ErrorBoundary>
+          <ClassComponent />
+          <FunctionalComponent />
+        </ErrorBoundary>
+      </React.Fragment>
+    );
+
+    const container = document.createElement('div');
+
+    act(() => ReactDOM.render(<App />, container));
+
+    expect(store.getElementAtIndex(1).isErrorBoundary).toBe(true);
+    expect(store.getElementAtIndex(2).isErrorBoundary).toBe(false);
+    expect(store.getElementAtIndex(3).isErrorBoundary).toBe(false);
+  });
+
   describe('Lazy', () => {
     async function fakeImport(result) {
       return {default: result};
