@@ -213,7 +213,8 @@ function render(
       concurrentRoot ? ConcurrentRoot : LegacyRoot,
       false,
       null,
-      false, null,
+      false,
+      null,
     );
     roots.set(containerTag, root);
   }
