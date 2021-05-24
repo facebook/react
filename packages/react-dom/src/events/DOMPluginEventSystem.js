@@ -104,7 +104,7 @@ function extractEvents(
   // This is the basic functionality of the event system. All
   // the other plugins are essentially polyfills. So the plugin
   // should probably be inlined somewhere and have its logic
-  // be core the to event system. This would potentially allow
+  // be core to the event system. This would potentially allow
   // us to ship builds of React without the polyfilled plugins below.
   SimpleEventPlugin.extractEvents(
     dispatchQueue,
