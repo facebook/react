@@ -19,7 +19,6 @@ import {
   batchedEventUpdates,
   batchedUpdates as batchedUpdatesImpl,
   discreteUpdates,
-  flushDiscreteUpdates,
   createContainer,
   updateContainer,
   injectIntoDevTools,
@@ -41,7 +40,7 @@ import {
   getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
 } from './ReactNativeFiberInspector';
-import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
@@ -202,13 +201,21 @@ function render(
   element: Element<ElementType>,
   containerTag: number,
   callback: ?() => void,
+  concurrentRoot: ?boolean,
 ): ?ElementRef<ElementType> {
   let root = roots.get(containerTag);
 
   if (!root) {
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
-    root = createContainer(containerTag, LegacyRoot, false, null, null);
+    root = createContainer(
+      containerTag,
+      concurrentRoot ? ConcurrentRoot : LegacyRoot,
+      false,
+      null,
+      false,
+      null,
+    );
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
@@ -242,7 +249,6 @@ function createPortal(
 setBatchingImplementation(
   batchedUpdatesImpl,
   discreteUpdates,
-  flushDiscreteUpdates,
   batchedEventUpdates,
 );
 

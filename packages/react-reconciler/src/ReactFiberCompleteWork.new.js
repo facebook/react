@@ -28,7 +28,7 @@ import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
-import {now} from './SchedulerWithReactIntegration.new';
+import {now} from './Scheduler';
 
 import {
   IndeterminateComponent,
@@ -58,6 +58,7 @@ import {
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
   Ref,
+  RefStatic,
   Update,
   NoFlags,
   DidCapture,
@@ -117,15 +118,14 @@ import {
   getIsHydrating,
 } from './ReactFiberHydrationContext.new';
 import {
-  enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import {
-  markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
@@ -157,6 +157,9 @@ function markUpdate(workInProgress: Fiber) {
 
 function markRef(workInProgress: Fiber) {
   workInProgress.flags |= Ref;
+  if (enableSuspenseLayoutEffectSemantics) {
+    workInProgress.flags |= RefStatic;
+  }
 }
 
 function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
@@ -976,9 +979,6 @@ function completeWork(
                 'This is probably a bug in React.',
             );
             prepareToHydrateHostSuspenseInstance(workInProgress);
-            if (enableSchedulerTracing) {
-              markSpawnedWork(OffscreenLane);
-            }
             bubbleProperties(workInProgress);
             if (enableProfilerTimer) {
               if ((workInProgress.mode & ProfileMode) !== NoMode) {
@@ -987,7 +987,7 @@ function completeWork(
                   // Don't count time spent in a timed out Suspense subtree as part of the base duration.
                   const primaryChildFragment = workInProgress.child;
                   if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
+                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
                     workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
                   }
                 }
@@ -1017,7 +1017,7 @@ function completeWork(
                   // Don't count time spent in a timed out Suspense subtree as part of the base duration.
                   const primaryChildFragment = workInProgress.child;
                   if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
+                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
                     workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
                   }
                 }
@@ -1121,7 +1121,7 @@ function completeWork(
             // Don't count time spent in a timed out Suspense subtree as part of the base duration.
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
-              // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
+              // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
               workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
             }
           }
@@ -1254,9 +1254,6 @@ function completeWork(
             // We can use any RetryLane even if it's the one currently rendering
             // since we're leaving it behind on this node.
             workInProgress.lanes = SomeRetryLane;
-            if (enableSchedulerTracing) {
-              markSpawnedWork(SomeRetryLane);
-            }
           }
         } else {
           cutOffTailIfNeeded(renderState, false);
@@ -1315,9 +1312,6 @@ function completeWork(
             // We can use any RetryLane even if it's the one currently rendering
             // since we're leaving it behind on this node.
             workInProgress.lanes = SomeRetryLane;
-            if (enableSchedulerTracing) {
-              markSpawnedWork(SomeRetryLane);
-            }
           }
         }
         if (renderState.isBackwards) {

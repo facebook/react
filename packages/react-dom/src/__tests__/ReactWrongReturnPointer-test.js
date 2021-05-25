@@ -22,7 +22,7 @@ beforeEach(() => {
   Scheduler = require('scheduler');
 
   Suspense = React.Suspense;
-  SuspenseList = React.unstable_SuspenseList;
+  SuspenseList = React.SuspenseList;
 
   getCacheForType = React.unstable_getCacheForType;
 

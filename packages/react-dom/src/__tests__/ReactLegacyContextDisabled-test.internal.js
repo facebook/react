@@ -139,9 +139,7 @@ describe('ReactLegacyContextDisabled', () => {
       'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
         'Use React.createContext() with React.useContext() instead.',
     ]);
-    expect(text).toBe(
-      '<span data-reactroot="">{}<!-- -->undefined<!-- -->undefined</span>',
-    );
+    expect(text).toBe('<span>{}<!-- -->undefined<!-- -->undefined</span>');
     expect(lifecycleContextLog).toEqual([{}, {}, {}]);
   });
 

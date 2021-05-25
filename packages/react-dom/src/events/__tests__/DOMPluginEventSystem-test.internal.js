@@ -67,6 +67,7 @@ describe('DOMPluginEventSystem', () => {
           ReactDOM = require('react-dom');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
+          act = require('react-dom/test-utils').unstable_concurrentAct;
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -574,7 +575,6 @@ describe('DOMPluginEventSystem', () => {
           expect(log).toEqual(['second', 'first']);
         });
 
-        // @gate experimental
         it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
           let suspend = false;
           let resolve;
@@ -636,16 +636,17 @@ describe('DOMPluginEventSystem', () => {
           Scheduler.unstable_flushAll();
 
           // The Suspense boundary is not yet hydrated.
-          a.click();
+          await act(async () => {
+            a.click();
+          });
           expect(clicks).toBe(0);
 
           // Resolving the promise so that rendering can complete.
-          suspend = false;
-          resolve();
-          await promise;
-
-          Scheduler.unstable_flushAll();
-          jest.runAllTimers();
+          await act(async () => {
+            suspend = false;
+            resolve();
+            await promise;
+          });
 
           // We're now full hydrated.
 
@@ -654,7 +655,7 @@ describe('DOMPluginEventSystem', () => {
           document.body.removeChild(parentContainer);
         });
 
-        it('handle click events on dynamic portals', () => {
+        it('handle click events on dynamic portals', async () => {
           const log = [];
 
           function Parent() {
@@ -668,7 +669,7 @@ describe('DOMPluginEventSystem', () => {
                   ref.current,
                 ),
               );
-            });
+            }, []);
 
             return (
               <div ref={ref} onClick={() => log.push('parent')} id="parent">
@@ -677,17 +678,25 @@ describe('DOMPluginEventSystem', () => {
             );
           }
 
-          ReactDOM.render(<Parent />, container);
+          await act(async () => {
+            ReactDOM.render(<Parent />, container);
+          });
 
           const parent = container.lastChild;
           expect(parent.id).toEqual('parent');
-          dispatchClickEvent(parent);
+
+          await act(async () => {
+            dispatchClickEvent(parent);
+          });
 
           expect(log).toEqual(['parent']);
 
           const child = parent.lastChild;
           expect(child.id).toEqual('child');
-          dispatchClickEvent(child);
+
+          await act(async () => {
+            dispatchClickEvent(child);
+          });
 
           // we add both 'child' and 'parent' due to bubbling
           expect(log).toEqual(['parent', 'child', 'parent']);
@@ -695,7 +704,7 @@ describe('DOMPluginEventSystem', () => {
 
         // Slight alteration to the last test, to catch
         // a subtle difference in traversal.
-        it('handle click events on dynamic portals #2', () => {
+        it('handle click events on dynamic portals #2', async () => {
           const log = [];
 
           function Parent() {
@@ -709,7 +718,7 @@ describe('DOMPluginEventSystem', () => {
                   ref.current,
                 ),
               );
-            });
+            }, []);
 
             return (
               <div ref={ref} onClick={() => log.push('parent')} id="parent">
@@ -718,17 +727,25 @@ describe('DOMPluginEventSystem', () => {
             );
           }
 
-          ReactDOM.render(<Parent />, container);
+          await act(async () => {
+            ReactDOM.render(<Parent />, container);
+          });
 
           const parent = container.lastChild;
           expect(parent.id).toEqual('parent');
-          dispatchClickEvent(parent);
+
+          await act(async () => {
+            dispatchClickEvent(parent);
+          });
 
           expect(log).toEqual(['parent']);
 
           const child = parent.lastChild;
           expect(child.id).toEqual('child');
-          dispatchClickEvent(child);
+
+          await act(async () => {
+            dispatchClickEvent(child);
+          });
 
           // we add both 'child' and 'parent' due to bubbling
           expect(log).toEqual(['parent', 'child', 'parent']);
@@ -1255,7 +1272,7 @@ describe('DOMPluginEventSystem', () => {
               return <div ref={divRef}>Hello world</div>;
             }
             const output = ReactDOMServer.renderToString(<Test />);
-            expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
+            expect(output).toBe(`<div>Hello world</div>`);
           });
 
           // @gate experimental
@@ -1276,9 +1293,7 @@ describe('DOMPluginEventSystem', () => {
               );
             }
             const output = ReactDOMServer.renderToString(<Test />);
-            expect(output).toBe(
-              `<div data-reactroot=""><span>Hello world</span></div>`,
-            );
+            expect(output).toBe(`<div><span>Hello world</span></div>`);
             container.innerHTML = output;
             ReactDOM.hydrate(<Test />, container);
             Scheduler.unstable_flushAll();
@@ -1932,7 +1947,13 @@ describe('DOMPluginEventSystem', () => {
             log.length = 0;
 
             // Increase counter
-            root.render(<Test counter={1} />);
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.startTransition(() => {
+                root.render(<Test counter={1} />);
+              });
+            } else {
+              root.render(<Test counter={1} />);
+            }
             // Yield before committing
             expect(Scheduler).toFlushAndYieldThrough(['Test']);
 

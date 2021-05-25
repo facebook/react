@@ -11,6 +11,7 @@ describe('StoreStressConcurrent', () => {
   let React;
   let ReactDOM;
   let act;
+  let actAsync;
   let bridge;
   let store;
   let print;
@@ -23,6 +24,9 @@ describe('StoreStressConcurrent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     act = require('./utils').act;
+    // TODO: Figure out recommendation for concurrent mode tests, then replace
+    // this helper with the real thing.
+    actAsync = require('./utils').actAsync;
 
     print = require('./storeSerializer').print;
   });
@@ -63,7 +67,7 @@ describe('StoreStressConcurrent', () => {
     // 1. Render a normal version of [a, b, c, d, e].
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     act(() => root.render(<Parent>{[a, b, c, d, e]}</Parent>));
     expect(store).toMatchInlineSnapshot(
       `
@@ -147,7 +151,7 @@ describe('StoreStressConcurrent', () => {
       // Ensure fresh mount.
       container = document.createElement('div');
       // $FlowFixMe
-      root = ReactDOM.unstable_createRoot(container);
+      root = ReactDOM.createRoot(container);
 
       // Verify mounting 'abcde'.
       act(() => root.render(<Parent>{cases[i]}</Parent>));
@@ -177,7 +181,7 @@ describe('StoreStressConcurrent', () => {
     // There'll be no unmounting until the very end.
     container = document.createElement('div');
     // $FlowFixMe
-    root = ReactDOM.unstable_createRoot(container);
+    root = ReactDOM.createRoot(container);
     for (let i = 0; i < cases.length; i++) {
       // Verify mounting 'abcde'.
       act(() => root.render(<Parent>{cases[i]}</Parent>));
@@ -243,7 +247,7 @@ describe('StoreStressConcurrent', () => {
     const snapshots = [];
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     for (let i = 0; i < steps.length; i++) {
       act(() => root.render(<Root>{steps[i]}</Root>));
       // We snapshot each step once so it doesn't regress.
@@ -316,7 +320,7 @@ describe('StoreStressConcurrent', () => {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() => root.render(<Root>{steps[i]}</Root>));
         expect(print(store)).toMatch(snapshots[i]);
         act(() => root.render(<Root>{steps[j]}</Root>));
@@ -333,7 +337,7 @@ describe('StoreStressConcurrent', () => {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -405,7 +409,7 @@ describe('StoreStressConcurrent', () => {
     const snapshots = [];
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     for (let i = 0; i < steps.length; i++) {
       act(() =>
         root.render(
@@ -532,7 +536,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -578,7 +582,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -636,7 +640,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -686,7 +690,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -740,7 +744,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -758,7 +762,7 @@ describe('StoreStressConcurrent', () => {
 
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -768,7 +772,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Stop forcing fallback.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -818,7 +822,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Stop forcing fallback. This reverts to primary content.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -829,13 +833,13 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[i]);
 
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await actAsync(async () => root.unmount());
         expect(print(store)).toBe('');
       }
     }
   });
 
-  it('should handle a stress test for Suspense without type change (Concurrent Mode)', () => {
+  it('should handle a stress test for Suspense without type change (Concurrent Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -894,7 +898,7 @@ describe('StoreStressConcurrent', () => {
     const snapshots = [];
     let container = document.createElement('div');
     // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
+    let root = ReactDOM.createRoot(container);
     for (let i = 0; i < steps.length; i++) {
       act(() =>
         root.render(
@@ -1051,7 +1055,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1103,7 +1107,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1170,7 +1174,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1222,7 +1226,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1274,7 +1278,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         // $FlowFixMe
-        root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -1294,7 +1298,7 @@ describe('StoreStressConcurrent', () => {
 
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1304,7 +1308,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Stop forcing fallback.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1354,7 +1358,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Stop forcing fallback. This reverts to primary content.
-        act(() => {
+        await actAsync(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),

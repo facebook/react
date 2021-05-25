@@ -14,6 +14,8 @@
  * environment.
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
+
 import ReactFizzServer from 'react-server';
 
 type Instance = {|
@@ -51,6 +53,8 @@ type Destination = {
 
 const POP = Buffer.from('/', 'utf8');
 
+let opaqueID = 0;
+
 const ReactNoopServer = ReactFizzServer({
   scheduleWork(callback: () => void) {
     callback();
@@ -77,12 +81,17 @@ const ReactNoopServer = ReactFizzServer({
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
-  createResponseState(): null {
-    return null;
-  },
   createSuspenseBoundaryID(): SuspenseInstance {
     // The ID is a pointer to the boundary itself.
     return {state: 'pending', children: []};
+  },
+
+  makeServerID(): number {
+    return opaqueID++;
+  },
+
+  getChildFormatContext(): null {
+    return null;
   },
 
   pushTextInstance(target: Array<Uint8Array>, text: string): void {
@@ -96,7 +105,7 @@ const ReactNoopServer = ReactFizzServer({
     target: Array<Uint8Array>,
     type: string,
     props: Object,
-  ): void {
+  ): ReactNodeList {
     const instance: Instance = {
       type: type,
       children: [],
@@ -104,6 +113,7 @@ const ReactNoopServer = ReactFizzServer({
       hidden: false,
     };
     target.push(Buffer.from(JSON.stringify(instance), 'utf8'));
+    return props.children;
   },
 
   pushEndInstance(
@@ -114,7 +124,11 @@ const ReactNoopServer = ReactFizzServer({
     target.push(POP);
   },
 
-  writePlaceholder(destination: Destination, id: number): boolean {
+  writePlaceholder(
+    destination: Destination,
+    responseState: ResponseState,
+    id: number,
+  ): boolean {
     const parent = destination.stack[destination.stack.length - 1];
     destination.placeholders.set(id, {
       parent: parent,
@@ -153,7 +167,12 @@ const ReactNoopServer = ReactFizzServer({
     destination.stack.pop();
   },
 
-  writeStartSegment(destination: Destination, id: number): boolean {
+  writeStartSegment(
+    destination: Destination,
+    responseState: ResponseState,
+    formatContext: null,
+    id: number,
+  ): boolean {
     const segment = {
       children: [],
     };
@@ -163,7 +182,7 @@ const ReactNoopServer = ReactFizzServer({
     }
     destination.stack.push(segment);
   },
-  writeEndSegment(destination: Destination): boolean {
+  writeEndSegment(destination: Destination, formatContext: null): boolean {
     destination.stack.pop();
   },
 
@@ -210,7 +229,14 @@ const ReactNoopServer = ReactFizzServer({
   },
 });
 
-function render(children: React$Element<any>): Destination {
+type Options = {
+  progressiveChunkSize?: number,
+  onReadyToStream?: () => void,
+  onCompleteAll?: () => void,
+  onError?: (error: mixed) => void,
+};
+
+function render(children: React$Element<any>, options?: Options): Destination {
   const destination: Destination = {
     root: null,
     placeholders: new Map(),
@@ -220,7 +246,16 @@ function render(children: React$Element<any>): Destination {
       ReactNoopServer.abort(request);
     },
   };
-  const request = ReactNoopServer.createRequest(children, destination);
+  const request = ReactNoopServer.createRequest(
+    children,
+    destination,
+    null,
+    null,
+    options ? options.progressiveChunkSize : undefined,
+    options ? options.onError : undefined,
+    options ? options.onCompleteAll : undefined,
+    options ? options.onReadyToStream : undefined,
+  );
   ReactNoopServer.startWork(request);
   ReactNoopServer.startFlowing(request);
   return destination;

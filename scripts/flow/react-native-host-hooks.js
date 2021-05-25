@@ -179,6 +179,11 @@ declare var nativeFabricUIManager: {
     locationY: number,
     callback: (Fiber) => void,
   ) => void,
+  setIsJSResponder: (
+    node: Node,
+    isJsResponder: boolean,
+    blockNativeResponder: boolean,
+  ) => void,
   ...
 };
 

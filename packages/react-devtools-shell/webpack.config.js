@@ -52,6 +52,7 @@ const config = {
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
+      'process.env.DEVTOOLS_PACKAGE': `"react-devtools-shell"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
     }),
   ],

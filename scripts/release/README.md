@@ -8,7 +8,7 @@ Before proceeding, consider your motivation:
 
 - **"I want to share experimental features with collaborators."** After your code lands in GitHub (behind an experimental feature flag), it will be automatically published via CI within the next weekday. So usually, all you have to do is wait.
 - **"But I want to publish it now!"** You can [trigger the CI job to run automatically](#trigger-an-automated-prerelease).
-- **"I want to publish a stable release with a real version number"** Refer to the ["Publishing a Stable Release"]((#publishing-a-stable-release)) section. If this is your first time running a stable release, consult with another team member before proceeding.
+- **"I want to publish a stable release with a real version number"** Refer to the ["Publishing a Stable Release"](#publishing-a-stable-release) section. If this is your first time running a stable release, consult with another team member before proceeding.
 - **"I have some special use case that's not explicitly mentioned here."** Read the rest of this document, and consult with another team member before proceeding.
 
 # Process

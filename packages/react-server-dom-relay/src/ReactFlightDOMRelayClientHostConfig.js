@@ -24,6 +24,8 @@ export {
   requireModule,
 } from 'ReactFlightDOMRelayClientIntegration';
 
+import isArray from 'shared/isArray';
+
 export type {ModuleMetaData} from 'ReactFlightDOMRelayClientIntegration';
 
 export type UninitializedModel = JSONValue;
@@ -35,7 +37,7 @@ function parseModelRecursively(response: Response, parentObj, value) {
     return parseModelString(response, parentObj, value);
   }
   if (typeof value === 'object' && value !== null) {
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
       const parsedValue = [];
       for (let i = 0; i < value.length; i++) {
         (parsedValue: any)[i] = parseModelRecursively(

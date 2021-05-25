@@ -211,7 +211,7 @@ module.exports = function(initModules) {
       element,
       shouldUseDocument(element)
         ? '<html><body><div id="badIdWhichWillCauseMismatch" /></body></html>'
-        : '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>',
+        : '<div id="badIdWhichWillCauseMismatch"></div>',
     );
 
     await renderIntoDom(element, container, true, errorCount + 1);

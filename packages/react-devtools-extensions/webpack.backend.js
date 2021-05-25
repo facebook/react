@@ -51,6 +51,7 @@ module.exports = {
       __DEV__: true,
       __PROFILE__: false,
       __EXPERIMENTAL__: true,
+      'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
     }),

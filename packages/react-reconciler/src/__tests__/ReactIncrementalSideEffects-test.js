@@ -409,7 +409,13 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hello'), span('Hello')), span('Yo')),
     ]);
 
-    ReactNoop.render(<Foo text="World" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo text="World" />);
+      });
+    } else {
+      ReactNoop.render(<Foo text="World" />);
+    }
 
     // Flush some of the work without committing
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar']);
@@ -638,7 +644,13 @@ describe('ReactIncrementalSideEffects', () => {
       Scheduler.unstable_yieldValue('Foo');
       return <span prop={props.step} />;
     }
-    ReactNoop.render(<Foo step={1} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={1} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={1} />);
+    }
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
@@ -647,13 +659,26 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flushNextYield();
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
-    ReactNoop.render(<Foo step={2} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={2} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={2} />);
+    }
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // This time, before we commit the tree, we update the root component with
     // new props
-    ReactNoop.render(<Foo step={3} />);
+
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo step={3} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={3} />);
+    }
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.
@@ -1281,9 +1306,7 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      'Warning: A string ref, "bar", has been found within a strict mode tree.',
-    );
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(fooInstance.refs.bar.test).toEqual('test');
   });

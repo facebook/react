@@ -14,7 +14,6 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
-import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type BundleType =
@@ -137,6 +136,8 @@ export type ReactRenderer = {
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
+  // 17.0.2+
+  reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
   ComponentTree?: any,
   // Present for React DOM v12 (possibly earlier) through v15.
@@ -163,11 +164,11 @@ export type CommitDataBackend = {|
   fiberActualDurations: Array<[number, number]>,
   // Tuple of fiber ID and computed "self" duration
   fiberSelfDurations: Array<[number, number]>,
-  interactionIDs: Array<number>,
   // Only available in certain (newer) React builds,
   passiveEffectDuration: number | null,
   priorityLevel: string | null,
   timestamp: number,
+  updaters: Array<SerializedElement> | null,
 |};
 
 export type ProfilingDataForRootBackend = {|
@@ -175,9 +176,6 @@ export type ProfilingDataForRootBackend = {|
   displayName: string,
   // Tuple of Fiber ID and base duration
   initialTreeBaseDurations: Array<[number, number]>,
-  // Tuple of Interaction ID and commit indices
-  interactionCommits: Array<[number, Array<number>]>,
-  interactions: Array<[number, Interaction]>,
   rootID: number,
 |};
 
@@ -199,15 +197,16 @@ export type PathMatch = {|
   isFullMatch: boolean,
 |};
 
-export type Owner = {|
+export type SerializedElement = {|
   displayName: string | null,
   id: number,
+  key: number | string | null,
   type: ElementType,
 |};
 
 export type OwnersList = {|
   id: number,
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 |};
 
 export type InspectedElement = {|
@@ -244,7 +243,7 @@ export type InspectedElement = {|
   warnings: Array<[string, number]>,
 
   // List of owners
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
   source: Source | null,
@@ -322,10 +321,11 @@ export type RendererInterface = {
   getDisplayNameForFiberID: GetDisplayNameForFiberID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
-  getOwnersList: (id: number) => Array<Owner> | null,
+  getOwnersList: (id: number) => Array<SerializedElement> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
+  handlePostCommitFiberRoot: (fiber: Object) => void,
   inspectElement: (
     requestID: number,
     id: number,

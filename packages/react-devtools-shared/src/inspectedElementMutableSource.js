@@ -77,7 +77,7 @@ export function inspectElement({
         // If the Element is still in the Store, we can eagerly remove it from the Map.
         inspectedElementMap.delete(element);
 
-        throw Error(`Element ${id} not found`);
+        throw Error(`Element "${id}" not found`);
 
       case 'full-data':
         const fullData = ((data: any): InspectElementFullData);
@@ -127,6 +127,6 @@ export function inspectElement({
         break;
     }
 
-    throw Error(`Unable to inspect element with id ${id}`);
+    throw Error(`Unable to inspect element with id "${id}"`);
   });
 }

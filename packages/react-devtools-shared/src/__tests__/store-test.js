@@ -356,18 +356,18 @@ describe('Store', () => {
       };
       const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
-          <React.unstable_SuspenseList revealOrder="forwards" tail="collapsed">
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
             <Component key="A" />
             <React.Suspense fallback={<Loading />}>
               {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
             </React.Suspense>
             <Component key="C" />
-          </React.unstable_SuspenseList>
+          </React.SuspenseList>
         </React.Fragment>
       );
 
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       act(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
@@ -853,7 +853,7 @@ describe('Store', () => {
     expect(store).toMatchSnapshot('1: mount');
   });
 
-  it('should show the right display names for special component types', async done => {
+  it('should show the right display names for special component types', async () => {
     const MyComponent = (props, ref) => null;
     const ForwardRefComponent = React.forwardRef(MyComponent);
     const MyComponent2 = (props, ref) => null;
@@ -879,6 +879,17 @@ describe('Store', () => {
       FakeHigherOrderComponent,
     );
 
+    const MemoizedFakeHigherOrderComponentWithDisplayNameOverride = React.memo(
+      FakeHigherOrderComponent,
+    );
+    MemoizedFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'memoRefOverride';
+    const ForwardRefFakeHigherOrderComponentWithDisplayNameOverride = React.forwardRef(
+      FakeHigherOrderComponent,
+    );
+    ForwardRefFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'forwardRefOverride';
+
     const App = () => (
       <React.Fragment>
         <MyComponent />
@@ -891,6 +902,8 @@ describe('Store', () => {
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
         <React.unstable_Cache />
+        <MemoizedFakeHigherOrderComponentWithDisplayNameOverride />
+        <ForwardRefFakeHigherOrderComponentWithDisplayNameOverride />
       </React.Fragment>
     );
 
@@ -904,9 +917,24 @@ describe('Store', () => {
     // Render again after it resolves
     act(() => ReactDOM.render(<App />, container));
 
-    expect(store).toMatchSnapshot();
-
-    done();
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <MyComponent>
+            <MyComponent> [ForwardRef]
+          ▾ <Anonymous> [ForwardRef]
+              <MyComponent2>
+            <Custom> [ForwardRef]
+            <MyComponent4> [Memo]
+          ▾ <MyComponent> [Memo]
+              <MyComponent> [ForwardRef]
+            <Baz> [withFoo][withBar]
+            <Baz> [Memo][withFoo][withBar]
+            <Baz> [ForwardRef][withFoo][withBar]
+            <Cache>
+            <memoRefOverride> [Memo]
+            <forwardRefOverride> [ForwardRef]
+    `);
   });
 
   describe('Lazy', () => {
@@ -933,7 +961,7 @@ describe('Store', () => {
       LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
     });
 
-    it('should support Lazy components (legacy render)', async done => {
+    it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -952,13 +980,11 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components in (createRoot)', async done => {
+    it('should support Lazy components in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));
@@ -976,11 +1002,9 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -992,13 +1016,11 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));
@@ -1009,8 +1031,6 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
   });
 

@@ -37,7 +37,6 @@ export const CacheContext: ReactContext<Cache> = enableCache
       // We don't use Consumer/Provider for Cache components. So we'll cheat.
       Consumer: (null: any),
       Provider: (null: any),
-      _calculateChangedBits: null,
       // We'll initialize these at the root.
       _currentValue: (null: any),
       _currentValue2: (null: any),

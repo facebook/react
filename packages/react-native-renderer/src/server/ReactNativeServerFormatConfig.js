@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
+
 import type {
   Destination,
   Chunk,
@@ -20,6 +22,8 @@ import {
 } from 'react-server/src/ReactServerStreamConfig';
 
 import invariant from 'shared/invariant';
+
+export const isPrimaryRenderer = true;
 
 // Every list of children or string is null terminated.
 const END_TAG = 0;
@@ -57,13 +61,42 @@ SUSPENSE_UPDATE_TO_CLIENT_RENDER[0] = SUSPENSE_UPDATE_TO_CLIENT_RENDER_TAG;
 // Per response,
 export type ResponseState = {
   nextSuspenseID: number,
+  nextOpaqueID: number,
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(): ResponseState {
   return {
     nextSuspenseID: 0,
+    nextOpaqueID: 0,
   };
+}
+
+// isInAParentText
+export type FormatContext = boolean;
+
+export function createRootFormatContext(): FormatContext {
+  return false;
+}
+
+export function getChildFormatContext(
+  parentContext: FormatContext,
+  type: string,
+  props: Object,
+): FormatContext {
+  const prevIsInAParentText = parentContext;
+  const isInAParentText =
+    type === 'AndroidTextInput' || // Android
+    type === 'RCTMultilineTextInputView' || // iOS
+    type === 'RCTSinglelineTextInputView' || // iOS
+    type === 'RCTText' ||
+    type === 'RCTVirtualText';
+
+  if (prevIsInAParentText !== isInAParentText) {
+    return isInAParentText;
+  } else {
+    return parentContext;
+  }
 }
 
 // This object is used to lazily reuse the ID of the first generated node, or assign one.
@@ -75,6 +108,19 @@ export function createSuspenseBoundaryID(
 ): SuspenseBoundaryID {
   // TODO: This is not deterministic since it's created during render.
   return responseState.nextSuspenseID++;
+}
+
+export type OpaqueIDType = number;
+
+export function makeServerID(
+  responseState: null | ResponseState,
+): OpaqueIDType {
+  invariant(
+    responseState !== null,
+    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
+  );
+  // TODO: This is not deterministic since it's created during render.
+  return responseState.nextOpaqueID++;
 }
 
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
@@ -107,14 +153,16 @@ export function pushStartInstance(
   type: string,
   props: Object,
   responseState: ResponseState,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
-): void {
+): ReactNodeList {
   target.push(
     INSTANCE,
     stringToChunk(type),
     END, // Null terminated type string
     // TODO: props
   );
+  return props.children;
 }
 
 export function pushEndInstance(
@@ -145,6 +193,7 @@ function formatID(id: number): Uint8Array {
 // display. It's never visible to users.
 export function writePlaceholder(
   destination: Destination,
+  responseState: ResponseState,
   id: number,
 ): boolean {
   writeChunk(destination, PLACEHOLDER);
@@ -179,12 +228,17 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
 
 export function writeStartSegment(
   destination: Destination,
+  responseState: ResponseState,
+  formatContext: FormatContext,
   id: number,
 ): boolean {
   writeChunk(destination, SEGMENT);
   return writeChunk(destination, formatID(id));
 }
-export function writeEndSegment(destination: Destination): boolean {
+export function writeEndSegment(
+  destination: Destination,
+  formatContext: FormatContext,
+): boolean {
   return writeChunk(destination, END);
 }
 

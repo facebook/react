@@ -12,6 +12,7 @@ const loggedTypeFailures = {};
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
@@ -40,7 +41,7 @@ export default function checkPropTypes(
 ): void {
   if (__DEV__) {
     // $FlowFixMe This is okay but Flow doesn't know it.
-    const has = Function.call.bind(Object.prototype.hasOwnProperty);
+    const has = Function.call.bind(hasOwnProperty);
     for (const typeSpecName in typeSpecs) {
       if (has(typeSpecs, typeSpecName)) {
         let error;

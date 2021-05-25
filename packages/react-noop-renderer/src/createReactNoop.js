@@ -21,7 +21,13 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import isArray from 'shared/isArray';
+import {
+  DefaultEventPriority,
+  IdleEventPriority,
+  ConcurrentRoot,
+  LegacyRoot,
+} from 'react-reconciler/constants';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
@@ -420,6 +426,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     getInstanceFromScope() {
       throw new Error('Not yet implemented.');
     },
+
+    detachDeletedInstance() {},
   };
 
   const hostConfig = useMutation
@@ -585,7 +593,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  let currentEventPriority = NoopRenderer.DefaultEventPriority;
+  let currentEventPriority = DefaultEventPriority;
 
   function childToJSX(child, text) {
     if (text !== null) {
@@ -597,7 +605,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (typeof child === 'string') {
       return child;
     }
-    if (Array.isArray(child)) {
+    if (isArray(child)) {
       if (child.length === 0) {
         return null;
       }
@@ -611,7 +619,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
       return children;
     }
-    if (Array.isArray(child.children)) {
+    if (isArray(child.children)) {
       // This is an instance.
       const instance: Instance = (child: any);
       const children = childToJSX(instance.children, instance.text);
@@ -661,7 +669,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (children === null) {
       return null;
     }
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
         type: REACT_FRAGMENT_TYPE,
@@ -680,7 +688,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (children === null) {
       return null;
     }
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
         type: REACT_FRAGMENT_TYPE,
@@ -903,7 +911,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     idleUpdates<T>(fn: () => T): T {
       const prevEventPriority = currentEventPriority;
-      currentEventPriority = NoopRenderer.IdleEventPriority;
+      currentEventPriority = IdleEventPriority;
       try {
         fn();
       } finally {

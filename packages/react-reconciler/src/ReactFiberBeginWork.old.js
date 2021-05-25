@@ -66,6 +66,7 @@ import {
   DidCapture,
   Update,
   Ref,
+  RefStatic,
   ChildDeletion,
   ForceUpdateForLegacySuspense,
   StaticMask,
@@ -77,14 +78,15 @@ import {
   disableModulePatternComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
-  enableSchedulerTracing,
   enableSuspenseServerRenderer,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -160,7 +162,6 @@ import {
   checkIfContextChanged,
   readContext,
   prepareToReadContext,
-  calculateChangedBits,
   scheduleWorkOnParentPath,
 } from './ReactFiberNewContext.old';
 import {renderWithHooks, bailoutHooks} from './ReactFiberHooks.old';
@@ -183,7 +184,6 @@ import {
 } from './ReactFiberHydrationContext.old';
 import {
   adoptClassInstance,
-  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
@@ -199,7 +199,6 @@ import {
   isSimpleFunctionComponent,
 } from './ReactFiber.old';
 import {
-  markSpawnedWork,
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
@@ -210,7 +209,6 @@ import {
   RetryAfterError,
   NoContext,
 } from './ReactFiberWorkLoop.old';
-import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {
   requestCacheFromPool,
@@ -221,7 +219,7 @@ import {
   restoreSpawnedCachePool,
   getOffscreenDeferredCachePool,
 } from './ReactFiberCacheComponent.old';
-import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
+import is from 'shared/objectIs';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -634,9 +632,6 @@ function updateOffscreenComponent(
       }
 
       // Schedule this fiber to re-render at offscreen priority. Then bailout.
-      if (enableSchedulerTracing) {
-        markSpawnedWork((OffscreenLane: Lane));
-      }
       workInProgress.lanes = workInProgress.childLanes = laneToLanes(
         OffscreenLane,
       );
@@ -795,12 +790,7 @@ function updateCacheComponent(
       pushCacheProvider(workInProgress, nextCache);
       if (nextCache !== prevState.cache) {
         // This cache refreshed. Propagate a context change.
-        propagateContextChange(
-          workInProgress,
-          CacheContext,
-          MAX_SIGNED_31_BIT_INT,
-          renderLanes,
-        );
+        propagateContextChange(workInProgress, CacheContext, renderLanes);
       }
     }
   }
@@ -860,6 +850,9 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   ) {
     // Schedule a Ref effect
     workInProgress.flags |= Ref;
+    if (enableSuspenseLayoutEffectSemantics) {
+      workInProgress.flags |= RefStatic;
+    }
   }
 }
 
@@ -1169,12 +1162,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     pushCacheProvider(workInProgress, nextCache);
     if (nextCache !== prevState.cache) {
       // The root cache refreshed.
-      propagateContextChange(
-        workInProgress,
-        CacheContext,
-        MAX_SIGNED_31_BIT_INT,
-        renderLanes,
-      );
+      propagateContextChange(workInProgress, CacheContext, renderLanes);
     }
   }
 
@@ -1599,16 +1587,6 @@ function mountIndeterminateComponent(
 
     initializeUpdateQueue(workInProgress);
 
-    const getDerivedStateFromProps = Component.getDerivedStateFromProps;
-    if (typeof getDerivedStateFromProps === 'function') {
-      applyDerivedStateFromProps(
-        workInProgress,
-        Component,
-        getDerivedStateFromProps,
-        props,
-      );
-    }
-
     adoptClassInstance(workInProgress, value);
     mountClassInstance(workInProgress, Component, props, renderLanes);
     return finishClassComponent(
@@ -1955,9 +1933,6 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       // RetryLane even if it's the one currently rendering since we're leaving
       // it behind on this node.
       workInProgress.lanes = SomeRetryLane;
-      if (enableSchedulerTracing) {
-        markSpawnedWork(SomeRetryLane);
-      }
       return fallbackFragment;
     } else {
       return mountSuspensePrimaryChildren(
@@ -2413,17 +2388,11 @@ function mountDehydratedSuspenseComponent(
     // time. This will mean that Suspense timeouts are slightly shifted to later than
     // they should be.
     // Schedule a normal pri update to render this content.
-    if (enableSchedulerTracing) {
-      markSpawnedWork(DefaultHydrationLane);
-    }
     workInProgress.lanes = laneToLanes(DefaultHydrationLane);
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
     workInProgress.lanes = laneToLanes(OffscreenLane);
-    if (enableSchedulerTracing) {
-      markSpawnedWork(OffscreenLane);
-    }
   }
   return null;
 }
@@ -2536,10 +2505,7 @@ function updateDehydratedSuspenseComponent(
     // Leave the child in place. I.e. the dehydrated fragment.
     workInProgress.child = current.child;
     // Register a callback to retry this boundary once the server has sent the result.
-    let retry = retryDehydratedSuspenseBoundary.bind(null, current);
-    if (enableSchedulerTracing) {
-      retry = Schedule_tracing_wrap(retry);
-    }
+    const retry = retryDehydratedSuspenseBoundary.bind(null, current);
     registerSuspenseInstanceRetry(suspenseInstance, retry);
     return null;
   } else {
@@ -2719,11 +2685,11 @@ function validateTailOptions(
 
 function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
   if (__DEV__) {
-    const isArray = Array.isArray(childSlot);
+    const isAnArray = isArray(childSlot);
     const isIterable =
-      !isArray && typeof getIteratorFn(childSlot) === 'function';
-    if (isArray || isIterable) {
-      const type = isArray ? 'array' : 'iterable';
+      !isAnArray && typeof getIteratorFn(childSlot) === 'function';
+    if (isAnArray || isIterable) {
+      const type = isAnArray ? 'array' : 'iterable';
       console.error(
         'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
           'an additional SuspenseList to configure its revealOrder: ' +
@@ -2751,7 +2717,7 @@ function validateSuspenseListChildren(
       children !== null &&
       children !== false
     ) {
-      if (Array.isArray(children)) {
+      if (isArray(children)) {
         for (let i = 0; i < children.length; i++) {
           if (!validateSuspenseListNestedChild(children[i], i)) {
             return;
@@ -3011,8 +2977,7 @@ function updateContextProvider(
   } else {
     if (oldProps !== null) {
       const oldValue = oldProps.value;
-      const changedBits = calculateChangedBits(context, newValue, oldValue);
-      if (changedBits === 0) {
+      if (is(oldValue, newValue)) {
         // No change. Bailout early if children are the same.
         if (
           oldProps.children === newProps.children &&
@@ -3027,12 +2992,7 @@ function updateContextProvider(
       } else {
         // The context value changed. Search for matching consumers and schedule
         // them to update.
-        propagateContextChange(
-          workInProgress,
-          context,
-          changedBits,
-          renderLanes,
-        );
+        propagateContextChange(workInProgress, context, renderLanes);
       }
     }
   }
@@ -3090,7 +3050,7 @@ function updateContextConsumer(
   }
 
   prepareToReadContext(workInProgress, renderLanes);
-  const newValue = readContext(context, newProps.unstable_observedBits);
+  const newValue = readContext(context);
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;

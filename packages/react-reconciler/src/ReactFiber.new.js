@@ -24,6 +24,8 @@ import {
   enableStrictEffects,
   enableProfilerTimer,
   enableScopeAPI,
+  enableSyncDefaultUpdates,
+  allowConcurrentByDefault,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -68,6 +70,7 @@ import {
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
+  ConcurrentUpdatesByDefaultMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -419,26 +422,29 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
 export function createHostRootFiber(
   tag: RootTag,
-  strictModeLevelOverride: null | number,
+  isStrictMode: boolean,
+  concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode;
-    if (strictModeLevelOverride !== null) {
-      if (strictModeLevelOverride >= 1) {
-        mode |= StrictLegacyMode;
-      }
+    if (isStrictMode === true) {
+      mode |= StrictLegacyMode;
+
       if (enableStrictEffects) {
-        if (strictModeLevelOverride >= 2) {
-          mode |= StrictEffectsMode;
-        }
+        mode |= StrictEffectsMode;
       }
-    } else {
-      if (enableStrictEffects && createRootStrictEffectsByDefault) {
-        mode |= StrictLegacyMode | StrictEffectsMode;
-      } else {
-        mode |= StrictLegacyMode;
-      }
+    } else if (enableStrictEffects && createRootStrictEffectsByDefault) {
+      mode |= StrictLegacyMode | StrictEffectsMode;
+    }
+    if (
+      // We only use this flag for our repo tests to check both behaviors.
+      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
+      !enableSyncDefaultUpdates ||
+      // Only for internal experiments.
+      (allowConcurrentByDefault && concurrentUpdatesByDefaultOverride)
+    ) {
+      mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
     mode = NoMode;
@@ -488,21 +494,7 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-
-        // Legacy strict mode (<StrictMode> without any level prop) defaults to level 1.
-        const level =
-          pendingProps.unstable_level == null ? 1 : pendingProps.unstable_level;
-
-        // Levels cascade; higher levels inherit all lower level modes.
-        // It is explicitly not supported to lower a mode with nesting, only to increase it.
-        if (level >= 1) {
-          mode |= StrictLegacyMode;
-        }
-        if (enableStrictEffects) {
-          if (level >= 2) {
-            mode |= StrictEffectsMode;
-          }
-        }
+        mode |= StrictLegacyMode | StrictEffectsMode;
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);
@@ -651,7 +643,10 @@ function createFiberFromProfiler(
 ): Fiber {
   if (__DEV__) {
     if (typeof pendingProps.id !== 'string') {
-      console.error('Profiler must specify an "id" as a prop');
+      console.error(
+        'Profiler must specify an "id" of type `string` as a prop. Received the type `%s` instead.',
+        typeof pendingProps.id,
+      );
     }
   }
 

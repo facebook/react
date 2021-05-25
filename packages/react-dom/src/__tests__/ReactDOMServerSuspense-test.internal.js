@@ -54,7 +54,45 @@ describe('ReactDOMServerSuspense', () => {
     throw new Promise(() => {});
   }
 
-  // @gate experimental || www
+  function getVisibleChildren(element) {
+    const children = [];
+    let node = element.firstChild;
+    while (node) {
+      if (node.nodeType === 1) {
+        if (
+          node.tagName !== 'SCRIPT' &&
+          node.tagName !== 'TEMPLATE' &&
+          node.tagName !== 'template' &&
+          !node.hasAttribute('hidden') &&
+          !node.hasAttribute('aria-hidden')
+        ) {
+          const props = {};
+          const attributes = node.attributes;
+          for (let i = 0; i < attributes.length; i++) {
+            if (
+              attributes[i].name === 'id' &&
+              attributes[i].value.includes(':')
+            ) {
+              // We assume this is a React added ID that's a non-visual implementation detail.
+              continue;
+            }
+            props[attributes[i].name] = attributes[i].value;
+          }
+          props.children = getVisibleChildren(node);
+          children.push(React.createElement(node.tagName.toLowerCase(), props));
+        }
+      } else if (node.nodeType === 3) {
+        children.push(node.data);
+      }
+      node = node.nextSibling;
+    }
+    return children.length === 0
+      ? undefined
+      : children.length === 1
+      ? children[0]
+      : children;
+  }
+
   it('should render the children when no promise is thrown', async () => {
     const c = await serverRender(
       <div>
@@ -63,13 +101,9 @@ describe('ReactDOMServerSuspense', () => {
         </React.Suspense>
       </div>,
     );
-    const e = c.children[0];
-
-    expect(e.tagName).toBe('DIV');
-    expect(e.textContent).toBe('Children');
+    expect(getVisibleChildren(c)).toEqual(<div>Children</div>);
   });
 
-  // @gate experimental || www
   it('should render the fallback when a promise thrown', async () => {
     const c = await serverRender(
       <div>
@@ -78,13 +112,9 @@ describe('ReactDOMServerSuspense', () => {
         </React.Suspense>
       </div>,
     );
-    const e = c.children[0];
-
-    expect(e.tagName).toBe('DIV');
-    expect(e.textContent).toBe('Fallback');
+    expect(getVisibleChildren(c)).toEqual(<div>Fallback</div>);
   });
 
-  // @gate experimental || www
   it('should work with nested suspense components', async () => {
     const c = await serverRender(
       <div>
@@ -98,14 +128,15 @@ describe('ReactDOMServerSuspense', () => {
         </React.Suspense>
       </div>,
     );
-    const e = c.children[0];
 
-    expect(e.innerHTML).toBe(
-      '<div>Children</div><!--$!--><div>Fallback</div><!--/$-->',
+    expect(getVisibleChildren(c)).toEqual(
+      <div>
+        <div>Children</div>
+        <div>Fallback</div>
+      </div>,
     );
   });
 
-  // @gate experimental
   it('server renders a SuspenseList component and its children', async () => {
     const example = (
       <React.SuspenseList>
