@@ -42,10 +42,10 @@ export const warnAboutDeprecatedLifecycles = true;
 export const enableProfilerTimer = __PROFILE__;
 
 // Record durations for commit and passive effects phases.
-export const enableProfilerCommitHooks = false;
+export const enableProfilerCommitHooks = __PROFILE__;
 
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
-export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 
 // Profiler API accepts a function to be called when a nested update is scheduled.
 // This callback accepts the component type (class instance or function) the update is scheduled for.
