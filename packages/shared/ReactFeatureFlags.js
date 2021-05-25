@@ -49,7 +49,7 @@ export const enableProfilerNestedUpdatePhase = false;
 
 // Profiler API accepts a function to be called when a nested update is scheduled.
 // This callback accepts the component type (class instance or function) the update is scheduled for.
-export const enableProfilerNestedUpdateScheduledHook = false;
+export const enableProfilerNestedUpdateScheduledHook = __PROFILE__;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;

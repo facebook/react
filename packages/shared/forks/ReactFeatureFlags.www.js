@@ -43,8 +43,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
-export const enableProfilerNestedUpdateScheduledHook =
-  __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
+export const enableProfilerNestedUpdateScheduledHook = __PROFILE__;
 export const enableUpdaterTracking =
   __PROFILE__ && dynamicFeatureFlags.enableUpdaterTracking;
 
