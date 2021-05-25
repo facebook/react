@@ -1753,7 +1753,13 @@ export function attach(
       const elementType = getElementTypeForFiber(fiber);
       const {_debugOwner} = fiber;
 
-      const ownerID = _debugOwner != null ? getFiberIDThrows(_debugOwner) : 0;
+      // Ideally we should call getFiberIDThrows() for _debugOwner,
+      // since owners are almost always higher in the tree (and so have already been processed),
+      // but in some (rare) instances reported in open source, a descendant mounts before an owner.
+      // Since this is a DEV only field it's probably okay to also just lazily generate and ID here if needed.
+      // See https://github.com/facebook/react/issues/21445
+      const ownerID =
+        _debugOwner != null ? getOrGenerateFiberID(_debugOwner) : 0;
       const parentID = parentFiber ? getFiberIDThrows(parentFiber) : 0;
 
       const displayNameStringID = getStringID(displayName);
