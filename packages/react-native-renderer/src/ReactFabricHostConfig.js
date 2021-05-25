@@ -25,7 +25,10 @@ import invariant from 'shared/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
-import {DefaultEventPriority, DiscreteEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  DiscreteEventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 // Modules provided by RN:
 import {
