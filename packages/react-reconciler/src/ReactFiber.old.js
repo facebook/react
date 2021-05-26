@@ -108,8 +108,6 @@ if (__DEV__) {
   }
 }
 
-
-
 function FiberNode(
   tag: WorkTag,
   pendingProps: mixed,

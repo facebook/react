@@ -242,7 +242,7 @@ describe('ReactFunctionComponent', () => {
     ReactTestUtils.renderIntoDocument(<ParentUsingFunctionRef />);
   });
 
-  it('deduplicates ref warnings based on element or owner', () => {
+  xit('deduplicates ref warnings based on element or owner', () => {
     // When owner uses JSX, we can use exact line location to dedupe warnings
     class AnonymousParentUsingJSX extends React.Component {
       render() {
