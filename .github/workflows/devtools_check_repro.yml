@@ -178,7 +178,7 @@ jobs:
               Issues without repros are automatically closed but we will re-open if you update with repro info.
             `.trim();
 
-            if (url.includes("/localhost")) {
+            if (url.includes("localhost")) {
               closeWithComment(`
                 ${COMMENT_HEADER}
 
