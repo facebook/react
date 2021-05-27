@@ -45,7 +45,7 @@ describe('useRef', () => {
   }
 
   it('creates a ref object initialized with the provided value', () => {
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
 
     function useDebouncedCallback(callback, ms, inputs) {
       const timeoutID = useRef(-1);

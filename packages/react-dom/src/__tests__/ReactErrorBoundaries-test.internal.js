@@ -37,7 +37,7 @@ describe('ReactErrorBoundaries', () => {
   let Normal;
 
   beforeEach(() => {
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
     jest.resetModules();
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');

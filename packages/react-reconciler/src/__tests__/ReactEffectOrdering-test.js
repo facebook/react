@@ -22,7 +22,7 @@ let useLayoutEffect;
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');

@@ -22,7 +22,7 @@ let useMutableSource;
 
 function loadModules() {
   jest.resetModules();
-  jest.useFakeTimers();
+  jest.useFakeTimers('legacy');
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableProfilerTimer = true;
