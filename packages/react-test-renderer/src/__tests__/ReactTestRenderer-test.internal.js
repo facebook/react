@@ -14,7 +14,7 @@ const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
-const prettyFormat = require('pretty-format');
+const prettyFormat = require('pretty-format').default;
 
 // Isolate noop renderer
 jest.resetModules();
