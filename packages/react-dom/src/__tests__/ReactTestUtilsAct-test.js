@@ -248,7 +248,7 @@ function runActTests(label, render, unmount, rerender) {
 
       describe('fake timers', () => {
         beforeEach(() => {
-          jest.useFakeTimers();
+          jest.useFakeTimers('legacy');
         });
 
         afterEach(() => {

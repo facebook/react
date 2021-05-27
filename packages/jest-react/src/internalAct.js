@@ -33,7 +33,7 @@ export function act(scope: () => Thenable<mixed> | void) {
   if (setTimeout._isMockFunction !== true) {
     throw Error(
       "This version of `act` requires Jest's timer mocks " +
-        '(i.e. jest.useFakeTimers).',
+        "(i.e. jest.useFakeTimers('legacy')).",
     );
   }
 
