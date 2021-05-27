@@ -26,4 +26,6 @@ module.exports = {
   testSequencer: require.resolve('./jestSequencer'),
 
   testEnvironment: 'jsdom',
+  // TODO: Use the default runner jest-circus
+  testRunner: 'jest-jasmine2',
 };
