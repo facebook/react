@@ -72,7 +72,7 @@ function dispatchMouseEvent(to, from) {
 
 describe('ReactDOMServerPartialHydration', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSuspenseCallback = true;
