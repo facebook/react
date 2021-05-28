@@ -512,4 +512,57 @@ describe('useId', () => {
     // Should have hydrated successfully
     expect(span.current).toBe(dehydratedSpan);
   });
+
+  test('id from a child', async () => {
+    function Item({setId, children}) {
+      const id = useId();
+
+      React.useEffect(() => {
+        setId(id);
+      }, [setId, id]);
+      return (
+        <div id={id} role="option">
+          {children}
+        </div>
+      );
+    }
+
+    function App({itemIcon}) {
+      const [id, setId] = React.useState(null);
+
+      return (
+        <div aria-activedescendant={id} role="listbox">
+          <Item setId={setId}>Item</Item>
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    const serverID = container
+      .querySelector('[role="option"]')
+      .getAttribute('id');
+    expect(serverID).not.toEqual(null);
+    expect(
+      container
+        .querySelector('[role="listbox"]')
+        .getAttribute('aria-activedescendant'),
+    ).toEqual(null);
+
+    await clientAct(async () => {
+      ReactDOM.hydrateRoot(container, <App />);
+    });
+
+    const clientID = container
+      .querySelector('[role="option"]')
+      .getAttribute('id');
+    expect(clientID).not.toEqual(null);
+    expect(
+      container
+        .querySelector('[role="listbox"]')
+        .getAttribute('aria-activedescendant'),
+    ).toEqual(clientID);
+  });
 });
