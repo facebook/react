@@ -1,3 +1,4 @@
+import * as React from 'react';
 import FeedPage from './FeedPage';
 import ProfilePage from './ProfilePage';
 
