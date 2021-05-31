@@ -492,7 +492,11 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= StrictLegacyMode | StrictEffectsMode;
+        mode |= StrictLegacyMode;
+        if (enableStrictEffects && (mode & ConcurrentMode) !== NoMode) {
+          // Strict effects should never run on legacy roots
+          mode |= StrictEffectsMode;
+        }
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);
