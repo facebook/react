@@ -923,7 +923,6 @@ function mountClassInstance(
       enableStrictEffects &&
       (workInProgress.mode & StrictEffectsMode) !== NoMode
     ) {
-      // Never double-invoke effects for legacy roots.
       fiberFlags |= MountLayoutDev;
     }
     workInProgress.flags |= fiberFlags;
@@ -1005,7 +1004,6 @@ function resumeMountClassInstance(
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
@@ -1060,7 +1058,6 @@ function resumeMountClassInstance(
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
@@ -1078,7 +1075,6 @@ function resumeMountClassInstance(
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
