@@ -35,6 +35,7 @@ import {
   findHostInstance as findHostInstance_old,
   findHostInstanceWithWarning as findHostInstanceWithWarning_old,
   findHostInstanceWithNoPortals as findHostInstanceWithNoPortals_old,
+  shouldError as shouldError_old,
   shouldSuspend as shouldSuspend_old,
   injectIntoDevTools as injectIntoDevTools_old,
   act as act_old,
@@ -158,7 +159,7 @@ export const findHostInstanceWithNoPortals = enableNewReconciler
   : findHostInstanceWithNoPortals_old;
 export const shouldError = enableNewReconciler
   ? shouldError_new
-  : shouldError_new;
+  : shouldError_old;
 export const shouldSuspend = enableNewReconciler
   ? shouldSuspend_new
   : shouldSuspend_old;
