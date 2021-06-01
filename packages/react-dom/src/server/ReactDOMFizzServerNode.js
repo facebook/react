@@ -26,20 +26,21 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request);
 }
 
-type Options = {
+type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
   progressiveChunkSize?: number,
   onReadyToStream?: () => void,
   onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
-};
+|};
 
-type Controls = {
+type Controls = {|
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(): void,
-};
+  startWriting(): void,
+|};
 
 function pipeToNodeWritable(
   children: ReactNodeList,
