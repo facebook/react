@@ -25,7 +25,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
 // this feature flag only impacts StrictEffectsMode.
-export const enableStrictEffects = false;
+export const enableStrictEffects = __DEV__;
 
 // If TRUE, trees rendered with createRoot will be StrictEffectsMode.
 // If FALSE, these trees will be StrictLegacyMode.
@@ -128,7 +128,7 @@ export const deletedTreeCleanUpLevel = 1;
 // Destroy layout effects for components that are hidden because something suspended in an update
 // and recreate them when they are shown again (after the suspended boundary has resolved).
 // Note that this should be an uncommon use case and can be avoided by using the transition API.
-export const enableSuspenseLayoutEffectSemantics = false;
+export const enableSuspenseLayoutEffectSemantics = true;
 
 // --------------------------
 // Future APIs to be deprecated

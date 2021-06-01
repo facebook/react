@@ -25,7 +25,6 @@ export const {
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
   skipUnmountedBoundaries,
-  enableStrictEffects,
   createRootStrictEffectsByDefault,
   enableSuspenseLayoutEffectSemantics,
   enableUseRefAccessWarning,
@@ -39,6 +38,8 @@ export const {
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
 
+export const enableStrictEffects =
+  __DEV__ && dynamicFeatureFlags.enableStrictEffects;
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
