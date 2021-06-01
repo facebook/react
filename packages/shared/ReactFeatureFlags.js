@@ -128,7 +128,7 @@ export const deletedTreeCleanUpLevel = 1;
 // Destroy layout effects for components that are hidden because something suspended in an update
 // and recreate them when they are shown again (after the suspended boundary has resolved).
 // Note that this should be an uncommon use case and can be avoided by using the transition API.
-export const enableSuspenseLayoutEffectSemantics = false;
+export const enableSuspenseLayoutEffectSemantics = true;
 
 // --------------------------
 // Future APIs to be deprecated
