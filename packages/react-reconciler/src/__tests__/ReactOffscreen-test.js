@@ -2,7 +2,9 @@ let React;
 let ReactNoop;
 let Scheduler;
 let LegacyHidden;
+let Offscreen;
 let useState;
+let useLayoutEffect;
 
 describe('ReactOffscreen', () => {
   beforeEach(() => {
@@ -12,7 +14,9 @@ describe('ReactOffscreen', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     LegacyHidden = React.unstable_LegacyHidden;
+    Offscreen = React.unstable_Offscreen;
     useState = React.useState;
+    useLayoutEffect = React.useLayoutEffect;
   });
 
   function Text(props) {
@@ -168,5 +172,151 @@ describe('ReactOffscreen', () => {
         <span prop="Outside" />
       </>,
     );
+  });
+
+  // @gate experimental
+  // @gate enableSuspenseLayoutEffectSemantics
+  it('mounts without layout effects when hidden', async () => {
+    function Child({text}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout');
+        };
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount hidden tree.
+    await ReactNoop.act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    // No layout effect.
+    expect(Scheduler).toHaveYielded(['Child']);
+    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
+    // it should only be used inside a host component wrapper whose visibility
+    // is toggled simultaneously.
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+
+    // Unhide the tree. The layout effect is mounted.
+    await ReactNoop.act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+  });
+
+  // @gate experimental
+  // @gate enableSuspenseLayoutEffectSemantics
+  it('mounts/unmounts layout effects when visibility changes (starting visible)', async () => {
+    function Child({text}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout');
+        };
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+
+    // Hide the tree. The layout effect is unmounted.
+    await ReactNoop.act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
+    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
+    // it should only be used inside a host component wrapper whose visibility
+    // is toggled simultaneously.
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+
+    // Unhide the tree. The layout effect is re-mounted.
+    await ReactNoop.act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+  });
+
+  // @gate experimental
+  // @gate enableSuspenseLayoutEffectSemantics
+  it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
+    function Child({text}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout');
+        };
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      // Start the tree hidden. The layout effect is not mounted.
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child']);
+    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
+    // it should only be used inside a host component wrapper whose visibility
+    // is toggled simultaneously.
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+
+    // Show the tree. The layout effect is mounted.
+    await ReactNoop.act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+
+    // Hide the tree again. The layout effect is un-mounted.
+    await ReactNoop.act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <Child />
+        </Offscreen>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
+    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
+    // it should only be used inside a host component wrapper whose visibility
+    // is toggled simultaneously.
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 });
