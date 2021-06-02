@@ -49,7 +49,7 @@ export const deletedTreeCleanUpLevel = 1;
 export const enableSuspenseLayoutEffectSemantics = false;
 
 export const enableNewReconciler = false;
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
