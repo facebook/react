@@ -93,9 +93,8 @@ export default function InspectedElementWrapper(_: Props) {
       canViewElementSourceFunction(inspectedElement));
 
   const isErrored = inspectedElement != null && inspectedElement.isErrored;
-  const errorBoundaryID = inspectedElement != null
-    ? inspectedElement.errorBoundaryID
-    : null;
+  const errorBoundaryID =
+    inspectedElement != null ? inspectedElement.errorBoundaryID : null;
 
   const isSuspended =
     element !== null &&

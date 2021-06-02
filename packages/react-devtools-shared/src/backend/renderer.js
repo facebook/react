@@ -3128,9 +3128,7 @@ export function attach(
       // either that we want to use it to toggle off error state
       // or that we allow to force error state on it if it's within another
       // error boundary
-      errorBoundaryID = isErrored
-        ? id
-        : nearestErrorBoundaryID;
+      errorBoundaryID = isErrored ? id : nearestErrorBoundaryID;
     } else {
       errorBoundaryID = nearestErrorBoundaryID;
     }
