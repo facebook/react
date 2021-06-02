@@ -12,6 +12,8 @@
  * just helpers for the unit test.
  */
 
+declare let global: any;
+
 declare module 'react' {
   export class Component {
     props: any;

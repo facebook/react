@@ -285,7 +285,9 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo initialValue="foo" />, 'SPAN', 'bar');
-    expect(renderCount).toBe(1);
+    // This is broken with deferRenderPhaseUpdateToNextBatch flag on.
+    // We can't use the gate feature here because this test is also in CoffeeScript and TypeScript.
+    expect(renderCount).toBe(global.__WWW__ && !global.__VARIANT__ ? 2 : 1);
   });
 
   it('should warn with non-object in the initial state property', () => {
