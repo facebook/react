@@ -158,7 +158,7 @@ export const enableLegacyFBSupport = false;
 // not currently rendering. We treat them the same as if they came from an
 // interleaved event. Remove this flag once we have migrated to the
 // new behavior.
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableUseRefAccessWarning = false;
 
