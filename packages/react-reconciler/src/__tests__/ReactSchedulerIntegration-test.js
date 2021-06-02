@@ -120,7 +120,7 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('idle updates are not blocked by offscreen work', async () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);

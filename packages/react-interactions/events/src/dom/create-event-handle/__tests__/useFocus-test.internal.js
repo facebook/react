@@ -28,7 +28,7 @@ function initializeModules(hasPointerEvents) {
 
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.
-  if (__EXPERIMENTAL__) {
+  if (__EXPERIMENTAL__ || global.__WWW__) {
     useFocus = require('react-interactions/events/focus').useFocus;
   }
 }

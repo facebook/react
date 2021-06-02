@@ -149,7 +149,7 @@ describe('ReactCache', () => {
     }
   }
 
-  // @gate experimental
+  // @gate experimental || www
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
@@ -158,7 +158,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('mount new data', async () => {
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
@@ -180,7 +180,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('root acts as implicit cache boundary', async () => {
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
@@ -200,7 +200,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('multiple new Cache boundaries in the same update share the same, fresh cache', async () => {
     function App({text}) {
       return (
@@ -239,7 +239,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('AA');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test(
     'nested cache boundaries share the same cache as the root during ' +
       'the initial render',
@@ -272,7 +272,7 @@ describe('ReactCache', () => {
     },
   );
 
-  // @gate experimental
+  // @gate experimental || www
   test('new content inside an existing Cache boundary should re-use already cached data', async () => {
     function App({showMore}) {
       return (
@@ -309,7 +309,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('a new Cache boundary uses fresh cache', async () => {
     // The only difference from the previous test is that the "Show More"
     // content is wrapped in a nested <Cache /> boundary
@@ -356,7 +356,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('inner content uses same cache as shell if spawned by the same transition', async () => {
     const root = ReactNoop.createRoot();
 
@@ -431,7 +431,7 @@ describe('ReactCache', () => {
     );
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('refresh a cache', async () => {
     let refresh;
     function App() {
@@ -474,7 +474,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v2]');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('refresh the root cache', async () => {
     let refresh;
     function App() {
@@ -515,7 +515,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v2]');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('refresh a cache with seed data', async () => {
     let refresh;
     function App() {
@@ -558,7 +558,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v2]');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('refreshing a parent cache also refreshes its children', async () => {
     let refreshShell;
     function RefreshShell() {
@@ -623,7 +623,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v3]A [v3]');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test(
     'refreshing a cache boundary does not refresh the other boundaries ' +
       'that mounted at the same time (i.e. the ones that share the same cache)',
@@ -696,7 +696,7 @@ describe('ReactCache', () => {
     },
   );
 
-  // @gate experimental
+  // @gate experimental || www
   test(
     'mount a new Cache boundary in a sibling while simultaneously ' +
       'resolving a Suspense boundary',
@@ -758,7 +758,7 @@ describe('ReactCache', () => {
     },
   );
 
-  // @gate experimental
+  // @gate experimental || www
   test('cache pool is cleared once transitions that depend on it commit their shell', async () => {
     function Child({text}) {
       return (
@@ -841,7 +841,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]A [v1]A [v2]');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('cache pool is not cleared by arbitrary commits', async () => {
     function App() {
       return (

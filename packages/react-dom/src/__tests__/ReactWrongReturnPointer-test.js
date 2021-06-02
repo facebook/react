@@ -194,7 +194,6 @@ test('warns in DEV if return pointer is inconsistent', async () => {
   );
 });
 
-// @gate experimental
 // @gate enableCache
 test('regression (#20932): return pointer is correct before entering deleted tree', async () => {
   // Based on a production bug. Designed to trigger a very specific
