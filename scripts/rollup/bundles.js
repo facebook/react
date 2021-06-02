@@ -267,16 +267,14 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
-    bundleTypes: __EXPERIMENTAL__
-      ? [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD]
-      : [],
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.browser',
     global: 'ReactDOMFizzServer',
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
