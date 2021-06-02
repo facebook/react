@@ -596,9 +596,6 @@ export function attach(
       if (fiber != null) {
         fibersWithChangedErrorOrWarningCounts.add(fiber);
         updateMostRecentlyInspectedElementIfNecessary(id);
-        if (forceErrorForFiberIDs.has(id)) {
-          overrideError(id, false);
-        }
       }
     }
 
@@ -642,7 +639,6 @@ export function attach(
   }
 
   function clearErrorsForFiberID(fiberID: number) {
-    forceErrorForFiberIDs.delete(fiberID);
     clearMessageCountHelper(
       fiberID,
       pendingFiberToErrorsMap,
@@ -675,6 +671,13 @@ export function attach(
     type: 'error' | 'warn',
     args: $ReadOnlyArray<any>,
   ): void {
+    if (type === 'error') {
+      const maybeID = getFiberIDUnsafe(fiber);
+      // if this is an error simulated by us to trigger error boundary, ignore
+      if (maybeID != null && forceErrorForFiberIDs.get(maybeID) === true) {
+        return;
+      }
+    }
     const message = format(...args);
     if (__DEBUG__) {
       debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
@@ -1148,6 +1151,13 @@ export function attach(
       const {alternate} = fiber;
       if (alternate !== null) {
         fiberToIDMap.delete(alternate);
+      }
+
+      if (forceErrorForFiberIDs.has(fiberID)) {
+        forceErrorForFiberIDs.delete(fiberID);
+        if (forceErrorForFiberIDs.size === 0 && setErrorHandler != null) {
+          setErrorHandler(shouldErrorFiberAlwaysNull);
+        }
       }
     });
     untrackFibersSet.clear();
@@ -1740,23 +1750,6 @@ export function attach(
     return stringID;
   }
 
-  function isErrorBoundary(fiber: Fiber): boolean {
-    const {tag, type} = fiber;
-
-    switch (tag) {
-      case ClassComponent:
-      case IncompleteClassComponent:
-        const instance = fiber.stateNode;
-        return (
-          typeof type.getDerivedStateFromError === 'function' ||
-          (instance !== null &&
-            typeof instance.componentDidCatch === 'function')
-        );
-      default:
-        return false;
-    }
-  }
-
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
     const isRoot = fiber.tag === HostRoot;
     const id = getOrGenerateFiberID(fiber);
@@ -1809,7 +1802,6 @@ export function attach(
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
       pushOperation(keyStringID);
-      pushOperation(isErrorBoundary(fiber) ? 1 : 0);
     }
 
     if (isProfilingSupported) {
@@ -2943,6 +2935,34 @@ export function attach(
     return {instance, style};
   }
 
+  function isErrorBoundary(fiber: Fiber): boolean {
+    const {tag, type} = fiber;
+
+    switch (tag) {
+      case ClassComponent:
+      case IncompleteClassComponent:
+        const instance = fiber.stateNode;
+        return (
+          typeof type.getDerivedStateFromError === 'function' ||
+          (instance !== null &&
+            typeof instance.componentDidCatch === 'function')
+        );
+      default:
+        return false;
+    }
+  }
+
+  function getNearestErrorBoundaryID(fiber: Fiber): number | null {
+    let parent = fiber.return;
+    while (parent !== null) {
+      if (isErrorBoundary(parent)) {
+        return getFiberIDUnsafe(parent);
+      }
+      parent = parent.return;
+    }
+    return null;
+  }
+
   function inspectElementRaw(id: number): InspectedElement | null {
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
@@ -3096,9 +3116,24 @@ export function attach(
 
     const errors = fiberIDToErrorsMap.get(id) || new Map();
     const warnings = fiberIDToWarningsMap.get(id) || new Map();
+
     const isErrored =
       (fiber.flags & DidCapture) !== NoFlags ||
       forceErrorForFiberIDs.get(id) === true;
+    const nearestErrorBoundaryID = getNearestErrorBoundaryID(fiber);
+
+    let errorBoundaryID;
+    if (isErrorBoundary(fiber)) {
+      // if the current inspected element is an error boundary,
+      // either that we want to use it to toggle off error state
+      // or that we allow to force error state on it if it's within another
+      // error boundary
+      errorBoundaryID = isErrored
+        ? id
+        : nearestErrorBoundaryID;
+    } else {
+      errorBoundaryID = nearestErrorBoundaryID;
+    }
 
     return {
       id,
@@ -3117,16 +3152,10 @@ export function attach(
       canEditFunctionPropsRenamePaths:
         typeof overridePropsRenamePath === 'function',
 
-      canToggleError:
-        supportsTogglingError &&
-        // If it's showing the real content, we can always flip it into an
-        // error state.
-        (!isErrored ||
-          // If it's showing an error state because we previously forced it to,
-          // allow toggling it back to remove the error boundary.
-          forceErrorForFiberIDs.get(id) === true),
+      canToggleError: supportsTogglingError && errorBoundaryID != null,
       // Is this error boundary in error state.
       isErrored,
+      errorBoundaryID,
 
       canToggleSuspense:
         supportsTogglingSuspense &&
@@ -3809,11 +3838,12 @@ export function attach(
     }
 
     const id = getOrGenerateFiberID(fiber);
+
     let status = null;
     if (forceErrorForFiberIDs.has(id)) {
       status = forceErrorForFiberIDs.get(id);
       if (status === false) {
-        clearErrorsForFiberID(id);
+        forceErrorForFiberIDs.delete(id);
       }
 
       if (forceErrorForFiberIDs.size === 0) {

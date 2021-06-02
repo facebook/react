@@ -2405,6 +2405,14 @@ describe('InspectedElement', () => {
       );
 
       const errorBoundaryID = ((store.getElementIDAtIndex(0): any): number);
+      const inspect = index => {
+        // HACK: Recreate TestRenderer instance so we can inspect different
+        // elements
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
+        });
+        return inspectElementAtIndex(index);
+      };
       const toggleError = async forceError => {
         await withErrorsOrWarningsIgnored(['ErrorBoundary'], async () => {
           await utils.actAsync(() => {
@@ -2421,21 +2429,38 @@ describe('InspectedElement', () => {
         });
       };
 
-      let inspectedElement = await inspectElementAtIndex(1);
+      // Inspect <ErrorBoundary /> and see that we cannot toggle error state
+      // on error boundary itself
+      let inspectedElement = await inspect(0);
+      expect(inspectedElement.canToggleError).toBe(false);
+      expect(inspectedElement.errorBoundaryID).toBe(null);
+
+      // Inspect <Example />
+      inspectedElement = await inspect(1);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(false);
+      expect(inspectedElement.errorBoundaryID).toBe(errorBoundaryID);
 
+      // now force error state on <Example />
       await toggleError(true);
 
-      inspectedElement = await inspectElementAtIndex(0);
+      // we are in error state now, <Example /> won't show up
+      expect(store.getElementIDAtIndex(1)).toBe(null);
+
+      // Inpsect <ErrorBoundary /> to toggle off the error state
+      inspectedElement = await inspect(0);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(true);
+      // its error boundary ID is itself because it's caught the error
+      expect(inspectedElement.errorBoundaryID).toBe(errorBoundaryID);
 
       await toggleError(false);
 
-      inspectedElement = await inspectElementAtIndex(0);
+      // We can now inspect <Example /> with ability to toggle again
+      inspectedElement = await inspect(1);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(false);
+      expect(inspectedElement.errorBoundaryID).toBe(errorBoundaryID);
     });
   });
 });

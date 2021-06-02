@@ -225,8 +225,6 @@ function updateTree(
           const key = stringTable[keyStringID];
           i++;
 
-          i++; // isErrorBoundary
-
           if (__DEBUG__) {
             debug(
               'Add',

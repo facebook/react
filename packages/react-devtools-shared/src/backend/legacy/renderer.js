@@ -407,8 +407,6 @@ export function attach(
       pushOperation(ownerID);
       pushOperation(displayNameStringID);
       pushOperation(keyStringID);
-      // isErrorBoundary not supported in legacy renderer
-      pushOperation(0);
     }
   }
 
@@ -805,6 +803,7 @@ export function attach(
       // Toggle error boundary did not exist in legacy versions
       canToggleError: false,
       isErrored: false,
+      errorBoundaryID: null,
 
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
