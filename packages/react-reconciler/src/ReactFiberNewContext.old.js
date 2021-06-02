@@ -644,9 +644,6 @@ export function readContext<T>(context: ReactContext<T>): T {
       currentlyRenderingFiber.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
-
-        // TODO: This is an old field. Delete it.
-        responders: null,
       };
       if (enableLazyContextPropagation) {
         currentlyRenderingFiber.flags |= NeedsPropagation;
