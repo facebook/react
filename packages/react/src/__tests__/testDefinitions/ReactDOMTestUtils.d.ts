@@ -12,9 +12,6 @@
  * just helpers for the unit test.
  */
 
-declare module 'react-dom' {
-  export function createRoot(container : any) : any
-  export function render(element : any, container : any) : any
-  export function unmountComponentAtNode(container : any) : void
-  export function findDOMNode(instance : any) : any
+declare module 'react-dom/test-utils' {
+  export function act(cb : () => any) : any
 }
