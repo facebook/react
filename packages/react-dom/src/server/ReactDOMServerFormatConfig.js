@@ -568,19 +568,22 @@ let didWarnSelectedSetOnOption = false;
 
 function checkSelectProp(props, propName) {
   if (__DEV__) {
-    const array = isArray(props[propName]);
-    if (props.multiple && !array) {
-      console.error(
-        'The `%s` prop supplied to <select> must be an array if ' +
-          '`multiple` is true.',
-        propName,
-      );
-    } else if (!props.multiple && array) {
-      console.error(
-        'The `%s` prop supplied to <select> must be a scalar ' +
-          'value if `multiple` is false.',
-        propName,
-      );
+    const value = props[propName];
+    if (value != null) {
+      const array = isArray(value);
+      if (props.multiple && !array) {
+        console.error(
+          'The `%s` prop supplied to <select> must be an array if ' +
+            '`multiple` is true.',
+          propName,
+        );
+      } else if (!props.multiple && array) {
+        console.error(
+          'The `%s` prop supplied to <select> must be a scalar ' +
+            'value if `multiple` is false.',
+          propName,
+        );
+      }
     }
   }
 }
