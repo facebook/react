@@ -1058,6 +1058,118 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  function normalizeCodeLocInfo(str) {
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
+  }
+
+  // @gate experimental
+  it('should include a component stack across suspended boundaries', async () => {
+    function B() {
+      const children = [readText('Hello'), readText('World')];
+      // Intentionally trigger a key warning here.
+      return (
+        <div>
+          {children.map(t => (
+            <span>{t}</span>
+          ))}
+        </div>
+      );
+    }
+    function C() {
+      return (
+        <inCorrectTag>
+          <Text text="Loading" />
+        </inCorrectTag>
+      );
+    }
+    function A() {
+      return (
+        <div>
+          <Suspense fallback={<C />}>
+            <B />
+          </Suspense>
+        </div>
+      );
+    }
+
+    // We can't use the toErrorDev helper here because this is an async act.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
+
+    try {
+      await act(async () => {
+        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+          <A />,
+          writable,
+        );
+        startWriting();
+      });
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <incorrecttag>Loading</incorrecttag>
+        </div>,
+      );
+
+      if (__DEV__) {
+        expect(mockError).toHaveBeenCalledWith(
+          'Warning: <%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.%s',
+          'inCorrectTag',
+          '\n' +
+            '    in inCorrectTag (at **)\n' +
+            '    in C (at **)\n' +
+            '    in Suspense (at **)\n' +
+            '    in div (at **)\n' +
+            '    in A (at **)',
+        );
+        mockError.mockClear();
+      } else {
+        expect(mockError).not.toHaveBeenCalled();
+      }
+
+      await act(async () => {
+        resolveText('Hello');
+        resolveText('World');
+      });
+
+      if (__DEV__) {
+        expect(mockError).toHaveBeenCalledWith(
+          'Warning: Each child in a list should have a unique "key" prop.%s%s' +
+            ' See https://reactjs.org/link/warning-keys for more information.%s',
+          '\n\nCheck the top-level render call using <div>.',
+          '',
+          '\n' +
+            '    in span (at **)\n' +
+            '    in B (at **)\n' +
+            '    in Suspense (at **)\n' +
+            '    in div (at **)\n' +
+            '    in A (at **)',
+        );
+      } else {
+        expect(mockError).not.toHaveBeenCalled();
+      }
+
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>
+            <span>Hello</span>
+            <span>World</span>
+          </div>
+        </div>,
+      );
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
   // @gate experimental
   it('should can suspend in a class component with legacy context', async () => {
     class TestProvider extends React.Component {

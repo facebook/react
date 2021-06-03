@@ -24,6 +24,7 @@ import type {
   FormatContext,
 } from './ReactServerFormatConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
+import type {ComponentStackNode} from './ReactFizzComponentStack';
 
 import {
   scheduleWork,
@@ -77,6 +78,7 @@ import {
   currentResponseState,
   setCurrentResponseState,
 } from './ReactFizzHooks';
+import {getStackByComponentStackNode} from './ReactFizzComponentStack';
 
 import {
   getIteratorFn,
@@ -110,6 +112,7 @@ import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 type LegacyContext = {
   [key: string]: any,
@@ -135,6 +138,7 @@ type Task = {
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   assignID: null | SuspenseBoundaryID, // id to assign to the content
+  componentStack: null | ComponentStackNode, // DEV-only component stack
 };
 
 const PENDING = 0;
@@ -299,7 +303,7 @@ function createTask(
   } else {
     blockedBoundary.pendingTasks++;
   }
-  const task = {
+  const task: Task = ({
     node,
     ping: () => pingTask(request, task),
     blockedBoundary,
@@ -308,7 +312,10 @@ function createTask(
     legacyContext,
     context,
     assignID,
-  };
+  }: any);
+  if (__DEV__) {
+    task.componentStack = null;
+  }
   abortSet.add(task);
   return task;
 }
@@ -331,6 +338,57 @@ function createPendingSegment(
   };
 }
 
+// DEV-only global reference to the currently executing task
+let currentTaskInDEV: null | Task = null;
+function getCurrentStackInDEV(): string {
+  if (__DEV__) {
+    if (currentTaskInDEV === null || currentTaskInDEV.componentStack === null) {
+      return '';
+    }
+    return getStackByComponentStackNode(currentTaskInDEV.componentStack);
+  }
+  return '';
+}
+
+function pushBuiltInComponentStackInDEV(task: Task, type: string): void {
+  if (__DEV__) {
+    task.componentStack = {
+      tag: 0,
+      parent: task.componentStack,
+      type,
+    };
+  }
+}
+function pushFunctionComponentStackInDEV(task: Task, type: Function): void {
+  if (__DEV__) {
+    task.componentStack = {
+      tag: 1,
+      parent: task.componentStack,
+      type,
+    };
+  }
+}
+function pushClassComponentStackInDEV(task: Task, type: Function): void {
+  if (__DEV__) {
+    task.componentStack = {
+      tag: 2,
+      parent: task.componentStack,
+      type,
+    };
+  }
+}
+function popComponentStackInDEV(task: Task): void {
+  if (__DEV__) {
+    if (task.componentStack === null) {
+      console.error(
+        'Unexpectedly popped too many stack frames. This is a bug in React.',
+      );
+    } else {
+      task.componentStack = task.componentStack.parent;
+    }
+  }
+}
+
 function reportError(request: Request, error: mixed): void {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
@@ -351,6 +409,7 @@ function renderSuspenseBoundary(
   task: Task,
   props: Object,
 ): void {
+  pushBuiltInComponentStackInDEV(task, 'Suspense');
   const parentBoundary = task.blockedBoundary;
   const parentSegment = task.blockedSegment;
 
@@ -406,6 +465,7 @@ function renderSuspenseBoundary(
       // This must have been the last segment we were waiting on. This boundary is now complete.
       // Therefore we won't need the fallback. We early return so that we don't have to create
       // the fallback.
+      popComponentStackInDEV(task);
       return;
     }
   } catch (error) {
@@ -445,9 +505,14 @@ function renderSuspenseBoundary(
     task.context,
     null,
   );
+  if (__DEV__) {
+    suspendedFallbackTask.componentStack = task.componentStack;
+  }
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
+
+  popComponentStackInDEV(task);
 }
 
 function renderHostElement(
@@ -456,6 +521,7 @@ function renderHostElement(
   type: string,
   props: Object,
 ): void {
+  pushBuiltInComponentStackInDEV(task, type);
   const segment = task.blockedSegment;
   const children = pushStartInstance(
     segment.chunks,
@@ -476,6 +542,7 @@ function renderHostElement(
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
   pushEndInstance(segment.chunks, type, props);
+  popComponentStackInDEV(task);
 }
 
 function shouldConstruct(Component) {
@@ -564,12 +631,14 @@ function renderClassComponent(
   Component: any,
   props: any,
 ): void {
+  pushClassComponentStackInDEV(task, Component);
   const maskedContext = !disableLegacyContext
     ? getMaskedContext(Component, task.legacyContext)
     : undefined;
   const instance = constructClassInstance(Component, props, maskedContext);
   mountClassInstance(instance, Component, props, maskedContext);
   finishClassComponent(request, task, instance, Component, props);
+  popComponentStackInDEV(task);
 }
 
 const didWarnAboutBadClass = {};
@@ -594,6 +663,7 @@ function renderIndeterminateComponent(
   if (!disableLegacyContext) {
     legacyContext = getMaskedContext(Component, task.legacyContext);
   }
+  pushFunctionComponentStackInDEV(task, Component);
 
   if (__DEV__) {
     if (
@@ -688,6 +758,7 @@ function renderIndeterminateComponent(
     // the previous task every again, so we can use the destructive recursive form.
     renderNodeDestructive(request, task, value);
   }
+  popComponentStackInDEV(task);
 }
 
 function validateFunctionComponentInDev(Component: any): void {
@@ -768,8 +839,10 @@ function renderForwardRef(
   props: Object,
   ref: any,
 ): void {
+  pushFunctionComponentStackInDEV(task, type.render);
   const children = renderWithHooks(request, task, type.render, props, ref);
   renderNodeDestructive(request, task, children);
+  popComponentStackInDEV(task);
 }
 
 function renderMemo(
@@ -866,11 +939,13 @@ function renderLazyComponent(
   props: Object,
   ref: any,
 ): void {
+  pushBuiltInComponentStackInDEV(task, 'Lazy');
   const payload = lazyComponent._payload;
   const init = lazyComponent._init;
   const Component = init(payload);
   const resolvedProps = resolveDefaultProps(Component, props);
-  return renderElement(request, task, Component, resolvedProps, ref);
+  renderElement(request, task, Component, resolvedProps, ref);
+  popComponentStackInDEV(task);
 }
 
 function renderElement(
@@ -907,9 +982,15 @@ function renderElement(
     case REACT_DEBUG_TRACING_MODE_TYPE:
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
-    case REACT_SUSPENSE_LIST_TYPE: // TODO: SuspenseList should control the boundaries.
     case REACT_FRAGMENT_TYPE: {
       renderNodeDestructive(request, task, props.children);
+      return;
+    }
+    case REACT_SUSPENSE_LIST_TYPE: {
+      pushBuiltInComponentStackInDEV(task, 'SuspenseList');
+      // TODO: SuspenseList should control the boundaries.
+      renderNodeDestructive(request, task, props.children);
+      popComponentStackInDEV(task);
       return;
     }
     case REACT_SCOPE_TYPE: {
@@ -1157,6 +1238,13 @@ function spawnNewSuspendedTask(
     task.context,
     task.assignID,
   );
+  if (__DEV__) {
+    if (task.componentStack !== null) {
+      // We pop one task off the stack because the node that suspended will be tried again,
+      // which will add it back onto the stack.
+      newTask.componentStack = task.componentStack.parent;
+    }
+  }
   // We've delegated the assignment.
   task.assignID = null;
   const ping = newTask.ping;
@@ -1174,6 +1262,10 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   const previousFormatContext = task.blockedSegment.formatContext;
   const previousLegacyContext = task.legacyContext;
   const previousContext = task.context;
+  let previousComponentStack = null;
+  if (__DEV__) {
+    previousComponentStack = task.componentStack;
+  }
   try {
     return renderNodeDestructive(request, task, node);
   } catch (x) {
@@ -1187,6 +1279,9 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       task.context = previousContext;
       // Restore all active ReactContexts to what they were before.
       switchContext(previousContext);
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
     } else {
       // Restore the context. We assume that this will be restored by the inner
       // functions in case nothing throws so we don't use "finally" here.
@@ -1195,6 +1290,9 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       task.context = previousContext;
       // Restore all active ReactContexts to what they were before.
       switchContext(previousContext);
+      if (__DEV__) {
+        task.componentStack = previousComponentStack;
+      }
       // We assume that we don't need the correct context.
       // Let's terminate the rest of the tree and don't render any siblings.
       throw x;
@@ -1360,6 +1458,11 @@ function retryTask(request: Request, task: Task): void {
   // We don't restore it after we leave because it's likely that we'll end up
   // needing a very similar context soon again.
   switchContext(task.context);
+  let prevTaskInDEV = null;
+  if (__DEV__) {
+    prevTaskInDEV = currentTaskInDEV;
+    currentTaskInDEV = task;
+  }
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -1379,6 +1482,10 @@ function retryTask(request: Request, task: Task): void {
       segment.status = ERRORED;
       erroredTask(request, task.blockedBoundary, segment, x);
     }
+  } finally {
+    if (__DEV__) {
+      currentTaskInDEV = prevTaskInDEV;
+    }
   }
 }
 
@@ -1389,6 +1496,11 @@ export function performWork(request: Request): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = Dispatcher;
+  let prevGetCurrentStackImpl;
+  if (__DEV__) {
+    prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
+    ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
+  }
   const prevResponseState = currentResponseState;
   setCurrentResponseState(request.responseState);
   try {
@@ -1408,6 +1520,9 @@ export function performWork(request: Request): void {
   } finally {
     setCurrentResponseState(prevResponseState);
     ReactCurrentDispatcher.current = prevDispatcher;
+    if (__DEV__) {
+      ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
+    }
     if (prevDispatcher === Dispatcher) {
       // This means that we were in a reentrant work loop. This could happen
       // in a renderer that supports synchronous work like renderToString,
