@@ -286,7 +286,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(ops).toEqual(['BC', 'ABCD']);
     });
 
-    // @gate experimental
+    // @gate experimental || www
     it('flushControlled flushes updates before yielding to browser', () => {
       let inst;
       class Counter extends React.Component {
@@ -326,7 +326,7 @@ describe('ReactDOMFiberAsync', () => {
       ]);
     });
 
-    // @gate experimental
+    // @gate experimental || www
     it('flushControlled does not flush until end of outermost batchedUpdates', () => {
       let inst;
       class Counter extends React.Component {
@@ -357,7 +357,7 @@ describe('ReactDOMFiberAsync', () => {
       ]);
     });
 
-    // @gate experimental
+    // @gate experimental || www
     it('flushControlled returns nothing', () => {
       // In the future, we may want to return a thenable "work" object.
       let inst;

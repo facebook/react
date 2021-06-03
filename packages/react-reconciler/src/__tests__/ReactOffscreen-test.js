@@ -24,7 +24,7 @@ describe('ReactOffscreen', () => {
     return <span prop={props.text} />;
   }
 
-  // @gate experimental
+  // @gate experimental || www
   it('unstable-defer-without-hiding should never toggle the visibility of its children', async () => {
     function App({mode}) {
       return (
@@ -83,7 +83,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('does not defer in legacy mode', async () => {
     let setState;
     function Foo() {
@@ -128,7 +128,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('does defer in concurrent mode', async () => {
     let setState;
     function Foo() {
@@ -174,7 +174,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate experimental
+  // @gate experimental || www
   // @gate enableSuspenseLayoutEffectSemantics
   it('mounts without layout effects when hidden', async () => {
     function Child({text}) {
@@ -216,7 +216,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   // @gate enableSuspenseLayoutEffectSemantics
   it('mounts/unmounts layout effects when visibility changes (starting visible)', async () => {
     function Child({text}) {
@@ -266,7 +266,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   // @gate enableSuspenseLayoutEffectSemantics
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
