@@ -2404,7 +2404,9 @@ describe('InspectedElement', () => {
         ),
       );
 
-      const errorBoundaryID = ((store.getElementIDAtIndex(0): any): number);
+      const targetErrorBoundaryID = ((store.getElementIDAtIndex(
+        0,
+      ): any): number);
       const inspect = index => {
         // HACK: Recreate TestRenderer instance so we can inspect different
         // elements
@@ -2417,8 +2419,8 @@ describe('InspectedElement', () => {
         await withErrorsOrWarningsIgnored(['ErrorBoundary'], async () => {
           await utils.actAsync(() => {
             bridge.send('overrideError', {
-              id: errorBoundaryID,
-              rendererID: store.getRendererIDForElement(errorBoundaryID),
+              id: targetErrorBoundaryID,
+              rendererID: store.getRendererIDForElement(targetErrorBoundaryID),
               forceError,
             });
           });
@@ -2433,13 +2435,15 @@ describe('InspectedElement', () => {
       // on error boundary itself
       let inspectedElement = await inspect(0);
       expect(inspectedElement.canToggleError).toBe(false);
-      expect(inspectedElement.errorBoundaryID).toBe(null);
+      expect(inspectedElement.targetErrorBoundaryID).toBe(null);
 
       // Inspect <Example />
       inspectedElement = await inspect(1);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(false);
-      expect(inspectedElement.errorBoundaryID).toBe(errorBoundaryID);
+      expect(inspectedElement.targetErrorBoundaryID).toBe(
+        targetErrorBoundaryID,
+      );
 
       // now force error state on <Example />
       await toggleError(true);
@@ -2452,7 +2456,9 @@ describe('InspectedElement', () => {
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(true);
       // its error boundary ID is itself because it's caught the error
-      expect(inspectedElement.errorBoundaryID).toBe(errorBoundaryID);
+      expect(inspectedElement.targetErrorBoundaryID).toBe(
+        targetErrorBoundaryID,
+      );
 
       await toggleError(false);
 
@@ -2460,7 +2466,9 @@ describe('InspectedElement', () => {
       inspectedElement = await inspect(1);
       expect(inspectedElement.canToggleError).toBe(true);
       expect(inspectedElement.isErrored).toBe(false);
-      expect(inspectedElement.errorBoundaryID).toBe(errorBoundaryID);
+      expect(inspectedElement.targetErrorBoundaryID).toBe(
+        targetErrorBoundaryID,
+      );
     });
   });
 });

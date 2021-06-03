@@ -79,7 +79,7 @@ export type InspectedElement = {|
   // Is this Error, and can its value be overridden now?
   isErrored: boolean,
   canToggleError: boolean,
-  errorBoundaryID: ?number,
+  targetErrorBoundaryID: ?number,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,

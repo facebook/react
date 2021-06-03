@@ -3120,17 +3120,16 @@ export function attach(
     const isErrored =
       (fiber.flags & DidCapture) !== NoFlags ||
       forceErrorForFiberIDs.get(id) === true;
-    const nearestErrorBoundaryID = getNearestErrorBoundaryID(fiber);
 
-    let errorBoundaryID;
+    let targetErrorBoundaryID;
     if (isErrorBoundary(fiber)) {
       // if the current inspected element is an error boundary,
       // either that we want to use it to toggle off error state
       // or that we allow to force error state on it if it's within another
       // error boundary
-      errorBoundaryID = isErrored ? id : nearestErrorBoundaryID;
+      targetErrorBoundaryID = isErrored ? id : getNearestErrorBoundaryID(fiber);
     } else {
-      errorBoundaryID = nearestErrorBoundaryID;
+      targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
     }
 
     return {
@@ -3150,10 +3149,10 @@ export function attach(
       canEditFunctionPropsRenamePaths:
         typeof overridePropsRenamePath === 'function',
 
-      canToggleError: supportsTogglingError && errorBoundaryID != null,
+      canToggleError: supportsTogglingError && targetErrorBoundaryID != null,
       // Is this error boundary in error state.
       isErrored,
-      errorBoundaryID,
+      targetErrorBoundaryID,
 
       canToggleSuspense:
         supportsTogglingSuspense &&
@@ -3827,6 +3826,8 @@ export function attach(
     return null;
   }
 
+  // Map of id and its force error status: true (error), false (toggled off),
+  // null (do nothing)
   const forceErrorForFiberIDs = new Map();
   function shouldErrorFiberAccordingToMap(fiber) {
     if (typeof setErrorHandler !== 'function') {
@@ -3835,7 +3836,10 @@ export function attach(
       );
     }
 
-    const id = getOrGenerateFiberID(fiber);
+    const id = getFiberIDUnsafe(fiber);
+    if (id === null) {
+      return null;
+    }
 
     let status = null;
     if (forceErrorForFiberIDs.has(id)) {

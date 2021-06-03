@@ -93,8 +93,8 @@ export default function InspectedElementWrapper(_: Props) {
       canViewElementSourceFunction(inspectedElement));
 
   const isErrored = inspectedElement != null && inspectedElement.isErrored;
-  const errorBoundaryID =
-    inspectedElement != null ? inspectedElement.errorBoundaryID : null;
+  const targetErrorBoundaryID =
+    inspectedElement != null ? inspectedElement.targetErrorBoundaryID : null;
 
   const isSuspended =
     element !== null &&
@@ -109,28 +109,28 @@ export default function InspectedElementWrapper(_: Props) {
     inspectedElement != null && inspectedElement.canToggleSuspense;
 
   const toggleErrored = useCallback(() => {
-    if (inspectedElement == null || errorBoundaryID == null) {
+    if (inspectedElement == null || targetErrorBoundaryID == null) {
       return;
     }
 
-    if (errorBoundaryID !== inspectedElement.id) {
+    if (targetErrorBoundaryID !== inspectedElement.id) {
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
-        payload: errorBoundaryID,
+        payload: targetErrorBoundaryID,
       });
     }
 
-    const rendererID = store.getRendererIDForElement(errorBoundaryID);
+    const rendererID = store.getRendererIDForElement(targetErrorBoundaryID);
 
     // Toggle error.
     if (rendererID !== null) {
       bridge.send('overrideError', {
-        id: errorBoundaryID,
+        id: targetErrorBoundaryID,
         rendererID,
         forceError: !isErrored,
       });
     }
-  }, [bridge, dispatch, isErrored, errorBoundaryID]);
+  }, [bridge, dispatch, isErrored, targetErrorBoundaryID]);
 
   // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
   const toggleSuspended = useCallback(() => {
