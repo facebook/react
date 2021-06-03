@@ -132,6 +132,7 @@ const getCommitFromCurrentBuild = async () => {
 };
 
 const getPublicPackages = isExperimental => {
+  // TODO: Use ReactVersions.js as source of truth.
   if (isExperimental) {
     return [
       'create-subscription',
