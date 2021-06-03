@@ -335,4 +335,472 @@ describe('ReactHooksInspection', () => {
       ]);
     });
   });
+
+  describe('custom and primitive hook naming conflicts', () => {
+    it('use case one', () => {
+      function noop() {}
+
+      function useState(value) {
+        React.useState(value);
+        React.useReducer(() => 0, 0);
+      }
+
+      function useCustom() {
+        React.useEffect(noop);
+      }
+
+      function HooksNamingConflict() {
+        useCustom();
+        useState(0);
+        React.useMemo(() => 0, []);
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'Custom',
+          subHooks: [
+            {
+              id: 0,
+              isStateEditable: false,
+              name: 'Effect',
+              subHooks: [],
+              value: noop,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'State',
+          subHooks: [
+            {
+              id: 1,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
+            {
+              id: 2,
+              isStateEditable: true,
+              name: 'Reducer',
+              subHooks: [],
+              value: 0,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: 3,
+          isStateEditable: false,
+          name: 'Memo',
+          subHooks: [],
+          value: 0,
+        },
+      ]);
+    });
+
+    it('use case two', () => {
+      function noop() {}
+
+      function useState(value) {
+        React.useState(value);
+        React.useReducer(() => 0, 0);
+      }
+
+      function useCustom() {
+        React.useEffect(noop);
+      }
+
+      function HooksNamingConflict() {
+        useState(0);
+        React.useMemo(() => 0, []);
+        useCustom();
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'State',
+          subHooks: [
+            {
+              id: 0,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
+            {
+              id: 1,
+              isStateEditable: true,
+              name: 'Reducer',
+              subHooks: [],
+              value: 0,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: 2,
+          isStateEditable: false,
+          name: 'Memo',
+          subHooks: [],
+          value: 0,
+        },
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'Custom',
+          subHooks: [
+            {
+              id: 3,
+              isStateEditable: false,
+              name: 'Effect',
+              subHooks: [],
+              value: noop,
+            },
+          ],
+          value: undefined,
+        },
+      ]);
+    });
+
+    it('use case three', () => {
+      function noop() {}
+
+      function useCustom() {
+        React.useEffect(noop);
+      }
+
+      function useState(value) {
+        React.useState(value);
+        useCustom();
+        React.useReducer(() => 0, 0);
+      }
+
+      function HooksNamingConflict() {
+        useState(0);
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'State',
+          subHooks: [
+            {
+              id: 0,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
+            {
+              id: null,
+              isStateEditable: false,
+              name: 'Custom',
+              subHooks: [
+                {
+                  id: 1,
+                  isStateEditable: false,
+                  name: 'Effect',
+                  subHooks: [],
+                  value: noop,
+                },
+              ],
+              value: undefined,
+            },
+            {
+              id: 2,
+              isStateEditable: true,
+              name: 'Reducer',
+              subHooks: [],
+              value: 0,
+            },
+          ],
+          value: undefined,
+        },
+      ]);
+    });
+
+    it('use case four', () => {
+      function useState(value) {
+        React.useReducer(() => 0, 0);
+        React.useState(value);
+      }
+
+      function HooksNamingConflict() {
+        useState(0);
+        React.useMemo(() => 0, []);
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'State',
+          subHooks: [
+            {
+              id: 0,
+              isStateEditable: true,
+              name: 'Reducer',
+              subHooks: [],
+              value: 0,
+            },
+            {
+              id: 1,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: 2,
+          isStateEditable: false,
+          name: 'Memo',
+          subHooks: [],
+          value: 0,
+        },
+      ]);
+    });
+
+    it('use case five', () => {
+      function useStateIndirection(value) {
+        React.useState(value);
+      }
+
+      function useState(value) {
+        useStateIndirection(value);
+        React.useReducer(() => 0, 0);
+      }
+
+      function HooksNamingConflict() {
+        useState(0);
+        React.useMemo(() => 0, []);
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'State',
+          subHooks: [
+            {
+              id: null,
+              isStateEditable: false,
+              name: 'StateIndirection',
+              subHooks: [
+                {
+                  id: 0,
+                  isStateEditable: true,
+                  name: 'State',
+                  subHooks: [],
+                  value: 0,
+                },
+              ],
+              value: undefined,
+            },
+            {
+              id: 1,
+              isStateEditable: true,
+              name: 'Reducer',
+              subHooks: [],
+              value: 0,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: 2,
+          isStateEditable: false,
+          name: 'Memo',
+          subHooks: [],
+          value: 0,
+        },
+      ]);
+    });
+
+    it('use case six', () => {
+      function useState(value) {
+        React.useState(value);
+        React.useReducer(() => 0, 0);
+      }
+
+      function useStateIndirection(value) {
+        useState(value);
+      }
+
+      function HooksNamingConflict() {
+        useStateIndirection(0);
+        React.useMemo(() => 0, []);
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'StateIndirection',
+          subHooks: [
+            {
+              id: null,
+              isStateEditable: false,
+              name: 'State',
+              subHooks: [
+                {
+                  id: 0,
+                  isStateEditable: true,
+                  name: 'State',
+                  subHooks: [],
+                  value: 0,
+                },
+                {
+                  id: 1,
+                  isStateEditable: true,
+                  name: 'Reducer',
+                  subHooks: [],
+                  value: 0,
+                },
+              ],
+              value: undefined,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: 2,
+          isStateEditable: false,
+          name: 'Memo',
+          subHooks: [],
+          value: 0,
+        },
+      ]);
+    });
+
+    it('use case seven', () => {
+      function useState(value) {
+        React.useState(value);
+        React.useState(true);
+        React.useReducer(() => 0, 0);
+      }
+
+      function HooksNamingConflict() {
+        useState(0);
+        React.useMemo(() => 0, []);
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'State',
+          subHooks: [
+            {
+              id: 0,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
+            {
+              id: 1,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: true,
+            },
+            {
+              id: 2,
+              isStateEditable: true,
+              name: 'Reducer',
+              subHooks: [],
+              value: 0,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: 3,
+          isStateEditable: false,
+          name: 'Memo',
+          subHooks: [],
+          value: 0,
+        },
+      ]);
+    });
+
+    it('use case eight', () => {
+      function useState(value) {
+        React.useState(value);
+        React.useReducer(() => 0, 0);
+        React.useState(true);
+      }
+
+      function HooksNamingConflict() {
+        useState(0);
+        React.useMemo(() => 0, []);
+        return null;
+      }
+
+      const tree = ReactDebugTools.inspectHooks(HooksNamingConflict, {});
+      expect(tree).toEqual([
+        {
+          id: null,
+          isStateEditable: false,
+          name: 'State',
+          subHooks: [
+            {
+              id: 0,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: 0,
+            },
+            {
+              id: 1,
+              isStateEditable: true,
+              name: 'Reducer',
+              subHooks: [],
+              value: 0,
+            },
+            {
+              id: 2,
+              isStateEditable: true,
+              name: 'State',
+              subHooks: [],
+              value: true,
+            },
+          ],
+          value: undefined,
+        },
+        {
+          id: 3,
+          isStateEditable: false,
+          name: 'Memo',
+          subHooks: [],
+          value: 0,
+        },
+      ]);
+    });
+  });
 });
