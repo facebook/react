@@ -1032,13 +1032,27 @@ function renderElement(
     }
   }
 
+  let info = '';
+  if (__DEV__) {
+    if (
+      type === undefined ||
+      (typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0)
+    ) {
+      info +=
+        ' You likely forgot to export your component from the file ' +
+        "it's defined in, or you might have mixed up default and " +
+        'named imports.';
+    }
+  }
   invariant(
     false,
     'Element type is invalid: expected a string (for built-in ' +
       'components) or a class/function (for composite components) ' +
       'but got: %s.%s',
     type == null ? type : typeof type,
-    '',
+    info,
   );
 }
 
