@@ -98,9 +98,29 @@ function processStable(buildDir) {
     updatePackageVersions(
       buildDir + '/node_modules',
       versionsMap,
-      defaultVersionIfNotFound
+      defaultVersionIfNotFound,
+      true
     );
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
+
+    // Identical to `oss-stable` but with real, semver versions. This is what
+    // will get published to @latest.
+    spawnSync('cp', [
+      '-r',
+      buildDir + '/oss-stable',
+      buildDir + '/oss-stable-semver',
+    ]);
+    const semverVersionsMap = new Map();
+    for (const moduleName in stablePackages) {
+      const version = stablePackages[moduleName];
+      semverVersionsMap.set(moduleName, version);
+    }
+    updatePackageVersions(
+      buildDir + '/oss-stable-semver',
+      semverVersionsMap,
+      defaultVersionIfNotFound,
+      false
+    );
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
@@ -131,7 +151,8 @@ function processExperimental(buildDir, version) {
     updatePackageVersions(
       buildDir + '/node_modules',
       versionsMap,
-      defaultVersionIfNotFound
+      defaultVersionIfNotFound,
+      true
     );
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-experimental');
   }
@@ -179,7 +200,8 @@ function crossDeviceRenameSync(source, destination) {
 function updatePackageVersions(
   modulesDir,
   versionsMap,
-  defaultVersionIfNotFound
+  defaultVersionIfNotFound,
+  pinToExactVersion
 ) {
   for (const moduleName of fs.readdirSync(modulesDir)) {
     let version = versionsMap.get(moduleName);
@@ -199,14 +221,18 @@ function updatePackageVersions(
       if (packageInfo.dependencies) {
         for (const dep of Object.keys(packageInfo.dependencies)) {
           if (versionsMap.has(dep)) {
-            packageInfo.dependencies[dep] = version;
+            packageInfo.dependencies[dep] = pinToExactVersion
+              ? version
+              : '^' + version;
           }
         }
       }
       if (packageInfo.peerDependencies) {
         for (const dep of Object.keys(packageInfo.peerDependencies)) {
           if (versionsMap.has(dep)) {
-            packageInfo.peerDependencies[dep] = version;
+            packageInfo.peerDependencies[dep] = pinToExactVersion
+              ? version
+              : '^' + version;
           }
         }
       }
