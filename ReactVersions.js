@@ -50,7 +50,6 @@ const experimentalPackages = [
   'react-fs',
   'react-pg',
   'react-server-dom-webpack',
-  'react-server',
 ];
 
 // TODO: Export a map of every package and its version.
