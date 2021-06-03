@@ -957,6 +957,8 @@ function updateClassComponent(
       case false: {
         const instance = workInProgress.stateNode;
         const ctor = workInProgress.type;
+        // TODO This way of resetting the error boundary state is a hack.
+        // Is there a better way to do this?
         const tempInstance = new ctor(
           workInProgress.memoizedProps,
           instance.context,

@@ -113,17 +113,18 @@ export default function InspectedElementWrapper(_: Props) {
       return;
     }
 
-    if (targetErrorBoundaryID !== inspectedElement.id) {
-      dispatch({
-        type: 'SELECT_ELEMENT_BY_ID',
-        payload: targetErrorBoundaryID,
-      });
-    }
-
     const rendererID = store.getRendererIDForElement(targetErrorBoundaryID);
-
-    // Toggle error.
     if (rendererID !== null) {
+      if (targetErrorBoundaryID !== inspectedElement.id) {
+        // Update tree selection so that if we cause a component to error,
+        // the nearest error boundary will become the newly selected thing.
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: targetErrorBoundaryID,
+        });
+      }
+
+      // Toggle error.
       bridge.send('overrideError', {
         id: targetErrorBoundaryID,
         rendererID,
