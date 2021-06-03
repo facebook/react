@@ -23,7 +23,8 @@ const run = async () => {
       await testPackagingFixture(params);
     }
 
-    await printPrereleaseSummary(params, false);
+    const isLatestRelease = params.releaseChannel === 'latest';
+    await printPrereleaseSummary(params, isLatestRelease);
   } catch (error) {
     handleError(error);
   }
