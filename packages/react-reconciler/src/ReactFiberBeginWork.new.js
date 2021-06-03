@@ -70,6 +70,7 @@ import {
   ChildDeletion,
   ForceUpdateForLegacySuspense,
   StaticMask,
+  ShouldCapture,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -111,6 +112,7 @@ import {
   processUpdateQueue,
   cloneUpdateQueue,
   initializeUpdateQueue,
+  enqueueCapturedUpdate,
 } from './ReactUpdateQueue.new';
 import {
   NoLane,
@@ -125,6 +127,7 @@ import {
   removeLanes,
   mergeLanes,
   getBumpedLaneForHydration,
+  pickArbitraryLane,
 } from './ReactFiberLane.new';
 import {
   ConcurrentMode,
@@ -141,7 +144,7 @@ import {
   isPrimaryRenderer,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {shouldSuspend} from './ReactFiberReconciler';
+import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.new';
 import {
   suspenseStackCursor,
@@ -219,6 +222,8 @@ import {
   restoreSpawnedCachePool,
   getOffscreenDeferredCachePool,
 } from './ReactFiberCacheComponent.new';
+import {createCapturedValue} from './ReactCapturedValue';
+import {createClassErrorUpdate} from './ReactFiberThrow.new';
 import is from 'shared/objectIs';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -947,6 +952,38 @@ function updateClassComponent(
   renderLanes: Lanes,
 ) {
   if (__DEV__) {
+    // This is used by DevTools to force a boundary to error.
+    switch (shouldError(workInProgress)) {
+      case false: {
+        const instance = workInProgress.stateNode;
+        const ctor = workInProgress.type;
+        // TODO This way of resetting the error boundary state is a hack.
+        // Is there a better way to do this?
+        const tempInstance = new ctor(
+          workInProgress.memoizedProps,
+          instance.context,
+        );
+        const state = tempInstance.state;
+        instance.updater.enqueueSetState(instance, state, null);
+        break;
+      }
+      case true: {
+        workInProgress.flags |= DidCapture;
+        workInProgress.flags |= ShouldCapture;
+        const error = new Error('Simulated error coming from DevTools');
+        const lane = pickArbitraryLane(renderLanes);
+        workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
+        // Schedule the error boundary to re-render using updated state
+        const update = createClassErrorUpdate(
+          workInProgress,
+          createCapturedValue(error, workInProgress),
+          lane,
+        );
+        enqueueCapturedUpdate(workInProgress, update);
+        break;
+      }
+    }
+
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
       // because they're only guaranteed to be resolved here.

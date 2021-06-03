@@ -115,6 +115,11 @@ type OverrideValueAtPath = {|
   value: any,
 |};
 
+type OverrideError = {|
+  ...ElementAndRendererID,
+  forceError: boolean,
+|};
+
 type OverrideSuspense = {|
   ...ElementAndRendererID,
   forceFallback: boolean,
@@ -201,6 +206,7 @@ type FrontendEvents = {|
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
+  overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
