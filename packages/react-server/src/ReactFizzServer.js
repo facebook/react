@@ -314,7 +314,7 @@ function createTask(
     assignID,
   }: any);
   if (__DEV__) {
-    task.componentStack = currentTaskInDEV ? task.componentStack : null;
+    task.componentStack = null;
   }
   abortSet.add(task);
   return task;
@@ -465,6 +465,7 @@ function renderSuspenseBoundary(
       // This must have been the last segment we were waiting on. This boundary is now complete.
       // Therefore we won't need the fallback. We early return so that we don't have to create
       // the fallback.
+      popComponentStackInDEV(task);
       return;
     }
   } catch (error) {
@@ -477,7 +478,6 @@ function renderSuspenseBoundary(
   } finally {
     task.blockedBoundary = parentBoundary;
     task.blockedSegment = parentSegment;
-    popComponentStackInDEV(task);
   }
 
   // This injects an extra segment just to contain an empty tag with an ID.
@@ -505,9 +505,14 @@ function renderSuspenseBoundary(
     task.context,
     null,
   );
+  if (__DEV__) {
+    suspendedFallbackTask.componentStack = task.componentStack;
+  }
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
+
+  popComponentStackInDEV(task);
 }
 
 function renderHostElement(
@@ -1233,6 +1238,13 @@ function spawnNewSuspendedTask(
     task.context,
     task.assignID,
   );
+  if (__DEV__) {
+    if (task.componentStack !== null) {
+      // We pop one task off the stack because the node that suspended will be tried again,
+      // which will add it back onto the stack.
+      newTask.componentStack = task.componentStack.parent;
+    }
+  }
   // We've delegated the assignment.
   task.assignID = null;
   const ping = newTask.ping;
