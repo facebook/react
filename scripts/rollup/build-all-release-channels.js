@@ -198,14 +198,14 @@ function updatePackageVersions(
 
       if (packageInfo.dependencies) {
         for (const dep of Object.keys(packageInfo.dependencies)) {
-          if (modulesDir.includes(dep)) {
+          if (versionsMap.has(dep)) {
             packageInfo.dependencies[dep] = version;
           }
         }
       }
       if (packageInfo.peerDependencies) {
         for (const dep of Object.keys(packageInfo.peerDependencies)) {
-          if (modulesDir.includes(dep)) {
+          if (versionsMap.has(dep)) {
             packageInfo.peerDependencies[dep] = version;
           }
         }
