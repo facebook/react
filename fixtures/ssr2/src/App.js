@@ -6,7 +6,7 @@
  *
  */
 
-import {useState, Suspense, lazy} from 'react';
+import {Suspense, lazy} from 'react';
 import {ErrorBoundary} from 'react-error-boundary';
 import Html from './Html';
 import Spinner from './Spinner';
@@ -39,7 +39,9 @@ function Content() {
         </Suspense>
       </aside>
       <article className="post">
-        <Post />
+        <Suspense fallback={<Spinner />}>
+          <Post />
+        </Suspense>
         <section className="comments">
           <h2>Comments</h2>
           <Suspense fallback={<Spinner />}>

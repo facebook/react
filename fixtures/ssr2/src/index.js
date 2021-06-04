@@ -8,7 +8,6 @@
 
 import {createRoot} from 'react-dom';
 import App from './App';
-import {DataProvider} from './data';
 
 const root = createRoot(document, {hydrate: true});
 root.render(<App assets={window.assetManifest} />);

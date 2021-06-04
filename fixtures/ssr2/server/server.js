@@ -19,7 +19,6 @@ const express = require('express');
 const compress = require('compression');
 const {readFileSync} = require('fs');
 const path = require('path');
-const React = require('react');
 const render = require('./render');
 const {JS_BUNDLE_DELAY} = require('./delays');
 

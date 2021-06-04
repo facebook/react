@@ -15,4 +15,4 @@ exports.API_DELAY = 2000;
 exports.ABORT_DELAY = 10000;
 
 // How long serving the JS bundles is delayed.
-exports.JS_BUNDLE_DELAY = 5000;
+exports.JS_BUNDLE_DELAY = 4000;
