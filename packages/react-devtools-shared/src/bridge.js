@@ -238,7 +238,7 @@ type FrontendEvents = {|
   // but the new frontend still dispatches them (in case older backends are listening to them instead).
   //
   // Note that this approach does no support the combination of a newer backend with an older frontend.
-  // It would be more work to suppot both approaches (and not run handlers twice)
+  // It would be more work to support both approaches (and not run handlers twice)
   // so I chose to support the more likely/common scenario (and the one more difficult for an end user to "fix").
   overrideContext: [OverrideValue],
   overrideHookState: [OverrideHookState],
