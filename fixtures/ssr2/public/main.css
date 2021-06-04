@@ -2,6 +2,10 @@ body {
   font-family: system-ui, sans-serif;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 nav {
   padding: 20px;
 }
