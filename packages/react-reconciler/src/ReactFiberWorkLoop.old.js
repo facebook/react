@@ -1803,7 +1803,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // Check if there are any effects in the whole tree.
   // TODO: This is left over from the effect list implementation, where we had
-  // to check for the existence of `firstEffect` to satsify Flow. I think the
+  // to check for the existence of `firstEffect` to satisfy Flow. I think the
   // only other reason this optimization exists is because it affects profiling.
   // Reconsider whether this is necessary.
   const subtreeHasEffects =
