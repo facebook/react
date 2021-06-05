@@ -79,7 +79,7 @@ function change(decimal) {
   }
   return percentFormatter.format(decimal);
 }
-
+// USING `` to concatinate the content
 const header = `
   | Name | +/- | Base | Current | +/- gzip | Base gzip | Current gzip |
   | ---- | --- | ---- | ------- | -------- | --------- | ------------ |`;
