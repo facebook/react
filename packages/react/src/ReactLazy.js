@@ -59,6 +59,19 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     thenable.then(
       moduleObject => {
         if (payload._status === Pending) {
+          if (__DEV__) {
+            if (moduleObject === undefined) {
+              console.error(
+                'lazy: Expected the result of a dynamic import() call. ' +
+                  'Instead received: %s\n\nYour code should look like: \n  ' +
+                  // Break up imports to avoid accidentally parsing them as dependencies.
+                  'const MyComponent = lazy(() => imp' +
+                  "ort('./MyComponent'))\n\n" +
+                  'Did you accidentally put curly braces around the import?',
+                moduleObject,
+              );
+            }
+          }
           const defaultExport = moduleObject.default;
           if (__DEV__) {
             if (defaultExport === undefined) {
