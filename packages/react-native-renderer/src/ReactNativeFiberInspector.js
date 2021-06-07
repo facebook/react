@@ -14,7 +14,7 @@ import {
   findCurrentHostFiber,
   findCurrentFiberUsingSlowPath,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
 // Module provided by RN:
@@ -81,7 +81,7 @@ if (__DEV__) {
 
   const createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
-      name: getComponentName(fiber.type),
+      name: getComponentNameFromType(fiber.type),
       getInspectorData: findNodeHandle => {
         return {
           props: getHostProps(fiber),
@@ -190,13 +190,22 @@ if (__DEV__) {
 
           closestInstance =
             internalInstanceHandle.stateNode.canonical._internalInstanceHandle;
+
+          // Note: this is deprecated and we want to remove it ASAP. Keeping it here for React DevTools compatibility for now.
+          const nativeViewTag =
+            internalInstanceHandle.stateNode.canonical._nativeTag;
+
           nativeFabricUIManager.measure(
             internalInstanceHandle.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
+              const inspectorData = getInspectorDataForInstance(
+                closestInstance,
+              );
               callback({
+                ...inspectorData,
                 pointerY: locationY,
                 frame: {left: pageX, top: pageY, width, height},
-                ...getInspectorDataForInstance(closestInstance),
+                touchedViewTag: nativeViewTag,
               });
             },
           );

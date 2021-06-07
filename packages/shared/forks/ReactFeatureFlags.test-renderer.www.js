@@ -12,19 +12,21 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
+export const enableSchedulingProfiler = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = false;
-export const enableSchedulerTracing = __PROFILE__;
+export const enableProfilerCommitHooks = __PROFILE__;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
+export const enableProfilerNestedUpdateScheduledHook = false;
+export const enableUpdaterTracking = false;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
-export const enableBlocksAPI = false;
+export const enableLazyElements = false;
+export const enableCache = false;
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
-export const enableDeprecatedFlareAPI = true;
-export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = true;
@@ -37,17 +39,27 @@ export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = true;
 export const warnUnstableRenderSubtreeIntoContainer = false;
-export const deferPassiveEffectCleanupDuringUnmount = true;
-export const runAllPassiveEffectDestroysBeforeCreates = true;
-export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
-export const enableComponentStackLocations = false;
+export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
+export const disableNativeComponentFrames = false;
+export const skipUnmountedBoundaries = false;
+export const deletedTreeCleanUpLevel = 1;
+export const enableSuspenseLayoutEffectSemantics = false;
 
 export const enableNewReconciler = false;
-export const deferRenderPhaseUpdateToNextBatch = true;
-export const disableHiddenPropDeprioritization = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
+
+export const enableStrictEffects = true;
+export const createRootStrictEffectsByDefault = false;
+export const enableUseRefAccessWarning = false;
+
+export const enableRecursiveCommitTraversal = false;
+export const disableSchedulerTimeoutInWorkLoop = false;
+export const enableLazyContextPropagation = false;
+export const enableSyncDefaultUpdates = true;
+export const allowConcurrentByDefault = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

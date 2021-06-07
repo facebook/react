@@ -21,31 +21,21 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.act;
+    act = ReactTestUtils.unstable_concurrentAct;
     Scheduler = require('scheduler');
   });
 
-  // TODO: Delete this once new API exists in both forks
-  function LegacyHiddenDiv({hidden, children, ...props}) {
-    if (gate(flags => flags.new)) {
-      return (
-        <div
-          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
-          {...props}>
-          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
-            {children}
-          </React.unstable_LegacyHidden>
-        </div>
-      );
-    } else {
-      return (
-        <div
-          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
-          {...props}>
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer necessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </div>
-      );
-    }
+        </React.unstable_LegacyHidden>
+      </div>
+    );
   }
 
   it('should batch state when updating state twice', () => {
@@ -1310,8 +1300,7 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  // @gate experimental
-  // @gate enableLegacyHiddenType
+  // @gate experimental || www
   it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
     const container = document.createElement('div');
 
@@ -1335,7 +1324,7 @@ describe('ReactUpdates', () => {
       });
       return (
         <div>
-          <LegacyHiddenDiv hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Bar />
           </LegacyHiddenDiv>
           <Baz />
@@ -1343,7 +1332,7 @@ describe('ReactUpdates', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     let hiddenDiv;
     act(() => {
       root.render(<Foo />);
@@ -1693,86 +1682,6 @@ describe('ReactUpdates', () => {
 
       expect(Scheduler).toHaveYielded(['Done']);
       expect(container.textContent).toBe('1000');
-    });
-  }
-
-  if (__DEV__) {
-    it('should properly trace interactions within batched udpates', () => {
-      const SchedulerTracing = require('scheduler/tracing');
-
-      let expectedInteraction;
-
-      const container = document.createElement('div');
-
-      const Component = jest.fn(() => {
-        expect(expectedInteraction).toBeDefined();
-
-        const interactions = SchedulerTracing.unstable_getCurrent();
-        expect(interactions.size).toBe(1);
-        expect(interactions).toContain(expectedInteraction);
-
-        return null;
-      });
-
-      ReactDOM.unstable_batchedUpdates(() => {
-        SchedulerTracing.unstable_trace(
-          'mount traced inside a batched update',
-          1,
-          () => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, container);
-          },
-        );
-      });
-
-      ReactDOM.unstable_batchedUpdates(() => {
-        SchedulerTracing.unstable_trace(
-          'update traced inside a batched update',
-          2,
-          () => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, container);
-          },
-        );
-      });
-
-      const secondContainer = document.createElement('div');
-
-      SchedulerTracing.unstable_trace(
-        'mount traced outside a batched update',
-        3,
-        () => {
-          ReactDOM.unstable_batchedUpdates(() => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, secondContainer);
-          });
-        },
-      );
-
-      SchedulerTracing.unstable_trace(
-        'update traced outside a batched update',
-        4,
-        () => {
-          ReactDOM.unstable_batchedUpdates(() => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, container);
-          });
-        },
-      );
-
-      expect(Component).toHaveBeenCalledTimes(4);
     });
   }
 });

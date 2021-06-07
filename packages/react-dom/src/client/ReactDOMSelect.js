@@ -12,6 +12,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {getToStringValue, toString} from './ToStringValue';
+import isArray from 'shared/isArray';
 
 let didWarnValueDefaultValue;
 
@@ -45,15 +46,15 @@ function checkSelectPropTypes(props) {
       if (props[propName] == null) {
         continue;
       }
-      const isArray = Array.isArray(props[propName]);
-      if (props.multiple && !isArray) {
+      const propNameIsArray = isArray(props[propName]);
+      if (props.multiple && !propNameIsArray) {
         console.error(
           'The `%s` prop supplied to <select> must be an array if ' +
             '`multiple` is true.%s',
           propName,
           getDeclarationErrorAddendum(),
         );
-      } else if (!props.multiple && isArray) {
+      } else if (!props.multiple && propNameIsArray) {
         console.error(
           'The `%s` prop supplied to <select> must be a scalar ' +
             'value if `multiple` is false.%s',
@@ -159,7 +160,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled select ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
       );
       didWarnValueDefaultValue = true;
     }

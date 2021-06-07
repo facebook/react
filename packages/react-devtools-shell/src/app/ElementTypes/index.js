@@ -19,6 +19,7 @@ import {
   Profiler,
   StrictMode,
   Suspense,
+  unstable_Cache as Cache,
 } from 'react';
 
 const Context = createContext('abc');
@@ -36,16 +37,16 @@ function FunctionComponent() {
 
 const MemoFunctionComponent = memo(FunctionComponent);
 
-const FowardRefComponentWithAnonymousFunction = forwardRef((props, ref) => (
+const ForwardRefComponentWithAnonymousFunction = forwardRef((props, ref) => (
   <ClassComponent ref={ref} {...props} />
 ));
 const ForwardRefComponent = forwardRef(function NamedInnerFunction(props, ref) {
   return <ClassComponent ref={ref} {...props} />;
 });
-const FowardRefComponentWithCustomDisplayName = forwardRef((props, ref) => (
+const ForwardRefComponentWithCustomDisplayName = forwardRef((props, ref) => (
   <ClassComponent ref={ref} {...props} />
 ));
-FowardRefComponentWithCustomDisplayName.displayName = 'Custom';
+ForwardRefComponentWithCustomDisplayName.displayName = 'Custom';
 
 const LazyComponent = lazy(() =>
   Promise.resolve({
@@ -61,15 +62,17 @@ export default function ElementTypes() {
           <Context.Consumer>{value => null}</Context.Consumer>
         </Context.Provider>
         <StrictMode>
-          <Suspense fallback={<div>Loading...</div>}>
-            <ClassComponent />
-            <FunctionComponent />
-            <MemoFunctionComponent />
-            <ForwardRefComponent />
-            <FowardRefComponentWithAnonymousFunction />
-            <FowardRefComponentWithCustomDisplayName />
-            <LazyComponent />
-          </Suspense>
+          <Cache>
+            <Suspense fallback={<div>Loading...</div>}>
+              <ClassComponent />
+              <FunctionComponent />
+              <MemoFunctionComponent />
+              <ForwardRefComponent />
+              <ForwardRefComponentWithAnonymousFunction />
+              <ForwardRefComponentWithCustomDisplayName />
+              <LazyComponent />
+            </Suspense>
+          </Cache>
         </StrictMode>
       </Fragment>
     </Profiler>

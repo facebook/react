@@ -167,7 +167,7 @@ describe('ReactFunctionComponent', () => {
             '1. You may be adding a ref to a function component\n' +
             "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
             '3. You have multiple copies of React loaded\n' +
-            'See https://fb.me/react-refs-must-have-owner for more information.',
+            'See https://reactjs.org/link/refs-must-have-owner for more information.',
     );
   });
 
@@ -284,10 +284,8 @@ describe('ReactFunctionComponent', () => {
     }).toErrorDev('Warning: Function components cannot be given refs.');
     // Should be deduped (same internal instance, no additional warnings)
     instance2.forceUpdate();
-    // Could not be deduped (different internal instance):
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<AnonymousParentNotUsingJSX />),
-    ).toErrorDev('Warning: Function components cannot be given refs.');
+    // Could not be differentiated (since owner is anonymous and no source location)
+    ReactTestUtils.renderIntoDocument(<AnonymousParentNotUsingJSX />);
 
     // When owner doesn't use JSX, but is named, we warn once per owner name
     class NamedParentNotUsingJSX extends React.Component {

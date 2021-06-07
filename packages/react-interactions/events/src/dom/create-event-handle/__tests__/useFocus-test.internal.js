@@ -21,7 +21,6 @@ function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableModernEventSystem = true;
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
@@ -29,7 +28,7 @@ function initializeModules(hasPointerEvents) {
 
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.
-  if (__EXPERIMENTAL__) {
+  if (__EXPERIMENTAL__ || global.__WWW__) {
     useFocus = require('react-interactions/events/focus').useFocus;
   }
 }
@@ -37,7 +36,7 @@ function initializeModules(hasPointerEvents) {
 const forcePointerEvents = true;
 const table = [[forcePointerEvents], [!forcePointerEvents]];
 
-describe.each(table)(`useFocus`, hasPointerEvents => {
+describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   let container;
 
   beforeEach(() => {
@@ -71,7 +70,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       Scheduler.unstable_flushAll();
     };
 
-    // @gate experimental
+    // @gate www
     it('does not call callbacks', () => {
       componentInit();
       const target = createEventTarget(ref.current);
@@ -98,7 +97,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       Scheduler.unstable_flushAll();
     };
 
-    // @gate experimental
+    // @gate www
     it('is called after "blur" event', () => {
       componentInit();
       const target = createEventTarget(ref.current);
@@ -129,7 +128,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       Scheduler.unstable_flushAll();
     };
 
-    // @gate experimental
+    // @gate www
     it('is called after "focus" event', () => {
       componentInit();
       const target = createEventTarget(ref.current);
@@ -137,7 +136,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onFocus).toHaveBeenCalledTimes(1);
     });
 
-    // @gate experimental
+    // @gate www
     it('is not called if descendants of target receive focus', () => {
       componentInit();
       const target = createEventTarget(innerRef.current);
@@ -167,7 +166,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       Scheduler.unstable_flushAll();
     };
 
-    // @gate experimental
+    // @gate www
     it('is called after "blur" and "focus" events', () => {
       componentInit();
       const target = createEventTarget(ref.current);
@@ -179,7 +178,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onFocusChange).toHaveBeenCalledWith(false);
     });
 
-    // @gate experimental
+    // @gate www
     it('is not called after "blur" and "focus" events on descendants', () => {
       componentInit();
       const target = createEventTarget(innerRef.current);
@@ -211,7 +210,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       Scheduler.unstable_flushAll();
     };
 
-    // @gate experimental
+    // @gate www
     it('is called after "focus" and "blur" if keyboard navigation is active', () => {
       componentInit();
       const target = createEventTarget(ref.current);
@@ -226,7 +225,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onFocusVisibleChange).toHaveBeenCalledWith(false);
     });
 
-    // @gate experimental
+    // @gate www
     it('is called if non-keyboard event is dispatched on target previously focused with keyboard', () => {
       componentInit();
       const target = createEventTarget(ref.current);
@@ -245,7 +244,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
     });
 
-    // @gate experimental
+    // @gate www
     it('is not called after "focus" and "blur" events without keyboard', () => {
       componentInit();
       const target = createEventTarget(ref.current);
@@ -257,7 +256,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(0);
     });
 
-    // @gate experimental
+    // @gate www
     it('is not called after "blur" and "focus" events on descendants', () => {
       componentInit();
       const innerTarget = createEventTarget(innerRef.current);
@@ -271,7 +270,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
   });
 
   describe('nested Focus components', () => {
-    // @gate experimental
+    // @gate www
     it('propagates events in the correct order', () => {
       const events = [];
       const innerRef = React.createRef();

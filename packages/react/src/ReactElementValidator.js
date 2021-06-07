@@ -13,7 +13,7 @@
  */
 
 import isValidElementType from 'shared/isValidElementType';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {
   getIteratorFn,
   REACT_FORWARD_REF_TYPE,
@@ -23,6 +23,7 @@ import {
 } from 'shared/ReactSymbols';
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 import checkPropTypes from 'shared/checkPropTypes';
+import isArray from 'shared/isArray';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {
@@ -33,6 +34,7 @@ import {
 } from './ReactElement';
 import {setExtraStackFrame} from './ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {
@@ -56,11 +58,9 @@ if (__DEV__) {
   propTypesMisspellWarningShown = false;
 }
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
-
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    const name = getComponentName(ReactCurrentOwner.current.type);
+    const name = getComponentNameFromType(ReactCurrentOwner.current.type);
     if (name) {
       return '\n\nCheck the render method of `' + name + '`.';
     }
@@ -139,7 +139,7 @@ function validateExplicitKey(element, parentType) {
     element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
-    childOwner = ` It was passed a child from ${getComponentName(
+    childOwner = ` It was passed a child from ${getComponentNameFromType(
       element._owner.type,
     )}.`;
   }
@@ -148,7 +148,7 @@ function validateExplicitKey(element, parentType) {
     setCurrentlyValidatingElement(element);
     console.error(
       'Each child in a list should have a unique "key" prop.' +
-        '%s%s See https://fb.me/react-warning-keys for more information.',
+        '%s%s See https://reactjs.org/link/warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
     );
@@ -169,7 +169,7 @@ function validateChildKeys(node, parentType) {
   if (typeof node !== 'object') {
     return;
   }
-  if (Array.isArray(node)) {
+  if (isArray(node)) {
     for (let i = 0; i < node.length; i++) {
       const child = node[i];
       if (isValidElement(child)) {
@@ -211,7 +211,6 @@ function validatePropTypes(element) {
     if (type === null || type === undefined || typeof type === 'string') {
       return;
     }
-    const name = getComponentName(type);
     let propTypes;
     if (typeof type === 'function') {
       propTypes = type.propTypes;
@@ -227,11 +226,13 @@ function validatePropTypes(element) {
       return;
     }
     if (propTypes) {
-      setCurrentlyValidatingElement(element);
-      checkPropTypes(propTypes, element.props, 'prop', name);
-      setCurrentlyValidatingElement(null);
+      // Intentionally inside to avoid triggering lazy initializers:
+      const name = getComponentNameFromType(type);
+      checkPropTypes(propTypes, element.props, 'prop', name, element);
     } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
       propTypesMisspellWarningShown = true;
+      // Intentionally inside to avoid triggering lazy initializers:
+      const name = getComponentNameFromType(type);
       console.error(
         'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
         name || 'Unknown',
@@ -255,26 +256,26 @@ function validatePropTypes(element) {
  */
 function validateFragmentProps(fragment) {
   if (__DEV__) {
-    setCurrentlyValidatingElement(fragment);
-
     const keys = Object.keys(fragment.props);
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
       if (key !== 'children' && key !== 'key') {
+        setCurrentlyValidatingElement(fragment);
         console.error(
           'Invalid prop `%s` supplied to `React.Fragment`. ' +
             'React.Fragment can only have `key` and `children` props.',
           key,
         );
+        setCurrentlyValidatingElement(null);
         break;
       }
     }
 
     if (fragment.ref !== null) {
+      setCurrentlyValidatingElement(fragment);
       console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
+      setCurrentlyValidatingElement(null);
     }
-
-    setCurrentlyValidatingElement(null);
   }
 }
 
@@ -313,10 +314,10 @@ export function jsxWithValidation(
     let typeString;
     if (type === null) {
       typeString = 'null';
-    } else if (Array.isArray(type)) {
+    } else if (isArray(type)) {
       typeString = 'array';
     } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+      typeString = `<${getComponentNameFromType(type.type) || 'Unknown'} />`;
       info =
         ' Did you accidentally export a JSX literal instead of a component?';
     } else {
@@ -352,7 +353,7 @@ export function jsxWithValidation(
     const children = props.children;
     if (children !== undefined) {
       if (isStaticChildren) {
-        if (Array.isArray(children)) {
+        if (isArray(children)) {
           for (let i = 0; i < children.length; i++) {
             validateChildKeys(children[i], type);
           }
@@ -382,7 +383,7 @@ export function jsxWithValidation(
           'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
             'Explicitly pass a key after spreading props in your JSX call. ' +
             'E.g. <%s {...props} key={key} />',
-          getComponentName(type) || 'ComponentName',
+          getComponentNameFromType(type) || 'ComponentName',
         );
       }
     }
@@ -437,10 +438,10 @@ export function createElementWithValidation(type, props, children) {
     let typeString;
     if (type === null) {
       typeString = 'null';
-    } else if (Array.isArray(type)) {
+    } else if (isArray(type)) {
       typeString = 'array';
     } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
-      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+      typeString = `<${getComponentNameFromType(type.type) || 'Unknown'} />`;
       info =
         ' Did you accidentally export a JSX literal instead of a component?';
     } else {

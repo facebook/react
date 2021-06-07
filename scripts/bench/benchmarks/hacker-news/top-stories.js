@@ -222,7 +222,7 @@ window.stories = [
     time: 1493161601,
     title: 'JPEG Huffman Coding Tutorial',
     type: 'story',
-    url: 'http://www.impulseadventure.com/photo/jpeg-huffman-coding.html',
+    url: 'https://www.impulseadventure.com/photo/jpeg-huffman-coding.html',
   },
   {
     by: 'jasontan',
@@ -263,7 +263,7 @@ window.stories = [
     title:
       'Painting with Code: Introducing our new open source library React Sketch.app',
     type: 'story',
-    url: 'http://airbnb.design/painting-with-code/',
+    url: 'https://airbnb.design/painting-with-code/',
   },
   {
     by: 'mromnia',
@@ -448,7 +448,7 @@ window.stories = [
     time: 1493139957,
     title: 'How to Become Well-Connected',
     type: 'story',
-    url: 'http://firstround.com/review/how-to-become-insanely-well-connected/',
+    url: 'https://firstround.com/review/how-to-become-insanely-well-connected/',
   },
   {
     by: 'dbrgn',
@@ -495,7 +495,7 @@ window.stories = [
     time: 1493160263,
     title: 'Nginx 1.13 released with TLS 1.3 support',
     type: 'story',
-    url: 'http://mailman.nginx.org/pipermail/nginx-announce/2017/000195.html',
+    url: 'https://mailman.nginx.org/pipermail/nginx-announce/2017/000195.html',
   },
   {
     by: 'bcherny',
@@ -604,7 +604,7 @@ window.stories = [
     title: 'Suicide of an Uber engineer: Widow blames job stress',
     type: 'story',
     url:
-      'http://www.sfchronicle.com/business/article/Suicide-of-an-Uber-engineer-widow-blames-job-11095807.php?t=7e40d1f554&cmpid=fb-premium&cmpid=twitter-premium',
+      'https://www.sfchronicle.com/business/article/Suicide-of-an-Uber-engineer-widow-blames-job-11095807.php?t=7e40d1f554&cmpid=fb-premium&cmpid=twitter-premium',
   },
   {
     by: 'catc',
@@ -828,7 +828,7 @@ window.stories = [
     time: 1493143560,
     title: 'Implementing a Fast Research Compiler in Rust',
     type: 'story',
-    url: 'http://dawn.cs.stanford.edu/blog/weld.html',
+    url: 'https://dawn.cs.stanford.edu/blog/weld.html',
   },
   {
     by: 'bluesilver07',
@@ -848,7 +848,7 @@ window.stories = [
     time: 1493142448,
     title: 'Xenko Game Engine 2.0 released',
     type: 'story',
-    url: 'http://xenko.com/blog/release-xenko-2-0-0/',
+    url: 'https://xenko.com/blog/release-xenko-2-0-0/',
   },
   {
     by: 'molecule',
@@ -919,7 +919,7 @@ window.stories = [
     title: 'Robert M. Pirsig has died',
     type: 'story',
     url:
-      'http://www.npr.org/sections/thetwo-way/2017/04/24/525443040/-zen-and-the-art-of-motorcycle-maintenance-author-robert-m-pirsig-dies-at-88',
+      'https://www.npr.org/sections/thetwo-way/2017/04/24/525443040/-zen-and-the-art-of-motorcycle-maintenance-author-robert-m-pirsig-dies-at-88',
   },
   {
     by: 'artsandsci',
@@ -1119,7 +1119,7 @@ window.stories = [
     time: 1493118936,
     title: 'Quantum – Open journal for quantum science',
     type: 'story',
-    url: 'http://quantum-journal.org/papers/',
+    url: 'https://quantum-journal.org/papers/',
   },
   {
     by: 'tjalfi',
@@ -1130,7 +1130,7 @@ window.stories = [
     time: 1493097061,
     title: 'A Seven Dimensional Analysis of Hashing Methods [pdf]',
     type: 'story',
-    url: 'http://www.vldb.org/pvldb/vol9/p96-richter.pdf',
+    url: 'https://www.vldb.org/pvldb/vol9/p96-richter.pdf',
   },
   {
     by: 'mxstbr',
@@ -1220,7 +1220,7 @@ window.stories = [
       'Modern Hieroglyphs: Binary Logic Behind the Universal “Power Symbol”',
     type: 'story',
     url:
-      'http://99percentinvisible.org/article/modern-hieroglyphics-binary-logic-behind-universal-power-symbol/',
+      'https://99percentinvisible.org/article/modern-hieroglyphics-binary-logic-behind-universal-power-symbol/',
   },
   {
     by: 'LaFolle',
@@ -1250,7 +1250,7 @@ window.stories = [
     time: 1493108371,
     title: 'Feynman Algorithm (2014)',
     type: 'story',
-    url: 'http://wiki.c2.com/?FeynmanAlgorithm',
+    url: 'https://wiki.c2.com/?FeynmanAlgorithm',
   },
   {
     by: 'Thevet',

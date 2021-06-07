@@ -22,7 +22,7 @@ describe('ReactHooksInspectionIntegration', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
     ReactDebugTools = require('react-debug-tools');
   });
 
@@ -366,10 +366,9 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useTransition hook', () => {
     function Foo(props) {
-      React.unstable_useTransition();
+      React.useTransition();
       const memoizedValue = React.useMemo(() => 'hello', []);
       return <div>{memoizedValue}</div>;
     }
@@ -394,10 +393,9 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useDeferredValue hook', () => {
     function Foo(props) {
-      React.unstable_useDeferredValue('abc', {
+      React.useDeferredValue('abc', {
         timeoutMs: 500,
       });
       const [state] = React.useState(() => 'hello', []);
@@ -424,7 +422,6 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental
   it('should support composite useOpaqueIdentifier hook', () => {
     function Foo(props) {
       const id = React.unstable_useOpaqueIdentifier();
@@ -452,7 +449,6 @@ describe('ReactHooksInspectionIntegration', () => {
     });
   });
 
-  // @gate experimental
   it('should support composite useOpaqueIdentifier hook in concurrent mode', () => {
     function Foo(props) {
       const id = React.unstable_useOpaqueIdentifier();
@@ -787,7 +783,7 @@ describe('ReactHooksInspectionIntegration', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     expect(getterCalls).toBe(1);
@@ -797,7 +793,7 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   // This test case is based on an open source bug report:
-  // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
+  // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
   it('should properly advance the current hook for useContext', () => {
     const MyContext = React.createContext(1);
 
@@ -846,37 +842,40 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  if (__EXPERIMENTAL__) {
-    it('should support composite useMutableSource hook', () => {
-      const mutableSource = React.createMutableSource({}, () => 1);
-      function Foo(props) {
-        React.useMutableSource(
-          mutableSource,
-          () => 'snapshot',
-          () => {},
-        );
-        React.useMemo(() => 'memo', []);
-        return <div />;
-      }
-      const renderer = ReactTestRenderer.create(<Foo />);
-      const childFiber = renderer.root.findByType(Foo)._currentFiber();
-      const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-      expect(tree).toEqual([
-        {
-          id: 0,
-          isStateEditable: false,
-          name: 'MutableSource',
-          value: 'snapshot',
-          subHooks: [],
-        },
-        {
-          id: 1,
-          isStateEditable: false,
-          name: 'Memo',
-          value: 'memo',
-          subHooks: [],
-        },
-      ]);
-    });
-  }
+  it('should support composite useMutableSource hook', () => {
+    const createMutableSource =
+      React.createMutableSource || React.unstable_createMutableSource;
+    const useMutableSource =
+      React.useMutableSource || React.unstable_useMutableSource;
+
+    const mutableSource = createMutableSource({}, () => 1);
+    function Foo(props) {
+      useMutableSource(
+        mutableSource,
+        () => 'snapshot',
+        () => {},
+      );
+      React.useMemo(() => 'memo', []);
+      return <div />;
+    }
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        id: 0,
+        isStateEditable: false,
+        name: 'MutableSource',
+        value: 'snapshot',
+        subHooks: [],
+      },
+      {
+        id: 1,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'memo',
+        subHooks: [],
+      },
+    ]);
+  });
 });

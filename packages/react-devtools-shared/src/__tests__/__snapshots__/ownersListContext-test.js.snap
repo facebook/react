@@ -12,19 +12,22 @@ Array [
   Object {
     "displayName": "Grandparent",
     "hocDisplayNames": null,
-    "id": 7,
+    "id": 2,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Parent",
     "hocDisplayNames": null,
-    "id": 9,
+    "id": 3,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Child",
     "hocDisplayNames": null,
-    "id": 8,
+    "id": 4,
+    "key": null,
     "type": 5,
   },
 ]
@@ -44,18 +47,21 @@ Array [
     "displayName": "Grandparent",
     "hocDisplayNames": null,
     "id": 2,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Parent",
     "hocDisplayNames": null,
     "id": 3,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Child",
     "hocDisplayNames": null,
     "id": 4,
+    "key": null,
     "type": 5,
   },
 ]
@@ -67,13 +73,45 @@ Array [
     "displayName": "Grandparent",
     "hocDisplayNames": null,
     "id": 2,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Parent",
     "hocDisplayNames": null,
     "id": 3,
+    "key": null,
     "type": 5,
+  },
+]
+`;
+
+exports[`OwnersListContext should include all owners for a component wrapped in react memo: owners for "InnerComponent" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "hocDisplayNames": null,
+    "id": 2,
+    "key": null,
+    "type": 5,
+  },
+  Object {
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "Memo",
+    ],
+    "id": 3,
+    "key": null,
+    "type": 8,
+  },
+  Object {
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "ForwardRef",
+    ],
+    "id": 4,
+    "key": null,
+    "type": 6,
   },
 ]
 `;
@@ -88,7 +126,8 @@ Array [
   Object {
     "displayName": "Grandparent",
     "hocDisplayNames": null,
-    "id": 5,
+    "id": 2,
+    "key": null,
     "type": 5,
   },
 ]

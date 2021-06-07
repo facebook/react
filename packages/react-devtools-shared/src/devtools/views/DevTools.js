@@ -13,7 +13,7 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
 import Store from '../store';
 import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';
@@ -25,6 +25,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
+import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
 import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
@@ -169,9 +170,10 @@ export default function DevTools({
     };
   }, [showTabBar]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     return () => {
       try {
+        // Shut the Bridge down synchronously (during unmount).
         bridge.shutdown();
       } catch (error) {
         // Attempting to use a disconnected port.
@@ -225,6 +227,7 @@ export default function DevTools({
                 </TreeContextController>
               </ViewElementSourceContext.Provider>
             </SettingsContextController>
+            <UnsupportedBridgeProtocolDialog />
             {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
             {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
           </ModalDialogContextController>

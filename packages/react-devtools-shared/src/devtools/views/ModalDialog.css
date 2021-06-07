@@ -3,6 +3,7 @@
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: row;
   align-items: flex-start;
   justify-content: center;
   padding: 1rem;
@@ -13,6 +14,7 @@
 .Dialog {
   position: relative;
   z-index: 3;
+  margin: 0 0.25rem;
   width: 25rem;
   min-width: 20rem;
   max-width: 100%;

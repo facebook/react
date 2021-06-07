@@ -44,7 +44,11 @@ describe('console', () => {
 
     // Note the Console module only patches once,
     // so it's important to patch the test console before injection.
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+    });
 
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
@@ -76,10 +80,62 @@ describe('console', () => {
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
+  it('should patch the console when appendComponentStack is enabled', () => {
+    unpatchConsole();
+
+    expect(fakeConsole.error).toBe(mockError);
+    expect(fakeConsole.warn).toBe(mockWarn);
+
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+    });
+
+    expect(fakeConsole.error).not.toBe(mockError);
+    expect(fakeConsole.warn).not.toBe(mockWarn);
+  });
+
+  it('should patch the console when breakOnWarn is enabled', () => {
+    unpatchConsole();
+
+    expect(fakeConsole.error).toBe(mockError);
+    expect(fakeConsole.warn).toBe(mockWarn);
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: true,
+      showInlineWarningsAndErrors: false,
+    });
+
+    expect(fakeConsole.error).not.toBe(mockError);
+    expect(fakeConsole.warn).not.toBe(mockWarn);
+  });
+
+  it('should patch the console when showInlineWarningsAndErrors is enabled', () => {
+    unpatchConsole();
+
+    expect(fakeConsole.error).toBe(mockError);
+    expect(fakeConsole.warn).toBe(mockWarn);
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: true,
+    });
+
+    expect(fakeConsole.error).not.toBe(mockError);
+    expect(fakeConsole.warn).not.toBe(mockWarn);
+  });
+
   it('should only patch the console once', () => {
     const {error, warn} = fakeConsole;
 
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+    });
 
     expect(fakeConsole.error).toBe(error);
     expect(fakeConsole.warn).toBe(warn);
@@ -330,7 +386,11 @@ describe('console', () => {
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
 
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+    });
     act(() => ReactDOM.render(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
@@ -392,5 +452,17 @@ describe('console', () => {
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
       '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
+  });
+
+  it('should correctly log Symbols', () => {
+    const Component = ({children}) => {
+      fakeConsole.warn('Symbol:', Symbol(''));
+      return null;
+    };
+
+    act(() => ReactDOM.render(<Component />, document.createElement('div')));
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('Symbol:');
   });
 });

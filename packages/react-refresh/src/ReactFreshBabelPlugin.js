@@ -8,9 +8,9 @@
 'use strict';
 
 export default function(babel, opts = {}) {
-  if (typeof babel.getEnv === 'function') {
+  if (typeof babel.env === 'function') {
     // Only available in Babel 7.
-    const env = babel.getEnv();
+    const env = babel.env();
     if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
@@ -140,9 +140,6 @@ export default function(babel, opts = {}) {
             } else if (calleeType === 'MemberExpression') {
               // Could be something like React.forwardRef(...)
               // Pass through.
-            } else {
-              // More complicated call.
-              return false;
             }
             break;
           }
@@ -171,6 +168,7 @@ export default function(babel, opts = {}) {
         for (let i = 0; i < referencePaths.length; i++) {
           const ref = referencePaths[i];
           if (
+            ref.node &&
             ref.node.type !== 'JSXIdentifier' &&
             ref.node.type !== 'Identifier'
           ) {
@@ -228,8 +226,8 @@ export default function(babel, opts = {}) {
       case 'React.useRef':
       case 'useContext':
       case 'React.useContext':
-      case 'useImperativeMethods':
-      case 'React.useImperativeMethods':
+      case 'useImperativeHandle':
+      case 'React.useImperativeHandle':
       case 'useDebugValue':
       case 'React.useDebugValue':
         return true;
@@ -306,7 +304,7 @@ export default function(babel, opts = {}) {
     if (typeof require === 'function' && !opts.emitFullSignatures) {
       // Prefer to hash when we can (e.g. outside of ASTExplorer).
       // This makes it deterministically compact, even if there's
-      // e.g. a useState ininitalizer with some code inside.
+      // e.g. a useState initializer with some code inside.
       // We also need it for www that has transforms like cx()
       // that don't understand if something is part of a string.
       finalKey = require('crypto')
@@ -333,6 +331,38 @@ export default function(babel, opts = {}) {
       );
     }
     return args;
+  }
+
+  function findHOCCallPathsAbove(path) {
+    const calls = [];
+    while (true) {
+      if (!path) {
+        return calls;
+      }
+      const parentPath = path.parentPath;
+      if (!parentPath) {
+        return calls;
+      }
+      if (
+        // hoc(_c = function() { })
+        parentPath.node.type === 'AssignmentExpression' &&
+        path.node === parentPath.node.right
+      ) {
+        // Ignore registrations.
+        path = parentPath;
+        continue;
+      }
+      if (
+        // hoc1(hoc2(...))
+        parentPath.node.type === 'CallExpression' &&
+        path.node !== parentPath.node.callee
+      ) {
+        calls.push(parentPath);
+        path = parentPath;
+        continue;
+      }
+      return calls; // Stop at other types.
+    }
   }
 
   const seenForRegistration = new WeakSet();
@@ -536,7 +566,7 @@ export default function(babel, opts = {}) {
 
           // Unlike with $RefreshReg$, this needs to work for nested
           // declarations too. So we need to search for a path where
-          // we can insert a statement rather than hardcoding it.
+          // we can insert a statement rather than hard coding it.
           let insertAfterPath = null;
           path.find(p => {
             if (p.parentPath.isBlock()) {
@@ -632,13 +662,16 @@ export default function(babel, opts = {}) {
             // Result: let Foo = () => {}; __signature(Foo, ...);
           } else {
             // let Foo = hoc(() => {})
-            path.replaceWith(
-              t.callExpression(
-                sigCallID,
-                createArgumentsForSignature(node, signature, path.scope),
-              ),
-            );
-            // Result: let Foo = hoc(__signature(() => {}, ...))
+            const paths = [path, ...findHOCCallPathsAbove(path)];
+            paths.forEach(p => {
+              p.replaceWith(
+                t.callExpression(
+                  sigCallID,
+                  createArgumentsForSignature(p.node, signature, p.scope),
+                ),
+              );
+            });
+            // Result: let Foo = __signature(hoc(__signature(() => {}, ...)), ...)
           }
         },
       },

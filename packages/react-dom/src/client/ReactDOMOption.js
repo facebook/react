@@ -7,32 +7,12 @@
  * @flow
  */
 
-import * as React from 'react';
+import {Children} from 'react';
 import {getToStringValue, toString} from './ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;
-
-function flattenChildren(children) {
-  let content = '';
-
-  // Flatten children. We'll warn if they are invalid
-  // during validateProps() which runs for hydration too.
-  // Note that this would throw on non-element objects.
-  // Elements are stringified (which is normally irrelevant
-  // but matters for <fbt>).
-  React.Children.forEach(children, function(child) {
-    if (child == null) {
-      return;
-    }
-    content += (child: any);
-    // Note: we don't warn about invalid children here.
-    // Instead, this is done separately below so that
-    // it happens during the hydration codepath too.
-  });
-
-  return content;
-}
+let didWarnInvalidInnerHTML = false;
 
 /**
  * Implements an <option> host component that warns when `selected` is set.
@@ -40,28 +20,33 @@ function flattenChildren(children) {
 
 export function validateProps(element: Element, props: Object) {
   if (__DEV__) {
-    // This mirrors the codepath above, but runs for hydration too.
-    // Warn about invalid children here so that client and hydration are consistent.
-    // TODO: this seems like it could cause a DEV-only throw for hydration
-    // if children contains a non-element object. We should try to avoid that.
-    if (typeof props.children === 'object' && props.children !== null) {
-      React.Children.forEach(props.children, function(child) {
-        if (child == null) {
-          return;
-        }
-        if (typeof child === 'string' || typeof child === 'number') {
-          return;
-        }
-        if (typeof (child: any).type !== 'string') {
-          return;
-        }
-        if (!didWarnInvalidChild) {
-          didWarnInvalidChild = true;
+    // If a value is not provided, then the children must be simple.
+    if (props.value == null) {
+      if (typeof props.children === 'object' && props.children !== null) {
+        Children.forEach(props.children, function(child) {
+          if (child == null) {
+            return;
+          }
+          if (typeof child === 'string' || typeof child === 'number') {
+            return;
+          }
+          if (!didWarnInvalidChild) {
+            didWarnInvalidChild = true;
+            console.error(
+              'Cannot infer the option value of complex children. ' +
+                'Pass a `value` prop or use a plain string as children to <option>.',
+            );
+          }
+        });
+      } else if (props.dangerouslySetInnerHTML != null) {
+        if (!didWarnInvalidInnerHTML) {
+          didWarnInvalidInnerHTML = true;
           console.error(
-            'Only strings and numbers are supported as <option> children.',
+            'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
+              'which value should be selected.',
           );
         }
-      });
+      }
     }
 
     // TODO: Remove support for `selected` in <option>.
@@ -80,15 +65,4 @@ export function postMountWrapper(element: Element, props: Object) {
   if (props.value != null) {
     element.setAttribute('value', toString(getToStringValue(props.value)));
   }
-}
-
-export function getHostProps(element: Element, props: Object) {
-  const hostProps = {children: undefined, ...props};
-  const content = flattenChildren(props.children);
-
-  if (content) {
-    hostProps.children = content;
-  }
-
-  return hostProps;
 }

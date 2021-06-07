@@ -546,50 +546,5 @@ describe('SyntheticKeyboardEvent', () => {
       );
       expect(expectedCount).toBe(3);
     });
-
-    it('is able to `persist`', () => {
-      const persistentEvents = [];
-      const eventHandler = event => {
-        expect(event.isPersistent()).toBe(false);
-        event.persist();
-        expect(event.isPersistent()).toBe(true);
-        persistentEvents.push(event);
-      };
-      const div = ReactDOM.render(
-        <div
-          onKeyDown={eventHandler}
-          onKeyUp={eventHandler}
-          onKeyPress={eventHandler}
-        />,
-        container,
-      );
-
-      div.dispatchEvent(
-        new KeyboardEvent('keydown', {
-          keyCode: 40,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      div.dispatchEvent(
-        new KeyboardEvent('keyup', {
-          keyCode: 40,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      div.dispatchEvent(
-        new KeyboardEvent('keypress', {
-          charCode: 40,
-          keyCode: 40,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      expect(persistentEvents.length).toBe(3);
-      expect(persistentEvents[0].type).toBe('keydown');
-      expect(persistentEvents[1].type).toBe('keyup');
-      expect(persistentEvents[2].type).toBe('keypress');
-    });
   });
 });

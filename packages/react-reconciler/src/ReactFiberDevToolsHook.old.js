@@ -8,15 +8,24 @@
  */
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-import {getCurrentTime} from './ReactFiberWorkLoop.old';
-import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime.old';
 
-import type {Fiber} from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {EventPriority} from './ReactEventPriorities.old';
 
-import {DidCapture} from './ReactSideEffectTags';
+import {DidCapture} from './ReactFiberFlags';
+import {
+  DiscreteEventPriority,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+  IdleEventPriority,
+} from './ReactEventPriorities.old';
+import {
+  ImmediatePriority as ImmediateSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+  IdlePriority as IdleSchedulerPriority,
+} from './Scheduler';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -44,7 +53,7 @@ export function injectInternals(internals: Object): boolean {
       console.error(
         'The installed version of React DevTools is too old and will not work ' +
           'with the current version of React. Please update React DevTools. ' +
-          'https://fb.me/react-devtools',
+          'https://reactjs.org/link/react-devtools',
       );
     }
     // DevTools exists, even though it doesn't support Fiber.
@@ -82,25 +91,56 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
   }
 }
 
-export function onCommitRoot(root: FiberRoot, expirationTime: ExpirationTime) {
+export function onCommitRoot(root: FiberRoot, eventPriority: EventPriority) {
   if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
-      const didError = (root.current.effectTag & DidCapture) === DidCapture;
+      const didError = (root.current.flags & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
-        const currentTime = getCurrentTime();
-        const priorityLevel = inferPriorityFromExpirationTime(
-          currentTime,
-          expirationTime,
-        );
+        let schedulerPriority;
+        switch (eventPriority) {
+          case DiscreteEventPriority:
+            schedulerPriority = ImmediateSchedulerPriority;
+            break;
+          case ContinuousEventPriority:
+            schedulerPriority = UserBlockingSchedulerPriority;
+            break;
+          case DefaultEventPriority:
+            schedulerPriority = NormalSchedulerPriority;
+            break;
+          case IdleEventPriority:
+            schedulerPriority = IdleSchedulerPriority;
+            break;
+          default:
+            schedulerPriority = NormalSchedulerPriority;
+            break;
+        }
         injectedHook.onCommitFiberRoot(
           rendererID,
           root,
-          priorityLevel,
+          schedulerPriority,
           didError,
         );
       } else {
         injectedHook.onCommitFiberRoot(rendererID, root, undefined, didError);
       }
+    } catch (err) {
+      if (__DEV__) {
+        if (!hasLoggedError) {
+          hasLoggedError = true;
+          console.error('React instrumentation encountered an error: %s', err);
+        }
+      }
+    }
+  }
+}
+
+export function onPostCommitRoot(root: FiberRoot) {
+  if (
+    injectedHook &&
+    typeof injectedHook.onPostCommitFiberRoot === 'function'
+  ) {
+    try {
+      injectedHook.onPostCommitFiberRoot(rendererID, root);
     } catch (err) {
       if (__DEV__) {
         if (!hasLoggedError) {

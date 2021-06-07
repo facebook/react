@@ -29,7 +29,7 @@ describe('ReactFresh', () => {
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').act;
+      act = require('react-dom/test-utils').unstable_concurrentAct;
       createReactClass = require('create-react-class/factory')(
         React.Component,
         React.isValidElement,
@@ -75,27 +75,17 @@ describe('ReactFresh', () => {
     return type;
   }
 
-  // TODO: Delete this once new API exists in both forks
-  function LegacyHiddenDiv({hidden, children, ...props}) {
-    if (gate(flags => flags.new)) {
-      return (
-        <div
-          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
-          {...props}>
-          <React.unstable_LegacyHidden mode={hidden ? 'hidden' : 'visible'}>
-            {children}
-          </React.unstable_LegacyHidden>
-        </div>
-      );
-    } else {
-      return (
-        <div
-          hidden={hidden ? 'unstable-do-not-use-legacy-hidden' : false}
-          {...props}>
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer necessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
           {children}
-        </div>
-      );
-    }
+        </React.unstable_LegacyHidden>
+      </div>
+    );
   }
 
   it('can preserve state for compatible types', () => {
@@ -2419,7 +2409,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can hot reload offscreen components', () => {
+  it('can hot reload offscreen components', async () => {
     if (__DEV__ && __EXPERIMENTAL__) {
       const AppV1 = prepare(() => {
         function Hello() {
@@ -2440,14 +2430,14 @@ describe('ReactFresh', () => {
             Scheduler.unstable_yieldValue('App#layout');
           });
           return (
-            <LegacyHiddenDiv hidden={offscreen}>
+            <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
               <Hello />
             </LegacyHiddenDiv>
           );
         };
       });
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;
@@ -2481,10 +2471,15 @@ describe('ReactFresh', () => {
       expect(el.firstChild.textContent).toBe('0');
       expect(el.firstChild.style.color).toBe('red');
 
-      el.firstChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-      expect(el.firstChild.textContent).toBe('0');
-      expect(el.firstChild.style.color).toBe('red');
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+      await act(async () => {
+        el.firstChild.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+          }),
+        );
+      });
+
+      expect(Scheduler).toHaveYielded(['Hello#layout']);
       expect(el.firstChild.textContent).toBe('1');
       expect(el.firstChild.style.color).toBe('red');
 
@@ -3622,11 +3617,26 @@ describe('ReactFresh', () => {
       const useStore = () => {};
       expect(ReactFreshRuntime.isLikelyComponentType(useStore)).toBe(false);
       expect(ReactFreshRuntime.isLikelyComponentType(useTheme)).toBe(false);
+      const rogueProxy = new Proxy(
+        {},
+        {
+          get(target, property) {
+            throw new Error();
+          },
+        },
+      );
+      expect(ReactFreshRuntime.isLikelyComponentType(rogueProxy)).toBe(false);
 
       // These seem like function components.
       const Button = () => {};
       expect(ReactFreshRuntime.isLikelyComponentType(Button)).toBe(true);
       expect(ReactFreshRuntime.isLikelyComponentType(Widget)).toBe(true);
+      const ProxyButton = new Proxy(Button, {
+        get(target, property) {
+          return target[property];
+        },
+      });
+      expect(ReactFreshRuntime.isLikelyComponentType(ProxyButton)).toBe(true);
       const anon = (() => () => {})();
       anon.displayName = 'Foo';
       expect(ReactFreshRuntime.isLikelyComponentType(anon)).toBe(true);
@@ -3634,8 +3644,14 @@ describe('ReactFresh', () => {
       // These seem like class components.
       class Btn extends React.Component {}
       class PureBtn extends React.PureComponent {}
+      const ProxyBtn = new Proxy(Btn, {
+        get(target, property) {
+          return target[property];
+        },
+      });
       expect(ReactFreshRuntime.isLikelyComponentType(Btn)).toBe(true);
       expect(ReactFreshRuntime.isLikelyComponentType(PureBtn)).toBe(true);
+      expect(ReactFreshRuntime.isLikelyComponentType(ProxyBtn)).toBe(true);
       expect(
         ReactFreshRuntime.isLikelyComponentType(
           createReactClass({render() {}}),
@@ -3734,31 +3750,39 @@ describe('ReactFresh', () => {
     }
   });
 
-  // This simulates the scenario in https://github.com/facebook/react/issues/17626.
+  function initFauxDevToolsHook() {
+    const onCommitFiberRoot = jest.fn();
+    const onCommitFiberUnmount = jest.fn();
+
+    let idCounter = 0;
+    const renderers = new Map();
+
+    // This is a minimal shim for the global hook installed by DevTools.
+    // The real one is in packages/react-devtools-shared/src/hook.js.
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      renderers,
+      supportsFiber: true,
+      inject(renderer) {
+        const id = ++idCounter;
+        renderers.set(id, renderer);
+        return id;
+      },
+      onCommitFiberRoot,
+      onCommitFiberUnmount,
+    };
+  }
+
+  // This simulates the scenario in https://github.com/facebook/react/issues/17626
   it('can inject the runtime after the renderer executes', () => {
     if (__DEV__) {
-      // This is a minimal shim for the global hook installed by DevTools.
-      // The real one is in packages/react-devtools-shared/src/hook.js.
-      let idCounter = 0;
-      const renderers = new Map();
-      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-        renderers,
-        supportsFiber: true,
-        inject(renderer) {
-          const id = ++idCounter;
-          renderers.set(id, renderer);
-          return id;
-        },
-        onCommitFiberRoot() {},
-        onCommitFiberUnmount() {},
-      };
+      initFauxDevToolsHook();
 
       // Load these first, as if they're coming from a CDN.
       jest.resetModules();
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').act;
+      act = require('react-dom/test-utils').unstable_concurrentAct;
 
       // Important! Inject into the global hook *after* ReactDOM runs:
       ReactFreshRuntime = require('react-refresh/runtime');
@@ -3807,6 +3831,45 @@ describe('ReactFresh', () => {
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('1');
       expect(el.style.color).toBe('red');
+    }
+  });
+
+  // This simulates the scenario in https://github.com/facebook/react/issues/20100
+  it('does not block DevTools when an unsupported renderer is injected', () => {
+    if (__DEV__) {
+      initFauxDevToolsHook();
+
+      const onCommitFiberRoot =
+        global.__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot;
+
+      // Redirect all React/ReactDOM requires to v16.8.0
+      // This version predates Fast Refresh support.
+      jest.mock('scheduler', () => jest.requireActual('scheduler-0-13'));
+      jest.mock('scheduler/tracing', () =>
+        jest.requireActual('scheduler-0-13/tracing'),
+      );
+      jest.mock('react', () => jest.requireActual('react-16-8'));
+      jest.mock('react-dom', () => jest.requireActual('react-dom-16-8'));
+
+      // Load React and company.
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+
+      // Important! Inject into the global hook *after* ReactDOM runs:
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+
+      render(() => {
+        function Hello() {
+          return <div>Hi!</div>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+        return Hello;
+      });
+
+      expect(onCommitFiberRoot).toHaveBeenCalled();
     }
   });
 });

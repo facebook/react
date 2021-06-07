@@ -8,12 +8,12 @@
  */
 
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {getToStringValue, toString} from './ToStringValue';
 import type {ToStringValue} from './ToStringValue';
-
 import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
 
 let didWarnValDefaultVal = false;
@@ -76,7 +76,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled textarea ' +
           'and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnValDefaultVal = true;
@@ -100,7 +100,7 @@ export function initWrapperState(element: Element, props: Object) {
           defaultValue == null,
           'If you supply `defaultValue` on a <textarea>, do not pass children.',
         );
-        if (Array.isArray(children)) {
+        if (isArray(children)) {
           invariant(
             children.length <= 1,
             '<textarea> can only have at most one child.',

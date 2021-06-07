@@ -113,7 +113,7 @@ export default class ProfilerStore extends EventEmitter<{|
     }
 
     throw Error(
-      `Could not find commit data for root "${rootID}" and commit ${commitIndex}`,
+      `Could not find commit data for root "${rootID}" and commit "${commitIndex}"`,
     );
   }
 
@@ -211,6 +211,7 @@ export default class ProfilerStore extends EventEmitter<{|
         id: elementID,
         children: element.children.slice(0),
         displayName: element.displayName,
+        hocDisplayNames: element.hocDisplayNames,
         key: element.key,
         type: element.type,
       };

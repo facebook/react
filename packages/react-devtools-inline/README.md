@@ -8,7 +8,7 @@ This is a low-level package. If you're looking for the standalone DevTools app, 
 
 This package exports two entry points: a frontend (to be run in the main `window`) and a backend (to be installed and run within an `iframe`<sup>1</sup>).
 
-The frontend and backend can be initialized in any order, but **the backend must not be activated until after the frontend has been initialized**. Because of this, the simplest sequence is:
+The frontend and backend can be initialized in any order, but **the backend must not be activated until the frontend initialization has completed**. Because of this, the simplest sequence is:
 
 1. Frontend (DevTools interface) initialized in the main `window`.
 1. Backend initialized in an `iframe`.
@@ -85,7 +85,7 @@ initializeBackend(contentWindow);
 
 // React application can be injected into <iframe> at any time now...
 // Note that this would need to be done via <script> tag injection,
-// as setting the src of the <iframe> would load a new page (withou the injected backend).
+// as setting the src of the <iframe> would load a new page (without the injected backend).
 
 // Initialize DevTools UI to listen to the hook we just installed.
 // This returns a React component we can render anywhere in the parent window.
@@ -107,7 +107,7 @@ Sandboxed `iframe`s are also supported but require more complex initialization.
 ```js
 import { activate, initialize } from "react-devtools-inline/backend";
 
-// The DevTooks hook needs to be installed before React is even required!
+// The DevTools hook needs to be installed before React is even required!
 // The safest way to do this is probably to install it in a separate script tag.
 initialize(window);
 
@@ -151,6 +151,40 @@ iframe.onload = () => {
     "*"
   );
 };
+```
+
+### Advanced integration with custom "wall"
+
+Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/).
+
+```js
+import {
+  createBridge,
+  createStore,
+  initialize as createDevTools,
+} from "react-devtools-inline/frontend";
+
+// Custom Wall implementation enables serializing data
+// using an API other than window.postMessage()
+// For example...
+const wall = {
+  emit() {},
+  listen(listener) {
+    wall._listener = listener;
+  },
+  async send(event, payload) {
+    const response = await fetch(...).json();
+    wall._listener(response);
+  },
+};
+
+// Create a Bridge and Store that use the custom Wall.
+const bridge = createBridge(target, wall);
+const store = createStore(bridge);
+const DevTools = createDevTools(target, { bridge, store });
+
+// Render DevTools with it.
+<DevTools {...otherProps} />;
 ```
 
 ## Local development

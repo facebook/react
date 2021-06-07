@@ -7,3 +7,56 @@
    */
   overflow-x: hidden !important;
 }
+
+.Tooltip {
+  margin-top: 2.5rem;
+}
+
+.TooltipList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.TooltipListItem {
+  display: flex;
+}
+
+.TooltipLabel {
+  font-weight: bold;
+  margin-right: 0.25rem;
+}
+.TooltipLabel:after {
+  content: ':';
+}
+
+.TooltipValue {
+  flex-grow: 1;
+  text-align: end;
+}
+
+.DurationsWrapper {
+  flex-grow: 1;
+}
+
+.DurationsList {
+  list-style: none;
+  margin: 0 0 0 1rem;
+  padding: 0;
+}
+
+.DurationsListItem {
+  display: flex;
+}
+
+.DurationsLabel {
+  margin-right: 0.25rem;
+}
+.DurationsLabel:after {
+  content: ':';
+}
+
+.DurationsValue {
+  flex-grow: 1;
+  text-align: end;
+}

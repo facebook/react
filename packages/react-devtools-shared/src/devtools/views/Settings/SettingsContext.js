@@ -18,8 +18,10 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
+  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -39,6 +41,12 @@ type Context = {|
 
   appendComponentStack: boolean,
   setAppendComponentStack: (value: boolean) => void,
+
+  breakOnConsoleErrors: boolean,
+  setBreakOnConsoleErrors: (value: boolean) => void,
+
+  showInlineWarningsAndErrors: boolean,
+  setShowInlineWarningsAndErrors: (value: boolean) => void,
 
   theme: Theme,
   setTheme(value: Theme): void,
@@ -79,6 +87,20 @@ function SettingsContextController({
     appendComponentStack,
     setAppendComponentStack,
   ] = useLocalStorage<boolean>(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
+  const [
+    breakOnConsoleErrors,
+    setBreakOnConsoleErrors,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    false,
+  );
+  const [
+    showInlineWarningsAndErrors,
+    setShowInlineWarningsAndErrors,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+    true,
+  );
   const [
     traceUpdatesEnabled,
     setTraceUpdatesEnabled,
@@ -133,8 +155,17 @@ function SettingsContextController({
   }, [browserTheme, theme, documentElements]);
 
   useEffect(() => {
-    bridge.send('updateAppendComponentStack', appendComponentStack);
-  }, [bridge, appendComponentStack]);
+    bridge.send('updateConsolePatchSettings', {
+      appendComponentStack,
+      breakOnConsoleErrors,
+      showInlineWarningsAndErrors,
+    });
+  }, [
+    bridge,
+    appendComponentStack,
+    breakOnConsoleErrors,
+    showInlineWarningsAndErrors,
+  ]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
@@ -143,25 +174,33 @@ function SettingsContextController({
   const value = useMemo(
     () => ({
       appendComponentStack,
+      breakOnConsoleErrors,
       displayDensity,
       lineHeight:
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
       setAppendComponentStack,
+      setBreakOnConsoleErrors,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
+      setShowInlineWarningsAndErrors,
+      showInlineWarningsAndErrors,
       theme,
       traceUpdatesEnabled,
     }),
     [
       appendComponentStack,
+      breakOnConsoleErrors,
       displayDensity,
       setAppendComponentStack,
+      setBreakOnConsoleErrors,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
+      setShowInlineWarningsAndErrors,
+      showInlineWarningsAndErrors,
       theme,
       traceUpdatesEnabled,
     ],
@@ -196,7 +235,7 @@ function updateStyleHelper(
   );
 }
 
-function updateDisplayDensity(
+export function updateDisplayDensity(
   displayDensity: DisplayDensity,
   documentElements: DocumentElements,
 ): void {
@@ -230,11 +269,16 @@ function updateDisplayDensity(
   root.style.fontSize = fontSize;
 }
 
-function updateThemeVariables(
+export function updateThemeVariables(
   theme: Theme,
   documentElements: DocumentElements,
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-attribute-name-not-editable',
+    documentElements,
+  );
   updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
   updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
@@ -301,6 +345,25 @@ function updateThemeVariables(
     'color-component-badge-count-inverted',
     documentElements,
   );
+  updateStyleHelper(theme, 'color-console-error-badge-text', documentElements);
+  updateStyleHelper(theme, 'color-console-error-background', documentElements);
+  updateStyleHelper(theme, 'color-console-error-border', documentElements);
+  updateStyleHelper(theme, 'color-console-error-icon', documentElements);
+  updateStyleHelper(theme, 'color-console-error-text', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-console-warning-badge-text',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-console-warning-background',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-console-warning-border', documentElements);
+  updateStyleHelper(theme, 'color-console-warning-icon', documentElements);
+  updateStyleHelper(theme, 'color-console-warning-text', documentElements);
+  updateStyleHelper(theme, 'color-context-border', documentElements);
   updateStyleHelper(theme, 'color-context-background', documentElements);
   updateStyleHelper(theme, 'color-context-background-hover', documentElements);
   updateStyleHelper(
@@ -314,8 +377,25 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
+  updateStyleHelper(theme, 'color-error-background', documentElements);
+  updateStyleHelper(theme, 'color-error-border', documentElements);
+  updateStyleHelper(theme, 'color-error-text', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
+  updateStyleHelper(theme, 'color-link', documentElements);
   updateStyleHelper(theme, 'color-modal-background', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-bridge-version-npm-background',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-bridge-version-npm-text', documentElements);
+  updateStyleHelper(theme, 'color-bridge-version-number', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-primitive-hook-badge-background',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-primitive-hook-badge-text', documentElements);
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);

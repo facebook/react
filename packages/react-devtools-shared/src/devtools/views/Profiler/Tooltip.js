@@ -7,7 +7,7 @@ import styles from './Tooltip.css';
 
 const initialTooltipState = {height: 0, mouseX: 0, mouseY: 0, width: 0};
 
-export default function Tooltip({children, label}: any) {
+export default function Tooltip({children, className, label, style}: any) {
   const containerRef = useRef(null);
   const tooltipRef = useRef(null);
 
@@ -36,7 +36,10 @@ export default function Tooltip({children, label}: any) {
       className={styles.Container}
       onMouseMove={onMouseMove}
       ref={containerRef}>
-      <div ref={tooltipRef} className={`${styles.Tooltip} ${tooltipClassName}`}>
+      <div
+        className={`${styles.Tooltip} ${tooltipClassName} ${className || ''}`}
+        ref={tooltipRef}
+        style={style}>
         {label}
       </div>
       {children}
@@ -81,7 +84,7 @@ function getMousePosition(
   mouseEvent: SyntheticMouseEvent<*>,
 ) {
   if (relativeContainer !== null) {
-    // Positon within the nearest position:relative container.
+    // Position within the nearest position:relative container.
     let targetContainer = relativeContainer;
     while (targetContainer.parentElement != null) {
       if (targetContainer.style.position === 'relative') {

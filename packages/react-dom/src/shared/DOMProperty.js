@@ -7,10 +7,8 @@
  * @flow
  */
 
-import {
-  enableDeprecatedFlareAPI,
-  enableFilterEmptyStringAttributesDOM,
-} from 'shared/ReactFeatureFlags';
+import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -19,7 +17,7 @@ type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export const RESERVED = 0;
 
 // A simple string attribute.
-// Attributes that aren't in the whitelist are presumed to have this type.
+// Attributes that aren't in the filter are presumed to have this type.
 export const STRING = 1;
 
 // A string attribute that accepts booleans in React. In HTML, these are called
@@ -65,13 +63,10 @@ export const ATTRIBUTE_NAME_START_CHAR =
 export const ATTRIBUTE_NAME_CHAR =
   ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040';
 
-export const ID_ATTRIBUTE_NAME = 'data-reactid';
-export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const illegalAttributeNameCache = {};
 const validatedAttributeNameCache = {};
 
@@ -252,9 +247,6 @@ const reservedProps = [
   'suppressHydrationWarning',
   'style',
 ];
-if (enableDeprecatedFlareAPI) {
-  reservedProps.push('DEPRECATED_flareListeners');
-}
 
 reservedProps.forEach(name => {
   properties[name] = new PropertyInfoRecord(
@@ -449,7 +441,7 @@ const capitalize = token => token[1].toUpperCase();
 
 // This is a list of all SVG attributes that need special casing, namespacing,
 // or boolean value assignment. Regular attributes that just accept strings
-// and have the same names are omitted, just like in the HTML whitelist.
+// and have the same names are omitted, just like in the HTML attribute filter.
 // Some of these attributes can be hard to find. This list was created by
 // scraping the MDN documentation.
 [

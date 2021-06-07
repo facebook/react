@@ -16,7 +16,6 @@ describe('ProfilingCache', () => {
   let React;
   let ReactDOM;
   let Scheduler;
-  let SchedulerTracing;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
   let store: Store;
@@ -35,7 +34,6 @@ describe('ProfilingCache', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
-    SchedulerTracing = require('scheduler/tracing');
     TestRenderer = utils.requireTestRenderer();
   });
 
@@ -478,7 +476,7 @@ describe('ProfilingCache', () => {
     expect(commitData).not.toBeNull();
   });
 
-  it('should calculate self duration correctly for suspended views', async done => {
+  it('should calculate self duration correctly for suspended views', async () => {
     let data;
     const getData = () => {
       if (data) {
@@ -536,8 +534,6 @@ describe('ProfilingCache', () => {
     }
 
     expect(allCommitData).toHaveLength(2);
-
-    done();
   });
 
   it('should collect data for each rendered fiber', () => {
@@ -624,76 +620,112 @@ describe('ProfilingCache', () => {
     }
   });
 
-  it('should report every traced interaction', () => {
-    const Parent = ({count}) => {
-      Scheduler.unstable_advanceTime(10);
-      const children = new Array(count)
-        .fill(true)
-        .map((_, index) => <Child key={index} duration={index} />);
-      return (
-        <React.Fragment>
-          {children}
-          <MemoizedChild duration={1} />
-        </React.Fragment>
-      );
-    };
-    const Child = ({duration}) => {
-      Scheduler.unstable_advanceTime(duration);
-      return null;
-    };
-    const MemoizedChild = React.memo(Child);
-
+  it('should handle unexpectedly shallow suspense trees', () => {
     const container = document.createElement('div');
 
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() =>
-      SchedulerTracing.unstable_trace(
-        'mount: one child',
-        Scheduler.unstable_now(),
-        () => ReactDOM.render(<Parent count={1} />, container),
-      ),
-    );
-    utils.act(() =>
-      SchedulerTracing.unstable_trace(
-        'update: two children',
-        Scheduler.unstable_now(),
-        () => ReactDOM.render(<Parent count={2} />, container),
-      ),
-    );
+    utils.act(() => ReactDOM.render(<React.Suspense />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    let interactions = null;
-
-    function Validator({previousInteractions, rootID}) {
-      interactions = store.profilerStore.profilingCache.getInteractionsChartData(
-        {
-          rootID,
-        },
-      ).interactions;
-      if (previousInteractions != null) {
-        expect(interactions).toEqual(previousInteractions);
-      } else {
-        expect(interactions).toMatchSnapshot('Interactions');
-      }
+    function Validator({commitIndex, rootID}) {
+      const profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);
+      expect(profilingDataForRoot).toMatchSnapshot('Empty Suspense node');
       return null;
     }
 
     const rootID = store.roots[0];
 
-    utils.act(() =>
-      TestRenderer.create(
-        <Validator previousInteractions={null} rootID={rootID} />,
-      ),
-    );
+    utils.act(() => {
+      TestRenderer.create(<Validator commitIndex={0} rootID={rootID} />);
+    });
+  });
 
-    expect(interactions).not.toBeNull();
+  // See https://github.com/facebook/react/issues/18831
+  it('should not crash during route transitions with Suspense', () => {
+    const RouterContext = React.createContext();
 
-    utils.exportImportHelper(bridge, store);
+    function App() {
+      return (
+        <Router>
+          <Switch>
+            <Route path="/">
+              <Home />
+            </Route>
+            <Route path="/about">
+              <About />
+            </Route>
+          </Switch>
+        </Router>
+      );
+    }
 
-    utils.act(() =>
-      TestRenderer.create(
-        <Validator previousInteractions={interactions} rootID={rootID} />,
-      ),
-    );
+    const Home = () => {
+      return (
+        <React.Suspense>
+          <Link path="/about">Home</Link>
+        </React.Suspense>
+      );
+    };
+
+    const About = () => <div>About</div>;
+
+    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Router.js
+    function Router({children}) {
+      const [path, setPath] = React.useState('/');
+      return (
+        <RouterContext.Provider value={{path, setPath}}>
+          {children}
+        </RouterContext.Provider>
+      );
+    }
+
+    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Switch.js
+    function Switch({children}) {
+      return (
+        <RouterContext.Consumer>
+          {context => {
+            let element = null;
+            React.Children.forEach(children, child => {
+              if (context.path === child.props.path) {
+                element = child.props.children;
+              }
+            });
+            return element ? React.cloneElement(element) : null;
+          }}
+        </RouterContext.Consumer>
+      );
+    }
+
+    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Route.js
+    function Route({children, path}) {
+      return null;
+    }
+
+    const linkRef = React.createRef();
+
+    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router-dom/modules/Link.js
+    function Link({children, path}) {
+      return (
+        <RouterContext.Consumer>
+          {context => {
+            return (
+              <button ref={linkRef} onClick={() => context.setPath(path)}>
+                {children}
+              </button>
+            );
+          }}
+        </RouterContext.Consumer>
+      );
+    }
+
+    const {Simulate} = require('react-dom/test-utils');
+
+    const container = document.createElement('div');
+    utils.act(() => ReactDOM.render(<App />, container));
+    expect(container.textContent).toBe('Home');
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => Simulate.click(linkRef.current));
+    utils.act(() => store.profilerStore.stopProfiling());
+    expect(container.textContent).toBe('About');
   });
 });

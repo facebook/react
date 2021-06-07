@@ -10,53 +10,50 @@
 import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
-  ReactEventResponder,
-  ReactEventResponderListener,
-  ReactEventResponderInstance,
   ReactContext,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
+  MutableSourceVersion,
   MutableSource,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {SideEffectTag} from './ReactSideEffectTags';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
-import type {HookType} from './ReactFiberHooks.old';
+import type {Flags} from './ReactFiberFlags';
+import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
+import type {Cache} from './ReactFiberCacheComponent.old';
 
-export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
+// Unwind Circular: moved from ReactFiberHooks.old
+export type HookType =
+  | 'useState'
+  | 'useReducer'
+  | 'useContext'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useCallback'
+  | 'useMemo'
+  | 'useImperativeHandle'
+  | 'useDebugValue'
+  | 'useDeferredValue'
+  | 'useTransition'
+  | 'useMutableSource'
+  | 'useOpaqueIdentifier'
+  | 'useCacheRefresh';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
-  observedBits: number,
   next: ContextDependency<mixed> | null,
+  memoizedValue: T,
   ...
 };
 
-export type Dependencies_old = {
-  expirationTime: ExpirationTime,
-  firstContext: ContextDependency<mixed> | null,
-  responders: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  > | null,
-  ...
-};
-
-export type Dependencies_new = {
+export type Dependencies = {
   lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
-  responders: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  > | null,
   ...
 };
 
@@ -124,8 +121,7 @@ export type Fiber = {|
   memoizedState: any,
 
   // Dependencies (contexts, events) for this fiber, if it has any
-  dependencies_new: Dependencies_new | null,
-  dependencies_old: Dependencies_old | null,
+  dependencies: Dependencies | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
@@ -136,7 +132,9 @@ export type Fiber = {|
   mode: TypeOfMode,
 
   // Effect
-  effectTag: SideEffectTag,
+  flags: Flags,
+  subtreeFlags: Flags,
+  deletions: Array<Fiber> | null,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: Fiber | null,
@@ -147,11 +145,6 @@ export type Fiber = {|
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
-  // Only used by old reconciler
-  expirationTime: ExpirationTime,
-  childExpirationTime: ExpirationTime,
-
-  // Only used by new reconciler
   lanes: Lanes,
   childLanes: Lanes,
 
@@ -185,7 +178,7 @@ export type Fiber = {|
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
   // __DEV__ only
-  _debugID?: number,
+
   _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
@@ -218,41 +211,17 @@ type BaseFiberRootProperties = {|
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
-  // Node returned by Scheduler.scheduleCallback
+
+  // Used by useMutableSource hook to avoid tearing during hydration.
+  mutableSourceEagerHydrationData?: Array<
+    MutableSource<any> | MutableSourceVersion,
+  > | null,
+
+  // Node returned by Scheduler.scheduleCallback. Represents the next rendering
+  // task that the root will work on.
   callbackNode: *,
-
-  // Only used by old reconciler
-
-  // Expiration of the callback associated with this root
-  callbackExpirationTime: ExpirationTime,
-  // Priority of the callback associated with this root
-  callbackPriority_old: ReactPriorityLevel,
-
-  finishedExpirationTime: ExpirationTime,
-  // The earliest pending expiration time that exists in the tree
-  firstPendingTime: ExpirationTime,
-  // The latest pending expiration time that exists in the tree
-  lastPendingTime: ExpirationTime,
-  // The earliest suspended expiration time that exists in the tree
-  firstSuspendedTime: ExpirationTime,
-  // The latest suspended expiration time that exists in the tree
-  lastSuspendedTime: ExpirationTime,
-  // The next known expiration time after the suspended range
-  nextKnownPendingLevel: ExpirationTime,
-  // The latest time at which a suspended component pinged the root to
-  // render again
-  lastPingedTime: ExpirationTime,
-  lastExpiredTime: ExpirationTime,
-  // Used by useMutableSource hook to avoid tearing within this root
-  // when external, mutable sources are read from during render.
-  mutableSourceLastPendingUpdateTime: ExpirationTime,
-
-  // Only used by new reconciler
-
-  // Represents the next task that the root should work on, or the current one
-  // if it's already working.
-  callbackId: Lanes,
-  callbackPriority_new: LanePriority,
+  callbackPriority: Lane,
+  eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
 
   pendingLanes: Lanes,
@@ -265,17 +234,16 @@ type BaseFiberRootProperties = {|
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
+
+  pooledCache: Cache | null,
+  pooledCacheLanes: Lanes,
 |};
 
-// The following attributes are only used by interaction tracing builds.
-// They enable interactions to be associated with their async work,
-// And expose interaction metadata to the React DevTools Profiler plugin.
-// Note that these attributes are only defined when the enableSchedulerTracing flag is enabled.
-type ProfilingOnlyFiberRootProperties = {|
-  interactionThreadID: number,
-  memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap_new: Map<Lane | Lanes, Set<Interaction>>,
-  pendingInteractionMap_old: Map<ExpirationTime, Set<Interaction>>,
+// The following attributes are only used by DevTools and are only present in DEV builds.
+// They enable DevTools Profiler UI to show which Fiber(s) scheduled a given commit.
+type UpdaterTrackingOnlyFiberRootProperties = {|
+  memoizedUpdaters: Set<Fiber>,
+  pendingUpdatersLaneMap: LaneMap<Set<Fiber>>,
 |};
 
 export type SuspenseHydrationCallbacks = {
@@ -291,13 +259,11 @@ type SuspenseCallbackOnlyFiberRootProperties = {|
 
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
-// Profiling properties are only safe to access in profiling builds (when enableSchedulerTracing is true).
 // The types are defined separately within this file to ensure they stay in sync.
-// (We don't have to use an inline :any cast when enableSchedulerTracing is disabled.)
 export type FiberRoot = {
   ...BaseFiberRootProperties,
-  ...ProfilingOnlyFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
+  ...UpdaterTrackingOnlyFiberRootProperties,
   ...
 };
 
@@ -305,20 +271,15 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
-  readContext<T>(
-    context: ReactContext<T>,
-    observedBits: void | number | boolean,
-  ): T,
+  getCacheForType?: <T>(resourceType: () => T) => T,
+  readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
     reducer: (S, A) => S,
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
-  useContext<T>(
-    context: ReactContext<T>,
-    observedBits: void | number | boolean,
-  ): T,
+  useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {|current: T|},
   useEffect(
     create: () => (() => void) | void,
@@ -336,18 +297,15 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useResponder<E, C>(
-    responder: ReactEventResponder<E, C>,
-    props: Object,
-  ): ReactEventResponderListener<E, C>,
-  useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
-  useTransition(
-    config: SuspenseConfig | void | null,
-  ): [(() => void) => void, boolean],
+  useDeferredValue<T>(value: T): T,
+  useTransition(): [boolean, (() => void) => void],
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
+  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
+
+  unstable_isNewReconciler?: boolean,
 |};

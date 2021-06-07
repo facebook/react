@@ -5,14 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
+import hasOwnProperty from 'shared/hasOwnProperty';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 const RESERVED_PROPS = {
   key: true,
@@ -61,7 +59,9 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
       self &&
       ReactCurrentOwner.current.stateNode !== self
     ) {
-      const componentName = getComponentName(ReactCurrentOwner.current.type);
+      const componentName = getComponentNameFromType(
+        ReactCurrentOwner.current.type,
+      );
 
       if (!didWarnAboutStringRefs[componentName]) {
         console.error(
@@ -70,8 +70,8 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
             'This case cannot be automatically converted to an arrow function. ' +
             'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
-            'https://fb.me/react-strict-mode-string-ref',
-          getComponentName(ReactCurrentOwner.current.type),
+            'https://reactjs.org/link/strict-mode-string-ref',
+          getComponentNameFromType(ReactCurrentOwner.current.type),
           config.ref,
         );
         didWarnAboutStringRefs[componentName] = true;
@@ -89,7 +89,7 @@ function defineKeyPropWarningGetter(props, displayName) {
           '%s: `key` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
             'value within the child component, you should pass it as a different ' +
-            'prop. (https://fb.me/react-special-props)',
+            'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
       }
@@ -111,7 +111,7 @@ function defineRefPropWarningGetter(props, displayName) {
           '%s: `ref` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
             'value within the child component, you should pass it as a different ' +
-            'prop. (https://fb.me/react-special-props)',
+            'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
       }

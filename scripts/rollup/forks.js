@@ -43,7 +43,7 @@ const forks = Object.freeze({
       // happens. Other bundles just require('object-assign') anyway.
       return null;
     }
-    if (entry === 'react') {
+    if (entry === 'react' || entry === 'react/unstable-shared-subset') {
       // Use the forked version that uses ES modules instead of CommonJS.
       return 'shared/forks/object-assign.inline-umd.js';
     }
@@ -64,8 +64,8 @@ const forks = Object.freeze({
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
-    if (entry === 'react') {
-      return 'react/src/ReactSharedInternals';
+    if (entry === 'react' || entry === 'react/unstable-shared-subset') {
+      return 'react/src/ReactSharedInternals.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -116,6 +116,13 @@ const forks = Object.freeze({
         }
       case 'react-test-renderer':
         switch (bundleType) {
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+          case RN_OSS_DEV:
+          case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.test-renderer.native.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
@@ -136,6 +143,10 @@ const forks = Object.freeze({
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
             return 'shared/forks/ReactFeatureFlags.www.js';
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.native-fb.js';
         }
     }
     return null;
@@ -160,25 +171,6 @@ const forks = Object.freeze({
     }
   },
 
-  'scheduler/tracing': (bundleType, entry, dependencies) => {
-    switch (bundleType) {
-      case UMD_DEV:
-      case UMD_PROD:
-      case UMD_PROFILING:
-        if (dependencies.indexOf('react') === -1) {
-          // It's only safe to use this fork for modules that depend on React,
-          // because they read the re-exported API from the SECRET_INTERNALS object.
-          return null;
-        }
-        // Optimization: for UMDs, use the API that is already a part of the React
-        // package instead of requiring it to be loaded via a separate <script> tag
-        return 'shared/forks/SchedulerTracing.umd.js';
-      default:
-        // For other bundles, use the shared NPM package.
-        return null;
-    }
-  },
-
   'scheduler/src/SchedulerFeatureFlags': (bundleType, entry, dependencies) => {
     if (
       bundleType === FB_WWW_DEV ||
@@ -188,18 +180,6 @@ const forks = Object.freeze({
       return 'scheduler/src/forks/SchedulerFeatureFlags.www.js';
     }
     return 'scheduler/src/SchedulerFeatureFlags';
-  },
-
-  'scheduler/src/SchedulerHostConfig': (bundleType, entry, dependencies) => {
-    if (
-      entry === 'scheduler/unstable_mock' ||
-      entry === 'react-noop-renderer' ||
-      entry === 'react-noop-renderer/persistent' ||
-      entry === 'react-test-renderer'
-    ) {
-      return 'scheduler/src/forks/SchedulerHostConfig.mock';
-    }
-    return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
 
   'shared/consoleWithStackDev': (bundleType, entry) => {
@@ -278,6 +258,26 @@ const forks = Object.freeze({
     }
     // Otherwise, use the non-forked version.
     return 'react-reconciler/src/ReactFiberReconciler.old.js';
+  },
+
+  'react-reconciler/src/ReactEventPriorities': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (bundle.enableNewReconciler) {
+      switch (bundleType) {
+        case FB_WWW_DEV:
+        case FB_WWW_PROD:
+        case FB_WWW_PROFILING:
+          // Use the forked version of the reconciler
+          return 'react-reconciler/src/ReactEventPriorities.new.js';
+      }
+    }
+    // Otherwise, use the non-forked version.
+    return 'react-reconciler/src/ReactEventPriorities.old.js';
   },
 
   'react-reconciler/src/ReactFiberHotReloading': (
@@ -480,14 +480,6 @@ const forks = Object.freeze({
       default:
         return null;
     }
-  },
-
-  // React DOM uses different top level event names and supports mouse events.
-  'legacy-events/ResponderTopLevelEventTypes': (bundleType, entry) => {
-    if (entry === 'react-dom' || entry.startsWith('react-dom/')) {
-      return 'legacy-events/forks/ResponderTopLevelEventTypes.dom.js';
-    }
-    return null;
   },
 });
 

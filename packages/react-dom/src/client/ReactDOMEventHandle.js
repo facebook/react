@@ -7,32 +7,22 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
+import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventHandle,
   ReactDOMEventHandleListener,
 } from '../shared/ReactDOMTypes';
 
-import {getEventPriorityForListenerSystem} from '../events/DOMEventProperties';
+import {allNativeEvents} from '../events/EventRegistry';
 import {
-  getClosestInstanceFromNode,
   getEventHandlerListeners,
   setEventHandlerListeners,
-  getEventListenerMap,
-  getFiberFromScopeInstance,
+  doesTargetHaveEventHandle,
+  addEventHandleToTarget,
 } from './ReactDOMComponentTree';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import {
-  listenToTopLevelEvent,
-  addEventTypeToDispatchConfig,
-} from '../events/DOMModernPluginEventSystem';
-
-import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
-import {
-  PLUGIN_EVENT_SYSTEM,
-  IS_TARGET_PHASE_ONLY,
-} from '../events/EventSystemFlags';
+import {listenToNativeEventForNonManagedEventTarget} from '../events/DOMPluginEventSystem';
 
 import {
   enableScopeAPI,
@@ -42,22 +32,7 @@ import invariant from 'shared/invariant';
 
 type EventHandleOptions = {|
   capture?: boolean,
-  passive?: boolean,
-  priority?: EventPriority,
 |};
-
-function getNearestRootOrPortalContainer(node: Fiber): null | Element {
-  while (node !== null) {
-    const tag = node.tag;
-    // Once we encounter a host container or root container
-    // we can return their DOM instance.
-    if (tag === HostRoot || tag === HostPortal) {
-      return node.stateNode.containerInfo;
-    }
-    node = node.return;
-  }
-  return null;
-}
 
 function isValidEventTarget(target: EventTarget | ReactScopeInstance): boolean {
   return typeof (target: Object).addEventListener === 'function';
@@ -68,44 +43,42 @@ function isReactScope(target: EventTarget | ReactScopeInstance): boolean {
 }
 
 function createEventHandleListener(
-  type: DOMTopLevelEventType,
-  capture: boolean,
+  type: DOMEventName,
+  isCapturePhaseListener: boolean,
   callback: (SyntheticEvent<EventTarget>) => void,
-  destroy: (target: EventTarget | ReactScopeInstance) => void,
 ): ReactDOMEventHandleListener {
   return {
     callback,
-    capture,
-    destroy,
+    capture: isCapturePhaseListener,
     type,
   };
 }
 
-function registerEventOnNearestTargetContainer(
-  targetFiber: Fiber,
-  topLevelType: DOMTopLevelEventType,
-  passive: boolean | void,
-  priority: EventPriority | void,
+function registerReactDOMEvent(
+  target: EventTarget | ReactScopeInstance,
+  domEventName: DOMEventName,
+  isCapturePhaseListener: boolean,
 ): void {
-  // If it is, find the nearest root or portal and make it
-  // our event handle target container.
-  const targetContainer = getNearestRootOrPortalContainer(targetFiber);
-  if (targetContainer === null) {
+  if ((target: any).nodeType === ELEMENT_NODE) {
+    // Do nothing. We already attached all root listeners.
+  } else if (enableScopeAPI && isReactScope(target)) {
+    // Do nothing. We already attached all root listeners.
+  } else if (isValidEventTarget(target)) {
+    const eventTarget = ((target: any): EventTarget);
+    // These are valid event targets, but they are also
+    // non-managed React nodes.
+    listenToNativeEventForNonManagedEventTarget(
+      domEventName,
+      isCapturePhaseListener,
+      eventTarget,
+    );
+  } else {
     invariant(
       false,
-      'ReactDOM.createEventHandle: setListener called on an target ' +
-        'that did not have a corresponding root. This is likely a bug in React.',
+      'ReactDOM.createEventHandle: setter called on an invalid ' +
+        'target. Provide a valid EventTarget or an element managed by React.',
     );
   }
-  const listenerMap = getEventListenerMap(targetContainer);
-  listenToTopLevelEvent(
-    topLevelType,
-    targetContainer,
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM,
-    passive,
-    priority,
-  );
 }
 
 export function createEventHandle(
@@ -113,135 +86,63 @@ export function createEventHandle(
   options?: EventHandleOptions,
 ): ReactDOMEventHandle {
   if (enableCreateEventHandleAPI) {
-    const topLevelType = ((type: any): DOMTopLevelEventType);
-    let capture = false;
-    let passive = undefined; // Undefined means to use the browser default
-    let priority;
+    const domEventName = ((type: any): DOMEventName);
 
+    // We cannot support arbitrary native events with eager root listeners
+    // because the eager strategy relies on knowing the whole list ahead of time.
+    // If we wanted to support this, we'd have to add code to keep track
+    // (or search) for all portal and root containers, and lazily add listeners
+    // to them whenever we see a previously unknown event. This seems like a lot
+    // of complexity for something we don't even have a particular use case for.
+    // Unfortunately, the downside of this invariant is that *removing* a native
+    // event from the list of known events has now become a breaking change for
+    // any code relying on the createEventHandle API.
+    invariant(
+      allNativeEvents.has(domEventName),
+      'Cannot call unstable_createEventHandle with "%s", as it is not an event known to React.',
+      domEventName,
+    );
+
+    let isCapturePhaseListener = false;
     if (options != null) {
       const optionsCapture = options.capture;
-      const optionsPassive = options.passive;
-      const optionsPriority = options.priority;
-
       if (typeof optionsCapture === 'boolean') {
-        capture = optionsCapture;
-      }
-      if (typeof optionsPassive === 'boolean') {
-        passive = optionsPassive;
-      }
-      if (typeof optionsPriority === 'number') {
-        priority = optionsPriority;
+        isCapturePhaseListener = optionsCapture;
       }
     }
-    if (priority === undefined) {
-      priority = getEventPriorityForListenerSystem(topLevelType);
-    }
 
-    const listeners = new Map();
-
-    const destroy = (target: EventTarget | ReactScopeInstance): void => {
-      const listener = listeners.get(target);
-      if (listener !== undefined) {
-        listeners.delete(target);
-        const targetListeners = getEventHandlerListeners(target);
-        if (targetListeners !== null) {
-          targetListeners.delete(listener);
-        }
+    const eventHandle = (
+      target: EventTarget | ReactScopeInstance,
+      callback: (SyntheticEvent<EventTarget>) => void,
+    ) => {
+      invariant(
+        typeof callback === 'function',
+        'ReactDOM.createEventHandle: setter called with an invalid ' +
+          'callback. The callback must be a function.',
+      );
+      if (!doesTargetHaveEventHandle(target, eventHandle)) {
+        addEventHandleToTarget(target, eventHandle);
+        registerReactDOMEvent(target, domEventName, isCapturePhaseListener);
       }
-    };
-
-    const clear = (): void => {
-      const eventTargetsArr = Array.from(listeners.keys());
-      for (let i = 0; i < eventTargetsArr.length; i++) {
-        destroy(eventTargetsArr[i]);
+      const listener = createEventHandleListener(
+        domEventName,
+        isCapturePhaseListener,
+        callback,
+      );
+      let targetListeners = getEventHandlerListeners(target);
+      if (targetListeners === null) {
+        targetListeners = new Set();
+        setEventHandlerListeners(target, targetListeners);
       }
+      targetListeners.add(listener);
+      return () => {
+        ((targetListeners: any): Set<ReactDOMEventHandleListener>).delete(
+          listener,
+        );
+      };
     };
 
-    return {
-      setListener(
-        target: EventTarget | ReactScopeInstance,
-        callback: null | ((SyntheticEvent<EventTarget>) => void),
-      ): void {
-        // Check if the target is a DOM element.
-        if ((target: any).nodeType === ELEMENT_NODE) {
-          const targetElement = ((target: any): Element);
-          // Check if the DOM element is managed by React.
-          const targetFiber = getClosestInstanceFromNode(targetElement);
-          if (targetFiber === null) {
-            invariant(
-              false,
-              'ReactDOM.createEventHandle: setListener called on an element ' +
-                'target that is not managed by React. Ensure React rendered the DOM element.',
-            );
-          }
-          registerEventOnNearestTargetContainer(
-            targetFiber,
-            topLevelType,
-            passive,
-            priority,
-          );
-        } else if (enableScopeAPI && isReactScope(target)) {
-          const scopeTarget = ((target: any): ReactScopeInstance);
-          const targetFiber = getFiberFromScopeInstance(scopeTarget);
-          if (targetFiber === null) {
-            // Scope is unmounted, do not proceed.
-            return;
-          }
-          registerEventOnNearestTargetContainer(
-            targetFiber,
-            topLevelType,
-            passive,
-            priority,
-          );
-        } else if (isValidEventTarget(target)) {
-          const eventTarget = ((target: any): EventTarget);
-          const listenerMap = getEventListenerMap(eventTarget);
-          listenToTopLevelEvent(
-            topLevelType,
-            eventTarget,
-            listenerMap,
-            PLUGIN_EVENT_SYSTEM | IS_TARGET_PHASE_ONLY,
-            passive,
-            priority,
-            capture,
-          );
-        } else {
-          invariant(
-            false,
-            'ReactDOM.createEventHandle: setListener called on an invalid ' +
-              'target. Provide a vaid EventTarget or an element managed by React.',
-          );
-        }
-        let listener = listeners.get(target);
-        if (listener === undefined) {
-          if (callback === null) {
-            return;
-          }
-          listener = createEventHandleListener(
-            topLevelType,
-            capture,
-            callback,
-            destroy,
-          );
-          listeners.set(target, listener);
-
-          let targetListeners = getEventHandlerListeners(target);
-          if (targetListeners === null) {
-            targetListeners = new Set();
-            setEventHandlerListeners(target, targetListeners);
-          }
-          targetListeners.add(listener);
-          // Finally, add the event to our known event types list.
-          addEventTypeToDispatchConfig(topLevelType);
-        } else if (callback !== null) {
-          listener.callback = callback;
-        } else {
-          // Remove listener
-          destroy(target);
-        }
-      },
-      clear,
-    };
+    return eventHandle;
   }
   return (null: any);
 }

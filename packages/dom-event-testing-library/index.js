@@ -22,12 +22,14 @@ const createEventTarget = node => ({
    */
   blur(payload) {
     node.dispatchEvent(domEvents.blur(payload));
+    node.dispatchEvent(domEvents.focusOut(payload));
   },
   click(payload) {
     node.dispatchEvent(domEvents.click(payload));
   },
   focus(payload) {
     node.dispatchEvent(domEvents.focus(payload));
+    node.dispatchEvent(domEvents.focusIn(payload));
     node.focus();
   },
   keydown(payload) {

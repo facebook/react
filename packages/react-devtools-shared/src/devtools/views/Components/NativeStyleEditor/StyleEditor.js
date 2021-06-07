@@ -164,7 +164,7 @@ function Row({
   // The list of valid attributes would need to be injected by RN backend,
   // which would need to require them from ReactNativeViewViewConfig "validAttributes.style" keys.
   // This would need to degrade gracefully for react-native-web,
-  // althoguh we could let it also inject a custom set of whitelisted attributes.
+  // although we could let it also inject a custom set of allowed attributes.
 
   const [localAttribute, setLocalAttribute] = useState(attribute);
   const [localValue, setLocalValue] = useState(JSON.stringify(value));

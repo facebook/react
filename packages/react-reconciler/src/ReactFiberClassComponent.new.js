@@ -8,29 +8,48 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {Flags} from './ReactFiberFlags';
 
 import * as React from 'react';
-import {Update, Snapshot} from './ReactSideEffectTags';
+import {
+  LayoutStatic,
+  MountLayoutDev,
+  Update,
+  Snapshot,
+} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  enableDebugTracing,
+  enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
+  enableStrictEffects,
+  enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {StrictMode} from './ReactTypeOfMode';
+import {
+  DebugTracingMode,
+  NoMode,
+  StrictLegacyMode,
+  StrictEffectsMode,
+} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
+  entangleTransitions,
   processUpdateQueue,
   checkHasForceUpdateAfterProcessing,
   resetHasForceUpdateBeforeProcessing,
@@ -40,7 +59,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.new';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes} from './ReactFiberLane.new';
 import {
   cacheContext,
   getMaskedContext,
@@ -48,18 +67,21 @@ import {
   hasContextChanged,
   emptyContextObject,
 } from './ReactFiberContext.new';
-import {readContext} from './ReactFiberNewContext.new';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {
   requestEventTime,
   requestUpdateLane,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.new';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {
+  markForceUpdateScheduled,
+  markStateUpdateScheduled,
+} from './SchedulingProfiler';
 
 const fakeInternalInstance = {};
-const isArray = Array.isArray;
 
 // React.Component uses a shared frozen object by default.
 // We'll use it to determine whether we need to initialize legacy refs.
@@ -106,7 +128,7 @@ if (__DEV__) {
 
   warnOnUndefinedDerivedState = function(type, partialState) {
     if (partialState === undefined) {
-      const componentName = getComponentName(type) || 'Component';
+      const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
         didWarnAboutUndefinedDerivedState.add(componentName);
         console.error(
@@ -140,7 +162,7 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-export function applyDerivedStateFromProps(
+function applyDerivedStateFromProps(
   workInProgress: Fiber,
   ctor: any,
   getDerivedStateFromProps: (props: any, state: any) => any,
@@ -151,7 +173,7 @@ export function applyDerivedStateFromProps(
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictMode
+      workInProgress.mode & StrictLegacyMode
     ) {
       disableLogs();
       try {
@@ -189,10 +211,9 @@ const classComponentUpdater = {
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -201,16 +222,31 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
+          logStateUpdateScheduled(name, lane, payload);
+        }
+      }
+    }
+
+    if (enableSchedulingProfiler) {
+      markStateUpdateScheduled(fiber, lane);
+    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -221,16 +257,31 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
+          logStateUpdateScheduled(name, lane, payload);
+        }
+      }
+    }
+
+    if (enableSchedulingProfiler) {
+      markStateUpdateScheduled(fiber, lane);
+    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -240,8 +291,24 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
+          logForceUpdateScheduled(name, lane);
+        }
+      }
+    }
+
+    if (enableSchedulingProfiler) {
+      markForceUpdateScheduled(fiber, lane);
+    }
   },
 };
 
@@ -259,7 +326,7 @@ function checkShouldComponentUpdate(
     if (__DEV__) {
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode
+        workInProgress.mode & StrictLegacyMode
       ) {
         disableLogs();
         try {
@@ -281,7 +348,7 @@ function checkShouldComponentUpdate(
         console.error(
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
-          getComponentName(ctor) || 'Component',
+          getComponentNameFromType(ctor) || 'Component',
         );
       }
     }
@@ -301,7 +368,7 @@ function checkShouldComponentUpdate(
 function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
   const instance = workInProgress.stateNode;
   if (__DEV__) {
-    const name = getComponentName(ctor) || 'Component';
+    const name = getComponentNameFromType(ctor) || 'Component';
     const renderPresent = instance.render;
 
     if (!renderPresent) {
@@ -414,7 +481,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
           'Please extend React.Component if shouldComponentUpdate is used.',
-        getComponentName(ctor) || 'A pure component',
+        getComponentNameFromType(ctor) || 'A pure component',
       );
     }
     if (typeof instance.componentDidUnmount === 'function') {
@@ -476,7 +543,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       console.error(
         '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
           'This component defines getSnapshotBeforeUpdate() only.',
-        getComponentName(ctor),
+        getComponentNameFromType(ctor),
       );
     }
 
@@ -573,7 +640,7 @@ function constructClassInstance(
         console.error(
           '%s defines an invalid contextType. ' +
             'contextType should point to the Context object returned by React.createContext().%s',
-          getComponentName(ctor) || 'Component',
+          getComponentNameFromType(ctor) || 'Component',
           addendum,
         );
       }
@@ -596,7 +663,7 @@ function constructClassInstance(
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictMode
+      workInProgress.mode & StrictLegacyMode
     ) {
       disableLogs();
       try {
@@ -616,7 +683,7 @@ function constructClassInstance(
 
   if (__DEV__) {
     if (typeof ctor.getDerivedStateFromProps === 'function' && state === null) {
-      const componentName = getComponentName(ctor) || 'Component';
+      const componentName = getComponentNameFromType(ctor) || 'Component';
       if (!didWarnAboutUninitializedState.has(componentName)) {
         didWarnAboutUninitializedState.add(componentName);
         console.error(
@@ -672,7 +739,7 @@ function constructClassInstance(
         foundWillReceivePropsName !== null ||
         foundWillUpdateName !== null
       ) {
-        const componentName = getComponentName(ctor) || 'Component';
+        const componentName = getComponentNameFromType(ctor) || 'Component';
         const newApiName =
           typeof ctor.getDerivedStateFromProps === 'function'
             ? 'getDerivedStateFromProps()'
@@ -683,7 +750,7 @@ function constructClassInstance(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
-              'https://fb.me/react-unsafe-component-lifecycles',
+              'https://reactjs.org/link/unsafe-component-lifecycles',
             componentName,
             newApiName,
             foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
@@ -722,7 +789,7 @@ function callComponentWillMount(workInProgress, instance) {
         '%s.componentWillMount(): Assigning directly to this.state is ' +
           "deprecated (except inside a component's " +
           'constructor). Use setState instead.',
-        getComponentName(workInProgress.type) || 'Component',
+        getComponentNameFromFiber(workInProgress) || 'Component',
       );
     }
     classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
@@ -746,7 +813,7 @@ function callComponentWillReceiveProps(
   if (instance.state !== oldState) {
     if (__DEV__) {
       const componentName =
-        getComponentName(workInProgress.type) || 'Component';
+        getComponentNameFromFiber(workInProgress) || 'Component';
       if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
         didWarnAboutStateAssignmentForComponent.add(componentName);
         console.error(
@@ -791,7 +858,7 @@ function mountClassInstance(
 
   if (__DEV__) {
     if (instance.state === newProps) {
-      const componentName = getComponentName(ctor) || 'Component';
+      const componentName = getComponentNameFromType(ctor) || 'Component';
       if (!didWarnAboutDirectlyAssigningPropsToState.has(componentName)) {
         didWarnAboutDirectlyAssigningPropsToState.add(componentName);
         console.error(
@@ -803,7 +870,7 @@ function mountClassInstance(
       }
     }
 
-    if (workInProgress.mode & StrictMode) {
+    if (workInProgress.mode & StrictLegacyMode) {
       ReactStrictModeWarnings.recordLegacyContextWarning(
         workInProgress,
         instance,
@@ -818,7 +885,6 @@ function mountClassInstance(
     }
   }
 
-  processUpdateQueue(workInProgress, newProps, instance, renderLanes);
   instance.state = workInProgress.memoizedState;
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
@@ -848,7 +914,18 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    workInProgress.effectTag |= Update;
+    let fiberFlags: Flags = Update;
+    if (enableSuspenseLayoutEffectSemantics) {
+      fiberFlags |= LayoutStatic;
+    }
+    if (
+      __DEV__ &&
+      enableStrictEffects &&
+      (workInProgress.mode & StrictEffectsMode) !== NoMode
+    ) {
+      fiberFlags |= MountLayoutDev;
+    }
+    workInProgress.flags |= fiberFlags;
   }
 }
 
@@ -918,7 +995,18 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
+      if (
+        __DEV__ &&
+        enableStrictEffects &&
+        (workInProgress.mode & StrictEffectsMode) !== NoMode
+      ) {
+        fiberFlags |= MountLayoutDev;
+      }
+      workInProgress.flags |= fiberFlags;
     }
     return false;
   }
@@ -961,13 +1049,35 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
+      if (
+        __DEV__ &&
+        enableStrictEffects &&
+        (workInProgress.mode & StrictEffectsMode) !== NoMode
+      ) {
+        fiberFlags |= MountLayoutDev;
+      }
+      workInProgress.flags |= fiberFlags;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
+      if (
+        __DEV__ &&
+        enableStrictEffects &&
+        (workInProgress.mode & StrictEffectsMode) !== NoMode
+      ) {
+        fiberFlags |= MountLayoutDev;
+      }
+      workInProgress.flags |= fiberFlags;
     }
 
     // If shouldComponentUpdate returned false, we should still update the
@@ -1055,7 +1165,13 @@ function updateClassInstance(
     unresolvedOldProps === unresolvedNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
-    !checkHasForceUpdateAfterProcessing()
+    !checkHasForceUpdateAfterProcessing() &&
+    !(
+      enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies)
+    )
   ) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
@@ -1064,7 +1180,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
@@ -1072,7 +1188,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Snapshot;
+        workInProgress.flags |= Snapshot;
       }
     }
     return false;
@@ -1098,7 +1214,15 @@ function updateClassInstance(
       oldState,
       newState,
       nextContext,
-    );
+    ) ||
+    // TODO: In some cases, we'll end up checking if context has changed twice,
+    // both before and after `shouldComponentUpdate` has been called. Not ideal,
+    // but I'm loath to refactor this function. This only happens for memoized
+    // components so it's not that common.
+    (enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies));
 
   if (shouldUpdate) {
     // In order to support react-lifecycles-compat polyfilled components,
@@ -1116,10 +1240,10 @@ function updateClassInstance(
       }
     }
     if (typeof instance.componentDidUpdate === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
-      workInProgress.effectTag |= Snapshot;
+      workInProgress.flags |= Snapshot;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
@@ -1129,7 +1253,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
@@ -1137,7 +1261,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Snapshot;
+        workInProgress.flags |= Snapshot;
       }
     }
 

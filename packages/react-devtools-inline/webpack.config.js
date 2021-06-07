@@ -4,6 +4,7 @@ const {
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
+const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -11,13 +12,13 @@ if (!NODE_ENV) {
   process.exit(1);
 }
 
-const __DEV__ = true; // NODE_ENV === 'development';
+const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: false,
+  devtool: __DEV__ ? 'eval-cheap-source-map' : 'source-map',
   entry: {
     backend: './src/backend.js',
     frontend: './src/frontend.js',
@@ -36,11 +37,22 @@ module.exports = {
     'react-is': 'react-is',
     scheduler: 'scheduler',
   },
+  resolve: {
+    alias: {
+      'react-devtools-feature-flags': resolveFeatureFlags('inline'),
+    },
+  },
+  optimization: {
+    minimize: false,
+  },
   plugins: [
     new DefinePlugin({
       __DEV__,
-      __PROFILE__: false,
       __EXPERIMENTAL__: true,
+      __EXTENSION__: false,
+      __PROFILE__: false,
+      __TEST__: NODE_ENV === 'test',
+      'process.env.DEVTOOLS_PACKAGE': `"react-devtools-inline"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
@@ -69,7 +81,7 @@ module.exports = {
           {
             loader: 'css-loader',
             options: {
-              sourceMap: true,
+              sourceMap: __DEV__,
               modules: true,
               localIdentName: '[local]___[hash:base64:5]',
             },

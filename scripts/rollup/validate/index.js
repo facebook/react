@@ -1,81 +1,108 @@
 'use strict';
 
-const chalk = require('chalk');
+/* eslint-disable no-for-of-loops/no-for-of-loops */
+
 const path = require('path');
-const spawnSync = require('child_process').spawnSync;
-const glob = require('glob');
+const {promisify} = require('util');
+const glob = promisify(require('glob'));
+const {ESLint} = require('eslint');
 
-const extension = process.platform === 'win32' ? '.cmd' : '';
+// Lint the final build artifacts. Helps catch bugs in our build pipeline.
 
-// Performs sanity checks on bundles *built* by Rollup.
-// Helps catch Rollup regressions.
-function lint({format, filePatterns}) {
-  console.log(`Linting ${format} bundles...`);
-  const result = spawnSync(
-    path.join('node_modules', '.bin', 'eslint' + extension),
-    [
-      ...filePatterns,
-      '--config',
-      path.join(__dirname, `eslintrc.${format}.js`),
-      // Disregard our ESLint rules that apply to the source.
-      '--no-eslintrc',
-      // Use a different ignore file.
-      '--ignore-path',
-      path.join(__dirname, 'eslintignore'),
-    ],
-    {
-      // Allow colors to pass through
-      stdio: 'inherit',
+function getFormat(filepath) {
+  if (filepath.includes('facebook')) {
+    if (filepath.includes('shims')) {
+      // We don't currently lint these shims. We rely on the downstream Facebook
+      // repo to transform them.
+      // TODO: Should we lint them?
+      return null;
     }
-  );
-  if (result.status !== 0) {
-    console.error(chalk.red(`Linting of ${format} bundles has failed.`));
-    process.exit(result.status);
-  } else {
-    console.log(chalk.green(`Linted ${format} bundles successfully!`));
-    console.log();
+    return 'fb';
+  }
+  if (filepath.includes('react-native')) {
+    if (filepath.includes('shims')) {
+      // We don't currently lint these shims. We rely on the downstream Facebook
+      // repo to transform them.
+      // TODO: Should we we lint them?
+      return null;
+    }
+    return 'rn';
+  }
+  if (filepath.includes('cjs')) {
+    if (
+      filepath.includes('react-server-dom-webpack-plugin') ||
+      filepath.includes('react-server-dom-webpack-node-register') ||
+      filepath.includes('react-suspense-test-utils')
+    ) {
+      return 'cjs2015';
+    }
+    return 'cjs';
+  }
+  if (filepath.includes('esm')) {
+    return 'esm';
+  }
+  if (filepath.includes('umd')) {
+    return 'umd';
+  }
+  if (
+    filepath.includes('oss-experimental') ||
+    filepath.includes('oss-stable')
+  ) {
+    // If a file in one of the open source channels doesn't match an earlier,
+    // more specific rule, then assume it's CommonJS.
+    return 'cjs';
+  }
+  throw new Error('Could not find matching lint format for file: ' + filepath);
+}
+
+function getESLintInstance(format) {
+  return new ESLint({
+    useEslintrc: false,
+    overrideConfigFile: path.join(__dirname, `eslintrc.${format}.js`),
+    ignore: false,
+  });
+}
+
+async function lint(eslint, filepaths) {
+  const results = await eslint.lintFiles(filepaths);
+  if (
+    results.some(result => result.errorCount > 0 || result.warningCount > 0)
+  ) {
+    process.exitCode = 1;
+    console.log(`Lint failed`);
+    const formatter = await eslint.loadFormatter('stylish');
+    const resultText = formatter.format(results);
+    console.log(resultText);
   }
 }
 
-function checkFilesExist(bundle) {
-  const {format, filePatterns} = bundle;
-  filePatterns.forEach(pattern => {
-    console.log(`Checking if files exist in ${pattern}...`);
-    const files = glob.sync(pattern);
-    if (files.length === 0) {
-      console.error(chalk.red(`Found no ${format} bundles in ${pattern}`));
-      process.exit(1);
-    } else {
-      console.log(chalk.green(`Found ${files.length} bundles.`));
-      console.log();
+async function lintEverything() {
+  console.log(`Linting build artifacts...`);
+
+  const allFilepaths = await glob('build2/**/*.js');
+
+  const pathsByFormat = new Map();
+  for (const filepath of allFilepaths) {
+    const format = getFormat(filepath);
+    if (format !== null) {
+      const paths = pathsByFormat.get(format);
+      if (paths === undefined) {
+        pathsByFormat.set(format, [filepath]);
+      } else {
+        paths.push(filepath);
+      }
     }
-  });
-  return bundle;
+  }
+
+  const promises = [];
+  for (const [format, filepaths] of pathsByFormat) {
+    const eslint = getESLintInstance(format);
+    promises.push(lint(eslint, filepaths));
+  }
+  await Promise.all(promises);
 }
 
-const bundles = [
-  {
-    format: 'rn',
-    filePatterns: [`./build/react-native/implementations/*.js`],
-  },
-  {
-    format: 'umd',
-    filePatterns: [`./build/node_modules/*/umd/*.js`],
-  },
-  {
-    format: 'cjs',
-    filePatterns: [
-      `./build/node_modules/*/*.js`,
-      `./build/node_modules/*/cjs/*.js`,
-    ],
-  },
-];
-
-if (process.env.RELEASE_CHANNEL === 'experimental') {
-  bundles.push({
-    format: 'fb',
-    filePatterns: [`./build/facebook-www/*.js`],
-  });
-}
-
-bundles.map(checkFilesExist).map(lint);
+lintEverything().catch(error => {
+  process.exitCode = 1;
+  console.error(error);
+});

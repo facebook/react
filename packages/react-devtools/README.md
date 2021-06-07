@@ -43,7 +43,7 @@ If you're using React Native 0.43 or higher, it should connect to your simulator
 
 You can open the [in-app developer menu](https://reactnative.dev/docs/debugging.html#accessing-the-in-app-developer-menu) and choose "Show Inspector". It will bring up an overlay that lets you tap on any UI element and see information about it:
 
-![React Native Inspector](http://i.imgur.com/ReFhREb.gif)
+![React Native Inspector](https://i.imgur.com/ReFhREb.gif)
 
 However, when `react-devtools` is running, Inspector will enter a special collapsed mode, and instead use the DevTools as primary UI. In this mode, clicking on something in the simulator will bring up the relevant components in the DevTools:
 
@@ -101,7 +101,7 @@ By default DevTools listen to port `8097` on `localhost`. If you need to customi
 
 Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.com/package/serve).
 
-**The React tab won't show up if the site doesn't use React**, or if React can't communicate with the devtools. When the page loads, the devtools sets a global named `__REACT_DEVTOOLS_GLOBAL_HOOK__`, then React communicates with that hook during initialization. You can test this on the [React website](http://facebook.github.io/react/) or by inspecting [Facebook](https://www.facebook.com/).
+**The React tab won't show up if the site doesn't use React**, or if React can't communicate with the devtools. When the page loads, the devtools sets a global named `__REACT_DEVTOOLS_GLOBAL_HOOK__`, then React communicates with that hook during initialization. You can test this on the [React website](https://reactjs.org/) or by inspecting [Facebook](https://www.facebook.com/).
 
 **If your app is inside of CodePen**, make sure you are registered. Then press Fork (if it's not your pen), and then choose Change View > Debug. The Debug view is inspectable with DevTools because it doesn't use an iframe.
 
@@ -128,9 +128,10 @@ To use the latest build from CI, run the following command from the root of the 
 ./scripts/release/download-experimental-build.js
 ```
 ### Build steps
-Once the above packages have been built or downloaded, you can test the standalone DevTools by running the following:
+You can test the standalone DevTools by running the following:
 
-* Run `yarn start:backend` and `yarn start:standalone` in `../react-devtools-core`
+* **First, complete the prerequisite steps above! If you don't do it, none of the steps below will work.**
+* Then, run `yarn start:backend` and `yarn start:standalone` in `../react-devtools-core`
 * Run `yarn start` in this folder
 * Refresh the app after it has recompiled a change
 * For React Native, copy `react-devtools-core` to its `node_modules` to test your changes.

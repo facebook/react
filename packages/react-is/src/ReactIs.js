@@ -21,6 +21,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
 
@@ -36,6 +37,7 @@ export function typeOf(object: any) {
           case REACT_PROFILER_TYPE:
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
+          case REACT_SUSPENSE_LIST_TYPE:
             return type;
           default:
             const $$typeofType = type && type.$$typeof;
@@ -70,6 +72,7 @@ export const Portal = REACT_PORTAL_TYPE;
 export const Profiler = REACT_PROFILER_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
 export const Suspense = REACT_SUSPENSE_TYPE;
+export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 
 export {isValidElementType};
 
@@ -84,7 +87,7 @@ export function isAsyncMode(object: any) {
       // Using console['warn'] to evade Babel and ESLint
       console['warn'](
         'The ReactIs.isAsyncMode() alias has been deprecated, ' +
-          'and will be removed in React 17+.',
+          'and will be removed in React 18+.',
       );
     }
   }
@@ -97,7 +100,7 @@ export function isConcurrentMode(object: any) {
       // Using console['warn'] to evade Babel and ESLint
       console['warn'](
         'The ReactIs.isConcurrentMode() alias has been deprecated, ' +
-          'and will be removed in React 17+.',
+          'and will be removed in React 18+.',
       );
     }
   }
@@ -139,4 +142,7 @@ export function isStrictMode(object: any) {
 }
 export function isSuspense(object: any) {
   return typeOf(object) === REACT_SUSPENSE_TYPE;
+}
+export function isSuspenseList(object: any) {
+  return typeOf(object) === REACT_SUSPENSE_LIST_TYPE;
 }

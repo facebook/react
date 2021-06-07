@@ -8,8 +8,10 @@
  */
 
 import * as React from 'react';
+import {useContext} from 'react';
 import {createPortal} from 'react-dom';
 import ErrorBoundary from './ErrorBoundary';
+import {StoreContext} from './context';
 
 export type Props = {portalContainer?: Element, ...};
 
@@ -17,8 +19,10 @@ export default function portaledContent(
   Component: React$StatelessFunctionalComponent<any>,
 ): React$StatelessFunctionalComponent<any> {
   return function PortaledContent({portalContainer, ...rest}: Props) {
+    const store = useContext(StoreContext);
+
     const children = (
-      <ErrorBoundary>
+      <ErrorBoundary store={store}>
         <Component {...rest} />
       </ErrorBoundary>
     );

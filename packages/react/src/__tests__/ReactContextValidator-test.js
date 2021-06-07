@@ -263,7 +263,7 @@ describe('ReactContextValidator', () => {
 
     class Component extends React.Component {
       render() {
-        return <TestContext.Provider />;
+        return <TestContext.Provider value={undefined} />;
       }
     }
 
@@ -431,8 +431,12 @@ describe('ReactContextValidator', () => {
     expect(renderContext).toBe(secondContext);
     expect(componentDidUpdateContext).toBe(secondContext);
 
-    // sCU is not called in this case because React force updates when a provider re-renders
-    expect(shouldComponentUpdateWasCalled).toBe(false);
+    if (gate(flags => flags.enableLazyContextPropagation)) {
+      expect(shouldComponentUpdateWasCalled).toBe(true);
+    } else {
+      // sCU is not called in this case because React force updates when a provider re-renders
+      expect(shouldComponentUpdateWasCalled).toBe(false);
+    }
   });
 
   it('should re-render PureComponents when context Provider updates', () => {

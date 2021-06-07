@@ -9,7 +9,7 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import invariant from 'shared/invariant';
-import {getFiberCurrentPropsFromNode} from 'legacy-events/EventPluginUtils';
+import {getFiberCurrentPropsFromNode} from './legacy-events/EventPluginUtils';
 
 export default function getListener(
   inst: Fiber,

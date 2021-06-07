@@ -84,46 +84,55 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {Lanes, Lane} from './ReactFiberLane.old';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime.old';
+import {
+  NoLane,
+  NoLanes,
+  isSubsetOfLanes,
+  mergeLanes,
+  isTransitionLane,
+  intersectLanes,
+  markRootEntangled,
+} from './ReactFiberLane.old';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext.old';
-import {Callback, ShouldCapture, DidCapture} from './ReactSideEffectTags';
+import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
-  markRenderEventTimeAndConfig,
-  markUnprocessedUpdateTime,
+  markSkippedUpdateLanes,
+  isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
+import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 
 import invariant from 'shared/invariant';
-import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration.old';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 export type Update<State> = {|
-  expirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
+  // TODO: Temporary field. Will remove this by storing a map of
+  // transition -> event time on the root.
+  eventTime: number,
+  lane: Lane,
 
   tag: 0 | 1 | 2 | 3,
   payload: any,
   callback: (() => mixed) | null,
 
   next: Update<State> | null,
-
-  // DEV only
-  priority?: ReactPriorityLevel,
 |};
 
-type SharedQueue<State> = {|pending: Update<State> | null|};
+export type SharedQueue<State> = {|
+  pending: Update<State> | null,
+  interleaved: Update<State> | null,
+  lanes: Lanes,
+|};
 
 export type UpdateQueue<State> = {|
   baseState: State,
@@ -161,6 +170,8 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     lastBaseUpdate: null,
     shared: {
       pending: null,
+      interleaved: null,
+      lanes: NoLanes,
     },
     effects: null,
   };
@@ -186,13 +197,10 @@ export function cloneUpdateQueue<State>(
   }
 }
 
-export function createUpdate(
-  expirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
-): Update<*> {
+export function createUpdate(eventTime: number, lane: Lane): Update<*> {
   const update: Update<*> = {
-    expirationTime,
-    suspenseConfig,
+    eventTime,
+    lane,
 
     tag: UpdateState,
     payload: null,
@@ -200,13 +208,14 @@ export function createUpdate(
 
     next: null,
   };
-  if (__DEV__) {
-    update.priority = getCurrentPriorityLevel();
-  }
   return update;
 }
 
-export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
+export function enqueueUpdate<State>(
+  fiber: Fiber,
+  update: Update<State>,
+  lane: Lane,
+) {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
@@ -214,15 +223,31 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   }
 
   const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
-  const pending = sharedQueue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
+
+  if (isInterleavedUpdate(fiber, lane)) {
+    const interleaved = sharedQueue.interleaved;
+    if (interleaved === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+      // At the end of the current render, this queue's interleaved updates will
+      // be transfered to the pending queue.
+      pushInterleavedQueue(sharedQueue);
+    } else {
+      update.next = interleaved.next;
+      interleaved.next = update;
+    }
+    sharedQueue.interleaved = update;
   } else {
-    update.next = pending.next;
-    pending.next = update;
+    const pending = sharedQueue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update;
   }
-  sharedQueue.pending = update;
 
   if (__DEV__) {
     if (
@@ -237,6 +262,34 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
       );
       didWarnUpdateInsideUpdate = true;
     }
+  }
+}
+
+export function entangleTransitions(root: FiberRoot, fiber: Fiber, lane: Lane) {
+  const updateQueue = fiber.updateQueue;
+  if (updateQueue === null) {
+    // Only occurs if the fiber has been unmounted.
+    return;
+  }
+
+  const sharedQueue: SharedQueue<mixed> = (updateQueue: any).shared;
+  if (isTransitionLane(lane)) {
+    let queueLanes = sharedQueue.lanes;
+
+    // If any entangled lanes are no longer pending on the root, then they must
+    // have finished. We can remove them from the shared queue, which represents
+    // a superset of the actually pending lanes. In some cases we may entangle
+    // more than we need to, but that's OK. In fact it's worse if we *don't*
+    // entangle when we should.
+    queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+    // Entangle the new transition lane with the other transition lanes.
+    const newQueueLanes = mergeLanes(queueLanes, lane);
+    sharedQueue.lanes = newQueueLanes;
+    // Even if queue.lanes already include lane, we don't know for certain if
+    // the lane finished since the last time we entangled it. So we need to
+    // entangle it again, just to be sure.
+    markRootEntangled(root, newQueueLanes);
   }
 }
 
@@ -268,8 +321,8 @@ export function enqueueCapturedUpdate<State>(
         let update = firstBaseUpdate;
         do {
           const clone: Update<State> = {
-            expirationTime: update.expirationTime,
-            suspenseConfig: update.suspenseConfig,
+            eventTime: update.eventTime,
+            lane: update.lane,
 
             tag: update.tag,
             payload: update.payload,
@@ -339,7 +392,7 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode
+            workInProgress.mode & StrictLegacyMode
           ) {
             disableLogs();
             try {
@@ -356,8 +409,8 @@ function getStateFromUpdate<State>(
       return payload;
     }
     case CaptureUpdate: {
-      workInProgress.effectTag =
-        (workInProgress.effectTag & ~ShouldCapture) | DidCapture;
+      workInProgress.flags =
+        (workInProgress.flags & ~ShouldCapture) | DidCapture;
     }
     // Intentional fallthrough
     case UpdateState: {
@@ -372,7 +425,7 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode
+            workInProgress.mode & StrictLegacyMode
           ) {
             disableLogs();
             try {
@@ -406,7 +459,7 @@ export function processUpdateQueue<State>(
   workInProgress: Fiber,
   props: any,
   instance: any,
-  renderExpirationTime: ExpirationTime,
+  renderLanes: Lanes,
 ): void {
   // This is always non-null on a ClassComponent or HostRoot
   const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
@@ -463,7 +516,9 @@ export function processUpdateQueue<State>(
   if (firstBaseUpdate !== null) {
     // Iterate through the list of updates to compute the result.
     let newState = queue.baseState;
-    let newExpirationTime = NoWork;
+    // TODO: Don't need to accumulate this. Instead, we can remove renderLanes
+    // from the original lanes.
+    let newLanes = NoLanes;
 
     let newBaseState = null;
     let newFirstBaseUpdate = null;
@@ -471,14 +526,15 @@ export function processUpdateQueue<State>(
 
     let update = firstBaseUpdate;
     do {
-      const updateExpirationTime = update.expirationTime;
-      if (updateExpirationTime < renderExpirationTime) {
+      const updateLane = update.lane;
+      const updateEventTime = update.eventTime;
+      if (!isSubsetOfLanes(renderLanes, updateLane)) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
         const clone: Update<State> = {
-          expirationTime: update.expirationTime,
-          suspenseConfig: update.suspenseConfig,
+          eventTime: updateEventTime,
+          lane: updateLane,
 
           tag: update.tag,
           payload: update.payload,
@@ -493,16 +549,17 @@ export function processUpdateQueue<State>(
           newLastBaseUpdate = newLastBaseUpdate.next = clone;
         }
         // Update the remaining priority in the queue.
-        if (updateExpirationTime > newExpirationTime) {
-          newExpirationTime = updateExpirationTime;
-        }
+        newLanes = mergeLanes(newLanes, updateLane);
       } else {
         // This update does have sufficient priority.
 
         if (newLastBaseUpdate !== null) {
           const clone: Update<State> = {
-            expirationTime: Sync, // This update is going to be committed so we never want uncommit it.
-            suspenseConfig: update.suspenseConfig,
+            eventTime: updateEventTime,
+            // This update is going to be committed so we never want uncommit
+            // it. Using NoLane works because 0 is a subset of all bitmasks, so
+            // this will never be skipped by the check above.
+            lane: NoLane,
 
             tag: update.tag,
             payload: update.payload,
@@ -512,17 +569,6 @@ export function processUpdateQueue<State>(
           };
           newLastBaseUpdate = newLastBaseUpdate.next = clone;
         }
-
-        // Mark the event time of this update as relevant to this render pass.
-        // TODO: This should ideally use the true event time of this update rather than
-        // its priority which is a derived and not reverseable value.
-        // TODO: We should skip this update if it was already committed but currently
-        // we have no way of detecting the difference between a committed and suspended
-        // update here.
-        markRenderEventTimeAndConfig(
-          updateExpirationTime,
-          update.suspenseConfig,
-        );
 
         // Process this update.
         newState = getStateFromUpdate(
@@ -534,8 +580,13 @@ export function processUpdateQueue<State>(
           instance,
         );
         const callback = update.callback;
-        if (callback !== null) {
-          workInProgress.effectTag |= Callback;
+        if (
+          callback !== null &&
+          // If the update was already committed, we should not queue its
+          // callback again.
+          update.lane !== NoLane
+        ) {
+          workInProgress.flags |= Callback;
           const effects = queue.effects;
           if (effects === null) {
             queue.effects = [update];
@@ -572,6 +623,22 @@ export function processUpdateQueue<State>(
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
 
+    // Interleaved updates are stored on a separate queue. We aren't going to
+    // process them during this render, but we do need to track which lanes
+    // are remaining.
+    const lastInterleaved = queue.shared.interleaved;
+    if (lastInterleaved !== null) {
+      let interleaved = lastInterleaved;
+      do {
+        newLanes = mergeLanes(newLanes, interleaved.lane);
+        interleaved = ((interleaved: any).next: Update<State>);
+      } while (interleaved !== lastInterleaved);
+    } else if (firstBaseUpdate === null) {
+      // `queue.lanes` is used for entangling transitions. We can set it back to
+      // zero once the queue is empty.
+      queue.shared.lanes = NoLanes;
+    }
+
     // Set the remaining expiration time to be whatever is remaining in the queue.
     // This should be fine because the only two other things that contribute to
     // expiration time are props and context. We're already in the middle of the
@@ -579,8 +646,8 @@ export function processUpdateQueue<State>(
     // dealt with the props. Context in components that specify
     // shouldComponentUpdate is tricky; but we'll have to account for
     // that regardless.
-    markUnprocessedUpdateTime(newExpirationTime);
-    workInProgress.expirationTime = newExpirationTime;
+    markSkippedUpdateLanes(newLanes);
+    workInProgress.lanes = newLanes;
     workInProgress.memoizedState = newState;
   }
 

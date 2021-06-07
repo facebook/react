@@ -145,7 +145,7 @@ export function installHook(target: any): DevToolsHook | null {
             'React is running in production mode, but dead code ' +
               'elimination has not been applied. Read how to correctly ' +
               'configure React for production: ' +
-              'https://fb.me/react-perf-use-the-production-build',
+              'https://reactjs.org/link/perf-use-production-build',
           );
         });
       }
@@ -172,8 +172,19 @@ export function installHook(target: any): DevToolsHook | null {
     // In that case, we'll patch later (when the frontend attaches).
     //
     // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
-    if (process.env.NODE_ENV !== 'test') {
+    //
+    // Note that because this function is inlined, this conditional check must only use static booleans.
+    // Otherwise the extension will throw with an undefined error.
+    // (See comments in the try/catch below for more context on inlining.)
+    if (!__EXTENSION__ && !__TEST__) {
       try {
+        const appendComponentStack =
+          window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
+        const breakOnConsoleErrors =
+          window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
+        const showInlineWarningsAndErrors =
+          window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
+
         // The installHook() function is injected by being stringified in the browser,
         // so imports outside of this function do not get included.
         //
@@ -181,9 +192,17 @@ export function installHook(target: any): DevToolsHook | null {
         // but Webpack wraps imports with an object (e.g. _backend_console__WEBPACK_IMPORTED_MODULE_0__)
         // and the object itself will be undefined as well for the reasons mentioned above,
         // so we use try/catch instead.
-        if (window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false) {
+        if (
+          appendComponentStack ||
+          breakOnConsoleErrors ||
+          showInlineWarningsAndErrors
+        ) {
           registerRendererWithConsole(renderer);
-          patchConsole();
+          patchConsole({
+            appendComponentStack,
+            breakOnConsoleErrors,
+            showInlineWarningsAndErrors,
+          });
         }
       } catch (error) {}
     }
@@ -268,6 +287,13 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
+  function onPostCommitFiberRoot(rendererID, root) {
+    const rendererInterface = rendererInterfaces.get(rendererID);
+    if (rendererInterface != null) {
+      rendererInterface.handlePostCommitFiberRoot(root);
+    }
+  }
+
   // TODO: More meaningful names for "rendererInterfaces" and "renderers".
   const fiberRoots = {};
   const rendererInterfaces = new Map();
@@ -296,6 +322,7 @@ export function installHook(target: any): DevToolsHook | null {
     checkDCE,
     onCommitFiberUnmount,
     onCommitFiberRoot,
+    onPostCommitFiberRoot,
   };
 
   Object.defineProperty(
