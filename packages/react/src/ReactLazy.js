@@ -28,7 +28,7 @@ type PendingPayload = {
 
 type ResolvedPayload<T> = {
   _status: 1,
-  _result: T,
+  _result: {default: T},
 };
 
 type RejectedPayload = {
@@ -60,36 +60,10 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     thenable.then(
       moduleObject => {
         if (payload._status === Pending) {
-          if (__DEV__) {
-            if (moduleObject === undefined) {
-              console.error(
-                'lazy: Expected the result of a dynamic import() call. ' +
-                  'Instead received: %s\n\nYour code should look like: \n  ' +
-                  // Break up imports to avoid accidentally parsing them as dependencies.
-                  'const MyComponent = lazy(() => imp' +
-                  "ort('./MyComponent'))\n\n" +
-                  'Did you accidentally put curly braces around the import?',
-                moduleObject,
-              );
-            }
-          }
-          const defaultExport = moduleObject.default;
-          if (__DEV__) {
-            if (defaultExport === undefined) {
-              console.error(
-                'lazy: Expected the result of a dynamic import() call. ' +
-                  'Instead received: %s\n\nYour code should look like: \n  ' +
-                  // Break up imports to avoid accidentally parsing them as dependencies.
-                  'const MyComponent = lazy(() => imp' +
-                  "ort('./MyComponent'))",
-                moduleObject,
-              );
-            }
-          }
           // Transition to the next state.
           const resolved: ResolvedPayload<T> = (payload: any);
           resolved._status = Resolved;
-          resolved._result = defaultExport;
+          resolved._result = moduleObject;
         }
       },
       error => {
@@ -110,7 +84,34 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     }
   }
   if (payload._status === Resolved) {
-    return payload._result;
+    const moduleObject = payload._result;
+    if (__DEV__) {
+      if (moduleObject === undefined) {
+        console.error(
+          'lazy: Expected the result of a dynamic import() call. ' +
+            'Instead received: %s\n\nYour code should look like: \n  ' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'const MyComponent = lazy(() => imp' +
+            "ort('./MyComponent'))\n\n" +
+            'Did you accidentally put curly braces around the import?',
+          moduleObject,
+        );
+      }
+    }
+    const defaultExport = moduleObject.default;
+    if (__DEV__) {
+      if (defaultExport === undefined) {
+        console.error(
+          'lazy: Expected the result of a dynamic import() call. ' +
+            'Instead received: %s\n\nYour code should look like: \n  ' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'const MyComponent = lazy(() => imp' +
+            "ort('./MyComponent'))",
+          moduleObject,
+        );
+      }
+    }
+    return defaultExport;
   } else {
     throw payload._result;
   }
