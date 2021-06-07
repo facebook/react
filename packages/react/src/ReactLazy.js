@@ -49,6 +49,15 @@ export type LazyComponent<T, P> = {
 };
 
 function lazyInitializer<T>(payload: Payload<T>): T {
+  function onError(error) {
+    if (payload._status === Pending) {
+      // Transition to the next state.
+      const rejected: RejectedPayload = (payload: any);
+      rejected._status = Rejected;
+      rejected._result = error;
+    }
+  }
+
   if (payload._status === Uninitialized) {
     const ctor = payload._result;
     const thenable = ctor();
@@ -56,37 +65,33 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     const pending: PendingPayload = (payload: any);
     pending._status = Pending;
     pending._result = thenable;
-    thenable.then(
-      moduleObject => {
-        if (payload._status === Pending) {
-          const defaultExport = moduleObject.default;
-          if (__DEV__) {
-            if (defaultExport === undefined) {
-              console.error(
-                'lazy: Expected the result of a dynamic import() call. ' +
-                  'Instead received: %s\n\nYour code should look like: \n  ' +
-                  // Break up imports to avoid accidentally parsing them as dependencies.
-                  'const MyComponent = lazy(() => imp' +
-                  "ort('./MyComponent'))",
-                moduleObject,
-              );
-            }
+    thenable.then(moduleObject => {
+      if (payload._status === Pending) {
+        let defaultExport;
+        try {
+          defaultExport = moduleObject.default;
+        } catch (e) {
+          onError(e);
+          return;
+        }
+        if (__DEV__) {
+          if (defaultExport === undefined) {
+            console.error(
+              'lazy: Expected the result of a dynamic import() call. ' +
+                'Instead received: %s\n\nYour code should look like: \n  ' +
+                // Break up imports to avoid accidentally parsing them as dependencies.
+                'const MyComponent = lazy(() => imp' +
+                "ort('./MyComponent'))",
+              moduleObject,
+            );
           }
-          // Transition to the next state.
-          const resolved: ResolvedPayload<T> = (payload: any);
-          resolved._status = Resolved;
-          resolved._result = defaultExport;
         }
-      },
-      error => {
-        if (payload._status === Pending) {
-          // Transition to the next state.
-          const rejected: RejectedPayload = (payload: any);
-          rejected._status = Rejected;
-          rejected._result = error;
-        }
-      },
-    );
+        // Transition to the next state.
+        const resolved: ResolvedPayload<T> = (payload: any);
+        resolved._status = Resolved;
+        resolved._result = defaultExport;
+      }
+    }, onError);
   }
   if (payload._status === Resolved) {
     return payload._result;
