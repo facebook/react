@@ -98,9 +98,8 @@ function lazyInitializer<T>(payload: Payload<T>): T {
         );
       }
     }
-    const defaultExport = moduleObject.default;
     if (__DEV__) {
-      if (defaultExport === undefined) {
+      if (!('default' in moduleObject)) {
         console.error(
           'lazy: Expected the result of a dynamic import() call. ' +
             'Instead received: %s\n\nYour code should look like: \n  ' +
@@ -111,7 +110,7 @@ function lazyInitializer<T>(payload: Payload<T>): T {
         );
       }
     }
-    return defaultExport;
+    return moduleObject.default;
   } else {
     throw payload._result;
   }
