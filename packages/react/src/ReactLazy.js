@@ -56,12 +56,11 @@ function lazyInitializer<T>(payload: Payload<T>): T {
         if (moduleObject === undefined) {
           console.error(
             'lazy: Expected the result of a dynamic import() call. ' +
-              'Instead received: %s\n\nYour code should look like: \n  ' +
+              'Instead received: undefined.\n\nYour code should look like: \n  ' +
               // Break up imports to avoid accidentally parsing them as dependencies.
               'const MyComponent = lazy(() => imp' +
               "ort('./MyComponent'))\n\n" +
               'Did you accidentally put curly braces around the import?',
-            moduleObject,
           );
         }
       }
@@ -102,11 +101,30 @@ function lazyInitializer<T>(payload: Payload<T>): T {
   if (payload._status === Uninitialized) {
     const ctor = payload._result;
     const thenable = ctor();
+    if (__DEV__) {
+      if (thenable === undefined) {
+        console.error(
+          'lazy: Expected the result of a dynamic import() call. ' +
+            'Instead received: undefined.\n\nYour code should look like: \n  ' +
+            // Break up imports to avoid accidentally parsing them as dependencies.
+            'const MyComponent = lazy(() => imp' +
+            "ort('./MyComponent'))\n\n" +
+            'Did you accidentally put curly braces around the import?',
+        );
+      }
+    }
     // Transition to the next state.
     const pending: PendingPayload = (payload: any);
     pending._status = Pending;
     pending._result = thenable;
-    thenable.then(onFulfill, onReject);
+    try {
+      thenable.then(onFulfill, onReject);
+    } catch (e) {
+      // If then() itself throws for some reason,
+      // or if this is not a thenable, record that
+      // so we don't keep throwing undefined later.
+      onReject(e);
+    }
   }
   if (payload._status === Resolved) {
     return payload._result;
