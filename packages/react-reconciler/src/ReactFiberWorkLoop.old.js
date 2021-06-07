@@ -427,7 +427,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     return updateLane;
   }
 
-  // This update originated outside React. Ask the host environement for an
+  // This update originated outside React. Ask the host environment for an
   // appropriate priority, based on the type of event.
   //
   // The opaque type returned by the host config is internally a lane, so we can
