@@ -56,8 +56,8 @@ function lazyInitializer<T>(payload: Payload<T>): T {
     const pending: PendingPayload = (payload: any);
     pending._status = Pending;
     pending._result = thenable;
-    thenable.then(
-      moduleObject => {
+    thenable
+      .then(moduleObject => {
         if (payload._status === Pending) {
           const defaultExport = moduleObject.default;
           if (__DEV__) {
@@ -77,16 +77,17 @@ function lazyInitializer<T>(payload: Payload<T>): T {
           resolved._status = Resolved;
           resolved._result = defaultExport;
         }
-      },
-      error => {
+      })
+      // Use .catch so that errors while resolving the default
+      // import also propagate to the error handler.
+      .catch(error => {
         if (payload._status === Pending) {
           // Transition to the next state.
           const rejected: RejectedPayload = (payload: any);
           rejected._status = Rejected;
           rejected._result = error;
         }
-      },
-    );
+      });
   }
   if (payload._status === Resolved) {
     return payload._result;
