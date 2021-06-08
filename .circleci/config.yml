@@ -532,7 +532,7 @@ workflows:
             - setup
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: stable
-          dist_tag: "next, alpha"
+          dist_tag: "next,alpha"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -564,7 +564,7 @@ workflows:
             - setup
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
-          dist_tag: "next, alpha"
+          dist_tag: "next,alpha"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
