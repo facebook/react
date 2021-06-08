@@ -350,7 +350,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 
 export function getCurrentEventPriority(): * {
   const currentEventPriority =
-    fabricGetCurrentEventPriority ?? fabricGetCurrentEventPriority();
+    fabricGetCurrentEventPriority ? fabricGetCurrentEventPriority() : null;
 
   if (currentEventPriority != null) {
     switch (currentEventPriority) {
