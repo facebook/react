@@ -12,20 +12,17 @@
 // The @next channel appends additional information, with the scheme
 // <version>-<label>-<commit_sha>, e.g.:
 //
-//   18.0.0-next-a1c2d3e4
-//
-// (TODO: ^ this isn't enabled quite yet. We still use <version>-<commit_sha>.)
+//   18.0.0-alpha-a1c2d3e4
 //
 // The @experimental channel doesn't include a version, only a sha, e.g.:
 //
 //   0.0.0-experimental-a1c2d3e4
 
-// TODO: Main includes breaking changes. Bump this to 18.0.0.
-const ReactVersion = '17.0.3';
+const ReactVersion = '18.0.0';
 
 // The label used by the @next channel. Represents the upcoming release's
 // stability. Could be "alpha", "beta", "rc", etc.
-const nextChannelLabel = 'next';
+const nextChannelLabel = 'alpha';
 
 const stablePackages = {
   'create-subscription': ReactVersion,
@@ -52,7 +49,6 @@ const experimentalPackages = [
   'react-server-dom-webpack',
 ];
 
-// TODO: Export a map of every package and its version.
 module.exports = {
   ReactVersion,
   nextChannelLabel,
