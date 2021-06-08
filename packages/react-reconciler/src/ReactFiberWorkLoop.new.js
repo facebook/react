@@ -389,7 +389,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     workInProgressRootRenderLanes !== NoLanes
   ) {
     // This is a render phase update. These are not officially supported. The
-    // old behavior is to give this the same "thread" (expiration time) as
+    // old behavior is to give this the same "thread" (lanes) as
     // whatever is currently rendering. So if you call `setState` on a component
     // that happens later in the same render, it will flush. Ideally, we want to
     // remove the special case and treat them as if they came from an
@@ -427,7 +427,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     return updateLane;
   }
 
-  // This update originated outside React. Ask the host environement for an
+  // This update originated outside React. Ask the host environment for an
   // appropriate priority, based on the type of event.
   //
   // The opaque type returned by the host config is internally a lane, so we can
@@ -756,7 +756,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     }
   }
 
-  // Determine the next expiration time to work on, using the fields stored
+  // Determine the next lanes to work on, using the fields stored
   // on the root.
   let lanes = getNextLanes(
     root,
@@ -1629,7 +1629,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       // capture values if possible.
       const next = unwindWork(completedWork, subtreeRenderLanes);
 
-      // Because this fiber did not complete, don't reset its expiration time.
+      // Because this fiber did not complete, don't reset its lanes.
 
       if (next !== null) {
         // If completing this work spawned new work, do that next. We'll come
@@ -1803,7 +1803,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // Check if there are any effects in the whole tree.
   // TODO: This is left over from the effect list implementation, where we had
-  // to check for the existence of `firstEffect` to satsify Flow. I think the
+  // to check for the existence of `firstEffect` to satisfy Flow. I think the
   // only other reason this optimization exists is because it affects profiling.
   // Reconsider whether this is necessary.
   const subtreeHasEffects =
@@ -2308,7 +2308,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   // The boundary fiber (a Suspense component or SuspenseList component)
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
-  // likely unblocked. Try rendering again, at a new expiration time.
+  // likely unblocked. Try rendering again, at a new lanes.
   if (retryLane === NoLane) {
     // TODO: Assign this to `suspenseState.retryLane`? to avoid
     // unnecessary entanglement?

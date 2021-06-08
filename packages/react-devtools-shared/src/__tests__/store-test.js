@@ -60,6 +60,45 @@ describe('Store', () => {
     expect(store).toMatchSnapshot('2: add host nodes');
   });
 
+  // This test is not the same cause as what's reported on GitHub,
+  // but the resulting behavior (owner mounting after descendant) is the same.
+  // Thec ase below is admittedly contrived and relies on side effects.
+  // I'mnot yet sure of how to reduce the GitHub reported production case to a test though.
+  // See https://github.com/facebook/react/issues/21445
+  it('should handle when a component mounts before its owner', () => {
+    const promise = new Promise(resolve => {});
+
+    let Dynamic = null;
+    const Owner = () => {
+      Dynamic = <Child />;
+      throw promise;
+    };
+    const Parent = () => {
+      return Dynamic;
+    };
+    const Child = () => null;
+
+    const container = document.createElement('div');
+
+    act(() =>
+      ReactDOM.render(
+        <>
+          <React.Suspense fallback="Loading...">
+            <Owner />
+          </React.Suspense>
+          <Parent />
+        </>,
+        container,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Suspense>
+        ▾ <Parent>
+            <Child>
+    `);
+  });
+
   describe('collapseNodesByDefault:false', () => {
     beforeEach(() => {
       store.collapseNodesByDefault = false;

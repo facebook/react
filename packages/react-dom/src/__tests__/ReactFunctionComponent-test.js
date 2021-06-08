@@ -284,10 +284,8 @@ describe('ReactFunctionComponent', () => {
     }).toErrorDev('Warning: Function components cannot be given refs.');
     // Should be deduped (same internal instance, no additional warnings)
     instance2.forceUpdate();
-    // Could not be deduped (different internal instance):
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<AnonymousParentNotUsingJSX />),
-    ).toErrorDev('Warning: Function components cannot be given refs.');
+    // Could not be differentiated (since owner is anonymous and no source location)
+    ReactTestUtils.renderIntoDocument(<AnonymousParentNotUsingJSX />);
 
     // When owner doesn't use JSX, but is named, we warn once per owner name
     class NamedParentNotUsingJSX extends React.Component {

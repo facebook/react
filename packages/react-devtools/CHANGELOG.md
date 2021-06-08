@@ -9,6 +9,10 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.13.5 (May 25, 2021)
+#### Bugfix
+* Handle edge case where a component mounts before its "owner" (in DEV mode) that previously caused a validation error ([bvaughn](https://github.com/bvaughn) in [#21562](https://github.com/facebook/react/pull/21562))
+
 ## 4.13.4 (May 20, 2021)
 #### Bugfix
 * Fix edge-case Fast Refresh bug that caused Fibers with warnings/errors to be untracked prematurely (which broke componentinspection in DevTools) ([bvaughn](https://github.com/bvaughn) in [#21536](https://github.com/facebook/react/pull/21536))

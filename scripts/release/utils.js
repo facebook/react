@@ -11,6 +11,7 @@ const {join} = require('path');
 const createLogger = require('progress-estimator');
 const prompt = require('prompt-promise');
 const theme = require('./theme');
+const {stablePackages, experimentalPackages} = require('../../ReactVersions');
 
 // https://www.npmjs.com/package/progress-estimator#configuration
 const logger = createLogger({
@@ -132,41 +133,11 @@ const getCommitFromCurrentBuild = async () => {
 };
 
 const getPublicPackages = isExperimental => {
+  const packageNames = Object.keys(stablePackages);
   if (isExperimental) {
-    return [
-      'create-subscription',
-      'eslint-plugin-react-hooks',
-      'jest-react',
-      'react',
-      'react-art',
-      'react-dom',
-      'react-is',
-      'react-reconciler',
-      'react-refresh',
-      'react-test-renderer',
-      'use-subscription',
-      'scheduler',
-      'react-fetch',
-      'react-fs',
-      'react-pg',
-      'react-server-dom-webpack',
-    ];
-  } else {
-    return [
-      'create-subscription',
-      'eslint-plugin-react-hooks',
-      'jest-react',
-      'react',
-      'react-art',
-      'react-dom',
-      'react-is',
-      'react-reconciler',
-      'react-refresh',
-      'react-test-renderer',
-      'use-subscription',
-      'scheduler',
-    ];
+    packageNames.push(...experimentalPackages);
   }
+  return packageNames;
 };
 
 const handleError = error => {

@@ -32,7 +32,7 @@ const paramDefinitions = [
     name: 'releaseChannel',
     alias: 'r',
     type: String,
-    description: 'Release channel (stable or experimental)',
+    description: 'Release channel (stable, experimental, or latest)',
   },
 ];
 
@@ -40,9 +40,13 @@ module.exports = async () => {
   const params = commandLineArgs(paramDefinitions);
 
   const channel = params.releaseChannel;
-  if (channel !== 'experimental' && channel !== 'stable') {
+  if (
+    channel !== 'experimental' &&
+    channel !== 'stable' &&
+    channel !== 'latest'
+  ) {
     console.error(
-      theme.error`Invalid release channel (-r) "${channel}". Must be "stable" or "experimental".`
+      theme.error`Invalid release channel (-r) "${channel}". Must be "stable", "experimental", or "latest".`
     );
     process.exit(1);
   }

@@ -120,7 +120,7 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('idle updates are not blocked by offscreen work', async () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -187,7 +187,7 @@ describe(
       jest.resetModules();
 
       jest.mock('scheduler', () => {
-        const actual = require.requireActual('scheduler/unstable_mock');
+        const actual = jest.requireActual('scheduler/unstable_mock');
         return {
           ...actual,
           unstable_shouldYield() {
@@ -207,7 +207,7 @@ describe(
 
     afterEach(() => {
       jest.mock('scheduler', () =>
-        require.requireActual('scheduler/unstable_mock'),
+        jest.requireActual('scheduler/unstable_mock'),
       );
     });
 

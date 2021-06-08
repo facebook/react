@@ -25,7 +25,6 @@ export const enableSuspenseLayoutEffectSemantics = __VARIANT__;
 //
 // NOTE: This feature will only work in DEV mode; all callsites are wrapped with __DEV__.
 export const enableDebugTracing = __EXPERIMENTAL__;
-export const enableUpdaterTracking = false;
 
 export const enableSchedulingProfiler = __VARIANT__;
 

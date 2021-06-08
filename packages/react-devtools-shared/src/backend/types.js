@@ -142,6 +142,8 @@ export type ReactRenderer = {
   ComponentTree?: any,
   // Present for React DOM v12 (possibly earlier) through v15.
   Mount?: any,
+  // Only injected by React v17.0.3+ in DEV mode
+  setErrorHandler?: ?(shouldError: (fiber: Object) => ?boolean) => void,
   ...
 };
 
@@ -223,6 +225,11 @@ export type InspectedElement = {|
   canEditHooksAndRenamePaths: boolean,
   canEditFunctionPropsDeletePaths: boolean,
   canEditFunctionPropsRenamePaths: boolean,
+
+  // Is this Error, and can its value be overridden now?
+  canToggleError: boolean,
+  isErrored: boolean,
+  targetErrorBoundaryID: ?number,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
@@ -332,6 +339,7 @@ export type RendererInterface = {
     inspectedPaths: Object,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
+  overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   overrideValueAtPath: (
     type: Type,

@@ -16,10 +16,10 @@ export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = false;
-export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerCommitHooks = __PROFILE__;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
-export const enableUpdaterTracking = false;
+export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
@@ -49,7 +49,7 @@ export const deletedTreeCleanUpLevel = 1;
 export const enableSuspenseLayoutEffectSemantics = false;
 
 export const enableNewReconciler = false;
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;

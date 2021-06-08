@@ -16,8 +16,8 @@ export const enableSchedulingProfiler = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = false;
-export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerCommitHooks = __PROFILE__;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = false;
 export const enableSuspenseServerRenderer = false;
@@ -49,7 +49,7 @@ export const deletedTreeCleanUpLevel = 1;
 export const enableSuspenseLayoutEffectSemantics = false;
 
 export const enableNewReconciler = false;
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableStrictEffects = true;
 export const createRootStrictEffectsByDefault = false;
@@ -58,7 +58,7 @@ export const enableUseRefAccessWarning = false;
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
-export const enableSyncDefaultUpdates = false;
+export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 
 // Flow magic to verify the exports of this file match the original version.

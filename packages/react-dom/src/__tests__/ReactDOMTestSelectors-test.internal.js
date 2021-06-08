@@ -56,6 +56,7 @@ describe('ReactDOMTestSelectors', () => {
   });
 
   describe('findAllNodes', () => {
+    // @gate www
     it('should support searching from the document root', () => {
       function Example() {
         return (
@@ -75,6 +76,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    // @gate www
     it('should support searching from the container', () => {
       function Example() {
         return (
@@ -94,6 +96,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    // @gate www
     it('should support searching from a previous match if the match had a data-testname', () => {
       function Outer() {
         return (
@@ -124,6 +127,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('inner');
     });
 
+    // @gate www
     it('should not support searching from a previous match if the match did not have a data-testname', () => {
       function Outer() {
         return (
@@ -153,6 +157,7 @@ describe('ReactDOMTestSelectors', () => {
       );
     });
 
+    // @gate www
     it('should support an multiple component types in the selector array', () => {
       function Outer() {
         return (
@@ -206,6 +211,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match3');
     });
 
+    // @gate www
     it('should find multiple matches', () => {
       function Example1() {
         return (
@@ -243,6 +249,7 @@ describe('ReactDOMTestSelectors', () => {
       ]);
     });
 
+    // @gate www
     it('should ignore nested matches', () => {
       function Example() {
         return (
@@ -262,6 +269,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toEqual('match1');
     });
 
+    // @gate www
     it('should enforce the specific order of selectors', () => {
       function Outer() {
         return (
@@ -286,6 +294,7 @@ describe('ReactDOMTestSelectors', () => {
       ).toHaveLength(0);
     });
 
+    // @gate www
     it('should not search within hidden subtrees', () => {
       const ref1 = React.createRef(null);
       const ref2 = React.createRef(null);
@@ -315,6 +324,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0]).toBe(ref2.current);
     });
 
+    // @gate www
     it('should support filtering by display text', () => {
       function Example() {
         return (
@@ -337,6 +347,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    // @gate www
     it('should support filtering by explicit accessibiliy role', () => {
       function Example() {
         return (
@@ -361,6 +372,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    // @gate www
     it('should support filtering by explicit secondary accessibiliy role', () => {
       const ref = React.createRef();
 
@@ -385,6 +397,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0]).toBe(ref.current);
     });
 
+    // @gate www
     it('should support filtering by implicit accessibiliy role', () => {
       function Example() {
         return (
@@ -407,6 +420,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    // @gate www
     it('should support filtering by implicit accessibiliy role with attributes qualifications', () => {
       function Example() {
         return (
@@ -429,6 +443,7 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    // @gate www
     it('should support searching ahead with the has() selector', () => {
       function Example() {
         return (
@@ -464,12 +479,14 @@ describe('ReactDOMTestSelectors', () => {
       expect(matches[0].id).toBe('match');
     });
 
+    // @gate www
     it('should throw if no container can be found', () => {
       expect(() => findAllNodes(document.body, [])).toThrow(
         'Could not find React container within specified host subtree.',
       );
     });
 
+    // @gate www
     it('should throw if an invalid host root is specified', () => {
       const ref = React.createRef();
       function Example() {
@@ -485,6 +502,7 @@ describe('ReactDOMTestSelectors', () => {
   });
 
   describe('getFindAllNodesFailureDescription', () => {
+    // @gate www
     it('should describe findAllNodes failures caused by the component type selector', () => {
       function Outer() {
         return <Middle />;
@@ -514,6 +532,7 @@ No matching component was found for:
       );
     });
 
+    // @gate www
     it('should return null if findAllNodes was able to find a match', () => {
       function Example() {
         return (
@@ -549,6 +568,7 @@ No matching component was found for:
       };
     }
 
+    // @gate www
     it('should return a single rect for a component that returns a single root host element', () => {
       const ref = React.createRef();
 
@@ -582,6 +602,7 @@ No matching component was found for:
       });
     });
 
+    // @gate www
     it('should return a multiple rects for multiple matches', () => {
       const outerRef = React.createRef();
       const innerRef = React.createRef();
@@ -631,6 +652,7 @@ No matching component was found for:
       });
     });
 
+    // @gate www
     it('should return a multiple rects for single match that returns a fragment', () => {
       const refA = React.createRef();
       const refB = React.createRef();
@@ -680,6 +702,7 @@ No matching component was found for:
       });
     });
 
+    // @gate www
     it('should merge overlapping rects', () => {
       const refA = React.createRef();
       const refB = React.createRef();
@@ -734,6 +757,7 @@ No matching component was found for:
       });
     });
 
+    // @gate www
     it('should merge some types of adjacent rects (if they are the same in one dimension)', () => {
       const refA = React.createRef();
       const refB = React.createRef();
@@ -833,6 +857,7 @@ No matching component was found for:
       });
     });
 
+    // @gate www
     it('should not search within hidden subtrees', () => {
       const refA = React.createRef();
       const refB = React.createRef();
@@ -889,6 +914,7 @@ No matching component was found for:
   });
 
   describe('focusWithin', () => {
+    // @gate www
     it('should return false if the specified component path has no matches', () => {
       function Example() {
         return <Child />;
@@ -909,6 +935,7 @@ No matching component was found for:
       expect(didFocus).toBe(false);
     });
 
+    // @gate www
     it('should return false if there are no focusable elements within the matched subtree', () => {
       function Example() {
         return <Child />;
@@ -926,6 +953,7 @@ No matching component was found for:
       expect(didFocus).toBe(false);
     });
 
+    // @gate www
     it('should return false if the only focusable elements are disabled', () => {
       function Example() {
         return (
@@ -943,6 +971,7 @@ No matching component was found for:
       expect(didFocus).toBe(false);
     });
 
+    // @gate www
     it('should return false if the only focusable elements are hidden', () => {
       function Example() {
         return <button hidden={true}>not clickable</button>;
@@ -956,6 +985,7 @@ No matching component was found for:
       expect(didFocus).toBe(false);
     });
 
+    // @gate www
     it('should successfully focus the first focusable element within the tree', () => {
       const secondRef = React.createRef(null);
 
@@ -1010,6 +1040,7 @@ No matching component was found for:
       expect(handleThirdFocus).not.toHaveBeenCalled();
     });
 
+    // @gate www
     it('should successfully focus the first focusable element even if application logic interferes', () => {
       const ref = React.createRef(null);
 
@@ -1039,6 +1070,7 @@ No matching component was found for:
       expect(handleFocus).toHaveBeenCalledTimes(1);
     });
 
+    // @gate www
     it('should not focus within hidden subtrees', () => {
       const secondRef = React.createRef(null);
 
@@ -1162,6 +1194,7 @@ No matching component was found for:
       window.IntersectionObserver = IntersectionObserver;
     });
 
+    // @gate www
     it('should notify a listener when the underlying instance intersection changes', () => {
       const ref = React.createRef(null);
 
@@ -1198,6 +1231,7 @@ No matching component was found for:
       expect(handleVisibilityChange).toHaveBeenCalledWith([{rect, ratio: 0.5}]);
     });
 
+    // @gate www
     it('should notify a listener of multiple targets when the underlying instance intersection changes', () => {
       const ref1 = React.createRef(null);
       const ref2 = React.createRef(null);
@@ -1274,6 +1308,7 @@ No matching component was found for:
       ]);
     });
 
+    // @gate www
     it('should stop listening when its disconnected', () => {
       const ref = React.createRef(null);
 
@@ -1308,7 +1343,7 @@ No matching component was found for:
     });
 
     // This test reuires gating because it relies on the __DEV__ only commit hook to work.
-    // @gate __DEV__
+    // @gate www && __DEV__
     it('should update which targets its listening to after a commit', () => {
       const ref1 = React.createRef(null);
       const ref2 = React.createRef(null);
@@ -1387,6 +1422,7 @@ No matching component was found for:
       ]);
     });
 
+    // @gate www
     it('should not observe components within hidden subtrees', () => {
       const ref1 = React.createRef(null);
       const ref2 = React.createRef(null);
