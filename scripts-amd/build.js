@@ -210,6 +210,9 @@ function getPlugins(
     // Add the whitespace back if necessary.
     shouldStayReadable && prettier({parser: 'babylon'}),
     // License and haste headers, top-level `if` blocks.
+    // Так как из amd модулей нет доступа к ключевому слову module,
+    // а react грузит внутри модуль timers через него, мы объявляем его глобально
+    // в модуле и указываем requirejs как функцию загрузки
     {
       renderChunk(source) {
         return `/** @license React v${reactVersion}
@@ -217,6 +220,7 @@ function getPlugins(
 *
 ${Constants.license}
 */
+var module = {require: requirejs};
 ${source}`;
       },
     },

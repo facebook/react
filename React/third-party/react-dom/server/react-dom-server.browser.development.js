@@ -6,6 +6,7 @@
 * This source code is licensed under the MIT license found in the
 * LICENSE file in the root directory of this source tree.
 */
+var module = {require: requirejs};
 define('react-dom/server', ['exports', 'react'], function (exports, React) { 'use strict';
 
   // Do not require this module directly! Use normal `invariant` calls with
