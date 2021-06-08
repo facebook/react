@@ -12,6 +12,7 @@ const {
   ReactVersion,
   stablePackages,
   experimentalPackages,
+  nextChannelLabel,
 } = require('../../ReactVersions');
 
 // Runs the build script for both stable and experimental release channels,
@@ -90,10 +91,12 @@ function processStable(buildDir) {
     const defaultVersionIfNotFound = '0.0.0' + '-' + sha;
     const versionsMap = new Map();
     for (const moduleName in stablePackages) {
-      // TODO: Use version declared in ReactVersions module instead of 0.0.0.
-      // const version = stablePackages[moduleName];
-      // versionsMap.set(moduleName, version + '-' + nextChannelLabel + '-' + sha);
-      versionsMap.set(moduleName, defaultVersionIfNotFound);
+      const version = stablePackages[moduleName];
+      versionsMap.set(
+        moduleName,
+        version + '-' + nextChannelLabel + '-' + sha,
+        defaultVersionIfNotFound
+      );
     }
     updatePackageVersions(
       buildDir + '/node_modules',
@@ -220,19 +223,21 @@ function updatePackageVersions(
 
       if (packageInfo.dependencies) {
         for (const dep of Object.keys(packageInfo.dependencies)) {
-          if (versionsMap.has(dep)) {
+          const depVersion = versionsMap.get(dep);
+          if (depVersion !== undefined) {
             packageInfo.dependencies[dep] = pinToExactVersion
-              ? version
-              : '^' + version;
+              ? depVersion
+              : '^' + depVersion;
           }
         }
       }
       if (packageInfo.peerDependencies) {
         for (const dep of Object.keys(packageInfo.peerDependencies)) {
-          if (versionsMap.has(dep)) {
+          const depVersion = versionsMap.get(dep);
+          if (depVersion !== undefined) {
             packageInfo.peerDependencies[dep] = pinToExactVersion
-              ? version
-              : '^' + version;
+              ? depVersion
+              : '^' + depVersion;
           }
         }
       }
