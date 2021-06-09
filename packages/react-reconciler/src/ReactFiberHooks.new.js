@@ -1145,7 +1145,7 @@ function useMutableSource<Source, Snapshot>(
       try {
         latestSetSnapshot(latestGetSnapshot(source._source));
 
-        // Record a pending mutable source update with the same expiration time.
+        // Record a pending mutable source update with the same lane.
         const lane = requestUpdateLane(fiber);
 
         markRootMutableRead(root, lane);
