@@ -10,6 +10,7 @@
 'use strict';
 
 const stream = require('stream');
+const shouldIgnoreConsoleError = require('../../../../../scripts/jest/shouldIgnoreConsoleError');
 
 module.exports = function(initModules) {
   let ReactDOM;
@@ -74,23 +75,29 @@ module.exports = function(initModules) {
     }
 
     const result = await fn();
-    if (
-      console.error.calls &&
-      console.error.calls.count() !== count &&
-      console.error.calls.count() !== 0
-    ) {
-      console.log(
-        `We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`,
-      );
-      if (console.error.calls.count() > 0) {
-        console.log(`We saw these warnings:`);
-        for (let i = 0; i < console.error.calls.count(); i++) {
-          console.log(...console.error.calls.argsFor(i));
+    if (console.error.calls && console.error.calls.count() !== 0) {
+      const filteredWarnings = [];
+      for (let i = 0; i < console.error.calls.count(); i++) {
+        const args = console.error.calls.argsFor(i);
+        const [format, ...rest] = args;
+        if (!shouldIgnoreConsoleError(format, rest)) {
+          filteredWarnings.push(args);
         }
       }
-    }
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(count);
+      if (filteredWarnings.length !== count) {
+        console.log(
+          `We expected ${count} warning(s), but saw ${filteredWarnings.length} warning(s).`,
+        );
+        if (filteredWarnings.count > 0) {
+          console.log(`We saw these warnings:`);
+          for (let i = 0; i < filteredWarnings.length; i++) {
+            console.log(...filteredWarnings[i]);
+          }
+        }
+        if (__DEV__) {
+          expect(console.error).toHaveBeenCalledTimes(count);
+        }
+      }
     }
     return result;
   }
