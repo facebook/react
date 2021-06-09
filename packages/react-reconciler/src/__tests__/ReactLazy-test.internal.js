@@ -178,13 +178,13 @@ describe('ReactLazy', () => {
 
     await Promise.resolve();
 
+    expect(Scheduler).toFlushAndThrow('Element type is invalid');
     if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error).toHaveBeenCalledTimes(3);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Expected the result of a dynamic import() call',
       );
     }
-    expect(Scheduler).toFlushAndThrow('Element type is invalid');
   });
 
   it('throws if promise rejects', async () => {

@@ -17,6 +17,7 @@ import InspectableElements from './InspectableElements';
 import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
+import ErrorBoundaries from './ErrorBoundaries';
 import SuspenseTree from './SuspenseTree';
 import {ignoreErrors, ignoreWarnings} from './console';
 
@@ -54,6 +55,7 @@ function mountTestApp() {
   mountHelper(InlineWarnings);
   mountHelper(ReactNativeWeb);
   mountHelper(Toggle);
+  mountHelper(ErrorBoundaries);
   mountHelper(SuspenseTree);
   mountHelper(DeeplyNestedComponents);
   mountHelper(Iframe);

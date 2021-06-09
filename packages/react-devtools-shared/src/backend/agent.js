@@ -122,6 +122,12 @@ type OverrideValueAtPathParams = {|
   value: any,
 |};
 
+type OverrideErrorParams = {|
+  id: number,
+  rendererID: number,
+  forceError: boolean,
+|};
+
 type OverrideSuspenseParams = {|
   id: number,
   rendererID: number,
@@ -183,6 +189,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
+    bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('overrideValueAtPath', this.overrideValueAtPath);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
@@ -378,6 +385,15 @@ export default class Agent extends EventEmitter<{|
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.logElementToConsole(id);
+    }
+  };
+
+  overrideError = ({id, rendererID, forceError}: OverrideErrorParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.overrideError(id, forceError);
     }
   };
 

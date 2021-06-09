@@ -21,7 +21,7 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerFormatConfig';
 
-type Options = {
+type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
   progressiveChunkSize?: number,
@@ -29,7 +29,7 @@ type Options = {
   onReadyToStream?: () => void,
   onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
-};
+|};
 
 function renderToReadableStream(
   children: ReactNodeList,

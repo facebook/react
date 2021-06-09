@@ -178,7 +178,7 @@ export type Fiber = {|
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
   // __DEV__ only
-  _debugID?: number,
+
   _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,

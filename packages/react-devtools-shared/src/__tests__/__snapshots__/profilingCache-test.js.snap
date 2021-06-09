@@ -113,7 +113,7 @@ Object {
     },
   },
   "duration": 3,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     7 => 3,
     3 => 3,
@@ -122,7 +122,7 @@ Object {
     7 => 3,
     3 => 0,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 18,
   "updaters": Array [
@@ -286,7 +286,7 @@ Object {
     },
   },
   "duration": 10,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     4 => 0,
     2 => 10,
@@ -297,7 +297,7 @@ Object {
     2 => 10,
     1 => 0,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 35,
   "updaters": Array [
@@ -326,7 +326,7 @@ Object {
     },
   },
   "duration": 10,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     2 => 10,
     1 => 10,
@@ -335,7 +335,7 @@ Object {
     2 => 10,
     1 => 0,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 45,
   "updaters": Array [
@@ -587,7 +587,7 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               4,
@@ -616,7 +616,7 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 35,
           "updaters": Array [
@@ -645,7 +645,7 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -666,7 +666,7 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 45,
           "updaters": Array [
@@ -1367,7 +1367,7 @@ Object {
         },
       },
       "duration": 10,
-      "effectDuration": null,
+      "effectDuration": 0,
       "fiberActualDurations": Map {
         4 => 0,
         2 => 10,
@@ -1378,7 +1378,7 @@ Object {
         2 => 10,
         1 => 0,
       },
-      "passiveEffectDuration": null,
+      "passiveEffectDuration": 0,
       "priorityLevel": "Immediate",
       "timestamp": 34,
       "updaters": Array [
@@ -1404,7 +1404,7 @@ Object {
         },
       },
       "duration": 10,
-      "effectDuration": null,
+      "effectDuration": 0,
       "fiberActualDurations": Map {
         2 => 10,
         1 => 10,
@@ -1413,7 +1413,7 @@ Object {
         2 => 10,
         1 => 0,
       },
-      "passiveEffectDuration": null,
+      "passiveEffectDuration": 0,
       "priorityLevel": "Immediate",
       "timestamp": 44,
       "updaters": Array [
@@ -1683,10 +1683,10 @@ Object {
     Object {
       "changeDescriptions": Map {},
       "duration": 0,
-      "effectDuration": null,
+      "effectDuration": 0,
       "fiberActualDurations": Map {},
       "fiberSelfDurations": Map {},
-      "passiveEffectDuration": null,
+      "passiveEffectDuration": 0,
       "priorityLevel": "Normal",
       "timestamp": 34,
       "updaters": Array [
@@ -1900,7 +1900,7 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               4,
@@ -1929,7 +1929,7 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 34,
           "updaters": Array [
@@ -1958,7 +1958,7 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -1979,7 +1979,7 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 44,
           "updaters": Array [
@@ -2306,10 +2306,10 @@ Object {
         Object {
           "changeDescriptions": Array [],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [],
           "fiberSelfDurations": Array [],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Normal",
           "timestamp": 34,
           "updaters": Array [
@@ -2494,7 +2494,7 @@ Object {
     },
   },
   "duration": 0,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     1 => 0,
     2 => 0,
@@ -2505,7 +2505,7 @@ Object {
     2 => 0,
     3 => 0,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Normal",
   "timestamp": 0,
   "updaters": Array [
@@ -2685,7 +2685,7 @@ Object {
             ],
           ],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -2714,7 +2714,7 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Normal",
           "timestamp": 0,
           "updaters": Array [

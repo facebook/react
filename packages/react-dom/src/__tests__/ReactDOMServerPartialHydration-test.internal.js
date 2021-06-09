@@ -571,7 +571,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('blocks updates to hydrate the content first if props changed at idle priority', async () => {
     let suspend = false;
     let resolve;
@@ -1498,7 +1498,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('ALoading B');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('clears server boundaries when SuspenseList runs out of time hydrating', async () => {
     let suspend = false;
     let resolve;
@@ -1912,7 +1912,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('does not invoke an event on a hydrated event handle until it commits', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -2077,7 +2077,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('invokes discrete events on nested suspense boundaries in a root (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -2617,7 +2617,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('renders a hidden LegacyHidden component inside a Suspense boundary', async () => {
     const ref = React.createRef();
 
@@ -2646,7 +2646,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('renders a visible LegacyHidden component', async () => {
     const ref = React.createRef();
 

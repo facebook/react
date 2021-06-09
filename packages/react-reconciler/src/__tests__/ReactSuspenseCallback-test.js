@@ -10,15 +10,12 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
 
 describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSuspenseCallback = true;
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -47,30 +44,34 @@ describe('ReactSuspense', () => {
     return {promise, resolve, PromiseComp};
   }
 
-  it('check type', () => {
-    const {PromiseComp} = createThenable();
+  if (__DEV__) {
+    // @gate www
+    it('check type', () => {
+      const {PromiseComp} = createThenable();
 
-    const elementBadType = (
-      <React.Suspense suspenseCallback={1} fallback={'Waiting'}>
-        <PromiseComp />
-      </React.Suspense>
-    );
+      const elementBadType = (
+        <React.Suspense suspenseCallback={1} fallback={'Waiting'}>
+          <PromiseComp />
+        </React.Suspense>
+      );
 
-    ReactNoop.render(elementBadType);
-    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
-      'Warning: Unexpected type for suspenseCallback.',
-    ]);
+      ReactNoop.render(elementBadType);
+      expect(() => Scheduler.unstable_flushAll()).toErrorDev([
+        'Warning: Unexpected type for suspenseCallback.',
+      ]);
 
-    const elementMissingCallback = (
-      <React.Suspense fallback={'Waiting'}>
-        <PromiseComp />
-      </React.Suspense>
-    );
+      const elementMissingCallback = (
+        <React.Suspense fallback={'Waiting'}>
+          <PromiseComp />
+        </React.Suspense>
+      );
 
-    ReactNoop.render(elementMissingCallback);
-    expect(() => Scheduler.unstable_flushAll()).toErrorDev([]);
-  });
+      ReactNoop.render(elementMissingCallback);
+      expect(() => Scheduler.unstable_flushAll()).toErrorDev([]);
+    });
+  }
 
+  // @gate www
   it('1 then 0 suspense callback', async () => {
     const {promise, resolve, PromiseComp} = createThenable();
 
@@ -97,6 +98,7 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([]);
   });
 
+  // @gate www
   it('2 then 1 then 0 suspense callback', async () => {
     const {
       promise: promise1,
@@ -143,6 +145,7 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([]);
   });
 
+  // @gate www
   it('nested suspense promises are reported only for their tier', () => {
     const {promise, PromiseComp} = createThenable();
 
@@ -174,6 +177,7 @@ describe('ReactSuspense', () => {
     expect(ops2).toEqual([new Set([promise])]);
   });
 
+  // @gate www
   it('competing suspense promises', async () => {
     const {
       promise: promise1,
@@ -242,6 +246,7 @@ describe('ReactSuspense', () => {
   });
 
   if (__DEV__) {
+    // @gate www
     it('regression test for #16215 that relies on implementation details', async () => {
       // Regression test for https://github.com/facebook/react/pull/16215.
       // The bug only happens if there's an error earlier in the commit phase.
@@ -271,9 +276,6 @@ describe('ReactSuspense', () => {
           return errors[errors.length - 1];
         },
       }));
-
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.enableSuspenseCallback = true;
 
       React = require('react');
       ReactNoop = require('react-noop-renderer');

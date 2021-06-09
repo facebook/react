@@ -110,7 +110,7 @@ export function inspectElement(
     if (rendererID == null) {
       const rejectedRecord = ((newRecord: any): RejectedRecord);
       rejectedRecord.status = Rejected;
-      rejectedRecord.value = `Could not inspect element with id ${element.id}`;
+      rejectedRecord.value = `Could not inspect element with id "${element.id}"`;
 
       map.set(element, record);
 
@@ -134,7 +134,7 @@ export function inspectElement(
         if (newRecord.status === Pending) {
           const rejectedRecord = ((newRecord: any): RejectedRecord);
           rejectedRecord.status = Rejected;
-          rejectedRecord.value = `Could not inspect element with id ${element.id}`;
+          rejectedRecord.value = `Could not inspect element with id "${element.id}"`;
           wake();
         }
       },
