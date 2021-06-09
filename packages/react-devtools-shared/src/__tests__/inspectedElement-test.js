@@ -390,9 +390,8 @@ describe('InspectedElement', () => {
     });
 
     const container = document.createElement('div');
-    await utils.actAsync(() =>
-      ReactDOM.render(<Target a={1} b="abc" />, container),
-    );
+    const root = ReactDOM.createRoot(container);
+    await utils.actAsync(() => root.render(<Target a={1} b="abc" />));
 
     expect(targetRenderCount).toBe(1);
     expect(console.error).toHaveBeenCalledTimes(1);
