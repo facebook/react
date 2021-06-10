@@ -2208,25 +2208,27 @@ function commitMutationEffects_begin(root: FiberRoot) {
 function commitMutationEffects_complete(root: FiberRoot) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      invokeGuardedCallback(
-        null,
-        commitMutationEffectsOnFiber,
-        null,
-        fiber,
-        root,
-      );
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, fiber.return, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitMutationEffectsOnFiber(fiber, root);
-      } catch (error) {
-        captureCommitPhaseError(fiber, fiber.return, error);
+    if (fiber.flags !== NoFlags) {
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(
+          null,
+          commitMutationEffectsOnFiber,
+          null,
+          fiber,
+          root,
+        );
+        if (hasCaughtError()) {
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitMutationEffectsOnFiber(fiber, root);
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
       }
     }
 
