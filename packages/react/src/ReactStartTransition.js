@@ -10,11 +10,10 @@
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 
 export function startTransition(scope: () => void) {
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
+  const revertTransition = ReactCurrentBatchConfig.setTransition(1);
   try {
     scope();
   } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+    revertTransition();
   }
 }
