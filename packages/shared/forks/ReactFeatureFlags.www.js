@@ -26,6 +26,7 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   createRootStrictEffectsByDefault,
+  enableSuspenseLayoutEffectSemantics,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
@@ -36,8 +37,6 @@ export const {
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
-
-export const enableSuspenseLayoutEffectSemantics = true;
 
 export const enableStrictEffects =
   __DEV__ && dynamicFeatureFlags.enableStrictEffects;
