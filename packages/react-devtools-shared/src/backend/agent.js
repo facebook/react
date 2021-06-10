@@ -26,6 +26,7 @@ import {
   toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
+import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
@@ -121,6 +122,12 @@ type OverrideValueAtPathParams = {|
   value: any,
 |};
 
+type OverrideErrorParams = {|
+  id: number,
+  rendererID: number,
+  forceError: boolean,
+|};
+
 type OverrideSuspenseParams = {|
   id: number,
   rendererID: number,
@@ -176,11 +183,13 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
+    bridge.addListener('getBridgeProtocol', this.getBridgeProtocol);
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
+    bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('overrideValueAtPath', this.overrideValueAtPath);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
@@ -308,6 +317,10 @@ export default class Agent extends EventEmitter<{|
     return null;
   }
 
+  getBridgeProtocol = () => {
+    this._bridge.send('bridgeProtocol', currentBridgeProtocol);
+  };
+
   getProfilingData = ({rendererID}: {|rendererID: RendererID|}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -372,6 +385,15 @@ export default class Agent extends EventEmitter<{|
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.logElementToConsole(id);
+    }
+  };
+
+  overrideError = ({id, rendererID, forceError}: OverrideErrorParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.overrideError(id, forceError);
     }
   };
 
@@ -670,7 +692,10 @@ export default class Agent extends EventEmitter<{|
 
   onHookOperations = (operations: Array<number>) => {
     if (__DEBUG__) {
-      debug('onHookOperations', operations);
+      debug(
+        'onHookOperations',
+        `(${operations.length}) [${operations.join(', ')}]`,
+      );
     }
 
     // TODO:

@@ -155,8 +155,6 @@ export type MutableSource<Source: $NonMaybeType<mixed>> = {|
 // This doesn't require a value to be passed to either handler.
 export interface Wakeable {
   then(onFulfill: () => mixed, onReject: () => mixed): void | Wakeable;
-  // Special flag to opt out of tracing interactions across a Suspense boundary.
-  __reactDoNotTraceInteractions?: boolean;
 }
 
 // The subset of a Promise that React APIs rely on. This resolves a value.

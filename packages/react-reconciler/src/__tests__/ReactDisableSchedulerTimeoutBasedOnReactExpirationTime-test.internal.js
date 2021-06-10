@@ -63,7 +63,13 @@ describe('ReactSuspenseList', () => {
     root.render(<App show={false} />);
     expect(Scheduler).toFlushAndYield([]);
 
-    root.render(<App show={true} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.render(<App show={true} />);
+      });
+    } else {
+      root.render(<App show={true} />);
+    }
     expect(Scheduler).toFlushAndYield([
       'Suspend! [A]',
       'Suspend! [B]',

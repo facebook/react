@@ -26,11 +26,12 @@ module.exports = {
     require: true,
     globalThis: true,
     global: true,
+    // Internet Explorer
+    setImmediate: true,
     // Trusted Types
     trustedTypes: true,
 
     // Scheduler profiling
-    SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
 

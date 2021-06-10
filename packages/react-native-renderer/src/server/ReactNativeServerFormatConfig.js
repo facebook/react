@@ -23,6 +23,8 @@ import {
 
 import invariant from 'shared/invariant';
 
+export const isPrimaryRenderer = true;
+
 // Every list of children or string is null terminated.
 const END_TAG = 0;
 // Tree node tags.
@@ -59,12 +61,14 @@ SUSPENSE_UPDATE_TO_CLIENT_RENDER[0] = SUSPENSE_UPDATE_TO_CLIENT_RENDER_TAG;
 // Per response,
 export type ResponseState = {
   nextSuspenseID: number,
+  nextOpaqueID: number,
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(): ResponseState {
   return {
     nextSuspenseID: 0,
+    nextOpaqueID: 0,
   };
 }
 
@@ -104,6 +108,19 @@ export function createSuspenseBoundaryID(
 ): SuspenseBoundaryID {
   // TODO: This is not deterministic since it's created during render.
   return responseState.nextSuspenseID++;
+}
+
+export type OpaqueIDType = number;
+
+export function makeServerID(
+  responseState: null | ResponseState,
+): OpaqueIDType {
+  invariant(
+    responseState !== null,
+    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
+  );
+  // TODO: This is not deterministic since it's created during render.
+  return responseState.nextOpaqueID++;
 }
 
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');

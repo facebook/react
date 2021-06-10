@@ -65,9 +65,7 @@ describe('ReactDOMFizzServer', () => {
     );
     startWriting();
     jest.runAllTimers();
-    expect(output.result).toMatchInlineSnapshot(
-      `"<div>hello world<!-- --></div>"`,
-    );
+    expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   // @gate experimental
@@ -84,7 +82,7 @@ describe('ReactDOMFizzServer', () => {
     // Then React starts writing.
     startWriting();
     expect(output.result).toMatchInlineSnapshot(
-      `"<!doctype html><html><head><title>test</title><head><body><div>hello world<!-- --></div>"`,
+      `"<!doctype html><html><head><title>test</title><head><body><div>hello world</div>"`,
     );
   });
 
@@ -99,7 +97,7 @@ describe('ReactDOMFizzServer', () => {
       }
       return 'Done';
     }
-    let isComplete = false;
+    let isCompleteCalls = 0;
     const {writable, output} = getTestWritable();
     const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
       <div>
@@ -110,13 +108,13 @@ describe('ReactDOMFizzServer', () => {
       writable,
       {
         onCompleteAll() {
-          isComplete = true;
+          isCompleteCalls++;
         },
       },
     );
     await jest.runAllTimers();
     expect(output.result).toBe('');
-    expect(isComplete).toBe(false);
+    expect(isCompleteCalls).toBe(0);
     // Resolve the loading.
     hasLoaded = true;
     await resolve();
@@ -124,7 +122,7 @@ describe('ReactDOMFizzServer', () => {
     await jest.runAllTimers();
 
     expect(output.result).toBe('');
-    expect(isComplete).toBe(true);
+    expect(isCompleteCalls).toBe(1);
 
     // First we write our header.
     output.result +=
@@ -244,6 +242,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
+    let isCompleteCalls = 0;
     const {writable, output, completed} = getTestWritable();
     const {startWriting, abort} = ReactDOMFizzServer.pipeToNodeWritable(
       <div>
@@ -252,12 +251,18 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       </div>,
       writable,
+      {
+        onCompleteAll() {
+          isCompleteCalls++;
+        },
+      },
     );
     startWriting();
 
     jest.runAllTimers();
 
     expect(output.result).toContain('Loading');
+    expect(isCompleteCalls).toBe(0);
 
     abort();
 
@@ -265,5 +270,41 @@ describe('ReactDOMFizzServer', () => {
 
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
+    expect(isCompleteCalls).toBe(1);
+  });
+
+  // @gate experimental
+  it('should be able to complete by abort when the fallback is also suspended', async () => {
+    let isCompleteCalls = 0;
+    const {writable, output, completed} = getTestWritable();
+    const {startWriting, abort} = ReactDOMFizzServer.pipeToNodeWritable(
+      <div>
+        <Suspense fallback="Loading">
+          <Suspense fallback={<InfiniteSuspend />}>
+            <InfiniteSuspend />
+          </Suspense>
+        </Suspense>
+      </div>,
+      writable,
+      {
+        onCompleteAll() {
+          isCompleteCalls++;
+        },
+      },
+    );
+    startWriting();
+
+    jest.runAllTimers();
+
+    expect(output.result).toContain('Loading');
+    expect(isCompleteCalls).toBe(0);
+
+    abort();
+
+    await completed;
+
+    expect(output.error).toBe(undefined);
+    expect(output.result).toContain('Loading');
+    expect(isCompleteCalls).toBe(1);
   });
 });

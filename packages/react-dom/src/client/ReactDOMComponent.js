@@ -29,7 +29,6 @@ import {
   restoreControlledState as ReactDOMInputRestoreControlledState,
 } from './ReactDOMInput';
 import {
-  getHostProps as ReactDOMOptionGetHostProps,
   postMountWrapper as ReactDOMOptionPostMountWrapper,
   validateProps as ReactDOMOptionValidateProps,
 } from './ReactDOMOption';
@@ -535,7 +534,7 @@ export function setInitialProperties(
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
-      props = ReactDOMOptionGetHostProps(domElement, rawProps);
+      props = rawProps;
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
@@ -613,11 +612,6 @@ export function diffProperties(
     case 'input':
       lastProps = ReactDOMInputGetHostProps(domElement, lastRawProps);
       nextProps = ReactDOMInputGetHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-    case 'option':
-      lastProps = ReactDOMOptionGetHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMOptionGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
@@ -947,9 +941,6 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is allowed
-        case 'data-reactroot':
-          break;
         // Controlled attributes are not validated
         // TODO: Only ignore them on controlled tags.
         case 'value':

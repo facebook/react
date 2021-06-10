@@ -2,7 +2,6 @@ let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
 let Scheduler;
-let SchedulerTracing;
 let ReactCache;
 let Suspense;
 let act;
@@ -18,12 +17,10 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     act = ReactTestRenderer.unstable_concurrentAct;
     Scheduler = require('scheduler');
-    SchedulerTracing = require('scheduler/tracing');
     ReactCache = require('react-cache');
 
     Suspense = React.Suspense;
@@ -129,7 +126,13 @@ describe('ReactSuspense', () => {
 
     // Navigate the shell to now render the child content.
     // This should suspend.
-    root.update(<Foo renderBar={true} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.update(<Foo renderBar={true} />);
+      });
+    } else {
+      root.update(<Foo renderBar={true} />);
+    }
 
     expect(Scheduler).toFlushAndYield([
       'Foo',
@@ -238,15 +241,29 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Initial');
 
     // The update will suspend.
-    root.update(
-      <>
-        <Suspense fallback={<Text text="Loading..." />}>
-          <Async />
-        </Suspense>
-        <Text text="After Suspense" />
-        <Text text="Sibling" />
-      </>,
-    );
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.update(
+          <>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Async />
+            </Suspense>
+            <Text text="After Suspense" />
+            <Text text="Sibling" />
+          </>,
+        );
+      });
+    } else {
+      root.update(
+        <>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Async />
+          </Suspense>
+          <Text text="After Suspense" />
+          <Text text="Sibling" />
+        </>,
+      );
+    }
 
     // Yield past the Suspense boundary but don't complete the last sibling.
     expect(Scheduler).toFlushAndYieldThrough([
@@ -270,7 +287,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
-  // @gate experimental
+  // @gate !enableSyncDefaultUpdates
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +
@@ -311,7 +328,7 @@ describe('ReactSuspense', () => {
 
       // Schedule another update. This will have lower priority because it's
       // a transition.
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(<App shouldSuspend={false} step={2} />);
       });
 
@@ -1246,76 +1263,6 @@ describe('ReactSuspense', () => {
         // re-render once.
         'C',
       ]);
-    });
-
-    it('should call onInteractionScheduledWorkCompleted after suspending', () => {
-      const subscriber = {
-        onInteractionScheduledWorkCompleted: jest.fn(),
-        onInteractionTraced: jest.fn(),
-        onWorkCanceled: jest.fn(),
-        onWorkScheduled: jest.fn(),
-        onWorkStarted: jest.fn(),
-        onWorkStopped: jest.fn(),
-      };
-      SchedulerTracing.unstable_subscribe(subscriber);
-      SchedulerTracing.unstable_trace('test', performance.now(), () => {
-        function App() {
-          return (
-            <React.Suspense fallback={<Text text="Loading..." />}>
-              <AsyncText text="A" ms={1000} />
-              <AsyncText text="B" ms={2000} />
-              <AsyncText text="C" ms={3000} />
-            </React.Suspense>
-          );
-        }
-
-        const root = ReactTestRenderer.create(null);
-        root.update(<App />);
-
-        expect(Scheduler).toHaveYielded([
-          'Suspend! [A]',
-          'Suspend! [B]',
-          'Suspend! [C]',
-          'Loading...',
-        ]);
-
-        // Resolve A
-        jest.advanceTimersByTime(1000);
-
-        expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-        expect(Scheduler).toFlushUntilNextPaint([
-          'A',
-          // The promises for B and C have now been thrown twice
-          'Suspend! [B]',
-          'Suspend! [C]',
-        ]);
-
-        // Resolve B
-        jest.advanceTimersByTime(1000);
-
-        expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-        expect(Scheduler).toFlushUntilNextPaint([
-          // Even though the promise for B was thrown twice, we should only
-          // re-render once.
-          'B',
-          // The promise for C has now been thrown three times
-          'Suspend! [C]',
-        ]);
-
-        // Resolve C
-        jest.advanceTimersByTime(1000);
-
-        expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
-        expect(Scheduler).toFlushAndYield([
-          // Even though the promise for C was thrown three times, we should only
-          // re-render once.
-          'C',
-        ]);
-      });
-
-      expect(
-        subscriber.onInteractionScheduledWorkCompleted,
-      ).toHaveBeenCalledTimes(1);
     });
 
     it('#14162', () => {

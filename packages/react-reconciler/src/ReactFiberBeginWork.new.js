@@ -66,9 +66,11 @@ import {
   DidCapture,
   Update,
   Ref,
+  RefStatic,
   ChildDeletion,
   ForceUpdateForLegacySuspense,
   StaticMask,
+  ShouldCapture,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -77,14 +79,15 @@ import {
   disableModulePatternComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
-  enableSchedulerTracing,
   enableSuspenseServerRenderer,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -109,6 +112,7 @@ import {
   processUpdateQueue,
   cloneUpdateQueue,
   initializeUpdateQueue,
+  enqueueCapturedUpdate,
 } from './ReactUpdateQueue.new';
 import {
   NoLane,
@@ -123,6 +127,7 @@ import {
   removeLanes,
   mergeLanes,
   getBumpedLaneForHydration,
+  pickArbitraryLane,
 } from './ReactFiberLane.new';
 import {
   ConcurrentMode,
@@ -139,7 +144,7 @@ import {
   isPrimaryRenderer,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {shouldSuspend} from './ReactFiberReconciler';
+import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.new';
 import {
   suspenseStackCursor,
@@ -182,7 +187,6 @@ import {
 } from './ReactFiberHydrationContext.new';
 import {
   adoptClassInstance,
-  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
@@ -198,7 +202,6 @@ import {
   isSimpleFunctionComponent,
 } from './ReactFiber.new';
 import {
-  markSpawnedWork,
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
@@ -209,7 +212,6 @@ import {
   RetryAfterError,
   NoContext,
 } from './ReactFiberWorkLoop.new';
-import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {
   requestCacheFromPool,
@@ -220,6 +222,8 @@ import {
   restoreSpawnedCachePool,
   getOffscreenDeferredCachePool,
 } from './ReactFiberCacheComponent.new';
+import {createCapturedValue} from './ReactCapturedValue';
+import {createClassErrorUpdate} from './ReactFiberThrow.new';
 import is from 'shared/objectIs';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -553,7 +557,7 @@ function updateSimpleMemoComponent(
         // The pending lanes were cleared at the beginning of beginWork. We're
         // about to bail out, but there might be other lanes that weren't
         // included in the current render. Usually, the priority level of the
-        // remaining updates is accumlated during the evaluation of the
+        // remaining updates is accumulated during the evaluation of the
         // component (i.e. when processing the update queue). But since since
         // we're bailing out early *without* evaluating the component, we need
         // to account for it here, too. Reset to the value of the current fiber.
@@ -633,9 +637,6 @@ function updateOffscreenComponent(
       }
 
       // Schedule this fiber to re-render at offscreen priority. Then bailout.
-      if (enableSchedulerTracing) {
-        markSpawnedWork((OffscreenLane: Lane));
-      }
       workInProgress.lanes = workInProgress.childLanes = laneToLanes(
         OffscreenLane,
       );
@@ -854,6 +855,9 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   ) {
     // Schedule a Ref effect
     workInProgress.flags |= Ref;
+    if (enableSuspenseLayoutEffectSemantics) {
+      workInProgress.flags |= RefStatic;
+    }
   }
 }
 
@@ -948,6 +952,38 @@ function updateClassComponent(
   renderLanes: Lanes,
 ) {
   if (__DEV__) {
+    // This is used by DevTools to force a boundary to error.
+    switch (shouldError(workInProgress)) {
+      case false: {
+        const instance = workInProgress.stateNode;
+        const ctor = workInProgress.type;
+        // TODO This way of resetting the error boundary state is a hack.
+        // Is there a better way to do this?
+        const tempInstance = new ctor(
+          workInProgress.memoizedProps,
+          instance.context,
+        );
+        const state = tempInstance.state;
+        instance.updater.enqueueSetState(instance, state, null);
+        break;
+      }
+      case true: {
+        workInProgress.flags |= DidCapture;
+        workInProgress.flags |= ShouldCapture;
+        const error = new Error('Simulated error coming from DevTools');
+        const lane = pickArbitraryLane(renderLanes);
+        workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
+        // Schedule the error boundary to re-render using updated state
+        const update = createClassErrorUpdate(
+          workInProgress,
+          createCapturedValue(error, workInProgress),
+          lane,
+        );
+        enqueueCapturedUpdate(workInProgress, update);
+        break;
+      }
+    }
+
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
       // because they're only guaranteed to be resolved here.
@@ -1588,16 +1624,6 @@ function mountIndeterminateComponent(
 
     initializeUpdateQueue(workInProgress);
 
-    const getDerivedStateFromProps = Component.getDerivedStateFromProps;
-    if (typeof getDerivedStateFromProps === 'function') {
-      applyDerivedStateFromProps(
-        workInProgress,
-        Component,
-        getDerivedStateFromProps,
-        props,
-      );
-    }
-
     adoptClassInstance(workInProgress, value);
     mountClassInstance(workInProgress, Component, props, renderLanes);
     return finishClassComponent(
@@ -1664,7 +1690,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
         info += '\n\nCheck the render method of `' + ownerName + '`.';
       }
 
-      let warningKey = ownerName || workInProgress._debugID || '';
+      let warningKey = ownerName || '';
       const debugSource = workInProgress._debugSource;
       if (debugSource) {
         warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
@@ -1944,9 +1970,6 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       // RetryLane even if it's the one currently rendering since we're leaving
       // it behind on this node.
       workInProgress.lanes = SomeRetryLane;
-      if (enableSchedulerTracing) {
-        markSpawnedWork(SomeRetryLane);
-      }
       return fallbackFragment;
     } else {
       return mountSuspensePrimaryChildren(
@@ -2402,17 +2425,11 @@ function mountDehydratedSuspenseComponent(
     // time. This will mean that Suspense timeouts are slightly shifted to later than
     // they should be.
     // Schedule a normal pri update to render this content.
-    if (enableSchedulerTracing) {
-      markSpawnedWork(DefaultHydrationLane);
-    }
     workInProgress.lanes = laneToLanes(DefaultHydrationLane);
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
     workInProgress.lanes = laneToLanes(OffscreenLane);
-    if (enableSchedulerTracing) {
-      markSpawnedWork(OffscreenLane);
-    }
   }
   return null;
 }
@@ -2525,10 +2542,7 @@ function updateDehydratedSuspenseComponent(
     // Leave the child in place. I.e. the dehydrated fragment.
     workInProgress.child = current.child;
     // Register a callback to retry this boundary once the server has sent the result.
-    let retry = retryDehydratedSuspenseBoundary.bind(null, current);
-    if (enableSchedulerTracing) {
-      retry = Schedule_tracing_wrap(retry);
-    }
+    const retry = retryDehydratedSuspenseBoundary.bind(null, current);
     registerSuspenseInstanceRetry(suspenseInstance, retry);
     return null;
   } else {
@@ -2708,11 +2722,11 @@ function validateTailOptions(
 
 function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
   if (__DEV__) {
-    const isArray = Array.isArray(childSlot);
+    const isAnArray = isArray(childSlot);
     const isIterable =
-      !isArray && typeof getIteratorFn(childSlot) === 'function';
-    if (isArray || isIterable) {
-      const type = isArray ? 'array' : 'iterable';
+      !isAnArray && typeof getIteratorFn(childSlot) === 'function';
+    if (isAnArray || isIterable) {
+      const type = isAnArray ? 'array' : 'iterable';
       console.error(
         'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
           'an additional SuspenseList to configure its revealOrder: ' +
@@ -2740,7 +2754,7 @@ function validateSuspenseListChildren(
       children !== null &&
       children !== false
     ) {
-      if (Array.isArray(children)) {
+      if (isArray(children)) {
         for (let i = 0; i < children.length; i++) {
           if (!validateSuspenseListNestedChild(children[i], i)) {
             return;

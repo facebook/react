@@ -210,6 +210,7 @@ export type ReactFabricType = {
     element: Element<ElementType>,
     containerTag: number,
     callback: ?() => void,
+    concurrentRoot: ?boolean,
   ): ?ElementRef<ElementType>,
   unmountComponentAtNode(containerTag: number): void,
   ...

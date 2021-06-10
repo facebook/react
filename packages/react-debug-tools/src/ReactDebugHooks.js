@@ -265,7 +265,7 @@ function useMutableSource<Source, Snapshot>(
   return value;
 }
 
-function useTransition(): [(() => void) => void, boolean] {
+function useTransition(): [boolean, (() => void) => void] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
@@ -276,7 +276,7 @@ function useTransition(): [(() => void) => void, boolean] {
     stackError: new Error(),
     value: undefined,
   });
-  return [callback => {}, false];
+  return [false, callback => {}];
 }
 
 function useDeferredValue<T>(value: T): T {

@@ -604,10 +604,10 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
-          const [startTransition1] = useTransition();
-          const [startTransition2, isPending2] = useTransition();
-          const [startTransition3] = React.useTransition();
-          const [startTransition4, isPending4] = React.useTransition();
+          const [isPending1] = useTransition();
+          const [isPending2, startTransition2] = useTransition();
+          const [isPending3] = React.useTransition();
+          const [isPending4, startTransition4] = React.useTransition();
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
 

@@ -241,7 +241,7 @@ export function printOperationsArray(operations: Array<number>) {
         );
         break;
       default:
-        throw Error(`Unsupported Bridge operation ${operation}`);
+        throw Error(`Unsupported Bridge operation "${operation}"`);
     }
   }
 

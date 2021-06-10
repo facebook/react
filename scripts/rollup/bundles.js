@@ -238,14 +238,9 @@ const bundles = [
 
   /******* React DOM Server *******/
   {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: __EXPERIMENTAL__
+      ? [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD]
+      : [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
@@ -272,19 +267,24 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
-    bundleTypes: __EXPERIMENTAL__
-      ? [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD]
-      : [],
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.browser',
     global: 'ReactDOMFizzServer',
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
+    externals: ['react', 'react-dom/server'],
+  },
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-relay/src/ReactDOMServerFB',
+    global: 'ReactDOMServer',
     externals: ['react', 'react-dom/server'],
   },
 
@@ -733,39 +733,6 @@ const bundles = [
     externals: [],
   },
 
-  /******* React Scheduler Post Task Only (experimental) *******/
-  {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'scheduler/unstable_post_task_only',
-    global: 'SchedulerPostTaskOnly',
-    externals: [],
-  },
-
-  /******* React Scheduler No DOM (experimental) *******/
-  {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'scheduler/unstable_no_dom',
-    global: 'SchedulerNoDOM',
-    externals: [],
-  },
-
   /******* Jest React (experimental) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -801,24 +768,6 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-refresh/runtime',
     global: 'ReactFreshRuntime',
-    externals: [],
-  },
-
-  {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'scheduler/tracing',
-    global: 'SchedulerTracing',
     externals: [],
   },
 ];

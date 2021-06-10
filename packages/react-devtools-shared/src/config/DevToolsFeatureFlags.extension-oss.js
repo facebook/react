@@ -14,6 +14,7 @@
  ************************************************************************/
 
 export const enableProfilerChangedHookIndices = false;
+export const isInternalFacebookBuild = false;
 
 /************************************************************************
  * Do not edit the code below.

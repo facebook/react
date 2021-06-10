@@ -18,7 +18,6 @@ let readText;
 let resolveText;
 let ReactNoop;
 let Scheduler;
-let SchedulerTracing;
 let Suspense;
 let useState;
 let useReducer;
@@ -43,7 +42,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    SchedulerTracing = require('scheduler/tracing');
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
@@ -54,8 +52,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
-    useTransition = React.unstable_useTransition;
-    useDeferredValue = React.unstable_useDeferredValue;
+    useTransition = React.useTransition;
+    useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
     act = ReactNoop.act;
     ContinuousEventPriority = require('react-reconciler/constants')
@@ -166,10 +164,20 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
     // Schedule some updates
-    ReactNoop.batchedUpdates(() => {
-      counter.current.updateCount(1);
-      counter.current.updateCount(count => count + 10);
-    });
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        // TODO: Batched updates need to be inside startTransition?
+        ReactNoop.batchedUpdates(() => {
+          counter.current.updateCount(1);
+          counter.current.updateCount(count => count + 10);
+        });
+      });
+    } else {
+      ReactNoop.batchedUpdates(() => {
+        counter.current.updateCount(1);
+        counter.current.updateCount(count => count + 10);
+      });
+    }
 
     // Partially flush without committing
     expect(Scheduler).toFlushAndYieldThrough(['Count: 11']);
@@ -511,11 +519,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           </>,
         );
         expect(() =>
-          expect(Scheduler).toFlushAndYield(
-            __DEV__
-              ? ['Foo [0]', 'Bar', 'Foo [2]']
-              : ['Foo [0]', 'Bar', 'Foo [1]'],
-          ),
+          expect(Scheduler).toFlushAndYield(['Foo [0]', 'Bar', 'Foo [1]']),
         ).toErrorDev([
           'Cannot update a component (`Foo`) while rendering a ' +
             'different component (`Bar`). To locate the bad setState() call inside `Bar`',
@@ -530,11 +534,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             <Bar triggerUpdate={true} />
           </>,
         );
-        expect(Scheduler).toFlushAndYield(
-          __DEV__
-            ? ['Foo [2]', 'Bar', 'Foo [4]']
-            : ['Foo [1]', 'Bar', 'Foo [2]'],
-        );
+        expect(Scheduler).toFlushAndYield(['Foo [1]', 'Bar', 'Foo [2]']);
       });
     });
 
@@ -725,12 +725,24 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYield([0]);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
-      root.render(<Foo signal={false} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<Foo signal={false} />);
+        });
+      } else {
+        root.render(<Foo signal={false} />);
+      }
       expect(Scheduler).toFlushAndYield(['Suspend!']);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
       // Rendering again should suspend again.
-      root.render(<Foo signal={false} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<Foo signal={false} />);
+        });
+      } else {
+        root.render(<Foo signal={false} />);
+      }
       expect(Scheduler).toFlushAndYield(['Suspend!']);
     });
 
@@ -776,19 +788,38 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
       await ReactNoop.act(async () => {
-        root.render(<Foo signal={false} />);
-        setLabel('B');
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            root.render(<Foo signal={false} />);
+            setLabel('B');
+          });
+        } else {
+          root.render(<Foo signal={false} />);
+          setLabel('B');
+        }
 
         expect(Scheduler).toFlushAndYield(['Suspend!']);
         expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
         // Rendering again should suspend again.
-        root.render(<Foo signal={false} />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            root.render(<Foo signal={false} />);
+          });
+        } else {
+          root.render(<Foo signal={false} />);
+        }
         expect(Scheduler).toFlushAndYield(['Suspend!']);
 
         // Flip the signal back to "cancel" the update. However, the update to
         // label should still proceed. It shouldn't have been dropped.
-        root.render(<Foo signal={true} />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            root.render(<Foo signal={true} />);
+          });
+        } else {
+          root.render(<Foo signal={true} />);
+        }
         expect(Scheduler).toFlushAndYield(['B:0']);
         expect(root).toMatchRenderedOutput(<span prop="B:0" />);
       });
@@ -830,16 +861,12 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     // TODO: This should probably warn
-    // @gate experimental
     it('calling startTransition inside render phase', async () => {
-      let startTransition;
       function App() {
         const [counter, setCounter] = useState(0);
-        const [_startTransition] = useTransition();
-        startTransition = _startTransition;
 
         if (counter === 0) {
-          startTransition(() => {
+          React.startTransition(() => {
             setCounter(c => c + 1);
           });
         }
@@ -1350,7 +1377,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
 
         // Schedule another update for children, and partially process it.
-        setChildStates.forEach(setChildState => setChildState(2));
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            setChildStates.forEach(setChildState => setChildState(2));
+          });
+        } else {
+          setChildStates.forEach(setChildState => setChildState(2));
+        }
         expect(Scheduler).toFlushAndYieldThrough(['Child one render']);
 
         // Schedule unmount for the parent that unmounts children with pending update.
@@ -1667,20 +1700,41 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
         // Rendering again should flush the previous commit's effects
-        ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.unstable_yieldValue('Sync effect'),
-        );
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.startTransition(() => {
+            ReactNoop.render(<Counter count={1} />, () =>
+              Scheduler.unstable_yieldValue('Sync effect'),
+            );
+          });
+        } else {
+          ReactNoop.render(<Counter count={1} />, () =>
+            Scheduler.unstable_yieldValue('Sync effect'),
+          );
+        }
+
         expect(Scheduler).toFlushAndYieldThrough([
           'Schedule update [0]',
           'Count: 0',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
-        expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-        ReactNoop.flushPassiveEffects();
-        expect(Scheduler).toHaveYielded(['Schedule update [1]']);
-        expect(Scheduler).toFlushAndYield(['Count: 1']);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Count: 0',
+            'Sync effect',
+            'Schedule update [1]',
+            'Count: 1',
+          ]);
+        } else {
+          expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+          expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
+          expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+          ReactNoop.flushPassiveEffects();
+          expect(Scheduler).toHaveYielded(['Schedule update [1]']);
+          expect(Scheduler).toFlushAndYield(['Count: 1']);
+        }
+
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       });
     });
@@ -1697,16 +1751,11 @@ describe('ReactHooksWithNoopRenderer', () => {
         return <Text text={'Count: ' + count} />;
       }
 
-      // we explicitly wait for missing act() warnings here since
-      // it's a lot harder to simulate this condition inside an act scope
-      expect(() => {
-        ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.unstable_yieldValue('Sync effect'),
-        );
-        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toErrorDev(['An update to Counter ran an effect']);
-
+      ReactNoop.render(<Counter count={0} />, () =>
+        Scheduler.unstable_yieldValue('Sync effect'),
+      );
+      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
       // A flush sync doesn't cause the passive effects to fire.
       // So we haven't added the other update yet.
       act(() => {
@@ -1725,71 +1774,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-    });
-
-    // @gate enableSchedulerTracing
-    it('does not flush non-discrete passive effects when flushing sync (with tracing)', () => {
-      const onInteractionScheduledWorkCompleted = jest.fn();
-      const onWorkCanceled = jest.fn();
-      SchedulerTracing.unstable_subscribe({
-        onInteractionScheduledWorkCompleted,
-        onInteractionTraced: jest.fn(),
-        onWorkCanceled,
-        onWorkScheduled: jest.fn(),
-        onWorkStarted: jest.fn(),
-        onWorkStopped: jest.fn(),
-      });
-
-      let _updateCount;
-      function Counter(props) {
-        const [count, updateCount] = useState(0);
-        _updateCount = updateCount;
-        useEffect(() => {
-          expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions([
-            tracingEvent,
-          ]);
-          Scheduler.unstable_yieldValue(`Will set count to 1`);
-          updateCount(1);
-        }, []);
-        return <Text text={'Count: ' + count} />;
-      }
-
-      const tracingEvent = {id: 0, name: 'hello', timestamp: 0};
-      // we explicitly wait for missing act() warnings here since
-      // it's a lot harder to simulate this condition inside an act scope
-      expect(() => {
-        SchedulerTracing.unstable_trace(
-          tracingEvent.name,
-          tracingEvent.timestamp,
-          () => {
-            ReactNoop.render(<Counter count={0} />, () =>
-              Scheduler.unstable_yieldValue('Sync effect'),
-            );
-          },
-        );
-        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toErrorDev(['An update to Counter ran an effect']);
-
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
-
-      // A flush sync doesn't cause the passive effects to fire.
-      act(() => {
-        ReactNoop.flushSync(() => {
-          _updateCount(2);
-        });
-      });
-
-      expect(Scheduler).toHaveYielded([
-        'Will set count to 1',
-        'Count: 2',
-        'Count: 1',
-      ]);
-
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(onWorkCanceled).toHaveBeenCalledTimes(0);
     });
 
     it(
@@ -3137,15 +3121,13 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(totalRefUpdates).toBe(2); // Should not increase since last time
     });
   });
+
   describe('useTransition', () => {
-    // @gate experimental
     it('delays showing loading state until after timeout', async () => {
       let transition;
       function App() {
         const [show, setShow] = useState(false);
-        const [startTransition, isPending] = useTransition({
-          timeoutMs: 1000,
-        });
+        const [isPending, startTransition] = useTransition();
         transition = () => {
           startTransition(() => {
             setShow(true);
@@ -3202,7 +3184,6 @@ describe('ReactHooksWithNoopRenderer', () => {
   });
 
   describe('useDeferredValue', () => {
-    // @gate experimental
     it('defers text value', async () => {
       function TextBox({text}) {
         return <AsyncText text={text} />;
@@ -3706,9 +3687,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     ]);
   });
 
-  // @gate experimental
   it('regression: SuspenseList causes unmounts to be dropped on deletion', async () => {
-    const SuspenseList = React.unstable_SuspenseList;
+    const SuspenseList = React.SuspenseList;
 
     function Row({label}) {
       useEffect(() => {

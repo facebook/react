@@ -14,7 +14,7 @@ describe('ReactFlushSync', () => {
     Scheduler = require('scheduler');
     useState = React.useState;
     useEffect = React.useEffect;
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
   });
 
   function Text({text}) {
@@ -37,15 +37,21 @@ describe('ReactFlushSync', () => {
 
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
-      root.render(<App />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<App />);
+        });
+      } else {
+        root.render(<App />);
+      }
       // This will yield right before the passive effect fires
       expect(Scheduler).toFlushUntilNextPaint(['0, 0']);
 
       // The passive effect will schedule a sync update and a normal update.
       // They should commit in two separate batches. First the sync one.
-      expect(() =>
-        expect(Scheduler).toFlushUntilNextPaint(['1, 0']),
-      ).toErrorDev('flushSync was called from inside a lifecycle method');
+      expect(() => {
+        expect(Scheduler).toFlushUntilNextPaint(['1, 0']);
+      }).toErrorDev('flushSync was called from inside a lifecycle method');
 
       // The remaining update is not sync
       ReactNoop.flushSync();
@@ -57,7 +63,6 @@ describe('ReactFlushSync', () => {
     expect(root).toMatchRenderedOutput('1, 1');
   });
 
-  // @gate experimental
   test('nested with startTransition', async () => {
     let setSyncState;
     let setState;

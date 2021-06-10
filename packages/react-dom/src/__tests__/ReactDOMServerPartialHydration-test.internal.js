@@ -102,7 +102,6 @@ describe('ReactDOMServerPartialHydration', () => {
     );
   }
 
-  // @gate experimental
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
     let suspend = false;
     let resolve;
@@ -161,7 +160,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
   it('calls the hydration callbacks after hydration or deletion', async () => {
     let suspend = false;
     let resolve;
@@ -252,7 +250,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
-  // @gate experimental
   it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -310,7 +307,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
-  // @gate experimental || www
   it('warns and replaces the boundary content in legacy mode', async () => {
     let suspend = false;
     let resolve;
@@ -390,7 +386,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
   });
 
-  // @gate experimental
   it('can insert siblings before the dehydrated boundary', () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -449,7 +444,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.firstChild.textContent).toBe('First');
   });
 
-  // @gate experimental
   it('can delete the dehydrated boundary before it is hydrated', () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -506,7 +500,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
 
-  // @gate experimental
   it('blocks updates to hydrate the content first if props have changed', async () => {
     let suspend = false;
     let resolve;
@@ -578,7 +571,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('blocks updates to hydrate the content first if props changed at idle priority', async () => {
     let suspend = false;
     let resolve;
@@ -652,7 +645,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
   it('shows the fallback if props have changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -722,7 +714,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
-  // @gate experimental
   it('shows the fallback of the outer if fallback is missing', async () => {
     // This is the same exact test as above but with a nested Suspense without a fallback.
     // This should be a noop.
@@ -796,7 +787,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
-  // @gate experimental
   it('clears nested suspense boundaries if they did not hydrate yet', async () => {
     let suspend = false;
     let resolve;
@@ -869,7 +859,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi Hi');
   });
 
-  // @gate experimental
   it('hydrates first if props changed but we are able to resolve within a timeout', async () => {
     let suspend = false;
     let resolve;
@@ -917,9 +906,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
 
     // Render an update with a long timeout.
-    React.unstable_startTransition(() =>
-      root.render(<App text="Hi" className="hi" />),
-    );
+    React.startTransition(() => root.render(<App text="Hi" className="hi" />));
 
     // This shouldn't force the fallback yet.
     Scheduler.unstable_flushAll();
@@ -949,7 +936,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
   it('warns but works if setState is called before commit in a dehydrated component', async () => {
     let suspend = false;
     let resolve;
@@ -1018,7 +1004,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
   });
 
-  // @gate experimental
   it('blocks the update to hydrate first if context has changed', async () => {
     let suspend = false;
     let resolve;
@@ -1103,7 +1088,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental
   it('shows the fallback if context has changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;
@@ -1187,7 +1171,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
-  // @gate experimental
   it('replaces the fallback with client content if it is not rendered by the server', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1236,7 +1219,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
   it('replaces the fallback within the suspended time if there is a nested suspense', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1296,7 +1278,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
   it('replaces the fallback within the suspended time if there is a nested suspense in a nested suspense', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -1358,190 +1339,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate experimental
-  it('waits for pending content to come in from the server and then hydrates it', async () => {
-    let suspend = false;
-    const promise = new Promise(resolvePromise => {});
-    const ref = React.createRef();
-
-    function Child() {
-      if (suspend) {
-        throw promise;
-      } else {
-        return 'Hello';
-      }
-    }
-
-    function App() {
-      return (
-        <div>
-          <Suspense fallback="Loading...">
-            <span ref={ref}>
-              <Child />
-            </span>
-          </Suspense>
-        </div>
-      );
-    }
-
-    // We're going to simulate what Fizz will do during streaming rendering.
-
-    // First we generate the HTML of the loading state.
-    suspend = true;
-    const loadingHTML = ReactDOMServer.renderToString(<App />);
-    // Then we generate the HTML of the final content.
-    suspend = false;
-    const finalHTML = ReactDOMServer.renderToString(<App />);
-
-    const container = document.createElement('div');
-    container.innerHTML = loadingHTML;
-
-    const suspenseNode = container.firstChild.firstChild;
-    expect(suspenseNode.nodeType).toBe(8);
-    // Put the suspense node in hydration state.
-    suspenseNode.data = '$?';
-
-    // This will simulates new content streaming into the document and
-    // replacing the fallback with final content.
-    function streamInContent() {
-      const temp = document.createElement('div');
-      temp.innerHTML = finalHTML;
-      const finalSuspenseNode = temp.firstChild.firstChild;
-      const fallbackContent = suspenseNode.nextSibling;
-      const finalContent = finalSuspenseNode.nextSibling;
-      suspenseNode.parentNode.replaceChild(finalContent, fallbackContent);
-      suspenseNode.data = '$';
-      if (suspenseNode._reactRetry) {
-        suspenseNode._reactRetry();
-      }
-    }
-
-    // We're still showing a fallback.
-    expect(container.getElementsByTagName('span').length).toBe(0);
-
-    // Attempt to hydrate the content.
-    suspend = false;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    // We're still loading because we're waiting for the server to stream more content.
-    expect(container.textContent).toBe('Loading...');
-
-    // The server now updates the content in place in the fallback.
-    streamInContent();
-
-    // The final HTML is now in place.
-    expect(container.textContent).toBe('Hello');
-    const span = container.getElementsByTagName('span')[0];
-
-    // But it is not yet hydrated.
-    expect(ref.current).toBe(null);
-
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    // Now it's hydrated.
-    expect(ref.current).toBe(span);
-  });
-
-  // @gate experimental
-  it('handles an error on the client if the server ends up erroring', async () => {
-    let suspend = false;
-    const promise = new Promise(resolvePromise => {});
-    const ref = React.createRef();
-
-    function Child() {
-      if (suspend) {
-        throw promise;
-      } else {
-        throw new Error('Error Message');
-      }
-    }
-
-    class ErrorBoundary extends React.Component {
-      state = {error: null};
-      static getDerivedStateFromError(error) {
-        return {error};
-      }
-      render() {
-        if (this.state.error) {
-          return <div ref={ref}>{this.state.error.message}</div>;
-        }
-        return this.props.children;
-      }
-    }
-
-    function App() {
-      return (
-        <ErrorBoundary>
-          <div>
-            <Suspense fallback="Loading...">
-              <span ref={ref}>
-                <Child />
-              </span>
-            </Suspense>
-          </div>
-        </ErrorBoundary>
-      );
-    }
-
-    // We're going to simulate what Fizz will do during streaming rendering.
-
-    // First we generate the HTML of the loading state.
-    suspend = true;
-    const loadingHTML = ReactDOMServer.renderToString(<App />);
-
-    const container = document.createElement('div');
-    container.innerHTML = loadingHTML;
-
-    const suspenseNode = container.firstChild.firstChild;
-    expect(suspenseNode.nodeType).toBe(8);
-    // Put the suspense node in hydration state.
-    suspenseNode.data = '$?';
-
-    // This will simulates the server erroring and putting the fallback
-    // as the final state.
-    function streamInError() {
-      suspenseNode.data = '$!';
-      if (suspenseNode._reactRetry) {
-        suspenseNode._reactRetry();
-      }
-    }
-
-    // We're still showing a fallback.
-    expect(container.getElementsByTagName('span').length).toBe(0);
-
-    // Attempt to hydrate the content.
-    suspend = false;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    // We're still loading because we're waiting for the server to stream more content.
-    expect(container.textContent).toBe('Loading...');
-
-    // The server now updates the content in place in the fallback.
-    streamInError();
-
-    // The server errored, but we still haven't hydrated. We don't know if the
-    // client will succeed yet, so we still show the loading state.
-    expect(container.textContent).toBe('Loading...');
-    expect(ref.current).toBe(null);
-
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    // Hydrating should've generated an error and replaced the suspense boundary.
-    expect(container.textContent).toBe('Error Message');
-
-    const div = container.getElementsByTagName('div')[0];
-    expect(ref.current).toBe(div);
-  });
-
-  // @gate experimental
   it('shows inserted items in a SuspenseList before content is hydrated', async () => {
     let suspend = false;
     let resolve;
@@ -1627,7 +1424,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(spanB);
   });
 
-  // @gate experimental
   it('shows is able to hydrate boundaries even if others in a list are pending', async () => {
     let suspend = false;
     let resolve;
@@ -1702,99 +1498,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('ALoading B');
   });
 
-  // @gate experimental
-  it('shows inserted items before pending in a SuspenseList as fallbacks', async () => {
-    let suspend = false;
-    let resolve;
-    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
-    const ref = React.createRef();
-
-    function Child({children}) {
-      if (suspend) {
-        throw promise;
-      } else {
-        return children;
-      }
-    }
-
-    // These are hoisted to avoid them from rerendering.
-    const a = (
-      <Suspense fallback="Loading A">
-        <Child>
-          <span>A</span>
-        </Child>
-      </Suspense>
-    );
-    const b = (
-      <Suspense fallback="Loading B">
-        <Child>
-          <span ref={ref}>B</span>
-        </Child>
-      </Suspense>
-    );
-
-    function App({showMore}) {
-      return (
-        <SuspenseList revealOrder="forwards">
-          {a}
-          {b}
-          {showMore ? (
-            <Suspense fallback="Loading C">
-              <span>C</span>
-            </Suspense>
-          ) : null}
-        </SuspenseList>
-      );
-    }
-
-    suspend = false;
-    const html = ReactDOMServer.renderToString(<App showMore={false} />);
-
-    const container = document.createElement('div');
-    container.innerHTML = html;
-
-    const suspenseNode = container.firstChild;
-    expect(suspenseNode.nodeType).toBe(8);
-    // Put the suspense node in pending state.
-    suspenseNode.data = '$?';
-
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-
-    suspend = true;
-    act(() => {
-      root.render(<App showMore={false} />);
-    });
-
-    // We're not hydrated yet.
-    expect(ref.current).toBe(null);
-    expect(container.textContent).toBe('AB');
-
-    // Add more rows before we've hydrated the first two.
-    act(() => {
-      root.render(<App showMore={true} />);
-    });
-
-    // We're not hydrated yet.
-    expect(ref.current).toBe(null);
-
-    // Since the first two are already showing their final content
-    // we should be able to show the real content.
-    expect(container.textContent).toBe('ABLoading C');
-
-    suspend = false;
-    await act(async () => {
-      // Resolve the boundary to be in its resolved final state.
-      suspenseNode.data = '$';
-      if (suspenseNode._reactRetry) {
-        suspenseNode._reactRetry();
-      }
-      await resolve();
-    });
-
-    expect(container.textContent).toBe('ABC');
-  });
-
-  // @gate experimental
+  // @gate experimental || www
   it('clears server boundaries when SuspenseList runs out of time hydrating', async () => {
     let suspend = false;
     let resolve;
@@ -1865,11 +1569,21 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     await act(async () => {
-      root.render(<App />);
-      expect(Scheduler).toFlushAndYieldThrough(['Before']);
-      // This took a long time to render.
-      Scheduler.unstable_advanceTime(1000);
-      expect(Scheduler).toFlushAndYield(['After']);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<App />);
+        });
+
+        expect(Scheduler).toFlushAndYieldThrough(['Before', 'After']);
+      } else {
+        root.render(<App />);
+
+        expect(Scheduler).toFlushAndYieldThrough(['Before']);
+        // This took a long time to render.
+        Scheduler.unstable_advanceTime(1000);
+        expect(Scheduler).toFlushAndYield(['After']);
+      }
+
       // This will cause us to skip the second row completely.
     });
 
@@ -1887,7 +1601,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(b);
   });
 
-  // @gate experimental
   it('clears server boundaries when SuspenseList suspends last row hydrating', async () => {
     let suspend = false;
     let resolve;
@@ -1944,7 +1657,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('AB');
   });
 
-  // @gate experimental
   it('can client render nested boundaries', async () => {
     let suspend = false;
     const promise = new Promise(() => {});
@@ -1999,7 +1711,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.lastChild.data).toBe('unrelated comment');
   });
 
-  // @gate experimental
   it('can hydrate TWO suspense boundaries', async () => {
     const ref1 = React.createRef();
     const ref2 = React.createRef();
@@ -2039,7 +1750,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref2.current).toBe(span2);
   });
 
-  // @gate experimental
   it('regenerates if it cannot hydrate before changes to props/context expire', async () => {
     let suspend = false;
     const promise = new Promise(resolvePromise => {});
@@ -2121,7 +1831,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(newSpan.className).toBe('hi');
   });
 
-  // @gate experimental
   it('does not invoke an event on a hydrated node until it commits', async () => {
     let suspend = false;
     let resolve;
@@ -2203,7 +1912,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('does not invoke an event on a hydrated event handle until it commits', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -2287,7 +1996,6 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('invokes discrete events on nested suspense boundaries in a root (legacy system)', async () => {
     let suspend = false;
     let resolve;
@@ -2369,7 +2077,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('invokes discrete events on nested suspense boundaries in a root (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -2455,7 +2163,6 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('does not invoke the parent of dehydrated boundary event', async () => {
     let suspend = false;
     let resolve;
@@ -2531,7 +2238,6 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
     let suspend = false;
     let resolve;
@@ -2610,7 +2316,6 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(parentContainer);
   });
 
-  // @gate experimental
   it('blocks only on the last continuous event (legacy system)', async () => {
     let suspend1 = false;
     let resolve1;
@@ -2715,7 +2420,6 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('finishes normal pri work before continuing to hydrate a retry', async () => {
     let suspend = false;
     let resolve;
@@ -2797,7 +2501,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
-  // @gate experimental
   it('regression test: does not overfire non-bubbling browser events', async () => {
     let suspend = false;
     let resolve;
@@ -2888,7 +2591,6 @@ describe('ReactDOMServerPartialHydration', () => {
   // follow up.
   //
   // @gate FIXME
-  // @gate experimental
   it('hydrates a hidden subtree outside of a Suspense boundary', async () => {
     const ref = React.createRef();
 
@@ -2915,7 +2617,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('renders a hidden LegacyHidden component inside a Suspense boundary', async () => {
     const ref = React.createRef();
 
@@ -2944,7 +2646,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.innerHTML).toBe('Hidden child');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('renders a visible LegacyHidden component', async () => {
     const ref = React.createRef();
 

@@ -68,10 +68,9 @@
     "google-closure-compiler": "^20200517.0.0",
     "gzip-size": "^5.1.1",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "^25.2.7",
-    "jest-cli": "^25.2.7",
-    "jest-diff": "^25.2.6",
-    "jest-environment-jsdom-sixteen": "^1.0.3",
+    "jest": "^26.6.3",
+    "jest-cli": "^26.6.3",
+    "jest-diff": "^26.6.2",
     "jest-snapshot-serializer-raw": "^1.1.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.3",
@@ -100,7 +99,7 @@
     "yargs": "^15.3.1"
   },
   "devEngines": {
-    "node": "8.x || 9.x || 10.x || 11.x || 12.x || 13.x || 14.x || 15.x"
+    "node": "^12.17.0 || 13.x || 14.x || 15.x || 16.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
@@ -108,7 +107,7 @@
   "scripts": {
     "build": "node ./scripts/rollup/build.js",
     "build-combined": "node ./scripts/rollup/build-all-release-channels.js",
-    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh --type=NODE",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh --type=NODE && rm -rf build2 && mkdir build2 && cp -r ./build/node_modules build2/oss-experimental/",
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",

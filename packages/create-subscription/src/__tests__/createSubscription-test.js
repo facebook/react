@@ -325,7 +325,13 @@ describe('createSubscription', () => {
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
-    ReactNoop.render(<Parent observed={observableB} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Parent observed={observableB} />);
+      });
+    } else {
+      ReactNoop.render(<Parent observed={observableB} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough(['Subscriber: b-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 
@@ -412,7 +418,13 @@ describe('createSubscription', () => {
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
-    ReactNoop.render(<Parent observed={observableB} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Parent observed={observableB} />);
+      });
+    } else {
+      ReactNoop.render(<Parent observed={observableB} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough(['Subscriber: b-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 

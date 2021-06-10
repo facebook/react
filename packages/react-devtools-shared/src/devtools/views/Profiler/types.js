@@ -8,6 +8,7 @@
  */
 
 import type {ElementType} from 'react-devtools-shared/src/types';
+import type {SerializedElement} from '../Components/types';
 
 export type CommitTreeNode = {|
   id: number,
@@ -23,12 +24,6 @@ export type CommitTreeNode = {|
 export type CommitTree = {|
   nodes: Map<number, CommitTreeNode>,
   rootID: number,
-|};
-
-export type Interaction = {|
-  id: number,
-  name: string,
-  timestamp: number,
 |};
 
 export type SnapshotNode = {|
@@ -68,9 +63,6 @@ export type CommitDataFrontend = {|
   // Fibers that did not render will not have entries in this Map.
   fiberSelfDurations: Map<number, number>,
 
-  // Which interactions (IDs) were associated with this commit.
-  interactionIDs: Array<number>,
-
   // How long was the passive commit phase?
   // Note that not all builds of React expose this property.
   passiveEffectDuration: number | null,
@@ -80,6 +72,9 @@ export type CommitDataFrontend = {|
 
   // When did this commit occur (relative to the start of profiling)
   timestamp: number,
+
+  // Fiber(s) responsible for scheduling this update.
+  updaters: Array<SerializedElement> | null,
 |};
 
 export type ProfilingDataForRootFrontend = {|
@@ -93,12 +88,6 @@ export type ProfilingDataForRootFrontend = {|
   // Map of fiber id to (initial) tree base duration when Profiling session was started.
   // This info can be used along with commitOperations to reconstruct the tree for any commit.
   initialTreeBaseDurations: Map<number, number>,
-
-  // All interactions recorded (for this root) during the current session.
-  interactionCommits: Map<number, Array<number>>,
-
-  // All interactions recorded (for this root) during the current session.
-  interactions: Map<number, Interaction>,
 
   // List of tree mutation that occur during profiling.
   // These mutations can be used along with initial snapshots to reconstruct the tree for any commit.
@@ -127,10 +116,10 @@ export type CommitDataExport = {|
   fiberActualDurations: Array<[number, number]>,
   // Tuple of fiber ID and computed "self" duration
   fiberSelfDurations: Array<[number, number]>,
-  interactionIDs: Array<number>,
   passiveEffectDuration: number | null,
   priorityLevel: string | null,
   timestamp: number,
+  updaters: Array<SerializedElement> | null,
 |};
 
 export type ProfilingDataForRootExport = {|
@@ -138,9 +127,6 @@ export type ProfilingDataForRootExport = {|
   displayName: string,
   // Tuple of Fiber ID and base duration
   initialTreeBaseDurations: Array<[number, number]>,
-  // Tuple of Interaction ID and commit indices
-  interactionCommits: Array<[number, Array<number>]>,
-  interactions: Array<[number, Interaction]>,
   operations: Array<Array<number>>,
   rootID: number,
   snapshots: Array<[number, SnapshotNode]>,
@@ -148,6 +134,6 @@ export type ProfilingDataForRootExport = {|
 
 // Serializable version of ProfilingDataFrontend data.
 export type ProfilingDataExport = {|
-  version: 4,
+  version: 5,
   dataForRoots: Array<ProfilingDataForRootExport>,
 |};

@@ -8,6 +8,7 @@
  */
 
 import {PROFILER_EXPORT_VERSION} from 'react-devtools-shared/src/constants';
+import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
 
 import type {ProfilingDataBackend} from 'react-devtools-shared/src/backend/types';
 import type {
@@ -42,31 +43,23 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
 
   dataBackends.forEach(dataBackend => {
     dataBackend.dataForRoots.forEach(
-      ({
-        commitData,
-        displayName,
-        initialTreeBaseDurations,
-        interactionCommits,
-        interactions,
-        rootID,
-      }) => {
+      ({commitData, displayName, initialTreeBaseDurations, rootID}) => {
         const operations = operationsByRootID.get(rootID);
         if (operations == null) {
-          throw Error(`Could not find profiling operations for root ${rootID}`);
+          throw Error(
+            `Could not find profiling operations for root "${rootID}"`,
+          );
         }
 
         const snapshots = snapshotsByRootID.get(rootID);
         if (snapshots == null) {
-          throw Error(`Could not find profiling snapshots for root ${rootID}`);
+          throw Error(
+            `Could not find profiling snapshots for root "${rootID}"`,
+          );
         }
 
         // Do not filter empty commits from the profiler data!
-        // We used to do this, but it was error prone (see #18798).
-        // A commit may appear to be empty (no actual durations) because of component filters,
-        // but filtering these empty commits causes interaction commit indices to be off by N.
-        // This not only corrupts the resulting data, but also potentially causes runtime errors.
-        //
-        // For that matter, hiding "empty" commits might cause confusion too.
+        // Hiding "empty" commits might cause confusion too.
         // A commit *did happen* even if none of the components the Profiler is showing were involved.
         const convertedCommitData = commitData.map(
           (commitDataBackend, commitIndex) => ({
@@ -80,10 +73,26 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
               commitDataBackend.fiberActualDurations,
             ),
             fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
-            interactionIDs: commitDataBackend.interactionIDs,
             passiveEffectDuration: commitDataBackend.passiveEffectDuration,
             priorityLevel: commitDataBackend.priorityLevel,
             timestamp: commitDataBackend.timestamp,
+            updaters:
+              commitDataBackend.updaters !== null
+                ? commitDataBackend.updaters.map(serializedElement => {
+                    const [
+                      serializedElementDisplayName,
+                      serializedElementHocDisplayNames,
+                    ] = separateDisplayNameAndHOCs(
+                      serializedElement.displayName,
+                      serializedElement.type,
+                    );
+                    return {
+                      ...serializedElement,
+                      displayName: serializedElementDisplayName,
+                      hocDisplayNames: serializedElementHocDisplayNames,
+                    };
+                  })
+                : null,
           }),
         );
 
@@ -91,8 +100,6 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
           commitData: convertedCommitData,
           displayName,
           initialTreeBaseDurations: new Map(initialTreeBaseDurations),
-          interactionCommits: new Map(interactionCommits),
-          interactions: new Map(interactions),
           operations,
           rootID,
           snapshots,
@@ -111,7 +118,9 @@ export function prepareProfilingDataFrontendFromExport(
   const {version} = profilingDataExport;
 
   if (version !== PROFILER_EXPORT_VERSION) {
-    throw Error(`Unsupported profiler export version "${version}"`);
+    throw Error(
+      `Unsupported profile export version "${version}". Supported version is "${PROFILER_EXPORT_VERSION}".`,
+    );
   }
 
   const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
@@ -120,8 +129,6 @@ export function prepareProfilingDataFrontendFromExport(
       commitData,
       displayName,
       initialTreeBaseDurations,
-      interactionCommits,
-      interactions,
       operations,
       rootID,
       snapshots,
@@ -134,10 +141,10 @@ export function prepareProfilingDataFrontendFromExport(
             effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
-            interactionIDs,
             passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }) => ({
             changeDescriptions:
               changeDescriptions != null ? new Map(changeDescriptions) : null,
@@ -145,16 +152,14 @@ export function prepareProfilingDataFrontendFromExport(
             effectDuration,
             fiberActualDurations: new Map(fiberActualDurations),
             fiberSelfDurations: new Map(fiberSelfDurations),
-            interactionIDs,
             passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }),
         ),
         displayName,
         initialTreeBaseDurations: new Map(initialTreeBaseDurations),
-        interactionCommits: new Map(interactionCommits),
-        interactions: new Map(interactions),
         operations,
         rootID,
         snapshots: new Map(snapshots),
@@ -175,8 +180,6 @@ export function prepareProfilingDataExport(
       commitData,
       displayName,
       initialTreeBaseDurations,
-      interactionCommits,
-      interactions,
       operations,
       rootID,
       snapshots,
@@ -189,10 +192,10 @@ export function prepareProfilingDataExport(
             effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
-            interactionIDs,
             passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }) => ({
             changeDescriptions:
               changeDescriptions != null
@@ -202,18 +205,16 @@ export function prepareProfilingDataExport(
             effectDuration,
             fiberActualDurations: Array.from(fiberActualDurations.entries()),
             fiberSelfDurations: Array.from(fiberSelfDurations.entries()),
-            interactionIDs,
             passiveEffectDuration,
             priorityLevel,
             timestamp,
+            updaters,
           }),
         ),
         displayName,
         initialTreeBaseDurations: Array.from(
           initialTreeBaseDurations.entries(),
         ),
-        interactionCommits: Array.from(interactionCommits.entries()),
-        interactions: Array.from(interactions.entries()),
         operations,
         rootID,
         snapshots: Array.from(snapshots.entries()),

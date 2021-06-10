@@ -4,13 +4,14 @@
   "private": true,
   "dependencies": {
     "glamor": "^2.20.40",
+    "react": "0.0.0-experimental-269dd6ec5",
+    "react-dom": "0.0.0-experimental-269dd6ec5",
     "react-markdown": "^3.2.0",
     "react-scripts": "^1.1.4",
     "victory": "^0.25.6"
   },
   "scripts": {
-    "prestart": "cp -r ../../../build/node_modules/* ./node_modules/",
-    "prebuild": "cp -r ../../../build/node_modules/* ./node_modules/",
+    "copy-source": "cp -r ../../../build/node_modules/* ./node_modules/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",

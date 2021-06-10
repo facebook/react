@@ -895,7 +895,6 @@ describe('ReactDOMServerHooks', () => {
   });
 
   describe('useOpaqueIdentifier', () => {
-    // @gate experimental
     it('generates unique ids for server string render', async () => {
       function App(props) {
         const idOne = useOpaqueIdentifier();
@@ -929,7 +928,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('generates unique ids for server stream render', async () => {
       function App(props) {
         const idOne = useOpaqueIdentifier();
@@ -963,7 +961,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('generates unique ids for client render', async () => {
       function App(props) {
         const idOne = useOpaqueIdentifier();
@@ -997,7 +994,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('generates unique ids for client render on good server markup', async () => {
       function App(props) {
         const idOne = useOpaqueIdentifier();
@@ -1031,7 +1027,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier does not change id even if the component updates during client render', async () => {
       let _setShowId;
       function App() {
@@ -1063,7 +1058,6 @@ describe('ReactDOMServerHooks', () => {
       );
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier identifierPrefix works for server renderer and does not clash', async () => {
       function ChildTwo({id}) {
         return <div id={id}>Child Three</div>;
@@ -1149,7 +1143,6 @@ describe('ReactDOMServerHooks', () => {
       ).toBe(true);
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier identifierPrefix works for multiple reads on a streaming server renderer', async () => {
       function ChildTwo() {
         const id = useOpaqueIdentifier();
@@ -1241,7 +1234,6 @@ describe('ReactDOMServerHooks', () => {
       await Promise.all([streamOneIsDone, streamTwoIsDone]);
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: IDs match when, after hydration, a new component that uses the ID is rendered', async () => {
       let _setShowDiv;
       function App() {
@@ -1261,7 +1253,7 @@ describe('ReactDOMServerHooks', () => {
       document.body.append(container);
 
       container.innerHTML = ReactDOMServer.renderToString(<App />);
-      const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<App />);
       Scheduler.unstable_flushAll();
       jest.runAllTimers();
@@ -1285,7 +1277,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: IDs match when, after hydration, a new component that uses the ID is rendered for legacy', async () => {
       let _setShowDiv;
       function App() {
@@ -1326,7 +1317,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: ID is not used during hydration but is used in an update', async () => {
       let _setShow;
       function App({unused}) {
@@ -1344,7 +1334,7 @@ describe('ReactDOMServerHooks', () => {
       const container = document.createElement('div');
       document.body.append(container);
       container.innerHTML = ReactDOMServer.renderToString(<App />);
-      const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       act(() => {
         root.render(<App />);
       });
@@ -1359,7 +1349,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: ID is not used during hydration but is used in an update in legacy', async () => {
       let _setShow;
       function App({unused}) {
@@ -1389,7 +1378,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: flushSync', async () => {
       let _setShow;
       function App() {
@@ -1406,7 +1394,7 @@ describe('ReactDOMServerHooks', () => {
       const container = document.createElement('div');
       document.body.append(container);
       container.innerHTML = ReactDOMServer.renderToString(<App />);
-      const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       act(() => {
         root.render(<App />);
       });
@@ -1422,7 +1410,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: children with id hydrates before other children if ID updates', async () => {
       let _setShow;
 
@@ -1498,7 +1485,7 @@ describe('ReactDOMServerHooks', () => {
         .getAttribute('id');
       expect(serverId).not.toBeNull();
 
-      const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       root.render(<App show={false} />);
       expect(Scheduler).toHaveYielded([]);
 
@@ -1546,7 +1533,6 @@ describe('ReactDOMServerHooks', () => {
       expect(Scheduler).toHaveYielded([]);
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: IDs match when part of the DOM tree is server rendered and part is client rendered', async () => {
       let suspend = true;
       let resolve;
@@ -1591,7 +1577,7 @@ describe('ReactDOMServerHooks', () => {
       container.innerHTML = ReactDOMServer.renderToString(<App />);
 
       suspend = true;
-      const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       await act(async () => {
         root.render(<App />);
       });
@@ -1627,7 +1613,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warn when there is a hydration error', async () => {
       function Child({appId}) {
         return <div aria-labelledby={appId} />;
@@ -1642,7 +1627,7 @@ describe('ReactDOMServerHooks', () => {
 
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
@@ -1652,7 +1637,6 @@ describe('ReactDOMServerHooks', () => {
       );
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier: IDs match when part of the DOM tree is server rendered and part is client rendered', async () => {
       let suspend = true;
 
@@ -1695,7 +1679,7 @@ describe('ReactDOMServerHooks', () => {
       container.innerHTML = ReactDOMServer.renderToString(<App />);
 
       suspend = false;
-      const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      const root = ReactDOM.createRoot(container, {hydrate: true});
       await act(async () => {
         root.render(<App />);
       });
@@ -1717,7 +1701,6 @@ describe('ReactDOMServerHooks', () => {
       ).not.toBeNull();
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warn when there is a hydration error', async () => {
       function Child({appId}) {
         return <div aria-labelledby={appId} />;
@@ -1732,7 +1715,7 @@ describe('ReactDOMServerHooks', () => {
 
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
@@ -1742,7 +1725,6 @@ describe('ReactDOMServerHooks', () => {
       );
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
       function Child({appId}) {
         return <div aria-labelledby={appId + ''} />;
@@ -1757,7 +1739,7 @@ describe('ReactDOMServerHooks', () => {
 
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
@@ -1767,7 +1749,6 @@ describe('ReactDOMServerHooks', () => {
       );
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
       function Child({appId}) {
         return <div aria-labelledby={appId + ''} />;
@@ -1782,7 +1763,7 @@ describe('ReactDOMServerHooks', () => {
 
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
@@ -1792,7 +1773,6 @@ describe('ReactDOMServerHooks', () => {
       );
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warns if you try to use the result as a string in a child component', async () => {
       function Child({appId}) {
         return <div aria-labelledby={appId + ''} />;
@@ -1806,7 +1786,7 @@ describe('ReactDOMServerHooks', () => {
       document.body.appendChild(container);
 
       container.innerHTML = ReactDOMServer.renderToString(<App />);
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
@@ -1816,7 +1796,6 @@ describe('ReactDOMServerHooks', () => {
       );
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warns if you try to use the result as a string', async () => {
       function App() {
         const id = useOpaqueIdentifier();
@@ -1827,7 +1806,7 @@ describe('ReactDOMServerHooks', () => {
       document.body.appendChild(container);
 
       container.innerHTML = ReactDOMServer.renderToString(<App />);
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
@@ -1837,7 +1816,6 @@ describe('ReactDOMServerHooks', () => {
       );
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warns if you try to use the result as a string in a child component wrapped in a Suspense', async () => {
       function Child({appId}) {
         return <div aria-labelledby={appId + ''} />;
@@ -1856,7 +1834,7 @@ describe('ReactDOMServerHooks', () => {
 
       container.innerHTML = ReactDOMServer.renderToString(<App />);
 
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
 
       if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
         expect(() => Scheduler.unstable_flushAll()).toErrorDev([
@@ -1878,7 +1856,6 @@ describe('ReactDOMServerHooks', () => {
       }
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier warns if you try to add the result as a number in a child component wrapped in a Suspense', async () => {
       function Child({appId}) {
         return <div aria-labelledby={+appId} />;
@@ -1899,7 +1876,7 @@ describe('ReactDOMServerHooks', () => {
 
       container.innerHTML = ReactDOMServer.renderToString(<App />);
 
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
 
       if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
         expect(() => Scheduler.unstable_flushAll()).toErrorDev([
@@ -1921,7 +1898,6 @@ describe('ReactDOMServerHooks', () => {
       }
     });
 
-    // @gate experimental
     it('useOpaqueIdentifier with two opaque identifiers on the same page', () => {
       let _setShow;
 
@@ -1960,7 +1936,7 @@ describe('ReactDOMServerHooks', () => {
           .getAttribute('aria-labelledby'),
       ).toEqual(serverID);
 
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
       jest.runAllTimers();
       expect(Scheduler).toHaveYielded([]);
       expect(Scheduler).toFlushAndYield([]);

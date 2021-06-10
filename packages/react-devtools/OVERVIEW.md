@@ -286,7 +286,6 @@ When profiling begins, the frontend takes a snapshot/copy of each root. This sna
 When profiling begins, the backend records the base durations of each fiber currently in the tree. While profiling is in progress, the backend also stores some information about each commit, including:
 * Commit time and duration
 * Which elements were rendered during that commit
-* Which interactions (if any) were part of the commit
 * Which props and state changed (if enabled in profiler settings)
 
 This information will eventually be required by the frontend in order to render its profiling graphs, but it will not be sent across the bridge until profiling has completed (to minimize the performance impact of profiling).

@@ -19,7 +19,7 @@ describe('ReactLazyContextPropagation', () => {
     useState = React.useState;
     useContext = React.useContext;
     Suspense = React.Suspense;
-    SuspenseList = React.unstable_SuspenseList;
+    SuspenseList = React.SuspenseList;
 
     getCacheForType = React.unstable_getCacheForType;
 
@@ -542,7 +542,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('context is propagated through offscreen trees', async () => {
     const LegacyHidden = React.unstable_LegacyHidden;
 
@@ -588,7 +588,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('multiple contexts are propagated across through offscreen trees', async () => {
     // Same as previous test, but with multiple context providers
     const LegacyHidden = React.unstable_LegacyHidden;
@@ -649,8 +649,6 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BBB');
   });
 
-  // @gate enableCache
-  // @gate experimental
   test('contexts are propagated through SuspenseList', async () => {
     // This kinda tests an implementation detail. SuspenseList has an early
     // bailout that doesn't use `bailoutOnAlreadyFinishedWork`. It probably
@@ -746,7 +744,6 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
   // @gate enableCache
   test('nested bailouts across retries', async () => {
     // Lazy context propagation will stop propagating when it hits the first
@@ -816,7 +813,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   test('nested bailouts through offscreen trees', async () => {
     // Lazy context propagation will stop propagating when it hits the first
     // match. If we bail out again inside that tree, we must resume propagating.

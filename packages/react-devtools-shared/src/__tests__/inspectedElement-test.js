@@ -20,7 +20,6 @@ describe('InspectedElement', () => {
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
   let store: Store;
-  let meta;
   let utils;
 
   let BridgeContext;
@@ -38,8 +37,6 @@ describe('InspectedElement', () => {
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
-
-    meta = require('react-devtools-shared/src/hydration').meta;
 
     bridge = global.bridge;
     store = global.store;
@@ -136,7 +133,7 @@ describe('InspectedElement', () => {
     return inspectedElement;
   }
 
-  it('should inspect the currently selected element', async done => {
+  it('should inspect the currently selected element', async () => {
     const Example = () => {
       const [count] = React.useState(1);
       return count;
@@ -170,11 +167,9 @@ describe('InspectedElement', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should have hasLegacyContext flag set to either "true" or "false" depending on which context API is used.', async done => {
+  it('should have hasLegacyContext flag set to either "true" or "false" depending on which context API is used.', async () => {
     const contextData = {
       bool: true,
     };
@@ -270,10 +265,9 @@ describe('InspectedElement', () => {
       expect(inspectedElement.context).not.toBe(null);
       expect(inspectedElement.hasLegacyContext).toBe(shouldHaveLegacyContext);
     }
-    done();
   });
 
-  it('should poll for updates for the currently selected element', async done => {
+  it('should poll for updates for the currently selected element', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -312,11 +306,9 @@ describe('InspectedElement', () => {
         "b": "def",
       }
     `);
-
-    done();
   });
 
-  it('should not re-render a function with hooks if it did not update since it was last inspected', async done => {
+  it('should not re-render a function with hooks if it did not update since it was last inspected', async () => {
     let targetRenderCount = 0;
 
     const Wrapper = ({children}) => children;
@@ -377,11 +369,9 @@ describe('InspectedElement', () => {
         "b": "def",
       }
     `);
-
-    done();
   });
 
-  it('should temporarily disable console logging when re-running a component to inspect its hooks', async done => {
+  it('should temporarily disable console logging when re-running a component to inspect its hooks', async () => {
     let targetRenderCount = 0;
 
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -400,9 +390,8 @@ describe('InspectedElement', () => {
     });
 
     const container = document.createElement('div');
-    await utils.actAsync(() =>
-      ReactDOM.render(<Target a={1} b="abc" />, container),
-    );
+    const root = ReactDOM.createRoot(container);
+    await utils.actAsync(() => root.render(<Target a={1} b="abc" />));
 
     expect(targetRenderCount).toBe(1);
     expect(console.error).toHaveBeenCalledTimes(1);
@@ -422,11 +411,9 @@ describe('InspectedElement', () => {
     expect(console.info).toHaveBeenCalledTimes(1);
     expect(console.log).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledTimes(1);
-
-    done();
   });
 
-  it('should support simple data types', async done => {
+  it('should support simple data types', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -451,23 +438,24 @@ describe('InspectedElement', () => {
 
     const inspectedElement = await inspectElementAtIndex(0);
 
-    const {props} = (inspectedElement: any);
-    expect(props.boolean_false).toBe(false);
-    expect(props.boolean_true).toBe(true);
-    expect(Number.isFinite(props.infinity)).toBe(false);
-    expect(props.integer_zero).toEqual(0);
-    expect(props.integer_one).toEqual(1);
-    expect(props.float).toEqual(1.23);
-    expect(props.string).toEqual('abc');
-    expect(props.string_empty).toEqual('');
-    expect(props.nan).toBeNaN();
-    expect(props.value_null).toBeNull();
-    expect(props.value_undefined).toBeUndefined();
-
-    done();
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "boolean_false": false,
+        "boolean_true": true,
+        "float": 1.23,
+        "infinity": Infinity,
+        "integer_one": 1,
+        "integer_zero": 0,
+        "nan": NaN,
+        "string": "abc",
+        "string_empty": "",
+        "value_null": null,
+        "value_undefined": undefined,
+      }
+    `);
   });
 
-  it('should support complex data types', async done => {
+  it('should support complex data types', async () => {
     const Immutable = require('immutable');
 
     const Example = () => null;
@@ -550,180 +538,129 @@ describe('InspectedElement', () => {
 
     const inspectedElement = await inspectElementAtIndex(0);
 
-    const {
-      anonymous_fn,
-      array_buffer,
-      array_of_arrays,
-      big_int,
-      bound_fn,
-      data_view,
-      date,
-      fn,
-      html_element,
-      immutable,
-      map,
-      map_of_maps,
-      object_of_objects,
-      object_with_symbol,
-      proxy,
-      react_element,
-      regexp,
-      set,
-      set_of_sets,
-      symbol,
-      typed_array,
-    } = (inspectedElement: any).props;
-
-    expect(anonymous_fn[meta.inspectable]).toBe(false);
-    expect(anonymous_fn[meta.name]).toBe('function');
-    expect(anonymous_fn[meta.type]).toBe('function');
-    expect(anonymous_fn[meta.preview_long]).toBe('ƒ () {}');
-    expect(anonymous_fn[meta.preview_short]).toBe('ƒ () {}');
-
-    expect(array_buffer[meta.size]).toBe(3);
-    expect(array_buffer[meta.inspectable]).toBe(false);
-    expect(array_buffer[meta.name]).toBe('ArrayBuffer');
-    expect(array_buffer[meta.type]).toBe('array_buffer');
-    expect(array_buffer[meta.preview_short]).toBe('ArrayBuffer(3)');
-    expect(array_buffer[meta.preview_long]).toBe('ArrayBuffer(3)');
-
-    expect(array_of_arrays[0][meta.size]).toBe(2);
-    expect(array_of_arrays[0][meta.inspectable]).toBe(true);
-    expect(array_of_arrays[0][meta.name]).toBe('Array');
-    expect(array_of_arrays[0][meta.type]).toBe('array');
-    expect(array_of_arrays[0][meta.preview_long]).toBe('[Array(3), Array(0)]');
-    expect(array_of_arrays[0][meta.preview_short]).toBe('Array(2)');
-
-    expect(big_int[meta.inspectable]).toBe(false);
-    expect(big_int[meta.name]).toBe('123');
-    expect(big_int[meta.type]).toBe('bigint');
-    expect(big_int[meta.preview_long]).toBe('123n');
-    expect(big_int[meta.preview_short]).toBe('123n');
-
-    expect(bound_fn[meta.inspectable]).toBe(false);
-    expect(bound_fn[meta.name]).toBe('bound exampleFunction');
-    expect(bound_fn[meta.type]).toBe('function');
-    expect(bound_fn[meta.preview_long]).toBe('ƒ bound exampleFunction() {}');
-    expect(bound_fn[meta.preview_short]).toBe('ƒ bound exampleFunction() {}');
-
-    expect(data_view[meta.size]).toBe(3);
-    expect(data_view[meta.inspectable]).toBe(false);
-    expect(data_view[meta.name]).toBe('DataView');
-    expect(data_view[meta.type]).toBe('data_view');
-    expect(data_view[meta.preview_long]).toBe('DataView(3)');
-    expect(data_view[meta.preview_short]).toBe('DataView(3)');
-
-    expect(date[meta.inspectable]).toBe(false);
-    expect(date[meta.type]).toBe('date');
-    expect(new Date(date[meta.preview_long]).toISOString()).toBe(
-      exampleDateISO,
-    );
-    expect(new Date(date[meta.preview_short]).toISOString()).toBe(
-      exampleDateISO,
-    );
-
-    expect(fn[meta.inspectable]).toBe(false);
-    expect(fn[meta.name]).toBe('exampleFunction');
-    expect(fn[meta.type]).toBe('function');
-    expect(fn[meta.preview_long]).toBe('ƒ exampleFunction() {}');
-    expect(fn[meta.preview_short]).toBe('ƒ exampleFunction() {}');
-
-    expect(html_element[meta.inspectable]).toBe(false);
-    expect(html_element[meta.name]).toBe('DIV');
-    expect(html_element[meta.type]).toBe('html_element');
-    expect(html_element[meta.preview_long]).toBe('<div />');
-    expect(html_element[meta.preview_short]).toBe('<div />');
-
-    expect(immutable[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(immutable[meta.name]).toBe('Map');
-    expect(immutable[meta.type]).toBe('iterator');
-    expect(immutable[meta.preview_long]).toBe(
-      'Map(3) {"a" => List(3), "b" => 123, "c" => Map(2)}',
-    );
-    expect(immutable[meta.preview_short]).toBe('Map(3)');
-
-    expect(map[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(map[meta.name]).toBe('Map');
-    expect(map[meta.type]).toBe('iterator');
-    expect(map[0][meta.type]).toBe('array');
-    expect(map[meta.preview_long]).toBe(
-      'Map(2) {"name" => "Brian", "food" => "sushi"}',
-    );
-    expect(map[meta.preview_short]).toBe('Map(2)');
-
-    expect(map_of_maps[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(map_of_maps[meta.name]).toBe('Map');
-    expect(map_of_maps[meta.type]).toBe('iterator');
-    expect(map_of_maps[0][meta.type]).toBe('array');
-    expect(map_of_maps[meta.preview_long]).toBe(
-      'Map(2) {"first" => Map(2), "second" => Map(2)}',
-    );
-    expect(map_of_maps[meta.preview_short]).toBe('Map(2)');
-
-    expect(object_of_objects.inner[meta.size]).toBe(3);
-    expect(object_of_objects.inner[meta.inspectable]).toBe(true);
-    expect(object_of_objects.inner[meta.name]).toBe('');
-    expect(object_of_objects.inner[meta.type]).toBe('object');
-    expect(object_of_objects.inner[meta.preview_long]).toBe(
-      '{boolean: true, number: 123, string: "abc"}',
-    );
-    expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
-
-    expect(object_with_symbol['Symbol(name)']).toBe('hello');
-
-    expect(proxy[meta.inspectable]).toBe(false);
-    expect(proxy[meta.name]).toBe('function');
-    expect(proxy[meta.type]).toBe('function');
-    expect(proxy[meta.preview_long]).toBe('ƒ () {}');
-    expect(proxy[meta.preview_short]).toBe('ƒ () {}');
-
-    expect(react_element[meta.inspectable]).toBe(false);
-    expect(react_element[meta.name]).toBe('span');
-    expect(react_element[meta.type]).toBe('react_element');
-    expect(react_element[meta.preview_long]).toBe('<span />');
-    expect(react_element[meta.preview_short]).toBe('<span />');
-
-    expect(regexp[meta.inspectable]).toBe(false);
-    expect(regexp[meta.name]).toBe('/abc/giu');
-    expect(regexp[meta.preview_long]).toBe('/abc/giu');
-    expect(regexp[meta.preview_short]).toBe('/abc/giu');
-    expect(regexp[meta.type]).toBe('regexp');
-
-    expect(set[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(set[meta.name]).toBe('Set');
-    expect(set[meta.type]).toBe('iterator');
-    expect(set[0]).toBe('abc');
-    expect(set[1]).toBe(123);
-    expect(set[meta.preview_long]).toBe('Set(2) {"abc", 123}');
-    expect(set[meta.preview_short]).toBe('Set(2)');
-
-    expect(set_of_sets[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(set_of_sets[meta.name]).toBe('Set');
-    expect(set_of_sets[meta.type]).toBe('iterator');
-    expect(set_of_sets['0'][meta.inspectable]).toBe(true);
-    expect(set_of_sets[meta.preview_long]).toBe('Set(2) {Set(3), Set(3)}');
-    expect(set_of_sets[meta.preview_short]).toBe('Set(2)');
-
-    expect(symbol[meta.inspectable]).toBe(false);
-    expect(symbol[meta.name]).toBe('Symbol(symbol)');
-    expect(symbol[meta.type]).toBe('symbol');
-    expect(symbol[meta.preview_long]).toBe('Symbol(symbol)');
-    expect(symbol[meta.preview_short]).toBe('Symbol(symbol)');
-
-    expect(typed_array[meta.inspectable]).toBeUndefined(); // Complex type
-    expect(typed_array[meta.size]).toBe(3);
-    expect(typed_array[meta.name]).toBe('Int8Array');
-    expect(typed_array[meta.type]).toBe('typed_array');
-    expect(typed_array[0]).toBe(100);
-    expect(typed_array[1]).toBe(-100);
-    expect(typed_array[2]).toBe(0);
-    expect(typed_array[meta.preview_long]).toBe('Int8Array(3) [100, -100, 0]');
-    expect(typed_array[meta.preview_short]).toBe('Int8Array(3)');
-
-    done();
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "anonymous_fn": Dehydrated {
+          "preview_short": ƒ () {},
+          "preview_long": ƒ () {},
+        },
+        "array_buffer": Dehydrated {
+          "preview_short": ArrayBuffer(3),
+          "preview_long": ArrayBuffer(3),
+        },
+        "array_of_arrays": Array [
+          Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": [Array(3), Array(0)],
+          },
+        ],
+        "big_int": Dehydrated {
+          "preview_short": 123n,
+          "preview_long": 123n,
+        },
+        "bound_fn": Dehydrated {
+          "preview_short": ƒ bound exampleFunction() {},
+          "preview_long": ƒ bound exampleFunction() {},
+        },
+        "data_view": Dehydrated {
+          "preview_short": DataView(3),
+          "preview_long": DataView(3),
+        },
+        "date": Dehydrated {
+          "preview_short": Tue Dec 31 2019 23:42:42 GMT+0000 (Coordinated Universal Time),
+          "preview_long": Tue Dec 31 2019 23:42:42 GMT+0000 (Coordinated Universal Time),
+        },
+        "fn": Dehydrated {
+          "preview_short": ƒ exampleFunction() {},
+          "preview_long": ƒ exampleFunction() {},
+        },
+        "html_element": Dehydrated {
+          "preview_short": <div />,
+          "preview_long": <div />,
+        },
+        "immutable": Object {
+          "0": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["a", List(3)],
+          },
+          "1": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["b", 123],
+          },
+          "2": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["c", Map(2)],
+          },
+        },
+        "map": Object {
+          "0": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["name", "Brian"],
+          },
+          "1": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["food", "sushi"],
+          },
+        },
+        "map_of_maps": Object {
+          "0": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["first", Map(2)],
+          },
+          "1": Dehydrated {
+            "preview_short": Array(2),
+            "preview_long": ["second", Map(2)],
+          },
+        },
+        "object_of_objects": Object {
+          "inner": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {boolean: true, number: 123, string: "abc"},
+          },
+        },
+        "object_with_symbol": Object {
+          "Symbol(name)": "hello",
+        },
+        "proxy": Dehydrated {
+          "preview_short": ƒ () {},
+          "preview_long": ƒ () {},
+        },
+        "react_element": Dehydrated {
+          "preview_short": <span />,
+          "preview_long": <span />,
+        },
+        "regexp": Dehydrated {
+          "preview_short": /abc/giu,
+          "preview_long": /abc/giu,
+        },
+        "set": Object {
+          "0": "abc",
+          "1": 123,
+        },
+        "set_of_sets": Object {
+          "0": Dehydrated {
+            "preview_short": Set(3),
+            "preview_long": Set(3) {"a", "b", "c"},
+          },
+          "1": Dehydrated {
+            "preview_short": Set(3),
+            "preview_long": Set(3) {1, 2, 3},
+          },
+        },
+        "symbol": Dehydrated {
+          "preview_short": Symbol(symbol),
+          "preview_long": Symbol(symbol),
+        },
+        "typed_array": Object {
+          "0": 100,
+          "1": -100,
+          "2": 0,
+        },
+      }
+    `);
   });
 
-  it('should not consume iterables while inspecting', async done => {
+  it('should not consume iterables while inspecting', async () => {
     const Example = () => null;
 
     function* generator() {
@@ -738,18 +675,17 @@ describe('InspectedElement', () => {
     );
 
     const inspectedElement = await inspectElementAtIndex(0);
-
-    const {prop} = (inspectedElement: any).props;
-    expect(prop[meta.inspectable]).toBe(false);
-    expect(prop[meta.name]).toBe('Generator');
-    expect(prop[meta.type]).toBe('opaque_iterator');
-    expect(prop[meta.preview_long]).toBe('Generator');
-    expect(prop[meta.preview_short]).toBe('Generator');
-
-    done();
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "prop": Dehydrated {
+          "preview_short": Generator,
+          "preview_long": Generator,
+        },
+      }
+    `);
   });
 
-  it('should support objects with no prototype', async done => {
+  it('should support objects with no prototype', async () => {
     const Example = () => null;
 
     const object = Object.create(null);
@@ -772,11 +708,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should support objects with overridden hasOwnProperty', async done => {
+  it('should support objects with overridden hasOwnProperty', async () => {
     const Example = () => null;
 
     const object = {
@@ -791,15 +725,17 @@ describe('InspectedElement', () => {
 
     const inspectedElement = await inspectElementAtIndex(0);
 
-    // TRICKY: Don't use toMatchInlineSnapshot() for this test!
-    // Our snapshot serializer relies on hasOwnProperty() for feature detection.
-    expect(inspectedElement.props.object.name).toBe('blah');
-    expect(inspectedElement.props.object.hasOwnProperty).toBe(true);
-
-    done();
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "object": Object {
+          "hasOwnProperty": true,
+          "name": "blah",
+        },
+      }
+    `);
   });
 
-  it('should support custom objects with enumerable properties and getters', async done => {
+  it('should support custom objects with enumerable properties and getters', async () => {
     class CustomData {
       _number = 42;
       get number() {
@@ -833,11 +769,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should support objects with with inherited keys', async done => {
+  it('should support objects with with inherited keys', async () => {
     const Example = () => null;
 
     const base = Object.create(Object.prototype, {
@@ -917,11 +851,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should allow component prop value and value`s prototype has same name params.', async done => {
+  it('should allow component prop value and value`s prototype has same name params.', async () => {
     const testData = Object.create(
       {
         a: undefined,
@@ -973,11 +905,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should not dehydrate nested values until explicitly requested', async done => {
+  it('should not dehydrate nested values until explicitly requested', async () => {
     const Example = () => {
       const [state] = React.useState({
         foo: {
@@ -1140,11 +1070,9 @@ describe('InspectedElement', () => {
         },
       ]
     `);
-
-    done();
   });
 
-  it('should dehydrate complex nested values when requested', async done => {
+  it('should dehydrate complex nested values when requested', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1208,11 +1136,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should include updates for nested values that were previously hydrated', async done => {
+  it('should include updates for nested values that were previously hydrated', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1373,11 +1299,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should return a full update if a path is inspected for an object that has other pending changes', async done => {
+  it('should return a full update if a path is inspected for an object that has other pending changes', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1510,11 +1434,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should not tear if hydration is requested after an update', async done => {
+  it('should not tear if hydration is requested after an update', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1598,11 +1520,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should inspect hooks for components that only use context', async done => {
+  it('should inspect hooks for components that only use context', async () => {
     const Context = React.createContext(true);
     const Example = () => {
       const value = React.useContext(Context);
@@ -1637,11 +1557,9 @@ describe('InspectedElement', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should enable inspected values to be stored as global variables', async done => {
+  it('should enable inspected values to be stored as global variables', async () => {
     const Example = () => null;
 
     const nestedObject = {
@@ -1698,11 +1616,9 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(console.log).toHaveBeenCalledWith('$reactTemp1');
     expect(global.$reactTemp1).toBe(nestedObject.a.b);
-
-    done();
   });
 
-  it('should enable inspected values to be copied to the clipboard', async done => {
+  it('should enable inspected values to be copied to the clipboard', async () => {
     const Example = () => null;
 
     const nestedObject = {
@@ -1761,11 +1677,9 @@ describe('InspectedElement', () => {
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
       JSON.stringify(nestedObject.a.b),
     );
-
-    done();
   });
 
-  it('should enable complex values to be copied to the clipboard', async done => {
+  it('should enable complex values to be copied to the clipboard', async () => {
     const Immutable = require('immutable');
 
     const Example = () => null;
@@ -1856,11 +1770,9 @@ describe('InspectedElement', () => {
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
       JSON.stringify({0: 100, 1: -100, 2: 0}),
     );
-
-    done();
   });
 
-  it('should display complex values of useDebugValue', async done => {
+  it('should display complex values of useDebugValue', async () => {
     const container = document.createElement('div');
 
     function useDebuggableHook() {
@@ -1877,8 +1789,8 @@ describe('InspectedElement', () => {
       ReactDOM.render(<DisplayedComplexValue />, container),
     );
 
-    const inspectedElement = await inspectElementAtIndex(0);
-    expect(inspectedElement.hooks).toMatchInlineSnapshot(`
+    const {hooks} = await inspectElementAtIndex(0);
+    expect(hooks).toMatchInlineSnapshot(`
       Array [
         Object {
           "id": null,
@@ -1899,12 +1811,10 @@ describe('InspectedElement', () => {
         },
       ]
     `);
-
-    done();
   });
 
   describe('$r', () => {
-    it('should support function components', async done => {
+    it('should support function components', async () => {
       const Example = () => {
         const [count] = React.useState(1);
         return count;
@@ -1935,11 +1845,9 @@ describe('InspectedElement', () => {
           "type": [Function],
         }
       `);
-
-      done();
     });
 
-    it('should support memoized function components', async done => {
+    it('should support memoized function components', async () => {
       const Example = React.memo(function Example(props) {
         const [count] = React.useState(1);
         return count;
@@ -1970,11 +1878,9 @@ describe('InspectedElement', () => {
           "type": [Function],
         }
       `);
-
-      done();
     });
 
-    it('should support forward refs', async done => {
+    it('should support forward refs', async () => {
       const Example = React.forwardRef(function Example(props, ref) {
         const [count] = React.useState(1);
         return count;
@@ -2005,11 +1911,9 @@ describe('InspectedElement', () => {
           "type": [Function],
         }
       `);
-
-      done();
     });
 
-    it('should support class components', async done => {
+    it('should support class components', async () => {
       class Example extends React.Component {
         state = {
           count: 0,
@@ -2027,31 +1931,25 @@ describe('InspectedElement', () => {
       await inspectElementAtIndex(0);
 
       expect(global.$r.props).toMatchInlineSnapshot(`
-      Object {
-        "a": 1,
-        "b": "abc",
-      }
-      `);
+              Object {
+                "a": 1,
+                "b": "abc",
+              }
+            `);
       expect(global.$r.state).toMatchInlineSnapshot(`
-      Object {
-        "count": 0,
-      }
-      `);
-
-      done();
+              Object {
+                "count": 0,
+              }
+            `);
     });
   });
 
   describe('inline errors and warnings', () => {
-    // Some actions require the Fiber id.
-    // In those instances you might want to make assertions based on the ID instead of the index.
-    function getErrorsAndWarningsForElement(id: number) {
-      const index = ((store.getIndexOfElementID(id): any): number);
-      return getErrorsAndWarningsForElementAtIndex(index);
-    }
-
     async function getErrorsAndWarningsForElementAtIndex(index) {
       const id = ((store.getElementIDAtIndex(index): any): number);
+      if (id == null) {
+        throw Error(`Element at index "${index}"" not found in store`);
+      }
 
       let errors = null;
       let warnings = null;
@@ -2319,8 +2217,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       let data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
@@ -2357,8 +2255,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
@@ -2416,8 +2314,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       let data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
@@ -2454,8 +2352,8 @@ describe('InspectedElement', () => {
       jest.runOnlyPendingTimers();
 
       data = [
-        await getErrorsAndWarningsForElement(1),
-        await getErrorsAndWarningsForElement(2),
+        await getErrorsAndWarningsForElementAtIndex(0),
+        await getErrorsAndWarningsForElementAtIndex(1),
       ];
       expect(data).toMatchInlineSnapshot(`
         Array [
@@ -2479,6 +2377,97 @@ describe('InspectedElement', () => {
           },
         ]
       `);
+    });
+  });
+
+  describe('error boundary', () => {
+    it('can toggle error', async () => {
+      class ErrorBoundary extends React.Component<any> {
+        state = {hasError: false};
+        static getDerivedStateFromError(error) {
+          return {hasError: true};
+        }
+        render() {
+          const {hasError} = this.state;
+          return hasError ? 'has-error' : this.props.children;
+        }
+      }
+      const Example = () => 'example';
+
+      await utils.actAsync(() =>
+        ReactDOM.render(
+          <ErrorBoundary>
+            <Example />
+          </ErrorBoundary>,
+          document.createElement('div'),
+        ),
+      );
+
+      const targetErrorBoundaryID = ((store.getElementIDAtIndex(
+        0,
+      ): any): number);
+      const inspect = index => {
+        // HACK: Recreate TestRenderer instance so we can inspect different
+        // elements
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
+        });
+        return inspectElementAtIndex(index);
+      };
+      const toggleError = async forceError => {
+        await withErrorsOrWarningsIgnored(['ErrorBoundary'], async () => {
+          await utils.actAsync(() => {
+            bridge.send('overrideError', {
+              id: targetErrorBoundaryID,
+              rendererID: store.getRendererIDForElement(targetErrorBoundaryID),
+              forceError,
+            });
+          });
+        });
+
+        TestUtilsAct(() => {
+          jest.runOnlyPendingTimers();
+        });
+      };
+
+      // Inspect <ErrorBoundary /> and see that we cannot toggle error state
+      // on error boundary itself
+      let inspectedElement = await inspect(0);
+      expect(inspectedElement.canToggleError).toBe(false);
+      expect(inspectedElement.targetErrorBoundaryID).toBe(null);
+
+      // Inspect <Example />
+      inspectedElement = await inspect(1);
+      expect(inspectedElement.canToggleError).toBe(true);
+      expect(inspectedElement.isErrored).toBe(false);
+      expect(inspectedElement.targetErrorBoundaryID).toBe(
+        targetErrorBoundaryID,
+      );
+
+      // now force error state on <Example />
+      await toggleError(true);
+
+      // we are in error state now, <Example /> won't show up
+      expect(store.getElementIDAtIndex(1)).toBe(null);
+
+      // Inpsect <ErrorBoundary /> to toggle off the error state
+      inspectedElement = await inspect(0);
+      expect(inspectedElement.canToggleError).toBe(true);
+      expect(inspectedElement.isErrored).toBe(true);
+      // its error boundary ID is itself because it's caught the error
+      expect(inspectedElement.targetErrorBoundaryID).toBe(
+        targetErrorBoundaryID,
+      );
+
+      await toggleError(false);
+
+      // We can now inspect <Example /> with ability to toggle again
+      inspectedElement = await inspect(1);
+      expect(inspectedElement.canToggleError).toBe(true);
+      expect(inspectedElement.isErrored).toBe(false);
+      expect(inspectedElement.targetErrorBoundaryID).toBe(
+        targetErrorBoundaryID,
+      );
     });
   });
 });

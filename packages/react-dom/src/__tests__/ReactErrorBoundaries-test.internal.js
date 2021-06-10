@@ -787,16 +787,22 @@ describe('ReactErrorBoundaries', () => {
 
   it('logs a single error when using error boundary', () => {
     const container = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(
-        <ErrorBoundary>
-          <BrokenRender />
-        </ErrorBoundary>,
-        container,
-      ),
-    ).toErrorDev('The above error occurred in the <BrokenRender> component:', {
-      logAllErrors: true,
-    });
+    spyOnDev(console, 'error');
+    ReactDOM.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+      container,
+    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'ReactDOM.render is no longer supported',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'The above error occurred in the <BrokenRender> component:',
+      );
+    }
 
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
     expect(Scheduler).toHaveYielded([

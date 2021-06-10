@@ -51,7 +51,7 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
-import type {Owner, InspectedElement} from '../types';
+import type {InspectedElement, SerializedElement} from '../types';
 
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
@@ -767,6 +767,7 @@ export function attach(
           owners.push({
             displayName: getData(owner).displayName || 'Unknown',
             id: getID(owner),
+            key: element.key,
             type: getElementType(owner),
           });
           if (owner._currentElement) {
@@ -798,6 +799,11 @@ export function attach(
       canEditHooksAndRenamePaths: false,
       canEditFunctionPropsDeletePaths: false,
       canEditFunctionPropsRenamePaths: false,
+
+      // Toggle error boundary did not exist in legacy versions
+      canToggleError: false,
+      isErrored: false,
+      targetErrorBoundaryID: null,
 
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
@@ -1012,6 +1018,12 @@ export function attach(
   const handleCommitFiberUnmount = () => {
     throw new Error('handleCommitFiberUnmount not supported by this renderer');
   };
+  const handlePostCommitFiberRoot = () => {
+    throw new Error('handlePostCommitFiberRoot not supported by this renderer');
+  };
+  const overrideError = () => {
+    throw new Error('overrideError not supported by this renderer');
+  };
   const overrideSuspense = () => {
     throw new Error('overrideSuspense not supported by this renderer');
   };
@@ -1044,7 +1056,7 @@ export function attach(
     // Not implemented.
   }
 
-  function getOwnersList(id: number): Array<Owner> | null {
+  function getOwnersList(id: number): Array<SerializedElement> | null {
     // Not implemented.
     return null;
   }
@@ -1082,8 +1094,10 @@ export function attach(
     getProfilingData,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
+    handlePostCommitFiberRoot,
     inspectElement,
     logElementToConsole,
+    overrideError,
     overrideSuspense,
     overrideValueAtPath,
     renamePath,

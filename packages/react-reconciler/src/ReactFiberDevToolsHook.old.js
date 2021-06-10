@@ -134,6 +134,24 @@ export function onCommitRoot(root: FiberRoot, eventPriority: EventPriority) {
   }
 }
 
+export function onPostCommitRoot(root: FiberRoot) {
+  if (
+    injectedHook &&
+    typeof injectedHook.onPostCommitFiberRoot === 'function'
+  ) {
+    try {
+      injectedHook.onPostCommitFiberRoot(rendererID, root);
+    } catch (err) {
+      if (__DEV__) {
+        if (!hasLoggedError) {
+          hasLoggedError = true;
+          console.error('React instrumentation encountered an error: %s', err);
+        }
+      }
+    }
+  }
+}
+
 export function onCommitUnmount(fiber: Fiber) {
   if (injectedHook && typeof injectedHook.onCommitFiberUnmount === 'function') {
     try {

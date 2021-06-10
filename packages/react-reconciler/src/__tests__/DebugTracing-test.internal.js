@@ -43,7 +43,7 @@ describe('DebugTracing', () => {
     });
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('should not log anything for sync render without suspends or state updates', () => {
     ReactTestRenderer.create(
       <React.unstable_DebugTracingMode>
@@ -54,7 +54,7 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('should not log anything for concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(
       <React.unstable_DebugTracingMode>
@@ -282,7 +282,6 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
       `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
       `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
@@ -366,7 +365,6 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
       `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`,
-      `log: ⚛️ Example updated state (${DEFAULT_LANE_STRING})`, // debugRenderPhaseSideEffectsForStrictMode
       `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
     ]);
   });
@@ -398,7 +396,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('should not log anything outside of a unstable_DebugTracingMode subtree', () => {
     function ExampleThatCascades() {
       const [didMount, setDidMount] = React.useState(false);

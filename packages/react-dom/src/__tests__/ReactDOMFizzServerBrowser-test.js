@@ -55,7 +55,7 @@ describe('ReactDOMFizzServer', () => {
       <div>hello world</div>,
     );
     const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(`"<div>hello world<!-- --></div>"`);
+    expect(result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
   // @gate experimental

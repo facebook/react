@@ -24,7 +24,6 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {Interaction} from 'scheduler/src/Tracing';
 import type {Cache} from './ReactFiberCacheComponent.old';
 
 // Unwind Circular: moved from ReactFiberHooks.old
@@ -179,7 +178,7 @@ export type Fiber = {|
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
   // __DEV__ only
-  _debugID?: number,
+
   _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
@@ -228,6 +227,7 @@ type BaseFiberRootProperties = {|
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
+  expiredLanes: Lanes,
   mutableReadLanes: Lanes,
 
   finishedLanes: Lanes,
@@ -239,14 +239,11 @@ type BaseFiberRootProperties = {|
   pooledCacheLanes: Lanes,
 |};
 
-// The following attributes are only used by interaction tracing builds.
-// They enable interactions to be associated with their async work,
-// And expose interaction metadata to the React DevTools Profiler plugin.
-// Note that these attributes are only defined when the enableSchedulerTracing flag is enabled.
-type ProfilingOnlyFiberRootProperties = {|
-  interactionThreadID: number,
-  memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap: Map<Lane | Lanes, Set<Interaction>>,
+// The following attributes are only used by DevTools and are only present in DEV builds.
+// They enable DevTools Profiler UI to show which Fiber(s) scheduled a given commit.
+type UpdaterTrackingOnlyFiberRootProperties = {|
+  memoizedUpdaters: Set<Fiber>,
+  pendingUpdatersLaneMap: LaneMap<Set<Fiber>>,
 |};
 
 export type SuspenseHydrationCallbacks = {
@@ -262,13 +259,11 @@ type SuspenseCallbackOnlyFiberRootProperties = {|
 
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
-// Profiling properties are only safe to access in profiling builds (when enableSchedulerTracing is true).
 // The types are defined separately within this file to ensure they stay in sync.
-// (We don't have to use an inline :any cast when enableSchedulerTracing is disabled.)
 export type FiberRoot = {
   ...BaseFiberRootProperties,
-  ...ProfilingOnlyFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
+  ...UpdaterTrackingOnlyFiberRootProperties,
   ...
 };
 
@@ -303,7 +298,7 @@ export type Dispatcher = {|
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useDeferredValue<T>(value: T): T,
-  useTransition(): [(() => void) => void, boolean],
+  useTransition(): [boolean, (() => void) => void],
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,

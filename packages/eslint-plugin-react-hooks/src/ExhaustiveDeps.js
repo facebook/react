@@ -255,9 +255,14 @@ export default {
             }
           }
         } else if (name === 'useTransition') {
-          if (id.type === 'ArrayPattern' && isArray(resolved.identifiers)) {
-            // Is first tuple value the same reference we're checking?
-            if (id.elements[0] === resolved.identifiers[0]) {
+          // Only consider second value in initializing tuple stable.
+          if (
+            id.type === 'ArrayPattern' &&
+            id.elements.length === 2 &&
+            Array.isArray(resolved.identifiers)
+          ) {
+            // Is second tuple value the same reference we're checking?
+            if (id.elements[1] === resolved.identifiers[0]) {
               // Setter is stable.
               return true;
             }

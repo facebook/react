@@ -95,7 +95,7 @@ import {
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.old';
 import {markRenderScheduled} from './SchedulingProfiler';
-
+import ReactVersion from 'shared/ReactVersion';
 export {registerMutableSourceForHydration} from './ReactMutableSource.old';
 export {createPortal} from './ReactPortal';
 export {
@@ -248,14 +248,16 @@ export function createContainer(
   tag: RootTag,
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
-  strictModeLevelOverride: null | number,
+  isStrictMode: boolean,
+  concurrentUpdatesByDefaultOverride: null | boolean,
 ): OpaqueRoot {
   return createFiberRoot(
     containerInfo,
     tag,
     hydrate,
     hydrationCallbacks,
-    strictModeLevelOverride,
+    isStrictMode,
+    concurrentUpdatesByDefaultOverride,
   );
 }
 
@@ -461,6 +463,12 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
+let shouldErrorImpl = fiber => null;
+
+export function shouldError(fiber: Fiber): ?boolean {
+  return shouldErrorImpl(fiber);
+}
+
 let shouldSuspendImpl = fiber => false;
 
 export function shouldSuspend(fiber: Fiber): boolean {
@@ -474,6 +482,7 @@ let overrideProps = null;
 let overridePropsDeletePath = null;
 let overridePropsRenamePath = null;
 let scheduleUpdate = null;
+let setErrorHandler = null;
 let setSuspenseHandler = null;
 
 if (__DEV__) {
@@ -688,6 +697,10 @@ if (__DEV__) {
     scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
   };
 
+  setErrorHandler = (newShouldErrorImpl: Fiber => ?boolean) => {
+    shouldErrorImpl = newShouldErrorImpl;
+  };
+
   setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {
     shouldSuspendImpl = newShouldSuspendImpl;
   };
@@ -726,6 +739,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     overrideProps,
     overridePropsDeletePath,
     overridePropsRenamePath,
+    setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,
@@ -739,5 +753,8 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
     getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
+    // Enables DevTools to detect reconciler version rather than renderer version
+    // which may not match for third party renderers.
+    reconcilerVersion: ReactVersion,
   });
 }

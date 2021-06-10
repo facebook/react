@@ -11,31 +11,19 @@ import type {FiberRoot} from './ReactInternalTypes';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
-export type LanePriority =
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17;
 
 export type Lanes = number;
 export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
-import {enableCache, enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableCache,
+  enableSchedulingProfiler,
+  enableUpdaterTracking,
+  allowConcurrentByDefault,
+} from 'shared/ReactFeatureFlags';
+import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
+import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 
 // Lane values below should be kept in sync with getLabelsForLanes(), used by react-devtools-scheduling-profiler.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -47,7 +35,7 @@ export const NoLane: Lane = /*                          */ 0b0000000000000000000
 
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000001;
 
-const InputContinuousHydrationLane: Lane = /*           */ 0b0000000000000000000000000000010;
+export const InputContinuousHydrationLane: Lane = /*    */ 0b0000000000000000000000000000010;
 export const InputContinuousLane: Lanes = /*            */ 0b0000000000000000000000000000100;
 
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000001000;
@@ -265,6 +253,19 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     }
   }
 
+  if (
+    allowConcurrentByDefault &&
+    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
+  ) {
+    // Do nothing, use the lanes as they were assigned.
+  } else if ((nextLanes & InputContinuousLane) !== NoLanes) {
+    // When updates are sync by default, we entangle continuous priority updates
+    // and default updates, so they render in the same batch. The only reason
+    // they use separate lanes is because continuous updates should interrupt
+    // transitions, but default updates should not.
+    nextLanes |= pendingLanes & DefaultLane;
+  }
+
   // Check for entangled lanes and add them to the batch.
   //
   // A lane is said to be entangled with another when it's not allowed to render
@@ -357,12 +358,18 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case TransitionLane14:
     case TransitionLane15:
     case TransitionLane16:
+      return currentTime + 5000;
     case RetryLane1:
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
     case RetryLane5:
-      return currentTime + 5000;
+      // TODO: Retries should be allowed to expire if they are CPU bound for
+      // too long, but when I made this change it caused a spike in browser
+      // crashes. There must be some other underlying bug; not super urgent but
+      // ideally should figure out why and fix it. Unfortunately we don't have
+      // a repro for the crashes, only detected via production metrics.
+      return NoTimestamp;
     case SelectiveHydrationLane:
     case IdleHydrationLane:
     case IdleLane:
@@ -396,7 +403,6 @@ export function markStarvedLanesAsExpired(
   // expiration time. If so, we'll assume the update is being starved and mark
   // it as expired to force it to finish.
   let lanes = pendingLanes;
-  let expiredLanes = 0;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
@@ -415,14 +421,10 @@ export function markStarvedLanesAsExpired(
       }
     } else if (expirationTime <= currentTime) {
       // This lane expired
-      expiredLanes |= lane;
+      root.expiredLanes |= lane;
     }
 
     lanes &= ~lane;
-  }
-
-  if (expiredLanes !== 0) {
-    markRootExpired(root, expiredLanes);
   }
 }
 
@@ -451,6 +453,29 @@ export function includesOnlyRetries(lanes: Lanes) {
 }
 export function includesOnlyTransitions(lanes: Lanes) {
   return (lanes & TransitionLanes) === lanes;
+}
+
+export function shouldTimeSlice(root: FiberRoot, lanes: Lanes) {
+  if ((lanes & root.expiredLanes) !== NoLanes) {
+    // At least one of these lanes expired. To prevent additional starvation,
+    // finish rendering without yielding execution.
+    return false;
+  }
+
+  if (
+    allowConcurrentByDefault &&
+    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
+  ) {
+    // Concurrent updates by default always use time slicing.
+    return true;
+  }
+
+  const SyncDefaultLanes =
+    InputContinuousHydrationLane |
+    InputContinuousLane |
+    DefaultHydrationLane |
+    DefaultLane;
+  return (lanes & SyncDefaultLanes) === NoLanes;
 }
 
 export function isTransitionLane(lane: Lane) {
@@ -595,20 +620,6 @@ export function markRootPinged(
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
-export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
-  const entanglements = root.entanglements;
-  const SyncLaneIndex = 0;
-  entanglements[SyncLaneIndex] |= expiredLanes;
-  root.entangledLanes |= SyncLane;
-  root.pendingLanes |= SyncLane;
-}
-
-export function areLanesExpired(root: FiberRoot, lanes: Lanes) {
-  const SyncLaneIndex = 0;
-  const entanglements = root.entanglements;
-  return (entanglements[SyncLaneIndex] & lanes) !== NoLanes;
-}
-
 export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
   root.mutableReadLanes |= updateLane & root.pendingLanes;
 }
@@ -622,6 +633,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.suspendedLanes = 0;
   root.pingedLanes = 0;
 
+  root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
@@ -740,6 +752,57 @@ export function getBumpedLaneForHydration(
   }
 
   return lane;
+}
+
+export function addFiberToLanesMap(
+  root: FiberRoot,
+  fiber: Fiber,
+  lanes: Lanes | Lane,
+) {
+  if (!enableUpdaterTracking) {
+    return;
+  }
+  if (!isDevToolsPresent) {
+    return;
+  }
+  const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const updaters = pendingUpdatersLaneMap[index];
+    updaters.add(fiber);
+
+    lanes &= ~lane;
+  }
+}
+
+export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
+  if (!enableUpdaterTracking) {
+    return;
+  }
+  if (!isDevToolsPresent) {
+    return;
+  }
+  const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  const memoizedUpdaters = root.memoizedUpdaters;
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const updaters = pendingUpdatersLaneMap[index];
+    if (updaters.size > 0) {
+      updaters.forEach(fiber => {
+        const alternate = fiber.alternate;
+        if (alternate === null || !memoizedUpdaters.has(alternate)) {
+          memoizedUpdaters.add(fiber);
+        }
+      });
+      updaters.clear();
+    }
+
+    lanes &= ~lane;
+  }
 }
 
 const clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;

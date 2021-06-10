@@ -351,7 +351,6 @@ export function prepareUpdate(
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
-    type === 'option' ||
     type === 'noscript' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
@@ -892,7 +891,7 @@ export function commitHydratedSuspenseInstance(
 export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
-  return parentType !== 'head' || parentType !== 'body';
+  return parentType !== 'head' && parentType !== 'body';
 }
 
 export function didNotMatchHydratedContainerTextInstance(

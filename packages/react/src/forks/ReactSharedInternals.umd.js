@@ -7,7 +7,6 @@
 
 import assign from 'object-assign';
 import * as Scheduler from 'scheduler';
-import * as SchedulerTracing from 'scheduler/tracing';
 import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
 import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
@@ -28,7 +27,6 @@ const ReactSharedInternals = {
   // This re-export is only required for UMD bundles;
   // CJS bundles use the shared NPM package.
   Scheduler,
-  SchedulerTracing,
 };
 
 if (__DEV__) {

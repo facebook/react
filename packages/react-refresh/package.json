@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "react-16-8": "npm:react@16.8.0",
-    "react-dom-16-8": "npm:react-dom@16.8.0"
+    "react-dom-16-8": "npm:react-dom@16.8.0",
+    "scheduler-0-13": "npm:scheduler@0.13.0"
   }
 }

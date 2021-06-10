@@ -23,6 +23,7 @@ import {
   writeChunk,
   stringToChunk,
   stringToPrecomputedChunk,
+  isPrimaryStreamConfig,
 } from 'react-server/src/ReactServerStreamConfig';
 
 import {
@@ -48,13 +49,18 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
+// Used to distinguish these contexts from ones used in other renderers.
+// E.g. this can be used to distinguish legacy renderers from this modern one.
+export const isPrimaryRenderer = isPrimaryStreamConfig;
+
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  opaqueIdentifierPrefix: PrecomputedChunk,
+  opaqueIdentifierPrefix: string,
   nextSuspenseID: number,
+  nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
@@ -68,8 +74,9 @@ export function createResponseState(
     placeholderPrefix: stringToPrecomputedChunk(identifierPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(identifierPrefix + 'S:'),
     boundaryPrefix: identifierPrefix + 'B:',
-    opaqueIdentifierPrefix: stringToPrecomputedChunk(identifierPrefix + 'R:'),
+    opaqueIdentifierPrefix: identifierPrefix + 'R:',
     nextSuspenseID: 0,
+    nextOpaqueID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
@@ -166,6 +173,22 @@ export function createSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
   return {formattedID: null};
+}
+
+export type OpaqueIDType = string;
+
+export function makeServerID(
+  responseState: null | ResponseState,
+): OpaqueIDType {
+  invariant(
+    responseState !== null,
+    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
+  );
+  // TODO: This is not deterministic since it's created during render.
+  return (
+    responseState.opaqueIdentifierPrefix +
+    (responseState.nextOpaqueID++).toString(36)
+  );
 }
 
 function encodeHTMLTextNode(text: string): string {
@@ -299,7 +322,9 @@ function pushStyle(
           valueChunk = stringToChunk('' + styleValue);
         }
       } else {
-        valueChunk = stringToChunk(('' + styleValue).trim());
+        valueChunk = stringToChunk(
+          escapeTextForBrowser(('' + styleValue).trim()),
+        );
       }
     }
     if (isFirst) {
@@ -525,7 +550,9 @@ function pushInnerHTML(
         'for more information.',
     );
     const html = innerHTML.__html;
-    target.push(stringToChunk(html));
+    if (html !== null && html !== undefined) {
+      target.push(stringToChunk('' + html));
+    }
   }
 }
 
@@ -536,23 +563,27 @@ let didWarnDefaultChecked = false;
 let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
+let didWarnInvalidOptionInnerHTML = false;
 let didWarnSelectedSetOnOption = false;
 
 function checkSelectProp(props, propName) {
   if (__DEV__) {
-    const array = isArray(props[propName]);
-    if (props.multiple && !array) {
-      console.error(
-        'The `%s` prop supplied to <select> must be an array if ' +
-          '`multiple` is true.',
-        propName,
-      );
-    } else if (!props.multiple && array) {
-      console.error(
-        'The `%s` prop supplied to <select> must be a scalar ' +
-          'value if `multiple` is false.',
-        propName,
-      );
+    const value = props[propName];
+    if (value != null) {
+      const array = isArray(value);
+      if (props.multiple && !array) {
+        console.error(
+          'The `%s` prop supplied to <select> must be an array if ' +
+            '`multiple` is true.',
+          propName,
+        );
+      } else if (!props.multiple && array) {
+        console.error(
+          'The `%s` prop supplied to <select> must be a scalar ' +
+            'value if `multiple` is false.',
+          propName,
+        );
+      }
     }
   }
 }
@@ -640,7 +671,8 @@ function flattenOptionChildren(children: mixed): string {
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
-          'Only strings and numbers are supported as <option> children.',
+          'Cannot infer the option value of complex children. ' +
+            'Pass a `value` prop or use a plain string as children to <option>.',
         );
       }
     }
@@ -664,6 +696,7 @@ function pushStartOption(
   let children = null;
   let value = null;
   let selected = null;
+  let innerHTML = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -688,14 +721,13 @@ function pushStartOption(
             }
           }
           break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        // eslint-disable-next-line-no-fallthrough
         case 'value':
           value = propValue;
-          break;
-        case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
-            '`dangerouslySetInnerHTML` does not work on <option>.',
-          );
+        // We intentionally fallthrough to also set the attribute on the node.
         // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, responseState, propKey, propValue);
@@ -709,7 +741,18 @@ function pushStartOption(
     if (value !== null) {
       stringValue = '' + value;
     } else {
-      stringValue = children = flattenOptionChildren(children);
+      if (__DEV__) {
+        if (innerHTML !== null) {
+          if (!didWarnInvalidOptionInnerHTML) {
+            didWarnInvalidOptionInnerHTML = true;
+            console.error(
+              'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
+                'which value should be selected.',
+            );
+          }
+        }
+      }
+      stringValue = flattenOptionChildren(children);
     }
     if (isArray(selectedValue)) {
       // multiple
@@ -732,6 +775,7 @@ function pushStartOption(
   }
 
   target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
   return children;
 }
 
@@ -782,6 +826,11 @@ function pushInput(
 
   target.push(startChunkForTag('input'));
 
+  let value = null;
+  let defaultValue = null;
+  let checked = null;
+  let defaultChecked = null;
+
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -799,14 +848,16 @@ function pushInput(
           );
         // eslint-disable-next-line-no-fallthrough
         case 'defaultChecked':
-          // Previously "checked" would win but now it's enumeration order dependent.
-          // There's a warning in either case.
-          pushAttribute(target, responseState, 'checked', propValue);
+          defaultChecked = propValue;
           break;
         case 'defaultValue':
-          // Previously "value" would win but now it's enumeration order dependent.
-          // There's a warning in either case.
-          pushAttribute(target, responseState, 'value', propValue);
+          defaultValue = propValue;
+          break;
+        case 'checked':
+          checked = propValue;
+          break;
+        case 'value':
+          value = propValue;
           break;
         default:
           pushAttribute(target, responseState, propKey, propValue);
@@ -814,6 +865,18 @@ function pushInput(
       }
     }
   }
+
+  if (checked !== null) {
+    pushAttribute(target, responseState, 'checked', checked);
+  } else if (defaultChecked !== null) {
+    pushAttribute(target, responseState, 'checked', defaultChecked);
+  }
+  if (value !== null) {
+    pushAttribute(target, responseState, 'value', value);
+  } else if (defaultValue !== null) {
+    pushAttribute(target, responseState, 'value', defaultValue);
+  }
+
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
@@ -849,6 +912,7 @@ function pushStartTextArea(
   target.push(startChunkForTag('textarea'));
 
   let value = null;
+  let defaultValue = null;
   let children = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
@@ -861,10 +925,10 @@ function pushStartTextArea(
           children = propValue;
           break;
         case 'value':
-        case 'defaultValue':
-          // Previously "checked" would win but now it's enumeration order dependent.
-          // There's a warning in either case.
           value = propValue;
+          break;
+        case 'defaultValue':
+          defaultValue = propValue;
           break;
         case 'dangerouslySetInnerHTML':
           invariant(
@@ -878,6 +942,10 @@ function pushStartTextArea(
       }
     }
   }
+  if (value === null && defaultValue !== null) {
+    value = defaultValue;
+  }
+
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
@@ -1034,6 +1102,12 @@ function pushStartGenericElement(
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    // Special case children as a string to avoid the unnecessary comment.
+    // TODO: Remove this special case after the general optimization is in place.
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    return null;
+  }
   return children;
 }
 
@@ -1158,10 +1232,13 @@ function pushStartPreformattedElement(
         'for more information.',
     );
     const html = innerHTML.__html;
-    if (typeof html === 'string' && html[0] === '\n') {
-      target.push(leadingNewline);
+    if (html !== null && html !== undefined) {
+      if (typeof html === 'string' && html.length > 0 && html[0] === '\n') {
+        target.push(leadingNewline, stringToChunk(html));
+      } else {
+        target.push(stringToChunk('' + html));
+      }
     }
-    target.push(stringToChunk(html));
   }
   if (typeof children === 'string' && children[0] === '\n') {
     target.push(leadingNewline);

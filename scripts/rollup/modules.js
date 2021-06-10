@@ -15,7 +15,6 @@ const importSideEffects = Object.freeze({
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   react: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
@@ -31,7 +30,6 @@ const knownGlobals = Object.freeze({
   'react-dom/server': 'ReactDOMServer',
   'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
-  'scheduler/tracing': 'SchedulerTracing',
   'scheduler/unstable_mock': 'SchedulerMock',
 });
 

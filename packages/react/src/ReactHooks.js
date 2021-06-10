@@ -145,7 +145,7 @@ export function useDebugValue<T>(
 
 export const emptyObject = {};
 
-export function useTransition(): [(() => void) => void, boolean] {
+export function useTransition(): [boolean, (() => void) => void] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useTransition();
 }

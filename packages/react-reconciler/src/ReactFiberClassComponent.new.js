@@ -10,9 +10,15 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {Flags} from './ReactFiberFlags';
 
 import * as React from 'react';
-import {MountLayoutDev, Update, Snapshot} from './ReactFiberFlags';
+import {
+  LayoutStatic,
+  MountLayoutDev,
+  Update,
+  Snapshot,
+} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -21,6 +27,7 @@ import {
   warnAboutDeprecatedLifecycles,
   enableStrictEffects,
   enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -155,7 +162,7 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-export function applyDerivedStateFromProps(
+function applyDerivedStateFromProps(
   workInProgress: Fiber,
   ctor: any,
   getDerivedStateFromProps: (props: any, state: any) => any,
@@ -878,7 +885,6 @@ function mountClassInstance(
     }
   }
 
-  processUpdateQueue(workInProgress, newProps, instance, renderLanes);
   instance.state = workInProgress.memoizedState;
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
@@ -908,16 +914,18 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
+    let fiberFlags: Flags = Update;
+    if (enableSuspenseLayoutEffectSemantics) {
+      fiberFlags |= LayoutStatic;
+    }
     if (
       __DEV__ &&
       enableStrictEffects &&
       (workInProgress.mode & StrictEffectsMode) !== NoMode
     ) {
-      // Never double-invoke effects for legacy roots.
-      workInProgress.flags |= MountLayoutDev | Update;
-    } else {
-      workInProgress.flags |= Update;
+      fiberFlags |= MountLayoutDev;
     }
+    workInProgress.flags |= fiberFlags;
   }
 }
 
@@ -987,16 +995,18 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
     return false;
   }
@@ -1039,31 +1049,35 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
 
     // If shouldComponentUpdate returned false, we should still update the

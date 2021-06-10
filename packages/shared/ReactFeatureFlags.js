@@ -25,7 +25,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
 // this feature flag only impacts StrictEffectsMode.
-export const enableStrictEffects = false;
+export const enableStrictEffects = __DEV__;
 
 // If TRUE, trees rendered with createRoot will be StrictEffectsMode.
 // If FALSE, these trees will be StrictLegacyMode.
@@ -42,24 +42,24 @@ export const warnAboutDeprecatedLifecycles = true;
 export const enableProfilerTimer = __PROFILE__;
 
 // Record durations for commit and passive effects phases.
-export const enableProfilerCommitHooks = false;
+export const enableProfilerCommitHooks = __PROFILE__;
 
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
-export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 
 // Profiler API accepts a function to be called when a nested update is scheduled.
 // This callback accepts the component type (class instance or function) the update is scheduled for.
 export const enableProfilerNestedUpdateScheduledHook = false;
 
-// Trace which interactions trigger each commit.
-export const enableSchedulerTracing = __PROFILE__;
+// Track which Fiber(s) schedule render work.
+export const enableUpdaterTracking = __PROFILE__;
 
 // SSR experiments
-export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
-export const enableSelectiveHydration = __EXPERIMENTAL__;
+export const enableSuspenseServerRenderer = true;
+export const enableSelectiveHydration = true;
 
 // Flight experiments
-export const enableLazyElements = __EXPERIMENTAL__;
+export const enableLazyElements = true;
 export const enableCache = __EXPERIMENTAL__;
 
 // Only used in www builds.
@@ -125,6 +125,11 @@ export const skipUnmountedBoundaries = false;
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 1;
 
+// Destroy layout effects for components that are hidden because something suspended in an update
+// and recreate them when they are shown again (after the suspended boundary has resolved).
+// Note that this should be an uncommon use case and can be avoided by using the transition API.
+export const enableSuspenseLayoutEffectSemantics = true;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
@@ -153,7 +158,7 @@ export const enableLegacyFBSupport = false;
 // not currently rendering. We treat them the same as if they came from an
 // interleaved event. Remove this flag once we have migrated to the
 // new behavior.
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableUseRefAccessWarning = false;
 
@@ -162,3 +167,7 @@ export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 
 export const enableLazyContextPropagation = false;
+
+export const enableSyncDefaultUpdates = true;
+
+export const allowConcurrentByDefault = false;
