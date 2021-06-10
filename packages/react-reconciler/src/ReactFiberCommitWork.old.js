@@ -342,6 +342,24 @@ function safelyCallDestroy(
   }
 }
 
+function safelyCallBeforeInstanceBlur(fiber: Fiber) {
+  if (__DEV__) {
+    setCurrentDebugFiberInDEV(fiber);
+    invokeGuardedCallback(null, beforeActiveInstanceBlur, null, fiber);
+    if (hasCaughtError()) {
+      const error = clearCaughtError();
+      captureCommitPhaseError(fiber, fiber.return, error);
+    }
+    resetCurrentDebugFiberInDEV();
+  } else {
+    try {
+      beforeActiveInstanceBlur(fiber);
+    } catch (error) {
+      captureCommitPhaseError(fiber, fiber.return, error);
+    }
+  }
+}
+
 let focusedInstanceHandle: null | Fiber = null;
 let shouldFireAfterActiveInstanceBlur: boolean = false;
 
@@ -395,24 +413,46 @@ function commitBeforeMutationEffects_begin() {
 function commitBeforeMutationEffects_complete() {
   while (nextEffect !== null) {
     const fiber = nextEffect;
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      invokeGuardedCallback(
-        null,
-        commitBeforeMutationEffectsOnFiber,
-        null,
-        fiber,
-      );
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, fiber.return, error);
+    const flags = fiber.flags;
+
+    if (enableCreateEventHandleAPI) {
+      if (
+        !shouldFireAfterActiveInstanceBlur &&
+        focusedInstanceHandle !== null
+      ) {
+        // Check to see if the focused element was inside of a hidden (Suspense) subtree.
+        // TODO: Move this out of the hot path using a dedicated effect tag.
+        if (
+          fiber.tag === SuspenseComponent &&
+          isSuspenseBoundaryBeingHidden(fiber.alternate, fiber) &&
+          doesFiberContain(fiber, focusedInstanceHandle)
+        ) {
+          shouldFireAfterActiveInstanceBlur = true;
+          safelyCallBeforeInstanceBlur(fiber);
+        }
       }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitBeforeMutationEffectsOnFiber(fiber);
-      } catch (error) {
-        captureCommitPhaseError(fiber, fiber.return, error);
+    }
+
+    if ((flags & Snapshot) !== NoFlags) {
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(
+          null,
+          commitBeforeMutationEffectsOnFiber,
+          null,
+          fiber,
+        );
+        if (hasCaughtError()) {
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitBeforeMutationEffectsOnFiber(fiber);
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
       }
     }
 
@@ -428,113 +468,94 @@ function commitBeforeMutationEffects_complete() {
 }
 
 function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
-  const current = finishedWork.alternate;
-  const flags = finishedWork.flags;
+  setCurrentDebugFiberInDEV(finishedWork);
 
-  if (enableCreateEventHandleAPI) {
-    if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
-      // Check to see if the focused element was inside of a hidden (Suspense) subtree.
-      // TODO: Move this out of the hot path using a dedicated effect tag.
-      if (
-        finishedWork.tag === SuspenseComponent &&
-        isSuspenseBoundaryBeingHidden(current, finishedWork) &&
-        doesFiberContain(finishedWork, focusedInstanceHandle)
-      ) {
-        shouldFireAfterActiveInstanceBlur = true;
-        beforeActiveInstanceBlur(finishedWork);
-      }
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent: {
+      break;
     }
-  }
-
-  if ((flags & Snapshot) !== NoFlags) {
-    setCurrentDebugFiberInDEV(finishedWork);
-
-    switch (finishedWork.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent: {
-        break;
-      }
-      case ClassComponent: {
-        if (current !== null) {
-          const prevProps = current.memoizedProps;
-          const prevState = current.memoizedState;
-          const instance = finishedWork.stateNode;
-          // We could update instance props and state here,
-          // but instead we rely on them being set during last render.
-          // TODO: revisit this when we implement resuming.
-          if (__DEV__) {
-            if (
-              finishedWork.type === finishedWork.elementType &&
-              !didWarnAboutReassigningProps
-            ) {
-              if (instance.props !== finishedWork.memoizedProps) {
-                console.error(
-                  'Expected %s props to match memoized props before ' +
-                    'getSnapshotBeforeUpdate. ' +
-                    'This might either be because of a bug in React, or because ' +
-                    'a component reassigns its own `this.props`. ' +
-                    'Please file an issue.',
-                  getComponentNameFromFiber(finishedWork) || 'instance',
-                );
-              }
-              if (instance.state !== finishedWork.memoizedState) {
-                console.error(
-                  'Expected %s state to match memoized state before ' +
-                    'getSnapshotBeforeUpdate. ' +
-                    'This might either be because of a bug in React, or because ' +
-                    'a component reassigns its own `this.state`. ' +
-                    'Please file an issue.',
-                  getComponentNameFromFiber(finishedWork) || 'instance',
-                );
-              }
-            }
-          }
-          const snapshot = instance.getSnapshotBeforeUpdate(
-            finishedWork.elementType === finishedWork.type
-              ? prevProps
-              : resolveDefaultProps(finishedWork.type, prevProps),
-            prevState,
-          );
-          if (__DEV__) {
-            const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
-            if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
-              didWarnSet.add(finishedWork.type);
+    case ClassComponent: {
+      const current = finishedWork.alternate;
+      if (current !== null) {
+        const prevProps = current.memoizedProps;
+        const prevState = current.memoizedState;
+        const instance = finishedWork.stateNode;
+        // We could update instance props and state here,
+        // but instead we rely on them being set during last render.
+        // TODO: revisit this when we implement resuming.
+        if (__DEV__) {
+          if (
+            finishedWork.type === finishedWork.elementType &&
+            !didWarnAboutReassigningProps
+          ) {
+            if (instance.props !== finishedWork.memoizedProps) {
               console.error(
-                '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
-                  'must be returned. You have returned undefined.',
-                getComponentNameFromFiber(finishedWork),
+                'Expected %s props to match memoized props before ' +
+                  'getSnapshotBeforeUpdate. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.props`. ' +
+                  'Please file an issue.',
+                getComponentNameFromFiber(finishedWork) || 'instance',
+              );
+            }
+            if (instance.state !== finishedWork.memoizedState) {
+              console.error(
+                'Expected %s state to match memoized state before ' +
+                  'getSnapshotBeforeUpdate. ' +
+                  'This might either be because of a bug in React, or because ' +
+                  'a component reassigns its own `this.state`. ' +
+                  'Please file an issue.',
+                getComponentNameFromFiber(finishedWork) || 'instance',
               );
             }
           }
-          instance.__reactInternalSnapshotBeforeUpdate = snapshot;
         }
-        break;
-      }
-      case HostRoot: {
-        if (supportsMutation) {
-          const root = finishedWork.stateNode;
-          clearContainer(root.containerInfo);
-        }
-        break;
-      }
-      case HostComponent:
-      case HostText:
-      case HostPortal:
-      case IncompleteClassComponent:
-        // Nothing to do for these component types
-        break;
-      default: {
-        invariant(
-          false,
-          'This unit of work tag should not have side-effects. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
+        const snapshot = instance.getSnapshotBeforeUpdate(
+          finishedWork.elementType === finishedWork.type
+            ? prevProps
+            : resolveDefaultProps(finishedWork.type, prevProps),
+          prevState,
         );
+        if (__DEV__) {
+          const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<mixed>);
+          if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
+            didWarnSet.add(finishedWork.type);
+            console.error(
+              '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
+                'must be returned. You have returned undefined.',
+              getComponentNameFromFiber(finishedWork),
+            );
+          }
+        }
+        instance.__reactInternalSnapshotBeforeUpdate = snapshot;
       }
+      break;
     }
-
-    resetCurrentDebugFiberInDEV();
+    case HostRoot: {
+      if (supportsMutation) {
+        const root = finishedWork.stateNode;
+        clearContainer(root.containerInfo);
+      }
+      break;
+    }
+    case HostComponent:
+    case HostText:
+    case HostPortal:
+    case IncompleteClassComponent:
+      // Nothing to do for these component types
+      break;
+    default: {
+      invariant(
+        false,
+        'This unit of work tag should not have side-effects. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
+    }
   }
+
+  resetCurrentDebugFiberInDEV();
 }
 
 function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
@@ -2187,25 +2208,27 @@ function commitMutationEffects_begin(root: FiberRoot) {
 function commitMutationEffects_complete(root: FiberRoot) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      invokeGuardedCallback(
-        null,
-        commitMutationEffectsOnFiber,
-        null,
-        fiber,
-        root,
-      );
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, fiber.return, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitMutationEffectsOnFiber(fiber, root);
-      } catch (error) {
-        captureCommitPhaseError(fiber, fiber.return, error);
+    if (fiber.flags !== NoFlags) {
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(
+          null,
+          commitMutationEffectsOnFiber,
+          null,
+          fiber,
+          root,
+        );
+        if (hasCaughtError()) {
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitMutationEffectsOnFiber(fiber, root);
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
       }
     }
 
