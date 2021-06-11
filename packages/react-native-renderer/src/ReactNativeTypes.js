@@ -33,7 +33,7 @@ export type MeasureLayoutOnSuccessCallback = (
   height: number,
 ) => void;
 
-type AttributeType<T, V> =
+export type AttributeType<T, V> =
   | true
   | $ReadOnly<{|
       diff?: (arg1: T, arg2: T) => boolean,
@@ -42,7 +42,7 @@ type AttributeType<T, V> =
 
 // We either force that `diff` and `process` always use mixed,
 // or we allow them to define specific types and use this hack
-type AnyAttributeType = AttributeType<$FlowFixMe, $FlowFixMe>;
+export type AnyAttributeType = AttributeType<$FlowFixMe, $FlowFixMe>;
 
 export type AttributeConfiguration = $ReadOnly<{
   [propName: string]: AnyAttributeType,
@@ -53,7 +53,7 @@ export type AttributeConfiguration = $ReadOnly<{
   ...
 }>;
 
-type PartialAttributeConfiguration = $ReadOnly<{
+export type PartialAttributeConfiguration = $ReadOnly<{
   [propName: string]: AnyAttributeType,
   style?: $ReadOnly<{
     [propName: string]: AnyAttributeType,
