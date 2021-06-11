@@ -19,6 +19,7 @@ import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
+  enableCreateEventHandleAPI,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
@@ -1854,8 +1855,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
 
-    if (shouldFireAfterActiveInstanceBlur) {
-      afterActiveInstanceBlur();
+    if (enableCreateEventHandleAPI) {
+      if (shouldFireAfterActiveInstanceBlur) {
+        afterActiveInstanceBlur();
+      }
     }
     resetAfterCommit(root.containerInfo);
 

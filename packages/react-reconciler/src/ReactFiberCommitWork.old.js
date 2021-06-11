@@ -26,6 +26,7 @@ import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 
 import {
+  enableCreateEventHandleAPI,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
@@ -365,12 +366,16 @@ function commitBeforeMutationEffects_begin() {
   while (nextEffect !== null) {
     const fiber = nextEffect;
 
-    // TODO: Should wrap this in flags check, too, as optimization
-    const deletions = fiber.deletions;
-    if (deletions !== null) {
-      for (let i = 0; i < deletions.length; i++) {
-        const deletion = deletions[i];
-        commitBeforeMutationEffectsDeletion(deletion);
+    // This phase is only used for beforeActiveInstanceBlur.
+    // Let's skip the whole loop if it's off.
+    if (enableCreateEventHandleAPI) {
+      // TODO: Should wrap this in flags check, too, as optimization
+      const deletions = fiber.deletions;
+      if (deletions !== null) {
+        for (let i = 0; i < deletions.length; i++) {
+          const deletion = deletions[i];
+          commitBeforeMutationEffectsDeletion(deletion);
+        }
       }
     }
 
@@ -426,16 +431,18 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
-  if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
-    // Check to see if the focused element was inside of a hidden (Suspense) subtree.
-    // TODO: Move this out of the hot path using a dedicated effect tag.
-    if (
-      finishedWork.tag === SuspenseComponent &&
-      isSuspenseBoundaryBeingHidden(current, finishedWork) &&
-      doesFiberContain(finishedWork, focusedInstanceHandle)
-    ) {
-      shouldFireAfterActiveInstanceBlur = true;
-      beforeActiveInstanceBlur(finishedWork);
+  if (enableCreateEventHandleAPI) {
+    if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
+      // Check to see if the focused element was inside of a hidden (Suspense) subtree.
+      // TODO: Move this out of the hot path using a dedicated effect tag.
+      if (
+        finishedWork.tag === SuspenseComponent &&
+        isSuspenseBoundaryBeingHidden(current, finishedWork) &&
+        doesFiberContain(finishedWork, focusedInstanceHandle)
+      ) {
+        shouldFireAfterActiveInstanceBlur = true;
+        beforeActiveInstanceBlur(finishedWork);
+      }
     }
   }
 
@@ -531,13 +538,15 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
 }
 
 function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
-  // TODO (effects) It would be nice to avoid calling doesFiberContain()
-  // Maybe we can repurpose one of the subtreeFlags positions for this instead?
-  // Use it to store which part of the tree the focused instance is in?
-  // This assumes we can safely determine that instance during the "render" phase.
-  if (doesFiberContain(deletion, ((focusedInstanceHandle: any): Fiber))) {
-    shouldFireAfterActiveInstanceBlur = true;
-    beforeActiveInstanceBlur(deletion);
+  if (enableCreateEventHandleAPI) {
+    // TODO (effects) It would be nice to avoid calling doesFiberContain()
+    // Maybe we can repurpose one of the subtreeFlags positions for this instead?
+    // Use it to store which part of the tree the focused instance is in?
+    // This assumes we can safely determine that instance during the "render" phase.
+    if (doesFiberContain(deletion, ((focusedInstanceHandle: any): Fiber))) {
+      shouldFireAfterActiveInstanceBlur = true;
+      beforeActiveInstanceBlur(deletion);
+    }
   }
 }
 
