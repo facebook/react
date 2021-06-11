@@ -122,6 +122,8 @@ const RCTFabricUIManager = {
 
   dispatchCommand: jest.fn(),
 
+  sendAccessibilityEvent: jest.fn(),
+
   registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
 
   measure: jest.fn(function measure(node, callback) {
@@ -174,6 +176,7 @@ const RCTFabricUIManager = {
     );
     success(1, 1, 100, 100);
   }),
+  setIsJSResponder: jest.fn(),
 };
 
 global.nativeFabricUIManager = RCTFabricUIManager;

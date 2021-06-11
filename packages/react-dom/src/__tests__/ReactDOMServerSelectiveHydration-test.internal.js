@@ -19,6 +19,8 @@ let Scheduler;
 let Suspense;
 let act;
 
+let IdleEventPriority;
+
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
     to = null;
@@ -92,6 +94,21 @@ function dispatchClickEvent(target) {
   return target.dispatchEvent(mouseOutEvent);
 }
 
+// TODO: There's currently no React DOM API to opt into Idle priority updates,
+// and there's no native DOM event that maps to idle priority, so this is a
+// temporary workaround. Need something like ReactDOM.unstable_IdleUpdates.
+function TODO_scheduleIdleDOMSchedulerTask(fn) {
+  ReactDOM.unstable_runWithPriority(IdleEventPriority, () => {
+    const prevEvent = window.event;
+    window.event = {type: 'message'};
+    try {
+      fn();
+    } finally {
+      window.event = prevEvent;
+    }
+  });
+}
+
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -105,9 +122,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
     act = ReactTestUtils.unstable_concurrentAct;
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
+
+    IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
 
-  // @gate experimental
   it('hydrates the target boundary synchronously during a click', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -170,7 +188,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates at higher pri if sync did not work first time', async () => {
     let suspend = false;
     let resolve;
@@ -235,27 +252,29 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toHaveYielded([]);
 
     // This click target cannot be hydrated yet because it's suspended.
-    const result = dispatchClickEvent(spanD);
+    await act(async () => {
+      const result = dispatchClickEvent(spanD);
+      expect(result).toBe(true);
+    });
+    expect(Scheduler).toHaveYielded([
+      'App',
+      // Continuing rendering will render B next.
+      'B',
+      'C',
+    ]);
 
-    expect(Scheduler).toHaveYielded(['App']);
-
-    expect(result).toBe(true);
-
-    // Continuing rendering will render B next.
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
-
-    suspend = false;
-    resolve();
-    await promise;
-
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
     // After the click, we should prioritize D and the Click first,
     // and only after that render A and C.
-    expect(Scheduler).toFlushAndYield(['D', 'Clicked D', 'A']);
+    expect(Scheduler).toHaveYielded(['D', 'Clicked D', 'A']);
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates at higher pri for secondary discrete events', async () => {
     let suspend = false;
     let resolve;
@@ -328,13 +347,15 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     expect(Scheduler).toHaveYielded(['App']);
 
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
     // We should prioritize hydrating A, C and D first since we clicked in
     // them. Only after they're done will we hydrate B.
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'A',
       'Clicked A',
       'C',
@@ -348,7 +369,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates the target boundary synchronously during a click (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let isServerRendering = true;
@@ -417,7 +438,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates at higher pri if sync did not work first time (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -486,26 +507,26 @@ describe('ReactDOMServerSelectiveHydration', () => {
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
 
-    const target = createEventTarget(spanD);
-    target.virtualclick();
-
-    expect(Scheduler).toHaveYielded(['App']);
-
     // Continuing rendering will render B next.
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
-
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      const target = createEventTarget(spanD);
+      target.virtualclick();
+    });
+    expect(Scheduler).toHaveYielded(['App', 'B', 'C']);
 
     // After the click, we should prioritize D and the Click first,
     // and only after that render A and C.
-    expect(Scheduler).toFlushAndYield(['D', 'Clicked D', 'A']);
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
+    expect(Scheduler).toHaveYielded(['D', 'Clicked D', 'A']);
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates at higher pri for secondary discrete events (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -582,13 +603,15 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     expect(Scheduler).toHaveYielded(['App']);
 
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
     // We should prioritize hydrating A, C and D first since we clicked in
     // them. Only after they're done will we hydrate B.
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'A',
       'Clicked A',
       'C',
@@ -602,7 +625,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates the hovered targets as higher priority for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -681,9 +703,11 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     expect(Scheduler).toHaveYielded(['App']);
 
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
     // We should prioritize hydrating D first because we clicked it.
     // Next we should hydrate C since that's the current hover target.
@@ -691,7 +715,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     // the same time since B was already scheduled.
     // This is ok because it will at least not continue for nested
     // boundary. See the next test below.
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'D',
       'Clicked D',
       'B', // Ideally this should be later.
@@ -703,7 +727,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -789,7 +812,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -838,7 +861,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toFlushAndYield(['App', 'C', 'B', 'A']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('hydrates before an update even if hydration moves away from it', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -889,12 +912,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
       expect(Scheduler).toFlushAndYieldThrough(['App', 'Commit']);
 
       // Render an update at Idle priority that needs to update A.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_IdlePriority,
-        () => {
-          root.render(<App a="AA" />);
-        },
-      );
+
+      TODO_scheduleIdleDOMSchedulerTask(() => {
+        root.render(<App a="AA" />);
+      });
 
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.

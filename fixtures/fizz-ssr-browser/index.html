@@ -20,7 +20,10 @@
     <script src="../../build/node_modules/react-dom/umd/react-dom-unstable-fizz.browser.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <script type="text/babel">
-      let stream = ReactDOMFizzServer.renderToReadableStream(<body>Success</body>);
+      let controller = new AbortController();
+      let stream = ReactDOMFizzServer.renderToReadableStream(<body>Success</body>, {
+        signal: controller.signal,
+      });
       let response = new Response(stream, {
         headers: {'Content-Type': 'text/html'},
       });

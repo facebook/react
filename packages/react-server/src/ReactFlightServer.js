@@ -24,6 +24,7 @@ import {
   completeWriting,
   flushBuffered,
   close,
+  closeWithError,
   processModelChunk,
   processModuleChunk,
   processSymbolChunk,
@@ -43,8 +44,7 @@ import {
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
-
-const isArray = Array.isArray;
+import isArray from 'shared/isArray';
 
 type ReactJSONValue =
   | string
@@ -67,7 +67,7 @@ type ReactModelObject = {+[key: string]: ReactModel};
 
 type Segment = {
   id: number,
-  query: () => ReactModel,
+  model: ReactModel,
   ping: () => void,
 };
 
@@ -83,16 +83,22 @@ export type Request = {
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
+  onError: (error: mixed) => void,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
+function defaultErrorHandler(error: mixed) {
+  console['error'](error); // Don't transform to our wrapper
+}
+
 export function createRequest(
   model: ReactModel,
   destination: Destination,
   bundlerConfig: BundlerConfig,
+  onError: (error: mixed) => void = defaultErrorHandler,
 ): Request {
   const pingedSegments = [];
   const request = {
@@ -107,13 +113,14 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
+    onError,
     flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
   };
   request.pendingChunks++;
-  const rootSegment = createSegment(request, () => model);
+  const rootSegment = createSegment(request, model);
   pingedSegments.push(rootSegment);
   return request;
 }
@@ -180,11 +187,11 @@ function pingSegment(request: Request, segment: Segment): void {
   }
 }
 
-function createSegment(request: Request, query: () => ReactModel): Segment {
+function createSegment(request: Request, model: ReactModel): Segment {
   const id = request.nextChunkId++;
   const segment = {
     id,
-    query,
+    model,
     ping: () => pingSegment(request, segment),
   };
   return segment;
@@ -408,11 +415,12 @@ export function resolveModelToJSON(
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
         request.pendingChunks++;
-        const newSegment = createSegment(request, () => value);
+        const newSegment = createSegment(request, value);
         const ping = newSegment.ping;
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
       } else {
+        reportError(request, x);
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
         // once it gets rendered.
@@ -589,6 +597,16 @@ export function resolveModelToJSON(
   );
 }
 
+function reportError(request: Request, error: mixed): void {
+  const onError = request.onError;
+  onError(error);
+}
+
+function fatalError(request: Request, error: mixed): void {
+  // This is called outside error handling code such as if an error happens in React internals.
+  closeWithError(request.destination, error);
+}
+
 function emitErrorChunk(request: Request, id: number, error: mixed): void {
   // TODO: We should not leak error messages to the client in prod.
   // Give this an error code instead and log on the server.
@@ -625,10 +643,8 @@ function emitSymbolChunk(request: Request, id: number, name: string): void {
 }
 
 function retrySegment(request: Request, segment: Segment): void {
-  const query = segment.query;
-  let value;
   try {
-    value = query();
+    let value = segment.model;
     while (
       typeof value === 'object' &&
       value !== null &&
@@ -639,7 +655,7 @@ function retrySegment(request: Request, segment: Segment): void {
       // Attempt to render the server component.
       // Doing this here lets us reuse this same segment if the next component
       // also suspends.
-      segment.query = () => value;
+      segment.model = value;
       value = attemptResolveElement(
         element.type,
         element.key,
@@ -656,6 +672,7 @@ function retrySegment(request: Request, segment: Segment): void {
       x.then(ping, ping);
       return;
     } else {
+      reportError(request, x);
       // This errored, we need to serialize this error to the
       emitErrorChunk(request, segment.id, x);
     }
@@ -668,18 +685,23 @@ function performWork(request: Request): void {
   ReactCurrentDispatcher.current = Dispatcher;
   currentCache = request.cache;
 
-  const pingedSegments = request.pingedSegments;
-  request.pingedSegments = [];
-  for (let i = 0; i < pingedSegments.length; i++) {
-    const segment = pingedSegments[i];
-    retrySegment(request, segment);
+  try {
+    const pingedSegments = request.pingedSegments;
+    request.pingedSegments = [];
+    for (let i = 0; i < pingedSegments.length; i++) {
+      const segment = pingedSegments[i];
+      retrySegment(request, segment);
+    }
+    if (request.flowing) {
+      flushCompletedChunks(request);
+    }
+  } catch (error) {
+    reportError(request, error);
+    fatalError(request, error);
+  } finally {
+    ReactCurrentDispatcher.current = prevDispatcher;
+    currentCache = prevCache;
   }
-  if (request.flowing) {
-    flushCompletedChunks(request);
-  }
-
-  ReactCurrentDispatcher.current = prevDispatcher;
-  currentCache = prevCache;
 }
 
 let reentrant = false;
@@ -751,7 +773,12 @@ export function startWork(request: Request): void {
 
 export function startFlowing(request: Request): void {
   request.flowing = true;
-  flushCompletedChunks(request);
+  try {
+    flushCompletedChunks(request);
+  } catch (error) {
+    reportError(request, error);
+    fatalError(request, error);
+  }
 }
 
 function unsupportedHook(): void {
@@ -775,12 +802,8 @@ const Dispatcher: DispatcherType = {
     return callback;
   },
   useDebugValue(): void {},
-  useDeferredValue<T>(value: T): T {
-    return value;
-  },
-  useTransition(): [(callback: () => void) => void, boolean] {
-    return [() => {}, false];
-  },
+  useDeferredValue: (unsupportedHook: any),
+  useTransition: (unsupportedHook: any),
   getCacheForType<T>(resourceType: () => T): T {
     invariant(
       currentCache,

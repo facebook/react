@@ -12,7 +12,6 @@ const guessStableVersionNumbers = require('./prepare-release-from-npm-commands/g
 const parseParams = require('./prepare-release-from-npm-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
-const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 const updateStableVersionNumbers = require('./prepare-release-from-npm-commands/update-stable-version-numbers');
 const theme = require('./theme');
 
@@ -48,7 +47,6 @@ const run = async () => {
 
     if (!params.skipTests) {
       await testPackagingFixture(params);
-      await testTracingFixture(params);
     }
 
     await printPrereleaseSummary(params, true);

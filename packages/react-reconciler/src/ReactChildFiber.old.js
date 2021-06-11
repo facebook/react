@@ -12,13 +12,8 @@ import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 
-import getComponentName from 'shared/getComponentName';
-import {
-  Deletion,
-  ChildDeletion,
-  Placement,
-  StaticMask,
-} from './ReactFiberFlags';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {Placement, ChildDeletion} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -36,6 +31,7 @@ import {
   SimpleMemoComponent,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
   enableLazyElements,
@@ -51,7 +47,7 @@ import {
 } from './ReactFiber.old';
 import {emptyRefsObject} from './ReactFiberClassComponent.old';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictLegacyMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -87,7 +83,7 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasKeyUseWarning[componentName]) {
       return;
@@ -101,8 +97,6 @@ if (__DEV__) {
     );
   };
 }
-
-const isArray = Array.isArray;
 
 function coerceRef(
   returnFiber: Fiber,
@@ -119,7 +113,7 @@ function coerceRef(
       // TODO: Clean this up once we turn on the string ref warning for
       // everyone, because the strict mode case will no longer be relevant
       if (
-        (returnFiber.mode & StrictMode || warnAboutStringRefs) &&
+        (returnFiber.mode & StrictLegacyMode || warnAboutStringRefs) &&
         // We warn in ReactElement.js if owner and self are equal for string refs
         // because these cannot be automatically converted to an arrow function
         // using a codemod. Therefore, we don't have to warn about string refs again.
@@ -129,7 +123,8 @@ function coerceRef(
           element._owner.stateNode !== element._self
         )
       ) {
-        const componentName = getComponentName(returnFiber.type) || 'Component';
+        const componentName =
+          getComponentNameFromFiber(returnFiber) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
             console.error(
@@ -221,22 +216,21 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
-  if (returnFiber.type !== 'textarea') {
-    invariant(
-      false,
-      'Objects are not valid as a React child (found: %s). ' +
-        'If you meant to render a collection of children, use an array ' +
-        'instead.',
-      Object.prototype.toString.call(newChild) === '[object Object]'
-        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-        : newChild,
-    );
-  }
+  const childString = Object.prototype.toString.call(newChild);
+  invariant(
+    false,
+    'Objects are not valid as a React child (found: %s). ' +
+      'If you meant to render a collection of children, use an array ' +
+      'instead.',
+    childString === '[object Object]'
+      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+      : childString,
+  );
 }
 
 function warnOnFunctionType(returnFiber: Fiber) {
   if (__DEV__) {
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasFunctionTypeWarning[componentName]) {
       return;
@@ -267,37 +261,13 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Noop.
       return;
     }
-    // Deletions are added in reversed order so we add it to the front.
-    // At this point, the return fiber's effect list is empty except for
-    // deletions, so we can just append the deletion to the list. The remaining
-    // effects aren't added until the complete phase. Once we implement
-    // resuming, this may not be true.
-    const last = returnFiber.lastEffect;
-    if (last !== null) {
-      last.nextEffect = childToDelete;
-      returnFiber.lastEffect = childToDelete;
-    } else {
-      returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
-    }
-    childToDelete.nextEffect = null;
-    childToDelete.flags = (childToDelete.flags & StaticMask) | Deletion;
-
-    let deletions = returnFiber.deletions;
+    const deletions = returnFiber.deletions;
     if (deletions === null) {
-      deletions = returnFiber.deletions = [childToDelete];
+      returnFiber.deletions = [childToDelete];
       returnFiber.flags |= ChildDeletion;
     } else {
       deletions.push(childToDelete);
     }
-    // Stash a reference to the return fiber's deletion array on each of the
-    // deleted children. This is really weird, but it's a temporary workaround
-    // while we're still using the effect list to traverse effect fibers. A
-    // better workaround would be to follow the `.return` pointer in the commit
-    // phase, but unfortunately we can't assume that `.return` points to the
-    // correct fiber, even in the commit phase, because `findDOMNode` might
-    // mutate it.
-    // TODO: Remove this line.
-    childToDelete.deletions = deletions;
   }
 
   function deleteRemainingChildren(
@@ -1261,9 +1231,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     // Handle object types
-    const isObject = typeof newChild === 'object' && newChild !== null;
-
-    if (isObject) {
+    if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(
@@ -1296,6 +1264,26 @@ function ChildReconciler(shouldTrackSideEffects) {
             );
           }
       }
+
+      if (isArray(newChild)) {
+        return reconcileChildrenArray(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      if (getIteratorFn(newChild)) {
+        return reconcileChildrenIterator(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
@@ -1307,28 +1295,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           lanes,
         ),
       );
-    }
-
-    if (isArray(newChild)) {
-      return reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (getIteratorFn(newChild)) {
-      return reconcileChildrenIterator(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (isObject) {
-      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (__DEV__) {
@@ -1361,7 +1327,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             '%s(...): Nothing was returned from render. This usually means a ' +
               'return statement is missing. Or, to render nothing, ' +
               'return null.',
-            getComponentName(returnFiber.type) || 'Component',
+            getComponentNameFromFiber(returnFiber) || 'Component',
           );
         }
       }

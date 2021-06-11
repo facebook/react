@@ -243,23 +243,21 @@ export function dehydrate(
               : data.constructor.name,
         };
 
-        if (typeof data[Symbol.iterator]) {
-          // TRICKY
-          // Don't use [...spread] syntax for this purpose.
-          // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
-          // Other types (e.g. typed arrays, Sets) will not spread correctly.
-          Array.from(data).forEach(
-            (item, i) =>
-              (unserializableValue[i] = dehydrate(
-                item,
-                cleaned,
-                unserializable,
-                path.concat([i]),
-                isPathAllowed,
-                isPathAllowedCheck ? 1 : level + 1,
-              )),
-          );
-        }
+        // TRICKY
+        // Don't use [...spread] syntax for this purpose.
+        // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
+        // Other types (e.g. typed arrays, Sets) will not spread correctly.
+        Array.from(data).forEach(
+          (item, i) =>
+            (unserializableValue[i] = dehydrate(
+              item,
+              cleaned,
+              unserializable,
+              path.concat([i]),
+              isPathAllowed,
+              isPathAllowedCheck ? 1 : level + 1,
+            )),
+        );
 
         unserializable.push(path);
 
@@ -383,7 +381,9 @@ export function hydrate(
 
     const value = parent[last];
 
-    if (value.type === 'infinity') {
+    if (!value) {
+      return;
+    } else if (value.type === 'infinity') {
       parent[last] = Infinity;
     } else if (value.type === 'nan') {
       parent[last] = NaN;

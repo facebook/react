@@ -9,11 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
-import type {
-  ReactFundamentalComponentInstance,
-  ReactScopeInstance,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactScopeInstance, ReactContext} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {
   Instance,
@@ -32,7 +28,7 @@ import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
-import {now} from './SchedulerWithReactIntegration.new';
+import {now} from './Scheduler';
 
 import {
   IndeterminateComponent,
@@ -54,25 +50,22 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  FundamentalComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
 } from './ReactWorkTags';
-import {
-  NoMode,
-  BlockingMode,
-  ConcurrentMode,
-  ProfileMode,
-} from './ReactTypeOfMode';
+import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
   Ref,
+  RefStatic,
   Update,
   NoFlags,
   DidCapture,
   Snapshot,
+  ChildDeletion,
   StaticMask,
+  MutationMask,
 } from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
@@ -90,10 +83,6 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  getFundamentalComponentInstance,
-  mountFundamentalComponent,
-  cloneFundamentalInstance,
-  shouldUpdateFundamentalComponent,
   preparePortalMount,
   prepareScopeUpdate,
 } from './ReactFiberHostConfig';
@@ -129,16 +118,14 @@ import {
   getIsHydrating,
 } from './ReactFiberHydrationContext.new';
 import {
-  enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableFundamentalAPI,
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import {
-  markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
@@ -146,7 +133,6 @@ import {
   getRenderTargetTime,
   subtreeRenderLanes,
 } from './ReactFiberWorkLoop.new';
-import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
 import {
   OffscreenLane,
   SomeRetryLane,
@@ -171,6 +157,34 @@ function markUpdate(workInProgress: Fiber) {
 
 function markRef(workInProgress: Fiber) {
   workInProgress.flags |= Ref;
+  if (enableSuspenseLayoutEffectSemantics) {
+    workInProgress.flags |= RefStatic;
+  }
+}
+
+function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
+  const didBailout = current !== null && current.child === completedWork.child;
+  if (didBailout) {
+    return true;
+  }
+
+  if ((completedWork.flags & ChildDeletion) !== NoFlags) {
+    return false;
+  }
+
+  // TODO: If we move the `hadNoMutationsEffects` call after `bubbleProperties`
+  // then we only have to check the `completedWork.subtreeFlags`.
+  let child = completedWork.child;
+  while (child !== null) {
+    if (
+      (child.flags & MutationMask) !== NoFlags ||
+      (child.subtreeFlags & MutationMask) !== NoFlags
+    ) {
+      return false;
+    }
+    child = child.sibling;
+  }
+  return true;
 }
 
 let appendAllChildren;
@@ -192,8 +206,6 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
-      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-        appendInitialChild(parent, node.stateNode.instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -217,7 +229,7 @@ if (supportsMutation) {
     }
   };
 
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -301,15 +313,6 @@ if (supportsMutation) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
           instance = cloneHiddenTextInstance(instance, text, node);
-        }
-        appendInitialChild(parent, instance);
-      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-        let instance = node.stateNode.instance;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const props = node.memoizedProps;
-          const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
         }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
@@ -397,15 +400,6 @@ if (supportsMutation) {
           instance = cloneHiddenTextInstance(instance, text, node);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
-      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-        let instance = node.stateNode.instance;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const props = node.memoizedProps;
-          const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
-        }
-        appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -461,13 +455,13 @@ if (supportsMutation) {
       node = node.sibling;
     }
   };
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
       ...
     } = workInProgress.stateNode;
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged) {
       // No changes, just reuse the existing instance.
     } else {
@@ -492,7 +486,7 @@ if (supportsMutation) {
     const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
     // This guarantees that we can reuse all of them.
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged && oldProps === newProps) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
@@ -575,7 +569,7 @@ if (supportsMutation) {
   };
 } else {
   // No host operations
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -847,7 +841,7 @@ function completeWork(
           workInProgress.flags |= Snapshot;
         }
       }
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
       return null;
     }
@@ -985,9 +979,6 @@ function completeWork(
                 'This is probably a bug in React.',
             );
             prepareToHydrateHostSuspenseInstance(workInProgress);
-            if (enableSchedulerTracing) {
-              markSpawnedWork(OffscreenLane);
-            }
             bubbleProperties(workInProgress);
             if (enableProfilerTimer) {
               if ((workInProgress.mode & ProfileMode) !== NoMode) {
@@ -1063,12 +1054,10 @@ function completeWork(
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
-        // If this subtreee is running in blocking mode we can suspend,
-        // otherwise we won't suspend.
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
-        if ((workInProgress.mode & BlockingMode) !== NoMode) {
+        if ((workInProgress.mode & ConcurrentMode) !== NoMode) {
           // TODO: Move this back to throwException because this is too late
           // if this is a large tree which is common for initial loads. We
           // don't know if we should restart a render or not until we get
@@ -1142,7 +1131,7 @@ function completeWork(
     }
     case HostPortal:
       popHostContainer(workInProgress);
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       if (current === null) {
         preparePortalMount(workInProgress.stateNode.containerInfo);
       }
@@ -1226,11 +1215,7 @@ function completeWork(
 
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
-                // Reset the effect list before doing the second pass since that's now invalid.
-                if (renderState.lastEffect === null) {
-                  workInProgress.firstEffect = null;
-                }
-                workInProgress.lastEffect = renderState.lastEffect;
+                // Reset the effect flags before doing the second pass since that's now invalid.
                 // Reset the child fibers to their original state.
                 workInProgress.subtreeFlags = NoFlags;
                 resetChildFibers(workInProgress, renderLanes);
@@ -1269,9 +1254,6 @@ function completeWork(
             // We can use any RetryLane even if it's the one currently rendering
             // since we're leaving it behind on this node.
             workInProgress.lanes = SomeRetryLane;
-            if (enableSchedulerTracing) {
-              markSpawnedWork(SomeRetryLane);
-            }
           }
         } else {
           cutOffTailIfNeeded(renderState, false);
@@ -1301,15 +1283,6 @@ function completeWork(
               !renderedTail.alternate &&
               !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
-              // We need to delete the row we just rendered.
-              // Reset the effect list to what it was before we rendered this
-              // child. The nested children have already appended themselves.
-              const lastEffect = (workInProgress.lastEffect =
-                renderState.lastEffect);
-              // Remove any effects that were appended after this point.
-              if (lastEffect !== null) {
-                lastEffect.nextEffect = null;
-              }
               // We're done.
               bubbleProperties(workInProgress);
               return null;
@@ -1339,9 +1312,6 @@ function completeWork(
             // We can use any RetryLane even if it's the one currently rendering
             // since we're leaving it behind on this node.
             workInProgress.lanes = SomeRetryLane;
-            if (enableSchedulerTracing) {
-              markSpawnedWork(SomeRetryLane);
-            }
           }
         }
         if (renderState.isBackwards) {
@@ -1369,7 +1339,6 @@ function completeWork(
         const next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
-        renderState.lastEffect = workInProgress.lastEffect;
         renderState.renderingStartTime = now();
         next.sibling = null;
 
@@ -1392,59 +1361,6 @@ function completeWork(
       }
       bubbleProperties(workInProgress);
       return null;
-    }
-    case FundamentalComponent: {
-      if (enableFundamentalAPI) {
-        const fundamentalImpl = workInProgress.type.impl;
-        let fundamentalInstance: ReactFundamentalComponentInstance<
-          any,
-          any,
-        > | null = workInProgress.stateNode;
-
-        if (fundamentalInstance === null) {
-          const getInitialState = fundamentalImpl.getInitialState;
-          let fundamentalState;
-          if (getInitialState !== undefined) {
-            fundamentalState = getInitialState(newProps);
-          }
-          fundamentalInstance = workInProgress.stateNode = createFundamentalStateInstance(
-            workInProgress,
-            newProps,
-            fundamentalImpl,
-            fundamentalState || {},
-          );
-          const instance = ((getFundamentalComponentInstance(
-            fundamentalInstance,
-          ): any): Instance);
-          fundamentalInstance.instance = instance;
-          if (fundamentalImpl.reconcileChildren === false) {
-            bubbleProperties(workInProgress);
-            return null;
-          }
-          appendAllChildren(instance, workInProgress, false, false);
-          mountFundamentalComponent(fundamentalInstance);
-        } else {
-          // We fire update in commit phase
-          const prevProps = fundamentalInstance.props;
-          fundamentalInstance.prevProps = prevProps;
-          fundamentalInstance.props = newProps;
-          fundamentalInstance.currentFiber = workInProgress;
-          if (supportsPersistence) {
-            const instance = cloneFundamentalInstance(fundamentalInstance);
-            fundamentalInstance.instance = instance;
-            appendAllChildren(instance, workInProgress, false, false);
-          }
-          const shouldUpdate = shouldUpdateFundamentalComponent(
-            fundamentalInstance,
-          );
-          if (shouldUpdate) {
-            markUpdate(workInProgress);
-          }
-        }
-        bubbleProperties(workInProgress);
-        return null;
-      }
-      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {

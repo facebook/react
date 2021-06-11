@@ -249,7 +249,7 @@ const TooltipReactMeasure = ({
     return null;
   }
 
-  const {batchUID, duration, timestamp, lanes} = measure;
+  const {batchUID, duration, timestamp, lanes, laneLabels} = measure;
   const [startTime, stopTime] = getBatchRange(batchUID, data);
 
   return (
@@ -265,7 +265,11 @@ const TooltipReactMeasure = ({
         <div className={styles.DetailsGridLabel}>
           Lane{lanes.length === 1 ? '' : 's'}:
         </div>
-        <div>{lanes.join(', ')}</div>
+        <div>
+          {laneLabels.length > 0
+            ? `${laneLabels.join(', ')} (${lanes.join(', ')})`
+            : lanes.join(', ')}
+        </div>
       </div>
     </div>
   );

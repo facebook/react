@@ -14,7 +14,7 @@ import {
   enableProfilerNestedUpdatePhase,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
-import {Profiler} from './ReactWorkTags';
+import {HostRoot, Profiler} from './ReactWorkTags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -140,13 +140,19 @@ function recordLayoutEffectDuration(fiber: Fiber): void {
 
     layoutEffectStartTime = -1;
 
-    // Store duration on the next nearest Profiler ancestor.
+    // Store duration on the next nearest Profiler ancestor
+    // Or the root (for the DevTools Profiler to read)
     let parentFiber = fiber.return;
     while (parentFiber !== null) {
-      if (parentFiber.tag === Profiler) {
-        const parentStateNode = parentFiber.stateNode;
-        parentStateNode.effectDuration += elapsedTime;
-        break;
+      switch (parentFiber.tag) {
+        case HostRoot:
+          const root = parentFiber.stateNode;
+          root.effectDuration += elapsedTime;
+          return;
+        case Profiler:
+          const parentStateNode = parentFiber.stateNode;
+          parentStateNode.effectDuration += elapsedTime;
+          return;
       }
       parentFiber = parentFiber.return;
     }
@@ -163,18 +169,26 @@ function recordPassiveEffectDuration(fiber: Fiber): void {
 
     passiveEffectStartTime = -1;
 
-    // Store duration on the next nearest Profiler ancestor.
+    // Store duration on the next nearest Profiler ancestor
+    // Or the root (for the DevTools Profiler to read)
     let parentFiber = fiber.return;
     while (parentFiber !== null) {
-      if (parentFiber.tag === Profiler) {
-        const parentStateNode = parentFiber.stateNode;
-        if (parentStateNode !== null) {
-          // Detached fibers have their state node cleared out.
-          // In this case, the return pointer is also cleared out,
-          // so we won't be able to report the time spent in this Profiler's subtree.
-          parentStateNode.passiveEffectDuration += elapsedTime;
-        }
-        break;
+      switch (parentFiber.tag) {
+        case HostRoot:
+          const root = parentFiber.stateNode;
+          if (root !== null) {
+            root.passiveEffectDuration += elapsedTime;
+          }
+          return;
+        case Profiler:
+          const parentStateNode = parentFiber.stateNode;
+          if (parentStateNode !== null) {
+            // Detached fibers have their state node cleared out.
+            // In this case, the return pointer is also cleared out,
+            // so we won't be able to report the time spent in this Profiler's subtree.
+            parentStateNode.passiveEffectDuration += elapsedTime;
+          }
+          return;
       }
       parentFiber = parentFiber.return;
     }

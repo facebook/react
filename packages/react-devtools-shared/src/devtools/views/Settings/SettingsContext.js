@@ -383,6 +383,19 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
   updateStyleHelper(theme, 'color-link', documentElements);
   updateStyleHelper(theme, 'color-modal-background', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-bridge-version-npm-background',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-bridge-version-npm-text', documentElements);
+  updateStyleHelper(theme, 'color-bridge-version-number', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-primitive-hook-badge-background',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-primitive-hook-badge-text', documentElements);
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);

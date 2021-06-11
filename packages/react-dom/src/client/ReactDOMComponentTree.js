@@ -43,6 +43,16 @@ const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 
+export function detachDeletedInstance(node: Instance): void {
+  // TODO: This function is only called on host components. I don't think all of
+  // these fields are relevant.
+  delete (node: any)[internalInstanceKey];
+  delete (node: any)[internalPropsKey];
+  delete (node: any)[internalEventHandlersKey];
+  delete (node: any)[internalEventHandlerListenersKey];
+  delete (node: any)[internalEventHandlesSetKey];
+}
+
 export function precacheFiberNode(
   hostInst: Fiber,
   node: Instance | TextInstance | SuspenseInstance | ReactScopeInstance,

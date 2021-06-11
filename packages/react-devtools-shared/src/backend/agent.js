@@ -26,6 +26,7 @@ import {
   toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
+import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
@@ -38,6 +39,7 @@ import type {
   RendererInterface,
 } from './types';
 import type {ComponentFilter} from '../types';
+import {isSynchronousXHRSupported} from './utils';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -70,8 +72,9 @@ type CopyElementParams = {|
 
 type InspectElementParams = {|
   id: number,
-  path?: Array<string | number>,
+  path: Array<string | number> | null,
   rendererID: number,
+  requestID: number,
 |};
 
 type OverrideHookParams = {|
@@ -117,6 +120,12 @@ type OverrideValueAtPathParams = {|
   path: Array<string | number>,
   rendererID: number,
   value: any,
+|};
+
+type OverrideErrorParams = {|
+  id: number,
+  rendererID: number,
+  forceError: boolean,
 |};
 
 type OverrideSuspenseParams = {|
@@ -174,11 +183,13 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
+    bridge.addListener('getBridgeProtocol', this.getBridgeProtocol);
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
+    bridge.addListener('overrideError', this.overrideError);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('overrideValueAtPath', this.overrideValueAtPath);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
@@ -220,6 +231,7 @@ export default class Agent extends EventEmitter<{|
       isBackendStorageAPISupported = true;
     } catch (error) {}
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
+    bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
 
     setupHighlighter(bridge, this);
     setupTraceUpdates(this);
@@ -305,6 +317,10 @@ export default class Agent extends EventEmitter<{|
     return null;
   }
 
+  getBridgeProtocol = () => {
+    this._bridge.send('bridgeProtocol', currentBridgeProtocol);
+  };
+
   getProfilingData = ({rendererID}: {|rendererID: RendererID|}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -328,12 +344,20 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  inspectElement = ({id, path, rendererID}: InspectElementParams) => {
+  inspectElement = ({
+    id,
+    path,
+    rendererID,
+    requestID,
+  }: InspectElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      this._bridge.send('inspectedElement', renderer.inspectElement(id, path));
+      this._bridge.send(
+        'inspectedElement',
+        renderer.inspectElement(requestID, id, path),
+      );
 
       // When user selects an element, stop trying to restore the selection,
       // and instead remember the current selection for the next reload.
@@ -361,6 +385,15 @@ export default class Agent extends EventEmitter<{|
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.logElementToConsole(id);
+    }
+  };
+
+  overrideError = ({id, rendererID, forceError}: OverrideErrorParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.overrideError(id, forceError);
     }
   };
 
@@ -611,7 +644,11 @@ export default class Agent extends EventEmitter<{|
     // or in the case of React Native- if the backend is just finding out the preference-
     // then install or uninstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.
-    if (appendComponentStack || breakOnConsoleErrors) {
+    if (
+      appendComponentStack ||
+      breakOnConsoleErrors ||
+      showInlineWarningsAndErrors
+    ) {
       patchConsole({
         appendComponentStack,
         breakOnConsoleErrors,
@@ -655,7 +692,10 @@ export default class Agent extends EventEmitter<{|
 
   onHookOperations = (operations: Array<number>) => {
     if (__DEBUG__) {
-      debug('onHookOperations', operations);
+      debug(
+        'onHookOperations',
+        `(${operations.length}) [${operations.join(', ')}]`,
+      );
     }
 
     // TODO:

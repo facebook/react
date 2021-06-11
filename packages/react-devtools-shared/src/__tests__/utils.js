@@ -14,7 +14,10 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ElementType} from 'react-devtools-shared/src/types';
 
-export function act(callback: Function): void {
+export function act(
+  callback: Function,
+  recursivelyFlush: boolean = true,
+): void {
   const {act: actTestRenderer} = require('react-test-renderer');
   const {act: actDOM} = require('react-dom/test-utils');
 
@@ -24,13 +27,15 @@ export function act(callback: Function): void {
     });
   });
 
-  // Flush Bridge operations
-  while (jest.getTimerCount() > 0) {
-    actDOM(() => {
-      actTestRenderer(() => {
-        jest.runAllTimers();
+  if (recursivelyFlush) {
+    // Flush Bridge operations
+    while (jest.getTimerCount() > 0) {
+      actDOM(() => {
+        actTestRenderer(() => {
+          jest.runAllTimers();
+        });
       });
-    });
+    }
   }
 }
 

@@ -2409,7 +2409,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can hot reload offscreen components', () => {
+  it('can hot reload offscreen components', async () => {
     if (__DEV__ && __EXPERIMENTAL__) {
       const AppV1 = prepare(() => {
         function Hello() {
@@ -2437,7 +2437,7 @@ describe('ReactFresh', () => {
         };
       });
 
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;
@@ -2471,10 +2471,15 @@ describe('ReactFresh', () => {
       expect(el.firstChild.textContent).toBe('0');
       expect(el.firstChild.style.color).toBe('red');
 
-      el.firstChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-      expect(el.firstChild.textContent).toBe('0');
-      expect(el.firstChild.style.color).toBe('red');
-      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+      await act(async () => {
+        el.firstChild.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+          }),
+        );
+      });
+
+      expect(Scheduler).toHaveYielded(['Hello#layout']);
       expect(el.firstChild.textContent).toBe('1');
       expect(el.firstChild.style.color).toBe('red');
 
@@ -3839,6 +3844,10 @@ describe('ReactFresh', () => {
 
       // Redirect all React/ReactDOM requires to v16.8.0
       // This version predates Fast Refresh support.
+      jest.mock('scheduler', () => jest.requireActual('scheduler-0-13'));
+      jest.mock('scheduler/tracing', () =>
+        jest.requireActual('scheduler-0-13/tracing'),
+      );
       jest.mock('react', () => jest.requireActual('react-16-8'));
       jest.mock('react-dom', () => jest.requireActual('react-dom-16-8'));
 

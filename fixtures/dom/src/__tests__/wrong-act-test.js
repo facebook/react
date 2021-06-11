@@ -81,12 +81,12 @@ it("doesn't warn when you use the right act + renderer: test", () => {
   });
 });
 
-it('resets correctly across renderers', () => {
+it('resets correctly across renderers', async () => {
   function Effecty() {
     React.useEffect(() => {}, []);
     return null;
   }
-  TestUtils.act(() => {
+  await TestUtils.act(async () => {
     TestRenderer.act(() => {});
     expect(() => {
       TestRenderer.create(<Effecty />);
@@ -101,9 +101,15 @@ it('warns when using the wrong act version - test + dom: render', () => {
     TestRenderer.act(() => {
       ReactDOM.render(<App />, document.createElement('div'));
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"], {
-    withoutStack: true,
-  });
+  }).toWarnDev(
+    [
+      'ReactDOM.render is no longer supported in React 18.',
+      "It looks like you're using the wrong act()",
+    ],
+    {
+      withoutStack: true,
+    }
+  );
 });
 
 it('warns when using the wrong act version - test + dom: updates', () => {

@@ -15,18 +15,16 @@ import invariant from 'shared/invariant';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
   ClassComponent,
   HostComponent,
   HostRoot,
   HostPortal,
   HostText,
-  FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -103,7 +101,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(ownerFiber.type) || 'A component',
+          getComponentNameFromFiber(ownerFiber) || 'A component',
         );
       }
       instance._warnedAboutRefsInRender = true;
@@ -297,11 +295,7 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (
-    node.tag === HostComponent ||
-    node.tag === HostText ||
-    (enableFundamentalAPI && node.tag === FundamentalComponent)
-  ) {
+  if (node.tag === HostComponent || node.tag === HostText) {
     return node;
   }
 

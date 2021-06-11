@@ -14,12 +14,22 @@ process.on('unhandledRejection', err => {
 const runFlow = require('../flow/runFlow');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
+// Parallelize tests across multiple tasks.
+const nodeTotal = process.env.CIRCLE_NODE_TOTAL
+  ? parseInt(process.env.CIRCLE_NODE_TOTAL, 10)
+  : 1;
+const nodeIndex = process.env.CIRCLE_NODE_INDEX
+  ? parseInt(process.env.CIRCLE_NODE_INDEX, 10)
+  : 0;
+
 async function checkAll() {
-  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (let rendererInfo of inlinedHostConfigs) {
-    if (rendererInfo.isFlowTyped) {
-      await runFlow(rendererInfo.shortName, ['check']);
-      console.log();
+  for (let i = 0; i < inlinedHostConfigs.length; i++) {
+    if (i % nodeTotal === nodeIndex) {
+      const rendererInfo = inlinedHostConfigs[i];
+      if (rendererInfo.isFlowTyped) {
+        await runFlow(rendererInfo.shortName, ['check']);
+        console.log();
+      }
     }
   }
 }

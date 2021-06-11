@@ -186,6 +186,15 @@ describe('ReactIs', () => {
     expect(ReactIs.isSuspense(<div />)).toBe(false);
   });
 
+  it('should identify suspense list', () => {
+    expect(ReactIs.isValidElementType(React.SuspenseList)).toBe(true);
+    expect(ReactIs.typeOf(<React.SuspenseList />)).toBe(ReactIs.SuspenseList);
+    expect(ReactIs.isSuspenseList(<React.SuspenseList />)).toBe(true);
+    expect(ReactIs.isSuspenseList({type: ReactIs.SuspenseList})).toBe(false);
+    expect(ReactIs.isSuspenseList('React.SuspenseList')).toBe(false);
+    expect(ReactIs.isSuspenseList(<div />)).toBe(false);
+  });
+
   it('should identify profile root', () => {
     expect(ReactIs.isValidElementType(React.Profiler)).toBe(true);
     expect(

@@ -14,19 +14,20 @@ import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {ModalDialogContext} from '../ModalDialog';
-import {InspectedElementContext} from './InspectedElementContext';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
+import {InspectedElementContext} from './InspectedElementContext';
 
 import styles from './InspectedElement.css';
 
-import type {InspectedElementContextType} from './InspectedElementContext';
 import type {InspectedElement} from './types';
 
 export type Props = {||};
+
+// TODO Make edits and deletes also use transition API!
 
 export default function InspectedElementWrapper(_: Props) {
   const {inspectedElementID} = useContext(TreeStateContext);
@@ -38,20 +39,12 @@ export default function InspectedElementWrapper(_: Props) {
   const store = useContext(StoreContext);
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
-  const {
-    copyInspectedElementPath,
-    getInspectedElementPath,
-    getInspectedElement,
-    storeAsGlobal,
-  } = useContext<InspectedElementContextType>(InspectedElementContext);
+  const {inspectedElement} = useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
       ? store.getElementByID(inspectedElementID)
       : null;
-
-  const inspectedElement =
-    inspectedElementID != null ? getInspectedElement(inspectedElementID) : null;
 
   const highlightElement = useCallback(() => {
     if (element !== null && inspectedElementID !== null) {
@@ -99,14 +92,46 @@ export default function InspectedElementWrapper(_: Props) {
     (canViewElementSourceFunction === null ||
       canViewElementSourceFunction(inspectedElement));
 
+  const isErrored = inspectedElement != null && inspectedElement.isErrored;
+  const targetErrorBoundaryID =
+    inspectedElement != null ? inspectedElement.targetErrorBoundaryID : null;
+
   const isSuspended =
     element !== null &&
     element.type === ElementTypeSuspense &&
     inspectedElement != null &&
     inspectedElement.state != null;
 
+  const canToggleError =
+    inspectedElement != null && inspectedElement.canToggleError;
+
   const canToggleSuspense =
     inspectedElement != null && inspectedElement.canToggleSuspense;
+
+  const toggleErrored = useCallback(() => {
+    if (inspectedElement == null || targetErrorBoundaryID == null) {
+      return;
+    }
+
+    const rendererID = store.getRendererIDForElement(targetErrorBoundaryID);
+    if (rendererID !== null) {
+      if (targetErrorBoundaryID !== inspectedElement.id) {
+        // Update tree selection so that if we cause a component to error,
+        // the nearest error boundary will become the newly selected thing.
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: targetErrorBoundaryID,
+        });
+      }
+
+      // Toggle error.
+      bridge.send('overrideError', {
+        id: targetErrorBoundaryID,
+        rendererID,
+        forceError: !isErrored,
+      });
+    }
+  }, [bridge, dispatch, isErrored, targetErrorBoundaryID]);
 
   // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
   const toggleSuspended = useCallback(() => {
@@ -127,6 +152,7 @@ export default function InspectedElementWrapper(_: Props) {
     // Instead we can show a warning to the user.
     if (nearestSuspenseElement === null) {
       modalDialogDispatch({
+        id: 'InspectedElement',
         type: 'SHOW',
         content: <CannotSuspendWarningMessage />,
       });
@@ -183,6 +209,19 @@ export default function InspectedElementWrapper(_: Props) {
           </div>
         </div>
 
+        {canToggleError && (
+          <Toggle
+            className={styles.IconButton}
+            isChecked={isErrored}
+            onChange={toggleErrored}
+            title={
+              isErrored
+                ? 'Clear the forced error'
+                : 'Force the selected component into an errored state'
+            }>
+            <ButtonIcon type="error" />
+          </Toggle>
+        )}
         {canToggleSuspense && (
           <Toggle
             className={styles.IconButton}
@@ -228,11 +267,8 @@ export default function InspectedElementWrapper(_: Props) {
           key={
             inspectedElementID /* Force reset when selected Element changes */
           }
-          copyInspectedElementPath={copyInspectedElementPath}
           element={element}
-          getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
-          storeAsGlobal={storeAsGlobal}
         />
       )}
     </div>

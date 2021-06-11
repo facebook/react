@@ -10,7 +10,6 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let SchedulerTracing;
 let Scheduler;
 let act;
 let container;
@@ -30,7 +29,7 @@ describe('ReactTestUtils.act()', () => {
   if (__EXPERIMENTAL__) {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
-      concurrentRoot = ReactDOM.unstable_createRoot(dom);
+      concurrentRoot = ReactDOM.createRoot(dom);
       concurrentRoot.render(el);
     };
 
@@ -72,33 +71,6 @@ describe('ReactTestUtils.act()', () => {
 
   runActTests('legacy mode', renderLegacy, unmountLegacy, rerenderLegacy);
 
-  // and then in blocking mode
-  if (__EXPERIMENTAL__) {
-    let blockingRoot = null;
-    const renderBatched = (el, dom) => {
-      blockingRoot = ReactDOM.unstable_createBlockingRoot(dom);
-      blockingRoot.render(el);
-    };
-
-    const unmountBatched = dom => {
-      if (blockingRoot !== null) {
-        blockingRoot.unmount();
-        blockingRoot = null;
-      }
-    };
-
-    const rerenderBatched = el => {
-      blockingRoot.render(el);
-    };
-
-    runActTests(
-      'blocking mode',
-      renderBatched,
-      unmountBatched,
-      rerenderBatched,
-    );
-  }
-
   describe('unacted effects', () => {
     function App() {
       React.useEffect(() => {}, []);
@@ -124,25 +96,17 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    // @gate experimental
-    it('warns in blocking mode', () => {
-      expect(() => {
-        const root = ReactDOM.unstable_createBlockingRoot(
-          document.createElement('div'),
-        );
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
+    it('does not warn in concurrent mode', () => {
+      const root = ReactDOM.createRoot(document.createElement('div'));
+      root.render(<App />);
+      Scheduler.unstable_flushAll();
     });
 
-    // @gate experimental
-    it('warns in concurrent mode', () => {
+    it('warns in concurrent mode if root is strict', () => {
       expect(() => {
-        const root = ReactDOM.unstable_createRoot(
-          document.createElement('div'),
-        );
+        const root = ReactDOM.createRoot(document.createElement('div'), {
+          unstable_strictMode: true,
+        });
         root.render(<App />);
         Scheduler.unstable_flushAll();
       }).toErrorDev([
@@ -159,7 +123,6 @@ function runActTests(label, render, unmount, rerender) {
       React = require('react');
       ReactDOM = require('react-dom');
       ReactTestUtils = require('react-dom/test-utils');
-      SchedulerTracing = require('scheduler/tracing');
       Scheduler = require('scheduler');
       act = ReactTestUtils.act;
       container = document.createElement('div');
@@ -187,7 +150,7 @@ function runActTests(label, render, unmount, rerender) {
         expect(Scheduler).toHaveYielded([100]);
       });
 
-      it('flushes effects on every call', () => {
+      it('flushes effects on every call', async () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
@@ -209,16 +172,16 @@ function runActTests(label, render, unmount, rerender) {
           button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
         }
 
-        act(() => {
+        await act(async () => {
           click();
           click();
           click();
         });
         // it consolidates the 3 updates, then fires the effect
         expect(Scheduler).toHaveYielded([3]);
-        act(click);
+        await act(async () => click());
         expect(Scheduler).toHaveYielded([4]);
-        act(click);
+        await act(async () => click());
         expect(Scheduler).toHaveYielded([5]);
         expect(button.innerHTML).toBe('5');
       });
@@ -537,87 +500,6 @@ function runActTests(label, render, unmount, rerender) {
       });
     });
 
-    describe('interaction tracing', () => {
-      if (__DEV__) {
-        it('should correctly trace interactions for sync roots', () => {
-          let expectedInteraction;
-
-          const Component = jest.fn(() => {
-            expect(expectedInteraction).toBeDefined();
-
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expect(interactions).toContain(expectedInteraction);
-
-            return null;
-          });
-
-          act(() => {
-            SchedulerTracing.unstable_trace(
-              'mount traced inside act',
-              performance.now(),
-              () => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                render(<Component />, container);
-              },
-            );
-          });
-
-          act(() => {
-            SchedulerTracing.unstable_trace(
-              'update traced inside act',
-              performance.now(),
-              () => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                rerender(<Component />);
-              },
-            );
-          });
-
-          const secondContainer = document.createElement('div');
-
-          SchedulerTracing.unstable_trace(
-            'mount traced outside act',
-            performance.now(),
-            () => {
-              act(() => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                render(<Component />, secondContainer);
-              });
-            },
-          );
-
-          SchedulerTracing.unstable_trace(
-            'update traced outside act',
-            performance.now(),
-            () => {
-              act(() => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                rerender(<Component />);
-              });
-            },
-          );
-
-          expect(Component).toHaveBeenCalledTimes(
-            label === 'legacy mode' ? 4 : 8,
-          );
-          unmount(secondContainer);
-        });
-      }
-    });
-
     describe('error propagation', () => {
       it('propagates errors - sync', () => {
         let err;
@@ -731,14 +613,10 @@ function runActTests(label, render, unmount, rerender) {
 
         it('triggers fallbacks if available', async () => {
           if (label !== 'legacy mode') {
-            // FIXME: Support for Blocking* and Concurrent Mode were
-            // intentionally removed from the public version of `act`. It will
-            // be added back in a future major version, before Blocking and and
-            // Concurrent Mode are officially released. Consider disabling all
-            // non-Legacy tests in this suite until then.
-            //
-            // *Blocking Mode actually does happen to work, though
-            // not "officially" since it's an unreleased feature.
+            // FIXME: Support for Concurrent Root intentionally removed
+            // from the public version of `act`. It will be added back in
+            // a future major version, before the Concurrent Root is released.
+            // Consider skipping all non-Legacy tests in this suite until then.
             return;
           }
 
@@ -784,7 +662,7 @@ function runActTests(label, render, unmount, rerender) {
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // trigger a suspendy update with a delay
-          React.unstable_startTransition(() => {
+          React.startTransition(() => {
             act(() => {
               rerender(<App suspend={true} />);
             });
@@ -794,10 +672,8 @@ function runActTests(label, render, unmount, rerender) {
             // In Concurrent Mode, refresh transitions delay indefinitely.
             expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
           } else {
-            // In Legacy Mode and Blocking Mode, all fallbacks are forced to
-            // display, even during a refresh transition.
-            // TODO: Consider delaying indefinitely in Blocking Mode, to match
-            // Concurrent Mode semantics.
+            // In Legacy Mode, all fallbacks are forced to display,
+            // even during a refresh transition.
             expect(
               document.querySelector('[data-test-id=spinner]'),
             ).not.toBeNull();

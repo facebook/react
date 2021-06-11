@@ -45,9 +45,10 @@ const environmentFlags = {
   // Use this for tests that are known to be broken.
   FIXME: false,
 
-  // Turn this flag back on (or delete) once the effect list is removed in favor
-  // of a depth-first traversal using `subtreeTags`.
-  dfsEffectsRefactor: false,
+  // Turn these flags back on (or delete) once the effect list is removed in
+  // favor of a depth-first traversal using `subtreeTags`.
+  dfsEffectsRefactor: true,
+  enableUseJSStackToTrackPassiveDurations: false,
 };
 
 function getTestFlags() {
@@ -55,10 +56,7 @@ function getTestFlags() {
   // not to but there are exceptions.
   const featureFlags = require('shared/ReactFeatureFlags');
 
-  // TODO: This is a heuristic to detect the release channel by checking a flag
-  // that is known to only be enabled in www. What we should do instead is set
-  // the release channel explicitly in the each test config file.
-  const www = featureFlags.enableSuspenseCallback === true;
+  const www = global.__WWW__ === true;
   const releaseChannel = www
     ? __EXPERIMENTAL__
       ? 'modern'

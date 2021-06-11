@@ -604,10 +604,10 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
-          const [startTransition1] = useTransition();
-          const [startTransition2, isPending2] = useTransition();
-          const [startTransition3] = React.useTransition();
-          const [startTransition4, isPending4] = React.useTransition();
+          const [isPending1] = useTransition();
+          const [isPending2, startTransition2] = useTransition();
+          const [isPending3] = React.useTransition();
+          const [isPending4, startTransition4] = React.useTransition();
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
 
@@ -1688,6 +1688,42 @@ const tests = {
           message:
             'React Hook useCallback does nothing when called with only one argument. ' +
             'Did you forget to pass an array of dependencies?',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          useEffect()
+          useLayoutEffect()
+          useCallback()
+          useMemo()
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useLayoutEffect requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useCallback requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useMemo requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
       ],
@@ -3585,6 +3621,36 @@ const tests = {
             },
           ],
         },
+        {
+          message:
+            'React Hook useEffect has a complex expression in the dependency array. ' +
+            'Extract it to a separate variable so it can be statically checked.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {}, [props?.attribute.method()]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect has a complex expression in the dependency array. ' +
+            'Extract it to a separate variable so it can be statically checked.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {}, [props.method()]);
+        }
+      `,
+      errors: [
         {
           message:
             'React Hook useEffect has a complex expression in the dependency array. ' +

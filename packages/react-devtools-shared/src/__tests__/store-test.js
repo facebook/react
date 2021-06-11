@@ -12,12 +12,14 @@ describe('Store', () => {
   let ReactDOM;
   let agent;
   let act;
+  let bridge;
   let getRendererID;
   let store;
   let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
     agent = global.agent;
+    bridge = global.bridge;
     store = global.store;
 
     React = require('react');
@@ -56,6 +58,45 @@ describe('Store', () => {
 
     act(() => ReactDOM.render(<div />, container));
     expect(store).toMatchSnapshot('2: add host nodes');
+  });
+
+  // This test is not the same cause as what's reported on GitHub,
+  // but the resulting behavior (owner mounting after descendant) is the same.
+  // Thec ase below is admittedly contrived and relies on side effects.
+  // I'mnot yet sure of how to reduce the GitHub reported production case to a test though.
+  // See https://github.com/facebook/react/issues/21445
+  it('should handle when a component mounts before its owner', () => {
+    const promise = new Promise(resolve => {});
+
+    let Dynamic = null;
+    const Owner = () => {
+      Dynamic = <Child />;
+      throw promise;
+    };
+    const Parent = () => {
+      return Dynamic;
+    };
+    const Child = () => null;
+
+    const container = document.createElement('div');
+
+    act(() =>
+      ReactDOM.render(
+        <>
+          <React.Suspense fallback="Loading...">
+            <Owner />
+          </React.Suspense>
+          <Parent />
+        </>,
+        container,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Suspense>
+        ▾ <Parent>
+            <Child>
+    `);
   });
 
   describe('collapseNodesByDefault:false', () => {
@@ -354,18 +395,18 @@ describe('Store', () => {
       };
       const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
-          <React.unstable_SuspenseList revealOrder="forwards" tail="collapsed">
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
             <Component key="A" />
             <React.Suspense fallback={<Loading />}>
               {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
             </React.Suspense>
             <Component key="C" />
-          </React.unstable_SuspenseList>
+          </React.SuspenseList>
         </React.Fragment>
       );
 
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       act(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
@@ -851,7 +892,7 @@ describe('Store', () => {
     expect(store).toMatchSnapshot('1: mount');
   });
 
-  it('should show the right display names for special component types', async done => {
+  it('should show the right display names for special component types', async () => {
     const MyComponent = (props, ref) => null;
     const ForwardRefComponent = React.forwardRef(MyComponent);
     const MyComponent2 = (props, ref) => null;
@@ -877,6 +918,17 @@ describe('Store', () => {
       FakeHigherOrderComponent,
     );
 
+    const MemoizedFakeHigherOrderComponentWithDisplayNameOverride = React.memo(
+      FakeHigherOrderComponent,
+    );
+    MemoizedFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'memoRefOverride';
+    const ForwardRefFakeHigherOrderComponentWithDisplayNameOverride = React.forwardRef(
+      FakeHigherOrderComponent,
+    );
+    ForwardRefFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'forwardRefOverride';
+
     const App = () => (
       <React.Fragment>
         <MyComponent />
@@ -888,6 +940,9 @@ describe('Store', () => {
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
+        <React.unstable_Cache />
+        <MemoizedFakeHigherOrderComponentWithDisplayNameOverride />
+        <ForwardRefFakeHigherOrderComponentWithDisplayNameOverride />
       </React.Fragment>
     );
 
@@ -901,9 +956,24 @@ describe('Store', () => {
     // Render again after it resolves
     act(() => ReactDOM.render(<App />, container));
 
-    expect(store).toMatchSnapshot();
-
-    done();
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <MyComponent>
+            <MyComponent> [ForwardRef]
+          ▾ <Anonymous> [ForwardRef]
+              <MyComponent2>
+            <Custom> [ForwardRef]
+            <MyComponent4> [Memo]
+          ▾ <MyComponent> [Memo]
+              <MyComponent> [ForwardRef]
+            <Baz> [withFoo][withBar]
+            <Baz> [Memo][withFoo][withBar]
+            <Baz> [ForwardRef][withFoo][withBar]
+            <Cache>
+            <memoRefOverride> [Memo]
+            <forwardRefOverride> [ForwardRef]
+    `);
   });
 
   describe('Lazy', () => {
@@ -930,7 +1000,7 @@ describe('Store', () => {
       LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
     });
 
-    it('should support Lazy components (legacy render)', async done => {
+    it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -949,13 +1019,11 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components in (createRoot)', async done => {
+    it('should support Lazy components in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));
@@ -973,11 +1041,9 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -989,13 +1055,11 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));
@@ -1006,8 +1070,6 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
   });
 
@@ -1072,40 +1134,110 @@ describe('Store', () => {
       `);
     });
 
-    // This is not great, but it seems safer than potentially flushing between commits.
-    // Our logic for determining how to handle e.g. suspended trees or error boundaries
-    // is built on the assumption that we're evaluating the results of a commit, not an in-progress render.
-    it('during passive get counted (but not until the next commit)', () => {
-      function Example() {
-        React.useEffect(() => {
-          console.error('test-only: passive error');
-          console.warn('test-only: passive warning');
-        });
-        return null;
+    describe('during passive effects', () => {
+      function flushPendingBridgeOperations() {
+        jest.runOnlyPendingTimers();
       }
-      const container = document.createElement('div');
 
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example />, container));
+      // Gross abstraction around pending passive warning/error delay.
+      function flushPendingPassiveErrorAndWarningCounts() {
+        jest.advanceTimersByTime(1000);
+      }
+
+      it('are counted (after a delay)', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            ReactDOM.render(<Example />, container);
+          }, false);
+        });
+        flushPendingBridgeOperations();
+        expect(store).toMatchInlineSnapshot(`
+          [root]
+              <Example>
+        `);
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 1, ⚠ 1
+          [root]
+              <Example> ✕⚠
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
       });
 
-      expect(store).toMatchInlineSnapshot(`
-        [root]
-            <Example>
-      `);
+      it('are flushed early when there is a new commit', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
 
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example rerender={1} />, container));
+        function Noop() {
+          return null;
+        }
+
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            ReactDOM.render(
+              <>
+                <Example />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            [root]
+                <Example>
+          `);
+
+          // Before warnings and errors have flushed, flush another commit.
+          act(() => {
+            ReactDOM.render(
+              <>
+                <Example />
+                <Noop />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            ✕ 1, ⚠ 1
+            [root]
+                <Example> ✕⚠
+                <Noop>
+          `);
+        });
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 2, ⚠ 2
+          [root]
+              <Example> ✕⚠
+              <Noop>
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
       });
-
-      expect(store).toMatchInlineSnapshot(`
-        ✕ 1, ⚠ 1
-        [root]
-            <Example> ✕⚠
-      `);
-
-      act(() => ReactDOM.unmountComponentAtNode(container));
-      expect(store).toMatchInlineSnapshot(``);
     });
 
     it('from react get counted', () => {
@@ -1158,7 +1290,11 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      store.clearErrorsAndWarnings();
+      const {
+        clearErrorsAndWarnings,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsAndWarnings({bridge, store});
+
       // flush events to the renderer
       jest.runAllTimers();
 
@@ -1195,7 +1331,14 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      store.clearWarningsForElement(2);
+      const id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearWarningsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearWarningsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runAllTimers();
 
@@ -1233,7 +1376,14 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      store.clearErrorsForElement(2);
+      const id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearErrorsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runAllTimers();
 

@@ -5,7 +5,7 @@
 import {createElement} from 'react';
 import {
   // $FlowFixMe Flow does not yet know about createRoot()
-  unstable_createRoot as createRoot,
+  createRoot,
 } from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import Iframe from './Iframe';
@@ -14,11 +14,10 @@ import ElementTypes from './ElementTypes';
 import Hydration from './Hydration';
 import InlineWarnings from './InlineWarnings';
 import InspectableElements from './InspectableElements';
-import InteractionTracing from './InteractionTracing';
-import PriorityLevels from './PriorityLevels';
 import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
+import ErrorBoundaries from './ErrorBoundaries';
 import SuspenseTree from './SuspenseTree';
 import {ignoreErrors, ignoreWarnings} from './console';
 
@@ -49,15 +48,14 @@ function mountHelper(App) {
 
 function mountTestApp() {
   mountHelper(ToDoList);
-  mountHelper(InteractionTracing);
   mountHelper(InspectableElements);
   mountHelper(Hydration);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
   mountHelper(InlineWarnings);
-  mountHelper(PriorityLevels);
   mountHelper(ReactNativeWeb);
   mountHelper(Toggle);
+  mountHelper(ErrorBoundaries);
   mountHelper(SuspenseTree);
   mountHelper(DeeplyNestedComponents);
   mountHelper(Iframe);

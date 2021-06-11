@@ -14,7 +14,6 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
-import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type BundleType =
@@ -26,6 +25,7 @@ export type WorkFlags = number;
 export type ExpirationTime = number;
 
 export type WorkTagMap = {|
+  CacheComponent: WorkTag,
   ClassComponent: WorkTag,
   ContextConsumer: WorkTag,
   ContextProvider: WorkTag,
@@ -136,10 +136,14 @@ export type ReactRenderer = {
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
+  // 17.0.2+
+  reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
   ComponentTree?: any,
   // Present for React DOM v12 (possibly earlier) through v15.
   Mount?: any,
+  // Only injected by React v17.0.3+ in DEV mode
+  setErrorHandler?: ?(shouldError: (fiber: Object) => ?boolean) => void,
   ...
 };
 
@@ -149,19 +153,24 @@ export type ChangeDescription = {|
   isFirstMount: boolean,
   props: Array<string> | null,
   state: Array<string> | null,
+  hooks?: Array<number> | null,
 |};
 
 export type CommitDataBackend = {|
   // Tuple of fiber ID and change description
   changeDescriptions: Array<[number, ChangeDescription]> | null,
   duration: number,
+  // Only available in certain (newer) React builds,
+  effectDuration: number | null,
   // Tuple of fiber ID and actual duration
   fiberActualDurations: Array<[number, number]>,
   // Tuple of fiber ID and computed "self" duration
   fiberSelfDurations: Array<[number, number]>,
-  interactionIDs: Array<number>,
+  // Only available in certain (newer) React builds,
+  passiveEffectDuration: number | null,
   priorityLevel: string | null,
   timestamp: number,
+  updaters: Array<SerializedElement> | null,
 |};
 
 export type ProfilingDataForRootBackend = {|
@@ -169,9 +178,6 @@ export type ProfilingDataForRootBackend = {|
   displayName: string,
   // Tuple of Fiber ID and base duration
   initialTreeBaseDurations: Array<[number, number]>,
-  // Tuple of Interaction ID and commit indices
-  interactionCommits: Array<[number, Array<number>]>,
-  interactions: Array<[number, Interaction]>,
   rootID: number,
 |};
 
@@ -193,15 +199,16 @@ export type PathMatch = {|
   isFullMatch: boolean,
 |};
 
-export type Owner = {|
+export type SerializedElement = {|
   displayName: string | null,
   id: number,
+  key: number | string | null,
   type: ElementType,
 |};
 
 export type OwnersList = {|
   id: number,
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 |};
 
 export type InspectedElement = {|
@@ -218,6 +225,11 @@ export type InspectedElement = {|
   canEditHooksAndRenamePaths: boolean,
   canEditFunctionPropsDeletePaths: boolean,
   canEditFunctionPropsRenamePaths: boolean,
+
+  // Is this Error, and can its value be overridden now?
+  canToggleError: boolean,
+  isErrored: boolean,
+  targetErrorBoundaryID: ?number,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
@@ -238,7 +250,7 @@ export type InspectedElement = {|
   warnings: Array<[string, number]>,
 
   // List of owners
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
   source: Source | null,
@@ -256,28 +268,31 @@ export type InspectedElement = {|
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
-export const InspectElementHydratedPathType = 'hydrated-path';
 
-type InspectElementFullData = {|
+export type InspectElementFullData = {|
   id: number,
+  responseID: number,
   type: 'full-data',
   value: InspectedElement,
 |};
 
-type InspectElementHydratedPath = {|
+export type InspectElementHydratedPath = {|
   id: number,
+  responseID: number,
   type: 'hydrated-path',
   path: Array<string | number>,
   value: any,
 |};
 
-type InspectElementNoChange = {|
+export type InspectElementNoChange = {|
   id: number,
+  responseID: number,
   type: 'no-change',
 |};
 
-type InspectElementNotFound = {|
+export type InspectElementNotFound = {|
   id: number,
+  responseID: number,
   type: 'not-found',
 |};
 
@@ -313,15 +328,18 @@ export type RendererInterface = {
   getDisplayNameForFiberID: GetDisplayNameForFiberID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
-  getOwnersList: (id: number) => Array<Owner> | null,
+  getOwnersList: (id: number) => Array<SerializedElement> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
+  handlePostCommitFiberRoot: (fiber: Object) => void,
   inspectElement: (
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    inspectedPaths: Object,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
+  overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   overrideValueAtPath: (
     type: Type,

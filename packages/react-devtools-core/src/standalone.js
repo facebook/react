@@ -12,7 +12,7 @@ import {
   // $FlowFixMe Flow does not yet know about flushSync()
   flushSync,
   // $FlowFixMe Flow does not yet know about createRoot()
-  unstable_createRoot as createRoot,
+  createRoot,
 } from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
@@ -217,7 +217,10 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  store = new Store(bridge, {supportsNativeInspection: false});
+  store = new Store(bridge, {
+    checkBridgeProtocolCompatibility: true,
+    supportsNativeInspection: false,
+  });
 
   log('Connected');
   reload();

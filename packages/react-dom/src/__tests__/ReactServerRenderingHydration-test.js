@@ -25,99 +25,6 @@ describe('ReactDOMServerHydration', () => {
     Scheduler = require('scheduler');
   });
 
-  it('should have the correct mounting behavior (old hydrate API)', () => {
-    let mountCount = 0;
-    let numClicks = 0;
-
-    class TestComponent extends React.Component {
-      componentDidMount() {
-        mountCount++;
-      }
-
-      click = () => {
-        numClicks++;
-      };
-
-      render() {
-        return (
-          <span ref="span" onClick={this.click}>
-            Name: {this.props.name}
-          </span>
-        );
-      }
-    }
-
-    const element = document.createElement('div');
-    document.body.appendChild(element);
-    try {
-      ReactDOM.render(<TestComponent />, element);
-
-      let lastMarkup = element.innerHTML;
-
-      // Exercise the update path. Markup should not change,
-      // but some lifecycle methods should be run again.
-      ReactDOM.render(<TestComponent name="x" />, element);
-      expect(mountCount).toEqual(1);
-
-      // Unmount and remount. We should get another mount event and
-      // we should get different markup, as the IDs are unique each time.
-      ReactDOM.unmountComponentAtNode(element);
-      expect(element.innerHTML).toEqual('');
-      ReactDOM.render(<TestComponent name="x" />, element);
-      expect(mountCount).toEqual(2);
-      expect(element.innerHTML).not.toEqual(lastMarkup);
-
-      // Now kill the node and render it on top of server-rendered markup, as if
-      // we used server rendering. We should mount again, but the markup should
-      // be unchanged. We will append a sentinel at the end of innerHTML to be
-      // sure that innerHTML was not changed.
-      ReactDOM.unmountComponentAtNode(element);
-      expect(element.innerHTML).toEqual('');
-
-      lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
-      element.innerHTML = lastMarkup;
-
-      let instance;
-
-      expect(() => {
-        instance = ReactDOM.render(<TestComponent name="x" />, element);
-      }).toWarnDev(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v18. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-        {withoutStack: true},
-      );
-      expect(mountCount).toEqual(3);
-      expect(element.innerHTML).toBe(lastMarkup);
-
-      // Ensure the events system works after mount into server markup
-      expect(numClicks).toEqual(0);
-
-      instance.refs.span.click();
-      expect(numClicks).toEqual(1);
-
-      ReactDOM.unmountComponentAtNode(element);
-      expect(element.innerHTML).toEqual('');
-
-      // Now simulate a situation where the app is not idempotent. React should
-      // warn but do the right thing.
-      element.innerHTML = lastMarkup;
-      expect(() => {
-        instance = ReactDOM.render(<TestComponent name="y" />, element);
-      }).toErrorDev('Text content did not match. Server: "x" Client: "y"');
-      expect(mountCount).toEqual(4);
-      expect(element.innerHTML.length > 0).toBe(true);
-      expect(element.innerHTML).not.toEqual(lastMarkup);
-
-      // Ensure the events system works after markup mismatch.
-      expect(numClicks).toEqual(1);
-      instance.refs.span.click();
-      expect(numClicks).toEqual(2);
-    } finally {
-      document.body.removeChild(element);
-    }
-  });
-
   it('should have the correct mounting behavior (new hydrate API)', () => {
     let mountCount = 0;
     let numClicks = 0;
@@ -289,7 +196,7 @@ describe('ReactDOMServerHydration', () => {
       // Simulate IE normalizing the style attribute. IE makes it equal to
       // what's available under `node.style.cssText`.
       element.innerHTML =
-        '<div style="height: 10px; color: black; text-decoration: none;" data-reactroot=""></div>';
+        '<div style="height: 10px; color: black; text-decoration: none;"></div>';
 
       // We don't expect to see false positive warnings.
       // https://github.com/facebook/react/issues/11807
@@ -308,7 +215,7 @@ describe('ReactDOMServerHydration', () => {
     const element = document.createElement('div');
 
     element.innerHTML =
-      '<div style="text-decoration: none; color: black; height: 10px;" data-reactroot=""></div>';
+      '<div style="text-decoration: none; color: black; height: 10px;"></div>';
 
     expect(() =>
       ReactDOM.hydrate(
@@ -488,15 +395,15 @@ describe('ReactDOMServerHydration', () => {
     jest.runAllTimers();
     await Promise.resolve();
     Scheduler.unstable_flushAll();
+    await null;
     expect(element.textContent).toBe('Hello world');
   });
 
-  // @gate experimental
   it('does not re-enter hydration after committing the first one', () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<div />);
     Scheduler.unstable_flushAll();
     root.render(null);
@@ -509,26 +416,47 @@ describe('ReactDOMServerHydration', () => {
 
   it('Suspense + hydration in legacy mode', () => {
     const element = document.createElement('div');
-    element.innerHTML = '<div>Hello World</div>';
-    const div = element.firstChild;
+    element.innerHTML = '<div><div>Hello World</div></div>';
+    const div = element.firstChild.firstChild;
     const ref = React.createRef();
     expect(() =>
       ReactDOM.hydrate(
-        <React.Suspense fallback={null}>
-          <div ref={ref}>Hello World</div>
-        </React.Suspense>,
+        <div>
+          <React.Suspense fallback={null}>
+            <div ref={ref}>Hello World</div>
+          </React.Suspense>
+        </div>,
         element,
       ),
     ).toErrorDev(
       'Warning: Did not expect server HTML to contain a <div> in <div>.',
-      {withoutStack: true},
     );
 
     // The content should've been client rendered and replaced the
     // existing div.
     expect(ref.current).not.toBe(div);
     // The HTML should be the same though.
-    expect(element.innerHTML).toBe('<div>Hello World</div>');
+    expect(element.innerHTML).toBe('<div><div>Hello World</div></div>');
+  });
+
+  it('Suspense + hydration in legacy mode (at root)', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<div>Hello World</div>';
+    const div = element.firstChild;
+    const ref = React.createRef();
+    ReactDOM.hydrate(
+      <React.Suspense fallback={null}>
+        <div ref={ref}>Hello World</div>
+      </React.Suspense>,
+      element,
+    );
+
+    // The content should've been client rendered.
+    expect(ref.current).not.toBe(div);
+    // Unfortunately, since we don't delete the tail at the root, a duplicate will remain.
+    expect(element.innerHTML).toBe(
+      '<div>Hello World</div><div>Hello World</div>',
+    );
   });
 
   it('Suspense + hydration in legacy mode with no fallback', () => {

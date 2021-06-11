@@ -49,6 +49,7 @@ const config = {
       react: resolve(builtModulesDir, 'react'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-refresh': resolve(builtModulesDir, 'react-refresh'),
+      scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
   plugins: [
@@ -56,6 +57,7 @@ const config = {
       __DEV__,
       __PROFILE__: false,
       __EXPERIMENTAL__: true,
+      __VARIANT__: false,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
     }),
     new HtmlWebpackPlugin({
@@ -112,7 +114,7 @@ const config = {
 if (shouldUseDevServer) {
   config.devServer = {
     hot: true,
-    port: 8080,
+    port: 8081,
     clientLogLevel: 'warning',
     stats: 'errors-only',
   };

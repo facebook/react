@@ -192,7 +192,11 @@ export function installHook(target: any): DevToolsHook | null {
         // but Webpack wraps imports with an object (e.g. _backend_console__WEBPACK_IMPORTED_MODULE_0__)
         // and the object itself will be undefined as well for the reasons mentioned above,
         // so we use try/catch instead.
-        if (appendComponentStack || breakOnConsoleErrors) {
+        if (
+          appendComponentStack ||
+          breakOnConsoleErrors ||
+          showInlineWarningsAndErrors
+        ) {
           registerRendererWithConsole(renderer);
           patchConsole({
             appendComponentStack,
@@ -283,6 +287,13 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
+  function onPostCommitFiberRoot(rendererID, root) {
+    const rendererInterface = rendererInterfaces.get(rendererID);
+    if (rendererInterface != null) {
+      rendererInterface.handlePostCommitFiberRoot(root);
+    }
+  }
+
   // TODO: More meaningful names for "rendererInterfaces" and "renderers".
   const fiberRoots = {};
   const rendererInterfaces = new Map();
@@ -311,6 +322,7 @@ export function installHook(target: any): DevToolsHook | null {
     checkDCE,
     onCommitFiberUnmount,
     onCommitFiberRoot,
+    onPostCommitFiberRoot,
   };
 
   Object.defineProperty(

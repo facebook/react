@@ -13,6 +13,7 @@ import {
 } from '../events/EventRegistry';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import {
   getValueForAttribute,
@@ -28,7 +29,6 @@ import {
   restoreControlledState as ReactDOMInputRestoreControlledState,
 } from './ReactDOMInput';
 import {
-  getHostProps as ReactDOMOptionGetHostProps,
   postMountWrapper as ReactDOMOptionPostMountWrapper,
   validateProps as ReactDOMOptionValidateProps,
 } from './ReactDOMOption';
@@ -53,8 +53,8 @@ import {
   createDangerousStringForStyles,
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
-} from '../shared/CSSPropertyOperations';
-import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
+} from './CSSPropertyOperations';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
@@ -85,8 +85,6 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
-
-const {html: HTML_NAMESPACE} = Namespaces;
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -445,7 +443,7 @@ export function createElement(
         !isCustomComponentTag &&
         Object.prototype.toString.call(domElement) ===
           '[object HTMLUnknownElement]' &&
-        !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
+        !hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
         console.error(
@@ -536,7 +534,7 @@ export function setInitialProperties(
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
-      props = ReactDOMOptionGetHostProps(domElement, rawProps);
+      props = rawProps;
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
@@ -614,11 +612,6 @@ export function diffProperties(
     case 'input':
       lastProps = ReactDOMInputGetHostProps(domElement, lastRawProps);
       nextProps = ReactDOMInputGetHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-    case 'option':
-      lastProps = ReactDOMOptionGetHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMOptionGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
@@ -948,9 +941,6 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is allowed
-        case 'data-reactroot':
-          break;
         // Controlled attributes are not validated
         // TODO: Only ignore them on controlled tags.
         case 'value':

@@ -24,9 +24,9 @@ module.exports = {
     nativeFabricUIManager: true,
     // Trusted Types
     trustedTypes: true,
-
+    // RN supports this
+    setImmediate: true,
     // Scheduler profiling
-    SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
 

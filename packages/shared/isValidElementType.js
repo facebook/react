@@ -19,9 +19,9 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
+  REACT_OFFSCREEN_TYPE,
   REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 import {enableScopeAPI, enableCache} from './ReactFeatureFlags';
@@ -45,6 +45,7 @@ export default function isValidElementType(type: mixed) {
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
     type === REACT_LEGACY_HIDDEN_TYPE ||
+    type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
     (enableCache && type === REACT_CACHE_TYPE)
   ) {
@@ -58,7 +59,6 @@ export default function isValidElementType(type: mixed) {
       type.$$typeof === REACT_PROVIDER_TYPE ||
       type.$$typeof === REACT_CONTEXT_TYPE ||
       type.$$typeof === REACT_FORWARD_REF_TYPE ||
-      type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
       // This needs to include all possible module reference object
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used

@@ -14,7 +14,7 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethods,
-  ReactNativeBaseComponentViewConfig,
+  ViewConfig,
 } from './ReactNativeTypes';
 import type {Instance} from './ReactNativeHostConfig';
 
@@ -34,11 +34,11 @@ class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
   _internalFiberInstanceHandleDEV: Object;
-  viewConfig: ReactNativeBaseComponentViewConfig<>;
+  viewConfig: ViewConfig;
 
   constructor(
     tag: number,
-    viewConfig: ReactNativeBaseComponentViewConfig<>,
+    viewConfig: ViewConfig,
     internalInstanceHandleDEV: Object,
   ) {
     this._nativeTag = tag;
@@ -127,6 +127,6 @@ class ReactNativeFiberHostComponent {
 }
 
 // eslint-disable-next-line no-unused-expressions
-(ReactNativeFiberHostComponent.prototype: NativeMethods);
+(ReactNativeFiberHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export default ReactNativeFiberHostComponent;

@@ -333,6 +333,38 @@ export default function(babel, opts = {}) {
     return args;
   }
 
+  function findHOCCallPathsAbove(path) {
+    const calls = [];
+    while (true) {
+      if (!path) {
+        return calls;
+      }
+      const parentPath = path.parentPath;
+      if (!parentPath) {
+        return calls;
+      }
+      if (
+        // hoc(_c = function() { })
+        parentPath.node.type === 'AssignmentExpression' &&
+        path.node === parentPath.node.right
+      ) {
+        // Ignore registrations.
+        path = parentPath;
+        continue;
+      }
+      if (
+        // hoc1(hoc2(...))
+        parentPath.node.type === 'CallExpression' &&
+        path.node !== parentPath.node.callee
+      ) {
+        calls.push(parentPath);
+        path = parentPath;
+        continue;
+      }
+      return calls; // Stop at other types.
+    }
+  }
+
   const seenForRegistration = new WeakSet();
   const seenForSignature = new WeakSet();
   const seenForOutro = new WeakSet();
@@ -630,13 +662,16 @@ export default function(babel, opts = {}) {
             // Result: let Foo = () => {}; __signature(Foo, ...);
           } else {
             // let Foo = hoc(() => {})
-            path.replaceWith(
-              t.callExpression(
-                sigCallID,
-                createArgumentsForSignature(node, signature, path.scope),
-              ),
-            );
-            // Result: let Foo = hoc(__signature(() => {}, ...))
+            const paths = [path, ...findHOCCallPathsAbove(path)];
+            paths.forEach(p => {
+              p.replaceWith(
+                t.callExpression(
+                  sigCallID,
+                  createArgumentsForSignature(p.node, signature, p.scope),
+                ),
+              );
+            });
+            // Result: let Foo = __signature(hoc(__signature(() => {}, ...)), ...)
           }
         },
       },

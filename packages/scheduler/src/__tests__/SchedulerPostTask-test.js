@@ -30,10 +30,8 @@ let IdlePriority;
 describe('SchedulerPostTask', () => {
   beforeEach(() => {
     jest.resetModules();
-
-    // Un-mock scheduler
     jest.mock('scheduler', () =>
-      require.requireActual('scheduler/unstable_post_task'),
+      jest.requireActual('scheduler/unstable_post_task'),
     );
 
     runtime = installMockBrowserRuntime();

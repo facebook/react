@@ -17,6 +17,8 @@ import NullDependency from 'webpack/lib/dependencies/NullDependency';
 import AsyncDependenciesBlock from 'webpack/lib/AsyncDependenciesBlock';
 import Template from 'webpack/lib/Template';
 
+import isArray from 'shared/isArray';
+
 class ClientReferenceDependency extends ModuleDependency {
   constructor(request) {
     super(request);
@@ -76,7 +78,7 @@ export default class ReactFlightWebpackPlugin {
       ];
     } else if (
       typeof options.clientReferences === 'string' ||
-      !Array.isArray(options.clientReferences)
+      !isArray(options.clientReferences)
     ) {
       this.clientReferences = [(options.clientReferences: $FlowFixMe)];
     } else {

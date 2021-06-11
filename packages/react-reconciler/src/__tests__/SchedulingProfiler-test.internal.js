@@ -10,7 +10,16 @@
 
 'use strict';
 
+// This test is *.internal so that it can import this shared file.
 import ReactVersion from 'shared/ReactVersion';
+
+// Hard-coding because importing will not work with bundle tests and to
+// avoid leaking exports for lanes that are only imported in this test.
+const ReactFiberLane = {
+  SyncLane: /*        */ 0b0000000000000000000000000000001,
+  DefaultLane: /*     */ 0b0000000000000000000000000010000,
+  TransitionLane1: /* */ 0b0000000000000000000000001000000,
+};
 
 describe('SchedulingProfiler', () => {
   let React;
@@ -20,6 +29,7 @@ describe('SchedulingProfiler', () => {
 
   let clearedMarks;
   let featureDetectionMarkName = null;
+  let formatLanes;
   let marks;
 
   function createUserTimingPolyfill() {
@@ -76,6 +86,9 @@ describe('SchedulingProfiler', () => {
     ReactNoop = require('react-noop-renderer');
 
     Scheduler = require('scheduler');
+
+    const SchedulingProfiler = require('react-reconciler/src/SchedulingProfiler');
+    formatLanes = SchedulingProfiler.formatLanes;
   });
 
   afterEach(() => {
@@ -102,11 +115,11 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-1',
-      '--render-start-1',
+      `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
+      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--render-stop',
-      '--commit-start-1',
-      '--layout-effects-start-1',
+      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -118,7 +131,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -126,10 +139,10 @@ describe('SchedulingProfiler', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expectMarksToEqual([
-      '--render-start-512',
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -147,16 +160,33 @@ describe('SchedulingProfiler', () => {
       return <Bar />;
     }
 
-    ReactNoop.render(<Foo />);
-    // Do one step of work.
-    expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
-      '--render-start-512',
-      '--render-yield',
-    ]);
+      // Do one step of work.
+      expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+
+      expectMarksToEqual([
+        `--react-init-${ReactVersion}`,
+        `--schedule-render-${formatLanes(ReactFiberLane.TransitionLane1)}`,
+        `--render-start-${formatLanes(ReactFiberLane.TransitionLane1)}`,
+        '--render-yield',
+      ]);
+    } else {
+      ReactNoop.render(<Foo />);
+
+      // Do one step of work.
+      expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+
+      expectMarksToEqual([
+        `--react-init-${ReactVersion}`,
+        `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
+        `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+        '--render-yield',
+      ]);
+    }
   });
 
   // @gate enableSchedulingProfiler
@@ -174,12 +204,12 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-1',
-      '--render-start-1',
+      `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
+      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--suspense-suspend-0-Example',
       '--render-stop',
-      '--commit-start-1',
-      '--layout-effects-start-1',
+      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -205,12 +235,12 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-1',
-      '--render-start-1',
+      `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
+      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--suspense-suspend-0-Example',
       '--render-stop',
-      '--commit-start-1',
-      '--layout-effects-start-1',
+      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -237,7 +267,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -245,11 +275,11 @@ describe('SchedulingProfiler', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expectMarksToEqual([
-      '--render-start-512',
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--suspense-suspend-0-Example',
       '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -276,7 +306,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -284,11 +314,11 @@ describe('SchedulingProfiler', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expectMarksToEqual([
-      '--render-start-512',
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--suspense-suspend-0-Example',
       '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--layout-effects-stop',
       '--commit-stop',
     ]);
@@ -315,7 +345,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -323,15 +353,15 @@ describe('SchedulingProfiler', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expectMarksToEqual([
-      '--render-start-512',
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
-      '--schedule-state-update-1-Example',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--schedule-state-update-${formatLanes(ReactFiberLane.SyncLane)}-Example`,
       '--layout-effects-stop',
-      '--render-start-1',
+      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--render-stop',
-      '--commit-start-1',
+      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--commit-stop',
       '--commit-stop',
     ]);
@@ -352,7 +382,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -360,15 +390,17 @@ describe('SchedulingProfiler', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expectMarksToEqual([
-      '--render-start-512',
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
-      '--schedule-forced-update-1-Example',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--schedule-forced-update-${formatLanes(
+        ReactFiberLane.SyncLane,
+      )}-Example`,
       '--layout-effects-stop',
-      '--render-start-1',
+      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--render-stop',
-      '--commit-start-1',
+      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--commit-stop',
       '--commit-stop',
     ]);
@@ -390,7 +422,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -399,10 +431,10 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    gate(({old}) =>
-      old
-        ? expectMarksToContain('--schedule-state-update-1024-Example')
-        : expectMarksToContain('--schedule-state-update-512-Example'),
+    expectMarksToContain(
+      `--schedule-state-update-${formatLanes(
+        ReactFiberLane.DefaultLane,
+      )}-Example`,
     );
   });
 
@@ -422,7 +454,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -431,10 +463,10 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    gate(({old}) =>
-      old
-        ? expectMarksToContain('--schedule-forced-update-1024-Example')
-        : expectMarksToContain('--schedule-forced-update-512-Example'),
+    expectMarksToContain(
+      `--schedule-forced-update-${formatLanes(
+        ReactFiberLane.DefaultLane,
+      )}-Example`,
     );
   });
 
@@ -452,7 +484,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
     ]);
 
     clearPendingMarks();
@@ -460,20 +492,22 @@ describe('SchedulingProfiler', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expectMarksToEqual([
-      '--render-start-512',
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
-      '--schedule-state-update-1-Example',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--schedule-state-update-${formatLanes(ReactFiberLane.SyncLane)}-Example`,
       '--layout-effects-stop',
-      '--render-start-1',
+      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--render-stop',
-      '--commit-start-1',
+      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       '--commit-stop',
       '--commit-stop',
     ]);
   });
 
+  // This test is coupled to lane implementation details, so I'm disabling it in
+  // the new fork until it stabilizes so we don't have to repeatedly update it.
   // @gate enableSchedulingProfiler
   it('should mark cascading passive updates', () => {
     function Example() {
@@ -490,19 +524,21 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--react-init-${ReactVersion}`,
-      '--schedule-render-512',
-      '--render-start-512',
+      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--layout-effects-stop',
       '--commit-stop',
-      '--passive-effects-start-512',
-      '--schedule-state-update-1024-Example',
+      `--passive-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+      `--schedule-state-update-${formatLanes(
+        ReactFiberLane.DefaultLane,
+      )}-Example`,
       '--passive-effects-stop',
-      '--render-start-1024',
+      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--render-stop',
-      '--commit-start-1024',
+      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       '--commit-stop',
     ]);
   });
@@ -521,10 +557,10 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    gate(({old}) =>
-      old
-        ? expectMarksToContain('--schedule-state-update-1024-Example')
-        : expectMarksToContain('--schedule-state-update-512-Example'),
+    expectMarksToContain(
+      `--schedule-state-update-${formatLanes(
+        ReactFiberLane.DefaultLane,
+      )}-Example`,
     );
   });
 });

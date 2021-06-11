@@ -11,6 +11,8 @@ import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+
 const pooledTransform = new Transform();
 
 const NO_CONTEXT = {};
@@ -241,6 +243,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
@@ -337,6 +340,10 @@ export function shouldSetTextContent(type, props) {
   );
 }
 
+export function getCurrentEventPriority() {
+  return DefaultEventPriority;
+}
+
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
 
@@ -425,26 +432,6 @@ export function clearContainer(container) {
   // TODO Implement this
 }
 
-export function getFundamentalComponentInstance(fundamentalInstance) {
-  throw new Error('Not yet implemented.');
-}
-
-export function mountFundamentalComponent(fundamentalInstance) {
-  throw new Error('Not yet implemented.');
-}
-
-export function shouldUpdateFundamentalComponent(fundamentalInstance) {
-  throw new Error('Not yet implemented.');
-}
-
-export function updateFundamentalComponent(fundamentalInstance) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountFundamentalComponent(fundamentalInstance) {
-  throw new Error('Not yet implemented.');
-}
-
 export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
 }
@@ -476,5 +463,9 @@ export function afterActiveInstanceBlur() {
 }
 
 export function preparePortalMount(portalInstance: any): void {
+  // noop
+}
+
+export function detachDeletedInstance(node: Instance): void {
   // noop
 }
