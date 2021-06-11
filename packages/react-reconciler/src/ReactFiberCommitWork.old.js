@@ -342,24 +342,6 @@ function safelyCallDestroy(
   }
 }
 
-function safelyCallBeforeInstanceBlur(fiber: Fiber) {
-  if (__DEV__) {
-    setCurrentDebugFiberInDEV(fiber);
-    invokeGuardedCallback(null, beforeActiveInstanceBlur, null, fiber);
-    if (hasCaughtError()) {
-      const error = clearCaughtError();
-      captureCommitPhaseError(fiber, fiber.return, error);
-    }
-    resetCurrentDebugFiberInDEV();
-  } else {
-    try {
-      beforeActiveInstanceBlur(fiber);
-    } catch (error) {
-      captureCommitPhaseError(fiber, fiber.return, error);
-    }
-  }
-}
-
 let focusedInstanceHandle: null | Fiber = null;
 let shouldFireAfterActiveInstanceBlur: boolean = false;
 
@@ -428,7 +410,7 @@ function commitBeforeMutationEffects_complete() {
           doesFiberContain(fiber, focusedInstanceHandle)
         ) {
           shouldFireAfterActiveInstanceBlur = true;
-          safelyCallBeforeInstanceBlur(fiber);
+          beforeActiveInstanceBlur(fiber);
         }
       }
     }
