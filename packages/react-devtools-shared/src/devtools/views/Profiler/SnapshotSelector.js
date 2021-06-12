@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useCallback, useContext, useMemo} from 'react';
+import {Fragment, useCallback, useContext, useMemo, useRef} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {ProfilerContext} from './ProfilerContext';
@@ -31,6 +31,7 @@ export default function SnapshotSelector(_: Props) {
 
   const {profilerStore} = useContext(StoreContext);
   const {commitData} = profilerStore.getDataForRoot(((rootID: any): number));
+  const selectedCommitInputRef = useRef();
 
   const totalDurations: Array<number> = [];
   const commitTimes: Array<number> = [];
@@ -85,14 +86,66 @@ export default function SnapshotSelector(_: Props) {
   }
 
   let label = null;
+
+  const formatSelectedIndex = useCallback((seletedIndex, digits) => {
+    return `${seletedIndex + 1}`.padStart(digits, '0');
+  }, []);
+
+  const handleSelectedInputKeyDown = useCallback(event => {
+    const {target, key} = event;
+    if (key === 'Enter') {
+      target.blur();
+    }
+  }, []);
+
+  const handleSelectedInputBlur = useCallback(
+    event => {
+      let {innerHTML: value} = event.target;
+      value = value.trim();
+      if (/^\d+$/.test(value)) {
+        const num = +value;
+        if (num > 0 && num <= filteredCommitIndices.length) {
+          selectCommitIndex(num - 1);
+          return;
+        }
+      }
+      // If the value is illegal, revert it.
+      selectCommitIndex(selectedCommitIndex);
+      const el = selectedCommitInputRef.current;
+      if (el) {
+        el.innerHTML = formatSelectedIndex(
+          selectedFilteredCommitIndex,
+          `${numFilteredCommits}`.length,
+        );
+      }
+    },
+    [
+      filteredCommitIndices,
+      selectCommitIndex,
+      selectedCommitIndex,
+      selectedFilteredCommitIndex,
+      numFilteredCommits,
+    ],
+  );
+
   if (numFilteredCommits > 0) {
-    label =
-      `${selectedFilteredCommitIndex + 1}`.padStart(
-        `${numFilteredCommits}`.length,
-        '0',
-      ) +
-      ' / ' +
-      numFilteredCommits;
+    label = (
+      <>
+        <span
+          contentEditable={true}
+          suppressContentEditableWarning={true}
+          ref={selectedCommitInputRef}
+          onKeyDown={handleSelectedInputKeyDown}
+          onBlur={handleSelectedInputBlur}>
+          {formatSelectedIndex(
+            selectedFilteredCommitIndex,
+            `${numFilteredCommits}`.length,
+          )}
+        </span>
+        {' / '}
+        {numFilteredCommits}
+      </>
+    );
   }
 
   const viewNextCommit = useCallback(() => {
