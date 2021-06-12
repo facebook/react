@@ -4,12 +4,12 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master ]
+    branches: [ v11.0.0]
 
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: expo go
 
     steps:
     - uses: actions/checkout@v2
