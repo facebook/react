@@ -55,7 +55,10 @@ module.exports = [
   },
   {
     shortName: 'dom-legacy',
-    entryPoints: ['react-dom/server.browser', 'react-dom/server.node'],
+    entryPoints: [
+      'react-dom/src/server/ReactDOMLegacyServerBrowser', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMLegacyServerNode', // react-dom/server.node
+    ],
     paths: [
       'react-dom',
       'react-dom/server',
