@@ -32,9 +32,10 @@ function onError() {
   // Non-fatal errors are ignored.
 }
 
-function renderToString(
+function renderToStringImpl(
   children: ReactNodeList,
-  options?: ServerOptions,
+  options: void | ServerOptions,
+  generateStaticMarkup: boolean,
 ): string {
   let didFatal = false;
   let fatalError = null;
@@ -59,7 +60,10 @@ function renderToString(
   const request = createRequest(
     children,
     destination,
-    createResponseState(false, options ? options.identifierPrefix : undefined),
+    createResponseState(
+      generateStaticMarkup,
+      options ? options.identifierPrefix : undefined,
+    ),
     createRootFormatContext(undefined),
     Infinity,
     onError,
@@ -84,6 +88,20 @@ function renderToString(
   return result;
 }
 
+function renderToString(
+  children: ReactNodeList,
+  options?: ServerOptions,
+): string {
+  return renderToStringImpl(children, options, false);
+}
+
+function renderToStaticMarkup(
+  children: ReactNodeList,
+  options?: ServerOptions,
+): string {
+  return renderToStringImpl(children, options, true);
+}
+
 function renderToNodeStream() {
   invariant(
     false,
@@ -102,7 +120,7 @@ function renderToStaticNodeStream() {
 
 export {
   renderToString,
-  renderToString as renderToStaticMarkup,
+  renderToStaticMarkup,
   renderToNodeStream,
   renderToStaticNodeStream,
   ReactVersion as version,

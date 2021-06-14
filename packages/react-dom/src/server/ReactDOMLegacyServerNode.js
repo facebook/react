@@ -63,9 +63,10 @@ function onError() {
   // Non-fatal errors are ignored.
 }
 
-function renderToNodeStream(
+function renderToNodeStreamImpl(
   children: ReactNodeList,
-  options?: ServerOptions,
+  options: void | ServerOptions,
+  generateStaticMarkup: boolean,
 ): Readable {
   function onCompleteAll() {
     // We wait until everything has loaded before starting to write.
@@ -89,10 +90,24 @@ function renderToNodeStream(
   return destination;
 }
 
+function renderToNodeStream(
+  children: ReactNodeList,
+  options?: ServerOptions,
+): Readable {
+  return renderToNodeStreamImpl(children, options, false);
+}
+
+function renderToStaticNodeStream(
+  children: ReactNodeList,
+  options?: ServerOptions,
+): Readable {
+  return renderToNodeStreamImpl(children, options, true);
+}
+
 export {
   renderToString,
   renderToStaticMarkup,
   renderToNodeStream,
-  renderToNodeStream as renderToStaticNodeStream,
+  renderToStaticNodeStream,
   version,
 };
