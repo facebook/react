@@ -7,10 +7,5 @@
  * @flow
  */
 
-export {
-  renderToString,
-  renderToStaticMarkup,
-  renderToNodeStream,
-  renderToStaticNodeStream,
-  version,
-} from './src/server/ReactDOMLegacyServerBrowser';
+export * from '../ReactFlightServerConfigStream';
+export * from 'react-server-dom-webpack/src/ReactFlightServerWebpackBundlerConfig';

@@ -7,10 +7,4 @@
  * @flow
  */
 
-export {
-  renderToString,
-  renderToStaticMarkup,
-  renderToNodeStream,
-  renderToStaticNodeStream,
-  version,
-} from './src/server/ReactDOMLegacyServerBrowser';
+export * from 'react-dom/src/client/ReactDOMHostConfig';

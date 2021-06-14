@@ -56,17 +56,9 @@ const moduleTypes = {
   RENDERER_UTILS: 'RENDERER_UTILS',
   // Standalone reconciler for third-party renderers.
   RECONCILER: 'RECONCILER',
-  // Non-Fiber implementations like SSR and Shallow renderers.
-  NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
 
-const {
-  ISOMORPHIC,
-  RENDERER,
-  RENDERER_UTILS,
-  RECONCILER,
-  NON_FIBER_RENDERER,
-} = moduleTypes;
+const {ISOMORPHIC, RENDERER, RENDERER_UTILS, RECONCILER} = moduleTypes;
 
 const bundles = [
   /******* Isomorphic *******/
@@ -241,7 +233,7 @@ const bundles = [
     bundleTypes: __EXPERIMENTAL__
       ? [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD]
       : [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
+    moduleType: RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
     externals: ['react'],
@@ -254,7 +246,7 @@ const bundles = [
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: NON_FIBER_RENDERER,
+    moduleType: RENDERER,
     entry: 'react-dom/server.node',
     externals: ['react', 'stream'],
     babel: opts =>

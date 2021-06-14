@@ -7,11 +7,10 @@
  * @flow
  */
 
-// For some reason Flow doesn't like export * in this file. I don't know why.
 export {
   renderToString,
   renderToStaticMarkup,
   renderToNodeStream,
   renderToStaticNodeStream,
   version,
-} from './src/server/ReactDOMLegacyServerNode';
+} from './src/server/ReactDOMServerBrowser';
