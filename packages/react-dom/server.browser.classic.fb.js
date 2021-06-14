@@ -13,4 +13,4 @@ export {
   renderToNodeStream,
   renderToStaticNodeStream,
   version,
-} from './src/server/ReactDOMServerBrowser';
+} from './src/server/ReactDOMServerLegacyPartialRendererBrowser';
