@@ -7,9 +7,21 @@
  * @flow
  */
 
-import {createResponseState as createResponseStateImpl} from './ReactDOMServerFormatConfig';
+import type {
+  FormatContext,
+  SuspenseBoundaryID,
+  OpaqueIDType,
+} from './ReactDOMServerFormatConfig';
 
-import type {PrecomputedChunk} from 'react-server/src/ReactServerStreamConfig';
+import {
+  createResponseState as createResponseStateImpl,
+  pushTextInstance as pushTextInstanceImpl,
+} from './ReactDOMServerFormatConfig';
+
+import type {
+  Chunk,
+  PrecomputedChunk,
+} from 'react-server/src/ReactServerStreamConfig';
 
 export const isPrimaryRenderer = false;
 
@@ -61,7 +73,6 @@ export {
   createSuspenseBoundaryID,
   makeServerID,
   pushEmpty,
-  pushTextInstance,
   pushStartInstance,
   pushEndInstance,
   writePlaceholder,
@@ -75,3 +86,20 @@ export {
   writeCompletedBoundaryInstruction,
   writeClientRenderBoundaryInstruction,
 } from './ReactDOMServerFormatConfig';
+
+import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
+
+import escapeTextForBrowser from './escapeTextForBrowser';
+
+export function pushTextInstance(
+  target: Array<Chunk | PrecomputedChunk>,
+  text: string,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): void {
+  if (responseState.generateStaticMarkup) {
+    target.push(stringToChunk(escapeTextForBrowser(text)));
+  } else {
+    pushTextInstanceImpl(target, text, responseState, assignID);
+  }
+}
