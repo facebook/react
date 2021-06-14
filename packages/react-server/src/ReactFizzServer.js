@@ -222,17 +222,20 @@ export function createRequest(
   destination: Destination,
   responseState: ResponseState,
   rootFormatContext: FormatContext,
-  progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
-  onError: (error: mixed) => void = defaultErrorHandler,
-  onCompleteAll: () => void = noop,
-  onReadyToStream: () => void = noop,
+  progressiveChunkSize: void | number,
+  onError: void | ((error: mixed) => void),
+  onCompleteAll: void | (() => void),
+  onReadyToStream: void | (() => void),
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
   const request = {
     destination,
     responseState,
-    progressiveChunkSize,
+    progressiveChunkSize:
+      progressiveChunkSize === undefined
+        ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
+        : progressiveChunkSize,
     status: BUFFERING,
     nextSegmentId: 0,
     allPendingTasks: 0,
@@ -243,9 +246,9 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
-    onError,
-    onCompleteAll,
-    onReadyToStream,
+    onError: onError === undefined ? defaultErrorHandler : onError,
+    onCompleteAll: onCompleteAll === undefined ? noop : onCompleteAll,
+    onReadyToStream: onReadyToStream === undefined ? noop : onReadyToStream,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);
