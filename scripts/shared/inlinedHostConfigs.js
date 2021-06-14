@@ -18,9 +18,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/unstable-fizz',
-      'react-dom/unstable-fizz.node',
-      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/unstable-fizz.node
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer',
       'react-server-dom-webpack/writer.node.server',
@@ -43,8 +41,7 @@ module.exports = [
     paths: [
       'react-dom',
       'react-dom/testing',
-      'react-dom/unstable-fizz.browser',
-      'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
+      'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
@@ -61,9 +58,6 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/server',
-      'react-dom/server.browser',
-      'react-dom/server.node',
       'react-server-dom-webpack',
       'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node

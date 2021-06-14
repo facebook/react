@@ -9,6 +9,8 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import ReactVersion from 'shared/ReactVersion';
+
 import {
   createRequest,
   startWork,
@@ -72,4 +74,4 @@ function renderToReadableStream(
   return stream;
 }
 
-export {renderToReadableStream};
+export {renderToReadableStream, ReactVersion as version};

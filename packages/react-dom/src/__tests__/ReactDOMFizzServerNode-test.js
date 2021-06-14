@@ -20,7 +20,7 @@ describe('ReactDOMFizzServer', () => {
     jest.resetModules();
     React = require('react');
     if (__EXPERIMENTAL__) {
-      ReactDOMFizzServer = require('react-dom/unstable-fizz');
+      ReactDOMFizzServer = require('react-dom/server');
     }
     Stream = require('stream');
     Suspense = React.Suspense;

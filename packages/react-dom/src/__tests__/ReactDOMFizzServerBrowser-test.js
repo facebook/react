@@ -23,7 +23,7 @@ describe('ReactDOMFizzServer', () => {
     jest.resetModules();
     React = require('react');
     if (__EXPERIMENTAL__) {
-      ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
+      ReactDOMFizzServer = require('react-dom/server.browser');
     }
     Suspense = React.Suspense;
   });

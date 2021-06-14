@@ -1,5 +1,5 @@
 import React from 'react';
-import {pipeToNodeWritable} from 'react-dom/unstable-fizz';
+import {pipeToNodeWritable} from 'react-dom/server';
 
 import App from '../src/components/App';
 
