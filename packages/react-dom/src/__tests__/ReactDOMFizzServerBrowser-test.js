@@ -59,6 +59,19 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should emit DOCTYPE at the root of the document', async () => {
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <html>
+        <body>hello world</body>
+      </html>,
+    );
+    const result = await readResult(stream);
+    expect(result).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+    );
+  });
+
+  // @gate experimental
   it('emits all HTML as one unit if we wait until the end to start', async () => {
     let hasLoaded = false;
     let resolve;

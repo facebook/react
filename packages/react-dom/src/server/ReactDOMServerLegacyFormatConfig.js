@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {SuspenseBoundaryID} from './ReactDOMServerFormatConfig';
+import type {
+  SuspenseBoundaryID,
+  FormatContext,
+} from './ReactDOMServerFormatConfig';
 
 import {
   createResponseState as createResponseStateImpl,
@@ -16,6 +19,7 @@ import {
   writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
   writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
   writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
+  HTML_MODE,
 } from './ReactDOMServerFormatConfig';
 
 import type {
@@ -62,6 +66,13 @@ export function createResponseState(
   };
 }
 
+export function createRootFormatContext(): FormatContext {
+  return {
+    insertionMode: HTML_MODE, // We skip the root mode because we don't want to emit the DOCTYPE in legacy mode.
+    selectedValue: null,
+  };
+}
+
 export type {
   FormatContext,
   SuspenseBoundaryID,
@@ -69,7 +80,6 @@ export type {
 } from './ReactDOMServerFormatConfig';
 
 export {
-  createRootFormatContext,
   getChildFormatContext,
   createSuspenseBoundaryID,
   makeServerID,

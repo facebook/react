@@ -64,7 +64,7 @@ function renderToStringImpl(
       generateStaticMarkup,
       options ? options.identifierPrefix : undefined,
     ),
-    createRootFormatContext(undefined),
+    createRootFormatContext(),
     Infinity,
     onError,
     undefined,
