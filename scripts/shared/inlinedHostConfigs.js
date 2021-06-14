@@ -20,7 +20,6 @@ module.exports = [
       'react-dom',
       'react-dom/unstable-fizz',
       'react-dom/unstable-fizz.node',
-      'react-dom/server.node.stable',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/unstable-fizz.node
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer',
@@ -45,7 +44,6 @@ module.exports = [
       'react-dom',
       'react-dom/testing',
       'react-dom/unstable-fizz.browser',
-      'react-dom/server.browser.stable',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer.browser.server',
