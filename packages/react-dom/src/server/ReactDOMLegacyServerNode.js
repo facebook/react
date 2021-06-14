@@ -21,7 +21,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerFormatConfig';
+} from './ReactDOMServerLegacyFormatConfig';
 
 import {
   version,
@@ -77,7 +77,7 @@ function renderToNodeStream(
   const request = createRequest(
     children,
     destination,
-    createResponseState(options ? options.identifierPrefix : undefined),
+    createResponseState(false, options ? options.identifierPrefix : undefined),
     createRootFormatContext(undefined),
     Infinity,
     onError,

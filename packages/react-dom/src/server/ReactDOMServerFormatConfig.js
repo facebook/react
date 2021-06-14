@@ -23,7 +23,6 @@ import {
   writeChunk,
   stringToChunk,
   stringToPrecomputedChunk,
-  isPrimaryStreamConfig,
 } from 'react-server/src/ReactServerStreamConfig';
 
 import {
@@ -51,7 +50,7 @@ import isArray from 'shared/isArray';
 
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
-export const isPrimaryRenderer = isPrimaryStreamConfig;
+export const isPrimaryRenderer = true;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
@@ -63,18 +62,20 @@ export type ResponseState = {
   nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean,
+  sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
+  ...
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
-  identifierPrefix: string = '',
+  identifierPrefix: string | void,
 ): ResponseState {
+  const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   return {
-    placeholderPrefix: stringToPrecomputedChunk(identifierPrefix + 'P:'),
-    segmentPrefix: stringToPrecomputedChunk(identifierPrefix + 'S:'),
-    boundaryPrefix: identifierPrefix + 'B:',
-    opaqueIdentifierPrefix: identifierPrefix + 'R:',
+    placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
+    segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
+    boundaryPrefix: idPrefix + 'B:',
+    opaqueIdentifierPrefix: idPrefix + 'R:',
     nextSuspenseID: 0,
     nextOpaqueID: 0,
     sentCompleteSegmentFunction: false,

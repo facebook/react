@@ -22,7 +22,7 @@ import {
 import {
   createResponseState,
   createRootFormatContext,
-} from './ReactDOMServerFormatConfig';
+} from './ReactDOMServerLegacyFormatConfig';
 
 type ServerOptions = {
   identifierPrefix?: string,
@@ -59,7 +59,7 @@ function renderToString(
   const request = createRequest(
     children,
     destination,
-    createResponseState(options ? options.identifierPrefix : undefined),
+    createResponseState(false, options ? options.identifierPrefix : undefined),
     createRootFormatContext(undefined),
     Infinity,
     onError,
