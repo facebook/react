@@ -1460,23 +1460,41 @@ const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   return writeChunk(destination, startCompletedSuspenseBoundary);
 }
 export function writeStartPendingSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   return writeChunk(destination, startPendingSuspenseBoundary);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   return writeChunk(destination, startClientRenderedSuspenseBoundary);
 }
-export function writeEndSuspenseBoundary(destination: Destination): boolean {
+export function writeEndCompletedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeChunk(destination, endSuspenseBoundary);
+}
+export function writeEndPendingSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeChunk(destination, endSuspenseBoundary);
+}
+export function writeEndClientRenderedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
   return writeChunk(destination, endSuspenseBoundary);
 }
 

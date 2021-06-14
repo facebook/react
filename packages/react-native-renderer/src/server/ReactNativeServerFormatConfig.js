@@ -203,6 +203,7 @@ export function writePlaceholder(
 // Suspense boundaries are encoded as comments.
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, SUSPENSE_COMPLETE);
@@ -210,6 +211,7 @@ export function writeStartCompletedSuspenseBoundary(
 }
 export function writeStartPendingSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, SUSPENSE_PENDING);
@@ -217,12 +219,28 @@ export function writeStartPendingSuspenseBoundary(
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, SUSPENSE_CLIENT_RENDER);
   return writeChunk(destination, formatID(id));
 }
-export function writeEndSuspenseBoundary(destination: Destination): boolean {
+export function writeEndCompletedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeChunk(destination, END);
+}
+export function writeEndPendingSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeChunk(destination, END);
+}
+export function writeEndClientRenderedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
   return writeChunk(destination, END);
 }
 

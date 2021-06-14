@@ -7,18 +7,19 @@
  * @flow
  */
 
-import type {
-  FormatContext,
-  SuspenseBoundaryID,
-  OpaqueIDType,
-} from './ReactDOMServerFormatConfig';
+import type {SuspenseBoundaryID} from './ReactDOMServerFormatConfig';
 
 import {
   createResponseState as createResponseStateImpl,
   pushTextInstance as pushTextInstanceImpl,
+  writeStartCompletedSuspenseBoundary as writeStartCompletedSuspenseBoundaryImpl,
+  writeStartClientRenderedSuspenseBoundary as writeStartClientRenderedSuspenseBoundaryImpl,
+  writeEndCompletedSuspenseBoundary as writeEndCompletedSuspenseBoundaryImpl,
+  writeEndClientRenderedSuspenseBoundary as writeEndClientRenderedSuspenseBoundaryImpl,
 } from './ReactDOMServerFormatConfig';
 
 import type {
+  Destination,
   Chunk,
   PrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
@@ -75,16 +76,14 @@ export {
   pushEmpty,
   pushStartInstance,
   pushEndInstance,
-  writePlaceholder,
-  writeStartCompletedSuspenseBoundary,
-  writeStartPendingSuspenseBoundary,
-  writeStartClientRenderedSuspenseBoundary,
-  writeEndSuspenseBoundary,
   writeStartSegment,
   writeEndSegment,
   writeCompletedSegmentInstruction,
   writeCompletedBoundaryInstruction,
   writeClientRenderBoundaryInstruction,
+  writeStartPendingSuspenseBoundary,
+  writeEndPendingSuspenseBoundary,
+  writePlaceholder,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
@@ -102,4 +101,55 @@ export function pushTextInstance(
   } else {
     pushTextInstanceImpl(target, text, responseState, assignID);
   }
+}
+
+export function writeStartCompletedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+  id: SuspenseBoundaryID,
+): boolean {
+  if (responseState.generateStaticMarkup) {
+    // A completed boundary is done and doesn't need a representation in the HTML
+    // if we're not going to be hydrating it.
+    return true;
+  }
+  return writeStartCompletedSuspenseBoundaryImpl(
+    destination,
+    responseState,
+    id,
+  );
+}
+export function writeStartClientRenderedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+  id: SuspenseBoundaryID,
+): boolean {
+  if (responseState.generateStaticMarkup) {
+    // A client rendered boundary is done and doesn't need a representation in the HTML
+    // since we'll never hydrate it. This is arguably an error in static generation.
+    return true;
+  }
+  return writeStartClientRenderedSuspenseBoundaryImpl(
+    destination,
+    responseState,
+    id,
+  );
+}
+export function writeEndCompletedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  if (responseState.generateStaticMarkup) {
+    return true;
+  }
+  return writeEndCompletedSuspenseBoundaryImpl(destination, responseState);
+}
+export function writeEndClientRenderedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  if (responseState.generateStaticMarkup) {
+    return true;
+  }
+  return writeEndClientRenderedSuspenseBoundaryImpl(destination, responseState);
 }
