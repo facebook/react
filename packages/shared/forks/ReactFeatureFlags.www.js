@@ -31,7 +31,6 @@ export const {
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
-  deletedTreeCleanUpLevel,
   enableSyncDefaultUpdates,
 } = dynamicFeatureFlags;
 
@@ -94,6 +93,8 @@ export const enableNewReconciler = __VARIANT__;
 export const enableRecursiveCommitTraversal = false;
 
 export const allowConcurrentByDefault = true;
+
+export const deletedTreeCleanUpLevel = 3;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
