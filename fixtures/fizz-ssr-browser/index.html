@@ -21,9 +21,14 @@
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <script type="text/babel">
       let controller = new AbortController();
-      let stream = ReactDOMFizzServer.renderToReadableStream(<body>Success</body>, {
-        signal: controller.signal,
-      });
+      let stream = ReactDOMFizzServer.renderToReadableStream(
+        <html>
+          <body>Success</body>
+        </html>,
+        {
+          signal: controller.signal,
+        }
+      );
       let response = new Response(stream, {
         headers: {'Content-Type': 'text/html'},
       });

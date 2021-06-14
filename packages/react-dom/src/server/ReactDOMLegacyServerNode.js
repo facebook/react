@@ -79,7 +79,7 @@ function renderToNodeStreamImpl(
     children,
     destination,
     createResponseState(false, options ? options.identifierPrefix : undefined),
-    createRootFormatContext(undefined),
+    createRootFormatContext(),
     Infinity,
     onError,
     onCompleteAll,

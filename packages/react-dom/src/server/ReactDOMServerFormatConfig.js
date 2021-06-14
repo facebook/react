@@ -87,9 +87,10 @@ export function createResponseState(
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
-const HTML_MODE = 0;
-const SVG_MODE = 1;
-const MATHML_MODE = 2;
+const ROOT_HTML_MODE = 0; // Used for the root most element tag.
+export const HTML_MODE = 1;
+const SVG_MODE = 2;
+const MATHML_MODE = 3;
 const HTML_TABLE_MODE = 4;
 const HTML_TABLE_BODY_MODE = 5;
 const HTML_TABLE_ROW_MODE = 6;
@@ -121,7 +122,7 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       ? SVG_MODE
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
       ? MATHML_MODE
-      : HTML_MODE;
+      : ROOT_HTML_MODE;
   return createFormatContext(insertionMode, null);
 }
 
@@ -158,6 +159,10 @@ export function getChildFormatContext(
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
+    return createFormatContext(HTML_MODE, null);
+  }
+  if (parentContext.insertionMode === ROOT_HTML_MODE) {
+    // We've emitted the root and is now in plain HTML mode.
     return createFormatContext(HTML_MODE, null);
   }
   return parentContext;
@@ -1262,6 +1267,8 @@ function startChunkForTag(tag: string): PrecomputedChunk {
   return tagStartChunk;
 }
 
+const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
+
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
   type: string,
@@ -1363,6 +1370,21 @@ export function pushStartInstance(
     case 'font-face-format':
     case 'font-face-name':
     case 'missing-glyph': {
+      return pushStartGenericElement(
+        target,
+        props,
+        type,
+        responseState,
+        assignID,
+      );
+    }
+    case 'html': {
+      if (formatContext.insertionMode === ROOT_HTML_MODE) {
+        // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
+        // then we also emit the DOCTYPE as part of the root content as a convenience for
+        // rendering the whole document.
+        target.push(DOCTYPE);
+      }
       return pushStartGenericElement(
         target,
         props,
@@ -1541,6 +1563,7 @@ export function writeStartSegment(
   id: number,
 ): boolean {
   switch (formatContext.insertionMode) {
+    case ROOT_HTML_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
       writeChunk(destination, responseState.segmentPrefix);
@@ -1597,6 +1620,7 @@ export function writeEndSegment(
   formatContext: FormatContext,
 ): boolean {
   switch (formatContext.insertionMode) {
+    case ROOT_HTML_MODE:
     case HTML_MODE: {
       return writeChunk(destination, endSegmentHTML);
     }
