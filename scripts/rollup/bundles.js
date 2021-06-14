@@ -263,15 +263,17 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-fizz.browser',
-    global: 'ReactDOMFizzServer',
+    entry: 'react-dom/src/server/ReactDOMFizzServerBrowser',
+    name: 'react-dom-server.browser',
+    global: 'ReactDOMServer',
     externals: ['react'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-fizz.node',
-    global: 'ReactDOMFizzServer',
+    entry: 'react-dom/src/server/ReactDOMFizzServerNode',
+    name: 'react-dom-server.node',
+    global: 'ReactDOMServer',
     externals: ['react'],
   },
   {

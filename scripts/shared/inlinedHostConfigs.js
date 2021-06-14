@@ -12,7 +12,7 @@ module.exports = [
     entryPoints: [
       'react-dom',
       'react-dom/testing',
-      'react-dom/unstable-fizz.node',
+      'react-dom/src/server/ReactDOMFizzServerNode',
       'react-server-dom-webpack/writer.node.server',
       'react-server-dom-webpack',
     ],
@@ -36,7 +36,7 @@ module.exports = [
     entryPoints: [
       'react-dom',
       'react-dom/testing',
-      'react-dom/unstable-fizz.browser',
+      'react-dom/src/server/ReactDOMFizzServerBrowser',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack',
     ],
