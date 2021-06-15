@@ -13,6 +13,8 @@ describe('ReactTestRenderer.act()', () => {
     Scheduler = require('scheduler');
     act = ReactTestRenderer.act;
   });
+
+  // @gate __DEV__
   it('can use .act() to flush effects', () => {
     function App(props) {
       const [ctr, setCtr] = React.useState(0);
@@ -56,6 +58,7 @@ describe('ReactTestRenderer.act()', () => {
   });
 
   describe('async', () => {
+    // @gate __DEV__
     it('should work with async/await', async () => {
       function fetch(url) {
         return Promise.resolve({
@@ -83,6 +86,7 @@ describe('ReactTestRenderer.act()', () => {
       expect(root.toJSON()).toEqual(['1', '2', '3']);
     });
 
+    // @gate __DEV__
     it('should not flush effects without also flushing microtasks', async () => {
       const {useEffect, useReducer} = React;
 

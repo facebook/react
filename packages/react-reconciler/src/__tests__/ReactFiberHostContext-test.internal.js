@@ -26,6 +26,7 @@ describe('ReactFiberHostContext', () => {
       .DefaultEventPriority;
   });
 
+  // @gate __DEV__
   it('works with null host context', async () => {
     let creates = 0;
     const Renderer = ReactFiberReconciler({
@@ -83,6 +84,7 @@ describe('ReactFiberHostContext', () => {
     expect(creates).toBe(2);
   });
 
+  // @gate __DEV__
   it('should send the context to prepareForCommit and resetAfterCommit', () => {
     const rootContext = {};
     const Renderer = ReactFiberReconciler({

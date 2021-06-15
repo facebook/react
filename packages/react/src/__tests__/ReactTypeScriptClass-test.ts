@@ -21,6 +21,7 @@ let container;
 let root;
 let attachedListener = null;
 let renderedName = null;
+let act = ReactDOMTestUtils.unstable_concurrentAct;
 
 class Inner extends React.Component {
   getName() {
@@ -34,7 +35,7 @@ class Inner extends React.Component {
 }
 
 function test(element, expectedTag, expectedClassName) {
-  ReactDOMTestUtils.act(() => root.render(element));
+  act(() => root.render(element));
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -327,7 +328,7 @@ describe('ReactTypeScriptClass', function() {
   it('throws if no render function is defined', function() {
     expect(() => {
       expect(() =>
-        ReactDOMTestUtils.act(() => root.render(React.createElement(Empty)))
+        act(() => root.render(React.createElement(Empty)))
       ).toThrow();
     }).toErrorDev([
       // A failed component renders four times in DEV in concurrent mode
@@ -362,7 +363,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    ReactDOMTestUtils.act(() => ref.current.changeState());
+    act(() => ref.current.changeState());
     test(React.createElement(StateBasedOnProps), 'SPAN', 'bar');
   });
 
@@ -397,7 +398,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -416,7 +417,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -433,7 +434,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -457,7 +458,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -543,7 +544,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    ReactDOMTestUtils.act(() => attachedListener());
+    act(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -562,7 +563,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    ReactDOMTestUtils.act(() => attachedListener());
+    act(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -586,7 +587,7 @@ describe('ReactTypeScriptClass', function() {
       {},
     ]);
     lifeCycles = []; // reset
-    ReactDOMTestUtils.act(() => root.unmount(container));
+    act(() => root.unmount(container));
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 
