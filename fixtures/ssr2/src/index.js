@@ -9,4 +9,4 @@
 import {hydrateRoot} from 'react-dom';
 import App from './App';
 
-const root = hydrateRoot(document, <App assets={window.assetManifest} />);
+hydrateRoot(document, <App assets={window.assetManifest} />);
