@@ -23,6 +23,7 @@ export {
   createPortal,
   createRoot,
   createRoot as unstable_createRoot, // TODO Remove once callsites use createRoot
+  hydrateRoot,
   findDOMNode,
   flushSync,
   hydrate,

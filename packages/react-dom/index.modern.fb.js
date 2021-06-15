@@ -12,6 +12,7 @@ export {
   createPortal,
   createRoot,
   createRoot as unstable_createRoot, // TODO Remove once callsites use createRoot
+  hydrateRoot,
   flushSync,
   unstable_batchedUpdates,
   unstable_createEventHandle,

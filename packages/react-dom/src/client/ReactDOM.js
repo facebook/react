@@ -17,7 +17,7 @@ import {
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
-import {createRoot, isValidContainer} from './ReactDOMRoot';
+import {createRoot, hydrateRoot, isValidContainer} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
 
 import {
@@ -182,6 +182,7 @@ export {
   unmountComponentAtNode,
   // exposeConcurrentModeAPIs
   createRoot,
+  hydrateRoot,
   flushControlled as unstable_flushControlled,
   scheduleHydration as unstable_scheduleHydration,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
