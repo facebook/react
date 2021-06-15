@@ -10,6 +10,8 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 
+import ReactVersion from 'shared/ReactVersion';
+
 import {
   createRequest,
   startWork,
@@ -82,4 +84,4 @@ function pipeToNodeWritable(
   };
 }
 
-export {pipeToNodeWritable};
+export {pipeToNodeWritable, ReactVersion as version};
