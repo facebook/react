@@ -14,6 +14,7 @@ export {
   createPortal,
   createRoot,
   createRoot as unstable_createRoot,
+  hydrateRoot,
   findDOMNode,
   flushSync,
   hydrate,

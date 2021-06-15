@@ -96,11 +96,10 @@ describe('ReactDOMRoot', () => {
     );
     Scheduler.unstable_flushAll();
 
-    // Accepts `hydrate` option
     const container2 = document.createElement('div');
     container2.innerHTML = markup;
-    const root2 = ReactDOM.createRoot(container2, {hydrate: true});
-    root2.render(
+    ReactDOM.hydrateRoot(
+      container2,
       <div>
         <span />
       </div>,
@@ -191,7 +190,7 @@ describe('ReactDOMRoot', () => {
         // We care about this warning:
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
           'passed to ReactDOM.createRoot(). This is not supported. ' +
-          'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
+          'Did you mean to call hydrateRoot(container, element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         'Replacing React-rendered children with a new root component.',
       ],
