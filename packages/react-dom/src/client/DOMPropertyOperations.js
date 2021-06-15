@@ -22,27 +22,6 @@ import {isOpaqueHydratingObject} from './ReactDOMHostConfig';
 import type {PropertyInfo} from '../shared/DOMProperty';
 
 /**
- * Cached result of detectStringification() function.
- * Should become true in all environments but IE<=9.
- */
-let setAttributeCanStringify = undefined;
-
-/**
- * Detect if Element.setAttribute stringifies attribute values.
- * Should return true for all environments but IE <= 9.
- * @param {DOMElement} node
- */
-function detectStringification(node: Element) {
-  const obj: any = {
-    toString: () => 'foo',
-  };
-  const attrName = 'title';
-  const el = node.ownerDocument.createElement('p');
-  el.setAttribute(attrName, obj);
-  return el.getAttribute(attrName) === 'foo';
-}
-
-/**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
  * The "expected" argument is used as a hint of what the expected value is.
  * Some properties have multiple equivalent values.
@@ -164,9 +143,6 @@ export function setValueForProperty(
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
-  if (setAttributeCanStringify === undefined) {
-    setAttributeCanStringify = detectStringification(node);
-  }
   // If the prop isn't in the special list, treat it as a simple attribute.
   if (isCustomComponentTag || propertyInfo === null) {
     if (isAttributeNameSafe(name)) {
@@ -174,10 +150,8 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       } else {
-        node.setAttribute(
-          attributeName,
-          setAttributeCanStringify ? (value: any) : '' + (value: any),
-        );
+        // Node.setAttribute(NS) stringifies the value implicitly in all browsers apart from IE <= 9.
+        node.setAttribute(attributeName, (value: any));
       }
     }
     return;
@@ -207,13 +181,8 @@ export function setValueForProperty(
       // and we won't require Trusted Type here.
       attributeValue = '';
     } else {
-      if (setAttributeCanStringify) {
-        attributeValue = (value: any);
-      } else {
-        // As `setAttribute` does not stringify the value itself.
-        // ('' + value) makes it output the correct toString()-value.
-        attributeValue = '' + (value: any);
-      }
+      // Node.setAttribute(NS) stringifies the value implicitly in all browsers apart from IE <= 9.
+      attributeValue = (value: any);
       if (propertyInfo.sanitizeURL) {
         attributeValue = sanitizeURL(attributeValue);
       }

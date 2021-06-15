@@ -61,9 +61,6 @@ describe('when Trusted Types are available in global object', () => {
     };
     fakeTTObjects.add(ttObject1);
     fakeTTObjects.add(ttObject2);
-    // Run setAttributeCanStringify detection first to simplify counting
-    // setAttribute calls later.
-    ReactDOM.render(<div foo="bar" />, container);
   });
 
   afterEach(() => {
