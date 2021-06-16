@@ -2210,36 +2210,35 @@ function commitLayoutEffects_begin(
         commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
         continue;
       } else {
-        if ((fiber.subtreeFlags & LayoutMask) !== NoFlags) {
-          const current = fiber.alternate;
-          const wasHidden = current !== null && current.memoizedState !== null;
-          const newOffscreenSubtreeWasHidden =
-            wasHidden || offscreenSubtreeWasHidden;
-          const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
-          const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+        // TODO (Offscreen) Also check: subtreeFlags & LayoutMask
+        const current = fiber.alternate;
+        const wasHidden = current !== null && current.memoizedState !== null;
+        const newOffscreenSubtreeWasHidden =
+          wasHidden || offscreenSubtreeWasHidden;
+        const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
+        const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
 
-          // Traverse the Offscreen subtree with the current Offscreen as the root.
-          offscreenSubtreeIsHidden = newOffscreenSubtreeIsHidden;
-          offscreenSubtreeWasHidden = newOffscreenSubtreeWasHidden;
-          let child = firstChild;
-          while (child !== null) {
-            nextEffect = child;
-            commitLayoutEffects_begin(
-              child, // New root; bubble back up to here and stop.
-              root,
-              committedLanes,
-            );
-            child = child.sibling;
-          }
-
-          // Restore Offscreen state and resume in our-progress traversal.
-          nextEffect = fiber;
-          offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
-          offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
-          commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
-
-          continue;
+        // Traverse the Offscreen subtree with the current Offscreen as the root.
+        offscreenSubtreeIsHidden = newOffscreenSubtreeIsHidden;
+        offscreenSubtreeWasHidden = newOffscreenSubtreeWasHidden;
+        let child = firstChild;
+        while (child !== null) {
+          nextEffect = child;
+          commitLayoutEffects_begin(
+            child, // New root; bubble back up to here and stop.
+            root,
+            committedLanes,
+          );
+          child = child.sibling;
         }
+
+        // Restore Offscreen state and resume in our-progress traversal.
+        nextEffect = fiber;
+        offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
+        offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+        commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
+
+        continue;
       }
     }
 
