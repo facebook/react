@@ -20,7 +20,7 @@ describe 'ReactCoffeeScriptClass', ->
   beforeEach ->
     React = require 'react'
     ReactDOM = require 'react-dom'
-    act = require('react-dom/test-utils').act
+    act = require('react-dom/test-utils').unstable_concurrentAct
     PropTypes = require 'prop-types'
     container = document.createElement 'div'
     root = ReactDOM.createRoot container
