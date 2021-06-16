@@ -663,6 +663,64 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('new value');
   });
 
+  // @gate enableSuspenseLayoutEffectSemantics
+  it('re-fires layout effects when re-showing Suspense', () => {
+    function TextWithLayout(props) {
+      Scheduler.unstable_yieldValue(props.text);
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('create layout');
+        return () => {
+          Scheduler.unstable_yieldValue('destroy layout');
+        };
+      }, []);
+      return props.text;
+    }
+
+    let _setShow;
+    function App(props) {
+      const [show, setShow] = React.useState(false);
+      _setShow = setShow;
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <TextWithLayout text="Child 1" />
+          {show && <AsyncText ms={1000} text="Child 2" />}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<App />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Child 1', 'create layout']);
+    expect(root).toMatchRenderedOutput('Child 1');
+
+    ReactTestRenderer.act(() => {
+      _setShow(true);
+    });
+    expect(Scheduler).toHaveYielded(
+      // DEV behavior differs from prod
+      // In DEV sometimes the work loop sync-flushes the commit
+      // where as in production, it schedules it behind a timeout.
+      // See shouldForceFlushFallbacksInDEV() usage
+      __DEV__
+        ? ['Child 1', 'Suspend! [Child 2]', 'Loading...', 'destroy layout']
+        : ['Child 1', 'Suspend! [Child 2]', 'Loading...'],
+    );
+    jest.advanceTimersByTime(1000);
+    expect(Scheduler).toHaveYielded(
+      // DEV behavior differs from prod
+      // In DEV sometimes the work loop sync-flushes the commit
+      // where as in production, it schedules it behind a timeout.
+      // See shouldForceFlushFallbacksInDEV() usage
+      __DEV__
+        ? ['Promise resolved [Child 2]']
+        : ['destroy layout', 'Promise resolved [Child 2]'],
+    );
+    expect(Scheduler).toFlushAndYield(['Child 1', 'Child 2', 'create layout']);
+    expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
+  });
+
   describe('outside concurrent mode', () => {
     it('a mounted class component can suspend without losing state', () => {
       class TextWithLifecycle extends React.Component {
