@@ -695,28 +695,19 @@ describe('ReactSuspense', () => {
     expect(Scheduler).toFlushAndYield(['Child 1', 'create layout']);
     expect(root).toMatchRenderedOutput('Child 1');
 
-    ReactTestRenderer.act(() => {
+    act(() => {
       _setShow(true);
     });
-    expect(Scheduler).toHaveYielded(
-      // DEV behavior differs from prod
-      // In DEV sometimes the work loop sync-flushes the commit
-      // where as in production, it schedules it behind a timeout.
-      // See shouldForceFlushFallbacksInDEV() usage
-      __DEV__
-        ? ['Child 1', 'Suspend! [Child 2]', 'Loading...', 'destroy layout']
-        : ['Child 1', 'Suspend! [Child 2]', 'Loading...'],
-    );
+    expect(Scheduler).toHaveYielded([
+      'Child 1',
+      'Suspend! [Child 2]',
+      'Loading...',
+    ]);
     jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded(
-      // DEV behavior differs from prod
-      // In DEV sometimes the work loop sync-flushes the commit
-      // where as in production, it schedules it behind a timeout.
-      // See shouldForceFlushFallbacksInDEV() usage
-      __DEV__
-        ? ['Promise resolved [Child 2]']
-        : ['destroy layout', 'Promise resolved [Child 2]'],
-    );
+    expect(Scheduler).toHaveYielded([
+      'destroy layout',
+      'Promise resolved [Child 2]',
+    ]);
     expect(Scheduler).toFlushAndYield(['Child 1', 'Child 2', 'create layout']);
     expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
   });
