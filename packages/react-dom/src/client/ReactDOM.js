@@ -30,6 +30,7 @@ import {
   injectIntoDevTools,
   flushPassiveEffects,
   IsThisRendererActing,
+  act,
   attemptSynchronousHydration,
   attemptDiscreteHydration,
   attemptContinuousHydration,
@@ -166,6 +167,7 @@ const Internals = {
     flushPassiveEffects,
     // TODO: This is related to `act`, not events. Move to separate key?
     IsThisRendererActing,
+    act,
   ],
 };
 
