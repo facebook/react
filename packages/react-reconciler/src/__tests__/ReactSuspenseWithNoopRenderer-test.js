@@ -2304,6 +2304,55 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableCache
+  it('does not show the parent fallback if the inner fallback is not defined', async () => {
+    function Foo({showC}) {
+      Scheduler.unstable_yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Initial load..." />}>
+          <Suspense>
+            <AsyncText text="A" />
+            {showC ? <AsyncText text="C" /> : null}
+          </Suspense>
+          <Text text="B" />
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'Suspend! [A]',
+      'B',
+      // null
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('B')]);
+
+    // Eventually we resolve and show the data.
+    await resolveText('A');
+    expect(Scheduler).toFlushAndYield(['A']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
+
+    // Update to show C
+    ReactNoop.render(<Foo showC={true} />);
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'A',
+      'Suspend! [C]',
+      // null
+      'B',
+    ]);
+    // Flush to skip suspended time.
+    Scheduler.unstable_advanceTime(600);
+    await advanceTimers(600);
+    expect(ReactNoop.getChildren()).toEqual([hiddenSpan('A'), span('B')]);
+
+    // Later we load the data.
+    await resolveText('C');
+    expect(Scheduler).toFlushAndYield(['A', 'C']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('C'), span('B')]);
+  });
+
+  // @gate enableCache
   it('favors showing the inner fallback for nested top level avoided fallback', async () => {
     function Foo({showB}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -2390,6 +2439,57 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         span('A'),
         span('Loading B...'),
       ]);
+    }
+  });
+
+  // @gate enableCache
+  it('keeps showing an undefined fallback if it is already showing', async () => {
+    function Foo({showB}) {
+      Scheduler.unstable_yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Initial load..." />}>
+          <Suspense fallback={undefined}>
+            <Text text="A" />
+            {showB ? (
+              <Suspense fallback={undefined}>
+                <AsyncText text="B" />
+              </Suspense>
+            ) : null}
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    expect(Scheduler).toFlushAndYield(['Foo', 'A']);
+    expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo showB={true} />);
+      });
+    } else {
+      ReactNoop.render(<Foo showB={true} />);
+    }
+
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'A',
+      'Suspend! [B]',
+      // Null
+    ]);
+    // Still suspended.
+    expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+    // Flush to skip suspended time.
+    Scheduler.unstable_advanceTime(600);
+    await advanceTimers(600);
+
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      // Transitions never fall back.
+      expect(ReactNoop.getChildren()).toEqual([span('A')]);
+    } else {
+      expect(ReactNoop.getChildren()).toEqual([span('A')]);
     }
   });
 
