@@ -714,7 +714,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi');
   });
 
-  it('shows the fallback of the outer if fallback is missing', async () => {
+  it('treats missing fallback the same as if it was defined', async () => {
     // This is the same exact test as above but with a nested Suspense without a fallback.
     // This should be a noop.
     let suspend = false;
@@ -759,7 +759,8 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    expect(ref.current).toBe(null);
+    const span = container.getElementsByTagName('span')[0];
+    expect(ref.current).toBe(span);
 
     // Render an update, but leave it still suspended.
     root.render(<App text="Hi" className="hi" />);
@@ -768,9 +769,9 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    expect(container.getElementsByTagName('span').length).toBe(0);
-    expect(ref.current).toBe(null);
-    expect(container.textContent).toBe('Loading...');
+    expect(container.getElementsByTagName('span').length).toBe(1);
+    expect(ref.current).toBe(span);
+    expect(container.textContent).toBe('');
 
     // Unsuspending shows the content.
     suspend = false;
@@ -780,7 +781,6 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    const span = container.getElementsByTagName('span')[0];
     expect(span.textContent).toBe('Hi');
     expect(span.className).toBe('hi');
     expect(ref.current).toBe(span);

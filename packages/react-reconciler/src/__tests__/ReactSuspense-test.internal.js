@@ -9,8 +9,6 @@ let act;
 let TextResource;
 let textResourceShouldFail;
 
-// Additional tests can be found in ReactSuspenseWithNoopRenderer. Plan is
-// to gradually migrate those to this file.
 describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -391,44 +389,10 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  it('only captures if `fallback` is defined', () => {
-    const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <Suspense>
-          <AsyncText text="Hi" ms={5000} />
-        </Suspense>
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-
-    expect(Scheduler).toFlushAndYield([
-      'Suspend! [Hi]',
-      // The outer fallback should be rendered, because the inner one does not
-      // have a `fallback` prop
-      'Loading...',
-    ]);
-    jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded([]);
-    expect(Scheduler).toFlushAndYield([]);
-    expect(root).toMatchRenderedOutput('Loading...');
-
-    jest.advanceTimersByTime(5000);
-    expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-    expect(Scheduler).toFlushAndYield(['Hi']);
-    expect(root).toMatchRenderedOutput('Hi');
-  });
-
-  it('throws if tree suspends and none of the Suspense ancestors have a fallback', () => {
-    ReactTestRenderer.create(
-      <Suspense>
-        <AsyncText text="Hi" ms={1000} />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
+  it('throws if tree suspends and none of the Suspense ancestors have a boundary', () => {
+    ReactTestRenderer.create(<AsyncText text="Hi" ms={1000} />, {
+      unstable_isConcurrent: true,
+    });
 
     expect(Scheduler).toFlushAndThrow(
       'AsyncText suspended while rendering, but no fallback UI was specified.',
