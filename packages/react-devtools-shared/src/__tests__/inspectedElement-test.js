@@ -1813,6 +1813,46 @@ describe('InspectedElement', () => {
     `);
   });
 
+  // See github.com/facebook/react/issues/21654
+  it('should support Proxies that dont return an iterator', async () => {
+    const Example = () => null;
+    const proxy = new Proxy(
+      {},
+      {
+        get: (target, prop, receiver) => {
+          target[prop] = value => {};
+          return target[prop];
+        },
+      },
+    );
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example proxy={proxy} />, container),
+    );
+
+    const inspectedElement = await inspectElementAtIndex(0);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "proxy": Object {
+          "$$typeof": Dehydrated {
+            "preview_short": ƒ () {},
+            "preview_long": ƒ () {},
+          },
+          "Symbol(Symbol.iterator)": Dehydrated {
+            "preview_short": ƒ () {},
+            "preview_long": ƒ () {},
+          },
+          "constructor": Dehydrated {
+            "preview_short": ƒ () {},
+            "preview_long": ƒ () {},
+          },
+        },
+      }
+    `);
+  });
+
   describe('$r', () => {
     it('should support function components', async () => {
       const Example = () => {

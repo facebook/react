@@ -20,7 +20,7 @@ describe('ReactDOMFizzServer', () => {
     jest.resetModules();
     React = require('react');
     if (__EXPERIMENTAL__) {
-      ReactDOMFizzServer = require('react-dom/unstable-fizz');
+      ReactDOMFizzServer = require('react-dom/server');
     }
     Stream = require('stream');
     Suspense = React.Suspense;
@@ -66,6 +66,22 @@ describe('ReactDOMFizzServer', () => {
     startWriting();
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
+  });
+
+  // @gate experimental
+  it('should emit DOCTYPE at the root of the document', () => {
+    const {writable, output} = getTestWritable();
+    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      <html>
+        <body>hello world</body>
+      </html>,
+      writable,
+    );
+    startWriting();
+    jest.runAllTimers();
+    expect(output.result).toMatchInlineSnapshot(
+      `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+    );
   });
 
   // @gate experimental

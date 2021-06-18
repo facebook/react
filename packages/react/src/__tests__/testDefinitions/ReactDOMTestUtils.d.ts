@@ -13,5 +13,5 @@
  */
 
 declare module 'react-dom/test-utils' {
-  export function act(cb : () => any) : any
+  export function unstable_concurrentAct(cb : () => any) : any
 }

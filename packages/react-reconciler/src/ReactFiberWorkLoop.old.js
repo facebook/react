@@ -19,6 +19,7 @@ import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
+  enableCreateEventHandleAPI,
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
@@ -1854,8 +1855,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The next phase is the mutation phase, where we mutate the host tree.
     commitMutationEffects(root, finishedWork, lanes);
 
-    if (shouldFireAfterActiveInstanceBlur) {
-      afterActiveInstanceBlur();
+    if (enableCreateEventHandleAPI) {
+      if (shouldFireAfterActiveInstanceBlur) {
+        afterActiveInstanceBlur();
+      }
     }
     resetAfterCommit(root.containerInfo);
 
@@ -2982,17 +2985,13 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
 // so we can tell if any async act() calls try to run in parallel.
 
 let actingUpdatesScopeDepth = 0;
-let didWarnAboutUsingActInProd = false;
 
 export function act(callback: () => Thenable<mixed>): Thenable<void> {
   if (!__DEV__) {
-    if (didWarnAboutUsingActInProd === false) {
-      didWarnAboutUsingActInProd = true;
-      // eslint-disable-next-line react-internal/no-production-logging
-      console.error(
-        'act(...) is not supported in production builds of React, and might not behave as expected.',
-      );
-    }
+    invariant(
+      false,
+      'act(...) is not supported in production builds of React.',
+    );
   }
 
   const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
