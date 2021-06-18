@@ -138,6 +138,7 @@ const ReactNoopServer = ReactFizzServer({
 
   writeStartCompletedSuspenseBoundary(
     destination: Destination,
+    responseState: ResponseState,
     suspenseInstance: SuspenseInstance,
   ): boolean {
     suspenseInstance.state = 'complete';
@@ -147,6 +148,7 @@ const ReactNoopServer = ReactFizzServer({
   },
   writeStartPendingSuspenseBoundary(
     destination: Destination,
+    responseState: ResponseState,
     suspenseInstance: SuspenseInstance,
   ): boolean {
     suspenseInstance.state = 'pending';
@@ -156,6 +158,7 @@ const ReactNoopServer = ReactFizzServer({
   },
   writeStartClientRenderedSuspenseBoundary(
     destination: Destination,
+    responseState: ResponseState,
     suspenseInstance: SuspenseInstance,
   ): boolean {
     suspenseInstance.state = 'client-render';
@@ -163,7 +166,13 @@ const ReactNoopServer = ReactFizzServer({
     parent.children.push(suspenseInstance);
     destination.stack.push(suspenseInstance);
   },
-  writeEndSuspenseBoundary(destination: Destination): boolean {
+  writeEndCompletedSuspenseBoundary(destination: Destination): boolean {
+    destination.stack.pop();
+  },
+  writeEndPendingSuspenseBoundary(destination: Destination): boolean {
+    destination.stack.pop();
+  },
+  writeEndClientRenderedSuspenseBoundary(destination: Destination): boolean {
     destination.stack.pop();
   },
 

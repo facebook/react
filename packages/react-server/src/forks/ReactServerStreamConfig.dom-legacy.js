@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './unstable-fizz.node';
+export * from 'react-dom/src/server/ReactDOMLegacyServerStreamConfig';
