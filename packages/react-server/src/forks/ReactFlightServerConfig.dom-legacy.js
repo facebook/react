@@ -7,4 +7,5 @@
  * @flow
  */
 
-export * from './src/server/ReactDOMFizzServerBrowser';
+export * from '../ReactFlightServerConfigStream';
+export * from 'react-server-dom-webpack/src/ReactFlightServerWebpackBundlerConfig';

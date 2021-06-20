@@ -123,7 +123,7 @@ export const skipUnmountedBoundaries = false;
 //
 // It's an enum so that we can experiment with different levels of
 // aggressiveness.
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 3;
 
 // Destroy layout effects for components that are hidden because something suspended in an update
 // and recreate them when they are shown again (after the suspended boundary has resolved).

@@ -14,7 +14,6 @@ import type {
   IntersectionObserverOptions,
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
-import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 
 import {
@@ -105,8 +104,8 @@ export type EventTargetChildElement = {
   ...
 };
 export type Container =
-  | (Element & {_reactRootContainer?: RootType, ...})
-  | (Document & {_reactRootContainer?: RootType, ...});
+  | (Element & {_reactRootContainer?: FiberRoot, ...})
+  | (Document & {_reactRootContainer?: FiberRoot, ...});
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};

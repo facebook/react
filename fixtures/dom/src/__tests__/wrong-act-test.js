@@ -189,7 +189,7 @@ it("doesn't warn if you use nested acts from different renderers", () => {
 
 if (__EXPERIMENTAL__) {
   it('warns when using createRoot() + .render', () => {
-    const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+    const root = ReactDOM.createRoot(document.createElement('div'));
     expect(() => {
       TestRenderer.act(() => {
         root.render(<App />);

@@ -46,7 +46,12 @@ export const writeStartPendingSuspenseBoundary =
   $$$hostConfig.writeStartPendingSuspenseBoundary;
 export const writeStartClientRenderedSuspenseBoundary =
   $$$hostConfig.writeStartClientRenderedSuspenseBoundary;
-export const writeEndSuspenseBoundary = $$$hostConfig.writeEndSuspenseBoundary;
+export const writeEndCompletedSuspenseBoundary =
+  $$$hostConfig.writeEndCompletedSuspenseBoundary;
+export const writeEndPendingSuspenseBoundary =
+  $$$hostConfig.writeEndPendingSuspenseBoundary;
+export const writeEndClientRenderedSuspenseBoundary =
+  $$$hostConfig.writeEndClientRenderedSuspenseBoundary;
 export const writeStartSegment = $$$hostConfig.writeStartSegment;
 export const writeEndSegment = $$$hostConfig.writeEndSegment;
 export const writeCompletedSegmentInstruction =

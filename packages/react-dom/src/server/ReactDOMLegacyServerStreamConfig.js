@@ -8,35 +8,44 @@
  */
 
 export type Destination = {
-  buffer: string,
-  done: boolean,
-  fatal: boolean,
-  error: mixed,
+  push(chunk: string | null): boolean,
+  destroy(error: Error): mixed,
+  ...
 };
 
 export type PrecomputedChunk = string;
 export type Chunk = string;
 
 export function scheduleWork(callback: () => void) {
-  // We don't schedule work in this model, and instead expect performWork to always be called repeatedly.
+  callback();
 }
 
 export function flushBuffered(destination: Destination) {}
 
 export function beginWriting(destination: Destination) {}
 
+let prevWasCommentSegmenter = false;
 export function writeChunk(
   destination: Destination,
   chunk: Chunk | PrecomputedChunk,
 ): boolean {
-  destination.buffer += chunk;
-  return true;
+  if (prevWasCommentSegmenter) {
+    prevWasCommentSegmenter = false;
+    if (chunk[0] !== '<') {
+      destination.push('<!-- -->');
+    }
+  }
+  if (chunk === '<!-- -->') {
+    prevWasCommentSegmenter = true;
+    return true;
+  }
+  return destination.push(chunk);
 }
 
 export function completeWriting(destination: Destination) {}
 
 export function close(destination: Destination) {
-  destination.done = true;
+  destination.push(null);
 }
 
 export function stringToChunk(content: string): Chunk {
@@ -48,7 +57,6 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
-  destination.done = true;
-  destination.fatal = true;
-  destination.error = error;
+  // $FlowFixMe: This is an Error object or the destination accepts other types.
+  destination.destroy(error);
 }

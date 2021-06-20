@@ -34,7 +34,7 @@ describe('ReactDOMFizzServer', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     if (__EXPERIMENTAL__) {
-      ReactDOMFizzServer = require('react-dom/unstable-fizz');
+      ReactDOMFizzServer = require('react-dom/server');
     }
     Stream = require('stream');
     Suspense = React.Suspense;

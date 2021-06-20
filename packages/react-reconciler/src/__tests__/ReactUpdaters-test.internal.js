@@ -18,6 +18,7 @@ let mockDevToolsHook;
 let allSchedulerTags;
 let allSchedulerTypes;
 let onCommitRootShouldYield;
+let act;
 
 describe('updaters', () => {
   beforeEach(() => {
@@ -66,6 +67,8 @@ describe('updaters', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     Scheduler = require('scheduler');
+
+    act = ReactTestUtils.unstable_concurrentAct;
   });
 
   it('should report the (host) root as the scheduler for root-level render', async () => {
@@ -75,12 +78,12 @@ describe('updaters', () => {
     const Child = () => null;
     const container = document.createElement('div');
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       ReactDOM.render(<Parent />, container);
     });
     expect(allSchedulerTags).toEqual([[HostRoot]]);
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       ReactDOM.render(<Parent />, container);
     });
     expect(allSchedulerTags).toEqual([[HostRoot], [HostRoot]]);
@@ -108,19 +111,19 @@ describe('updaters', () => {
     };
     const Child = () => null;
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       ReactDOM.render(<Parent />, document.createElement('div'));
     });
     expect(scheduleForA).not.toBeNull();
     expect(scheduleForB).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       scheduleForA();
     });
     expect(allSchedulerTypes).toEqual([[null], [SchedulingComponentA]]);
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       scheduleForB();
     });
     expect(allSchedulerTypes).toEqual([
@@ -141,13 +144,13 @@ describe('updaters', () => {
     }
     const Child = () => null;
     let instance;
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       ReactDOM.render(<Parent />, document.createElement('div'));
     });
     expect(allSchedulerTypes).toEqual([[null]]);
 
     expect(instance).not.toBeNull();
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       instance.setState({});
     });
     expect(allSchedulerTypes).toEqual([[null], [SchedulingComponent]]);
@@ -183,7 +186,7 @@ describe('updaters', () => {
     };
 
     const root = ReactDOM.createRoot(document.createElement('div'));
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       root.render(<Parent />);
       expect(Scheduler).toFlushAndYieldThrough([
         'CascadingChild 0',
@@ -194,7 +197,7 @@ describe('updaters', () => {
     expect(triggerPassiveCascade).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       triggerActiveCascade();
       expect(Scheduler).toFlushAndYieldThrough([
         'CascadingChild 0',
@@ -209,7 +212,7 @@ describe('updaters', () => {
       [CascadingChild],
     ]);
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       triggerPassiveCascade();
       expect(Scheduler).toFlushAndYieldThrough([
         'CascadingChild 1',
@@ -264,21 +267,21 @@ describe('updaters', () => {
       }
     };
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       ReactDOM.render(<Parent />, document.createElement('div'));
       expect(Scheduler).toHaveYielded(['onCommitRoot']);
     });
     expect(setShouldSuspend).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       setShouldSuspend(true);
     });
     expect(Scheduler).toHaveYielded(['onCommitRoot']);
     expect(allSchedulerTypes).toEqual([[null], [Suspender]]);
 
     expect(resolver).not.toBeNull();
-    await ReactTestUtils.act(() => {
+    await act(() => {
       resolver('abc');
       return promise;
     });
@@ -328,7 +331,7 @@ describe('updaters', () => {
     };
 
     const root = ReactDOM.createRoot(document.createElement('div'));
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       root.render(<Parent shouldError={false} />);
     });
     expect(Scheduler).toHaveYielded(['initial', 'onCommitRoot']);
@@ -337,7 +340,7 @@ describe('updaters', () => {
     allSchedulerTypes.splice(0);
     onCommitRootShouldYield = true;
 
-    await ReactTestUtils.act(async () => {
+    await act(async () => {
       triggerError();
     });
     expect(Scheduler).toHaveYielded(['onCommitRoot', 'error', 'onCommitRoot']);
@@ -398,7 +401,7 @@ describe('updaters', () => {
     expect(allSchedulerTags).toEqual([[HostRoot]]);
 
     // Render a partial update, but don't finish.
-    ReactTestUtils.act(() => {
+    act(() => {
       triggerLowPriorityUpdate();
       expect(Scheduler).toFlushAndYieldThrough(['LowPriorityUpdater 1']);
       expect(allSchedulerTags).toEqual([[HostRoot]]);

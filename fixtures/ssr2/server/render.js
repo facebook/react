@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 // import {renderToString} from 'react-dom/server';
-import {pipeToNodeWritable} from 'react-dom/unstable-fizz';
+import {pipeToNodeWritable} from 'react-dom/server';
 import App from '../src/App';
 import {DataProvider} from '../src/data';
 import {API_DELAY, ABORT_DELAY} from './delays';
