@@ -623,7 +623,7 @@ export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
 // Use this function to schedule a task for a root. There's only one task per
 // root; if a task was already scheduled, we'll check to make sure the priority
 // of the existing task is the same as the priority of the next level that the
-// root has work on. This function is called on every update, and right before
+// root has worked on. This function is called on every update, and right before
 // exiting a task.
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackNode = root.callbackNode;
@@ -2702,7 +2702,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         }
       }
       // We always throw the original error in case the second render pass is not idempotent.
-      // This can happen if a memoized function or CommonJS module doesn't throw after first invokation.
+      // This can happen if a memoized function or CommonJS module doesn't throw after first invocation.
       throw originalError;
     }
   };

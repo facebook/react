@@ -348,7 +348,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   // This resets the Fiber to what createFiber or createWorkInProgress would
   // have set the values to before during the first pass. Ideally this wouldn't
-  // be necessary but unfortunately many code paths reads from the workInProgress
+  // be necessary but unfortunately many code paths read from the workInProgress
   // when they should be reading from current and writing to workInProgress.
 
   // We assume pendingProps, index, key, ref, return are still untouched to
