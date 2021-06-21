@@ -25,18 +25,17 @@ import {
 } from 'shared/ReactErrorUtils';
 import isArray from 'shared/isArray';
 
-// Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
-const EventInternals =
-  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+// Keep in sync with ReactDOM.js:
+const SecretInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const EventInternals = SecretInternals.Events;
 const getInstanceFromNode = EventInternals[0];
 const getNodeFromInstance = EventInternals[1];
 const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
-// const flushPassiveEffects = EventInternals[5];
-// TODO: This is related to `act`, not events. Move to separate key?
-// const IsThisRendererActing = EventInternals[6];
-const act = EventInternals[7];
+
+const act = SecretInternals.act;
 
 function Event(suffix) {}
 

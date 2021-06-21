@@ -14,16 +14,9 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 
-// Keep in sync with ReactDOM.js, and ReactTestUtils.js:
-const EventInternals =
-  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
-// const getInstanceFromNode = EventInternals[0];
-// const getNodeFromInstance = EventInternals[1];
-// const getFiberCurrentPropsFromNode = EventInternals[2];
-// const enqueueStateRestore = EventInternals[3];
-// const restoreStateIfNeeded = EventInternals[4];
-// const flushPassiveEffects = EventInternals[5];
-const IsThisRendererActing = EventInternals[6];
+const SecretInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const IsThisRendererActing = SecretInternals.IsThisRendererActing;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 
