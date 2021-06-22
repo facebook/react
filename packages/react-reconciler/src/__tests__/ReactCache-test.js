@@ -3,6 +3,7 @@ let ReactNoop;
 let Cache;
 let getCacheForType;
 let Scheduler;
+let act;
 let Suspense;
 let useCacheRefresh;
 let startTransition;
@@ -19,6 +20,7 @@ describe('ReactCache', () => {
     ReactNoop = require('react-noop-renderer');
     Cache = React.unstable_Cache;
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     Suspense = React.Suspense;
     getCacheForType = React.unstable_getCacheForType;
     useCacheRefresh = React.unstable_useCacheRefresh;
@@ -152,7 +154,7 @@ describe('ReactCache', () => {
   // @gate experimental || www
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<Cache>Hi</Cache>);
     });
     expect(root).toMatchRenderedOutput('Hi');
@@ -161,7 +163,7 @@ describe('ReactCache', () => {
   // @gate experimental || www
   test('mount new data', async () => {
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Cache>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -173,7 +175,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A']);
@@ -183,7 +185,7 @@ describe('ReactCache', () => {
   // @gate experimental || www
   test('root acts as implicit cache boundary', async () => {
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <AsyncText text="A" />
@@ -193,7 +195,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A']);
@@ -220,7 +222,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App showMore={false} />);
     });
     // Even though there are two new <Cache /> trees, they should share the same
@@ -232,7 +234,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('Loading...Loading...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
@@ -256,7 +258,7 @@ describe('ReactCache', () => {
       }
 
       const root = ReactNoop.createRoot();
-      await ReactNoop.act(async () => {
+      await act(async () => {
         root.render(<App />);
       });
       // Even though there are two new <Cache /> trees, they should share the same
@@ -264,7 +266,7 @@ describe('ReactCache', () => {
       expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A', 'A']);
@@ -290,7 +292,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
@@ -298,7 +300,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App showMore={true} />);
     });
     expect(Scheduler).toHaveYielded([
@@ -331,7 +333,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
@@ -339,7 +341,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App showMore={true} />);
     });
     expect(Scheduler).toHaveYielded([
@@ -349,7 +351,7 @@ describe('ReactCache', () => {
       'Loading...',
     ]);
     expect(root).toMatchRenderedOutput('A [v1]Loading...');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v2]']);
@@ -396,13 +398,13 @@ describe('ReactCache', () => {
       return <Text text="Content" />;
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading shell...']);
     expect(root).toMatchRenderedOutput('Loading shell...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded([
@@ -419,7 +421,7 @@ describe('ReactCache', () => {
       </>,
     );
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('B');
     });
     expect(Scheduler).toHaveYielded(['Content']);
@@ -441,7 +443,7 @@ describe('ReactCache', () => {
 
     // Mount initial data
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Cache>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -453,20 +455,20 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Fefresh for new data.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => refresh());
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     // Note that the version has updated
@@ -484,7 +486,7 @@ describe('ReactCache', () => {
 
     // Mount initial data
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <App />
@@ -494,20 +496,20 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Refresh for new data.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => refresh());
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     // Note that the version has updated
@@ -525,7 +527,7 @@ describe('ReactCache', () => {
 
     // Mount initial data
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Cache>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -537,14 +539,14 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Refresh for new data.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Refresh the cache with seeded data, like you would receive from a
       // server mutation.
       // TODO: Seeding multiple typed caches. Should work by calling `refresh`
@@ -585,7 +587,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
@@ -593,7 +595,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
-    await ReactNoop.act(async () => {
+    await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={true} />);
     });
@@ -606,7 +608,7 @@ describe('ReactCache', () => {
 
     // Now refresh the shell. This should also cause the "Show More" contents to
     // refresh, since its cache is nested inside the outer one.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => refreshShell());
     });
     expect(Scheduler).toHaveYielded([
@@ -616,7 +618,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v3]', 'A [v3]']);
@@ -657,12 +659,12 @@ describe('ReactCache', () => {
       // treated like sibling providers that happen to share an underlying
       // cache, as opposed to consumers of the root-level cache.
       const root = ReactNoop.createRoot();
-      await ReactNoop.act(async () => {
+      await act(async () => {
         root.render(<App showMore={false} />);
       });
 
       // Now reveal the boundaries. In a real app  this would be a navigation.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         root.render(<App showMore={true} />);
       });
 
@@ -675,7 +677,7 @@ describe('ReactCache', () => {
       ]);
       expect(root).toMatchRenderedOutput('Loading...Loading...');
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]']);
@@ -683,12 +685,12 @@ describe('ReactCache', () => {
 
       // Refresh the first boundary. It should not refresh the second boundary,
       // even though they previously shared the same underlying cache.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await refreshFirstBoundary();
       });
       expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A [v2]']);
@@ -723,7 +725,7 @@ describe('ReactCache', () => {
       }
 
       const root = ReactNoop.createRoot();
-      await ReactNoop.act(async () => {
+      await act(async () => {
         root.render(<App showMore={false} />);
       });
       expect(Scheduler).toHaveYielded([
@@ -732,7 +734,7 @@ describe('ReactCache', () => {
         'Loading...',
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         // This will resolve the content in the first cache
         resolveMostRecentTextCache('A');
         resolveMostRecentTextCache('B');
@@ -750,7 +752,7 @@ describe('ReactCache', () => {
       ]);
 
       // Now resolve the second tree
-      await ReactNoop.act(async () => {
+      await act(async () => {
         resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A [v2]']);
@@ -769,7 +771,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>(empty)</Suspense>,
       );
@@ -777,7 +779,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -789,7 +791,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -806,14 +808,14 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('(empty)');
 
     // Resolve the request
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
     // Now do another transition
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         root.render(
           <Suspense fallback={<Text text="Loading..." />}>
@@ -834,7 +836,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]', 'A [v2]']);
@@ -877,13 +879,13 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App showMore={false} />);
     });
     expect(Scheduler).toHaveYielded(['0']);
     expect(root).toMatchRenderedOutput('0');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         showMore();
       });
@@ -891,7 +893,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('0');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateUnrelated(1);
     });
     expect(Scheduler).toHaveYielded([
@@ -903,7 +905,7 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('1');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A']);

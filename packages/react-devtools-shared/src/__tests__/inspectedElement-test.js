@@ -26,7 +26,6 @@ describe('InspectedElement', () => {
   let InspectedElementContext;
   let InspectedElementContextController;
   let StoreContext;
-  let TestUtils;
   let TreeContextController;
 
   let TestUtilsAct;
@@ -45,10 +44,9 @@ describe('InspectedElement', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     PropTypes = require('prop-types');
-    TestUtils = require('react-dom/test-utils');
-    TestUtilsAct = TestUtils.unstable_concurrentAct;
+    TestUtilsAct = require('jest-react').act;
     TestRenderer = utils.requireTestRenderer();
-    TestRendererAct = TestUtils.unstable_concurrentAct;
+    TestRendererAct = require('jest-react').act;
 
     BridgeContext = require('react-devtools-shared/src/devtools/views/context')
       .BridgeContext;

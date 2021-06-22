@@ -12,7 +12,6 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let ReactTestUtils;
 let Scheduler;
 let mockDevToolsHook;
 let allSchedulerTags;
@@ -65,10 +64,9 @@ describe('updaters', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
     Scheduler = require('scheduler');
 
-    act = ReactTestUtils.unstable_concurrentAct;
+    act = require('jest-react').act;
   });
 
   it('should report the (host) root as the scheduler for root-level render', async () => {

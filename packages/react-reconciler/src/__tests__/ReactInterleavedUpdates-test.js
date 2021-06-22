@@ -4,6 +4,7 @@ let Scheduler;
 let startTransition;
 let useState;
 let useEffect;
+let act;
 
 describe('ReactInterleavedUpdates', () => {
   beforeEach(() => {
@@ -12,6 +13,7 @@ describe('ReactInterleavedUpdates', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
@@ -42,7 +44,7 @@ describe('ReactInterleavedUpdates', () => {
 
     const root = ReactNoop.createRoot();
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <>
           <Child />
@@ -54,7 +56,7 @@ describe('ReactInterleavedUpdates', () => {
     expect(Scheduler).toHaveYielded([0, 0, 0]);
     expect(root).toMatchRenderedOutput('000');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           updateChildren(1);
@@ -107,7 +109,7 @@ describe('ReactInterleavedUpdates', () => {
 
     const root = ReactNoop.createRoot();
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <>
           <Child />
@@ -119,7 +121,7 @@ describe('ReactInterleavedUpdates', () => {
     expect(Scheduler).toHaveYielded([0, 0, 0]);
     expect(root).toMatchRenderedOutput('000');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateChildren(1);
       // Partially render the children. Only the first one.
       expect(Scheduler).toFlushAndYieldThrough([1]);

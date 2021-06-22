@@ -14,6 +14,7 @@ let React;
 let ReactNoop;
 let Scheduler;
 let ContinuousEventPriority;
+let act;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('ReactIncrementalUpdates', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     ContinuousEventPriority = require('react-reconciler/constants')
       .ContinuousEventPriority;
   });
@@ -556,7 +558,7 @@ describe('ReactIncrementalUpdates', () => {
       return null;
     }
 
-    ReactNoop.act(() => {
+    act(() => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           ReactNoop.render(<App />);
@@ -664,13 +666,13 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Committed: ']);
     expect(root).toMatchRenderedOutput('');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           pushToLog('A');
@@ -725,13 +727,13 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           pushToLog('A');
@@ -788,20 +790,20 @@ describe('ReactIncrementalUpdates', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App prop="A" />);
     });
     expect(root).toMatchRenderedOutput('0');
 
     // Changing the prop causes the count to increase by 100
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App prop="B" />);
     });
     expect(root).toMatchRenderedOutput('100');
 
     // Now increment the count by 1 with a state update. And, in the same
     // batch, change the prop back to its original value.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App prop="A" />);
       app.setState(state => ({count: state.count + 1}));
     });

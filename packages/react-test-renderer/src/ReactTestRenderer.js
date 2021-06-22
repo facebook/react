@@ -49,18 +49,10 @@ import ReactVersion from 'shared/ReactVersion';
 import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
-import internalAct from 'shared/internalAct';
 
 const act_notBatchedInLegacyMode = React.unstable_act;
 function act(callback: () => Thenable<mixed>): Thenable<void> {
   return act_notBatchedInLegacyMode(() => {
-    return batchedUpdates(callback);
-  });
-}
-
-// TODO: Remove from public bundle
-function unstable_concurrentAct(callback: () => Thenable<mixed>): mixed {
-  return internalAct(() => {
     return batchedUpdates(callback);
   });
 }
@@ -612,5 +604,4 @@ export {
   /* eslint-disable-next-line camelcase */
   batchedUpdates as unstable_batchedUpdates,
   act,
-  unstable_concurrentAct,
 };

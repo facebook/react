@@ -44,7 +44,7 @@ function initModules() {
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
   Scheduler = require('scheduler');
-  act = ReactTestUtils.unstable_concurrentAct;
+  act = require('jest-react').act;
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;

@@ -10,6 +10,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let Suspense;
 let SuspenseList;
 let getCacheForType;
@@ -20,6 +21,7 @@ beforeEach(() => {
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
+  act = require('jest-react').act;
 
   Suspense = React.Suspense;
   SuspenseList = React.SuspenseList;
@@ -180,12 +182,12 @@ test('warns in DEV if return pointer is inconsistent', async () => {
   }
 
   const root = ReactNoop.createRoot();
-  await ReactNoop.act(async () => {
+  await act(async () => {
     root.render(<App text="A" />);
   });
 
   spyOnDev(console, 'error');
-  await ReactNoop.act(async () => {
+  await act(async () => {
     root.render(<App text="B" />);
   });
   expect(console.error.calls.count()).toBe(1);
@@ -225,7 +227,7 @@ test('regression (#20932): return pointer is correct before entering deleted tre
   }
 
   const root = ReactNoop.createRoot();
-  await ReactNoop.act(async () => {
+  await act(async () => {
     root.render(<App />);
   });
   expect(Scheduler).toHaveYielded([
@@ -233,11 +235,11 @@ test('regression (#20932): return pointer is correct before entering deleted tre
     'Loading Async...',
     'Loading Tail...',
   ]);
-  await ReactNoop.act(async () => {
+  await act(async () => {
     resolveText(0);
   });
   expect(Scheduler).toHaveYielded([0, 'Tail']);
-  await ReactNoop.act(async () => {
+  await act(async () => {
     setAsyncText(x => x + 1);
   });
   expect(Scheduler).toHaveYielded([

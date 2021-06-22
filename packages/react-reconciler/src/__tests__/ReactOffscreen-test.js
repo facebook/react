@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let LegacyHidden;
 let Offscreen;
 let useState;
@@ -13,6 +14,7 @@ describe('ReactOffscreen', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     LegacyHidden = React.unstable_LegacyHidden;
     Offscreen = React.unstable_Offscreen;
     useState = React.useState;
@@ -39,7 +41,7 @@ describe('ReactOffscreen', () => {
 
     // Test the initial mount
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App mode="unstable-defer-without-hiding" />);
       expect(Scheduler).toFlushUntilNextPaint(['Normal']);
       expect(root).toMatchRenderedOutput(<span prop="Normal" />);
@@ -53,7 +55,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Now try after an update
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App mode="visible" />);
     });
     expect(Scheduler).toHaveYielded(['Normal', 'Deferred']);
@@ -64,7 +66,7 @@ describe('ReactOffscreen', () => {
       </>,
     );
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App mode="unstable-defer-without-hiding" />);
       expect(Scheduler).toFlushUntilNextPaint(['Normal']);
       expect(root).toMatchRenderedOutput(
@@ -93,7 +95,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createLegacyRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <>
           <LegacyHidden mode="hidden">
@@ -116,7 +118,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Test that the children can be updated
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setState('B');
     });
     expect(Scheduler).toHaveYielded(['B']);
@@ -138,7 +140,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <>
           <LegacyHidden mode="hidden">
@@ -162,7 +164,7 @@ describe('ReactOffscreen', () => {
     );
 
     // Test that the children can be updated
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setState('B');
     });
     expect(Scheduler).toHaveYielded(['B']);
@@ -190,7 +192,7 @@ describe('ReactOffscreen', () => {
     const root = ReactNoop.createRoot();
 
     // Mount hidden tree.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -205,7 +207,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Unhide the tree. The layout effect is mounted.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -230,7 +232,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -241,7 +243,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree. The layout effect is unmounted.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Offscreen mode="hidden">
           <Child />
@@ -255,7 +257,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Unhide the tree. The layout effect is re-mounted.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -280,7 +282,7 @@ describe('ReactOffscreen', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Start the tree hidden. The layout effect is not mounted.
       root.render(
         <Offscreen mode="hidden">
@@ -295,7 +297,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Show the tree. The layout effect is mounted.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Offscreen mode="visible">
           <Child />
@@ -306,7 +308,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
 
     // Hide the tree again. The layout effect is un-mounted.
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <Offscreen mode="hidden">
           <Child />

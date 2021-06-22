@@ -237,7 +237,7 @@ describe('SimpleEventPlugin', function() {
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
 
-      act = require('react-dom/test-utils').unstable_concurrentAct;
+      act = require('jest-react').act;
     });
 
     it('flushes pending interactive work before exiting event handler', async () => {

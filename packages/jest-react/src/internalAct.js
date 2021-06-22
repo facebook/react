@@ -24,7 +24,7 @@ const {ReactCurrentActQueue} = ReactSharedInternals;
 
 let actingUpdatesScopeDepth = 0;
 
-function act(scope: () => Thenable<mixed> | void) {
+export function act(scope: () => Thenable<mixed> | void) {
   if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',
@@ -128,5 +128,3 @@ function flushActWork(resolve, reject) {
     }
   });
 }
-
-export default act;

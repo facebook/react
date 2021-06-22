@@ -23,7 +23,6 @@ import {
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
 import isArray from 'shared/isArray';
-import internalAct from 'shared/internalAct';
 
 // Keep in sync with ReactDOM.js:
 const SecretInternals =
@@ -39,13 +38,6 @@ const batchedUpdates = EventInternals[5];
 const act_notBatchedInLegacyMode = React.unstable_act;
 function act(callback) {
   return act_notBatchedInLegacyMode(() => {
-    return batchedUpdates(callback);
-  });
-}
-
-// TODO: Remove from public bundle
-function unstable_concurrentAct(callback) {
-  return internalAct(() => {
     return batchedUpdates(callback);
   });
 }
@@ -739,5 +731,4 @@ export {
   nativeTouchData,
   Simulate,
   act,
-  unstable_concurrentAct,
 };

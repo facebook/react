@@ -2,6 +2,7 @@ let React;
 let Suspense;
 let ReactNoop;
 let Scheduler;
+let act;
 let ReactFeatureFlags;
 let Random;
 
@@ -27,6 +28,7 @@ describe('ReactSuspenseFuzz', () => {
     Suspense = React.Suspense;
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     Random = require('random-seed');
   });
 
@@ -143,7 +145,11 @@ describe('ReactSuspenseFuzz', () => {
         if ((elapsedTime += 1000) > 1000000) {
           throw new Error('Something did not resolve properly.');
         }
-        ReactNoop.act(() => jest.advanceTimersByTime(1000));
+        act(() => {
+          ReactNoop.batchedUpdates(() => {
+            jest.advanceTimersByTime(1000);
+          });
+        });
         Scheduler.unstable_flushAllWithoutAsserting();
       }
     }

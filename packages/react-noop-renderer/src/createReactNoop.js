@@ -16,7 +16,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
@@ -28,7 +28,6 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-import internalAct from 'shared/internalAct';
 
 type Container = {
   rootID: string,
@@ -923,13 +922,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
-
-    // TODO: Remove from public bundle
-    act(callback: () => Thenable<mixed>): Thenable<void> {
-      return internalAct(() => {
-        return NoopRenderer.batchedUpdates(callback);
-      });
-    },
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {

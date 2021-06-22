@@ -30,7 +30,7 @@ function loadModules() {
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
-  act = ReactNoop.act;
+  act = require('jest-react').act;
 
   // Stable entrypoints export with "unstable_" prefix.
   createMutableSource =
@@ -1443,7 +1443,7 @@ describe('useMutableSource', () => {
       // Now mutate A. Both hooks should update.
       // This is at high priority so that it doesn't get batched with default
       // priority updates that might fire during the passive effect
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.discreteUpdates(() => {
           mutateA('a1');
         });
