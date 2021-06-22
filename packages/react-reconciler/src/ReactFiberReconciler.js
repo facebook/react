@@ -26,7 +26,6 @@ import {
   flushControlled as flushControlled_old,
   flushSync as flushSync_old,
   flushPassiveEffects as flushPassiveEffects_old,
-  IsThisRendererActing as IsThisRendererActing_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
   attemptDiscreteHydration as attemptDiscreteHydration_old,
@@ -66,7 +65,6 @@ import {
   flushControlled as flushControlled_new,
   flushSync as flushSync_new,
   flushPassiveEffects as flushPassiveEffects_new,
-  IsThisRendererActing as IsThisRendererActing_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
   attemptDiscreteHydration as attemptDiscreteHydration_new,
@@ -125,9 +123,6 @@ export const flushSync = enableNewReconciler ? flushSync_new : flushSync_old;
 export const flushPassiveEffects = enableNewReconciler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;
-export const IsThisRendererActing = enableNewReconciler
-  ? IsThisRendererActing_new
-  : IsThisRendererActing_old;
 export const getPublicRootInstance = enableNewReconciler
   ? getPublicRootInstance_new
   : getPublicRootInstance_old;

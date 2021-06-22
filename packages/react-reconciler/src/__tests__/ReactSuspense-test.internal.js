@@ -19,7 +19,7 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
 

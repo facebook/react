@@ -60,7 +60,6 @@ import {
   discreteUpdates,
   flushDiscreteUpdates,
   flushPassiveEffects,
-  IsThisRendererActing,
 } from './ReactFiberWorkLoop.new';
 import {
   createUpdate,
@@ -337,7 +336,6 @@ export {
   flushControlled,
   flushSync,
   flushPassiveEffects,
-  IsThisRendererActing,
 };
 
 export function getPublicRootInstance(

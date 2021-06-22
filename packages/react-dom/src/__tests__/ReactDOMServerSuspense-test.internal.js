@@ -25,7 +25,7 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
-  act = ReactTestUtils.unstable_concurrentAct;
+  act = require('jest-react').act;
 
   // Make them available to the helpers.
   return {

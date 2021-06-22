@@ -25,7 +25,7 @@ describe('ReactDOMRoot', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
   });
 
   it('renders children', () => {

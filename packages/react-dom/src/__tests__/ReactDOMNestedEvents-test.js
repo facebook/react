@@ -13,7 +13,6 @@ describe('ReactDOMNestedEvents', () => {
   let React;
   let ReactDOM;
   let Scheduler;
-  let TestUtils;
   let act;
   let useState;
 
@@ -22,8 +21,7 @@ describe('ReactDOMNestedEvents', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
-    TestUtils = require('react-dom/test-utils');
-    act = TestUtils.unstable_concurrentAct;
+    act = require('jest-react').act;
     useState = React.useState;
   });
 

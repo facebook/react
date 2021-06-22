@@ -18,7 +18,6 @@ import {
 import {SyntheticEvent} from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import {unstable_concurrentAct} from './ReactTestUtilsInternalAct';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
@@ -732,5 +731,4 @@ export {
   nativeTouchData,
   Simulate,
   act,
-  unstable_concurrentAct,
 };

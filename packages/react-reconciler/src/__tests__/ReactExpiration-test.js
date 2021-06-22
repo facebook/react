@@ -12,6 +12,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let readText;
 let resolveText;
 let startTransition;
@@ -25,6 +26,7 @@ describe('ReactExpiration', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
@@ -496,14 +498,14 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Sync pri: 0', 'Normal pri: 0']);
     expect(root).toMatchRenderedOutput('Sync pri: 0, Normal pri: 0');
 
     // First demonstrate what happens when there's no starvation
-    await ReactNoop.act(async () => {
+    await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           updateNormalPri();
@@ -527,7 +529,7 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('Sync pri: 1, Normal pri: 1');
 
     // Do the same thing, but starve the first update
-    await ReactNoop.act(async () => {
+    await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           updateNormalPri();
@@ -575,14 +577,14 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Sync pri: 0', 'Idle pri: 0']);
     expect(root).toMatchRenderedOutput('Sync pri: 0, Idle pri: 0');
 
     // First demonstrate what happens when there's no starvation
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateIdlePri();
       expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 0']);
       updateSyncPri();
@@ -598,7 +600,7 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('Sync pri: 1, Idle pri: 1');
 
     // Do the same thing, but starve the first update
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateIdlePri();
       expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 1']);
 
@@ -638,13 +640,13 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A0', 'B0', 'C']);
     expect(root).toMatchRenderedOutput('A0B0C');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         setA(1);
       });
@@ -682,14 +684,14 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       await resolveText('A0');
       root.render(<App step={0} />);
     });
     expect(Scheduler).toHaveYielded(['A0', 'B', 'C']);
     expect(root).toMatchRenderedOutput('A0BC');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           root.render(<App step={1} />);
@@ -741,12 +743,12 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A0', 'B0']);
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         setA(1);
       });
@@ -782,13 +784,13 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App step={0} />);
     });
     expect(Scheduler).toHaveYielded(['A0', 'B0', 'C0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('A0B0C0');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         root.render(<App step={1} />);
       });

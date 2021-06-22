@@ -28,7 +28,6 @@ import {
   flushSync,
   flushControlled,
   injectIntoDevTools,
-  IsThisRendererActing,
   attemptSynchronousHydration,
   attemptDiscreteHydration,
   attemptContinuousHydration,
@@ -164,8 +163,6 @@ const Internals = {
     restoreStateIfNeeded,
     batchedUpdates,
   ],
-  // TODO: Temporary. Only used by our internal version of `act. Will remove.
-  IsThisRendererActing,
 };
 
 export {

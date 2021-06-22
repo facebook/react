@@ -2767,9 +2767,6 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   }
 }
 
-// a 'shared' variable that changes when act() opens/closes in tests.
-export const IsThisRendererActing = {current: (false: boolean)};
-
 export function restorePendingUpdaters(root: FiberRoot, lanes: Lanes): void {
   if (enableUpdaterTracking) {
     if (isDevToolsPresent) {

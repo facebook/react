@@ -12,6 +12,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 
 describe('StrictEffectsMode defaults', () => {
   beforeEach(() => {
@@ -20,6 +21,7 @@ describe('StrictEffectsMode defaults', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableStrictEffects = __DEV__;
@@ -41,7 +43,7 @@ describe('StrictEffectsMode defaults', () => {
       return text;
     }
 
-    ReactNoop.act(() => {
+    act(() => {
       ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
@@ -70,7 +72,7 @@ describe('StrictEffectsMode defaults', () => {
       }
     }
 
-    ReactNoop.act(() => {
+    act(() => {
       ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
@@ -89,7 +91,7 @@ describe('StrictEffectsMode defaults', () => {
         return label;
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <>
             <ComponentWithEffects label={'one'} />
@@ -103,7 +105,7 @@ describe('StrictEffectsMode defaults', () => {
         ]);
       });
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <>
             <ComponentWithEffects label={'one'} />
@@ -143,7 +145,7 @@ describe('StrictEffectsMode defaults', () => {
         return label;
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <>
             <ComponentWithEffects label={'one'} />
@@ -162,7 +164,7 @@ describe('StrictEffectsMode defaults', () => {
         ]);
       });
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <>
             <ComponentWithEffects label={'one'} />
@@ -204,7 +206,7 @@ describe('StrictEffectsMode defaults', () => {
 
         return text;
       }
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -217,7 +219,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -228,7 +230,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(null);
       });
 
@@ -253,7 +255,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -266,7 +268,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect Two mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -277,7 +279,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect Two mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(null);
       });
 
@@ -304,7 +306,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -317,7 +319,7 @@ describe('StrictEffectsMode defaults', () => {
         'useLayoutEffect Two mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -328,7 +330,7 @@ describe('StrictEffectsMode defaults', () => {
         'useLayoutEffect Two mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(null);
       });
 
@@ -351,7 +353,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -362,7 +364,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
@@ -371,7 +373,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(null);
       });
 
@@ -402,7 +404,7 @@ describe('StrictEffectsMode defaults', () => {
         }
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App />);
       });
 
@@ -432,7 +434,7 @@ describe('StrictEffectsMode defaults', () => {
         }
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -442,13 +444,13 @@ describe('StrictEffectsMode defaults', () => {
         'componentDidMount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'update'} />);
       });
 
       expect(Scheduler).toHaveYielded(['componentDidUpdate']);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(null);
       });
 
@@ -475,7 +477,7 @@ describe('StrictEffectsMode defaults', () => {
         return text;
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -527,7 +529,7 @@ describe('StrictEffectsMode defaults', () => {
         return showChild && <Child />;
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App />);
       });
 
@@ -540,7 +542,7 @@ describe('StrictEffectsMode defaults', () => {
         'App useEffect mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         _setShowChild(true);
       });
 
@@ -594,7 +596,7 @@ describe('StrictEffectsMode defaults', () => {
         );
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -610,7 +612,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App text={'mount'} />);
       });
 
@@ -621,7 +623,7 @@ describe('StrictEffectsMode defaults', () => {
         'useEffect mount',
       ]);
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(null);
       });
 

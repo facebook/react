@@ -4,23 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * @flow strict
  */
-
-import type {Thenable} from 'shared/ReactTypes';
-
-import * as ReactDOM from 'react-dom';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import enqueueTask from 'shared/enqueueTask';
-import * as Scheduler from 'scheduler';
-
-const SecretInternals =
-  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-const IsThisRendererActing = SecretInternals.IsThisRendererActing;
-
-const batchedUpdates = ReactDOM.unstable_batchedUpdates;
-
-const {IsSomeRendererActing, ReactCurrentActQueue} = ReactSharedInternals;
 
 // This version of `act` is only used by our tests. Unlike the public version
 // of `act`, it's designed to work identically in both production and
@@ -28,12 +13,18 @@ const {IsSomeRendererActing, ReactCurrentActQueue} = ReactSharedInternals;
 // version, too, since our constraints in our test suite are not the same as
 // those of developers using React — we're testing React itself, as opposed to
 // building an app with React.
-// TODO: Replace the internal "concurrent" implementations of `act` with a
-// single shared module.
+
+import type {Thenable} from 'shared/ReactTypes';
+
+import * as Scheduler from 'scheduler/unstable_mock';
+
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import enqueueTask from 'shared/enqueueTask';
+const {ReactCurrentActQueue} = ReactSharedInternals;
 
 let actingUpdatesScopeDepth = 0;
 
-export function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
+export function act(scope: () => Thenable<mixed> | void) {
   if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',
@@ -47,10 +38,6 @@ export function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
   }
 
   const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  const previousIsSomeRendererActing = IsSomeRendererActing.current;
-  const previousIsThisRendererActing = IsThisRendererActing.current;
-  IsSomeRendererActing.current = true;
-  IsThisRendererActing.current = true;
   actingUpdatesScopeDepth++;
   if (__DEV__ && actingUpdatesScopeDepth === 1) {
     ReactCurrentActQueue.disableActWarning = true;
@@ -61,8 +48,6 @@ export function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
       ReactCurrentActQueue.disableActWarning = false;
     }
     actingUpdatesScopeDepth--;
-    IsSomeRendererActing.current = previousIsSomeRendererActing;
-    IsThisRendererActing.current = previousIsThisRendererActing;
 
     if (__DEV__) {
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
@@ -80,7 +65,7 @@ export function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
   // returned and 2) we could use async/await. Since it's only our used in
   // our test suite, we should be able to.
   try {
-    const thenable = batchedUpdates(scope);
+    const thenable = scope();
     if (
       typeof thenable === 'object' &&
       thenable !== null &&

@@ -5,6 +5,7 @@ let ContinuousEventPriority;
 let startTransition;
 let useState;
 let useEffect;
+let act;
 
 describe('ReactUpdatePriority', () => {
   beforeEach(() => {
@@ -13,6 +14,7 @@ describe('ReactUpdatePriority', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     ContinuousEventPriority = require('react-reconciler/constants')
       .ContinuousEventPriority;
     startTransition = React.startTransition;
@@ -36,7 +38,7 @@ describe('ReactUpdatePriority', () => {
       return <Text text={state} />;
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       ReactNoop.flushSync(() => {
         root.render(<App />);
       });
@@ -61,7 +63,7 @@ describe('ReactUpdatePriority', () => {
       return <Text text={`Idle: ${idleState}, Default: ${defaultState}`} />;
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       ReactNoop.idleUpdates(() => {
         root.render(<App />);
       });
@@ -106,13 +108,13 @@ describe('ReactUpdatePriority', () => {
       );
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A1', 'B1', 'C1']);
     expect(root).toMatchRenderedOutput('A1B1C1');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         setCounter(2);
       });

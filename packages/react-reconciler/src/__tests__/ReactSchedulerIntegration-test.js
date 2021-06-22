@@ -13,6 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let NormalPriority;
 let IdlePriority;
 let runWithPriority;
@@ -25,6 +26,7 @@ describe('ReactSchedulerIntegration', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     NormalPriority = Scheduler.unstable_NormalPriority;
     IdlePriority = Scheduler.unstable_IdlePriority;
     runWithPriority = Scheduler.unstable_runWithPriority;
@@ -71,11 +73,11 @@ describe('ReactSchedulerIntegration', () => {
       });
       return null;
     }
-    await ReactNoop.act(async () => {
+    await act(async () => {
       ReactNoop.render(<CleanupEffect />);
     });
     expect(Scheduler).toHaveYielded([]);
-    await ReactNoop.act(async () => {
+    await act(async () => {
       ReactNoop.render(<Effects />);
     });
     expect(Scheduler).toHaveYielded([
@@ -139,7 +141,7 @@ describe('ReactSchedulerIntegration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App label="A" />);
 
       // Commit the visible content
@@ -244,7 +246,7 @@ describe(
         return null;
       }
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
         expect(Scheduler).toFlushUntilNextPaint([]);
         expect(Scheduler).toFlushUntilNextPaint([]);
@@ -273,7 +275,7 @@ describe(
         );
       }
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         // Partially render the tree, then yield
         startTransition(() => {
           ReactNoop.render(<App />);

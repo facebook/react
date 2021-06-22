@@ -45,7 +45,7 @@ describe('ReactErrorBoundaries', () => {
     ReactFeatureFlags.skipUnmountedBoundaries = true;
     ReactDOM = require('react-dom');
     React = require('react');
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
 
     BrokenConstructor = class extends React.Component {
