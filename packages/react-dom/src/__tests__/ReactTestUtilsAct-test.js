@@ -354,32 +354,6 @@ function runActTests(label, render, unmount, rerender) {
           expect(container.innerHTML).toBe('2');
         });
       });
-
-      // @gate __DEV__
-      it('warns if you return a value inside act', () => {
-        expect(() => act(() => null)).toErrorDev(
-          [
-            'The callback passed to act(...) function must return undefined, or a Promise.',
-          ],
-          {withoutStack: true},
-        );
-        expect(() => act(() => 123)).toErrorDev(
-          [
-            'The callback passed to act(...) function must return undefined, or a Promise.',
-          ],
-          {withoutStack: true},
-        );
-      });
-
-      // @gate __DEV__
-      it('warns if you try to await a sync .act call', () => {
-        expect(() => act(() => {}).then(() => {})).toErrorDev(
-          [
-            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-          ],
-          {withoutStack: true},
-        );
-      });
     });
 
     describe('asynchronous tests', () => {
@@ -401,15 +375,17 @@ function runActTests(label, render, unmount, rerender) {
 
         await act(async () => {
           render(<App />, container);
-          // flush a little to start the timer
-          expect(Scheduler).toFlushAndYield([]);
+        });
+        expect(container.innerHTML).toBe('0');
+        // Flush the pending timers
+        await act(async () => {
           await sleep(100);
         });
         expect(container.innerHTML).toBe('1');
       });
 
       // @gate __DEV__
-      it('flushes microtasks before exiting', async () => {
+      it('flushes microtasks before exiting (async function)', async () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           async function someAsyncFunction() {
@@ -426,6 +402,31 @@ function runActTests(label, render, unmount, rerender) {
         }
 
         await act(async () => {
+          render(<App />, container);
+        });
+        expect(container.innerHTML).toEqual('1');
+      });
+
+      // @gate __DEV__
+      it('flushes microtasks before exiting (sync function)', async () => {
+        // Same as previous test, but the callback passed to `act` is not itself
+        // an async function.
+        function App() {
+          const [ctr, setCtr] = React.useState(0);
+          async function someAsyncFunction() {
+            // queue a bunch of promises to be sure they all flush
+            await null;
+            await null;
+            await null;
+            setCtr(1);
+          }
+          React.useEffect(() => {
+            someAsyncFunction();
+          }, []);
+          return ctr;
+        }
+
+        await act(() => {
           render(<App />, container);
         });
         expect(container.innerHTML).toEqual('1');
@@ -461,7 +462,13 @@ function runActTests(label, render, unmount, rerender) {
 
         await sleep(150);
         if (__DEV__) {
-          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(console.error).toHaveBeenCalledTimes(2);
+          expect(console.error.calls.argsFor(0)[0]).toMatch(
+            'You seem to have overlapping act() calls',
+          );
+          expect(console.error.calls.argsFor(1)[0]).toMatch(
+            'You seem to have overlapping act() calls',
+          );
         }
       });
 

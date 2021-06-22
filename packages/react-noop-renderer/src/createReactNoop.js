@@ -31,7 +31,7 @@ import {
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
-const {IsSomeRendererActing} = ReactSharedInternals;
+const {IsSomeRendererActing, ReactCurrentActQueue} = ReactSharedInternals;
 
 type Container = {
   rootID: string,
@@ -1048,6 +1048,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   // version, too, since our constraints in our test suite are not the same as
   // those of developers using React — we're testing React itself, as opposed to
   // building an app with React.
+  // TODO: Replace the internal "concurrent" implementations of `act` with a
+  // single shared module.
 
   const {batchedUpdates, IsThisRendererActing} = NoopRenderer;
   let actingUpdatesScopeDepth = 0;
@@ -1071,8 +1073,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     IsSomeRendererActing.current = true;
     IsThisRendererActing.current = true;
     actingUpdatesScopeDepth++;
+    if (__DEV__ && actingUpdatesScopeDepth === 1) {
+      ReactCurrentActQueue.disableActWarning = true;
+    }
 
     const unwind = () => {
+      if (__DEV__ && actingUpdatesScopeDepth === 1) {
+        ReactCurrentActQueue.disableActWarning = false;
+      }
       actingUpdatesScopeDepth--;
       IsSomeRendererActing.current = previousIsSomeRendererActing;
       IsThisRendererActing.current = previousIsThisRendererActing;

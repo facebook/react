@@ -75,8 +75,6 @@ export const enableCreateEventHandleAPI = true;
 
 export const enableScopeAPI = true;
 
-export const warnAboutUnmockedScheduler = true;
-
 export const enableSuspenseCallback = true;
 
 export const enableComponentStackLocations = true;

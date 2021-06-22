@@ -12,6 +12,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
+import * as React from 'react';
 import * as Scheduler from 'scheduler/unstable_mock';
 import {
   getPublicRootInstance,
@@ -20,7 +21,6 @@ import {
   flushSync,
   injectIntoDevTools,
   batchedUpdates,
-  act,
   IsThisRendererActing,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
@@ -53,7 +53,14 @@ import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
-const {IsSomeRendererActing} = ReactSharedInternals;
+const {IsSomeRendererActing, ReactCurrentActQueue} = ReactSharedInternals;
+
+const act_notBatchedInLegacyMode = React.unstable_act;
+function act(callback: () => Thenable<mixed>): Thenable<void> {
+  return act_notBatchedInLegacyMode(() => {
+    return batchedUpdates(callback);
+  });
+}
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -604,6 +611,8 @@ let actingUpdatesScopeDepth = 0;
 // building an app with React.
 // TODO: Migrate our tests to use ReactNoop. Although we would need to figure
 // out a solution for Relay, which has some Concurrent Mode tests.
+// TODO: Replace the internal "concurrent" implementations of `act` with a
+// single shared module.
 function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
   if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
     throw Error(
@@ -623,8 +632,14 @@ function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
   IsSomeRendererActing.current = true;
   IsThisRendererActing.current = true;
   actingUpdatesScopeDepth++;
+  if (__DEV__ && actingUpdatesScopeDepth === 1) {
+    ReactCurrentActQueue.disableActWarning = true;
+  }
 
   const unwind = () => {
+    if (__DEV__ && actingUpdatesScopeDepth === 1) {
+      ReactCurrentActQueue.disableActWarning = false;
+    }
     actingUpdatesScopeDepth--;
     IsSomeRendererActing.current = previousIsSomeRendererActing;
     IsThisRendererActing.current = previousIsThisRendererActing;

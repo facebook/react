@@ -38,7 +38,6 @@ import {
   shouldError as shouldError_old,
   shouldSuspend as shouldSuspend_old,
   injectIntoDevTools as injectIntoDevTools_old,
-  act as act_old,
   createPortal as createPortal_old,
   createComponentSelector as createComponentSelector_old,
   createHasPseudoClassSelector as createHasPseudoClassSelector_old,
@@ -79,7 +78,6 @@ import {
   shouldError as shouldError_new,
   shouldSuspend as shouldSuspend_new,
   injectIntoDevTools as injectIntoDevTools_new,
-  act as act_new,
   createPortal as createPortal_new,
   createComponentSelector as createComponentSelector_new,
   createHasPseudoClassSelector as createHasPseudoClassSelector_new,
@@ -166,7 +164,6 @@ export const shouldSuspend = enableNewReconciler
 export const injectIntoDevTools = enableNewReconciler
   ? injectIntoDevTools_new
   : injectIntoDevTools_old;
-export const act = enableNewReconciler ? act_new : act_old;
 export const createPortal = enableNewReconciler
   ? createPortal_new
   : createPortal_old;
