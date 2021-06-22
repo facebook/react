@@ -18,12 +18,12 @@ import {
 import {SyntheticEvent} from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import {unstable_concurrentAct} from './ReactTestUtilsInternalAct';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
 import isArray from 'shared/isArray';
+import internalAct from 'shared/internalAct';
 
 // Keep in sync with ReactDOM.js:
 const SecretInternals =
@@ -39,6 +39,13 @@ const batchedUpdates = EventInternals[5];
 const act_notBatchedInLegacyMode = React.unstable_act;
 function act(callback) {
   return act_notBatchedInLegacyMode(() => {
+    return batchedUpdates(callback);
+  });
+}
+
+// TODO: Remove from public bundle
+function unstable_concurrentAct(callback) {
+  return internalAct(() => {
     return batchedUpdates(callback);
   });
 }
