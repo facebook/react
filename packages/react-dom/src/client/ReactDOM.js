@@ -28,8 +28,8 @@ import {
   flushSync,
   flushControlled,
   injectIntoDevTools,
-  flushPassiveEffects,
   IsThisRendererActing,
+  act,
   attemptSynchronousHydration,
   attemptDiscreteHydration,
   attemptContinuousHydration,
@@ -155,7 +155,7 @@ function renderSubtreeIntoContainer(
 }
 
 const Internals = {
-  // Keep in sync with ReactTestUtils.js, and ReactTestUtilsAct.js.
+  // Keep in sync with ReactTestUtils.js.
   // This is an array for better minification.
   Events: [
     getInstanceFromNode,
@@ -163,10 +163,10 @@ const Internals = {
     getFiberCurrentPropsFromNode,
     enqueueStateRestore,
     restoreStateIfNeeded,
-    flushPassiveEffects,
-    // TODO: This is related to `act`, not events. Move to separate key?
-    IsThisRendererActing,
   ],
+  act,
+  // TODO: Temporary. Only used by our internal version of `act. Will remove.
+  IsThisRendererActing,
 };
 
 export {
