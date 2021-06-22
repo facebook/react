@@ -29,7 +29,6 @@ import {
   flushControlled,
   injectIntoDevTools,
   IsThisRendererActing,
-  act,
   attemptSynchronousHydration,
   attemptDiscreteHydration,
   attemptContinuousHydration,
@@ -163,8 +162,8 @@ const Internals = {
     getFiberCurrentPropsFromNode,
     enqueueStateRestore,
     restoreStateIfNeeded,
+    batchedUpdates,
   ],
-  act,
   // TODO: Temporary. Only used by our internal version of `act. Will remove.
   IsThisRendererActing,
 };

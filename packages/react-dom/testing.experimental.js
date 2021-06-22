@@ -8,4 +8,3 @@
  */
 
 export * from './index.experimental.js';
-export {act} from 'react-reconciler/src/ReactFiberReconciler';

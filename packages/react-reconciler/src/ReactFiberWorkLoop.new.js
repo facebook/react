@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable, Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
@@ -24,7 +24,6 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableProfilerNestedUpdateScheduledHook,
-  warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
   enableSchedulingProfiler,
@@ -37,8 +36,9 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
 import {
-  scheduleCallback,
-  cancelCallback,
+  // Aliased because `act` will override and push to an internal queue
+  scheduleCallback as Scheduler_scheduleCallback,
+  cancelCallback as Scheduler_cancelCallback,
   shouldYield,
   requestPaint,
   now,
@@ -78,9 +78,6 @@ import {
   markRenderYielded,
   markRenderStopped,
 } from './SchedulingProfiler';
-
-// The scheduler is imported here *only* to detect whether it's been mocked
-import * as Scheduler from 'scheduler';
 
 import {
   resetAfterCommit,
@@ -238,16 +235,13 @@ import {
 } from './ReactFiberDevToolsHook.new';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 
-// Used by `act`
-import enqueueTask from 'shared/enqueueTask';
-
 const ceil = Math.ceil;
 
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
   ReactCurrentBatchConfig,
-  IsSomeRendererActing,
+  ReactCurrentActQueue,
 } = ReactSharedInternals;
 
 type ExecutionContext = number;
@@ -653,7 +647,17 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackPriority = root.callbackPriority;
-  if (existingCallbackPriority === newCallbackPriority) {
+  if (
+    existingCallbackPriority === newCallbackPriority &&
+    // Special case related to `act`. If the currently scheduled task is a
+    // Scheduler task, rather than an `act` task, cancel it and re-scheduled
+    // on the `act` queue.
+    !(
+      __DEV__ &&
+      ReactCurrentActQueue.current !== null &&
+      existingCallbackNode !== fakeActCallbackNode
+    )
+  ) {
     if (__DEV__) {
       // If we're going to re-use an existing task, it needs to exist.
       // Assume that discrete update microtasks are non-cancellable and null.
@@ -2781,42 +2785,35 @@ export function restorePendingUpdaters(root: FiberRoot, lanes: Lanes): void {
   }
 }
 
-export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
+const fakeActCallbackNode = {};
+function scheduleCallback(priorityLevel, callback) {
   if (__DEV__) {
-    if (
-      warnsIfNotActing === true &&
-      IsSomeRendererActing.current === true &&
-      IsThisRendererActing.current !== true
-    ) {
-      const previousFiber = ReactCurrentFiberCurrent;
-      try {
-        setCurrentDebugFiberInDEV(fiber);
-        console.error(
-          "It looks like you're using the wrong act() around your test interactions.\n" +
-            'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
-            '// for react-dom:\n' +
-            // Break up imports to avoid accidentally parsing them as dependencies.
-            'import {act} fr' +
-            "om 'react-dom/test-utils';\n" +
-            '// ...\n' +
-            'act(() => ...);\n\n' +
-            '// for react-test-renderer:\n' +
-            // Break up imports to avoid accidentally parsing them as dependencies.
-            'import TestRenderer fr' +
-            "om 'react-test-renderer';\n" +
-            'const {act} = TestRenderer;\n' +
-            '// ...\n' +
-            'act(() => ...);',
-        );
-      } finally {
-        if (previousFiber) {
-          setCurrentDebugFiberInDEV(fiber);
-        } else {
-          resetCurrentDebugFiberInDEV();
-        }
-      }
+    // If we're currently inside an `act` scope, bypass Scheduler and push to
+    // the `act` queue instead.
+    const actQueue = ReactCurrentActQueue.current;
+    if (actQueue !== null) {
+      actQueue.push(callback);
+      return fakeActCallbackNode;
+    } else {
+      return Scheduler_scheduleCallback(priorityLevel, callback);
     }
+  } else {
+    // In production, always call Scheduler. This function will be stripped out.
+    return Scheduler_scheduleCallback(priorityLevel, callback);
   }
+}
+
+function cancelCallback(callbackNode) {
+  if (__DEV__ && callbackNode === fakeActCallbackNode) {
+    return;
+  }
+  // In production, always call Scheduler. This function will be stripped out.
+  return Scheduler_cancelCallback(callbackNode);
+}
+
+function shouldForceFlushFallbacksInDEV() {
+  // Never force flush in production. This function should get stripped out.
+  return __DEV__ && ReactCurrentActQueue.current !== null;
 }
 
 export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
@@ -2824,8 +2821,13 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
     if (
       warnsIfNotActing === true &&
       (fiber.mode & StrictLegacyMode) !== NoMode &&
-      IsSomeRendererActing.current === false &&
-      IsThisRendererActing.current === false
+      ReactCurrentActQueue.current === null &&
+      // Our internal tests use a custom implementation of `act` that works by
+      // mocking the Scheduler package. Disable the `act` warning.
+      // TODO: Maybe the warning should be disabled by default, and then turned
+      // on at the testing frameworks layer? Instead of what we do now, which
+      // is check if a `jest` global is defined.
+      ReactCurrentActQueue.disableActWarning === false
     ) {
       console.error(
         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
@@ -2849,8 +2851,13 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
     if (
       warnsIfNotActing === true &&
       executionContext === NoContext &&
-      IsSomeRendererActing.current === false &&
-      IsThisRendererActing.current === false
+      ReactCurrentActQueue.current === null &&
+      // Our internal tests use a custom implementation of `act` that works by
+      // mocking the Scheduler package. Disable the `act` warning.
+      // TODO: Maybe the warning should be disabled by default, and then turned
+      // on at the testing frameworks layer? Instead of what we do now, which
+      // is check if a `jest` global is defined.
+      ReactCurrentActQueue.disableActWarning === false
     ) {
       const previousFiber = ReactCurrentFiberCurrent;
       try {
@@ -2880,252 +2887,3 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 }
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
-
-// In tests, we want to enforce a mocked scheduler.
-let didWarnAboutUnmockedScheduler = false;
-// TODO Before we release concurrent mode, revisit this and decide whether a mocked
-// scheduler is the actual recommendation. The alternative could be a testing build,
-// a new lib, or whatever; we dunno just yet. This message is for early adopters
-// to get their tests right.
-
-export function warnIfUnmockedScheduler(fiber: Fiber) {
-  if (__DEV__) {
-    if (
-      didWarnAboutUnmockedScheduler === false &&
-      Scheduler.unstable_flushAllWithoutAsserting === undefined
-    ) {
-      if (fiber.mode & ConcurrentMode) {
-        didWarnAboutUnmockedScheduler = true;
-        console.error(
-          'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
-            'to guarantee consistent behaviour across tests and browsers. ' +
-            'For example, with jest: \n' +
-            // Break up requires to avoid accidentally parsing them as dependencies.
-            "jest.mock('scheduler', () => require" +
-            "('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://reactjs.org/link/mock-scheduler',
-        );
-      } else if (warnAboutUnmockedScheduler === true) {
-        didWarnAboutUnmockedScheduler = true;
-        console.error(
-          'Starting from React v18, the "scheduler" module will need to be mocked ' +
-            'to guarantee consistent behaviour across tests and browsers. ' +
-            'For example, with jest: \n' +
-            // Break up requires to avoid accidentally parsing them as dependencies.
-            "jest.mock('scheduler', () => require" +
-            "('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://reactjs.org/link/mock-scheduler',
-        );
-      }
-    }
-  }
-}
-
-// `act` testing API
-//
-// TODO: This is mostly a copy-paste from the legacy `act`, which does not have
-// access to the same internals that we do here. Some trade offs in the
-// implementation no longer make sense.
-
-let isFlushingAct = false;
-let isInsideThisAct = false;
-
-function shouldForceFlushFallbacksInDEV() {
-  // Never force flush in production. This function should get stripped out.
-  return __DEV__ && actingUpdatesScopeDepth > 0;
-}
-
-const flushMockScheduler = Scheduler.unstable_flushAllWithoutAsserting;
-const isSchedulerMocked = typeof flushMockScheduler === 'function';
-
-// Returns whether additional work was scheduled. Caller should keep flushing
-// until there's no work left.
-function flushActWork(): boolean {
-  if (flushMockScheduler !== undefined) {
-    const prevIsFlushing = isFlushingAct;
-    isFlushingAct = true;
-    try {
-      return flushMockScheduler();
-    } finally {
-      isFlushingAct = prevIsFlushing;
-    }
-  } else {
-    // No mock scheduler available. However, the only type of pending work is
-    // passive effects, which we control. So we can flush that.
-    const prevIsFlushing = isFlushingAct;
-    isFlushingAct = true;
-    try {
-      let didFlushWork = false;
-      while (flushPassiveEffects()) {
-        didFlushWork = true;
-      }
-      return didFlushWork;
-    } finally {
-      isFlushingAct = prevIsFlushing;
-    }
-  }
-}
-
-function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
-  try {
-    flushActWork();
-    enqueueTask(() => {
-      if (flushActWork()) {
-        flushWorkAndMicroTasks(onDone);
-      } else {
-        onDone();
-      }
-    });
-  } catch (err) {
-    onDone(err);
-  }
-}
-
-// we track the 'depth' of the act() calls with this counter,
-// so we can tell if any async act() calls try to run in parallel.
-
-let actingUpdatesScopeDepth = 0;
-
-export function act(callback: () => Thenable<mixed>): Thenable<void> {
-  if (!__DEV__) {
-    invariant(
-      false,
-      'act(...) is not supported in production builds of React.',
-    );
-  }
-
-  const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  actingUpdatesScopeDepth++;
-
-  const previousIsSomeRendererActing = IsSomeRendererActing.current;
-  const previousIsThisRendererActing = IsThisRendererActing.current;
-  const previousIsInsideThisAct = isInsideThisAct;
-  IsSomeRendererActing.current = true;
-  IsThisRendererActing.current = true;
-  isInsideThisAct = true;
-
-  function onDone() {
-    actingUpdatesScopeDepth--;
-    IsSomeRendererActing.current = previousIsSomeRendererActing;
-    IsThisRendererActing.current = previousIsThisRendererActing;
-    isInsideThisAct = previousIsInsideThisAct;
-    if (__DEV__) {
-      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-        console.error(
-          'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
-        );
-      }
-    }
-  }
-
-  let result;
-  try {
-    result = batchedUpdates(callback);
-  } catch (error) {
-    // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
-    onDone();
-    throw error;
-  }
-
-  if (
-    result !== null &&
-    typeof result === 'object' &&
-    typeof result.then === 'function'
-  ) {
-    // setup a boolean that gets set to true only
-    // once this act() call is await-ed
-    let called = false;
-    if (__DEV__) {
-      if (typeof Promise !== 'undefined') {
-        //eslint-disable-next-line no-undef
-        Promise.resolve()
-          .then(() => {})
-          .then(() => {
-            if (called === false) {
-              console.error(
-                'You called act(async () => ...) without await. ' +
-                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                  'calls and mixing their scopes. You should - await act(async () => ...);',
-              );
-            }
-          });
-      }
-    }
-
-    // in the async case, the returned thenable runs the callback, flushes
-    // effects and  microtasks in a loop until flushPassiveEffects() === false,
-    // and cleans up
-    return {
-      then(resolve, reject) {
-        called = true;
-        result.then(
-          () => {
-            if (
-              actingUpdatesScopeDepth > 1 ||
-              (isSchedulerMocked === true &&
-                previousIsSomeRendererActing === true)
-            ) {
-              onDone();
-              resolve();
-              return;
-            }
-            // we're about to exit the act() scope,
-            // now's the time to flush tasks/effects
-            flushWorkAndMicroTasks((err: ?Error) => {
-              onDone();
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          },
-          err => {
-            onDone();
-            reject(err);
-          },
-        );
-      },
-    };
-  } else {
-    if (__DEV__) {
-      if (result !== undefined) {
-        console.error(
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
-        );
-      }
-    }
-
-    // flush effects until none remain, and cleanup
-    try {
-      if (
-        actingUpdatesScopeDepth === 1 &&
-        (isSchedulerMocked === false || previousIsSomeRendererActing === false)
-      ) {
-        // we're about to exit the act() scope,
-        // now's the time to flush effects
-        flushActWork();
-      }
-      onDone();
-    } catch (err) {
-      onDone();
-      throw err;
-    }
-
-    // in the sync case, the returned thenable only warns *if* await-ed
-    return {
-      then(resolve) {
-        if (__DEV__) {
-          console.error(
-            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-          );
-        }
-        resolve();
-      },
-    };
-  }
-}
