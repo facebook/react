@@ -166,7 +166,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -181,7 +182,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
@@ -246,7 +248,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -261,7 +264,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
