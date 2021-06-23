@@ -692,7 +692,14 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     }
     if (supportsMicrotasks) {
       // Flush the queue in a microtask.
-      scheduleMicrotask(flushSyncCallbacks);
+      if (__DEV__ && ReactCurrentActQueue.current !== null) {
+        // Inside `act`, use our internal `act` queue so that these get flushed
+        // at the end of the current scope even when using the sync version
+        // of `act`.
+        ReactCurrentActQueue.current.push(flushSyncCallbacks);
+      } else {
+        scheduleMicrotask(flushSyncCallbacks);
+      }
     } else {
       // Flush the queue in an Immediate task.
       scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbacks);
