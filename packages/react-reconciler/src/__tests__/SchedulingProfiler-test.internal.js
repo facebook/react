@@ -13,12 +13,20 @@
 // This test is *.internal so that it can import this shared file.
 import ReactVersion from 'shared/ReactVersion';
 
+// Hard-coding because importing will not work with bundle tests and to
+// avoid leaking exports for lanes that are only imported in this test.
+const ReactFiberLane = {
+  SyncLane: /*        */ 0b0000000000000000000000000000001,
+  DefaultLane: /*     */ 0b0000000000000000000000000010000,
+  TransitionLane1: /* */ 0b0000000000000000000000001000000,
+};
+
 describe('SchedulingProfiler', () => {
   let React;
   let ReactTestRenderer;
   let ReactNoop;
   let Scheduler;
-  let ReactFiberLane;
+  let act;
 
   let clearedMarks;
   let featureDetectionMarkName = null;
@@ -79,14 +87,10 @@ describe('SchedulingProfiler', () => {
     ReactNoop = require('react-noop-renderer');
 
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
 
     const SchedulingProfiler = require('react-reconciler/src/SchedulingProfiler');
     formatLanes = SchedulingProfiler.formatLanes;
-
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFiberLane = ReactFeatureFlags.enableNewReconciler
-      ? require('react-reconciler/src/ReactFiberLane.new')
-      : require('react-reconciler/src/ReactFiberLane.old');
   });
 
   afterEach(() => {
@@ -158,16 +162,33 @@ describe('SchedulingProfiler', () => {
       return <Bar />;
     }
 
-    ReactNoop.render(<Foo />);
-    // Do one step of work.
-    expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--render-yield',
-    ]);
+      // Do one step of work.
+      expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+
+      expectMarksToEqual([
+        `--react-init-${ReactVersion}`,
+        `--schedule-render-${formatLanes(ReactFiberLane.TransitionLane1)}`,
+        `--render-start-${formatLanes(ReactFiberLane.TransitionLane1)}`,
+        '--render-yield',
+      ]);
+    } else {
+      ReactNoop.render(<Foo />);
+
+      // Do one step of work.
+      expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+
+      expectMarksToEqual([
+        `--react-init-${ReactVersion}`,
+        `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
+        `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+        '--render-yield',
+      ]);
+    }
   });
 
   // @gate enableSchedulingProfiler
@@ -499,7 +520,7 @@ describe('SchedulingProfiler', () => {
       return didMount;
     }
 
-    ReactTestRenderer.unstable_concurrentAct(() => {
+    act(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
@@ -534,7 +555,7 @@ describe('SchedulingProfiler', () => {
       return didRender;
     }
 
-    ReactTestRenderer.unstable_concurrentAct(() => {
+    act(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 

@@ -19,7 +19,7 @@ const run = async ({cwd, packages, tags}) => {
   );
   const {version} = await readJson(packageJSONPath);
   const isExperimentalVersion = version.indexOf('experimental') !== -1;
-  if (version.indexOf('0.0.0') === 0) {
+  if (version.indexOf('-') !== -1) {
     if (tags.includes('latest')) {
       if (isExperimentalVersion) {
         console.log(
@@ -45,7 +45,7 @@ const run = async ({cwd, packages, tags}) => {
       process.exit(1);
     }
   } else {
-    if (version.indexOf('-') === -1 && !tags.includes('latest')) {
+    if (!tags.includes('latest')) {
       console.log(
         theme`{error Stable release} {version ${version}} {error must always be tagged as} {tag latest}`
       );

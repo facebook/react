@@ -135,4 +135,36 @@ describe('ProfilerStore', () => {
       });
     }).toThrow('Cannot modify filter preferences while profiling');
   });
+
+  it('should not throw if state contains a property hasOwnProperty ', () => {
+    let setStateCallback;
+    const ControlledInput = () => {
+      const [state, setState] = React.useState({hasOwnProperty: true});
+      setStateCallback = setState;
+      return state.hasOwnProperty;
+    };
+
+    const container = document.createElement('div');
+
+    // This element has to be in the <body> for the event system to work.
+    document.body.appendChild(container);
+
+    // It's important that this test uses legacy sync mode.
+    // The root API does not trigger this particular failing case.
+    ReactDOM.render(<ControlledInput />, container);
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() =>
+      setStateCallback({
+        hasOwnProperty: false,
+      }),
+    );
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    // Only one commit should have been recorded (in response to the "change" event).
+    const root = store.roots[0];
+    const data = store.profilerStore.getDataForRoot(root);
+    expect(data.commitData).toHaveLength(1);
+    expect(data.operations).toHaveLength(1);
+  });
 });

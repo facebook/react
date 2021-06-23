@@ -31,11 +31,12 @@ function getWrappedName(
   innerType: any,
   wrapperName: string,
 ): string {
+  const displayName = (outerType: any).displayName;
+  if (displayName) {
+    return displayName;
+  }
   const functionName = innerType.displayName || innerType.name || '';
-  return (
-    (outerType: any).displayName ||
-    (functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName)
-  );
+  return functionName !== '' ? `${wrapperName}(${functionName})` : wrapperName;
 }
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
@@ -52,7 +53,7 @@ export default function getComponentNameFromType(type: mixed): string | null {
   if (__DEV__) {
     if (typeof (type: any).tag === 'number') {
       console.error(
-        'Received an unexpected object in getComponentName(). ' +
+        'Received an unexpected object in getComponentNameFromType(). ' +
           'This is likely a bug in React. Please file an issue.',
       );
     }
@@ -90,7 +91,11 @@ export default function getComponentNameFromType(type: mixed): string | null {
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
-        return getComponentNameFromType(type.type);
+        const outerName = (type: any).displayName || null;
+        if (outerName !== null) {
+          return outerName;
+        }
+        return getComponentNameFromType(type.type) || 'Memo';
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;

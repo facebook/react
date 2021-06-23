@@ -10,7 +10,6 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Container} from './ReactDOMHostConfig';
 
-import '../shared/checkReact';
 import {
   findDOMNode,
   render,
@@ -18,7 +17,7 @@ import {
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
-import {createRoot, createBlockingRoot, isValidContainer} from './ReactDOMRoot';
+import {createRoot, hydrateRoot, isValidContainer} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
 
 import {
@@ -29,15 +28,15 @@ import {
   flushSync,
   flushControlled,
   injectIntoDevTools,
-  flushPassiveEffects,
-  IsThisRendererActing,
   attemptSynchronousHydration,
   attemptDiscreteHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
-  runWithPriority,
-  getCurrentUpdateLanePriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {
+  runWithPriority,
+  getCurrentUpdatePriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
@@ -74,10 +73,9 @@ setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptDiscreteHydration(attemptDiscreteHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
-setGetCurrentUpdatePriority(getCurrentUpdateLanePriority);
+setGetCurrentUpdatePriority(getCurrentUpdatePriority);
 setAttemptHydrationAtPriority(runWithPriority);
 
-let didWarnAboutUnstableCreatePortal = false;
 let didWarnAboutUnstableRenderSubtreeIntoContainer = false;
 
 if (__DEV__) {
@@ -154,27 +152,8 @@ function renderSubtreeIntoContainer(
   );
 }
 
-function unstable_createPortal(
-  children: ReactNodeList,
-  container: Container,
-  key: ?string = null,
-) {
-  if (__DEV__) {
-    if (!didWarnAboutUnstableCreatePortal) {
-      didWarnAboutUnstableCreatePortal = true;
-      console.warn(
-        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 18+. Update your code to use ' +
-          'ReactDOM.createPortal() instead. It has the exact same API, ' +
-          'but without the "unstable_" prefix.',
-      );
-    }
-  }
-  return createPortal(children, container, key);
-}
-
 const Internals = {
-  // Keep in sync with ReactTestUtils.js, and ReactTestUtilsAct.js.
+  // Keep in sync with ReactTestUtils.js.
   // This is an array for better minification.
   Events: [
     getInstanceFromNode,
@@ -182,9 +161,7 @@ const Internals = {
     getFiberCurrentPropsFromNode,
     enqueueStateRestore,
     restoreStateIfNeeded,
-    flushPassiveEffects,
-    // TODO: This is related to `act`, not events. Move to separate key?
-    IsThisRendererActing,
+    batchedUpdates,
   ],
 };
 
@@ -201,15 +178,11 @@ export {
   unmountComponentAtNode,
   // exposeConcurrentModeAPIs
   createRoot,
-  createBlockingRoot,
+  hydrateRoot,
   flushControlled as unstable_flushControlled,
   scheduleHydration as unstable_scheduleHydration,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
-  // Disabled behind disableUnstableCreatePortal
-  // Temporary alias since we already shipped React 16 RC with it.
-  // TODO: remove in React 18.
-  unstable_createPortal,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
   // TODO: Remove this once callers migrate to alternatives.

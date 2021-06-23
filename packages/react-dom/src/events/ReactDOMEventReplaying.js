@@ -12,14 +12,12 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.old';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {
-  unstable_runWithPriority as runWithPriority,
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
-  unstable_getCurrentPriorityLevel as getCurrentPriorityLevel,
 } from 'scheduler';
 import {
   getNearestMountedFiber,
@@ -32,6 +30,7 @@ import {
   getClosestInstanceFromNode,
 } from '../client/ReactDOMComponentTree';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
 
@@ -59,16 +58,16 @@ export function setAttemptHydrationAtCurrentPriority(
   attemptHydrationAtCurrentPriority = fn;
 }
 
-let getCurrentUpdatePriority: () => LanePriority;
+let getCurrentUpdatePriority: () => EventPriority;
 
-export function setGetCurrentUpdatePriority(fn: () => LanePriority) {
+export function setGetCurrentUpdatePriority(fn: () => EventPriority) {
   getCurrentUpdatePriority = fn;
 }
 
-let attemptHydrationAtPriority: <T>(priority: LanePriority, fn: () => T) => T;
+let attemptHydrationAtPriority: <T>(priority: EventPriority, fn: () => T) => T;
 
 export function setAttemptHydrationAtPriority(
-  fn: <T>(priority: LanePriority, fn: () => T) => T,
+  fn: <T>(priority: EventPriority, fn: () => T) => T,
 ) {
   attemptHydrationAtPriority = fn;
 }
@@ -111,8 +110,7 @@ const queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
-  priority: number,
-  lanePriority: LanePriority,
+  priority: EventPriority,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -393,10 +391,8 @@ function attemptExplicitHydrationTarget(
           // We're blocked on hydrating this boundary.
           // Increase its priority.
           queuedTarget.blockedOn = instance;
-          attemptHydrationAtPriority(queuedTarget.lanePriority, () => {
-            runWithPriority(queuedTarget.priority, () => {
-              attemptHydrationAtCurrentPriority(nearestMounted);
-            });
+          attemptHydrationAtPriority(queuedTarget.priority, () => {
+            attemptHydrationAtCurrentPriority(nearestMounted);
           });
 
           return;
@@ -417,17 +413,24 @@ function attemptExplicitHydrationTarget(
 
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
-    const schedulerPriority = getCurrentPriorityLevel();
-    const updateLanePriority = getCurrentUpdatePriority();
+    // TODO: This will read the priority if it's dispatched by the React
+    // event system but not native events. Should read window.event.type, like
+    // we do for updates (getCurrentEventPriority).
+    const updatePriority = getCurrentUpdatePriority();
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,
-      priority: schedulerPriority,
-      lanePriority: updateLanePriority,
+      priority: updatePriority,
     };
     let i = 0;
     for (; i < queuedExplicitHydrationTargets.length; i++) {
-      if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
+      // Stop once we hit the first target with lower priority than
+      if (
+        !isHigherEventPriority(
+          updatePriority,
+          queuedExplicitHydrationTargets[i].priority,
+        )
+      ) {
         break;
       }
     }

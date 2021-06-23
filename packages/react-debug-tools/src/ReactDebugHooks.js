@@ -109,18 +109,12 @@ function getCacheForType<T>(resourceType: () => T): T {
   invariant(false, 'Not implemented.');
 }
 
-function readContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
+function readContext<T>(context: ReactContext<T>): T {
   // For now we don't expose readContext usage in the hooks debugging info.
   return context._currentValue;
 }
 
-function useContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
+function useContext<T>(context: ReactContext<T>): T {
   hookLog.push({
     primitive: 'Context',
     stackError: new Error(),
@@ -271,7 +265,7 @@ function useMutableSource<Source, Snapshot>(
   return value;
 }
 
-function useTransition(): [(() => void) => void, boolean] {
+function useTransition(): [boolean, (() => void) => void] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
@@ -282,7 +276,7 @@ function useTransition(): [(() => void) => void, boolean] {
     stackError: new Error(),
     value: undefined,
   });
-  return [callback => {}, false];
+  return [false, callback => {}];
 }
 
 function useDeferredValue<T>(value: T): T {

@@ -31,7 +31,7 @@ describe('ReactHooks', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = require('jest-react').act;
   });
 
   if (__DEV__) {
@@ -1511,7 +1511,7 @@ describe('ReactHooks', () => {
     ];
 
     if (__EXPERIMENTAL__) {
-      const useTransitionHelper = () => React.useTransition({timeoutMs: 1000});
+      const useTransitionHelper = () => React.useTransition();
       const useDeferredValueHelper = () =>
         React.useDeferredValue(0, {timeoutMs: 1000});
 
@@ -1775,13 +1775,15 @@ describe('ReactHooks', () => {
     }
 
     await act(async () => {
-      ReactTestRenderer.create(
-        <>
-          <A />
-          <B />
-        </>,
-      );
-      expect(() => Scheduler.unstable_flushAll()).toThrow('Hello');
+      ReactTestRenderer.unstable_batchedUpdates(() => {
+        ReactTestRenderer.create(
+          <>
+            <A />
+            <B />
+          </>,
+        );
+        expect(() => Scheduler.unstable_flushAll()).toThrow('Hello');
+      });
     });
 
     if (__DEV__) {

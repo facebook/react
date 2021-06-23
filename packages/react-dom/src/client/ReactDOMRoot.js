@@ -8,7 +8,6 @@
  */
 
 import type {Container} from './ReactDOMHostConfig';
-import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
@@ -19,7 +18,8 @@ export type RootType = {
   ...
 };
 
-export type RootOptions = {
+export type CreateRootOptions = {
+  // TODO: Remove these options.
   hydrate?: boolean,
   hydrationOptions?: {
     onHydrated?: (suspenseNode: Comment) => void,
@@ -27,7 +27,20 @@ export type RootOptions = {
     mutableSources?: Array<MutableSource<any>>,
     ...
   },
-  unstable_strictModeLevel?: number,
+  // END OF TODO
+  unstable_strictMode?: boolean,
+  unstable_concurrentUpdatesByDefault?: boolean,
+  ...
+};
+
+export type HydrateRootOptions = {
+  // Hydration options
+  hydratedSources?: Array<MutableSource<any>>,
+  onHydrated?: (suspenseNode: Comment) => void,
+  onDeleted?: (suspenseNode: Comment) => void,
+  // Options for all roots
+  unstable_strictMode?: boolean,
+  unstable_concurrentUpdatesByDefault?: boolean,
   ...
 };
 
@@ -51,27 +64,14 @@ import {
   registerMutableSourceForHydration,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
-import {
-  BlockingRoot,
-  ConcurrentRoot,
-  LegacyRoot,
-} from 'react-reconciler/src/ReactRootTags';
+import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
+import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
-function ReactDOMRoot(container: Container, options: void | RootOptions) {
-  this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
+function ReactDOMRoot(internalRoot) {
+  this._internalRoot = internalRoot;
 }
 
-function ReactDOMBlockingRoot(
-  container: Container,
-  tag: RootTag,
-  options: void | RootOptions,
-) {
-  this._internalRoot = createRootImpl(container, tag, options);
-}
-
-ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
-  children: ReactNodeList,
-): void {
+ReactDOMRoot.prototype.render = function(children: ReactNodeList): void {
   const root = this._internalRoot;
   if (__DEV__) {
     if (typeof arguments[1] === 'function') {
@@ -99,7 +99,7 @@ ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function
   updateContainer(children, root, null, null);
 };
 
-ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(): void {
+ReactDOMRoot.prototype.unmount = function(): void {
   if (__DEV__) {
     if (typeof arguments[0] === 'function') {
       console.error(
@@ -115,12 +115,17 @@ ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = functi
   });
 };
 
-function createRootImpl(
+export function createRoot(
   container: Container,
-  tag: RootTag,
-  options: void | RootOptions,
-) {
-  // Tag is either LegacyRoot or Concurrent Root
+  options?: CreateRootOptions,
+): RootType {
+  invariant(
+    isValidContainerLegacy(container),
+    'createRoot(...): Target container is not a DOM element.',
+  );
+  warnIfReactDOMContainerInDEV(container);
+
+  // TODO: Delete these options
   const hydrate = options != null && options.hydrate === true;
   const hydrationCallbacks =
     (options != null && options.hydrationOptions) || null;
@@ -129,23 +134,79 @@ function createRootImpl(
       options.hydrationOptions != null &&
       options.hydrationOptions.mutableSources) ||
     null;
-  const strictModeLevelOverride =
-    options != null && options.unstable_strictModeLevel != null
-      ? options.unstable_strictModeLevel
-      : null;
+  // END TODO
+
+  const isStrictMode = options != null && options.unstable_strictMode === true;
+  let concurrentUpdatesByDefaultOverride = null;
+  if (allowConcurrentByDefault) {
+    concurrentUpdatesByDefaultOverride =
+      options != null && options.unstable_concurrentUpdatesByDefault != null
+        ? options.unstable_concurrentUpdatesByDefault
+        : null;
+  }
 
   const root = createContainer(
     container,
-    tag,
+    ConcurrentRoot,
     hydrate,
     hydrationCallbacks,
-    strictModeLevelOverride,
+    isStrictMode,
+    concurrentUpdatesByDefaultOverride,
   );
   markContainerAsRoot(root.current, container);
 
   const rootContainerElement =
     container.nodeType === COMMENT_NODE ? container.parentNode : container;
   listenToAllSupportedEvents(rootContainerElement);
+
+  // TODO: Delete this path
+  if (mutableSources) {
+    for (let i = 0; i < mutableSources.length; i++) {
+      const mutableSource = mutableSources[i];
+      registerMutableSourceForHydration(root, mutableSource);
+    }
+  }
+  // END TODO
+
+  return new ReactDOMRoot(root);
+}
+
+export function hydrateRoot(
+  container: Container,
+  initialChildren: ReactNodeList,
+  options?: HydrateRootOptions,
+): RootType {
+  invariant(
+    isValidContainer(container),
+    'hydrateRoot(...): Target container is not a DOM element.',
+  );
+  warnIfReactDOMContainerInDEV(container);
+
+  // For now we reuse the whole bag of options since they contain
+  // the hydration callbacks.
+  const hydrationCallbacks = options != null ? options : null;
+  const mutableSources = (options != null && options.hydratedSources) || null;
+  const isStrictMode = options != null && options.unstable_strictMode === true;
+
+  let concurrentUpdatesByDefaultOverride = null;
+  if (allowConcurrentByDefault) {
+    concurrentUpdatesByDefaultOverride =
+      options != null && options.unstable_concurrentUpdatesByDefault != null
+        ? options.unstable_concurrentUpdatesByDefault
+        : null;
+  }
+
+  const root = createContainer(
+    container,
+    ConcurrentRoot,
+    true, // hydrate
+    hydrationCallbacks,
+    isStrictMode,
+    concurrentUpdatesByDefaultOverride,
+  );
+  markContainerAsRoot(root.current, container);
+  // This can't be a comment node since hydration doesn't work on comment nodes anyway.
+  listenToAllSupportedEvents(container);
 
   if (mutableSources) {
     for (let i = 0; i < mutableSources.length; i++) {
@@ -154,41 +215,24 @@ function createRootImpl(
     }
   }
 
-  return root;
+  // Render the initial children
+  updateContainer(initialChildren, root, null, null);
+
+  return new ReactDOMRoot(root);
 }
 
-export function createRoot(
-  container: Container,
-  options?: RootOptions,
-): RootType {
-  invariant(
-    isValidContainer(container),
-    'createRoot(...): Target container is not a DOM element.',
+export function isValidContainer(node: any): boolean {
+  return !!(
+    node &&
+    (node.nodeType === ELEMENT_NODE ||
+      node.nodeType === DOCUMENT_NODE ||
+      node.nodeType === DOCUMENT_FRAGMENT_NODE)
   );
-  warnIfReactDOMContainerInDEV(container);
-  return new ReactDOMRoot(container, options);
 }
 
-export function createBlockingRoot(
-  container: Container,
-  options?: RootOptions,
-): RootType {
-  invariant(
-    isValidContainer(container),
-    'createRoot(...): Target container is not a DOM element.',
-  );
-  warnIfReactDOMContainerInDEV(container);
-  return new ReactDOMBlockingRoot(container, BlockingRoot, options);
-}
-
-export function createLegacyRoot(
-  container: Container,
-  options?: RootOptions,
-): RootType {
-  return new ReactDOMBlockingRoot(container, LegacyRoot, options);
-}
-
-export function isValidContainer(node: mixed): boolean {
+// TODO: Remove this function which also includes comment nodes.
+// We only use it in places that are currently more relaxed.
+export function isValidContainerLegacy(node: any): boolean {
   return !!(
     node &&
     (node.nodeType === ELEMENT_NODE ||

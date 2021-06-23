@@ -14,7 +14,6 @@ import type {
   IntersectionObserverOptions,
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
-import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
 
 import {
@@ -25,6 +24,7 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
+export {detachDeletedInstance} from './ReactDOMComponentTree';
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,
@@ -66,18 +66,11 @@ import {
   enableSuspenseServerRenderer,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableNewReconciler,
-  enableDiscreteEventMicroTasks,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
-import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
-import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
-
-const DefaultLanePriority = enableNewReconciler
-  ? DefaultLanePriority_new
-  : DefaultLanePriority_old;
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = {
@@ -111,8 +104,8 @@ export type EventTargetChildElement = {
   ...
 };
 export type Container =
-  | (Element & {_reactRootContainer?: RootType, ...})
-  | (Document & {_reactRootContainer?: RootType, ...});
+  | (Element & {_reactRootContainer?: FiberRoot, ...})
+  | (Document & {_reactRootContainer?: FiberRoot, ...});
 export type Instance = Element;
 export type TextInstance = Text;
 export type SuspenseInstance = Comment & {_reactRetry?: () => void, ...};
@@ -357,7 +350,6 @@ export function prepareUpdate(
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
-    type === 'option' ||
     type === 'noscript' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
@@ -385,7 +377,7 @@ export function createTextInstance(
 export function getCurrentEventPriority(): * {
   const currentEvent = window.event;
   if (currentEvent === undefined) {
-    return DefaultLanePriority;
+    return DefaultEventPriority;
   }
   return getEventPriority(currentEvent.type);
 }
@@ -404,7 +396,7 @@ export const noTimeout = -1;
 // -------------------
 //     Microtasks
 // -------------------
-export const supportsMicrotasks = enableDiscreteEventMicroTasks;
+export const supportsMicrotasks = true;
 export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function'
     ? queueMicrotask
@@ -895,6 +887,12 @@ export function commitHydratedSuspenseInstance(
   retryIfBlockedOn(suspenseInstance);
 }
 
+export function shouldDeleteUnhydratedTailInstances(
+  parentType: string,
+): boolean {
+  return parentType !== 'head' && parentType !== 'body';
+}
+
 export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,
@@ -1006,6 +1004,15 @@ export function didNotFindHydratableSuspenseInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     // TODO: warnForInsertedHydratedSuspense(parentInstance);
+  }
+}
+
+export function errorHydratingContainer(parentContainer: Container): void {
+  if (__DEV__) {
+    console.error(
+      'An error occurred during hydration. The server HTML was replaced with client content in <%s>.',
+      parentContainer.nodeName.toLowerCase(),
+    );
   }
 }
 

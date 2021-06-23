@@ -31,6 +31,7 @@ import {
   SimpleMemoComponent,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
   enableLazyElements,
@@ -96,8 +97,6 @@ if (__DEV__) {
     );
   };
 }
-
-const isArray = Array.isArray;
 
 function coerceRef(
   returnFiber: Fiber,
@@ -217,18 +216,16 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
-  if (returnFiber.type !== 'textarea') {
-    const childString = Object.prototype.toString.call(newChild);
-    invariant(
-      false,
-      'Objects are not valid as a React child (found: %s). ' +
-        'If you meant to render a collection of children, use an array ' +
-        'instead.',
-      childString === '[object Object]'
-        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-        : childString,
-    );
-  }
+  const childString = Object.prototype.toString.call(newChild);
+  invariant(
+    false,
+    'Objects are not valid as a React child (found: %s). ' +
+      'If you meant to render a collection of children, use an array ' +
+      'instead.',
+    childString === '[object Object]'
+      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+      : childString,
+  );
 }
 
 function warnOnFunctionType(returnFiber: Fiber) {
@@ -1221,6 +1218,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
+    // Handle object types
     let isObject = typeof newChild === 'object' && newChild !== null;
 
     // Handle top level unkeyed fragments as if they were arrays.
@@ -1232,7 +1230,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       newChild.key === null;
     if (isUnkeyedTopLevelFragment) {
       newChild = newChild.props.children;
-      // Handle object types
       isObject = typeof newChild === 'object' && newChild !== null;
     }
 
@@ -1269,6 +1266,26 @@ function ChildReconciler(shouldTrackSideEffects) {
             );
           }
       }
+
+      if (isArray(newChild)) {
+        return reconcileChildrenArray(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      if (getIteratorFn(newChild)) {
+        return reconcileChildrenIterator(
+          returnFiber,
+          currentFirstChild,
+          newChild,
+          lanes,
+        );
+      }
+
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
@@ -1280,28 +1297,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           lanes,
         ),
       );
-    }
-
-    if (isArray(newChild)) {
-      return reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (getIteratorFn(newChild)) {
-      return reconcileChildrenIterator(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        lanes,
-      );
-    }
-
-    if (isObject) {
-      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (__DEV__) {

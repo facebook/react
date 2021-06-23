@@ -16,10 +16,10 @@ import type {
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.new';
+import type {Flags} from './ReactFiberFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -27,21 +27,21 @@ import {
   enableSchedulingProfiler,
   enableNewReconciler,
   enableCache,
-  decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
   enableStrictEffects,
+  enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 
 import {
   NoMode,
-  BlockingMode,
+  ConcurrentMode,
   DebugTracingMode,
   StrictEffectsMode,
 } from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
-  InputContinuousLanePriority,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
@@ -49,19 +49,23 @@ import {
   isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-  higherLanePriority,
-  DefaultLanePriority,
 } from './ReactFiberLane.new';
-import {readContext} from './ReactFiberNewContext.new';
+import {
+  ContinuousEventPriority,
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
+  higherEventPriority,
+} from './ReactEventPriorities.new';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
-  Update as UpdateEffect,
-  Passive as PassiveEffect,
-  PassiveStatic as PassiveStaticEffect,
+  LayoutStatic as LayoutStaticEffect,
   MountLayoutDev as MountLayoutDevEffect,
   MountPassiveDev as MountPassiveDevEffect,
+  Passive as PassiveEffect,
+  PassiveStatic as PassiveStaticEffect,
+  StaticMask as StaticMaskEffect,
+  Update as UpdateEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -75,7 +79,6 @@ import {
   requestEventTime,
   warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
-  warnIfNotScopedWithMatchingAct,
   markSkippedUpdateLanes,
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.new';
@@ -83,13 +86,11 @@ import {
 import invariant from 'shared/invariant';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import is from 'shared/objectIs';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
+import isArray from 'shared/isArray';
 import {
-  UserBlockingPriority,
-  NormalPriority,
-  runWithPriority,
-  getCurrentPriorityLevel,
-} from './SchedulerWithReactIntegration.new';
+  markWorkInProgressReceivedUpdate,
+  checkIfWorkInProgressReceivedUpdate,
+} from './ReactFiberBeginWork.new';
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
 import {
   makeClientId,
@@ -121,7 +122,6 @@ type Update<S, A> = {|
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
   next: Update<S, A>,
-  priority?: ReactPriorityLevel,
 |};
 
 export type UpdateQueue<S, A> = {|
@@ -229,7 +229,7 @@ function updateHookTypesDev() {
 
 function checkDepsAreArrayDev(deps: mixed) {
   if (__DEV__) {
-    if (deps !== undefined && deps !== null && !Array.isArray(deps)) {
+    if (deps !== undefined && deps !== null && !isArray(deps)) {
       // Verify deps, but only on mount to avoid extra checks.
       // It's unlikely their type would change as usually you define them inline.
       console.error(
@@ -478,8 +478,14 @@ export function renderWithHooks<Props, SecondArg>(
     // example, in the SuspenseList implementation.
     if (
       current !== null &&
-      (current.flags & PassiveStaticEffect) !==
-        (workInProgress.flags & PassiveStaticEffect)
+      (current.flags & StaticMaskEffect) !==
+        (workInProgress.flags & StaticMaskEffect) &&
+      // Disable this warning in legacy mode, because legacy Suspense is weird
+      // and creates false positives. To make this work in legacy mode, we'd
+      // need to mark fibers that commit in an incomplete state, somehow. For
+      // now I'll disable the warning that most of the bugs that would trigger
+      // it are either exclusive to concurrent mode or exist in both.
+      (current.mode & ConcurrentMode) !== NoMode
     ) {
       console.error(
         'Internal React error: Expected static flag was missing. Please ' +
@@ -495,6 +501,27 @@ export function renderWithHooks<Props, SecondArg>(
     'Rendered fewer hooks than expected. This may be caused by an accidental ' +
       'early return statement.',
   );
+
+  if (enableLazyContextPropagation) {
+    if (current !== null) {
+      if (!checkIfWorkInProgressReceivedUpdate()) {
+        // If there were no changes to props or state, we need to check if there
+        // was a context change. We didn't already do this because there's no
+        // 1:1 correspondence between dependencies and hooks. Although, because
+        // there almost always is in the common case (`readContext` is an
+        // internal API), we could compare in there. OTOH, we only hit this case
+        // if everything else bails out, so on the whole it might be better to
+        // keep the comparison out of the common path.
+        const currentDependencies = current.dependencies;
+        if (
+          currentDependencies !== null &&
+          checkIfContextChanged(currentDependencies)
+        ) {
+          markWorkInProgressReceivedUpdate();
+        }
+      }
+    }
+  }
 
   return children;
 }
@@ -1461,20 +1488,18 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  let fiberFlags: Flags = UpdateEffect;
+  if (enableSuspenseLayoutEffectSemantics) {
+    fiberFlags |= LayoutStaticEffect;
+  }
   if (
     __DEV__ &&
     enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
-    return mountEffectImpl(
-      MountLayoutDevEffect | UpdateEffect,
-      HookLayout,
-      create,
-      deps,
-    );
-  } else {
-    return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
+    fiberFlags |= MountLayoutDevEffect;
   }
+  return mountEffectImpl(fiberFlags, HookLayout, create, deps);
 }
 
 function updateLayoutEffect(
@@ -1533,25 +1558,23 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
+  let fiberFlags: Flags = UpdateEffect;
+  if (enableSuspenseLayoutEffectSemantics) {
+    fiberFlags |= LayoutStaticEffect;
+  }
   if (
     __DEV__ &&
     enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
-    return mountEffectImpl(
-      MountLayoutDevEffect | UpdateEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
-  } else {
-    return mountEffectImpl(
-      UpdateEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
+    fiberFlags |= MountLayoutDevEffect;
   }
+  return mountEffectImpl(
+    fiberFlags,
+    HookLayout,
+    imperativeHandleEffect.bind(null, create, ref),
+    effectDeps,
+  );
 }
 
 function updateImperativeHandle<T>(
@@ -1687,90 +1710,45 @@ function rerenderDeferredValue<T>(value: T): T {
 }
 
 function startTransition(setPending, callback) {
-  const priorityLevel = getCurrentPriorityLevel();
-  if (decoupleUpdatePriorityFromScheduler) {
-    const previousLanePriority = getCurrentUpdateLanePriority();
-    setCurrentUpdateLanePriority(
-      higherLanePriority(previousLanePriority, InputContinuousLanePriority),
-    );
+  const previousPriority = getCurrentUpdatePriority();
+  setCurrentUpdatePriority(
+    higherEventPriority(previousPriority, ContinuousEventPriority),
+  );
 
-    runWithPriority(
-      priorityLevel < UserBlockingPriority
-        ? UserBlockingPriority
-        : priorityLevel,
-      () => {
-        setPending(true);
-      },
-    );
+  setPending(true);
 
-    // TODO: Can remove this. Was only necessary because we used to give
-    // different behavior to transitions without a config object. Now they are
-    // all treated the same.
-    setCurrentUpdateLanePriority(DefaultLanePriority);
-
-    runWithPriority(
-      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-      () => {
-        const prevTransition = ReactCurrentBatchConfig.transition;
-        ReactCurrentBatchConfig.transition = 1;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          if (decoupleUpdatePriorityFromScheduler) {
-            setCurrentUpdateLanePriority(previousLanePriority);
-          }
-          ReactCurrentBatchConfig.transition = prevTransition;
-        }
-      },
-    );
-  } else {
-    runWithPriority(
-      priorityLevel < UserBlockingPriority
-        ? UserBlockingPriority
-        : priorityLevel,
-      () => {
-        setPending(true);
-      },
-    );
-
-    runWithPriority(
-      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-      () => {
-        const prevTransition = ReactCurrentBatchConfig.transition;
-        ReactCurrentBatchConfig.transition = 1;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          ReactCurrentBatchConfig.transition = prevTransition;
-        }
-      },
-    );
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 1;
+  try {
+    setPending(false);
+    callback();
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
   }
 }
 
-function mountTransition(): [(() => void) => void, boolean] {
+function mountTransition(): [boolean, (() => void) => void] {
   const [isPending, setPending] = mountState(false);
   // The `start` method never changes.
   const start = startTransition.bind(null, setPending);
   const hook = mountWorkInProgressHook();
   hook.memoizedState = start;
-  return [start, isPending];
+  return [isPending, start];
 }
 
-function updateTransition(): [(() => void) => void, boolean] {
+function updateTransition(): [boolean, (() => void) => void] {
   const [isPending] = updateState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
-  return [start, isPending];
+  return [isPending, start];
 }
 
-function rerenderTransition(): [(() => void) => void, boolean] {
+function rerenderTransition(): [boolean, (() => void) => void] {
   const [isPending] = rerenderState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
-  return [start, isPending];
+  return [isPending, start];
 }
 
 let isUpdatingOpaqueValueInRenderPhase = false;
@@ -1831,7 +1809,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
 
     const setId = mountState(id)[1];
 
-    if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
+    if ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode) {
       if (
         __DEV__ &&
         enableStrictEffects &&
@@ -2032,7 +2010,6 @@ function dispatchAction<S, A>(
     if (__DEV__) {
       // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
       if ('undefined' !== typeof jest) {
-        warnIfNotScopedWithMatchingAct(fiber);
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
@@ -2213,11 +2190,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -2225,13 +2199,10 @@ if (__DEV__) {
       checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       mountHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2316,7 +2287,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       mountHookTypesDev();
       return mountTransition();
@@ -2348,24 +2319,18 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       updateHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2446,7 +2411,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return mountTransition();
@@ -2478,24 +2443,18 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnUpdateInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2576,7 +2535,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return updateTransition();
@@ -2608,11 +2567,8 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnRerenderInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2620,13 +2576,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2707,7 +2660,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return rerenderTransition();
@@ -2739,12 +2692,9 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    readContext<T>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -2752,14 +2702,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2849,7 +2796,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -2884,12 +2831,9 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    readContext<T>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -2897,14 +2841,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2994,7 +2935,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -3029,12 +2970,9 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    readContext<T>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -3043,14 +2981,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -3140,7 +3075,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();

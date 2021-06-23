@@ -201,32 +201,32 @@ describe('React hooks DevTools integration', () => {
     if (__DEV__) {
       // First render was locked
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Lock again
       setSuspenseHandler(() => true);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock again
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Ensure it checks specific fibers.
       setSuspenseHandler(f => f === fiber || f === fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
       setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
     } else {
       expect(renderer.toJSON().children).toEqual(['Done']);
@@ -259,33 +259,33 @@ describe('React hooks DevTools integration', () => {
     if (__DEV__) {
       // First render was locked
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       Scheduler.unstable_flushAll();
       expect(renderer.toJSON().children).toEqual(['Done']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Lock again
       setSuspenseHandler(() => true);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock again
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Ensure it checks specific fibers.
       setSuspenseHandler(f => f === fiber || f === fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
       setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
     } else {
       expect(renderer.toJSON().children).toEqual(['Done']);

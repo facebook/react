@@ -9,7 +9,6 @@
 
 export * from './index.modern.fb.js';
 export {
-  act,
   createComponentSelector,
   createHasPseudoClassSelector,
   createRoleSelector,

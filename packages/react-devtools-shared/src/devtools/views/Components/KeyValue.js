@@ -8,12 +8,7 @@
  */
 
 import * as React from 'react';
-import {
-  unstable_useTransition as useTransition,
-  useContext,
-  useRef,
-  useState,
-} from 'react';
+import {useTransition, useContext, useRef, useState} from 'react';
 import EditableName from './EditableName';
 import EditableValue from './EditableValue';
 import NewArrayValue from './NewArrayValue';
@@ -90,7 +85,7 @@ export default function KeyValue({
     isReadOnly = value[meta.readonly];
   }
 
-  const [startInspectPathsTransition, isInspectPathsPending] = useTransition();
+  const [isInspectPathsPending, startInspectPathsTransition] = useTransition();
   const toggleIsOpen = () => {
     if (isOpen) {
       setIsOpen(false);

@@ -20,6 +20,7 @@ import Store from '../../store';
 import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -108,7 +109,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
     canEditHooksAndDeletePaths,
     canEditHooksAndRenamePaths,
   } = inspectedElement;
-  const {name, id: hookID, isStateEditable, subHooks, value} = hook;
+  const {id: hookID, isStateEditable, subHooks, value} = hook;
 
   const isReadOnly = hookID == null || !isStateEditable;
 
@@ -161,6 +162,18 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
   const canRenamePathsAtDepth = depth => isStateEditable && depth > 1;
 
   const isCustomHook = subHooks.length > 0;
+
+  let name = hook.name;
+  if (enableProfilerChangedHookIndices) {
+    if (!isCustomHook) {
+      name = (
+        <>
+          <span className={styles.PrimitiveHookNumber}>{hookID + 1}</span>
+          {name}
+        </>
+      );
+    }
+  }
 
   const type = typeof value;
 

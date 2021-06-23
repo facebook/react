@@ -280,20 +280,6 @@ jobs:
       - run: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
-  RELEASE_CHANNEL_stable_yarn_lint_build:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: yarn lint-build
-      - run: scripts/circleci/check_minified_errors.sh
-
   yarn_test:
     docker: *docker
     environment: *environment
@@ -405,9 +391,6 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_build:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_lint_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
@@ -419,9 +402,6 @@ workflows:
       - yarn_build:
           requires:
             - setup
-      - yarn_lint_build:
-          requires:
-            - yarn_build
       - build_devtools_and_process_artifacts:
           requires:
             - yarn_build
@@ -462,14 +442,14 @@ workflows:
                 - "-r=stable --env=production"
                 - "-r=experimental --env=development"
                 - "-r=experimental --env=production"
-                - "-r=www-classic --env=development"
-                - "-r=www-classic --env=production"
-                - "-r=www-classic --env=development --variant"
-                - "-r=www-classic --env=production --variant"
-                - "-r=www-modern --env=development"
-                - "-r=www-modern --env=production"
-                - "-r=www-modern --env=development --variant"
-                - "-r=www-modern --env=production --variant"
+                - "-r=www-classic --env=development --variant=false"
+                - "-r=www-classic --env=production --variant=false"
+                - "-r=www-classic --env=development --variant=true"
+                - "-r=www-classic --env=production --variant=true"
+                - "-r=www-modern --env=development --variant=false"
+                - "-r=www-modern --env=production --variant=false"
+                - "-r=www-modern --env=development --variant=true"
+                - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
@@ -497,14 +477,14 @@ workflows:
                 - "--project=devtools -r=experimental"
 
                 # TODO: Update test config to support www build tests
-                # - "-r=www-classic --env=development"
-                # - "-r=www-classic --env=production"
-                # - "-r=www-classic --env=development --variant"
-                # - "-r=www-classic --env=production --variant"
-                # - "-r=www-modern --env=development"
-                # - "-r=www-modern --env=production"
-                # - "-r=www-modern --env=development --variant"
-                # - "-r=www-modern --env=production --variant"
+                # - "-r=www-classic --env=development --variant=false"
+                # - "-r=www-classic --env=production --variant=false"
+                # - "-r=www-classic --env=development --variant=true"
+                # - "-r=www-classic --env=production --variant=true"
+                # - "-r=www-modern --env=development --variant=false"
+                # - "-r=www-modern --env=production --variant=false"
+                # - "-r=www-modern --env=development --variant=true"
+                # - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
       - get_base_build:
@@ -521,6 +501,9 @@ workflows:
                 - master
           requires:
             - get_base_build
+            - yarn_build_combined
+      - yarn_lint_build:
+          requires:
             - yarn_build_combined
   fuzz_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
@@ -549,7 +532,7 @@ workflows:
             - setup
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: stable
-          dist_tag: next
+          dist_tag: "next,alpha"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -581,7 +564,7 @@ workflows:
             - setup
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
-          dist_tag: next
+          dist_tag: "next,alpha"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:

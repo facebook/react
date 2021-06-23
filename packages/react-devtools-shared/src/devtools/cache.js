@@ -61,7 +61,7 @@ const Rejected = 2;
 const ReactCurrentDispatcher = (React: any)
   .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentDispatcher;
 
-function readContext(Context, observedBits) {
+function readContext(Context) {
   const dispatcher = ReactCurrentDispatcher.current;
   if (dispatcher === null) {
     throw new Error(
@@ -70,7 +70,7 @@ function readContext(Context, observedBits) {
         'lifecycle methods.',
     );
   }
-  return dispatcher.readContext(Context, observedBits);
+  return dispatcher.readContext(Context);
 }
 
 const CacheContext = createContext(null);

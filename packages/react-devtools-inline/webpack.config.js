@@ -33,10 +33,14 @@ module.exports = {
     react: 'react',
     // TODO: Once this package is published, remove the external
     // 'react-debug-tools': 'react-debug-tools',
-    'react-devtools-feature-flags': resolveFeatureFlags('inline'),
     'react-dom': 'react-dom',
     'react-is': 'react-is',
     scheduler: 'scheduler',
+  },
+  resolve: {
+    alias: {
+      'react-devtools-feature-flags': resolveFeatureFlags('inline'),
+    },
   },
   optimization: {
     minimize: false,
@@ -48,6 +52,7 @@ module.exports = {
       __EXTENSION__: false,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      'process.env.DEVTOOLS_PACKAGE': `"react-devtools-inline"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,

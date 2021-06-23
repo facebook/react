@@ -24,9 +24,11 @@ import {
   enableStrictEffects,
   enableProfilerTimer,
   enableScopeAPI,
+  enableSyncDefaultUpdates,
+  allowConcurrentByDefault,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
-import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
+import {ConcurrentRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -68,7 +70,7 @@ import {
   ProfileMode,
   StrictLegacyMode,
   StrictEffectsMode,
-  BlockingMode,
+  ConcurrentUpdatesByDefaultMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -105,8 +107,6 @@ if (__DEV__) {
     hasBadMapPolyfill = true;
   }
 }
-
-let debugCounter = 1;
 
 function FiberNode(
   tag: WorkTag,
@@ -176,7 +176,7 @@ function FiberNode(
 
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
-    this._debugID = debugCounter++;
+
     this._debugSource = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
@@ -259,7 +259,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
     if (__DEV__) {
       // DEV-only fields
-      workInProgress._debugID = current._debugID;
+
       workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
@@ -388,10 +388,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;
-    // TODO: `subtreeFlags` should be reset to NoFlags, like we do in
-    // `createWorkInProgress`. Nothing reads this until the complete phase,
-    // currently, but it might in the future, and we should be consistent.
-    workInProgress.subtreeFlags = current.subtreeFlags;
+    workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
@@ -423,44 +420,29 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
 export function createHostRootFiber(
   tag: RootTag,
-  strictModeLevelOverride: null | number,
+  isStrictMode: boolean,
+  concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    mode = ConcurrentMode | BlockingMode;
-    if (strictModeLevelOverride !== null) {
-      if (strictModeLevelOverride >= 1) {
-        mode |= StrictLegacyMode;
-      }
+    mode = ConcurrentMode;
+    if (isStrictMode === true) {
+      mode |= StrictLegacyMode;
+
       if (enableStrictEffects) {
-        if (strictModeLevelOverride >= 2) {
-          mode |= StrictEffectsMode;
-        }
+        mode |= StrictEffectsMode;
       }
-    } else {
-      if (enableStrictEffects && createRootStrictEffectsByDefault) {
-        mode |= StrictLegacyMode | StrictEffectsMode;
-      } else {
-        mode |= StrictLegacyMode;
-      }
+    } else if (enableStrictEffects && createRootStrictEffectsByDefault) {
+      mode |= StrictLegacyMode | StrictEffectsMode;
     }
-  } else if (tag === BlockingRoot) {
-    mode = BlockingMode;
-    if (strictModeLevelOverride !== null) {
-      if (strictModeLevelOverride >= 1) {
-        mode |= StrictLegacyMode;
-      }
-      if (enableStrictEffects) {
-        if (strictModeLevelOverride >= 2) {
-          mode |= StrictEffectsMode;
-        }
-      }
-    } else {
-      if (enableStrictEffects && createRootStrictEffectsByDefault) {
-        mode |= StrictLegacyMode | StrictEffectsMode;
-      } else {
-        mode |= StrictLegacyMode;
-      }
+    if (
+      // We only use this flag for our repo tests to check both behaviors.
+      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
+      !enableSyncDefaultUpdates ||
+      // Only for internal experiments.
+      (allowConcurrentByDefault && concurrentUpdatesByDefaultOverride)
+    ) {
+      mode |= ConcurrentUpdatesByDefaultMode;
     }
   } else {
     mode = NoMode;
@@ -510,20 +492,10 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-
-        // Legacy strict mode (<StrictMode> without any level prop) defaults to level 1.
-        const level =
-          pendingProps.unstable_level == null ? 1 : pendingProps.unstable_level;
-
-        // Levels cascade; higher levels inherit all lower level modes.
-        // It is explicitly not supported to lower a mode with nesting, only to increase it.
-        if (level >= 1) {
-          mode |= StrictLegacyMode;
-        }
-        if (enableStrictEffects) {
-          if (level >= 2) {
-            mode |= StrictEffectsMode;
-          }
+        mode |= StrictLegacyMode;
+        if (enableStrictEffects && (mode & ConcurrentMode) !== NoMode) {
+          // Strict effects should never run on legacy roots
+          mode |= StrictEffectsMode;
         }
         break;
       case REACT_PROFILER_TYPE:
@@ -673,7 +645,10 @@ function createFiberFromProfiler(
 ): Fiber {
   if (__DEV__) {
     if (typeof pendingProps.id !== 'string') {
-      console.error('Profiler must specify an "id" as a prop');
+      console.error(
+        'Profiler must specify an "id" of type `string` as a prop. Received the type `%s` instead.',
+        typeof pendingProps.id,
+      );
     }
   }
 
@@ -836,7 +811,7 @@ export function assignFiberPropertiesInDEV(
     target.selfBaseDuration = source.selfBaseDuration;
     target.treeBaseDuration = source.treeBaseDuration;
   }
-  target._debugID = source._debugID;
+
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugNeedsRemount = source._debugNeedsRemount;

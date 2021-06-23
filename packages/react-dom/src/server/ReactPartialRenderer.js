@@ -14,6 +14,7 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -51,7 +52,6 @@ import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
 import {
   createMarkupForCustomAttribute,
   createMarkupForProperty,
-  createMarkupForRoot,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
 import {
@@ -63,7 +63,7 @@ import {
   setCurrentPartialRenderer,
 } from './ReactPartialRendererHooks';
 import {
-  Namespaces,
+  HTML_NAMESPACE,
   getIntrinsicNamespace,
   getChildNamespace,
 } from '../shared/DOMNamespaces';
@@ -77,6 +77,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 export type ServerOptions = {
   identifierPrefix?: string,
@@ -186,12 +187,14 @@ let didWarnDefaultChecked = false;
 let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
+let didWarnInvalidOptionInnerHTML = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
 const didWarnAboutModulePatternComponent = {};
 const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const didWarnAboutUninitializedState = {};
+const didWarnAboutLegacyLifecyclesAndDerivedState = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -332,7 +335,8 @@ function flattenOptionChildren(children: mixed): ?string {
       ) {
         didWarnInvalidOptionChildren = true;
         console.error(
-          'Only strings and numbers are supported as <option> children.',
+          'Cannot infer the option value of complex children. ' +
+            'Pass a `value` prop or use a plain string as children to <option>.',
         );
       }
     }
@@ -340,7 +344,6 @@ function flattenOptionChildren(children: mixed): ?string {
   return content;
 }
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
   children: null,
@@ -385,15 +388,6 @@ function createOpenTagMarkup(
     }
   }
 
-  // For static pages, no need to put React ID and checksum. Saves lots of
-  // bytes.
-  if (makeStaticMarkup) {
-    return ret;
-  }
-
-  if (isRootElement) {
-    ret += ' ' + createMarkupForRoot();
-  }
   return ret;
 }
 
@@ -480,6 +474,79 @@ function resolve(
                 componentName,
               );
               didWarnAboutUninitializedState[componentName] = true;
+            }
+          }
+
+          // If new component APIs are defined, "unsafe" lifecycles won't be called.
+          // Warn about these lifecycles if they are present.
+          // Don't warn about react-lifecycles-compat polyfilled methods though.
+          if (
+            typeof Component.getDerivedStateFromProps === 'function' ||
+            typeof inst.getSnapshotBeforeUpdate === 'function'
+          ) {
+            let foundWillMountName = null;
+            let foundWillReceivePropsName = null;
+            let foundWillUpdateName = null;
+            if (
+              typeof inst.componentWillMount === 'function' &&
+              inst.componentWillMount.__suppressDeprecationWarning !== true
+            ) {
+              foundWillMountName = 'componentWillMount';
+            } else if (typeof inst.UNSAFE_componentWillMount === 'function') {
+              foundWillMountName = 'UNSAFE_componentWillMount';
+            }
+            if (
+              typeof inst.componentWillReceiveProps === 'function' &&
+              inst.componentWillReceiveProps.__suppressDeprecationWarning !==
+                true
+            ) {
+              foundWillReceivePropsName = 'componentWillReceiveProps';
+            } else if (
+              typeof inst.UNSAFE_componentWillReceiveProps === 'function'
+            ) {
+              foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
+            }
+            if (
+              typeof inst.componentWillUpdate === 'function' &&
+              inst.componentWillUpdate.__suppressDeprecationWarning !== true
+            ) {
+              foundWillUpdateName = 'componentWillUpdate';
+            } else if (typeof inst.UNSAFE_componentWillUpdate === 'function') {
+              foundWillUpdateName = 'UNSAFE_componentWillUpdate';
+            }
+            if (
+              foundWillMountName !== null ||
+              foundWillReceivePropsName !== null ||
+              foundWillUpdateName !== null
+            ) {
+              const componentName =
+                getComponentNameFromType(Component) || 'Component';
+              const newApiName =
+                typeof Component.getDerivedStateFromProps === 'function'
+                  ? 'getDerivedStateFromProps()'
+                  : 'getSnapshotBeforeUpdate()';
+              if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
+                didWarnAboutLegacyLifecyclesAndDerivedState[
+                  componentName
+                ] = true;
+                console.error(
+                  'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+                    '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
+                    'The above lifecycles should be removed. Learn more about this warning here:\n' +
+                    'https://reactjs.org/link/unsafe-component-lifecycles',
+                  componentName,
+                  newApiName,
+                  foundWillMountName !== null
+                    ? `\n  ${foundWillMountName}`
+                    : '',
+                  foundWillReceivePropsName !== null
+                    ? `\n  ${foundWillReceivePropsName}`
+                    : '',
+                  foundWillUpdateName !== null
+                    ? `\n  ${foundWillUpdateName}`
+                    : '',
+                );
+              }
             }
           }
         }
@@ -582,32 +649,32 @@ function resolve(
       typeof inst.componentWillMount === 'function'
     ) {
       if (typeof inst.componentWillMount === 'function') {
-        if (__DEV__) {
-          if (
-            warnAboutDeprecatedLifecycles &&
-            inst.componentWillMount.__suppressDeprecationWarning !== true
-          ) {
-            const componentName =
-              getComponentNameFromType(Component) || 'Unknown';
-
-            if (!didWarnAboutDeprecatedWillMount[componentName]) {
-              console.warn(
-                // keep this warning in sync with ReactStrictModeWarning.js
-                'componentWillMount has been renamed, and is not recommended for use. ' +
-                  'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
-                  '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
-                  'or the constructor.\n' +
-                  '\nPlease update the following components: %s',
-                componentName,
-              );
-              didWarnAboutDeprecatedWillMount[componentName] = true;
-            }
-          }
-        }
-
         // In order to support react-lifecycles-compat polyfilled components,
         // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof Component.getDerivedStateFromProps !== 'function') {
+          if (__DEV__) {
+            if (
+              warnAboutDeprecatedLifecycles &&
+              inst.componentWillMount.__suppressDeprecationWarning !== true
+            ) {
+              const componentName =
+                getComponentNameFromType(Component) || 'Unknown';
+
+              if (!didWarnAboutDeprecatedWillMount[componentName]) {
+                console.warn(
+                  // keep this warning in sync with ReactStrictModeWarning.js
+                  'componentWillMount has been renamed, and is not recommended for use. ' +
+                    'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
+                    '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
+                    'or the constructor.\n' +
+                    '\nPlease update the following components: %s',
+                  componentName,
+                );
+                didWarnAboutDeprecatedWillMount[componentName] = true;
+              }
+            }
+          }
+
           inst.componentWillMount();
         }
       }
@@ -747,7 +814,7 @@ class ReactDOMServerRenderer {
       type: null,
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
-      domNamespace: Namespaces.html,
+      domNamespace: HTML_NAMESPACE,
       children: flatChildren,
       childIndex: 0,
       context: emptyObject,
@@ -1324,18 +1391,21 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
-    const tag = element.type.toLowerCase();
+    const tag = element.type;
 
     let namespace = parentNamespace;
-    if (parentNamespace === Namespaces.html) {
+    if (parentNamespace === HTML_NAMESPACE) {
       namespace = getIntrinsicNamespace(tag);
     }
 
+    let props = element.props;
+
     if (__DEV__) {
-      if (namespace === Namespaces.html) {
+      if (namespace === HTML_NAMESPACE) {
+        const isCustomComponent = isCustomComponentFn(tag, props);
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        if (tag !== element.type) {
+        if (!isCustomComponent && tag.toLowerCase() !== element.type) {
           console.error(
             '<%s /> is using incorrect casing. ' +
               'Use PascalCase for React components, ' +
@@ -1348,7 +1418,6 @@ class ReactDOMServerRenderer {
 
     validateDangerousTag(tag);
 
-    let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
         checkControlledValueProps('input', props);
@@ -1436,7 +1505,7 @@ class ReactDOMServerRenderer {
             defaultValue == null,
             'If you supply `defaultValue` on a <textarea>, do not pass children.',
           );
-          if (Array.isArray(textareaChildren)) {
+          if (isArray(textareaChildren)) {
             invariant(
               textareaChildren.length <= 1,
               '<textarea> can only have at most one child.',
@@ -1465,14 +1534,14 @@ class ReactDOMServerRenderer {
           if (props[propName] == null) {
             continue;
           }
-          const isArray = Array.isArray(props[propName]);
-          if (props.multiple && !isArray) {
+          const propNameIsArray = isArray(props[propName]);
+          if (props.multiple && !propNameIsArray) {
             console.error(
               'The `%s` prop supplied to <select> must be an array if ' +
                 '`multiple` is true.',
               propName,
             );
-          } else if (!props.multiple && isArray) {
+          } else if (!props.multiple && propNameIsArray) {
             console.error(
               'The `%s` prop supplied to <select> must be a scalar ' +
                 'value if `multiple` is false.',
@@ -1504,16 +1573,26 @@ class ReactDOMServerRenderer {
     } else if (tag === 'option') {
       let selected = null;
       const selectValue = this.currentSelectValue;
-      const optionChildren = flattenOptionChildren(props.children);
       if (selectValue != null) {
         let value;
         if (props.value != null) {
           value = props.value + '';
         } else {
-          value = optionChildren;
+          if (__DEV__) {
+            if (props.dangerouslySetInnerHTML != null) {
+              if (!didWarnInvalidOptionInnerHTML) {
+                didWarnInvalidOptionInnerHTML = true;
+                console.error(
+                  'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
+                    'which value should be selected.',
+                );
+              }
+            }
+          }
+          value = flattenOptionChildren(props.children);
         }
         selected = false;
-        if (Array.isArray(selectValue)) {
+        if (isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
             if ('' + selectValue[j] === value) {
@@ -1528,12 +1607,10 @@ class ReactDOMServerRenderer {
         props = Object.assign(
           {
             selected: undefined,
-            children: undefined,
           },
           props,
           {
             selected: selected,
-            children: optionChildren,
           },
         );
       }

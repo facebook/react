@@ -39,7 +39,7 @@ describe('ReactFetchNode', () => {
     server = null;
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('can fetch text from a server component', async () => {
     serverImpl = (req, res) => {
       res.write('mango');
@@ -51,7 +51,7 @@ describe('ReactFetchNode', () => {
     expect(text).toEqual('mango');
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('can fetch json from a server component', async () => {
     serverImpl = (req, res) => {
       res.write(JSON.stringify({name: 'Sema'}));
@@ -63,7 +63,7 @@ describe('ReactFetchNode', () => {
     expect(json).toEqual({name: 'Sema'});
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('provides response status', async () => {
     serverImpl = (req, res) => {
       res.write(JSON.stringify({name: 'Sema'}));
@@ -79,7 +79,7 @@ describe('ReactFetchNode', () => {
     });
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('handles different paths', async () => {
     serverImpl = (req, res) => {
       switch (req.url) {
@@ -105,7 +105,7 @@ describe('ReactFetchNode', () => {
     expect(outputs).toMatchObject(['banana', 'mango', 'orange']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('can produce an error', async () => {
     serverImpl = (req, res) => {};
 

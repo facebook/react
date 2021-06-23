@@ -13,14 +13,14 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 describe('Store component filters', () => {
   let React;
   let ReactDOM;
-  let TestUtils;
   let Types;
   let bridge: FrontendBridge;
   let store: Store;
   let utils;
+  let internalAct;
 
   const act = (callback: Function) => {
-    TestUtils.unstable_concurrentAct(() => {
+    internalAct(() => {
       callback();
     });
     jest.runAllTimers(); // Flush Bridge operations
@@ -35,9 +35,9 @@ describe('Store component filters', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    TestUtils = require('react-dom/test-utils');
     Types = require('react-devtools-shared/src/types');
     utils = require('./utils');
+    internalAct = require('jest-react').act;
   });
 
   it('should throw if filters are updated while profiling', () => {

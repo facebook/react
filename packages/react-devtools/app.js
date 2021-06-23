@@ -32,6 +32,12 @@ app.on('ready', function() {
     },
   });
 
+  // https://stackoverflow.com/questions/32402327/
+  mainWindow.webContents.on('new-window', function(event, url) {
+    event.preventDefault();
+    require('electron').shell.openExternal(url);
+  });
+
   // and load the index.html of the app.
   mainWindow.loadURL('file://' + __dirname + '/app.html'); // eslint-disable-line no-path-concat
   mainWindow.webContents.executeJavaScript(

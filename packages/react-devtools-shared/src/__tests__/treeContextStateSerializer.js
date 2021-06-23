@@ -6,11 +6,12 @@ export function test(maybeState) {
     return false;
   }
 
+  const hasOwnProperty = Object.prototype.hasOwnProperty.bind(maybeState);
   // Duck typing at its finest.
   return (
-    maybeState.hasOwnProperty('inspectedElementID') &&
-    maybeState.hasOwnProperty('ownerFlatTree') &&
-    maybeState.hasOwnProperty('ownerSubtreeLeafElementID')
+    hasOwnProperty('inspectedElementID') &&
+    hasOwnProperty('ownerFlatTree') &&
+    hasOwnProperty('ownerSubtreeLeafElementID')
   );
 }
 

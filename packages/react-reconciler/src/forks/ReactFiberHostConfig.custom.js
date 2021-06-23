@@ -73,6 +73,7 @@ export const preparePortalMount = $$$hostConfig.preparePortalMount;
 export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
+export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
 
 // -------------------
 //      Microtasks
@@ -156,6 +157,8 @@ export const commitHydratedSuspenseInstance =
 export const clearSuspenseBoundary = $$$hostConfig.clearSuspenseBoundary;
 export const clearSuspenseBoundaryFromContainer =
   $$$hostConfig.clearSuspenseBoundaryFromContainer;
+export const shouldDeleteUnhydratedTailInstances =
+  $$$hostConfig.shouldDeleteUnhydratedTailInstances;
 export const didNotMatchHydratedContainerTextInstance =
   $$$hostConfig.didNotMatchHydratedContainerTextInstance;
 export const didNotMatchHydratedTextInstance =
@@ -175,3 +178,4 @@ export const didNotFindHydratableTextInstance =
   $$$hostConfig.didNotFindHydratableTextInstance;
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
+export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;

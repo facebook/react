@@ -153,7 +153,15 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('an empty strict mode', async render => {
-      expect(await render(<React.StrictMode />)).toBe(null);
+      expect(
+        (
+          await render(
+            <div>
+              <React.StrictMode />
+            </div>,
+          )
+        ).firstChild,
+      ).toBe(null);
     });
   });
 });

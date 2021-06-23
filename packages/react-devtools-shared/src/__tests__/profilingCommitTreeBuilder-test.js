@@ -104,7 +104,7 @@ describe('commit tree', () => {
       LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
     });
 
-    it('should support Lazy components (legacy render)', async done => {
+    it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
@@ -145,13 +145,11 @@ describe('commit tree', () => {
 
         expect(renderFinished).toBe(true);
       }
-
-      done();
     });
 
-    it('should support Lazy components (createRoot)', async done => {
+    it('should support Lazy components (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => root.render(<App renderChildren={true} />));
@@ -185,11 +183,9 @@ describe('commit tree', () => {
 
         expect(renderFinished).toBe(true);
       }
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before resolving (legacy render)', async done => {
+    it('should support Lazy components that are unmounted before resolving (legacy render)', async () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
@@ -226,13 +222,11 @@ describe('commit tree', () => {
 
         expect(renderFinished).toBe(true);
       }
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before resolving (createRoot)', async done => {
+    it('should support Lazy components that are unmounted before resolving (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => root.render(<App renderChildren={true} />));
@@ -264,8 +258,6 @@ describe('commit tree', () => {
 
         expect(renderFinished).toBe(true);
       }
-
-      done();
     });
   });
 });

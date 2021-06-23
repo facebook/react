@@ -56,10 +56,7 @@ function getTestFlags() {
   // not to but there are exceptions.
   const featureFlags = require('shared/ReactFeatureFlags');
 
-  // TODO: This is a heuristic to detect the release channel by checking a flag
-  // that is known to only be enabled in www. What we should do instead is set
-  // the release channel explicitly in the each test config file.
-  const www = featureFlags.enableSuspenseCallback === true;
+  const www = global.__WWW__ === true;
   const releaseChannel = www
     ? __EXPERIMENTAL__
       ? 'modern'
@@ -84,11 +81,6 @@ function getTestFlags() {
 
       ...featureFlags,
       ...environmentFlags,
-
-      // FIXME: www-classic has enableCache on, but when running the source
-      // tests, Jest doesn't expose the API correctly. Fix then remove
-      // this override.
-      enableCache: __EXPERIMENTAL__,
     },
     {
       get(flags, flagName) {

@@ -26,7 +26,6 @@ import {
   flushControlled as flushControlled_old,
   flushSync as flushSync_old,
   flushPassiveEffects as flushPassiveEffects_old,
-  IsThisRendererActing as IsThisRendererActing_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
   attemptDiscreteHydration as attemptDiscreteHydration_old,
@@ -35,9 +34,9 @@ import {
   findHostInstance as findHostInstance_old,
   findHostInstanceWithWarning as findHostInstanceWithWarning_old,
   findHostInstanceWithNoPortals as findHostInstanceWithNoPortals_old,
+  shouldError as shouldError_old,
   shouldSuspend as shouldSuspend_old,
   injectIntoDevTools as injectIntoDevTools_old,
-  act as act_old,
   createPortal as createPortal_old,
   createComponentSelector as createComponentSelector_old,
   createHasPseudoClassSelector as createHasPseudoClassSelector_old,
@@ -51,11 +50,7 @@ import {
   observeVisibleRects as observeVisibleRects_old,
   registerMutableSourceForHydration as registerMutableSourceForHydration_old,
   runWithPriority as runWithPriority_old,
-  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
-  DefaultEventPriority as DefaultEventPriority_old,
-  DiscreteEventPriority as DiscreteEventPriority_old,
-  ContinuousEventPriority as ContinuousEventPriority_old,
-  IdleEventPriority as IdleEventPriority_old,
+  getCurrentUpdatePriority as getCurrentUpdatePriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -70,7 +65,6 @@ import {
   flushControlled as flushControlled_new,
   flushSync as flushSync_new,
   flushPassiveEffects as flushPassiveEffects_new,
-  IsThisRendererActing as IsThisRendererActing_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
   attemptDiscreteHydration as attemptDiscreteHydration_new,
@@ -79,9 +73,9 @@ import {
   findHostInstance as findHostInstance_new,
   findHostInstanceWithWarning as findHostInstanceWithWarning_new,
   findHostInstanceWithNoPortals as findHostInstanceWithNoPortals_new,
+  shouldError as shouldError_new,
   shouldSuspend as shouldSuspend_new,
   injectIntoDevTools as injectIntoDevTools_new,
-  act as act_new,
   createPortal as createPortal_new,
   createComponentSelector as createComponentSelector_new,
   createHasPseudoClassSelector as createHasPseudoClassSelector_new,
@@ -95,11 +89,7 @@ import {
   observeVisibleRects as observeVisibleRects_new,
   registerMutableSourceForHydration as registerMutableSourceForHydration_new,
   runWithPriority as runWithPriority_new,
-  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
-  DefaultEventPriority as DefaultEventPriority_new,
-  DiscreteEventPriority as DiscreteEventPriority_new,
-  ContinuousEventPriority as ContinuousEventPriority_new,
-  IdleEventPriority as IdleEventPriority_new,
+  getCurrentUpdatePriority as getCurrentUpdatePriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -133,9 +123,6 @@ export const flushSync = enableNewReconciler ? flushSync_new : flushSync_old;
 export const flushPassiveEffects = enableNewReconciler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;
-export const IsThisRendererActing = enableNewReconciler
-  ? IsThisRendererActing_new
-  : IsThisRendererActing_old;
 export const getPublicRootInstance = enableNewReconciler
   ? getPublicRootInstance_new
   : getPublicRootInstance_old;
@@ -151,9 +138,9 @@ export const attemptContinuousHydration = enableNewReconciler
 export const attemptHydrationAtCurrentPriority = enableNewReconciler
   ? attemptHydrationAtCurrentPriority_new
   : attemptHydrationAtCurrentPriority_old;
-export const getCurrentUpdateLanePriority = enableNewReconciler
-  ? getCurrentUpdateLanePriority_new
-  : getCurrentUpdateLanePriority_old;
+export const getCurrentUpdatePriority = enableNewReconciler
+  ? getCurrentUpdatePriority_new
+  : getCurrentUpdatePriority_old;
 export const findHostInstance = enableNewReconciler
   ? findHostInstance_new
   : findHostInstance_old;
@@ -163,31 +150,21 @@ export const findHostInstanceWithWarning = enableNewReconciler
 export const findHostInstanceWithNoPortals = enableNewReconciler
   ? findHostInstanceWithNoPortals_new
   : findHostInstanceWithNoPortals_old;
+export const shouldError = enableNewReconciler
+  ? shouldError_new
+  : shouldError_old;
 export const shouldSuspend = enableNewReconciler
   ? shouldSuspend_new
   : shouldSuspend_old;
 export const injectIntoDevTools = enableNewReconciler
   ? injectIntoDevTools_new
   : injectIntoDevTools_old;
-export const act = enableNewReconciler ? act_new : act_old;
 export const createPortal = enableNewReconciler
   ? createPortal_new
   : createPortal_old;
 export const createComponentSelector = enableNewReconciler
   ? createComponentSelector_new
   : createComponentSelector_old;
-export const DefaultEventPriority = enableNewReconciler
-  ? DefaultEventPriority_new
-  : DefaultEventPriority_old;
-export const DiscreteEventPriority = enableNewReconciler
-  ? DiscreteEventPriority_new
-  : DiscreteEventPriority_old;
-export const ContinuousEventPriority = enableNewReconciler
-  ? ContinuousEventPriority_new
-  : ContinuousEventPriority_old;
-export const IdleEventPriority = enableNewReconciler
-  ? IdleEventPriority_new
-  : IdleEventPriority_old;
 
 //TODO: "psuedo" is spelled "pseudo"
 export const createHasPseudoClassSelector = enableNewReconciler

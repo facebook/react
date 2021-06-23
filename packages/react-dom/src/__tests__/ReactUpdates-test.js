@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
   });
 
@@ -1300,7 +1300,7 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
     const container = document.createElement('div');
 
@@ -1332,7 +1332,7 @@ describe('ReactUpdates', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     let hiddenDiv;
     act(() => {
       root.render(<Foo />);
@@ -1682,86 +1682,6 @@ describe('ReactUpdates', () => {
 
       expect(Scheduler).toHaveYielded(['Done']);
       expect(container.textContent).toBe('1000');
-    });
-  }
-
-  if (__DEV__) {
-    it('should properly trace interactions within batched updates', () => {
-      const SchedulerTracing = require('scheduler/tracing');
-
-      let expectedInteraction;
-
-      const container = document.createElement('div');
-
-      const Component = jest.fn(() => {
-        expect(expectedInteraction).toBeDefined();
-
-        const interactions = SchedulerTracing.unstable_getCurrent();
-        expect(interactions.size).toBe(1);
-        expect(interactions).toContain(expectedInteraction);
-
-        return null;
-      });
-
-      ReactDOM.unstable_batchedUpdates(() => {
-        SchedulerTracing.unstable_trace(
-          'mount traced inside a batched update',
-          1,
-          () => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, container);
-          },
-        );
-      });
-
-      ReactDOM.unstable_batchedUpdates(() => {
-        SchedulerTracing.unstable_trace(
-          'update traced inside a batched update',
-          2,
-          () => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, container);
-          },
-        );
-      });
-
-      const secondContainer = document.createElement('div');
-
-      SchedulerTracing.unstable_trace(
-        'mount traced outside a batched update',
-        3,
-        () => {
-          ReactDOM.unstable_batchedUpdates(() => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, secondContainer);
-          });
-        },
-      );
-
-      SchedulerTracing.unstable_trace(
-        'update traced outside a batched update',
-        4,
-        () => {
-          ReactDOM.unstable_batchedUpdates(() => {
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expectedInteraction = Array.from(interactions)[0];
-
-            ReactDOM.render(<Component />, container);
-          });
-        },
-      );
-
-      expect(Component).toHaveBeenCalledTimes(4);
     });
   }
 });

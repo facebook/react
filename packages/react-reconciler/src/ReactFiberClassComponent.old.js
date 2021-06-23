@@ -10,9 +10,15 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {Flags} from './ReactFiberFlags';
 
 import * as React from 'react';
-import {MountLayoutDev, Update, Snapshot} from './ReactFiberFlags';
+import {
+  LayoutStatic,
+  MountLayoutDev,
+  Update,
+  Snapshot,
+} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -20,6 +26,8 @@ import {
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
   enableStrictEffects,
+  enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -28,6 +36,7 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
@@ -58,7 +67,7 @@ import {
   hasContextChanged,
   emptyContextObject,
 } from './ReactFiberContext.old';
-import {readContext} from './ReactFiberNewContext.old';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext.old';
 import {
   requestEventTime,
   requestUpdateLane,
@@ -73,7 +82,6 @@ import {
 } from './SchedulingProfiler';
 
 const fakeInternalInstance = {};
-const isArray = Array.isArray;
 
 // React.Component uses a shared frozen object by default.
 // We'll use it to determine whether we need to initialize legacy refs.
@@ -154,7 +162,7 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-export function applyDerivedStateFromProps(
+function applyDerivedStateFromProps(
   workInProgress: Fiber,
   ctor: any,
   getDerivedStateFromProps: (props: any, state: any) => any,
@@ -877,7 +885,6 @@ function mountClassInstance(
     }
   }
 
-  processUpdateQueue(workInProgress, newProps, instance, renderLanes);
   instance.state = workInProgress.memoizedState;
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
@@ -907,16 +914,18 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
+    let fiberFlags: Flags = Update;
+    if (enableSuspenseLayoutEffectSemantics) {
+      fiberFlags |= LayoutStatic;
+    }
     if (
       __DEV__ &&
       enableStrictEffects &&
       (workInProgress.mode & StrictEffectsMode) !== NoMode
     ) {
-      // Never double-invoke effects for legacy roots.
-      workInProgress.flags |= MountLayoutDev | Update;
-    } else {
-      workInProgress.flags |= Update;
+      fiberFlags |= MountLayoutDev;
     }
+    workInProgress.flags |= fiberFlags;
   }
 }
 
@@ -986,16 +995,18 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
     return false;
   }
@@ -1038,31 +1049,35 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
 
     // If shouldComponentUpdate returned false, we should still update the
@@ -1150,7 +1165,13 @@ function updateClassInstance(
     unresolvedOldProps === unresolvedNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
-    !checkHasForceUpdateAfterProcessing()
+    !checkHasForceUpdateAfterProcessing() &&
+    !(
+      enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies)
+    )
   ) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
@@ -1193,7 +1214,15 @@ function updateClassInstance(
       oldState,
       newState,
       nextContext,
-    );
+    ) ||
+    // TODO: In some cases, we'll end up checking if context has changed twice,
+    // both before and after `shouldComponentUpdate` has been called. Not ideal,
+    // but I'm loath to refactor this function. This only happens for memoized
+    // components so it's not that common.
+    (enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies));
 
   if (shouldUpdate) {
     // In order to support react-lifecycles-compat polyfilled components,

@@ -360,6 +360,7 @@ describe('ReactART', () => {
     expect(onClick2).toBeCalled();
   });
 
+  // @gate !enableSyncDefaultUpdates
   it('can concurrently render with a "primary" renderer while sharing context', () => {
     const CurrentRendererContext = React.createContext(null);
 

@@ -15,12 +15,22 @@ import type {
 
 import {createRequest, startWork} from 'react-server/src/ReactFlightServer';
 
+type Options = {
+  onError?: (error: mixed) => void,
+};
+
 function render(
   model: ReactModel,
   destination: Destination,
   config: BundlerConfig,
+  options?: Options,
 ): void {
-  const request = createRequest(model, destination, config);
+  const request = createRequest(
+    model,
+    destination,
+    config,
+    options ? options.onError : undefined,
+  );
   startWork(request);
 }
 

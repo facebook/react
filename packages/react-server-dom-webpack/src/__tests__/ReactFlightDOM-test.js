@@ -36,7 +36,7 @@ describe('ReactFlightDOM', () => {
     jest.resetModules();
     webpackModules = {};
     webpackMap = {};
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -128,7 +128,6 @@ describe('ReactFlightDOM', () => {
     });
   });
 
-  // @gate experimental
   it('should resolve the root', async () => {
     const {Suspense} = React;
 
@@ -171,7 +170,7 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
@@ -180,7 +179,6 @@ describe('ReactFlightDOM', () => {
     );
   });
 
-  // @gate experimental
   it('should not get confused by $', async () => {
     const {Suspense} = React;
 
@@ -210,14 +208,13 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>$1</p>');
   });
 
-  // @gate experimental
   it('should not get confused by @', async () => {
     const {Suspense} = React;
 
@@ -247,15 +244,15 @@ describe('ReactFlightDOM', () => {
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>@div</p>');
   });
 
-  // @gate experimental
   it('should progressively reveal server components', async () => {
+    let reportedErrors = [];
     const {Suspense} = React;
 
     // Client Components
@@ -374,11 +371,15 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(model, writable, webpackMap);
+    ReactServerDOMWriter.pipeToNodeWritable(model, writable, webpackMap, {
+      onError(x) {
+        reportedErrors.push(x);
+      },
+    });
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(async () => {
       root.render(
         <Suspense fallback={<p>(loading)</p>}>
@@ -407,9 +408,12 @@ describe('ReactFlightDOM', () => {
         '<p>(loading games)</p>',
     );
 
+    expect(reportedErrors).toEqual([]);
+
+    const theError = new Error('Game over');
     // Let's *fail* loading games.
     await act(async () => {
-      rejectGames(new Error('Game over'));
+      rejectGames(theError);
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -417,6 +421,9 @@ describe('ReactFlightDOM', () => {
         '<p>(loading posts)</p>' +
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
+
+    expect(reportedErrors).toEqual([theError]);
+    reportedErrors = [];
 
     // We can now show the sidebar.
     await act(async () => {
@@ -439,9 +446,10 @@ describe('ReactFlightDOM', () => {
         '<div>:posts:</div>' +
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
+
+    expect(reportedErrors).toEqual([]);
   });
 
-  // @gate experimental
   it('should preserve state of client components on refetch', async () => {
     const {Suspense} = React;
 
@@ -470,7 +478,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const stream1 = getTestStream();
     ReactServerDOMWriter.pipeToNodeWritable(

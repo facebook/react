@@ -26,7 +26,7 @@ describe('ReactFlight', () => {
     ReactNoop = require('react-noop-renderer');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
-    act = ReactNoop.act;
+    act = require('jest-react').act;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -156,10 +156,15 @@ describe('ReactFlight', () => {
       return <div ref={ref} />;
     }
 
-    const event = ReactNoopFlightServer.render(<EventHandlerProp />);
-    const fn = ReactNoopFlightServer.render(<FunctionProp />);
-    const symbol = ReactNoopFlightServer.render(<SymbolProp />);
-    const refs = ReactNoopFlightServer.render(<RefProp />);
+    const options = {
+      onError() {
+        // ignore
+      },
+    };
+    const event = ReactNoopFlightServer.render(<EventHandlerProp />, options);
+    const fn = ReactNoopFlightServer.render(<FunctionProp />, options);
+    const symbol = ReactNoopFlightServer.render(<SymbolProp />, options);
+    const refs = ReactNoopFlightServer.render(<RefProp />, options);
 
     function Client({transport}) {
       return ReactNoopFlightClient.read(transport);
@@ -213,7 +218,11 @@ describe('ReactFlight', () => {
       );
     }
 
-    const data = ReactNoopFlightServer.render(<Server />);
+    const data = ReactNoopFlightServer.render(<Server />, {
+      onError(x) {
+        // ignore
+      },
+    });
 
     function Client({transport}) {
       return ReactNoopFlightClient.read(transport);

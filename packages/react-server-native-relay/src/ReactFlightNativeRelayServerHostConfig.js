@@ -8,9 +8,9 @@
  */
 
 import type {RowEncoding, JSONValue} from './ReactFlightNativeRelayProtocol';
-
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
-
+import hasOwnProperty from 'shared/hasOwnProperty';
+import isArray from 'shared/isArray';
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
 export type ModuleReference<T> = JSResourceReferenceImpl<T>;
@@ -25,6 +25,7 @@ import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 
 import {
   emitRow,
+  close,
   resolveModuleMetaData as resolveModuleMetaDataImpl,
 } from 'ReactFlightNativeRelayServerIntegration';
 
@@ -71,8 +72,6 @@ export function processErrorChunk(
   ];
 }
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
-
 function convertModelToJSON(
   request: Request,
   parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
@@ -81,7 +80,7 @@ function convertModelToJSON(
 ): JSONValue {
   const json = resolveModelToJSON(request, parent, key, model);
   if (typeof json === 'object' && json !== null) {
-    if (Array.isArray(json)) {
+    if (isArray(json)) {
       const jsonArray: Array<JSONValue> = [];
       for (let i = 0; i < json.length; i++) {
         jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
@@ -146,4 +145,8 @@ export function writeChunk(destination: Destination, chunk: Chunk): boolean {
 
 export function completeWriting(destination: Destination) {}
 
-export {close} from 'ReactFlightNativeRelayServerIntegration';
+export {close};
+
+export function closeWithError(destination: Destination, error: mixed): void {
+  close(destination);
+}
