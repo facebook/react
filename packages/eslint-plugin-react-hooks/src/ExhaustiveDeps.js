@@ -27,7 +27,17 @@ export default {
         enableDangerousAutofixThisMayCauseInfiniteLoops: false,
         properties: {
           additionalHooks: {
-            type: ['string', 'object'],
+            anyOf: [
+              {type: 'string'},
+              {
+                type: 'object',
+                additionalProperties: {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {callbackIndex: {type: 'number'}},
+                },
+              },
+            ],
           },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
