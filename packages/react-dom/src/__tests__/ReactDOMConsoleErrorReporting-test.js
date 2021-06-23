@@ -79,31 +79,31 @@ describe('ReactDOMConsoleErrorReporting', () => {
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
-          // Reported because we're in a browser click event:
           [
+            // Reported because we're in a browser click event:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // This one is jsdom-only. Real browser deduplicates it.
-          // (In DEV, we have a nested event due to guarded callback.)
           [
+            // This one is jsdom-only. Real browser deduplicates it.
+            // (In DEV, we have a nested event due to guarded callback.)
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported because we're in a browser click event:
           [
+            // Reported because we're in a browser click event:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // This one is jsdom-only. Real browser deduplicates it.
-          // (In DEV, we have a nested event due to guarded callback.)
           [
+            // This one is jsdom-only. Real browser deduplicates it.
+            // (In DEV, we have a nested event due to guarded callback.)
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
@@ -111,17 +111,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
       } else {
-        // Reported because we're in a browser click event:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported because we're in a browser click event:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported because we're in a browser click event:
           [
+            // Reported because we're in a browser click event:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
@@ -158,24 +158,37 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }).toThrow('Boom');
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          [
+            // TODO: This is duplicated only with createRoot. Why?
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported due to the guarded callback:
           [
+            // Reported due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // TODO: This is duplicated only with createRoot. Why?
+            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -225,24 +238,43 @@ describe('ReactDOMConsoleErrorReporting', () => {
       });
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          [
+            // TODO: This is duplicated only with createRoot. Why?
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported by jsdom due to the guarded callback:
           [
+            // Reported by jsdom due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
+            expect.stringContaining(
+              'The above error occurred in the <Foo> component',
+            ),
+          ],
+          [
+            // TODO: This is duplicated only with createRoot. Why?
+            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          [
+            // TODO: This is duplicated only with createRoot. Why?
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -255,6 +287,12 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported by React with no extra message:
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          [
+            // TODO: This is duplicated only with createRoot. Why?
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -294,24 +332,24 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }).toThrow('Boom');
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported due to the guarded callback:
           [
+            // Reported due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -365,24 +403,24 @@ describe('ReactDOMConsoleErrorReporting', () => {
       });
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported by jsdom due to the guarded callback:
           [
+            // Reported by jsdom due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -434,24 +472,24 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }).toThrow('Boom');
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported due to the guarded callback:
           [
+            // Reported due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -505,24 +543,24 @@ describe('ReactDOMConsoleErrorReporting', () => {
       });
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported by jsdom due to the guarded callback:
           [
+            // Reported by jsdom due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -585,15 +623,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
-          // Reported because we're in a browser click event:
           [
+            // Reported because we're in a browser click event:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // This one is jsdom-only. Real browser deduplicates it.
-          // (In DEV, we have a nested event due to guarded callback.)
           [
+            // This one is jsdom-only. Real browser deduplicates it.
+            // (In DEV, we have a nested event due to guarded callback.)
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -601,16 +639,16 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // Reported because we're in a browser click event:
           [
+            // Reported because we're in a browser click event:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // This one is jsdom-only. Real browser deduplicates it.
-          // (In DEV, we have a nested event due to guarded callback.)
           [
+            // This one is jsdom-only. Real browser deduplicates it.
+            // (In DEV, we have a nested event due to guarded callback.)
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
@@ -618,17 +656,17 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
       } else {
-        // Reported because we're in a browser click event:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported because we're in a browser click event:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
-          // Reported because we're in a browser click event:
           [
+            // Reported because we're in a browser click event:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
@@ -666,9 +704,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }).toThrow('Boom');
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -676,15 +714,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // Reported due to the guarded callback:
           [
+            // Reported due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -736,9 +774,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
       });
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -746,15 +784,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // Reported by jsdom due to the guarded callback:
           [
+            // Reported by jsdom due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -807,9 +845,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }).toThrow('Boom');
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -817,15 +855,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // Reported due to the guarded callback:
           [
+            // Reported due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -881,9 +919,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
       });
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -891,15 +929,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // Reported by jsdom due to the guarded callback:
           [
+            // Reported by jsdom due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -952,9 +990,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }).toThrow('Boom');
 
       if (__DEV__) {
-        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
+            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -962,15 +1000,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // Reported due to the guarded callback:
           [
+            // Reported due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -1036,15 +1074,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [expect.stringContaining('ReactDOM.render is no longer supported')],
-          // Reported by jsdom due to the guarded callback:
           [
+            // Reported by jsdom due to the guarded callback:
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
-          // Addendum by React:
           [
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
