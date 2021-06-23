@@ -13,6 +13,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
   let ReactDOM;
 
   let ErrorBoundary;
+  let NoError;
   let container;
   let windowOnError;
 
@@ -33,6 +34,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
         }
         return this.props.children;
       }
+    };
+    NoError = function() {
+      return <h1>OK</h1>;
     };
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -125,6 +129,20 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
       }
+
+      // Check next render doesn't throw.
+      windowOnError.mockReset();
+      console.error.calls.reset();
+      act(() => {
+        ReactDOM.render(<NoError />, container);
+      });
+      expect(container.textContent).toBe('OK');
+      expect(windowOnError.mock.calls).toEqual([]);
+      if (__DEV__) {
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
+      }
     });
 
     it('logs render errors without an error boundary', () => {
@@ -176,6 +194,20 @@ describe('ReactDOMConsoleErrorReporting', () => {
               message: 'Boom',
             }),
           ],
+        ]);
+      }
+
+      // Check next render doesn't throw.
+      windowOnError.mockReset();
+      console.error.calls.reset();
+      act(() => {
+        ReactDOM.render(<NoError />, container);
+      });
+      expect(container.textContent).toBe('OK');
+      expect(windowOnError.mock.calls).toEqual([]);
+      if (__DEV__) {
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
         ]);
       }
     });
@@ -234,6 +266,20 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
       }
+
+      // Check next render doesn't throw.
+      windowOnError.mockReset();
+      console.error.calls.reset();
+      act(() => {
+        ReactDOM.render(<NoError />, container);
+      });
+      expect(container.textContent).toBe('OK');
+      expect(windowOnError.mock.calls).toEqual([]);
+      if (__DEV__) {
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
+      }
     });
 
     // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
@@ -289,6 +335,20 @@ describe('ReactDOMConsoleErrorReporting', () => {
               message: 'Boom',
             }),
           ],
+        ]);
+      }
+
+      // Check next render doesn't throw.
+      windowOnError.mockReset();
+      console.error.calls.reset();
+      act(() => {
+        ReactDOM.render(<NoError />, container);
+      });
+      expect(container.textContent).toBe('OK');
+      expect(windowOnError.mock.calls).toEqual([]);
+      if (__DEV__) {
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
         ]);
       }
     });
@@ -351,6 +411,20 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
       }
+
+      // Check next render doesn't throw.
+      windowOnError.mockReset();
+      console.error.calls.reset();
+      act(() => {
+        ReactDOM.render(<NoError />, container);
+      });
+      expect(container.textContent).toBe('OK');
+      expect(windowOnError.mock.calls).toEqual([]);
+      if (__DEV__) {
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
+      }
     });
 
     // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
@@ -406,6 +480,20 @@ describe('ReactDOMConsoleErrorReporting', () => {
               message: 'Boom',
             }),
           ],
+        ]);
+      }
+
+      // Check next render doesn't throw.
+      windowOnError.mockReset();
+      console.error.calls.reset();
+      act(() => {
+        ReactDOM.render(<NoError />, container);
+      });
+      expect(container.textContent).toBe('OK');
+      expect(windowOnError.mock.calls).toEqual([]);
+      if (__DEV__) {
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
         ]);
       }
     });
@@ -466,6 +554,20 @@ describe('ReactDOMConsoleErrorReporting', () => {
               message: 'Boom',
             }),
           ],
+        ]);
+      }
+
+      // Check next render doesn't throw.
+      windowOnError.mockReset();
+      console.error.calls.reset();
+      act(() => {
+        ReactDOM.render(<NoError />, container);
+      });
+      expect(container.textContent).toBe('OK');
+      expect(windowOnError.mock.calls).toEqual([]);
+      if (__DEV__) {
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
         ]);
       }
     });
