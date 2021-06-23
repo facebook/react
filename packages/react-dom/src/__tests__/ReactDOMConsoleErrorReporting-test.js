@@ -235,5 +235,239 @@ describe('ReactDOMConsoleErrorReporting', () => {
         ]);
       }
     });
+
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs layout effect errors without an error boundary', () => {
+      spyOnDevAndProd(console, 'error');
+
+      function Foo() {
+        React.useLayoutEffect(() => {
+          throw Error('Boom');
+        }, []);
+        return null;
+      }
+
+      expect(() => {
+        act(() => {
+          ReactDOM.render(<Foo />, container);
+        });
+      }).toThrow('Boom');
+
+      if (__DEV__) {
+        // Reported due to guarded callback:
+        expect(windowOnError.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          // Reported due to the guarded callback:
+          [
+            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          // Addendum by React:
+          [
+            expect.stringContaining(
+              'The above error occurred in the <Foo> component',
+            ),
+          ],
+        ]);
+      } else {
+        // The top-level error was caught with try/catch, and there's no guarded callback,
+        // so in production we don't see an error event.
+        expect(windowOnError.mock.calls).toEqual([]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [
+            // Reported by React with no extra message:
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+      }
+    });
+
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs layout effect errors with an error boundary', () => {
+      spyOnDevAndProd(console, 'error');
+
+      function Foo() {
+        React.useLayoutEffect(() => {
+          throw Error('Boom');
+        }, []);
+        return null;
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <ErrorBoundary>
+            <Foo />
+          </ErrorBoundary>,
+          container,
+        );
+      });
+
+      if (__DEV__) {
+        // Reported due to guarded callback:
+        expect(windowOnError.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          // Reported by jsdom due to the guarded callback:
+          [
+            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          // Addendum by React:
+          [
+            expect.stringContaining(
+              'The above error occurred in the <Foo> component',
+            ),
+          ],
+        ]);
+      } else {
+        // The top-level error was caught with try/catch, and there's no guarded callback,
+        // so in production we don't see an error event.
+        expect(windowOnError.mock.calls).toEqual([]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [
+            // Reported by React with no extra message:
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+      }
+    });
+
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs passive effect errors without an error boundary', () => {
+      spyOnDevAndProd(console, 'error');
+
+      function Foo() {
+        React.useEffect(() => {
+          throw Error('Boom');
+        }, []);
+        return null;
+      }
+
+      expect(() => {
+        act(() => {
+          ReactDOM.render(<Foo />, container);
+        });
+      }).toThrow('Boom');
+
+      if (__DEV__) {
+        // Reported due to guarded callback:
+        expect(windowOnError.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          // Reported due to the guarded callback:
+          [
+            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          // Addendum by React:
+          [
+            expect.stringContaining(
+              'The above error occurred in the <Foo> component',
+            ),
+          ],
+        ]);
+      } else {
+        // The top-level error was caught with try/catch, and there's no guarded callback,
+        // so in production we don't see an error event.
+        expect(windowOnError.mock.calls).toEqual([]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [
+            // Reported by React with no extra message:
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+      }
+    });
+
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs passive effect errors with an error boundary', () => {
+      spyOnDevAndProd(console, 'error');
+
+      function Foo() {
+        React.useEffect(() => {
+          throw Error('Boom');
+        }, []);
+        return null;
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <ErrorBoundary>
+            <Foo />
+          </ErrorBoundary>,
+          container,
+        );
+      });
+
+      if (__DEV__) {
+        // Reported due to guarded callback:
+        expect(windowOnError.mock.calls).toEqual([
+          [
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+          // Reported by jsdom due to the guarded callback:
+          [
+            expect.stringContaining('Error: Uncaught [Error: Boom]'),
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+          // Addendum by React:
+          [
+            expect.stringContaining(
+              'The above error occurred in the <Foo> component',
+            ),
+          ],
+        ]);
+      } else {
+        // The top-level error was caught with try/catch, and there's no guarded callback,
+        // so in production we don't see an error event.
+        expect(windowOnError.mock.calls).toEqual([]);
+        expect(console.error.calls.all().map(c => c.args)).toEqual([
+          [
+            // Reported by React with no extra message:
+            expect.objectContaining({
+              message: 'Boom',
+            }),
+          ],
+        ]);
+      }
+    });
   });
 });
