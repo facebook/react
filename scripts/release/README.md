@@ -87,7 +87,7 @@ Stable releases should always be created from the "next" channel. This encourage
 To prepare a stable release, choose a "next" version and run the [`prepare-release-from-npm`](#prepare-release-from-npm) script <sup>1</sup>:
 
 ```sh
-scripts/release/prepare-release-from-npm.js --version=0.0.0-241c4467e
+scripts/release/prepare-release-from-npm.js --version=0.0.0-241c4467e-20200129
 ```
 
 This script will prompt you to select stable version numbers for each of the packages. It will update the package JSON versions (and dependencies) based on the numbers you select.
@@ -165,9 +165,9 @@ This script prompts for new (stable) release versions for each public package an
 "Next" releases have already been tested but it is still a good idea to **manually test and verify a release** before publishing to ensure that e.g. version numbers are correct. Upon completion, this script prints manual testing instructions.
 
 #### Example usage
-To promote the "next" release `0.0.0-241c4467e` (aka commit [241c4467e](https://github.com/facebook/react/commit/241c4467e)) to stable:
+To promote the "next" release `0.0.0-241c4467e-20200129` (aka commit [241c4467e](https://github.com/facebook/react/commit/241c4467e)) to stable:
 ```sh
-scripts/release/prepare-release-from-npm.js --version=0.0.0-241c4467e
+scripts/release/prepare-release-from-npm.js --version=0.0.0-241c4467e-20200129
 ```
 
 ## `publish`
