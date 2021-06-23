@@ -243,7 +243,7 @@ if (__DEV__) {
 }
 
 function getOwnerDocumentFromRootContainer(
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): Document {
   return rootContainerElement.nodeType === DOCUMENT_NODE
     ? (rootContainerElement: any)
@@ -268,7 +268,7 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
 function setInitialDOMProperties(
   tag: string,
   domElement: Element,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -355,7 +355,7 @@ function updateDOMProperties(
 export function createElement(
   type: string,
   props: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
   parentNamespace: string,
 ): Element {
   let isCustomComponentTag;
@@ -461,7 +461,7 @@ export function createElement(
 
 export function createTextNode(
   text: string,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): Text {
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
     text,
@@ -472,7 +472,7 @@ export function setInitialProperties(
   domElement: Element,
   tag: string,
   rawProps: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): void {
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
@@ -598,7 +598,7 @@ export function diffProperties(
   tag: string,
   lastRawProps: Object,
   nextRawProps: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, nextRawProps);
@@ -860,7 +860,7 @@ export function diffHydratedProperties(
   tag: string,
   rawProps: Object,
   parentNamespace: string,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | DocumentFragment,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
@@ -1149,7 +1149,7 @@ export function warnForUnmatchedText(textNode: Text, text: string) {
 }
 
 export function warnForDeletedHydratableElement(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   child: Element,
 ) {
   if (__DEV__) {
@@ -1166,7 +1166,7 @@ export function warnForDeletedHydratableElement(
 }
 
 export function warnForDeletedHydratableText(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   child: Text,
 ) {
   if (__DEV__) {
@@ -1183,7 +1183,7 @@ export function warnForDeletedHydratableText(
 }
 
 export function warnForInsertedHydratedElement(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   tag: string,
   props: Object,
 ) {
@@ -1201,7 +1201,7 @@ export function warnForInsertedHydratedElement(
 }
 
 export function warnForInsertedHydratedText(
-  parentNode: Element | Document,
+  parentNode: Element | Document | DocumentFragment,
   text: string,
 ) {
   if (__DEV__) {
