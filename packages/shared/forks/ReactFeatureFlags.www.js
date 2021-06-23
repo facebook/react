@@ -26,7 +26,6 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   createRootStrictEffectsByDefault,
-  enableSuspenseLayoutEffectSemantics,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
@@ -50,6 +49,8 @@ export const enableUpdaterTracking = __PROFILE__;
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
+
+export const enableSuspenseLayoutEffectSemantics = true;
 
 // Note: we'll want to remove this when we to userland implementation.
 // For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
