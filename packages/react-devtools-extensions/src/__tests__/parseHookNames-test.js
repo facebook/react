@@ -15,13 +15,10 @@ describe('parseHookNames', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    jest.mock('react-devtools-feature-flags', () => {
-      const flags = jest.requireActual('react-devtools-feature-flags');
-      return {
-        ...flags,
-        enableHookNameParsing: true,
-      };
-    });
+    const {
+      overrideFeatureFlags,
+    } = require('react-devtools-shared/src/__tests__/utils');
+    overrideFeatureFlags({enableHookNameParsing: true});
 
     fetchMock = require('jest-fetch-mock');
     fetchMock.enableMocks();

@@ -268,3 +268,13 @@ export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
     }
   }
 }
+
+export function overrideFeatureFlags(overrideFlags) {
+  jest.mock('react-devtools-feature-flags', () => {
+    const actualFlags = jest.requireActual('react-devtools-feature-flags');
+    return {
+      ...actualFlags,
+      ...overrideFlags,
+    };
+  });
+}
