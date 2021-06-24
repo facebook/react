@@ -140,7 +140,7 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
 import {doesFiberContain} from './ReactFiberTreeReflection';
-import {invokeGuardedCallback} from 'shared/ReactErrorUtils';
+import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -171,6 +171,7 @@ function reportUncaughtErrorInDEV(error) {
     invokeGuardedCallback(null, () => {
       throw error;
     });
+    clearCaughtError();
   }
 }
 
