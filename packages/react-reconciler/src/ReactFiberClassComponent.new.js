@@ -169,9 +169,8 @@ function applyDerivedStateFromProps(
   nextProps: any,
 ) {
   const prevState = workInProgress.memoizedState;
-  const partialState = getDerivedStateFromProps(nextProps, prevState);
+  let partialState = getDerivedStateFromProps(nextProps, prevState);
   if (__DEV__) {
-    warnOnUndefinedDerivedState(ctor, partialState);
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
@@ -179,11 +178,12 @@ function applyDerivedStateFromProps(
       disableLogs();
       try {
         // Invoke the function an extra time to help detect side-effects.
-        getDerivedStateFromProps(nextProps, prevState);
+        partialState = getDerivedStateFromProps(nextProps, prevState);
       } finally {
         reenableLogs();
       }
     }
+    warnOnUndefinedDerivedState(ctor, partialState);
   }
   // Merge the partial state and the previous state.
   const memoizedState =
@@ -318,19 +318,12 @@ function checkShouldComponentUpdate(
 ) {
   const instance = workInProgress.stateNode;
   if (typeof instance.shouldComponentUpdate === 'function') {
-    const shouldUpdate = instance.shouldComponentUpdate(
+    let shouldUpdate = instance.shouldComponentUpdate(
       newProps,
       newState,
       nextContext,
     );
     if (__DEV__) {
-      if (shouldUpdate === undefined) {
-        console.error(
-          '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
-            'boolean value. Make sure to return true or false.',
-          getComponentNameFromType(ctor) || 'Component',
-        );
-      }
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
@@ -338,10 +331,21 @@ function checkShouldComponentUpdate(
         disableLogs();
         try {
           // Invoke the function an extra time to help detect side-effects.
-          instance.shouldComponentUpdate(newProps, newState, nextContext);
+          shouldUpdate = instance.shouldComponentUpdate(
+            newProps,
+            newState,
+            nextContext,
+          );
         } finally {
           reenableLogs();
         }
+      }
+      if (shouldUpdate === undefined) {
+        console.error(
+          '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
+            'boolean value. Make sure to return true or false.',
+          getComponentNameFromType(ctor) || 'Component',
+        );
       }
     }
 
@@ -651,7 +655,7 @@ function constructClassInstance(
       : emptyContextObject;
   }
 
-  const instance = new ctor(props, context);
+  let instance = new ctor(props, context);
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
     if (
@@ -660,7 +664,7 @@ function constructClassInstance(
     ) {
       disableLogs();
       try {
-        new ctor(props, context); // eslint-disable-line no-new
+        instance = new ctor(props, context); // eslint-disable-line no-new
       } finally {
         reenableLogs();
       }
