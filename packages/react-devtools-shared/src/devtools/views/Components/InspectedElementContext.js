@@ -18,6 +18,7 @@ import {
   useMemo,
   useState,
 } from 'react';
+import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
@@ -93,17 +94,19 @@ export function InspectedElementContextController({children}: Props) {
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
-    if (
-      inspectedElement !== null &&
-      inspectedElement.type === ElementTypeFunction &&
-      inspectedElement.hooks !== null &&
-      loadHookNamesFunction !== null
-    ) {
-      hookNames = loadHookNames(
-        element,
-        inspectedElement.hooks,
-        loadHookNamesFunction,
-      );
+    if (enableHookNameParsing) {
+      if (
+        inspectedElement !== null &&
+        inspectedElement.type === ElementTypeFunction &&
+        inspectedElement.hooks !== null &&
+        loadHookNamesFunction !== null
+      ) {
+        hookNames = loadHookNames(
+          element,
+          inspectedElement.hooks,
+          loadHookNamesFunction,
+        );
+      }
     }
   }
 

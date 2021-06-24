@@ -8,6 +8,7 @@
  */
 
 import {unstable_getCacheForType as getCacheForType} from 'react';
+import {enableHookNameParsing} from 'react-devtools-feature-flags';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
@@ -66,6 +67,10 @@ export function loadHookNames(
   hooksTree: HooksTree,
   loadHookNamesFunction: (hookLog: HooksTree) => Thenable<HookNames>,
 ): HookNames | null {
+  if (!enableHookNameParsing) {
+    return null;
+  }
+
   const map = getRecordMap();
 
   // TODO (named hooks) Make sure caching layer works and we aren't re-parsing ASTs.

@@ -10,6 +10,7 @@
  */
 
 import {parse} from '@babel/parser';
+import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {SourceMapConsumer} from 'source-map';
 import {
   checkNodeLocation,
@@ -45,6 +46,10 @@ type HookSourceData = {|
 export default async function parseHookNames(
   hooksTree: HooksTree,
 ): Thenable<HookNames | null> {
+  if (!enableHookNameParsing) {
+    return Promise.resolve(null);
+  }
+
   const hooksList: Array<HooksNode> = [];
   flattenHooksList(hooksTree, hooksList);
 
