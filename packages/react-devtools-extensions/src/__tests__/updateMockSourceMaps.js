@@ -1,6 +1,12 @@
 const {transformSync} = require('@babel/core');
 const {btoa} = require('base64');
-const {mkdirSync, readFileSync, writeFileSync} = require('fs');
+const {
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} = require('fs');
 const {emptyDirSync} = require('fs-extra');
 const {resolve} = require('path');
 
@@ -57,4 +63,11 @@ function compile(fileName) {
   );
 }
 
-compile('SimpleComponent.js');
+// Compile all files in the current directory
+const entries = readdirSync(sourceDir);
+entries.forEach(entry => {
+  const stat = lstatSync(resolve(sourceDir, entry));
+  if (!stat.isDirectory() && entry.endsWith('.js')) {
+    compile(entry);
+  }
+});
