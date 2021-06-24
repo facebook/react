@@ -30,6 +30,7 @@ import type {Element} from 'react-devtools-shared/src/devtools/views/Components/
 type HooksTreeViewProps = {|
   bridge: FrontendBridge,
   element: Element,
+  hookNames: Array<string> | null,
   inspectedElement: InspectedElement,
   store: Store,
 |};
@@ -37,6 +38,7 @@ type HooksTreeViewProps = {|
 export function InspectedElementHooksTree({
   bridge,
   element,
+  hookNames,
   inspectedElement,
   store,
 }: HooksTreeViewProps) {
@@ -56,6 +58,7 @@ export function InspectedElementHooksTree({
           </Button>
         </div>
         <InnerHooksTreeView
+          hookNames={hookNames}
           hooks={hooks}
           id={id}
           element={element}
@@ -69,6 +72,7 @@ export function InspectedElementHooksTree({
 
 type InnerHooksTreeViewProps = {|
   element: Element,
+  hookNames: Array<string> | null,
   hooks: HooksTree,
   id: number,
   inspectedElement: InspectedElement,
@@ -77,6 +81,7 @@ type InnerHooksTreeViewProps = {|
 
 export function InnerHooksTreeView({
   element,
+  hookNames,
   hooks,
   id,
   inspectedElement,
@@ -88,6 +93,7 @@ export function InnerHooksTreeView({
       key={index}
       element={element}
       hook={hooks[index]}
+      hookName={hookNames != null ? hookNames[index] : null}
       id={id}
       inspectedElement={inspectedElement}
       path={path.concat([index])}
@@ -98,12 +104,20 @@ export function InnerHooksTreeView({
 type HookViewProps = {|
   element: Element,
   hook: HooksNode,
+  hookName: string | null,
   id: number,
   inspectedElement: InspectedElement,
   path: Array<string | number>,
 |};
 
-function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
+function HookView({
+  element,
+  hook,
+  hookName,
+  id,
+  inspectedElement,
+  path,
+}: HookViewProps) {
   const {
     canEditHooks,
     canEditHooksAndDeletePaths,
@@ -179,6 +193,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
 
   let displayValue;
   let isComplexDisplayValue = false;
+  const hookDisplayName = hookName ? `${name}(${hookName})` : name;
 
   // Format data for display to mimic the props/state/context for now.
   if (type === 'string') {
@@ -219,6 +234,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
         depth={1}
         element={element}
         hookID={hookID}
+        hookName={hookName}
         inspectedElement={inspectedElement}
         name="subHooks"
         path={path.concat(['subHooks'])}
@@ -236,7 +252,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
             <span
               onClick={toggleIsOpen}
               className={name !== '' ? styles.Name : styles.NameAnonymous}>
-              {name || 'Anonymous'}
+              {hookDisplayName || 'Anonymous'}
             </span>
             <span className={styles.Value} onClick={toggleIsOpen}>
               {isOpen || getMetaValueLabel(value)}
@@ -253,6 +269,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
               depth={1}
               element={element}
               hookID={hookID}
+              hookName={hookName}
               inspectedElement={inspectedElement}
               name="DebugValue"
               path={path.concat(['value'])}
@@ -272,7 +289,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
             <span
               onClick={toggleIsOpen}
               className={name !== '' ? styles.Name : styles.NameAnonymous}>
-              {name || 'Anonymous'}
+              {hookDisplayName || 'Anonymous'}
             </span>{' '}
             {/* $FlowFixMe */}
             <span className={styles.Value} onClick={toggleIsOpen}>
@@ -299,6 +316,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
             depth={1}
             element={element}
             hookID={hookID}
+            hookName={hookName}
             inspectedElement={inspectedElement}
             name={name}
             path={path.concat(['value'])}
@@ -320,6 +338,7 @@ function HookView({element, hook, id, inspectedElement, path}: HookViewProps) {
             depth={1}
             element={element}
             hookID={hookID}
+            hookName={hookName}
             inspectedElement={inspectedElement}
             name={name}
             path={[]}

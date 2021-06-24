@@ -11,6 +11,7 @@
   flex: 0 0 auto;
   cursor: default;
 }
+
 .EditableName {
   color: var(--color-attribute-name);
   flex: 0 0 auto;
@@ -48,4 +49,8 @@
 .DeleteArrayItemButton {
   padding: 0;
   margin-right: 0.125rem;
+}
+
+.HookName {
+  color: var(--color-component-name);
 }

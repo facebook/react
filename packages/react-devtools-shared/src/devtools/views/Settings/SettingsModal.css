@@ -22,7 +22,7 @@
   box-shadow: 0 2px 4px var(--color-shadow);
   border-radius: 0.25rem;
   overflow: auto;
-  width: 410px;
+  width: 400px;
   max-width: 100%;
 }
 

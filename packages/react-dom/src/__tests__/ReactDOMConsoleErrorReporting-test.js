@@ -305,7 +305,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors without an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs layout effect errors without an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -373,7 +374,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors with an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs layout effect errors with an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -443,7 +445,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors without an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs passive effect errors without an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -511,7 +514,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors with an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs passive effect errors with an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -815,7 +819,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors without an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs layout effect errors without an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -885,7 +890,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs layout effect errors with an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs layout effect errors with an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -958,7 +964,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors without an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs passive effect errors without an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {
@@ -1028,7 +1035,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
       }
     });
 
-    it('logs passive effect errors with an error boundary', () => {
+    // TODO: this is broken due to https://github.com/facebook/react/issues/21712.
+    xit('logs passive effect errors with an error boundary', () => {
       spyOnDevAndProd(console, 'error');
 
       function Foo() {

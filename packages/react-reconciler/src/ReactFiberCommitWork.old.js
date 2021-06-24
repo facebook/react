@@ -140,7 +140,6 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
 import {doesFiberContain} from './ReactFiberTreeReflection';
-import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -160,20 +159,6 @@ let nextEffect: Fiber | null = null;
 // Used for Profiling builds to track updaters.
 let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
-
-function reportUncaughtErrorInDEV(error) {
-  // Wrapping each small part of the commit phase into a guarded
-  // callback is a bit too slow (https://github.com/facebook/react/pull/21666).
-  // But we rely on it to surface errors to DEV tools like overlays
-  // (https://github.com/facebook/react/issues/21712).
-  // As a compromise, rethrow only caught errors in a guard.
-  if (__DEV__) {
-    invokeGuardedCallback(null, () => {
-      throw error;
-    });
-    clearCaughtError();
-  }
-}
 
 const callComponentWillUnmountWithTimer = function(current, instance) {
   instance.props = current.memoizedProps;
@@ -201,9 +186,8 @@ function safelyCallCommitHookLayoutEffectListMount(
 ) {
   try {
     commitHookEffectListMount(HookLayout, current);
-  } catch (error) {
-    reportUncaughtErrorInDEV(error);
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
+  } catch (unmountError) {
+    captureCommitPhaseError(current, nearestMountedAncestor, unmountError);
   }
 }
 
@@ -215,9 +199,8 @@ function safelyCallComponentWillUnmount(
 ) {
   try {
     callComponentWillUnmountWithTimer(current, instance);
-  } catch (error) {
-    reportUncaughtErrorInDEV(error);
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
+  } catch (unmountError) {
+    captureCommitPhaseError(current, nearestMountedAncestor, unmountError);
   }
 }
 
@@ -229,9 +212,8 @@ function safelyCallComponentDidMount(
 ) {
   try {
     instance.componentDidMount();
-  } catch (error) {
-    reportUncaughtErrorInDEV(error);
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
+  } catch (unmountError) {
+    captureCommitPhaseError(current, nearestMountedAncestor, unmountError);
   }
 }
 
@@ -239,9 +221,8 @@ function safelyCallComponentDidMount(
 function safelyAttachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   try {
     commitAttachRef(current);
-  } catch (error) {
-    reportUncaughtErrorInDEV(error);
-    captureCommitPhaseError(current, nearestMountedAncestor, error);
+  } catch (unmountError) {
+    captureCommitPhaseError(current, nearestMountedAncestor, unmountError);
   }
 }
 
@@ -265,7 +246,6 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
           ref(null);
         }
       } catch (error) {
-        reportUncaughtErrorInDEV(error);
         captureCommitPhaseError(current, nearestMountedAncestor, error);
       }
     } else {
@@ -282,7 +262,6 @@ function safelyCallDestroy(
   try {
     destroy();
   } catch (error) {
-    reportUncaughtErrorInDEV(error);
     captureCommitPhaseError(current, nearestMountedAncestor, error);
   }
 }
@@ -344,7 +323,6 @@ function commitBeforeMutationEffects_complete() {
     try {
       commitBeforeMutationEffectsOnFiber(fiber);
     } catch (error) {
-      reportUncaughtErrorInDEV(error);
       captureCommitPhaseError(fiber, fiber.return, error);
     }
     resetCurrentDebugFiberInDEV();
@@ -2087,7 +2065,6 @@ function commitMutationEffects_begin(root: FiberRoot) {
         try {
           commitDeletion(root, childToDelete, fiber);
         } catch (error) {
-          reportUncaughtErrorInDEV(error);
           captureCommitPhaseError(childToDelete, fiber, error);
         }
       }
@@ -2110,7 +2087,6 @@ function commitMutationEffects_complete(root: FiberRoot) {
     try {
       commitMutationEffectsOnFiber(fiber, root);
     } catch (error) {
-      reportUncaughtErrorInDEV(error);
       captureCommitPhaseError(fiber, fiber.return, error);
     }
     resetCurrentDebugFiberInDEV();
@@ -2353,7 +2329,6 @@ function commitLayoutMountEffects_complete(
       try {
         commitLayoutEffectOnFiber(root, current, fiber, committedLanes);
       } catch (error) {
-        reportUncaughtErrorInDEV(error);
         captureCommitPhaseError(fiber, fiber.return, error);
       }
       resetCurrentDebugFiberInDEV();
@@ -2407,7 +2382,6 @@ function commitPassiveMountEffects_complete(
       try {
         commitPassiveMountOnFiber(root, fiber);
       } catch (error) {
-        reportUncaughtErrorInDEV(error);
         captureCommitPhaseError(fiber, fiber.return, error);
       }
       resetCurrentDebugFiberInDEV();
@@ -2690,7 +2664,6 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
         try {
           commitHookEffectListMount(HookLayout | HookHasEffect, fiber);
         } catch (error) {
-          reportUncaughtErrorInDEV(error);
           captureCommitPhaseError(fiber, fiber.return, error);
         }
         break;
@@ -2700,7 +2673,6 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
         try {
           instance.componentDidMount();
         } catch (error) {
-          reportUncaughtErrorInDEV(error);
           captureCommitPhaseError(fiber, fiber.return, error);
         }
         break;
@@ -2720,7 +2692,6 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
         try {
           commitHookEffectListMount(HookPassive | HookHasEffect, fiber);
         } catch (error) {
-          reportUncaughtErrorInDEV(error);
           captureCommitPhaseError(fiber, fiber.return, error);
         }
         break;
@@ -2744,7 +2715,6 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
             fiber.return,
           );
         } catch (error) {
-          reportUncaughtErrorInDEV(error);
           captureCommitPhaseError(fiber, fiber.return, error);
         }
         break;
@@ -2775,7 +2745,6 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
             fiber.return,
           );
         } catch (error) {
-          reportUncaughtErrorInDEV(error);
           captureCommitPhaseError(fiber, fiber.return, error);
         }
       }

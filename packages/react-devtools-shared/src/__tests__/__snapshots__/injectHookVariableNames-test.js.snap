@@ -1,0 +1,187 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`loadHookNamesFunction should create hookLog injected with default variable names for no/multiple references: modified hook log 1`] = `
+Array [
+  Object {
+    "hookSource": Object {
+      "columnNumber": 42,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 3,
+    },
+    "hookVariableName": "countState",
+    "id": 0,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": 1,
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 35,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 5,
+    },
+    "hookVariableName": "flagState",
+    "id": 1,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": false,
+  },
+]
+`;
+
+exports[`loadHookNamesFunction should create hookLog injected with variable names for destructured assignment: modified hook log 1`] = `
+Array [
+  Object {
+    "hookSource": Object {
+      "columnNumber": 49,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 3,
+    },
+    "hookVariableName": "count",
+    "id": 0,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": 0,
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 41,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 4,
+    },
+    "hookVariableName": "flag",
+    "id": 1,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": false,
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 29,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 5,
+    },
+    "hookVariableName": "ref",
+    "id": 2,
+    "isStateEditable": false,
+    "name": "Ref",
+    "subHooks": Array [],
+    "value": undefined,
+  },
+]
+`;
+
+exports[`loadHookNamesFunction should create hookLog injected with variable names for inline/multi-line member expressions: modified hook log 1`] = `
+Array [
+  Object {
+    "hookSource": Object {
+      "columnNumber": 42,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 3,
+    },
+    "hookVariableName": "count",
+    "id": 0,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": 1,
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 35,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 5,
+    },
+    "hookVariableName": "flag",
+    "id": 1,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": false,
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 41,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 8,
+    },
+    "hookVariableName": "tick",
+    "id": 2,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": 0,
+  },
+]
+`;
+
+exports[`loadHookNamesFunction should not inject hookLog with variable names for non declarative primitive hooks: modified hook log 1`] = `
+Array [
+  Object {
+    "hookSource": Object {
+      "columnNumber": 44,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 3,
+    },
+    "hookVariableName": "flag",
+    "id": 0,
+    "isStateEditable": true,
+    "name": "State",
+    "subHooks": Array [],
+    "value": false,
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 40,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 4,
+    },
+    "hookVariableName": "inputRef",
+    "id": 1,
+    "isStateEditable": false,
+    "name": "Ref",
+    "subHooks": Array [],
+    "value": undefined,
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 17,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 6,
+    },
+    "id": 2,
+    "isStateEditable": false,
+    "name": "Effect",
+    "subHooks": Array [],
+    "value": [Function],
+  },
+  Object {
+    "hookSource": Object {
+      "columnNumber": 17,
+      "fileName": "example-app.js",
+      "functionName": "Example",
+      "lineNumber": 9,
+    },
+    "id": 3,
+    "isStateEditable": false,
+    "name": "LayoutEffect",
+    "subHooks": Array [],
+    "value": [Function],
+  },
+]
+`;

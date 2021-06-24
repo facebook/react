@@ -24,7 +24,11 @@ import {
   checkForUpdate,
   inspectElement,
 } from 'react-devtools-shared/src/inspectedElementCache';
+import {loadHookNames} from 'react-devtools-shared/src/hookNamesCache';
+import {ElementTypeFunction} from 'react-devtools-shared/src/types';
+import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
 
+import type {HookNames} from 'react-devtools-shared/src/hookNamesCache';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Element,
@@ -35,6 +39,7 @@ type Path = Array<string | number>;
 type InspectPathFunction = (path: Path) => void;
 
 type Context = {|
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement | null,
   inspectPaths: InspectPathFunction,
 |};
@@ -51,6 +56,7 @@ export type Props = {|
 
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
+  const loadHookNamesFunction = useContext(LoadHookNamesFunctionContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -83,8 +89,22 @@ export function InspectedElementContextController({children}: Props) {
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
   let inspectedElement = null;
+  let hookNames: HookNames | null = null;
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
+
+    if (
+      inspectedElement !== null &&
+      inspectedElement.type === ElementTypeFunction &&
+      inspectedElement.hooks !== null &&
+      loadHookNamesFunction !== null
+    ) {
+      hookNames = loadHookNames(
+        element,
+        inspectedElement.hooks,
+        loadHookNamesFunction,
+      );
+    }
   }
 
   const inspectPaths: InspectPathFunction = useCallback<InspectPathFunction>(
@@ -125,6 +145,7 @@ export function InspectedElementContextController({children}: Props) {
     }
   }, [
     element,
+    hookNames,
     // Reset this timer any time the element we're inspecting gets a new response.
     // No sense to ping right away after e.g. inspecting/hydrating a path.
     inspectedElement,
@@ -133,10 +154,11 @@ export function InspectedElementContextController({children}: Props) {
 
   const value = useMemo<Context>(
     () => ({
+      hookNames,
       inspectedElement,
       inspectPaths,
     }),
-    [inspectedElement, inspectPaths],
+    [hookNames, inspectedElement, inspectPaths],
   );
 
   return (

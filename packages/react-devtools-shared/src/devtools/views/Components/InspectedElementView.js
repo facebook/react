@@ -43,11 +43,13 @@ export type InspectPath = (path: Array<string | number>) => void;
 
 type Props = {|
   element: Element,
+  hookNames: Array<string> | null,
   inspectedElement: InspectedElement,
 |};
 
 export default function InspectedElementView({
   element,
+  hookNames,
   inspectedElement,
 }: Props) {
   const {id} = element;
@@ -103,6 +105,7 @@ export default function InspectedElementView({
         <InspectedElementHooksTree
           bridge={bridge}
           element={element}
+          hookNames={hookNames}
           inspectedElement={inspectedElement}
           store={store}
         />
