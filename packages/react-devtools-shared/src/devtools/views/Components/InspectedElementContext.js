@@ -28,6 +28,7 @@ import {
 import {loadHookNames} from 'react-devtools-shared/src/hookNamesCache';
 import {ElementTypeFunction} from 'react-devtools-shared/src/types';
 import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 
 import type {HookNames} from 'react-devtools-shared/src/hookNamesCache';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -60,6 +61,7 @@ export function InspectedElementContextController({children}: Props) {
   const loadHookNamesFunction = useContext(LoadHookNamesFunctionContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const {parseHookNames} = useContext(SettingsContext);
 
   const refresh = useCacheRefresh();
 
@@ -95,17 +97,19 @@ export function InspectedElementContextController({children}: Props) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
     if (enableHookNameParsing) {
-      if (
-        inspectedElement !== null &&
-        inspectedElement.type === ElementTypeFunction &&
-        inspectedElement.hooks !== null &&
-        loadHookNamesFunction !== null
-      ) {
-        hookNames = loadHookNames(
-          element,
-          inspectedElement.hooks,
-          loadHookNamesFunction,
-        );
+      if (parseHookNames) {
+        if (
+          inspectedElement !== null &&
+          inspectedElement.type === ElementTypeFunction &&
+          inspectedElement.hooks !== null &&
+          loadHookNamesFunction !== null
+        ) {
+          hookNames = loadHookNames(
+            element,
+            inspectedElement.hooks,
+            loadHookNamesFunction,
+          );
+        }
       }
     }
   }
