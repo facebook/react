@@ -166,7 +166,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -181,7 +182,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
@@ -246,7 +248,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.objectContaining({
               message: 'Boom',
             }),
@@ -261,20 +264,15 @@ describe('ReactDOMConsoleErrorReporting', () => {
             }),
           ],
           [
-            // Addendum by React:
-            expect.stringContaining(
-              'The above error occurred in the <Foo> component',
-            ),
-          ],
-          [
-            // TODO: This is duplicated only with createRoot. Why?
+            // This is only duplicated with createRoot
+            // because it retries once with a sync render.
             expect.stringContaining('Error: Uncaught [Error: Boom]'),
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
           [
-            // TODO: This is duplicated only with createRoot. Why?
+            // Addendum by React:
             expect.stringContaining(
               'The above error occurred in the <Foo> component',
             ),
@@ -287,12 +285,6 @@ describe('ReactDOMConsoleErrorReporting', () => {
         expect(console.error.calls.all().map(c => c.args)).toEqual([
           [
             // Reported by React with no extra message:
-            expect.objectContaining({
-              message: 'Boom',
-            }),
-          ],
-          [
-            // TODO: This is duplicated only with createRoot. Why?
             expect.objectContaining({
               message: 'Boom',
             }),

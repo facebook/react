@@ -108,8 +108,13 @@ function createClassErrorUpdate(
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
-      logCapturedError(fiber, errorInfo);
       return getDerivedStateFromError(error);
+    };
+    update.callback = () => {
+      if (__DEV__) {
+        markFailedErrorBoundaryForHotReloading(fiber);
+      }
+      logCapturedError(fiber, errorInfo);
     };
   }
 
@@ -119,6 +124,7 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
+      logCapturedError(fiber, errorInfo);
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
@@ -126,9 +132,6 @@ function createClassErrorUpdate(
         // TODO: Warn in strict mode if getDerivedStateFromError is
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
-
-        // Only log here if componentDidCatch is the only error boundary method defined
-        logCapturedError(fiber, errorInfo);
       }
       const error = errorInfo.value;
       const stack = errorInfo.stack;
@@ -149,10 +152,6 @@ function createClassErrorUpdate(
           }
         }
       }
-    };
-  } else if (__DEV__) {
-    update.callback = () => {
-      markFailedErrorBoundaryForHotReloading(fiber);
     };
   }
   return update;
