@@ -915,10 +915,11 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
+      expect(console.log).toBeCalledTimes(1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
-      expect(console.log.calls.all().map(c => c.args)).toEqual([['foo 1']]);
+      expect(console.log).toBeCalledWith('foo 1');
     });
 
     it('disables logs once for class double ctor', () => {
@@ -945,10 +946,11 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
+      expect(console.log).toBeCalledTimes(1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
-      expect(console.log.calls.all().map(c => c.args)).toEqual([['foo 1']]);
+      expect(console.log).toBeCalledWith('foo 1');
     });
 
     it('disables logs once for class double getDerivedStateFromProps', () => {
@@ -976,10 +978,11 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
+      expect(console.log).toBeCalledTimes(1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
-      expect(console.log.calls.all().map(c => c.args)).toEqual([['foo 1']]);
+      expect(console.log).toBeCalledWith('foo 1');
     });
 
     it('disables logs once for class double shouldComponentUpdate', () => {
@@ -1014,10 +1017,11 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
+      expect(console.log).toBeCalledTimes(1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
-      expect(console.log.calls.all().map(c => c.args)).toEqual([['foo 1']]);
+      expect(console.log).toBeCalledWith('foo 1');
     });
 
     it('disables logs once for class state updaters', () => {
@@ -1047,10 +1051,11 @@ describe('context legacy', () => {
       });
 
       expect(count).toBe(__DEV__ ? 2 : 1);
+      expect(console.log).toBeCalledTimes(1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
-      expect(console.log.calls.all().map(c => c.args)).toEqual([['foo 1']]);
+      expect(console.log).toBeCalledWith('foo 1');
     });
 
     it('disables logs once for function double render', () => {
@@ -1072,10 +1077,11 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
+      expect(console.log).toBeCalledTimes(1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
-      expect(console.log.calls.all().map(c => c.args)).toEqual([['foo 1']]);
+      expect(console.log).toBeCalledWith('foo 1');
     });
   });
 });
