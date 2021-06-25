@@ -12,9 +12,9 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('Store component filters', () => {
   let React;
-  let ReactDOM;
   let Types;
   let bridge: FrontendBridge;
+  let legacyRender;
   let store: Store;
   let utils;
   let internalAct;
@@ -34,10 +34,11 @@ describe('Store component filters', () => {
     store.recordChangeDescriptions = true;
 
     React = require('react');
-    ReactDOM = require('react-dom');
     Types = require('react-devtools-shared/src/types');
     utils = require('./utils');
     internalAct = require('jest-react').act;
+
+    legacyRender = utils.legacyRender;
   });
 
   it('should throw if filters are updated while profiling', () => {
@@ -56,7 +57,7 @@ describe('Store component filters', () => {
     const FunctionComponent = () => <div>Hi</div>;
 
     act(() =>
-      ReactDOM.render(
+      legacyRender(
         <ClassComponent>
           <FunctionComponent />
         </ClassComponent>,
@@ -137,7 +138,7 @@ describe('Store component filters', () => {
   it('should ignore invalid ElementTypeRoot filter', () => {
     const Component = () => <div>Hi</div>;
 
-    act(() => ReactDOM.render(<Component />, document.createElement('div')));
+    act(() => legacyRender(<Component />, document.createElement('div')));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Component>
@@ -165,7 +166,7 @@ describe('Store component filters', () => {
     const Baz = () => <Text label="baz" />;
 
     act(() =>
-      ReactDOM.render(
+      legacyRender(
         <React.Fragment>
           <Foo />
           <Bar />
@@ -221,7 +222,7 @@ describe('Store component filters', () => {
   it('should filter by path', () => {
     const Component = () => <div>Hi</div>;
 
-    act(() => ReactDOM.render(<Component />, document.createElement('div')));
+    act(() => legacyRender(<Component />, document.createElement('div')));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Component>
@@ -258,7 +259,7 @@ describe('Store component filters', () => {
     const Bar = () => <Foo />;
     Bar.displayName = 'Bar(Foo(Component))';
 
-    act(() => ReactDOM.render(<Bar />, document.createElement('div')));
+    act(() => legacyRender(<Bar />, document.createElement('div')));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Component> [Bar][Foo]
@@ -337,7 +338,7 @@ describe('Store component filters', () => {
     ];
 
     const container = document.createElement('div');
-    act(() => ReactDOM.render(<Wrapper shouldSuspend={true} />, container));
+    act(() => legacyRender(<Wrapper shouldSuspend={true} />, container));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Wrapper>
@@ -345,14 +346,14 @@ describe('Store component filters', () => {
               <div>
     `);
 
-    act(() => ReactDOM.render(<Wrapper shouldSuspend={false} />, container));
+    act(() => legacyRender(<Wrapper shouldSuspend={false} />, container));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Wrapper>
             <Component>
     `);
 
-    act(() => ReactDOM.render(<Wrapper shouldSuspend={true} />, container));
+    act(() => legacyRender(<Wrapper shouldSuspend={true} />, container));
     expect(store).toMatchInlineSnapshot(`
       [root]
         ▾ <Wrapper>
@@ -376,6 +377,14 @@ describe('Store component filters', () => {
         console.warn('test-only: render warning');
         return null;
       }
+
+      // HACK This require() is needed (somewhere in the test) for this case to pass.
+      // Without it, the legacyRender() call below causes this test to fail
+      // because it requires "react-dom" for the first time,
+      // which causes the console error() and warn() methods to be overridden again,
+      // effectively disconnecting the DevTools override in 'react-devtools-shared/src/backend/console'.
+      require('react-dom');
+
       const container = document.createElement('div');
       utils.withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(
@@ -386,7 +395,7 @@ describe('Store component filters', () => {
             ]),
         );
         act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <ComponentWithError />
               <ComponentWithWarning />
