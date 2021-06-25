@@ -1,18 +1,3 @@
-// TODO (named hooks) Don't mutate hooks object
-// This method should return a mirror object,
-// and its return value should be used in `print()`
-function serializeHookSourceFileNames(hooks) {
-  if (!hooks.length) return;
-  hooks.forEach(hook => {
-    if (!hook.hookSource) return;
-    const filename = hook.hookSource.fileName;
-    const truncateIdx = filename.lastIndexOf('/react-devtools-shared/');
-    hook.hookSource.fileName = filename.substring(truncateIdx + 1);
-    if (hook.subHooks && hook.subHooks.length)
-      serializeHookSourceFileNames(hook.subHooks);
-  });
-}
-
 // test() is part of Jest's serializer API
 export function test(maybeInspectedElement) {
   if (
@@ -25,11 +10,6 @@ export function test(maybeInspectedElement) {
   const hasOwnProperty = Object.prototype.hasOwnProperty.bind(
     maybeInspectedElement,
   );
-
-  // TODO (named hooks) Remove this call
-  if (hasOwnProperty('hooks') && maybeInspectedElement.hooks != null) {
-    serializeHookSourceFileNames(maybeInspectedElement.hooks);
-  }
 
   return (
     hasOwnProperty('canEditFunctionProps') &&

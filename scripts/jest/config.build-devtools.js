@@ -67,6 +67,9 @@ module.exports = Object.assign({}, baseConfig, {
       '../../packages/react-devtools-shared/src/__tests__/dehydratedValueSerializer.js'
     ),
     require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/hookSerializer.js'
+    ),
+    require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/inspectedElementSerializer.js'
     ),
     require.resolve(
