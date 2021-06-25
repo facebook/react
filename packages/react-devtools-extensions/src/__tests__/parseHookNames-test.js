@@ -39,6 +39,7 @@ describe('parseHookNames', () => {
       ) {
         return Promise.resolve(requireText(url, 'utf8'));
       } else if (url.endsWith('js.map')) {
+        // Source maps are relative URLs (e.g. "path/to/Exmaple.js" specifies "Exmaple.js.map").
         const sourceMapURL = resolve(
           __dirname,
           '__source__',
@@ -53,13 +54,20 @@ describe('parseHookNames', () => {
       }
     });
 
-    // Mock out portion of browser API used by SourceMap parser.
-    // TODO (named hooks) Inject this bit from main.js (so we can inject from test too).
+    // Mock out portion of browser API used by parseHookNames to initialize "source-map".
     global.chrome = {
       extension: {
         getURL: jest.fn((...args) => {
           const {join} = require('path');
-          return join(__dirname, '..', '..', 'node_modules', 'source-map', 'lib', 'mappings.wasm');
+          return join(
+            __dirname,
+            '..',
+            '..',
+            'node_modules',
+            'source-map',
+            'lib',
+            'mappings.wasm',
+          );
         }),
       },
     };
@@ -165,20 +173,42 @@ describe('parseHookNames', () => {
     expect(hookNames).toEqual([null, null]);
   });
 
-  it('should parse and load names for external and inline source maps', async () => {
-    async function test(path) {
-      const Component = require(path).default;
-      const hookNames = await getHookNamesForComponent(Component);
-      expect(hookNames).toEqual([
-        'memoizedFoo', // useMemo
-        null, // useEffect
-        'custom', // useCustomHook
-        'stateValue', // useCustomHook -> useState
-      ]);
-    }
+  describe('inline and external source maps', () => {
+    it('should work for simple components', async () => {
+      async function test(path) {
+        const Component = require(path).default;
+        const hookNames = await getHookNamesForComponent(Component);
+        expect(hookNames).toEqual([
+          'count', // useState
+        ]);
+      }
 
-    await test('./__source__/SimpleComponent'); // original source (uncompiled)
-    await test('./__source__/__compiled__/inline/SimpleComponent'); // inline source map
-    await test('./__source__/__compiled__/external/SimpleComponent'); // external source map
+      await test('./__source__/Example'); // original source (uncompiled)
+      await test('./__source__/__compiled__/inline/Example'); // inline source map
+      await test('./__source__/__compiled__/external/Example'); // external source map
+    });
+
+    it('should work with more complex components', async () => {
+      async function test(path) {
+        const Component = require(path).default;
+        const hookNames = await getHookNamesForComponent(Component);
+        expect(hookNames).toEqual([
+          'newItemText', // useState
+          'items', // useState
+          'uid', // useState
+          'handleClick', // useCallback
+          'handleKeyPress', // useCallback
+          'handleChange', // useCallback
+          'removeItem', // useCallback
+          'toggleItem', // useCallback
+        ]);
+      }
+
+      await test('./__source__/ToDoList'); // original source (uncompiled)
+      await test('./__source__/__compiled__/inline/ToDoList'); // inline source map
+      await test('./__source__/__compiled__/external/ToDoList'); // external source map
+    });
+
+    // TODO Custom hook in external file
   });
 });

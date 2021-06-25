@@ -44,7 +44,9 @@ function compile(fileName) {
   // Generate compiled output with external source maps
   writeFileSync(
     resolve(externalDir, fileName),
-    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code +
+      `\n//# sourceMappingURL=${fileName}.map` +
+      `\n//# sourceURL=${fileName}`,
     'utf8',
   );
   writeFileSync(
@@ -58,7 +60,8 @@ function compile(fileName) {
     resolve(inlineDir, fileName),
     transformed.code +
       '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
-      btoa(JSON.stringify(sourceMap)),
+      btoa(JSON.stringify(sourceMap)) +
+      `\n//# sourceURL=${fileName}`,
     'utf8',
   );
 }
