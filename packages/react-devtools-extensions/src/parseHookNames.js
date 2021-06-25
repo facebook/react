@@ -309,7 +309,7 @@ async function parseSourceMaps(
   // TODO (named hooks) Maybe this code should be injected;
   // It's the only code in react-devtools-shared that references chrome.* APIs
   // $FlowFixMe
-  const wasmMappingsURL = chrome.extension.getURL('source-map.wasm'); // eslint-disable-line no-undef
+  const wasmMappingsURL = chrome.extension.getURL('mappings.wasm'); // eslint-disable-line no-undef
 
   // SourceMapConsumer.initialize() does nothing when running in Node (aka Jest)
   // so we can avoid triggering a warning message about this.

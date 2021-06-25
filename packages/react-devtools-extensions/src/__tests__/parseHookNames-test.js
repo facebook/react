@@ -59,7 +59,7 @@ describe('parseHookNames', () => {
       extension: {
         getURL: jest.fn((...args) => {
           const {join} = require('path');
-          return join(__dirname, '..', '..', 'source-map.wasm');
+          return join(__dirname, '..', '..', 'node_modules', 'source-map', 'lib', 'mappings.wasm');
         }),
       },
     };
