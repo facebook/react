@@ -12,12 +12,15 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 describe('ProfilerStore', () => {
   let React;
   let ReactDOM;
+  let legacyRender;
   let store: Store;
   let utils;
 
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
+
+    legacyRender = utils.legacyRender;
 
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -38,15 +41,15 @@ describe('ProfilerStore', () => {
     const containerB = document.createElement('div');
 
     utils.act(() => {
-      ReactDOM.render(<Parent key="A" count={3} />, containerA);
-      ReactDOM.render(<Parent key="B" count={2} />, containerB);
+      legacyRender(<Parent key="A" count={3} />, containerA);
+      legacyRender(<Parent key="B" count={2} />, containerB);
     });
 
     utils.act(() => store.profilerStore.startProfiling());
 
     utils.act(() => {
-      ReactDOM.render(<Parent key="A" count={4} />, containerA);
-      ReactDOM.render(<Parent key="B" count={1} />, containerB);
+      legacyRender(<Parent key="A" count={4} />, containerA);
+      legacyRender(<Parent key="B" count={1} />, containerB);
     });
 
     utils.act(() => store.profilerStore.stopProfiling());
@@ -96,7 +99,7 @@ describe('ProfilerStore', () => {
 
     // It's important that this test uses legacy sync mode.
     // The root API does not trigger this particular failing case.
-    ReactDOM.render(<ControlledInput />, container);
+    legacyRender(<ControlledInput />, container);
 
     utils.act(() => store.profilerStore.startProfiling());
 
@@ -151,7 +154,7 @@ describe('ProfilerStore', () => {
 
     // It's important that this test uses legacy sync mode.
     // The root API does not trigger this particular failing case.
-    ReactDOM.render(<ControlledInput />, container);
+    legacyRender(<ControlledInput />, container);
 
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() =>
