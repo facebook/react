@@ -27,6 +27,11 @@ describe('parseHookNames', () => {
       .inspectHooks;
     parseHookNames = require('../parseHookNames').default;
 
+    // Jest (jest-runner?) configures Errors to automatically account for source maps.
+    // This changes behavior between our tests and the browser.
+    // To "fix" this, clear the prepareStackTrace() method on the Error object.
+    delete Error.prepareStackTrace;
+
     fetchMock.mockIf(/.+$/, request => {
       const {resolve} = require('path');
       const url = request.url;
