@@ -15,7 +15,7 @@ import enqueueTask from 'shared/enqueueTask';
 let actScopeDepth = 0;
 let didWarnNoAwaitAct = false;
 
-export function act(callback: () => Thenable<mixed>): Thenable<void> {
+export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
   if (__DEV__) {
     // `act` calls can be nested, so we track the depth. This represents the
     // number of `act` scopes on the stack.
@@ -41,21 +41,22 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
       typeof result === 'object' &&
       typeof result.then === 'function'
     ) {
+      const thenableResult: Thenable<T> = (result: any);
       // The callback is an async function (i.e. returned a promise). Wait
       // for it to resolve before exiting the current scope.
       let wasAwaited = false;
-      const thenable = {
+      const thenable: Thenable<T> = {
         then(resolve, reject) {
           wasAwaited = true;
-          result.then(
-            () => {
+          thenableResult.then(
+            returnValue => {
               popActScope(prevActScopeDepth);
               if (actScopeDepth === 0) {
                 // We've exited the outermost act scope. Recursively flush the
                 // queue until there's no remaining work.
-                recursivelyFlushAsyncActWork(resolve, reject);
+                recursivelyFlushAsyncActWork(returnValue, resolve, reject);
               } else {
-                resolve();
+                resolve(returnValue);
               }
             },
             error => {
@@ -88,6 +89,7 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
       }
       return thenable;
     } else {
+      const returnValue: T = (result: any);
       // The callback is not an async function. Exit the current scope
       // immediately, without awaiting.
       popActScope(prevActScopeDepth);
@@ -100,7 +102,7 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
         }
         // Return a thenable. If the user awaits it, we'll flush again in
         // case additional work was scheduled by a microtask.
-        return {
+        const thenable: Thenable<T> = {
           then(resolve, reject) {
             // Confirm we haven't re-entered another `act` scope, in case
             // the user does something weird like await the thenable
@@ -108,18 +110,22 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
             if (ReactCurrentActQueue.current === null) {
               // Recursively flush the queue until there's no remaining work.
               ReactCurrentActQueue.current = [];
-              recursivelyFlushAsyncActWork(resolve, reject);
+              recursivelyFlushAsyncActWork(returnValue, resolve, reject);
+            } else {
+              resolve(returnValue);
             }
           },
         };
+        return thenable;
       } else {
         // Since we're inside a nested `act` scope, the returned thenable
         // immediately resolves. The outer scope will flush the queue.
-        return {
+        const thenable: Thenable<T> = {
           then(resolve, reject) {
-            resolve();
+            resolve(returnValue);
           },
         };
+        return thenable;
       }
     }
   } else {
@@ -142,7 +148,11 @@ function popActScope(prevActScopeDepth) {
   }
 }
 
-function recursivelyFlushAsyncActWork(resolve, reject) {
+function recursivelyFlushAsyncActWork<T>(
+  returnValue: T,
+  resolve: T => mixed,
+  reject: mixed => mixed,
+) {
   if (__DEV__) {
     const queue = ReactCurrentActQueue.current;
     if (queue !== null) {
@@ -152,17 +162,17 @@ function recursivelyFlushAsyncActWork(resolve, reject) {
           if (queue.length === 0) {
             // No additional work was scheduled. Finish.
             ReactCurrentActQueue.current = null;
-            resolve();
+            resolve(returnValue);
           } else {
             // Keep flushing work until there's none left.
-            recursivelyFlushAsyncActWork(resolve, reject);
+            recursivelyFlushAsyncActWork(returnValue, resolve, reject);
           }
         });
       } catch (error) {
         reject(error);
       }
     } else {
-      resolve();
+      resolve(returnValue);
     }
   }
 }

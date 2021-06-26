@@ -47,4 +47,35 @@ describe('isomorphic act()', () => {
     });
     expect(root).toMatchRenderedOutput('B');
   });
+
+  // @gate __DEV__
+  test('return value – sync callback', async () => {
+    expect(await act(() => 'hi')).toEqual('hi');
+  });
+
+  // @gate __DEV__
+  test('return value – sync callback, nested', async () => {
+    const returnValue = await act(() => {
+      return act(() => 'hi');
+    });
+    expect(returnValue).toEqual('hi');
+  });
+
+  // @gate __DEV__
+  test('return value – async callback', async () => {
+    const returnValue = await act(async () => {
+      return await Promise.resolve('hi');
+    });
+    expect(returnValue).toEqual('hi');
+  });
+
+  // @gate __DEV__
+  test('return value – async callback, nested', async () => {
+    const returnValue = await act(async () => {
+      return await act(async () => {
+        return await Promise.resolve('hi');
+      });
+    });
+    expect(returnValue).toEqual('hi');
+  });
 });
