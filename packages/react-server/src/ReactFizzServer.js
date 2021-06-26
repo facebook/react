@@ -40,7 +40,9 @@ import {
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
   writeStartClientRenderedSuspenseBoundary,
-  writeEndSuspenseBoundary,
+  writeEndCompletedSuspenseBoundary,
+  writeEndPendingSuspenseBoundary,
+  writeEndClientRenderedSuspenseBoundary,
   writeStartSegment,
   writeEndSegment,
   writeClientRenderBoundaryInstruction,
@@ -220,17 +222,20 @@ export function createRequest(
   destination: Destination,
   responseState: ResponseState,
   rootFormatContext: FormatContext,
-  progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
-  onError: (error: mixed) => void = defaultErrorHandler,
-  onCompleteAll: () => void = noop,
-  onReadyToStream: () => void = noop,
+  progressiveChunkSize: void | number,
+  onError: void | ((error: mixed) => void),
+  onCompleteAll: void | (() => void),
+  onReadyToStream: void | (() => void),
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
   const request = {
     destination,
     responseState,
-    progressiveChunkSize,
+    progressiveChunkSize:
+      progressiveChunkSize === undefined
+        ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
+        : progressiveChunkSize,
     status: BUFFERING,
     nextSegmentId: 0,
     allPendingTasks: 0,
@@ -241,9 +246,9 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
-    onError,
-    onCompleteAll,
-    onReadyToStream,
+    onError: onError === undefined ? defaultErrorHandler : onError,
+    onCompleteAll: onCompleteAll === undefined ? noop : onCompleteAll,
+    onReadyToStream: onReadyToStream === undefined ? noop : onReadyToStream,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);
@@ -1609,12 +1614,19 @@ function flushSegment(
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
-    writeStartClientRenderedSuspenseBoundary(destination, boundary.id);
+    writeStartClientRenderedSuspenseBoundary(
+      destination,
+      request.responseState,
+      boundary.id,
+    );
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    return writeEndSuspenseBoundary(destination);
+    return writeEndClientRenderedSuspenseBoundary(
+      destination,
+      request.responseState,
+    );
   } else if (boundary.pendingTasks > 0) {
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
@@ -1625,12 +1637,16 @@ function flushSegment(
       request.partialBoundaries.push(boundary);
     }
 
-    writeStartPendingSuspenseBoundary(destination, boundary.id);
+    writeStartPendingSuspenseBoundary(
+      destination,
+      request.responseState,
+      boundary.id,
+    );
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    return writeEndSuspenseBoundary(destination);
+    return writeEndPendingSuspenseBoundary(destination, request.responseState);
   } else if (boundary.byteSize > request.progressiveChunkSize) {
     // This boundary is large and will be emitted separately so that we can progressively show
     // other content. We add it to the queue during the flush because we have to ensure that
@@ -1643,16 +1659,24 @@ function flushSegment(
 
     request.completedBoundaries.push(boundary);
     // Emit a pending rendered suspense boundary wrapper.
-    writeStartPendingSuspenseBoundary(destination, boundary.id);
+    writeStartPendingSuspenseBoundary(
+      destination,
+      request.responseState,
+      boundary.id,
+    );
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    return writeEndSuspenseBoundary(destination);
+    return writeEndPendingSuspenseBoundary(destination, request.responseState);
   } else {
     // We can inline this boundary's content as a complete boundary.
 
-    writeStartCompletedSuspenseBoundary(destination, boundary.id);
+    writeStartCompletedSuspenseBoundary(
+      destination,
+      request.responseState,
+      boundary.id,
+    );
 
     const completedSegments = boundary.completedSegments;
     invariant(
@@ -1662,7 +1686,10 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment);
 
-    return writeEndSuspenseBoundary(destination);
+    return writeEndCompletedSuspenseBoundary(
+      destination,
+      request.responseState,
+    );
   }
 }
 

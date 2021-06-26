@@ -19,7 +19,7 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
 
@@ -661,6 +661,55 @@ describe('ReactSuspense', () => {
     expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
     expect(Scheduler).toFlushAndYield(['new value']);
     expect(root).toMatchRenderedOutput('new value');
+  });
+
+  // @gate enableSuspenseLayoutEffectSemantics
+  it('re-fires layout effects when re-showing Suspense', () => {
+    function TextWithLayout(props) {
+      Scheduler.unstable_yieldValue(props.text);
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('create layout');
+        return () => {
+          Scheduler.unstable_yieldValue('destroy layout');
+        };
+      }, []);
+      return props.text;
+    }
+
+    let _setShow;
+    function App(props) {
+      const [show, setShow] = React.useState(false);
+      _setShow = setShow;
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <TextWithLayout text="Child 1" />
+          {show && <AsyncText ms={1000} text="Child 2" />}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<App />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Child 1', 'create layout']);
+    expect(root).toMatchRenderedOutput('Child 1');
+
+    act(() => {
+      _setShow(true);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Child 1',
+      'Suspend! [Child 2]',
+      'Loading...',
+    ]);
+    jest.advanceTimersByTime(1000);
+    expect(Scheduler).toHaveYielded([
+      'destroy layout',
+      'Promise resolved [Child 2]',
+    ]);
+    expect(Scheduler).toFlushAndYield(['Child 1', 'Child 2', 'create layout']);
+    expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
   });
 
   describe('outside concurrent mode', () => {

@@ -98,7 +98,7 @@ export function createRequest(
   model: ReactModel,
   destination: Destination,
   bundlerConfig: BundlerConfig,
-  onError: (error: mixed) => void = defaultErrorHandler,
+  onError: void | ((error: mixed) => void),
 ): Request {
   const pingedSegments = [];
   const request = {
@@ -113,7 +113,7 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
-    onError,
+    onError: onError === undefined ? defaultErrorHandler : onError,
     flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);

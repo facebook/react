@@ -78,7 +78,6 @@ export const enableCreateEventHandleAPI = false;
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
-export const warnAboutUnmockedScheduler = false;
 
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
@@ -123,7 +122,7 @@ export const skipUnmountedBoundaries = false;
 //
 // It's an enum so that we can experiment with different levels of
 // aggressiveness.
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 3;
 
 // Destroy layout effects for components that are hidden because something suspended in an update
 // and recreate them when they are shown again (after the suspended boundary has resolved).

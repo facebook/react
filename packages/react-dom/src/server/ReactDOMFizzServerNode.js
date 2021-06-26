@@ -10,6 +10,8 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 
+import ReactVersion from 'shared/ReactVersion';
+
 import {
   createRequest,
   startWork,
@@ -42,12 +44,12 @@ type Controls = {|
   startWriting(): void,
 |};
 
-function pipeToNodeWritable(
+function createRequestImpl(
   children: ReactNodeList,
   destination: Writable,
-  options?: Options,
-): Controls {
-  const request = createRequest(
+  options: void | Options,
+) {
+  return createRequest(
     children,
     destination,
     createResponseState(options ? options.identifierPrefix : undefined),
@@ -57,6 +59,14 @@ function pipeToNodeWritable(
     options ? options.onCompleteAll : undefined,
     options ? options.onReadyToStream : undefined,
   );
+}
+
+function pipeToNodeWritable(
+  children: ReactNodeList,
+  destination: Writable,
+  options?: Options,
+): Controls {
+  const request = createRequestImpl(children, destination, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {
@@ -74,4 +84,4 @@ function pipeToNodeWritable(
   };
 }
 
-export {pipeToNodeWritable};
+export {pipeToNodeWritable, ReactVersion as version};

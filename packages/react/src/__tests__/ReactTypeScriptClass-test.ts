@@ -1,7 +1,7 @@
 /// <reference path="./testDefinitions/PropTypes.d.ts" />
 /// <reference path="./testDefinitions/React.d.ts" />
 /// <reference path="./testDefinitions/ReactDOM.d.ts" />
-/// <reference path="./testDefinitions/ReactDOMTestUtils.d.ts" />
+/// <reference path="./testDefinitions/ReactInternalAct.d.ts" />
 
 /*!
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -14,6 +14,7 @@ import React = require('react');
 import ReactDOM = require('react-dom');
 import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
+import internalAct = require('jest-react');
 
 // Before Each
 
@@ -21,6 +22,7 @@ let container;
 let root;
 let attachedListener = null;
 let renderedName = null;
+let act = internalAct.act;
 
 class Inner extends React.Component {
   getName() {
@@ -34,7 +36,7 @@ class Inner extends React.Component {
 }
 
 function test(element, expectedTag, expectedClassName) {
-  ReactDOMTestUtils.act(() => root.render(element));
+  act(() => root.render(element));
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -327,7 +329,7 @@ describe('ReactTypeScriptClass', function() {
   it('throws if no render function is defined', function() {
     expect(() => {
       expect(() =>
-        ReactDOMTestUtils.act(() => root.render(React.createElement(Empty)))
+        act(() => root.render(React.createElement(Empty)))
       ).toThrow();
     }).toErrorDev([
       // A failed component renders four times in DEV in concurrent mode
@@ -362,7 +364,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    ReactDOMTestUtils.act(() => ref.current.changeState());
+    act(() => ref.current.changeState());
     test(React.createElement(StateBasedOnProps), 'SPAN', 'bar');
   });
 
@@ -397,7 +399,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -416,7 +418,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -433,7 +435,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -457,7 +459,7 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     expect(function() {
-      ReactDOMTestUtils.act(() =>
+      act(() =>
         root.render(React.createElement(Foo, {foo: 'foo'}))
       );
     }).toErrorDev(
@@ -543,7 +545,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    ReactDOMTestUtils.act(() => attachedListener());
+    act(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -562,7 +564,7 @@ describe('ReactTypeScriptClass', function() {
       'DIV',
       'foo'
     );
-    ReactDOMTestUtils.act(() => attachedListener());
+    act(() => attachedListener());
     expect(renderedName).toBe('bar');
   });
 
@@ -586,7 +588,7 @@ describe('ReactTypeScriptClass', function() {
       {},
     ]);
     lifeCycles = []; // reset
-    ReactDOMTestUtils.act(() => root.unmount(container));
+    act(() => root.unmount(container));
     expect(lifeCycles).toEqual(['will-unmount']);
   });
 

@@ -7,11 +7,4 @@
  * @flow
  */
 
-/**
- * Used by act() to track whether you're inside an act() scope.
- */
-
-const IsSomeRendererActing = {
-  current: (false: boolean),
-};
-export default IsSomeRendererActing;
+export * from 'react-dom/src/client/ReactDOMHostConfig';

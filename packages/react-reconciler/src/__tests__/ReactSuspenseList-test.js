@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let Profiler;
 let Suspense;
 let SuspenseList;
@@ -12,6 +13,7 @@ describe('ReactSuspenseList', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     Profiler = React.Profiler;
     Suspense = React.Suspense;
     SuspenseList = React.SuspenseList;
@@ -284,7 +286,7 @@ describe('ReactSuspenseList', () => {
       </>,
     );
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       C.resolve();
     });
 
@@ -298,7 +300,7 @@ describe('ReactSuspenseList', () => {
       </>,
     );
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       B.resolve();
     });
 
@@ -2203,7 +2205,7 @@ describe('ReactSuspenseList', () => {
     );
 
     // Update the row adjacent to the list
-    ReactNoop.act(() => updateAdjacent('C'));
+    act(() => updateAdjacent('C'));
 
     expect(Scheduler).toHaveYielded(['C']);
 
@@ -2259,7 +2261,7 @@ describe('ReactSuspenseList', () => {
     const previousInst = setAsyncB;
 
     // During an update we suspend on B.
-    ReactNoop.act(() => setAsyncB(true));
+    act(() => setAsyncB(true));
 
     expect(Scheduler).toHaveYielded([
       'Suspend! [B]',
@@ -2277,7 +2279,7 @@ describe('ReactSuspenseList', () => {
 
     // Before we resolve we'll rerender the whole list.
     // This should leave the tree intact.
-    ReactNoop.act(() => ReactNoop.render(<Foo updateList={true} />));
+    act(() => ReactNoop.render(<Foo updateList={true} />));
 
     expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]', 'Loading B']);
 
@@ -2347,7 +2349,7 @@ describe('ReactSuspenseList', () => {
     const previousInst = setAsyncB;
 
     // During an update we suspend on B.
-    ReactNoop.act(() => setAsyncB(true));
+    act(() => setAsyncB(true));
 
     expect(Scheduler).toHaveYielded([
       'Suspend! [B]',
@@ -2365,7 +2367,7 @@ describe('ReactSuspenseList', () => {
 
     // Before we resolve we'll rerender the whole list.
     // This should leave the tree intact.
-    ReactNoop.act(() => ReactNoop.render(<Foo updateList={true} />));
+    act(() => ReactNoop.render(<Foo updateList={true} />));
 
     expect(Scheduler).toHaveYielded(['A', 'Suspend! [B]', 'Loading B']);
 
@@ -2425,7 +2427,7 @@ describe('ReactSuspenseList', () => {
 
     expect(ReactNoop).toMatchRenderedOutput(null);
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Add a few items at the end.
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {

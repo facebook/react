@@ -10,15 +10,15 @@
 describe('useEditableValue', () => {
   let act;
   let React;
-  let ReactDOM;
+  let legacyRender;
   let useEditableValue;
 
   beforeEach(() => {
     const utils = require('./utils');
     act = utils.act;
+    legacyRender = utils.legacyRender;
 
     React = require('react');
-    ReactDOM = require('react-dom');
 
     useEditableValue = require('../devtools/views/hooks').useEditableValue;
   });
@@ -33,7 +33,7 @@ describe('useEditableValue', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Example />, container);
+    legacyRender(<Example />, container);
     expect(state.editableValue).toEqual('NaN');
     expect(state.externalValue).toEqual(NaN);
     expect(state.parsedValue).toEqual(NaN);
@@ -51,7 +51,7 @@ describe('useEditableValue', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Example value={1} />, container);
+    legacyRender(<Example value={1} />, container);
     expect(state.editableValue).toEqual('1');
     expect(state.externalValue).toEqual(1);
     expect(state.parsedValue).toEqual(1);
@@ -60,7 +60,7 @@ describe('useEditableValue', () => {
 
     // If there are NO pending changes,
     // an update to the external prop value should override the local/pending value.
-    ReactDOM.render(<Example value={2} />, container);
+    legacyRender(<Example value={2} />, container);
     expect(state.editableValue).toEqual('2');
     expect(state.externalValue).toEqual(2);
     expect(state.parsedValue).toEqual(2);
@@ -79,7 +79,7 @@ describe('useEditableValue', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Example value={1} />, container);
+    legacyRender(<Example value={1} />, container);
     expect(state.editableValue).toEqual('1');
     expect(state.externalValue).toEqual(1);
     expect(state.parsedValue).toEqual(1);
@@ -102,7 +102,7 @@ describe('useEditableValue', () => {
 
     // If there ARE pending changes,
     // an update to the external prop value should NOT override the local/pending value.
-    ReactDOM.render(<Example value={3} />, container);
+    legacyRender(<Example value={3} />, container);
     expect(state.editableValue).toEqual('2');
     expect(state.externalValue).toEqual(3);
     expect(state.parsedValue).toEqual(2);
@@ -121,7 +121,7 @@ describe('useEditableValue', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Example value={1} />, container);
+    legacyRender(<Example value={1} />, container);
     expect(state.editableValue).toEqual('1');
     expect(state.externalValue).toEqual(1);
     expect(state.parsedValue).toEqual(1);
@@ -154,7 +154,7 @@ describe('useEditableValue', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Example value={1} />, container);
+    legacyRender(<Example value={1} />, container);
     expect(state.editableValue).toEqual('1');
     expect(state.externalValue).toEqual(1);
     expect(state.parsedValue).toEqual(1);

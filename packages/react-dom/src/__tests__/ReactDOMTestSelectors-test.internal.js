@@ -33,7 +33,7 @@ describe('ReactDOMTestSelectors', () => {
     React = require('react');
 
     const ReactDOM = require('react-dom/testing');
-    act = ReactDOM.act;
+    act = React.unstable_act;
     createComponentSelector = ReactDOM.createComponentSelector;
     createHasPseudoClassSelector = ReactDOM.createHasPseudoClassSelector;
     createRoleSelector = ReactDOM.createRoleSelector;
