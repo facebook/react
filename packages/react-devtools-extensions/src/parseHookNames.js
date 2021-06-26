@@ -89,6 +89,20 @@ export default async function parseHookNames(
     .then(() => findHookNames(hooksList, fileNameToHookSourceData));
 }
 
+function decodeBase64String(encoded: string): Object {
+  if (typeof atob === 'function') {
+    return atob(encoded);
+  } else if (
+    typeof Buffer !== 'undefined' &&
+    Buffer !== null &&
+    typeof Buffer.from === 'function'
+  ) {
+    return Buffer.from(encoded, 'base64');
+  } else {
+    throw Error('Cannot decode base64 string');
+  }
+}
+
 function extractAndLoadSourceMaps(
   fileNameToHookSourceData: Map<string, HookSourceData>,
 ): Promise<*> {
@@ -110,7 +124,7 @@ function extractAndLoadSourceMaps(
           const trimmed = ((sourceMappingURL.match(
             /base64,([a-zA-Z0-9+\/=]+)/,
           ): any): Array<string>)[1];
-          const decoded = atob(trimmed);
+          const decoded = decodeBase64String(trimmed);
           const parsed = JSON.parse(decoded);
 
           // Hook source might be a URL like "https://4syus.csb.app/src/App.js"
@@ -242,10 +256,11 @@ function findHookNames(
         });
         hooksFromAST = getPotentialHookDeclarationsFromAST(ast);
         const line = ((hookSource.lineNumber: any): number);
-        potentialReactHookASTNode = hooksFromAST.find(
-          node =>
-            checkNodeLocation(node, line) && isConfirmedHookDeclaration(node),
-        );
+        potentialReactHookASTNode = hooksFromAST.find(node => {
+          const nodeLocationCheck = checkNodeLocation(node, line);
+          const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
+          return nodeLocationCheck && hookDeclaractionCheck;
+        });
       }
 
       if (!sourceCode || !potentialReactHookASTNode) {
@@ -305,15 +320,13 @@ function loadSourceFiles(
 async function parseSourceMaps(
   fileNameToHookSourceData: Map<string, HookSourceData>,
 ): Promise<*> {
-  // Parse source maps (or original source) into ASTs.
-  // TODO (named hooks) Maybe this code should be injected;
-  // It's the only code in react-devtools-shared that references chrome.* APIs
-  // $FlowFixMe
-  const wasmMappingsURL = chrome.extension.getURL('mappings.wasm'); // eslint-disable-line no-undef
-
   // SourceMapConsumer.initialize() does nothing when running in Node (aka Jest)
+  // because the wasm file is automatically read from the file system
   // so we can avoid triggering a warning message about this.
   if (!__TEST__) {
+    // $FlowFixMe
+    const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
+
     SourceMapConsumer.initialize({'lib/mappings.wasm': wasmMappingsURL});
   }
 

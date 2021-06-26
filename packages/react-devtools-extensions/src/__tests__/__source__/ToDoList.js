@@ -10,7 +10,7 @@
 import * as React from 'react';
 import {Fragment, useCallback, useState} from 'react';
 
-function ListItem({item, removeItem, toggleItem}) {
+export function ListItem({item, removeItem, toggleItem}) {
   const handleDelete = useCallback(() => {
     removeItem(item);
   }, [item, removeItem]);
@@ -34,7 +34,7 @@ function ListItem({item, removeItem, toggleItem}) {
   );
 }
 
-export default function List(props) {
+export function List(props) {
   const [newItemText, setNewItemText] = useState('');
   const [items, setItems] = useState([
     {id: 1, isComplete: true, text: 'First'},

@@ -26,13 +26,13 @@ function compile(fileName) {
   const transformed = transformSync(code, {
     plugins: ['@babel/plugin-transform-modules-commonjs'],
     presets: [
-      'minify',
+      // 'minify',
       [
         '@babel/react',
-        {
-          runtime: 'automatic',
-          development: false,
-        },
+        // {
+        //   runtime: 'automatic',
+        //   development: false,
+        // },
       ],
     ],
     sourceMap: true,
@@ -44,9 +44,12 @@ function compile(fileName) {
   // Generate compiled output with external source maps
   writeFileSync(
     resolve(externalDir, fileName),
+    // This comment format (//##) isn't valid;
+    // but it prevents Node from auto-applying source maps to stack traces
+    // which lets unit tests more accurately simulate browser behavior.
     transformed.code +
-      `\n//# sourceMappingURL=${fileName}.map` +
-      `\n//# sourceURL=${fileName}`,
+      `\n//## sourceMappingURL=${fileName}.map` +
+      `\n//## sourceURL=${fileName}`,
     'utf8',
   );
   writeFileSync(
@@ -58,10 +61,13 @@ function compile(fileName) {
   // Generate compiled output with external inline base64 source maps
   writeFileSync(
     resolve(inlineDir, fileName),
+    // This comment format (//##) isn't valid;
+    // but it prevents Node from auto-applying source maps to stack traces
+    // which lets unit tests more accurately simulate browser behavior.
     transformed.code +
-      '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
+      '\n//## sourceMappingURL=data:application/json;charset=utf-8;base64,' +
       btoa(JSON.stringify(sourceMap)) +
-      `\n//# sourceURL=${fileName}`,
+      `\n//## sourceURL=${fileName}`,
     'utf8',
   );
 }

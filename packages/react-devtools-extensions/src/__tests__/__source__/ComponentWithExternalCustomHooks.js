@@ -7,15 +7,11 @@
  * @flow
  */
 
-import React, {useState} from 'react';
+import React from 'react';
+import useTheme from './useTheme';
 
 export function Component() {
-  const [count, setCount] = useState(0);
+  const theme = useTheme();
 
-  return (
-    <div>
-      <p>You clicked {count} times</p>
-      <button onClick={() => setCount(count + 1)}>Click me</button>
-    </div>
-  );
+  return <div>theme: {theme}</div>;
 }

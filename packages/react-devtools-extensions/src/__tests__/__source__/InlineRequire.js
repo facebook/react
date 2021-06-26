@@ -7,15 +7,8 @@
  * @flow
  */
 
-import React, {useState} from 'react';
-
 export function Component() {
-  const [count, setCount] = useState(0);
+  const [count] = require('react').useState(0);
 
-  return (
-    <div>
-      <p>You clicked {count} times</p>
-      <button onClick={() => setCount(count + 1)}>Click me</button>
-    </div>
-  );
+  return count;
 }

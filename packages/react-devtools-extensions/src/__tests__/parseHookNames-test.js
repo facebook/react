@@ -30,15 +30,7 @@ describe('parseHookNames', () => {
     fetchMock.mockIf(/.+$/, request => {
       const {resolve} = require('path');
       const url = request.url;
-      if (url.endsWith('/__tests__/parseHookNames-test.js')) {
-        // parseHookNames will try to load the source file,
-        // which for some of these tests will be this test file itself.
-        return Promise.resolve(requireText(url, 'utf8'));
-      } else if (
-        url.includes('packages/react-devtools-extensions/src/__tests__/')
-      ) {
-        return Promise.resolve(requireText(url, 'utf8'));
-      } else if (url.endsWith('js.map')) {
+      if (url.endsWith('js.map')) {
         // Source maps are relative URLs (e.g. "path/to/Exmaple.js" specifies "Exmaple.js.map").
         const sourceMapURL = resolve(
           __dirname,
@@ -49,8 +41,7 @@ describe('parseHookNames', () => {
         );
         return Promise.resolve(requireText(sourceMapURL, 'utf8'));
       } else {
-        console.warn('Unexpected fetch:', request);
-        return null;
+        return Promise.resolve(requireText(url, 'utf8'));
       }
     });
 
@@ -82,8 +73,8 @@ describe('parseHookNames', () => {
     return readFileSync(path, encoding);
   }
 
-  async function getHookNamesForComponent(Component) {
-    const hooksTree = inspectHooks(Component, {}, undefined, true);
+  async function getHookNamesForComponent(Component, props = {}) {
+    const hooksTree = inspectHooks(Component, props, undefined, true);
     const hookNames = await parseHookNames(hooksTree);
     return hookNames;
   }
@@ -176,7 +167,7 @@ describe('parseHookNames', () => {
   describe('inline and external source maps', () => {
     it('should work for simple components', async () => {
       async function test(path) {
-        const Component = require(path).default;
+        const Component = require(path).Component;
         const hookNames = await getHookNamesForComponent(Component);
         expect(hookNames).toEqual([
           'count', // useState
@@ -188,10 +179,11 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/external/Example'); // external source map
     });
 
-    it('should work with more complex components', async () => {
+    it('should work with more complex files and components', async () => {
       async function test(path) {
-        const Component = require(path).default;
-        const hookNames = await getHookNamesForComponent(Component);
+        const components = require(path);
+
+        let hookNames = await getHookNamesForComponent(components.List);
         expect(hookNames).toEqual([
           'newItemText', // useState
           'items', // useState
@@ -202,6 +194,14 @@ describe('parseHookNames', () => {
           'removeItem', // useCallback
           'toggleItem', // useCallback
         ]);
+
+        hookNames = await getHookNamesForComponent(components.ListItem, {
+          item: {},
+        });
+        expect(hookNames).toEqual([
+          'handleDelete', // useCallback
+          'handleToggle', // useCallback
+        ]);
       }
 
       await test('./__source__/ToDoList'); // original source (uncompiled)
@@ -209,6 +209,39 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/external/ToDoList'); // external source map
     });
 
-    // TODO Custom hook in external file
+    // TODO (named hooks) The useContext() line number is slightly off
+    xit('should work for external hooks', async () => {
+      async function test(path) {
+        const Component = require(path).Component;
+        const hookNames = await getHookNamesForComponent(Component);
+        expect(hookNames).toEqual([
+          'theme', // useTheme()
+          'theme', // useContext()
+        ]);
+      }
+
+      await test('./__source__/ComponentWithExternalCustomHooks'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/ComponentWithExternalCustomHooks',
+      ); // inline source map
+      await test(
+        './__source__/__compiled__/external/ComponentWithExternalCustomHooks',
+      ); // external source map
+    });
+
+    // TODO (named hooks) Inline require (e.g. require("react").useState()) isn't supported yet
+    xit('should work for inline requires', async () => {
+      async function test(path) {
+        const Component = require(path).Component;
+        const hookNames = await getHookNamesForComponent(Component);
+        expect(hookNames).toEqual([
+          'count', // useState()
+        ]);
+      }
+
+      await test('./__source__/InlineRequire'); // original source (uncompiled)
+      await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
+      await test('./__source__/__compiled__/external/InlineRequire'); // external source map
+    });
   });
 });
