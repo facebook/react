@@ -51,7 +51,7 @@ import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
 const act_notBatchedInLegacyMode = React.unstable_act;
-function act(callback: () => Thenable<mixed>): Thenable<void> {
+function act<T>(callback: () => T): Thenable<T> {
   return act_notBatchedInLegacyMode(() => {
     return batchedUpdates(callback);
   });
