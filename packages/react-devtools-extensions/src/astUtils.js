@@ -8,7 +8,6 @@
  */
 
 import traverse, {NodePath, Node} from '@babel/traverse';
-import {parse} from '@babel/parser';
 import {File} from '@babel/types';
 
 import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
@@ -20,6 +19,14 @@ export type SourceFileASTWithHookDetails = {
   line: number,
   source: string,
 };
+
+export type SourceMap = {|
+  mappings: string,
+  names: Array<string>,
+  sources: Array<string>,
+  sourcesContent: Array<string>,
+  version: number,
+|};
 
 const AST_NODE_TYPES = Object.freeze({
   CALL_EXPRESSION: 'CallExpression',
@@ -56,37 +63,18 @@ export function filterMemberWithHookVariableName(hook: NodePath): boolean {
   );
 }
 
-// Provides the AST of the hook's source file
-export function getASTFromSourceMap(
+// Map the generated source line and column position to the original source and line.
+export function mapCompiledLineNumberToOriginalLineNumber(
   consumer: SourceConsumer,
   lineNumber: number,
   columnNumber: number,
-): SourceFileASTWithHookDetails | null {
-  // A check added to prevent parsing large files
-  const FAIL_SAFE_CHECK = 100000;
-
-  // Map the generated source line and column position to the original source and line.
-  const {line, source} = consumer.originalPositionFor({
+): number | null {
+  const {line} = consumer.originalPositionFor({
     line: lineNumber,
     column: columnNumber,
   });
 
-  if (line == null) {
-    console.error(
-      `Could not find source location (line: ${lineNumber}, column: ${columnNumber})`,
-    );
-    return null;
-  } else if (line > FAIL_SAFE_CHECK) {
-    console.error(`Source File: ${source} is too big`);
-    return null;
-  }
-
-  const sourceFileContent = consumer.sourceContentFor(source, true);
-  const sourceFileAST = parse(sourceFileContent, {
-    sourceType: 'unambiguous',
-    plugins: ['jsx', 'typescript'],
-  });
-  return {line, source, sourceFileAST};
+  return line;
 }
 
 // Returns all AST Nodes associated with 'potentialReactHookASTNode'

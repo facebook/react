@@ -26,7 +26,12 @@ let didError = false;
 
 const files = glob
   .sync('**/*.js', {
-    ignore: ['**/node_modules/**', '**/cjs/**', '**/__compiled__/**'],
+    ignore: [
+      '**/node_modules/**',
+      '**/cjs/**',
+      '**/__compiled__/**',
+      'packages/react-devtools-extensions/src/ErrorTesterCompiled.js',
+    ],
   })
   .filter(f => !onlyChanged || changedFiles.has(f));
 

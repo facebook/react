@@ -15,6 +15,10 @@ describe('parseHookNames', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    jest.mock('source-map-support', () => {
+      console.trace('source-map-support');
+    });
+
     const {
       overrideFeatureFlags,
     } = require('react-devtools-shared/src/__tests__/utils');
