@@ -37,13 +37,13 @@ const AST_NODE_TYPES = Object.freeze({
 });
 
 // Check if line number obtained from source map and the line number in hook node match
-export function checkNodeLocation(path: NodePath, line: number): boolean {
+function checkNodeLocation(path: NodePath, line: number): boolean {
   const {start, end} = path.node.loc;
   return line >= start.line && line <= end.line;
 }
 
 // Checks whether hookNode is a member of targetHookNode
-export function filterMemberNodesOfTargetHook(
+function filterMemberNodesOfTargetHook(
   targetHookNode: NodePath,
   hookNode: NodePath,
 ): boolean {
@@ -56,29 +56,15 @@ export function filterMemberNodesOfTargetHook(
 }
 
 // Checks whether hook is the first member node of a state variable declaration node
-export function filterMemberWithHookVariableName(hook: NodePath): boolean {
+function filterMemberWithHookVariableName(hook: NodePath): boolean {
   return (
     hook.node.init.property.type === AST_NODE_TYPES.NUMERIC_LITERAL &&
     hook.node.init.property.value === 0
   );
 }
 
-// Map the generated source line and column position to the original source and line.
-export function mapCompiledLineNumberToOriginalLineNumber(
-  consumer: SourceConsumer,
-  lineNumber: number,
-  columnNumber: number,
-): number | null {
-  const {line} = consumer.originalPositionFor({
-    line: lineNumber,
-    column: columnNumber,
-  });
-
-  return line;
-}
-
 // Returns all AST Nodes associated with 'potentialReactHookASTNode'
-export function getFilteredHookASTNodes(
+function getFilteredHookASTNodes(
   potentialReactHookASTNode: NodePath,
   potentialHooksFound: Array<NodePath>,
   source: string,
@@ -117,6 +103,47 @@ export function getFilteredHookASTNodes(
 
 // Returns Hook name
 export function getHookName(
+  hook: HooksNode,
+  originalSourceAST: mixed,
+  originalSourceCode: string,
+  originalSourceLineNumber: number,
+): string | null {
+  const hooksFromAST = getPotentialHookDeclarationsFromAST(originalSourceAST);
+
+  const potentialReactHookASTNode = hooksFromAST.find(node => {
+    const nodeLocationCheck = checkNodeLocation(
+      node,
+      ((originalSourceLineNumber: any): number),
+    );
+    const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
+    return nodeLocationCheck && hookDeclaractionCheck;
+  });
+
+  if (!potentialReactHookASTNode) {
+    return null;
+  }
+
+  // nodesAssociatedWithReactHookASTNode could directly be used to obtain the hook variable name
+  // depending on the type of potentialReactHookASTNode
+  try {
+    const nodesAssociatedWithReactHookASTNode = getFilteredHookASTNodes(
+      potentialReactHookASTNode,
+      hooksFromAST,
+      originalSourceCode,
+    );
+
+    return getHookNameFromNode(
+      hook,
+      nodesAssociatedWithReactHookASTNode,
+      potentialReactHookASTNode,
+    );
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function getHookNameFromNode(
   originalHook: HooksNode,
   nodesAssociatedWithReactHookASTNode: NodePath[],
   potentialReactHookASTNode: NodePath,
@@ -193,7 +220,7 @@ export function getHookName(
 }
 
 // Extracts the variable name from hook node path
-export function getHookVariableName(
+function getHookVariableName(
   hook: NodePath,
   isCustomHook: boolean = false,
 ): string | null {
@@ -210,9 +237,7 @@ export function getHookVariableName(
   }
 }
 
-export function getPotentialHookDeclarationsFromAST(
-  sourceAST: File,
-): NodePath[] {
+function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
   const potentialHooksFound: NodePath[] = [];
   traverse(sourceAST, {
     enter(path) {
@@ -225,7 +250,7 @@ export function getPotentialHookDeclarationsFromAST(
 }
 
 // Check if 'path' contains declaration of the form const X = useState(0);
-export function isConfirmedHookDeclaration(path: NodePath): boolean {
+function isConfirmedHookDeclaration(path: NodePath): boolean {
   const node = path.node.init;
   if (node.type !== AST_NODE_TYPES.CALL_EXPRESSION) {
     return false;
@@ -235,7 +260,7 @@ export function isConfirmedHookDeclaration(path: NodePath): boolean {
 }
 
 // We consider hooks to be a hook name identifier or a member expression containing a hook name.
-export function isHook(node: Node): boolean {
+function isHook(node: Node): boolean {
   if (node.type === AST_NODE_TYPES.IDENTIFIER) {
     return isHookName(node.name);
   } else if (
@@ -259,7 +284,7 @@ export function isHook(node: Node): boolean {
 // Catch all identifiers that begin with "use"
 // followed by an uppercase Latin character to exclude identifiers like "user".
 // Copied from packages/eslint-plugin-react-hooks/src/RulesOfHooks
-export function isHookName(name: string): boolean {
+function isHookName(name: string): boolean {
   return /^use[A-Z0-9].*$/.test(name);
 }
 
@@ -271,7 +296,7 @@ export function isNonDeclarativePrimitiveHook(hook: HooksNode) {
 }
 
 // Check if the AST Node COULD be a React Hook
-export function isPotentialHookDeclaration(path: NodePath): boolean {
+function isPotentialHookDeclaration(path: NodePath): boolean {
   // The array potentialHooksFound will contain all potential hook declaration cases we support
   const nodePathInit = path.node.init;
   if (nodePathInit != null) {
@@ -305,7 +330,7 @@ export function isPotentialHookDeclaration(path: NodePath): boolean {
 }
 
 /// Check whether 'node' is hook decalration of form useState(0); OR React.useState(0);
-export function isReactFunction(node: Node, functionName: string): boolean {
+function isReactFunction(node: Node, functionName: string): boolean {
   return (
     node.name === functionName ||
     (node.type === 'MemberExpression' &&
@@ -315,7 +340,7 @@ export function isReactFunction(node: Node, functionName: string): boolean {
 }
 
 // Check if 'path' is either State or Reducer hook
-export function isStateOrReducerHook(path: NodePath): boolean {
+function isStateOrReducerHook(path: NodePath): boolean {
   const callee = path.node.init.callee;
   return (
     isReactFunction(callee, 'useState') || isReactFunction(callee, 'useReducer')
@@ -323,7 +348,7 @@ export function isStateOrReducerHook(path: NodePath): boolean {
 }
 
 // Check whether hookNode of a declaration contains obvious variable name
-export function nodeContainsHookVariableName(hookNode: NodePath): boolean {
+function nodeContainsHookVariableName(hookNode: NodePath): boolean {
   // We determine cases where variable names are obvious in declarations. Examples:
   // const [tick, setTick] = useState(1); OR const ref = useRef(null);
   // Here tick/ref are obvious hook variables in the hook declaration node itself

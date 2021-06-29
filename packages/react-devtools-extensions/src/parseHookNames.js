@@ -12,15 +12,7 @@
 import {parse} from '@babel/parser';
 import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {SourceMapConsumer} from 'source-map';
-import {
-  checkNodeLocation,
-  getFilteredHookASTNodes,
-  getHookName,
-  getPotentialHookDeclarationsFromAST,
-  isConfirmedHookDeclaration,
-  isNonDeclarativePrimitiveHook,
-  mapCompiledLineNumberToOriginalLineNumber,
-} from './astUtils';
+import {getHookName, isNonDeclarativePrimitiveHook} from './astUtils';
 import {sourceMapsAreAppliedToErrors} from './ErrorTester';
 
 import type {
@@ -245,52 +237,22 @@ function findHookNames(
         // Either way, we don't need to convert the Error stack frame locations.
         originalSourceLineNumber = lineNumber;
       } else {
-        originalSourceLineNumber = mapCompiledLineNumberToOriginalLineNumber(
-          sourceConsumer,
-          lineNumber,
-          columnNumber,
-        );
+        originalSourceLineNumber = sourceConsumer.originalPositionFor({
+          line: lineNumber,
+          column: columnNumber,
+        }).line;
       }
 
       if (originalSourceLineNumber === null) {
         return null;
       }
 
-      const hooksFromAST = getPotentialHookDeclarationsFromAST(
+      return getHookName(
+        hook,
         hookSourceData.originalSourceAST,
+        ((hookSourceData.originalSourceCode: any): string),
+        ((originalSourceLineNumber: any): number),
       );
-      const potentialReactHookASTNode = hooksFromAST.find(node => {
-        const nodeLocationCheck = checkNodeLocation(
-          node,
-          ((originalSourceLineNumber: any): number),
-        );
-        const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
-        return nodeLocationCheck && hookDeclaractionCheck;
-      });
-
-      if (!potentialReactHookASTNode) {
-        return null;
-      }
-
-      // nodesAssociatedWithReactHookASTNode could directly be used to obtain the hook variable name
-      // depending on the type of potentialReactHookASTNode
-      try {
-        const originalSourceCode = ((hookSourceData.originalSourceCode: any): string);
-        const nodesAssociatedWithReactHookASTNode = getFilteredHookASTNodes(
-          potentialReactHookASTNode,
-          hooksFromAST,
-          originalSourceCode,
-        );
-
-        return getHookName(
-          hook,
-          nodesAssociatedWithReactHookASTNode,
-          potentialReactHookASTNode,
-        );
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
     }),
   ): any): Promise<HookNames>);
 }
