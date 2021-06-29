@@ -813,6 +813,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         lanes = errorRetryLanes;
         exitStatus = renderRootSync(root, errorRetryLanes);
       }
+
+      executionContext &= ~RetryAfterError;
     }
 
     if (exitStatus === RootFatalErrored) {
@@ -1006,6 +1008,8 @@ function performSyncWorkOnRoot(root) {
       lanes = errorRetryLanes;
       exitStatus = renderRootSync(root, lanes);
     }
+
+    executionContext &= ~RetryAfterError;
   }
 
   if (exitStatus === RootFatalErrored) {
