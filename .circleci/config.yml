@@ -477,12 +477,12 @@ workflows:
                 - "--project=devtools -r=experimental"
 
                 # TODO: Update test config to support www build tests
-                # - "-r=www-classic --env=development --variant=false"
-                # - "-r=www-classic --env=production --variant=false"
                 # - "-r=www-classic --env=development --variant=true"
                 # - "-r=www-classic --env=production --variant=true"
-                # - "-r=www-modern --env=development --variant=false"
-                # - "-r=www-modern --env=production --variant=false"
+                # - "-r=www-classic --env=development --variant=true"
+                # - "-r=www-classic --env=production --variant=true"
+                # - "-r=www-modern --env=development --variant=true"
+                # - "-r=www-modern --env=production --variant=true"
                 # - "-r=www-modern --env=development --variant=true"
                 # - "-r=www-modern --env=production --variant=true"
 
