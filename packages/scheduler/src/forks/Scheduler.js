@@ -450,7 +450,7 @@ function shouldYieldToHost() {
       }
       // There's no pending input. Only yield if we've reached the max
       // yield interval.
-      return currentTime >= maxYieldInterval;
+      return currentTime >= Math.max(deadline, deadline - yieldInterval + maxYieldInterval);
     } else {
       // There's still time left in the frame.
       return false;
