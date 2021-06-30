@@ -82,11 +82,18 @@ export function loadHookNames(
         callbacks.add(callback);
       },
     };
+
     const wake = () => {
+      if (timeoutID) {
+        clearTimeout(timeoutID);
+        timeoutID = null;
+      }
+
       // This assumes they won't throw.
       callbacks.forEach(callback => callback());
       callbacks.clear();
     };
+
     const newRecord: Record<HookNames> = (record = {
       status: Pending,
       value: wakeable,
@@ -113,6 +120,10 @@ export function loadHookNames(
         wake();
       },
       function onError(error) {
+        if (didTimeout) {
+          return;
+        }
+
         const thrownRecord = ((newRecord: any): RejectedRecord);
         thrownRecord.status = Rejected;
         thrownRecord.value = null;
@@ -122,7 +133,9 @@ export function loadHookNames(
     );
 
     // Eventually timeout and stop trying to load names.
-    setTimeout(() => {
+    let timeoutID = setTimeout(() => {
+      timeoutID = null;
+
       didTimeout = true;
 
       const timedoutRecord = ((newRecord: any): RejectedRecord);
