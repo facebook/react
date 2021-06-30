@@ -114,8 +114,7 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
-    // @gate experimental
-    it('does not warn on other effects', () => {
+    it('does not warn on other effects if root is strict', () => {
       function Component(props) {
         React.useLayoutEffect(() => {
           Scheduler.unstable_yieldValue('layout');
@@ -127,9 +126,9 @@ describe('ReactTestUtils.act()', () => {
       }
 
       expect(() => {
-        const root = ReactDOM.unstable_createRoot(
-          document.createElement('div'),
-        );
+        const root = ReactDOM.createRoot(document.createElement('div'), {
+          unstable_strictMode: true,
+        });
         root.render(<Component />);
         // confidence check that effects were mounted
         expect(Scheduler).toFlushAndYield(['layout', 'imperative handle']);
@@ -379,6 +378,7 @@ function runActTests(label, render, unmount, rerender) {
           expect(container.innerHTML).toBe('2');
         });
 
+        // @gate __DEV__
         it('does not warn on effects that were not queued', () => {
           function Component() {
             React.useEffect(() => {
@@ -387,8 +387,8 @@ function runActTests(label, render, unmount, rerender) {
             return null;
           }
 
-          ReactTestUtils.act(() => {
-            ReactDOM.render(
+          act(() => {
+            render(
               <React.StrictMode>
                 <Component />
               </React.StrictMode>,
@@ -398,16 +398,8 @@ function runActTests(label, render, unmount, rerender) {
 
           expect(Scheduler).toHaveYielded(['effect']);
 
-          ReactDOM.render(
-            <React.StrictMode>
-              <Component />
-            </React.StrictMode>,
-            container,
-          );
-
-          expect(Scheduler).toHaveYielded(['effect']);
           expect(() => {
-            ReactDOM.render(
+            rerender(
               <React.StrictMode>
                 <Component />
               </React.StrictMode>,
