@@ -52,7 +52,6 @@ import {
   scheduleUpdateOnFiber,
   flushRoot,
   batchedUpdates,
-  unbatchedUpdates,
   flushSync,
   flushControlled,
   deferredUpdates,
@@ -327,7 +326,6 @@ export function updateContainer(
 
 export {
   batchedUpdates,
-  unbatchedUpdates,
   deferredUpdates,
   discreteUpdates,
   flushControlled,
