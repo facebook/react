@@ -21,7 +21,6 @@ import {createRoot, hydrateRoot, isValidContainer} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
 
 import {
-  batchedEventUpdates,
   batchedUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
@@ -102,7 +101,6 @@ setBatchingImplementation(
   batchedUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
-  batchedEventUpdates,
 );
 
 function createPortal(

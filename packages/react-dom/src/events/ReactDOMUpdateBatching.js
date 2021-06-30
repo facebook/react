@@ -24,11 +24,8 @@ let discreteUpdatesImpl = function(fn, a, b, c, d) {
   return fn(a, b, c, d);
 };
 let flushDiscreteUpdatesImpl = function() {};
-// TODO: Remove references to batchedEventUpdates
-// let batchedEventUpdatesImpl = batchedUpdatesImpl;
 
 let isInsideEventHandler = false;
-// let isBatchingEventUpdates = false;
 
 function finishEventHandler() {
   // Here we wait until all updates have propagated, which is important
@@ -62,9 +59,6 @@ export function batchedUpdates(fn, a, b) {
   }
 }
 
-// TODO: Remove references to batchedEventUpdates
-export const batchedEventUpdates = batchedUpdates;
-
 // TODO: Replace with flushSync
 export function discreteUpdates(fn, a, b, c, d) {
   return discreteUpdatesImpl(fn, a, b, c, d);
@@ -74,11 +68,8 @@ export function setBatchingImplementation(
   _batchedUpdatesImpl,
   _discreteUpdatesImpl,
   _flushDiscreteUpdatesImpl,
-  _batchedEventUpdatesImpl,
 ) {
   batchedUpdatesImpl = _batchedUpdatesImpl;
   discreteUpdatesImpl = _discreteUpdatesImpl;
   flushDiscreteUpdatesImpl = _flushDiscreteUpdatesImpl;
-  // TODO: Remove references to batchedEventUpdates
-  // batchedEventUpdatesImpl = _batchedEventUpdatesImpl;
 }
