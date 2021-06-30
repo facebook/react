@@ -38,7 +38,7 @@ import './root.css';
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {HookNames} from 'react-devtools-shared/src/hookNamesCache';
+import type {HookNames} from 'react-devtools-shared/src/types';
 import type {Thenable} from '../cache';
 
 export type BrowserTheme = 'dark' | 'light';

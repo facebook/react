@@ -25,12 +25,13 @@ import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {HookNames} from 'react-devtools-shared/src/types';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 type HooksTreeViewProps = {|
   bridge: FrontendBridge,
   element: Element,
-  hookNames: Array<string> | null,
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement,
   store: Store,
 |};
@@ -72,7 +73,7 @@ export function InspectedElementHooksTree({
 
 type InnerHooksTreeViewProps = {|
   element: Element,
-  hookNames: Array<string> | null,
+  hookNames: HookNames | null,
   hooks: HooksTree,
   id: number,
   inspectedElement: InspectedElement,
@@ -93,7 +94,7 @@ export function InnerHooksTreeView({
       key={index}
       element={element}
       hook={hooks[index]}
-      hookName={hookNames != null ? hookNames[index] : null}
+      hookNames={hookNames}
       id={id}
       inspectedElement={inspectedElement}
       path={path.concat([index])}
@@ -104,7 +105,7 @@ export function InnerHooksTreeView({
 type HookViewProps = {|
   element: Element,
   hook: HooksNode,
-  hookName: string | null,
+  hookNames: HookNames | null,
   id: number,
   inspectedElement: InspectedElement,
   path: Array<string | number>,
@@ -113,7 +114,7 @@ type HookViewProps = {|
 function HookView({
   element,
   hook,
-  hookName,
+  hookNames,
   id,
   inspectedElement,
   path,
@@ -193,6 +194,8 @@ function HookView({
 
   let displayValue;
   let isComplexDisplayValue = false;
+
+  const hookName = hookNames != null ? hookNames.get(hook) : null;
   const hookDisplayName = hookName ? `${name}(${hookName})` : name;
 
   // Format data for display to mimic the props/state/context for now.
@@ -219,6 +222,7 @@ function HookView({
       <InnerHooksTreeView
         element={element}
         hooks={subHooks}
+        hookNames={hookNames}
         id={id}
         inspectedElement={inspectedElement}
         path={path.concat(['subHooks'])}

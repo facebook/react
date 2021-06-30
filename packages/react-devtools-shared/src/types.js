@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
+
 export type Wall = {|
   // `listen` returns the "unlisten" function.
   listen: (fn: Function) => Function,
@@ -76,3 +78,6 @@ export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
   | RegExpComponentFilter;
+
+export type HookName = string | null;
+export type HookNames = Map<HooksNode, HookName>;

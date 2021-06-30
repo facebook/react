@@ -36,14 +36,14 @@ import styles from './InspectedElementView.css';
 
 import type {ContextMenuContextType} from '../context';
 import type {Element, InspectedElement, SerializedElement} from './types';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType, HookNames} from 'react-devtools-shared/src/types';
 
 export type CopyPath = (path: Array<string | number>) => void;
 export type InspectPath = (path: Array<string | number>) => void;
 
 type Props = {|
   element: Element,
-  hookNames: Array<string> | null,
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement,
 |};
 

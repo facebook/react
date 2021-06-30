@@ -30,7 +30,7 @@ import {ElementTypeFunction} from 'react-devtools-shared/src/types';
 import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
-import type {HookNames} from 'react-devtools-shared/src/hookNamesCache';
+import type {HookNames} from 'react-devtools-shared/src/types';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Element,

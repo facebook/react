@@ -20,7 +20,7 @@ import type {
   HookSource,
   HooksTree,
 } from 'react-debug-tools/src/ReactDebugHooks';
-import type {HookNames} from 'react-devtools-shared/src/hookNamesCache';
+import type {HookNames} from 'react-devtools-shared/src/types';
 import type {Thenable} from 'shared/ReactTypes';
 import type {SourceConsumer, SourceMap} from './astUtils';
 
@@ -94,6 +94,10 @@ export default async function parseHookNames(
   }
 
   // TODO (named hooks) Call .destroy() on SourceConsumers after we're done to free up memory.
+
+  // TODO (named hooks) Replace Array of hook names with a Map() of hook ID to name to better support mapping nested hook to name.
+  // This is a little tricky though, since custom hooks don't have IDs.
+  // We may need to add an ID for these too, in the backend?
 
   return loadSourceFiles(fileNameToHookSourceData)
     .then(() => extractAndLoadSourceMaps(fileNameToHookSourceData))
@@ -203,58 +207,62 @@ function fetchFile(url: string): Promise<string> {
 function findHookNames(
   hooksList: Array<HooksNode>,
   fileNameToHookSourceData: Map<string, HookSourceData>,
-): Promise<HookNames> {
-  return ((Promise.all(
-    hooksList.map(hook => {
-      if (isNonDeclarativePrimitiveHook(hook)) {
-        // Not all hooks have names (e.g. useEffect or useLayoutEffect)
-        return null;
-      }
+): HookNames {
+  const map: HookNames = new Map();
 
-      // We already guard against a null HookSource in parseHookNames()
-      const hookSource = ((hook.hookSource: any): HookSource);
-      const fileName = hookSource.fileName;
-      if (!fileName) {
-        return null; // Should not be reachable.
-      }
+  hooksList.map(hook => {
+    if (isNonDeclarativePrimitiveHook(hook)) {
+      // Not all hooks have names (e.g. useEffect or useLayoutEffect)
+      return null;
+    }
 
-      const hookSourceData = fileNameToHookSourceData.get(fileName);
-      if (!hookSourceData) {
-        return null; // Should not be reachable.
-      }
+    // We already guard against a null HookSource in parseHookNames()
+    const hookSource = ((hook.hookSource: any): HookSource);
+    const fileName = hookSource.fileName;
+    if (!fileName) {
+      return null; // Should not be reachable.
+    }
 
-      const {lineNumber, columnNumber} = hookSource;
-      if (!lineNumber || !columnNumber) {
-        return null; // Should not be reachable.
-      }
+    const hookSourceData = fileNameToHookSourceData.get(fileName);
+    if (!hookSourceData) {
+      return null; // Should not be reachable.
+    }
 
-      const sourceConsumer = hookSourceData.sourceConsumer;
+    const {lineNumber, columnNumber} = hookSource;
+    if (!lineNumber || !columnNumber) {
+      return null; // Should not be reachable.
+    }
 
-      let originalSourceLineNumber;
-      if (sourceMapsAreAppliedToErrors || !sourceConsumer) {
-        // Either the current environment automatically applies source maps to errors,
-        // or the current code had no source map to begin with.
-        // Either way, we don't need to convert the Error stack frame locations.
-        originalSourceLineNumber = lineNumber;
-      } else {
-        originalSourceLineNumber = sourceConsumer.originalPositionFor({
-          line: lineNumber,
-          column: columnNumber,
-        }).line;
-      }
+    const sourceConsumer = hookSourceData.sourceConsumer;
 
-      if (originalSourceLineNumber === null) {
-        return null;
-      }
+    let originalSourceLineNumber;
+    if (sourceMapsAreAppliedToErrors || !sourceConsumer) {
+      // Either the current environment automatically applies source maps to errors,
+      // or the current code had no source map to begin with.
+      // Either way, we don't need to convert the Error stack frame locations.
+      originalSourceLineNumber = lineNumber;
+    } else {
+      originalSourceLineNumber = sourceConsumer.originalPositionFor({
+        line: lineNumber,
+        column: columnNumber,
+      }).line;
+    }
 
-      return getHookName(
-        hook,
-        hookSourceData.originalSourceAST,
-        ((hookSourceData.originalSourceCode: any): string),
-        ((originalSourceLineNumber: any): number),
-      );
-    }),
-  ): any): Promise<HookNames>);
+    if (originalSourceLineNumber === null) {
+      return null;
+    }
+
+    const name = getHookName(
+      hook,
+      hookSourceData.originalSourceAST,
+      ((hookSourceData.originalSourceCode: any): string),
+      ((originalSourceLineNumber: any): number),
+    );
+
+    map.set(hook, name);
+  });
+
+  return map;
 }
 
 function isValidUrl(possibleURL: string): boolean {

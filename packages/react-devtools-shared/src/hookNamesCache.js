@@ -13,6 +13,7 @@ import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
 import type {Element} from './devtools/views/Components/types';
+import type {HookNames} from 'react-devtools-shared/src/types';
 
 const TIMEOUT = 3000;
 
@@ -49,9 +50,6 @@ function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   }
 }
 
-export type HookName = string | null;
-export type HookNames = Array<HookName>;
-
 type HookNamesMap = WeakMap<Element, Record<HookNames>>;
 
 function createMap(): HookNamesMap {
@@ -75,7 +73,10 @@ export function loadHookNames(
 
   // TODO (named hooks) Make sure caching layer works and we aren't re-parsing ASTs.
   let record = map.get(element);
-  if (!record) {
+  if (record) {
+    // TODO (named hooks) Do we need to update the Map to use new hooks list as keys?
+    // or wil these be stable between inspections as a component updates?
+  } else {
     const callbacks = new Set();
     const wakeable: Wakeable = {
       then(callback) {

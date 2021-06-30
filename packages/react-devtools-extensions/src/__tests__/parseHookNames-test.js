@@ -77,6 +77,10 @@ describe('parseHookNames', () => {
     fetch.resetMocks();
   });
 
+  function expectHookNamesToEqual(map, expectedNamesArray) {
+    expect(Array.from(map.values())).toEqual(expectedNamesArray);
+  }
+
   function requireText(path, encoding) {
     const {readFileSync} = require('fs');
     return readFileSync(path, encoding);
@@ -99,7 +103,7 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expect(hookNames).toEqual(['foo', 'bar', 'baz']);
+    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
   });
 
   it('should parse names for useReducer()', async () => {
@@ -113,7 +117,7 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expect(hookNames).toEqual(['foo', 'bar', 'baz']);
+    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
   });
 
   it('should return null for hooks without names like useEffect', async () => {
@@ -126,7 +130,7 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expect(hookNames).toEqual([null, null]);
+    expectHookNamesToEqual(hookNames, [null, null]);
   });
 
   it('should parse names for custom hooks', async () => {
@@ -149,7 +153,7 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expect(hookNames).toEqual(['foo', null, 'baz']);
+    expectHookNamesToEqual(hookNames, ['foo', null, 'baz']);
   });
 
   it('should return null for custom hooks without explicit names', async () => {
@@ -170,7 +174,7 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expect(hookNames).toEqual([null, null]);
+    expectHookNamesToEqual(hookNames, [null, null]);
   });
 
   describe('inline and external source maps', () => {
@@ -178,7 +182,7 @@ describe('parseHookNames', () => {
       async function test(path) {
         const Component = require(path).Component;
         const hookNames = await getHookNamesForComponent(Component);
-        expect(hookNames).toEqual([
+        expectHookNamesToEqual(hookNames, [
           'count', // useState
         ]);
       }
@@ -193,7 +197,7 @@ describe('parseHookNames', () => {
         const components = require(path);
 
         let hookNames = await getHookNamesForComponent(components.List);
-        expect(hookNames).toEqual([
+        expectHookNamesToEqual(hookNames, [
           'newItemText', // useState
           'items', // useState
           'uid', // useState
@@ -207,7 +211,7 @@ describe('parseHookNames', () => {
         hookNames = await getHookNamesForComponent(components.ListItem, {
           item: {},
         });
-        expect(hookNames).toEqual([
+        expectHookNamesToEqual(hookNames, [
           'handleDelete', // useCallback
           'handleToggle', // useCallback
         ]);
@@ -218,12 +222,30 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/external/ToDoList'); // external source map
     });
 
+    it('should work for custom hook', async () => {
+      async function test(path) {
+        const Component = require(path).Component;
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+          'isDarkMode', // useIsDarkMode()
+          'isDarkMode', // useIsDarkMode -> useState()
+          null,
+          null,
+        ]);
+      }
+
+      await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
+      await test('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
+      await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
+    });
+
     // TODO (named hooks) The useContext() line number is slightly off
     xit('should work for external hooks', async () => {
       async function test(path) {
         const Component = require(path).Component;
         const hookNames = await getHookNamesForComponent(Component);
-        expect(hookNames).toEqual([
+        expectHookNamesToEqual(hookNames, [
           'theme', // useTheme()
           'theme', // useContext()
         ]);
@@ -239,11 +261,13 @@ describe('parseHookNames', () => {
     });
 
     // TODO (named hooks) Inline require (e.g. require("react").useState()) isn't supported yet
+    // Maybe this isn't an important use case to support,
+    // since inline requires are most likely to exist in compiled source (if at all).
     xit('should work for inline requires', async () => {
       async function test(path) {
         const Component = require(path).Component;
         const hookNames = await getHookNamesForComponent(Component);
-        expect(hookNames).toEqual([
+        expectHookNamesToEqual(hookNames, [
           'count', // useState()
         ]);
       }
