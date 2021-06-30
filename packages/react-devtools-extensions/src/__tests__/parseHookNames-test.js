@@ -266,7 +266,7 @@ describe('parseHookNames', () => {
       ); // external source map
     });
 
-    // TODO (named hooks) Inline require (e.g. require("react").useState()) isn't supported yet
+    // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
     // Maybe this isn't an important use case to support,
     // since inline requires are most likely to exist in compiled source (if at all).
     xit('should work for inline requires', async () => {

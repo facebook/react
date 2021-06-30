@@ -71,11 +71,11 @@ export function loadHookNames(
 
   const map = getRecordMap();
 
-  // TODO (named hooks) Make sure caching layer works and we aren't re-parsing ASTs.
   let record = map.get(element);
   if (record) {
-    // TODO (named hooks) Do we need to update the Map to use new hooks list as keys?
-    // or wil these be stable between inspections as a component updates?
+    // TODO Do we need to update the Map to use new the hooks list objects as keys
+    // or will these be stable between inspections as a component updates?
+    // It seems like they're stable.
   } else {
     const callbacks = new Set();
     const wakeable: Wakeable = {

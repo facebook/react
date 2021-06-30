@@ -81,3 +81,9 @@ export type ComponentFilter =
 
 export type HookName = string | null;
 export type HookNames = Map<HooksNode, HookName>;
+
+export type LRUCache<K, V> = {|
+  get: (key: K) => V,
+  has: (key: K) => boolean,
+  set: (key: K, value: V) => void,
+|};

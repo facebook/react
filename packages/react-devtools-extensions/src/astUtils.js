@@ -69,14 +69,6 @@ function getFilteredHookASTNodes(
   potentialHooksFound: Array<NodePath>,
   source: string,
 ): Array<NodePath> {
-  // Remove targetHook from potentialHooks array since its purpose is served.
-  // Also to clean the potentialHooks array for further filtering member nodes down the line.
-  const hookIdx = potentialHooksFound.indexOf(potentialReactHookASTNode);
-  if (hookIdx !== -1) {
-    // TODO (named hooks) Should we be doing this? Is it necessary?
-    // potentialHooksFound.splice(hookIdx, 1);
-  }
-
   let nodesAssociatedWithReactHookASTNode: NodePath[] = [];
   if (nodeContainsHookVariableName(potentialReactHookASTNode)) {
     // made custom hooks to enter this, always
@@ -275,7 +267,9 @@ function isHook(node: Node): boolean {
       isPascalCaseNameSpace.test(obj.name)
     );
   } else {
-    // TODO (named hooks) Handle inline require statements e.g. require("useStable")(...)
+    // TODO Possibly handle inline require statements e.g. require("useStable")(...)
+    // This does not seem like a high priority, since inline requires are probably
+    // not common and are also typically in compiled code rather than source code.
 
     return false;
   }
