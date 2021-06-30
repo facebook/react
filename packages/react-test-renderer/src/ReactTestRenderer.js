@@ -18,7 +18,7 @@ import {
   getPublicRootInstance,
   createContainer,
   updateContainer,
-  flushSyncWithWarningIfAlreadyRendering,
+  flushSync,
   injectIntoDevTools,
   batchedUpdates,
 } from 'react-reconciler/src/ReactFiberReconciler';
@@ -543,7 +543,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     },
 
     unstable_flushSync<T>(fn: () => T): T {
-      return flushSyncWithWarningIfAlreadyRendering(fn);
+      return flushSync(fn);
     },
   };
 

@@ -1114,7 +1114,10 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
   }
 }
 
-export function flushSync<A, R>(fn: A => R, a: A): R {
+export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
+  fn: A => R,
+  a: A,
+): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
@@ -1141,10 +1144,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   }
 }
 
-export function flushSyncWithWarningIfAlreadyRendering<A, R>(
-  fn: A => R,
-  a: A,
-): R {
+export function flushSync<A, R>(fn: A => R, a: A): R {
   if (__DEV__) {
     if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
       console.error(
@@ -1154,7 +1154,7 @@ export function flushSyncWithWarningIfAlreadyRendering<A, R>(
       );
     }
   }
-  return flushSync(fn, a);
+  return flushSyncWithoutWarningIfAlreadyRendering(fn, a);
 }
 
 export function flushControlled(fn: () => mixed): void {

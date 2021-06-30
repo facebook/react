@@ -24,7 +24,7 @@ import {
   batchedUpdates,
   discreteUpdates,
   flushSync,
-  flushSyncWithWarningIfAlreadyRendering,
+  flushSyncWithoutWarningIfAlreadyRendering,
   flushControlled,
   injectIntoDevTools,
   attemptSynchronousHydration,
@@ -97,7 +97,11 @@ if (__DEV__) {
 }
 
 setRestoreImplementation(restoreControlledState);
-setBatchingImplementation(batchedUpdates, discreteUpdates, flushSync);
+setBatchingImplementation(
+  batchedUpdates,
+  discreteUpdates,
+  flushSyncWithoutWarningIfAlreadyRendering,
+);
 
 function createPortal(
   children: ReactNodeList,
@@ -162,7 +166,7 @@ const Internals = {
 export {
   createPortal,
   batchedUpdates as unstable_batchedUpdates,
-  flushSyncWithWarningIfAlreadyRendering as flushSync,
+  flushSync,
   Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   ReactVersion as version,
   // Disabled behind disableLegacyReactDOMAPIs

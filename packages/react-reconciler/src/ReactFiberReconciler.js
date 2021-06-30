@@ -23,7 +23,7 @@ import {
   discreteUpdates as discreteUpdates_old,
   flushControlled as flushControlled_old,
   flushSync as flushSync_old,
-  flushSyncWithWarningIfAlreadyRendering as flushSyncWithWarningIfAlreadyRendering_old,
+  flushSyncWithoutWarningIfAlreadyRendering as flushSyncWithoutWarningIfAlreadyRendering_old,
   flushPassiveEffects as flushPassiveEffects_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
@@ -61,7 +61,7 @@ import {
   discreteUpdates as discreteUpdates_new,
   flushControlled as flushControlled_new,
   flushSync as flushSync_new,
-  flushSyncWithWarningIfAlreadyRendering as flushSyncWithWarningIfAlreadyRendering_new,
+  flushSyncWithoutWarningIfAlreadyRendering as flushSyncWithoutWarningIfAlreadyRendering_new,
   flushPassiveEffects as flushPassiveEffects_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
@@ -112,9 +112,9 @@ export const flushControlled = enableNewReconciler
   ? flushControlled_new
   : flushControlled_old;
 export const flushSync = enableNewReconciler ? flushSync_new : flushSync_old;
-export const flushSyncWithWarningIfAlreadyRendering = enableNewReconciler
-  ? flushSyncWithWarningIfAlreadyRendering_new
-  : flushSyncWithWarningIfAlreadyRendering_old;
+export const flushSyncWithoutWarningIfAlreadyRendering = enableNewReconciler
+  ? flushSyncWithoutWarningIfAlreadyRendering_new
+  : flushSyncWithoutWarningIfAlreadyRendering_old;
 export const flushPassiveEffects = enableNewReconciler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;

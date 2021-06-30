@@ -916,7 +916,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     flushSync(fn: () => mixed) {
-      NoopRenderer.flushSyncWithWarningIfAlreadyRendering(fn);
+      NoopRenderer.flushSync(fn);
     },
 
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
