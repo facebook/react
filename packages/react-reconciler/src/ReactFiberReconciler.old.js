@@ -57,7 +57,7 @@ import {
   flushControlled,
   deferredUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
+  flushSyncWithWarningIfAlreadyRendering,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.old';
 import {
@@ -330,9 +330,9 @@ export {
   unbatchedUpdates,
   deferredUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
   flushControlled,
   flushSync,
+  flushSyncWithWarningIfAlreadyRendering,
   flushPassiveEffects,
 };
 

@@ -915,10 +915,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
-
     flushSync(fn: () => mixed) {
-      NoopRenderer.flushSync(fn);
+      NoopRenderer.flushSyncWithWarningIfAlreadyRendering(fn);
     },
 
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
