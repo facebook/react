@@ -14,6 +14,7 @@ import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {SourceMapConsumer} from 'source-map';
 import {getHookName, isNonDeclarativePrimitiveHook} from './astUtils';
 import {sourceMapsAreAppliedToErrors} from './ErrorTester';
+import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {
   HooksNode,
@@ -62,6 +63,10 @@ export default async function parseHookNames(
 
   const hooksList: Array<HooksNode> = [];
   flattenHooksList(hooksTree, hooksList);
+
+  if (__DEBUG__) {
+    console.log('parseHookNames() hooksList:', hooksList);
+  }
 
   // Gather the unique set of source files to load for the built-in hooks.
   const fileNameToHookSourceData: Map<string, HookSourceData> = new Map();
@@ -128,6 +133,10 @@ function extractAndLoadSourceMaps(
     const sourceMappingURLs = runtimeSourceCode.match(SOURCE_MAP_REGEX);
     if (sourceMappingURLs == null) {
       // Maybe file has not been transformed; we'll try to parse it as-is in parseSourceAST().
+
+      if (__DEBUG__) {
+        console.log('extractAndLoadSourceMaps() No source map found');
+      }
     } else {
       for (let i = 0; i < sourceMappingURLs.length; i++) {
         const sourceMappingURL = sourceMappingURLs[i];
@@ -141,6 +150,14 @@ function extractAndLoadSourceMaps(
           ): any): Array<string>)[1];
           const decoded = decodeBase64String(trimmed);
           const parsed = JSON.parse(decoded);
+
+          if (__DEBUG__) {
+            console.groupCollapsed(
+              'extractAndLoadSourceMaps() Inline source map',
+            );
+            console.log(parsed);
+            console.groupEnd();
+          }
 
           // Hook source might be a URL like "https://4syus.csb.app/src/App.js"
           // Parsed source map might be a partial path like "src/App.js"
@@ -171,6 +188,12 @@ function extractAndLoadSourceMaps(
           }
 
           hookSourceData.sourceMapURL = url;
+
+          if (__DEBUG__) {
+            console.log(
+              'extractAndLoadSourceMaps() External source map "' + url + '"',
+            );
+          }
 
           promises.push(
             fetchFile(url).then(sourceMapContents => {
@@ -212,6 +235,10 @@ function findHookNames(
 
   hooksList.map(hook => {
     if (isNonDeclarativePrimitiveHook(hook)) {
+      if (__DEBUG__) {
+        console.log('findHookNames() Non declarative primitive hook');
+      }
+
       // Not all hooks have names (e.g. useEffect or useLayoutEffect)
       return null;
     }
@@ -248,6 +275,15 @@ function findHookNames(
       }).line;
     }
 
+    if (__DEBUG__) {
+      console.log(
+        'findHookNames() mapped line number',
+        lineNumber,
+        'to',
+        originalSourceLineNumber,
+      );
+    }
+
     if (originalSourceLineNumber === null) {
       return null;
     }
@@ -258,6 +294,10 @@ function findHookNames(
       ((hookSourceData.originalSourceCode: any): string),
       ((originalSourceLineNumber: any): number),
     );
+
+    if (__DEBUG__) {
+      console.log('findHookNames() Found name "' + (name || '-') + '"');
+    }
 
     map.set(hook, name);
   });
@@ -286,6 +326,14 @@ function loadSourceFiles(
           throw Error('Source code too large to parse');
         }
 
+        if (__DEBUG__) {
+          console.groupCollapsed(
+            'loadSourceFiles() fileName "' + fileName + '"',
+          );
+          console.log(runtimeSourceCode);
+          console.groupEnd();
+        }
+
         hookSourceData.runtimeSourceCode = runtimeSourceCode;
       }),
     );
@@ -300,6 +348,10 @@ async function parseSourceAST(
   // because the wasm file is automatically read from the file system
   // so we can avoid triggering a warning message about this.
   if (!__TEST__) {
+    if (__DEBUG__) {
+      console.log('parseSourceAST() Initializing source-map library ...');
+    }
+
     // $FlowFixMe
     const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
 
@@ -325,6 +377,14 @@ async function parseSourceAST(
               source,
               true,
             );
+
+            if (__DEBUG__) {
+              console.groupCollapsed(
+                'parseSourceAST() Extracted source code from source map',
+              );
+              console.log(originalSourceCode);
+              console.groupEnd();
+            }
 
             // Save the original source and parsed AST for later.
             // TODO (named hooks) Cache this across components, per source/file name.
