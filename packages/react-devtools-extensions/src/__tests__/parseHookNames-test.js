@@ -78,6 +78,7 @@ describe('parseHookNames', () => {
   });
 
   function expectHookNamesToEqual(map, expectedNamesArray) {
+    // Slightly hacky since it relies on the iterable order of values()
     expect(Array.from(map.values())).toEqual(expectedNamesArray);
   }
 
@@ -130,7 +131,7 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expectHookNamesToEqual(hookNames, [null, null]);
+    expectHookNamesToEqual(hookNames, []); // No hooks with names
   });
 
   it('should parse names for custom hooks', async () => {
@@ -153,7 +154,11 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expectHookNamesToEqual(hookNames, ['foo', null, 'baz']);
+    expectHookNamesToEqual(hookNames, [
+      'foo',
+      null, // Custom hooks can have names, but not when using destructuring.
+      'baz',
+    ]);
   });
 
   it('should return null for custom hooks without explicit names', async () => {
@@ -174,7 +179,10 @@ describe('parseHookNames', () => {
     }
 
     const hookNames = await getHookNamesForComponent(Component);
-    expectHookNamesToEqual(hookNames, [null, null]);
+    expectHookNamesToEqual(hookNames, [
+      null, // Custom hooks can have names, but this one does not even return a value.
+      null, // Custom hooks can have names, but not when using destructuring.
+    ]);
   });
 
   describe('inline and external source maps', () => {
@@ -230,8 +238,6 @@ describe('parseHookNames', () => {
           'count', // useState()
           'isDarkMode', // useIsDarkMode()
           'isDarkMode', // useIsDarkMode -> useState()
-          null,
-          null,
         ]);
       }
 
