@@ -39,7 +39,12 @@ export default function InspectedElementWrapper(_: Props) {
   const store = useContext(StoreContext);
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
-  const {inspectedElement, hookNames} = useContext(InspectedElementContext);
+  const {
+    hookNames,
+    inspectedElement,
+    parseHookNames,
+    toggleParseHookNames,
+  } = useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
@@ -270,6 +275,8 @@ export default function InspectedElementWrapper(_: Props) {
           element={element}
           hookNames={hookNames}
           inspectedElement={inspectedElement}
+          parseHookNames={parseHookNames}
+          toggleParseHookNames={toggleParseHookNames}
         />
       )}
     </div>

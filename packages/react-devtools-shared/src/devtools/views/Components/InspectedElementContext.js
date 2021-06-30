@@ -39,11 +39,14 @@ import type {
 
 type Path = Array<string | number>;
 type InspectPathFunction = (path: Path) => void;
+export type ToggleParseHookNames = () => void;
 
 type Context = {|
   hookNames: HookNames | null,
   inspectedElement: InspectedElement | null,
   inspectPaths: InspectPathFunction,
+  parseHookNames: boolean,
+  toggleParseHookNames: ToggleParseHookNames,
 |};
 
 export const InspectedElementContext = createContext<Context>(
@@ -61,7 +64,7 @@ export function InspectedElementContextController({children}: Props) {
   const loadHookNamesFunction = useContext(LoadHookNamesFunctionContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-  const {parseHookNames} = useContext(SettingsContext);
+  const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
 
   const refresh = useCacheRefresh();
 
@@ -77,6 +80,13 @@ export function InspectedElementContextController({children}: Props) {
     path: null,
   });
 
+  // Parse the currently inspected element's hook names.
+  // This may be enabled by default (for all elements)
+  // or it may be opted into on a per-element basis (if it's too slow to be on by default).
+  const [parseHookNames, setParseHookNames] = useState<boolean>(
+    parseHookNamesByDefault,
+  );
+
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
@@ -88,6 +98,8 @@ export function InspectedElementContextController({children}: Props) {
       element,
       path: null,
     });
+
+    setParseHookNames(parseHookNamesByDefault);
   }
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
@@ -113,6 +125,13 @@ export function InspectedElementContextController({children}: Props) {
       }
     }
   }
+
+  const toggleParseHookNames: ToggleParseHookNames = useCallback<ToggleParseHookNames>(() => {
+    startTransition(() => {
+      setParseHookNames(value => !value);
+      refresh();
+    });
+  }, [setParseHookNames]);
 
   const inspectPaths: InspectPathFunction = useCallback<InspectPathFunction>(
     (path: Path) => {
@@ -164,8 +183,16 @@ export function InspectedElementContextController({children}: Props) {
       hookNames,
       inspectedElement,
       inspectPaths,
+      parseHookNames,
+      toggleParseHookNames,
     }),
-    [hookNames, inspectedElement, inspectPaths],
+    [
+      hookNames,
+      inspectedElement,
+      inspectPaths,
+      parseHookNames,
+      toggleParseHookNames,
+    ],
   );
 
   return (

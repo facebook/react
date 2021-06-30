@@ -13,6 +13,7 @@ import {useCallback, useContext, useRef, useState} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Toggle from '../Toggle';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import KeyValue from './KeyValue';
 import {getMetaValueLabel, serializeHooksForCopy} from '../utils';
@@ -20,20 +21,26 @@ import Store from '../../store';
 import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import {
+  enableHookNameParsing,
+  enableProfilerChangedHookIndices,
+} from 'react-devtools-feature-flags';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {HookNames} from 'react-devtools-shared/src/types';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {ToggleParseHookNames} from './InspectedElementContext';
 
 type HooksTreeViewProps = {|
   bridge: FrontendBridge,
   element: Element,
   hookNames: HookNames | null,
   inspectedElement: InspectedElement,
+  parseHookNames: boolean,
   store: Store,
+  toggleParseHookNames: ToggleParseHookNames,
 |};
 
 export function InspectedElementHooksTree({
@@ -41,9 +48,21 @@ export function InspectedElementHooksTree({
   element,
   hookNames,
   inspectedElement,
+  parseHookNames,
   store,
+  toggleParseHookNames,
 }: HooksTreeViewProps) {
   const {hooks, id} = inspectedElement;
+
+  // Changing parseHookNames is done in a transition, because it suspends.
+  // This value is done outside of the transition, so the UI toggle feels responsive.
+  const [parseHookNamesOptimistic, setParseHookNamesOptimistic] = useState(
+    parseHookNames,
+  );
+  const handleChange = () => {
+    setParseHookNamesOptimistic(!parseHookNames);
+    toggleParseHookNames();
+  };
 
   const handleCopy = () => copy(serializeHooksForCopy(hooks));
 
@@ -54,6 +73,19 @@ export function InspectedElementHooksTree({
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
+          {enableHookNameParsing && !parseHookNames && (
+            <Toggle
+              isChecked={parseHookNamesOptimistic}
+              isDisabled={parseHookNamesOptimistic}
+              onChange={handleChange}
+              title={
+                parseHookNames
+                  ? 'Parse hook names'
+                  : 'Parse hook names (may be slow)'
+              }>
+              <ButtonIcon type="parse-hook-names" />
+            </Toggle>
+          )}
           <Button onClick={handleCopy} title="Copy to clipboard">
             <ButtonIcon type="copy" />
           </Button>

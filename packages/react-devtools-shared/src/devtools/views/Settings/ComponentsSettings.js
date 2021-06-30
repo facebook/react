@@ -269,7 +269,8 @@ export default function ComponentsSettings(_: {||}) {
             checked={parseHookNames}
             onChange={updateParseHookNames}
           />{' '}
-          Parse hook names from source code
+          Always parse hook names from source{' '}
+          <span className={styles.Warning}>(may be slow)</span>
         </label>
       )}
 
