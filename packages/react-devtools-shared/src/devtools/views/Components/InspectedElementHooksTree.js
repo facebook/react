@@ -228,7 +228,14 @@ function HookView({
   let isComplexDisplayValue = false;
 
   const hookName = hookNames != null ? hookNames.get(hook) : null;
-  const hookDisplayName = hookName ? `${name}(${hookName})` : name;
+  const hookDisplayName = hookName ? (
+    <>
+      {name}
+      {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+    </>
+  ) : (
+    name
+  );
 
   // Format data for display to mimic the props/state/context for now.
   if (type === 'string') {
