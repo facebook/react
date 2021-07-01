@@ -1044,34 +1044,6 @@ export function getExecutionContext(): ExecutionContext {
   return executionContext;
 }
 
-export function flushDiscreteUpdates() {
-  // TODO: Should be able to flush inside batchedUpdates, but not inside `act`.
-  // However, `act` uses `batchedUpdates`, so there's no way to distinguish
-  // those two cases. Need to fix this before exposing flushDiscreteUpdates
-  // as a public API.
-  if (
-    (executionContext & (BatchedContext | RenderContext | CommitContext)) !==
-    NoContext
-  ) {
-    if (__DEV__) {
-      if ((executionContext & RenderContext) !== NoContext) {
-        console.error(
-          'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
-            'already rendering.',
-        );
-      }
-    }
-    // We're already rendering, so we can't synchronously flush pending work.
-    // This is probably a nested event dispatch triggered by a lifecycle/effect,
-    // like `el.focus()`. Exit.
-    return;
-  }
-  flushSyncCallbacks();
-  // If the discrete updates scheduled passive effects, flush them now so that
-  // they fire before the next serial event.
-  flushPassiveEffects();
-}
-
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1142,7 +1114,10 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
   }
 }
 
-export function flushSync<A, R>(fn: A => R, a: A): R {
+export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
+  fn: A => R,
+  a: A,
+): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
@@ -1165,16 +1140,21 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     // the stack.
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       flushSyncCallbacks();
-    } else {
-      if (__DEV__) {
-        console.error(
-          'flushSync was called from inside a lifecycle method. React cannot ' +
-            'flush when React is already rendering. Consider moving this call to ' +
-            'a scheduler task or micro task.',
-        );
-      }
     }
   }
+}
+
+export function flushSync<A, R>(fn: A => R, a: A): R {
+  if (__DEV__) {
+    if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' +
+          'flush when React is already rendering. Consider moving this call to ' +
+          'a scheduler task or micro task.',
+      );
+    }
+  }
+  return flushSyncWithoutWarningIfAlreadyRendering(fn, a);
 }
 
 export function flushControlled(fn: () => mixed): void {

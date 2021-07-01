@@ -21,9 +21,9 @@ import {
   unbatchedUpdates as unbatchedUpdates_old,
   deferredUpdates as deferredUpdates_old,
   discreteUpdates as discreteUpdates_old,
-  flushDiscreteUpdates as flushDiscreteUpdates_old,
   flushControlled as flushControlled_old,
   flushSync as flushSync_old,
+  flushSyncWithoutWarningIfAlreadyRendering as flushSyncWithoutWarningIfAlreadyRendering_old,
   flushPassiveEffects as flushPassiveEffects_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
@@ -59,9 +59,9 @@ import {
   unbatchedUpdates as unbatchedUpdates_new,
   deferredUpdates as deferredUpdates_new,
   discreteUpdates as discreteUpdates_new,
-  flushDiscreteUpdates as flushDiscreteUpdates_new,
   flushControlled as flushControlled_new,
   flushSync as flushSync_new,
+  flushSyncWithoutWarningIfAlreadyRendering as flushSyncWithoutWarningIfAlreadyRendering_new,
   flushPassiveEffects as flushPassiveEffects_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
@@ -108,13 +108,13 @@ export const deferredUpdates = enableNewReconciler
 export const discreteUpdates = enableNewReconciler
   ? discreteUpdates_new
   : discreteUpdates_old;
-export const flushDiscreteUpdates = enableNewReconciler
-  ? flushDiscreteUpdates_new
-  : flushDiscreteUpdates_old;
 export const flushControlled = enableNewReconciler
   ? flushControlled_new
   : flushControlled_old;
 export const flushSync = enableNewReconciler ? flushSync_new : flushSync_old;
+export const flushSyncWithoutWarningIfAlreadyRendering = enableNewReconciler
+  ? flushSyncWithoutWarningIfAlreadyRendering_new
+  : flushSyncWithoutWarningIfAlreadyRendering_old;
 export const flushPassiveEffects = enableNewReconciler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;
