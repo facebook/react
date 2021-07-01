@@ -29,7 +29,7 @@ import {
   createContainer,
   findHostInstanceWithNoPortals,
   updateContainer,
-  unbatchedUpdates,
+  flushSyncWithoutWarningIfAlreadyRendering,
   getPublicRootInstance,
   findHostInstance,
   findHostInstanceWithWarning,
@@ -174,7 +174,7 @@ function legacyRenderSubtreeIntoContainer(
       };
     }
     // Initial mount should not be batched.
-    unbatchedUpdates(() => {
+    flushSyncWithoutWarningIfAlreadyRendering(() => {
       updateContainer(children, fiberRoot, parentComponent, callback);
     });
   } else {
@@ -357,7 +357,7 @@ export function unmountComponentAtNode(container: Container) {
     }
 
     // Unmount should not be batched.
-    unbatchedUpdates(() => {
+    flushSyncWithoutWarningIfAlreadyRendering(() => {
       legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
         // $FlowFixMe This should probably use `delete container._reactRootContainer`
         container._reactRootContainer = null;
