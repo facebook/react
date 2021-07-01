@@ -110,7 +110,7 @@ function TODO_scheduleIdleDOMSchedulerTask(fn) {
 
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
-    jest.resetModuleRegistry();
+    jest.resetModules();
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableCreateEventHandleAPI = true;

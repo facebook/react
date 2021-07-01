@@ -21,7 +21,7 @@ describe('SchedulerNoDOM', () => {
   // This is only meant to be used for testing purposes, like with jest's fake timer API.
   beforeEach(() => {
     jest.resetModules();
-    jest.useFakeTimers();
+    jest.useFakeTimers('legacy');
     delete global.setImmediate;
     jest.unmock('scheduler');
 
