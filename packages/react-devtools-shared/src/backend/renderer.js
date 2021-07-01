@@ -80,7 +80,10 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 import {format} from './utils';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import {
+  enableHookNameParsing,
+  enableProfilerChangedHookIndices,
+} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 
@@ -3092,6 +3095,7 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
+          enableHookNameParsing, // Include source location info for hooks
         );
       } finally {
         // Restore original console functionality.
