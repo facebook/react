@@ -17,7 +17,6 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
   batchedUpdates as batchedUpdatesImpl,
-  batchedEventUpdates,
   discreteUpdates,
   createContainer,
   updateContainer,
@@ -237,11 +236,7 @@ function createPortal(
   return createPortalImpl(children, containerTag, null, key);
 }
 
-setBatchingImplementation(
-  batchedUpdatesImpl,
-  discreteUpdates,
-  batchedEventUpdates,
-);
+setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
 
 function computeComponentStackForErrorReporting(reactTag: number): string {
   const fiber = getClosestInstanceFromNode(reactTag);

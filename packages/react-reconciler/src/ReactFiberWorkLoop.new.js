@@ -246,13 +246,12 @@ const {
 
 type ExecutionContext = number;
 
-export const NoContext = /*             */ 0b000000;
-const BatchedContext = /*               */ 0b000001;
-const EventContext = /*                 */ 0b000010;
-const LegacyUnbatchedContext = /*       */ 0b000100;
-const RenderContext = /*                */ 0b001000;
-const CommitContext = /*                */ 0b010000;
-export const RetryAfterError = /*       */ 0b100000;
+export const NoContext = /*             */ 0b00000;
+const BatchedContext = /*               */ 0b00001;
+const LegacyUnbatchedContext = /*       */ 0b00010;
+const RenderContext = /*                */ 0b00100;
+const CommitContext = /*                */ 0b01000;
+export const RetryAfterError = /*       */ 0b10000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
@@ -1089,22 +1088,6 @@ export function deferredUpdates<A>(fn: () => A): A {
 export function batchedUpdates<A, R>(fn: A => R, a: A): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  try {
-    return fn(a);
-  } finally {
-    executionContext = prevExecutionContext;
-    // If there were legacy sync updates, flush them at the end of the outer
-    // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
-      resetRenderTimer();
-      flushSyncCallbacksOnlyInLegacyMode();
-    }
-  }
-}
-
-export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
-  const prevExecutionContext = executionContext;
-  executionContext |= EventContext;
   try {
     return fn(a);
   } finally {

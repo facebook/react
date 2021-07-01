@@ -16,7 +16,6 @@ import './ReactFabricInjection';
 import {
   findHostInstance,
   findHostInstanceWithWarning,
-  batchedEventUpdates,
   batchedUpdates as batchedUpdatesImpl,
   discreteUpdates,
   createContainer,
@@ -246,11 +245,7 @@ function createPortal(
   return createPortalImpl(children, containerTag, null, key);
 }
 
-setBatchingImplementation(
-  batchedUpdatesImpl,
-  discreteUpdates,
-  batchedEventUpdates,
-);
+setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
 
 const roots = new Map();
 

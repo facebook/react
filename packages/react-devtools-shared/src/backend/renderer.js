@@ -2633,7 +2633,7 @@ export function attach(
   const UNMOUNTED = 3;
 
   // This function is copied from React and should be kept in sync:
-  // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
   function isFiberMountedImpl(fiber: Fiber): number {
     let node = fiber;
     let prevNode = null;
@@ -2689,7 +2689,7 @@ export function attach(
   }
 
   // This function is copied from React and should be kept in sync:
-  // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
   // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
   // BEGIN copied code
   function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {

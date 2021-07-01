@@ -171,9 +171,9 @@ jobs:
       - run:
           name: Download artifacts for base revision
           command: |
-              git fetch origin master
+              git fetch origin main
               cd ./scripts/release && yarn && cd ../../
-              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
+              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main)
               mv ./build2 ./base-build
       - persist_to_workspace:
           root: .
@@ -356,7 +356,7 @@ jobs:
       - run:
           name: Run publish script
           command: |
-            git fetch origin master
+            git fetch origin main
             cd ./scripts/release && yarn && cd ../../
             scripts/release/prepare-release-from-ci.js --skipTests -r << parameters.release_channel >> --commit=<< parameters.commit_sha >>
             cp ./scripts/release/ci-npmrc ~/.npmrc
@@ -414,7 +414,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - main
 
   # New workflow that will replace "stable" and "experimental"
   build_and_test:
@@ -491,14 +491,14 @@ workflows:
           filters:
             branches:
               ignore:
-                - master
+                - main
           requires:
             - setup
       - sizebot:
           filters:
             branches:
               ignore:
-                - master
+                - main
           requires:
             - get_base_build
             - yarn_build_combined
@@ -514,7 +514,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - main
     jobs:
       - setup
       - test_fuzz:
@@ -555,7 +555,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - main
     jobs:
       - setup
       - publish_prerelease:
