@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/server/ReactDOMFizzServerNode';
+export * from 'react-dom/src/server/ReactDOMLegacyServerStreamConfig';

@@ -15,6 +15,7 @@ let PropTypes;
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -25,6 +26,7 @@ describe('ReactIncrementalErrorHandling', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
   });
 
   function div(...children) {
@@ -308,7 +310,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('does not include offscreen work when retrying after an error', () => {
     function App(props) {
       if (props.isBroken) {
@@ -1843,7 +1845,7 @@ describe('ReactIncrementalErrorHandling', () => {
       throw Error('Oops');
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           root.render(<Oops />);
@@ -1886,11 +1888,11 @@ describe('ReactIncrementalErrorHandling', () => {
       return 'Everything is fine.';
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<Oops />);
     });
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Schedule a default pri and a low pri update on the root.
       root.render(<Oops />);
       React.startTransition(() => {

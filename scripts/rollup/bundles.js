@@ -56,17 +56,9 @@ const moduleTypes = {
   RENDERER_UTILS: 'RENDERER_UTILS',
   // Standalone reconciler for third-party renderers.
   RECONCILER: 'RECONCILER',
-  // Non-Fiber implementations like SSR and Shallow renderers.
-  NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
 
-const {
-  ISOMORPHIC,
-  RENDERER,
-  RENDERER_UTILS,
-  RECONCILER,
-  NON_FIBER_RENDERER,
-} = moduleTypes;
+const {ISOMORPHIC, RENDERER, RENDERER_UTILS, RECONCILER} = moduleTypes;
 
 const bundles = [
   /******* Isomorphic *******/
@@ -241,8 +233,9 @@ const bundles = [
     bundleTypes: __EXPERIMENTAL__
       ? [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD]
       : [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-dom/server.browser',
+    moduleType: RENDERER,
+    entry: 'react-dom/src/server/ReactDOMLegacyServerBrowser',
+    name: 'react-dom-server-legacy.browser',
     global: 'ReactDOMServer',
     externals: ['react'],
     babel: opts =>
@@ -254,8 +247,9 @@ const bundles = [
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-dom/server.node',
+    moduleType: RENDERER,
+    entry: 'react-dom/src/server/ReactDOMLegacyServerNode',
+    name: 'react-dom-server-legacy.node',
     externals: ['react', 'stream'],
     babel: opts =>
       Object.assign({}, opts, {
@@ -267,27 +261,27 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
-    bundleTypes: __EXPERIMENTAL__
-      ? [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD]
-      : [],
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-fizz.browser',
-    global: 'ReactDOMFizzServer',
-    externals: ['react', 'react-dom/server'],
+    entry: 'react-dom/src/server/ReactDOMFizzServerBrowser',
+    name: 'react-dom-server.browser',
+    global: 'ReactDOMServer',
+    externals: ['react'],
   },
   {
-    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-fizz.node',
-    global: 'ReactDOMFizzServer',
-    externals: ['react', 'react-dom/server'],
+    entry: 'react-dom/src/server/ReactDOMFizzServerNode',
+    name: 'react-dom-server.node',
+    global: 'ReactDOMServer',
+    externals: ['react'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-server-dom-relay/src/ReactDOMServerFB',
     global: 'ReactDOMServer',
-    externals: ['react', 'react-dom/server'],
+    externals: ['react'],
   },
 
   /******* React Server DOM Webpack Writer *******/
@@ -296,14 +290,14 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/writer.browser.server',
     global: 'ReactServerDOMWriter',
-    externals: ['react', 'react-dom/server'],
+    externals: ['react'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack/writer.node.server',
     global: 'ReactServerDOMWriter',
-    externals: ['react', 'react-dom/server'],
+    externals: ['react'],
   },
 
   /******* React Server DOM Webpack Reader *******/
@@ -350,7 +344,6 @@ const bundles = [
     global: 'ReactFlightDOMRelayServer', // TODO: Rename to Writer
     externals: [
       'react',
-      'react-dom/server',
       'ReactFlightDOMRelayServerIntegration',
       'JSResourceReference',
     ],
@@ -741,7 +734,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
-    externals: [],
+    externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
   },
 
   /******* ESLint Plugin for Hooks *******/
@@ -795,7 +788,7 @@ deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
 function getOriginalFilename(bundle, bundleType) {
-  let name = bundle.entry;
+  let name = bundle.name || bundle.entry;
   const globalName = bundle.global;
   // we do this to replace / to -, for react-dom/server
   name = name.replace('/index.', '.').replace('/', '-');

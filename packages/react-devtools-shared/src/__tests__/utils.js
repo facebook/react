@@ -162,6 +162,16 @@ export function getRendererID(): number {
   return parseInt(id, 10);
 }
 
+export function legacyRender(elements, container) {
+  const ReactDOM = require('react-dom');
+  withErrorsOrWarningsIgnored(
+    ['ReactDOM.render is no longer supported in React 18'],
+    () => {
+      ReactDOM.render(elements, container);
+    },
+  );
+}
+
 export function requireTestRenderer(): ReactTestRenderer {
   let hook;
   try {
@@ -228,9 +238,15 @@ export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
   errorOrWarningMessages: string[],
   fn: () => T,
 ): T {
+  // withErrorsOrWarningsIgnored() may be nested.
+  const prev = global._ignoredErrorOrWarningMessages || [];
+
   let resetIgnoredErrorOrWarningMessages = true;
   try {
-    global._ignoredErrorOrWarningMessages = errorOrWarningMessages;
+    global._ignoredErrorOrWarningMessages = [
+      ...prev,
+      ...errorOrWarningMessages,
+    ];
     const maybeThenable = fn();
     if (
       maybeThenable !== undefined &&
@@ -239,16 +255,16 @@ export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
       resetIgnoredErrorOrWarningMessages = false;
       return maybeThenable.then(
         () => {
-          global._ignoredErrorOrWarningMessages = [];
+          global._ignoredErrorOrWarningMessages = prev;
         },
         () => {
-          global._ignoredErrorOrWarningMessages = [];
+          global._ignoredErrorOrWarningMessages = prev;
         },
       );
     }
   } finally {
     if (resetIgnoredErrorOrWarningMessages) {
-      global._ignoredErrorOrWarningMessages = [];
+      global._ignoredErrorOrWarningMessages = prev;
     }
   }
 }

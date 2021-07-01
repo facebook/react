@@ -23,7 +23,6 @@ import {
   writeChunk,
   stringToChunk,
   stringToPrecomputedChunk,
-  isPrimaryStreamConfig,
 } from 'react-server/src/ReactServerStreamConfig';
 
 import {
@@ -51,7 +50,7 @@ import isArray from 'shared/isArray';
 
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.
-export const isPrimaryRenderer = isPrimaryStreamConfig;
+export const isPrimaryRenderer = true;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
@@ -63,18 +62,20 @@ export type ResponseState = {
   nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
-  sentClientRenderFunction: boolean,
+  sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
+  ...
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
-  identifierPrefix: string = '',
+  identifierPrefix: string | void,
 ): ResponseState {
+  const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   return {
-    placeholderPrefix: stringToPrecomputedChunk(identifierPrefix + 'P:'),
-    segmentPrefix: stringToPrecomputedChunk(identifierPrefix + 'S:'),
-    boundaryPrefix: identifierPrefix + 'B:',
-    opaqueIdentifierPrefix: identifierPrefix + 'R:',
+    placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
+    segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
+    boundaryPrefix: idPrefix + 'B:',
+    opaqueIdentifierPrefix: idPrefix + 'R:',
     nextSuspenseID: 0,
     nextOpaqueID: 0,
     sentCompleteSegmentFunction: false,
@@ -86,9 +87,10 @@ export function createResponseState(
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
-const HTML_MODE = 0;
-const SVG_MODE = 1;
-const MATHML_MODE = 2;
+const ROOT_HTML_MODE = 0; // Used for the root most element tag.
+export const HTML_MODE = 1;
+const SVG_MODE = 2;
+const MATHML_MODE = 3;
 const HTML_TABLE_MODE = 4;
 const HTML_TABLE_BODY_MODE = 5;
 const HTML_TABLE_ROW_MODE = 6;
@@ -120,7 +122,7 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       ? SVG_MODE
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
       ? MATHML_MODE
-      : HTML_MODE;
+      : ROOT_HTML_MODE;
   return createFormatContext(insertionMode, null);
 }
 
@@ -157,6 +159,10 @@ export function getChildFormatContext(
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
+    return createFormatContext(HTML_MODE, null);
+  }
+  if (parentContext.insertionMode === ROOT_HTML_MODE) {
+    // We've emitted the root and is now in plain HTML mode.
     return createFormatContext(HTML_MODE, null);
   }
   return parentContext;
@@ -568,19 +574,22 @@ let didWarnSelectedSetOnOption = false;
 
 function checkSelectProp(props, propName) {
   if (__DEV__) {
-    const array = isArray(props[propName]);
-    if (props.multiple && !array) {
-      console.error(
-        'The `%s` prop supplied to <select> must be an array if ' +
-          '`multiple` is true.',
-        propName,
-      );
-    } else if (!props.multiple && array) {
-      console.error(
-        'The `%s` prop supplied to <select> must be a scalar ' +
-          'value if `multiple` is false.',
-        propName,
-      );
+    const value = props[propName];
+    if (value != null) {
+      const array = isArray(value);
+      if (props.multiple && !array) {
+        console.error(
+          'The `%s` prop supplied to <select> must be an array if ' +
+            '`multiple` is true.',
+          propName,
+        );
+      } else if (!props.multiple && array) {
+        console.error(
+          'The `%s` prop supplied to <select> must be a scalar ' +
+            'value if `multiple` is false.',
+          propName,
+        );
+      }
     }
   }
 }
@@ -1258,6 +1267,8 @@ function startChunkForTag(tag: string): PrecomputedChunk {
   return tagStartChunk;
 }
 
+const DOCTYPE: PrecomputedChunk = stringToPrecomputedChunk('<!DOCTYPE html>');
+
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
   type: string,
@@ -1367,6 +1378,21 @@ export function pushStartInstance(
         assignID,
       );
     }
+    case 'html': {
+      if (formatContext.insertionMode === ROOT_HTML_MODE) {
+        // If we're rendering the html tag and we're at the root (i.e. not in foreignObject)
+        // then we also emit the DOCTYPE as part of the root content as a convenience for
+        // rendering the whole document.
+        target.push(DOCTYPE);
+      }
+      return pushStartGenericElement(
+        target,
+        props,
+        type,
+        responseState,
+        assignID,
+      );
+    }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
         // Generic element
@@ -1456,23 +1482,41 @@ const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   return writeChunk(destination, startCompletedSuspenseBoundary);
 }
 export function writeStartPendingSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   return writeChunk(destination, startPendingSuspenseBoundary);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
+  responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
   return writeChunk(destination, startClientRenderedSuspenseBoundary);
 }
-export function writeEndSuspenseBoundary(destination: Destination): boolean {
+export function writeEndCompletedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeChunk(destination, endSuspenseBoundary);
+}
+export function writeEndPendingSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return writeChunk(destination, endSuspenseBoundary);
+}
+export function writeEndClientRenderedSuspenseBoundary(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
   return writeChunk(destination, endSuspenseBoundary);
 }
 
@@ -1519,6 +1563,7 @@ export function writeStartSegment(
   id: number,
 ): boolean {
   switch (formatContext.insertionMode) {
+    case ROOT_HTML_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
       writeChunk(destination, responseState.segmentPrefix);
@@ -1575,6 +1620,7 @@ export function writeEndSegment(
   formatContext: FormatContext,
 ): boolean {
   switch (formatContext.insertionMode) {
+    case ROOT_HTML_MODE:
     case HTML_MODE: {
       return writeChunk(destination, endSegmentHTML);
     }

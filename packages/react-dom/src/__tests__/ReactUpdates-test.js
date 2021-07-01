@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
   });
 
@@ -1300,7 +1300,7 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
     const container = document.createElement('div');
 

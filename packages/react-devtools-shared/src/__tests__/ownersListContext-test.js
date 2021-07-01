@@ -14,9 +14,9 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('OwnersListContext', () => {
   let React;
-  let ReactDOM;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
+  let legacyRender;
   let store: Store;
   let utils;
 
@@ -30,12 +30,13 @@ describe('OwnersListContext', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
+    legacyRender = utils.legacyRender;
+
     bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
 
     React = require('react');
-    ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
     BridgeContext = require('react-devtools-shared/src/devtools/views/context')
@@ -73,7 +74,7 @@ describe('OwnersListContext', () => {
     const Child = () => null;
 
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div')),
+      legacyRender(<Grandparent />, document.createElement('div')),
     );
 
     expect(store).toMatchSnapshot('mount');
@@ -132,7 +133,7 @@ describe('OwnersListContext', () => {
     const Child = () => null;
 
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div')),
+      legacyRender(<Grandparent />, document.createElement('div')),
     );
 
     expect(store).toMatchSnapshot('mount');
@@ -170,7 +171,7 @@ describe('OwnersListContext', () => {
     const Parent = () => null;
 
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div')),
+      legacyRender(<Grandparent />, document.createElement('div')),
     );
 
     expect(store).toMatchSnapshot('mount');
@@ -211,7 +212,7 @@ describe('OwnersListContext', () => {
     };
 
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div')),
+      legacyRender(<Grandparent />, document.createElement('div')),
     );
 
     let didFinish = false;

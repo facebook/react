@@ -36,7 +36,7 @@ describe('ReactTransition', () => {
     Suspense = React.Suspense;
     startTransition = React.startTransition;
     getCacheForType = React.unstable_getCacheForType;
-    act = ReactNoop.act;
+    act = require('jest-react').act;
 
     caches = [];
     seededCache = null;
@@ -551,7 +551,7 @@ describe('ReactTransition', () => {
   test('interrupt a refresh transition if a new transition is scheduled', async () => {
     const root = ReactNoop.createRoot();
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <>
           <Suspense fallback={<Text text="Loading..." />} />
@@ -562,7 +562,7 @@ describe('ReactTransition', () => {
     expect(Scheduler).toHaveYielded(['Initial']);
     expect(root).toMatchRenderedOutput('Initial');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Start a refresh transition
       startTransition(() => {
         root.render(
@@ -729,13 +729,13 @@ describe('ReactTransition', () => {
 
       const root = ReactNoop.createRoot();
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         root.render(<App shouldSuspend={false} step={0} />);
       });
       expect(Scheduler).toHaveYielded(['A0', 'B0', 'C0']);
       expect(root).toMatchRenderedOutput('A0B0C0');
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         // This update will suspend.
         startTransition(() => {
           root.render(<App shouldSuspend={true} step={1} />);
@@ -911,7 +911,7 @@ describe('ReactTransition', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([
@@ -921,7 +921,7 @@ describe('ReactTransition', () => {
     ]);
     expect(root).toMatchRenderedOutput('Transition pri: 0, Normal pri: 0');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateTransitionPri();
 
       expect(Scheduler).toFlushAndYieldThrough([

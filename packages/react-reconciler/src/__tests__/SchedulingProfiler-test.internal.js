@@ -26,6 +26,7 @@ describe('SchedulingProfiler', () => {
   let ReactTestRenderer;
   let ReactNoop;
   let Scheduler;
+  let act;
 
   let clearedMarks;
   let featureDetectionMarkName = null;
@@ -86,6 +87,7 @@ describe('SchedulingProfiler', () => {
     ReactNoop = require('react-noop-renderer');
 
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
 
     const SchedulingProfiler = require('react-reconciler/src/SchedulingProfiler');
     formatLanes = SchedulingProfiler.formatLanes;
@@ -518,7 +520,7 @@ describe('SchedulingProfiler', () => {
       return didMount;
     }
 
-    ReactTestRenderer.unstable_concurrentAct(() => {
+    act(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
@@ -553,7 +555,7 @@ describe('SchedulingProfiler', () => {
       return didRender;
     }
 
-    ReactTestRenderer.unstable_concurrentAct(() => {
+    act(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 

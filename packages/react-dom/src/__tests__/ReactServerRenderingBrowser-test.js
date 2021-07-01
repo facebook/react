@@ -24,12 +24,6 @@ describe('ReactServerRenderingBrowser', () => {
     ReactDOMServerBrowser = require('react-dom/server.browser');
   });
 
-  it('provides the same top-level API as react-dom/server', () => {
-    expect(Object.keys(ReactDOMServerBrowser)).toEqual(
-      Object.keys(ReactDOMServer),
-    );
-  });
-
   it('returns the same results as react-dom/server', () => {
     class Nice extends React.Component {
       render() {

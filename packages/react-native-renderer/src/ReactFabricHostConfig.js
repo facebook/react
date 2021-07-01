@@ -25,7 +25,10 @@ import invariant from 'shared/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
-import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  DefaultEventPriority,
+  DiscreteEventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 // Modules provided by RN:
 import {
@@ -48,6 +51,9 @@ const {
   measure: fabricMeasure,
   measureInWindow: fabricMeasureInWindow,
   measureLayout: fabricMeasureLayout,
+  unstable_DefaultEventPriority: FabricDefaultPriority,
+  unstable_DiscreteEventPriority: FabricDiscretePriority,
+  unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
@@ -343,6 +349,20 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 }
 
 export function getCurrentEventPriority(): * {
+  const currentEventPriority = fabricGetCurrentEventPriority
+    ? fabricGetCurrentEventPriority()
+    : null;
+
+  if (currentEventPriority != null) {
+    switch (currentEventPriority) {
+      case FabricDiscretePriority:
+        return DiscreteEventPriority;
+      case FabricDefaultPriority:
+      default:
+        return DefaultEventPriority;
+    }
+  }
+
   return DefaultEventPriority;
 }
 

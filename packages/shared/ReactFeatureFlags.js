@@ -25,7 +25,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
 // this feature flag only impacts StrictEffectsMode.
-export const enableStrictEffects = false;
+export const enableStrictEffects = __DEV__;
 
 // If TRUE, trees rendered with createRoot will be StrictEffectsMode.
 // If FALSE, these trees will be StrictLegacyMode.
@@ -78,7 +78,6 @@ export const enableCreateEventHandleAPI = false;
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
-export const warnAboutUnmockedScheduler = false;
 
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
@@ -123,12 +122,12 @@ export const skipUnmountedBoundaries = false;
 //
 // It's an enum so that we can experiment with different levels of
 // aggressiveness.
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 3;
 
 // Destroy layout effects for components that are hidden because something suspended in an update
 // and recreate them when they are shown again (after the suspended boundary has resolved).
 // Note that this should be an uncommon use case and can be avoided by using the transition API.
-export const enableSuspenseLayoutEffectSemantics = false;
+export const enableSuspenseLayoutEffectSemantics = true;
 
 // --------------------------
 // Future APIs to be deprecated
@@ -158,7 +157,7 @@ export const enableLegacyFBSupport = false;
 // not currently rendering. We treat them the same as if they came from an
 // interleaved event. Remove this flag once we have migrated to the
 // new behavior.
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableUseRefAccessWarning = false;
 

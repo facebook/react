@@ -26,7 +26,6 @@ import {
   flushControlled as flushControlled_old,
   flushSync as flushSync_old,
   flushPassiveEffects as flushPassiveEffects_old,
-  IsThisRendererActing as IsThisRendererActing_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
   attemptDiscreteHydration as attemptDiscreteHydration_old,
@@ -35,9 +34,9 @@ import {
   findHostInstance as findHostInstance_old,
   findHostInstanceWithWarning as findHostInstanceWithWarning_old,
   findHostInstanceWithNoPortals as findHostInstanceWithNoPortals_old,
+  shouldError as shouldError_old,
   shouldSuspend as shouldSuspend_old,
   injectIntoDevTools as injectIntoDevTools_old,
-  act as act_old,
   createPortal as createPortal_old,
   createComponentSelector as createComponentSelector_old,
   createHasPseudoClassSelector as createHasPseudoClassSelector_old,
@@ -66,7 +65,6 @@ import {
   flushControlled as flushControlled_new,
   flushSync as flushSync_new,
   flushPassiveEffects as flushPassiveEffects_new,
-  IsThisRendererActing as IsThisRendererActing_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
   attemptDiscreteHydration as attemptDiscreteHydration_new,
@@ -75,9 +73,9 @@ import {
   findHostInstance as findHostInstance_new,
   findHostInstanceWithWarning as findHostInstanceWithWarning_new,
   findHostInstanceWithNoPortals as findHostInstanceWithNoPortals_new,
+  shouldError as shouldError_new,
   shouldSuspend as shouldSuspend_new,
   injectIntoDevTools as injectIntoDevTools_new,
-  act as act_new,
   createPortal as createPortal_new,
   createComponentSelector as createComponentSelector_new,
   createHasPseudoClassSelector as createHasPseudoClassSelector_new,
@@ -125,9 +123,6 @@ export const flushSync = enableNewReconciler ? flushSync_new : flushSync_old;
 export const flushPassiveEffects = enableNewReconciler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;
-export const IsThisRendererActing = enableNewReconciler
-  ? IsThisRendererActing_new
-  : IsThisRendererActing_old;
 export const getPublicRootInstance = enableNewReconciler
   ? getPublicRootInstance_new
   : getPublicRootInstance_old;
@@ -155,13 +150,15 @@ export const findHostInstanceWithWarning = enableNewReconciler
 export const findHostInstanceWithNoPortals = enableNewReconciler
   ? findHostInstanceWithNoPortals_new
   : findHostInstanceWithNoPortals_old;
+export const shouldError = enableNewReconciler
+  ? shouldError_new
+  : shouldError_old;
 export const shouldSuspend = enableNewReconciler
   ? shouldSuspend_new
   : shouldSuspend_old;
 export const injectIntoDevTools = enableNewReconciler
   ? injectIntoDevTools_new
   : injectIntoDevTools_old;
-export const act = enableNewReconciler ? act_new : act_old;
 export const createPortal = enableNewReconciler
   ? createPortal_new
   : createPortal_old;

@@ -23,7 +23,7 @@ describe('ReactDOMHooks', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
 
     container = document.createElement('div');
     document.body.appendChild(container);

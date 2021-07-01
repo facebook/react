@@ -49,6 +49,7 @@ describe('rendering React components at document', () => {
       }
 
       const markup = ReactDOMServer.renderToString(<Root hello="world" />);
+      expect(markup).not.toContain('DOCTYPE');
       const testDocument = getTestDocument(markup);
       const body = testDocument.body;
 

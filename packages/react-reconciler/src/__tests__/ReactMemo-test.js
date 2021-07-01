@@ -17,6 +17,7 @@ let React;
 let ReactNoop;
 let Suspense;
 let Scheduler;
+let act;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -26,6 +27,7 @@ describe('memo', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     ({Suspense} = React);
   });
 
@@ -447,12 +449,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await ReactNoop.act(async () => {
+        await act(async () => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);
@@ -483,12 +485,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await ReactNoop.act(async () => {
+        await act(async () => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);

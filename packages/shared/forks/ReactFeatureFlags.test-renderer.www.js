@@ -29,7 +29,6 @@ export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
-export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
@@ -45,11 +44,11 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 3;
 export const enableSuspenseLayoutEffectSemantics = false;
 
 export const enableNewReconciler = false;
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableStrictEffects = true;
 export const createRootStrictEffectsByDefault = false;

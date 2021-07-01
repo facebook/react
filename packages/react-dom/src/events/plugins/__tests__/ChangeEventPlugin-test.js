@@ -11,9 +11,9 @@
 
 let React;
 let ReactDOM;
-let TestUtils;
 let ReactFeatureFlags;
 let Scheduler;
+let act;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -56,7 +56,7 @@ describe('ChangeEventPlugin', () => {
     };
     React = require('react');
     ReactDOM = require('react-dom');
-    TestUtils = require('react-dom/test-utils');
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -727,7 +727,6 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
-      const {unstable_concurrentAct: act} = TestUtils;
       const {useState} = React;
 
       const root = ReactDOM.createRoot(container);

@@ -39,10 +39,13 @@ const run = async ({build, cwd, releaseChannel}) => {
     await exec(`rm -rf ./build/node_modules`, {cwd});
   }
   let sourceDir;
+  // TODO: Rename release channel to `next`
   if (releaseChannel === 'stable') {
     sourceDir = 'oss-stable';
   } else if (releaseChannel === 'experimental') {
     sourceDir = 'oss-experimental';
+  } else if (releaseChannel === 'latest') {
+    sourceDir = 'oss-stable-semver';
   } else {
     console.error('Internal error: Invalid release channel: ' + releaseChannel);
     process.exit(releaseChannel);

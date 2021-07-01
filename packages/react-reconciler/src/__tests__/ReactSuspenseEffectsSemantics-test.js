@@ -10,6 +10,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let Suspense;
 let getCacheForType;
 let caches;
@@ -23,6 +24,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     Suspense = React.Suspense;
 
     getCacheForType = React.unstable_getCacheForType;
@@ -253,7 +255,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount and suspend.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -280,7 +282,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -302,7 +304,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outside'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -370,7 +372,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount and suspend.
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.renderLegacySyncRoot(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -402,7 +404,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -419,7 +421,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outside'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -467,7 +469,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.renderLegacySyncRoot(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -491,7 +493,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Schedule an update that causes React to suspend.
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.renderLegacySyncRoot(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -527,7 +529,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -544,7 +546,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outside'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -590,7 +592,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       }
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -614,7 +616,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Schedule an update that causes React to suspend.
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -652,7 +654,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -673,7 +675,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outside'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -742,7 +744,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -763,7 +765,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Schedule an update that causes React to suspend.
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -801,7 +803,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -821,7 +823,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outside'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -863,7 +865,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -880,7 +882,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Outer', [span('Inner')])]);
 
       // Schedule an update that causes React to suspend.
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -911,7 +913,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -930,7 +932,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outer', [span('Inner')]),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -975,7 +977,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -994,7 +996,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Schedule an update that causes React to suspend.
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async" ms={1000} />
@@ -1028,7 +1030,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -1046,7 +1048,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outer', [span('MemoizedInner')]),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -1078,7 +1080,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -1092,7 +1094,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Outer'), span('Inner')]);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />} />,
         );
@@ -1115,7 +1117,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the outer Suspense subtree (outer effects and inner fallback effects should be destroyed)
       // (This check also ensures we don't destroy effects for mounted inner fallback.)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
@@ -1144,7 +1146,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Show the inner Susepnse subtree (no effects should be recreated)
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('InnerAsync_1');
       });
       expect(Scheduler).toHaveYielded([
@@ -1161,7 +1163,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Suspend the inner Suspense subtree (no effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
@@ -1186,7 +1188,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Show the outer Susepnse subtree (only outer effects should be recreated)
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('OuterAsync_1');
       });
       expect(Scheduler).toHaveYielded([
@@ -1210,7 +1212,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Show the inner Susepnse subtree (only inner effects should be recreated)
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('InnerAsync_2');
       });
       expect(Scheduler).toHaveYielded([
@@ -1230,7 +1232,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Suspend the outer Suspense subtree (all effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_2" ms={1000} />}
@@ -1260,7 +1262,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Show the outer Suspense subtree (all effects should be recreated)
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('OuterAsync_2');
       });
       expect(Scheduler).toHaveYielded([
@@ -1301,7 +1303,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -1315,7 +1317,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Outer'), span('Inner')]);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App innerChildren={<AsyncText text="InnerAsync_1" ms={1000} />} />,
         );
@@ -1338,7 +1340,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspend the outer Suspense subtree (outer effects and inner fallback effects should be destroyed)
       // (This check also ensures we don't destroy effects for mounted inner fallback.)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OuterAsync_1" ms={1000} />}
@@ -1367,7 +1369,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolve both suspended trees.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('OuterAsync_1');
         await resolveText('InnerAsync_1');
       });
@@ -1419,7 +1421,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -1436,7 +1438,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Suspend the outer shell
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App outerChildren={<AsyncText text="OutsideAsync" ms={1000} />} />,
         );
@@ -1472,7 +1474,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Suspend the fallback and verify that it's effects get cleaned up as well
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App
             fallbackChildren={<AsyncText text="FallbackAsync" ms={1000} />}
@@ -1514,7 +1516,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving both resources should cleanup fallabck effects and recreate main effects
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('FallbackAsync');
         await resolveText('OutsideAsync');
       });
@@ -1562,7 +1564,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -1579,7 +1581,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Suspend both the outer boundary and the fallback
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App
             outerChildren={<AsyncText text="OutsideAsync" ms={1000} />}
@@ -1612,7 +1614,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the inside fallback
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('FallbackAsync');
       });
       expect(Scheduler).toHaveYielded([
@@ -1634,7 +1636,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the outer fallback only
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('OutsideAsync');
       });
       expect(Scheduler).toHaveYielded([
@@ -1679,7 +1681,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App shouldSuspend={false} />);
       });
       expect(Scheduler).toHaveYielded([
@@ -1697,7 +1699,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Suspending a component in the middle of the tree
       // should still properly cleanup effects deeper in the tree
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App shouldSuspend={true} />);
       });
       expect(Scheduler).toHaveYielded([
@@ -1724,7 +1726,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving should cleanup.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Suspend');
       });
       expect(Scheduler).toHaveYielded([
@@ -1783,7 +1785,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           );
         }
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App />
@@ -1810,7 +1812,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ]);
 
         // Schedule an update that causes React to suspend.
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
@@ -1841,7 +1843,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
         // Resolve the pending suspense and throw
         componentDidMountShouldThrow = true;
-        await ReactNoop.act(async () => {
+        await act(async () => {
           await resolveText('Async');
         });
         expect(Scheduler).toHaveYielded([
@@ -1920,7 +1922,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           );
         }
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App />
@@ -1947,7 +1949,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ]);
 
         // Schedule an update that suspends and triggers our error code.
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
@@ -2036,7 +2038,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           );
         }
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App />
@@ -2063,7 +2065,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ]);
 
         // Schedule an update that causes React to suspend.
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
@@ -2094,7 +2096,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
         // Resolve the pending suspense and throw
         useLayoutEffectShouldThrow = true;
-        await ReactNoop.act(async () => {
+        await act(async () => {
           await resolveText('Async');
         });
         expect(Scheduler).toHaveYielded([
@@ -2172,7 +2174,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           );
         }
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App />
@@ -2199,7 +2201,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ]);
 
         // Schedule an update that suspends and triggers our error code.
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
@@ -2279,7 +2281,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       }
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -2295,7 +2297,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Schedule an update that causes React to suspend.
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App>
             <AsyncText text="Async_1" ms={1000} />
@@ -2330,7 +2332,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async_1');
       });
       expect(Scheduler).toHaveYielded([
@@ -2346,7 +2348,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async_2');
       });
       expect(Scheduler).toHaveYielded([
@@ -2369,7 +2371,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Class'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -2428,7 +2430,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       }
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -2447,7 +2449,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Schedule an update that causes React to suspend.
       textToRead = 'A';
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -2480,7 +2482,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // Resolving the suspended resource should re-create inner layout effects.
       textToRead = 'B';
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('A');
       });
       expect(Scheduler).toHaveYielded([
@@ -2497,7 +2499,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('B');
       });
       expect(Scheduler).toHaveYielded([
@@ -2514,7 +2516,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Class'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -2602,7 +2604,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         );
       }
 
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.renderLegacySyncRoot(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -2620,7 +2622,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.renderLegacySyncRoot(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -2641,7 +2643,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Fallback')]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -2653,7 +2655,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Async')]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.renderLegacySyncRoot(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -2681,7 +2683,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -2700,7 +2702,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -2726,7 +2728,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -2750,7 +2752,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('refCallback'),
       ]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -2787,7 +2789,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -2805,7 +2807,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -2829,7 +2831,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Fallback')]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -2851,7 +2853,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Async')]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -2892,7 +2894,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -2910,7 +2912,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -2934,7 +2936,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Fallback')]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -2956,7 +2958,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Async')]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -3011,7 +3013,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       }
 
       // Mount
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(<App />);
       });
       expect(Scheduler).toHaveYielded([
@@ -3023,7 +3025,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([]);
 
       // Suspend the inner Suspense subtree (only inner effects should be destroyed)
-      ReactNoop.act(() => {
+      act(() => {
         ReactNoop.render(
           <App children={<AsyncText text="Async" ms={1000} />} />,
         );
@@ -3040,7 +3042,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Fallback')]);
 
       // Resolving the suspended resource should re-create inner layout effects.
-      await ReactNoop.act(async () => {
+      await act(async () => {
         await resolveText('Async');
       });
       expect(Scheduler).toHaveYielded([
@@ -3055,7 +3057,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Async')]);
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         ReactNoop.render(null);
       });
       expect(Scheduler).toHaveYielded([
@@ -3107,7 +3109,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           );
         }
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App />
@@ -3134,7 +3136,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         ]);
 
         // Schedule an update that causes React to suspend.
-        await ReactNoop.act(async () => {
+        await act(async () => {
           ReactNoop.render(
             <ErrorBoundary fallback={<Text text="Error" />}>
               <App>
@@ -3165,7 +3167,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
         // Resolve the pending suspense and throw
         useRefCallbackShouldThrow = true;
-        await ReactNoop.act(async () => {
+        await act(async () => {
           await resolveText('Async');
         });
         expect(Scheduler).toHaveYielded([

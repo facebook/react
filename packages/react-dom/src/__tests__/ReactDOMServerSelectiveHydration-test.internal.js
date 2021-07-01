@@ -14,7 +14,6 @@ import {createEventTarget} from 'dom-event-testing-library';
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactTestUtils;
 let Scheduler;
 let Suspense;
 let act;
@@ -118,8 +117,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
 
@@ -369,7 +367,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates the target boundary synchronously during a click (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let isServerRendering = true;
@@ -438,7 +436,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates at higher pri if sync did not work first time (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -526,7 +524,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates at higher pri for secondary discrete events (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -812,7 +810,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -861,7 +859,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toFlushAndYield(['App', 'C', 'B', 'A']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('hydrates before an update even if hydration moves away from it', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
