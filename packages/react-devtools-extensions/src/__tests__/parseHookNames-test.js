@@ -246,8 +246,7 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
     });
 
-    // TODO (named hooks) The useContext() line number is slightly off
-    xit('should work for external hooks', async () => {
+    it('should work for external hooks', async () => {
       async function test(path) {
         const Component = require(path).Component;
         const hookNames = await getHookNamesForComponent(Component);
@@ -257,7 +256,9 @@ describe('parseHookNames', () => {
         ]);
       }
 
-      await test('./__source__/ComponentWithExternalCustomHooks'); // original source (uncompiled)
+      // We can't test the uncompiled source here, because it either needs to get transformed,
+      // which would break the source mapping, or the import statements will fail.
+
       await test(
         './__source__/__compiled__/inline/ComponentWithExternalCustomHooks',
       ); // inline source map
