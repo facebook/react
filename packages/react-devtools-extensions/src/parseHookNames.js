@@ -14,7 +14,7 @@ import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import LRU from 'lru-cache';
 import {SourceMapConsumer} from 'source-map';
 import {getHookName, isNonDeclarativePrimitiveHook} from './astUtils';
-import {sourceMapsAreAppliedToErrors} from './ErrorTester';
+import {areSourceMapsAppliedToErrors} from './ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {
@@ -313,7 +313,7 @@ function findHookNames(
     const sourceConsumer = hookSourceData.sourceConsumer;
 
     let originalSourceLineNumber;
-    if (sourceMapsAreAppliedToErrors || !sourceConsumer) {
+    if (areSourceMapsAppliedToErrors() || !sourceConsumer) {
       // Either the current environment automatically applies source maps to errors,
       // or the current code had no source map to begin with.
       // Either way, we don't need to convert the Error stack frame locations.
