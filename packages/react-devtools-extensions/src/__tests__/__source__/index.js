@@ -7,10 +7,10 @@
  * @flow
  */
 
-// export {Component as ComponentWithCustomHook} from './ComponentWithCustomHook';
-// export {Component as ComponentWithExternalCustomHooks} from './ComponentWithExternalCustomHooks';
+export {Component as ComponentWithCustomHook} from './ComponentWithCustomHook';
+export {Component as ComponentWithExternalCustomHooks} from './ComponentWithExternalCustomHooks';
 export {Component as Example} from './Example';
-// export {Component as InlineRequire} from './InlineRequire';
-// import * as ToDoList from './ToDoList';
-// export {ToDoList};
-// export {default as useTheme} from './useTheme';
+export {Component as InlineRequire} from './InlineRequire';
+import * as ToDoList from './ToDoList';
+export {ToDoList};
+export {default as useTheme} from './useTheme';

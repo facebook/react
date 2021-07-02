@@ -196,8 +196,8 @@ describe('parseHookNames', () => {
     });
 
     it('should work with more complex files and components', async () => {
-      async function test(path) {
-        const components = require(path);
+      async function test(path, name = undefined) {
+        const components = name != null ? require(path)[name] : require(path);
 
         let hookNames = await getHookNamesForComponent(components.List);
         expectHookNamesToEqual(hookNames, [
@@ -223,11 +223,12 @@ describe('parseHookNames', () => {
       await test('./__source__/ToDoList'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ToDoList'); // inline source map
       await test('./__source__/__compiled__/external/ToDoList'); // external source map
+      await test('./__source__/__compiled__/bundle', 'ToDoList'); // bundle source map
     });
 
     it('should work for custom hook', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
@@ -239,11 +240,12 @@ describe('parseHookNames', () => {
       await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
       await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
+      await test('./__source__/__compiled__/bundle', 'ComponentWithCustomHook'); // bundle source map
     });
 
     it('should work for external hooks', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'theme', // useTheme()
@@ -260,14 +262,18 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/ComponentWithExternalCustomHooks',
       ); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ComponentWithExternalCustomHooks',
+      ); // bundle source map
     });
 
     // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
     // Maybe this isn't an important use case to support,
     // since inline requires are most likely to exist in compiled source (if at all).
     xit('should work for inline requires', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
@@ -277,6 +283,7 @@ describe('parseHookNames', () => {
       await test('./__source__/InlineRequire'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
       await test('./__source__/__compiled__/external/InlineRequire'); // external source map
+      await test('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
     });
   });
 });
