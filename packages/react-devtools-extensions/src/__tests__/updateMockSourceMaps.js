@@ -9,16 +9,23 @@ const {
 } = require('fs');
 const {emptyDirSync} = require('fs-extra');
 const {resolve} = require('path');
+const rollup = require('rollup');
+const babel = require('rollup-plugin-babel');
+const commonjs = require('rollup-plugin-commonjs');
+const jsx = require('acorn-jsx');
+const rollupResolve = require('rollup-plugin-node-resolve');
 
 const sourceDir = resolve(__dirname, '__source__');
 const buildRoot = resolve(sourceDir, '__compiled__');
 const externalDir = resolve(buildRoot, 'external');
 const inlineDir = resolve(buildRoot, 'inline');
+const bundleDir = resolve(buildRoot, 'bundle');
 
 // Remove previous builds
 emptyDirSync(buildRoot);
 mkdirSync(externalDir);
 mkdirSync(inlineDir);
+mkdirSync(bundleDir);
 
 function compile(fileName) {
   const code = readFileSync(resolve(sourceDir, fileName), 'utf8');
@@ -66,6 +73,27 @@ function compile(fileName) {
   );
 }
 
+async function bundle() {
+  const entryFileName = resolve(sourceDir, 'index.js');
+
+  // Bundle all modules with rollup
+  const result = await rollup.rollup({
+    input: entryFileName,
+    acornInjectPlugins: [jsx()],
+    plugins: [
+      rollupResolve(),
+      commonjs(),
+      babel({presets: ['@babel/preset-react'], sourceMap: true}),
+    ],
+    external: ['react'],
+  });
+  await result.write({
+    file: resolve(bundleDir, 'index.js'),
+    format: 'cjs',
+    sourcemap: true,
+  });
+}
+
 // Compile all files in the current directory
 const entries = readdirSync(sourceDir);
 entries.forEach(entry => {
@@ -73,4 +101,9 @@ entries.forEach(entry => {
   if (!stat.isDirectory() && entry.endsWith('.js')) {
     compile(entry);
   }
+});
+
+bundle().catch(e => {
+  console.error(e);
+  process.exit(1);
 });

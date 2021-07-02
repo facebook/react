@@ -185,10 +185,10 @@ describe('parseHookNames', () => {
     ]);
   });
 
-  describe('inline and external source maps', () => {
+  describe('inline, external and bundle source maps', () => {
     it('should work for simple components', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'count', // useState
@@ -198,6 +198,7 @@ describe('parseHookNames', () => {
       await test('./__source__/Example'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/Example'); // inline source map
       await test('./__source__/__compiled__/external/Example'); // external source map
+      await test('./__source__/__compiled__/bundle/index', 'Example'); // bundle source map
     });
 
     it('should work with more complex files and components', async () => {

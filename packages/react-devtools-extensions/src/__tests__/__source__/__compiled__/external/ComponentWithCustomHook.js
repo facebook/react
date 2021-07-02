@@ -33,7 +33,7 @@ function Component() {
 }
 
 function useIsDarkMode() {
-  const [isDarkMode, setIsDarkMode] = (0, _react.useState)(0);
+  const [isDarkMode] = (0, _react.useState)(false);
   (0, _react.useEffect)(function useEffectCreate() {// Here is where we may listen to a "theme" event...
   }, []);
   return isDarkMode;
