@@ -26,4 +26,3 @@ function Component() {
   }, "Click me"));
 }
 //# sourceMappingURL=Example.js.map
-//# sourceURL=Example.js

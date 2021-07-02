@@ -33,8 +33,15 @@ describe('parseHookNames', () => {
 
     // Jest (jest-runner?) configures Errors to automatically account for source maps.
     // This changes behavior between our tests and the browser.
-    // To "fix" this, clear the prepareStackTrace() method on the Error object.
-    delete Error.prepareStackTrace;
+    // Ideally we would clear the prepareStackTrace() method on the Error object,
+    // but Node falls back to looking for it on the main context's Error constructor,
+    // which may still be patched.
+    // To ensure we get the default behavior, override prepareStackTrace ourselves.
+    // NOTE: prepareStackTrace is called from the error.stack getter, but the getter
+    // has a recursion breaker which falls back to the default behavior.
+    Error.prepareStackTrace = (error, trace) => {
+      return error.stack;
+    }
 
     fetchMock.mockIf(/.+$/, request => {
       const {resolve} = require('path');

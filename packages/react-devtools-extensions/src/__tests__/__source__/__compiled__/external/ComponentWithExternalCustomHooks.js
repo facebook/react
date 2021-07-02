@@ -24,4 +24,3 @@ function Component() {
   return /*#__PURE__*/_react.default.createElement("div", null, "theme: ", theme);
 }
 //# sourceMappingURL=ComponentWithExternalCustomHooks.js.map
-//# sourceURL=ComponentWithExternalCustomHooks.js

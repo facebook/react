@@ -12,4 +12,3 @@ Object.defineProperty(exports, "Example", {
 
 var _Example = require("./Example");
 //# sourceMappingURL=index.js.map
-//# sourceURL=index.js

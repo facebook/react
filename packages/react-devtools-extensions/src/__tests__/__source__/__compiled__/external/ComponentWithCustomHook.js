@@ -39,4 +39,3 @@ function useIsDarkMode() {
   return isDarkMode;
 }
 //# sourceMappingURL=ComponentWithCustomHook.js.map
-//# sourceURL=ComponentWithCustomHook.js
