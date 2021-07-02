@@ -51,8 +51,7 @@ function compile(fileName) {
   // Generate compiled output with external source maps
   writeFileSync(
     resolve(externalDir, fileName),
-    transformed.code +
-      `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
     'utf8',
   );
   writeFileSync(
