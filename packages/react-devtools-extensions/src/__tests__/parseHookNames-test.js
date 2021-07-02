@@ -41,24 +41,11 @@ describe('parseHookNames', () => {
     // has a recursion breaker which falls back to the default behavior.
     Error.prepareStackTrace = (error, trace) => {
       return error.stack;
-    }
+    };
 
     fetchMock.mockIf(/.+$/, request => {
       const {resolve} = require('path');
-      const url = request.url;
-      if (url.endsWith('js.map')) {
-        // Source maps are relative URLs (e.g. "path/to/Exmaple.js" specifies "Exmaple.js.map").
-        const sourceMapURL = resolve(
-          __dirname,
-          '__source__',
-          '__compiled__',
-          'external',
-          url,
-        );
-        return Promise.resolve(requireText(sourceMapURL, 'utf8'));
-      } else {
-        return Promise.resolve(requireText(url, 'utf8'));
-      }
+      return Promise.resolve(requireText(request.url, 'utf8'));
     });
 
     // Mock out portion of browser API used by parseHookNames to initialize "source-map".

@@ -189,6 +189,7 @@ function extractAndLoadSourceMaps(
       }
     } else {
       for (let i = 0; i < sourceMappingURLs.length; i++) {
+        const fileName = ((hookSourceData.hookSource.fileName: any): string);
         const sourceMappingURL = sourceMappingURLs[i];
         const index = sourceMappingURL.indexOf('base64,');
         if (index >= 0) {
@@ -211,7 +212,6 @@ function extractAndLoadSourceMaps(
 
           // Hook source might be a URL like "https://4syus.csb.app/src/App.js"
           // Parsed source map might be a partial path like "src/App.js"
-          const fileName = ((hookSourceData.hookSource.fileName: any): string);
           const match = parsed.sources.find(
             source =>
               source === 'Inline Babel script' || fileName.includes(source),
@@ -234,6 +234,13 @@ function extractAndLoadSourceMaps(
 
             if (!isValidUrl(url)) {
               throw new Error(`Invalid source map URL "${url}"`);
+            }
+          } else if (!url.startsWith('/')) {
+            // Resolve paths relative to the location of the file name
+            const lastSlashIdx = fileName.lastIndexOf('/');
+            if (lastSlashIdx !== -1) {
+              const baseURL = fileName.slice(0, fileName.lastIndexOf('/'));
+              url = `${baseURL}/${url}`;
             }
           }
 
