@@ -44,7 +44,6 @@ describe('parseHookNames', () => {
     };
 
     fetchMock.mockIf(/.+$/, request => {
-      const {resolve} = require('path');
       return Promise.resolve(requireText(request.url, 'utf8'));
     });
 
