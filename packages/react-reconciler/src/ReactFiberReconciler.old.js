@@ -52,11 +52,12 @@ import {
   scheduleUpdateOnFiber,
   flushRoot,
   batchedUpdates,
+  unbatchedUpdates,
   flushSync,
   flushControlled,
   deferredUpdates,
   discreteUpdates,
-  flushSyncWithoutWarningIfAlreadyRendering,
+  flushDiscreteUpdates,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.old';
 import {
@@ -326,11 +327,12 @@ export function updateContainer(
 
 export {
   batchedUpdates,
+  unbatchedUpdates,
   deferredUpdates,
   discreteUpdates,
+  flushDiscreteUpdates,
   flushControlled,
   flushSync,
-  flushSyncWithoutWarningIfAlreadyRendering,
   flushPassiveEffects,
 };
 

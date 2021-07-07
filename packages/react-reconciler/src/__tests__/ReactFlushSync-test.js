@@ -173,27 +173,4 @@ describe('ReactFlushSync', () => {
     // Effect flushes after paint.
     expect(Scheduler).toHaveYielded(['Effect']);
   });
-
-  test('does not flush pending passive effects', async () => {
-    function App() {
-      useEffect(() => {
-        Scheduler.unstable_yieldValue('Effect');
-      }, []);
-      return <Text text="Child" />;
-    }
-
-    const root = ReactNoop.createRoot();
-    await act(async () => {
-      root.render(<App />);
-      expect(Scheduler).toFlushUntilNextPaint(['Child']);
-      expect(root).toMatchRenderedOutput('Child');
-
-      // Passive effects are pending. Calling flushSync should not affect them.
-      ReactNoop.flushSync();
-      // Effects still haven't fired.
-      expect(Scheduler).toHaveYielded([]);
-    });
-    // Now the effects have fired.
-    expect(Scheduler).toHaveYielded(['Effect']);
-  });
 });

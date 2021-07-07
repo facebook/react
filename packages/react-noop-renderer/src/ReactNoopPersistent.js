@@ -38,6 +38,7 @@ export const {
   flushExpired,
   batchedUpdates,
   deferredUpdates,
+  unbatchedUpdates,
   discreteUpdates,
   idleUpdates,
   flushDiscreteUpdates,

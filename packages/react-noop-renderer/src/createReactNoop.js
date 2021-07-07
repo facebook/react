@@ -901,6 +901,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     deferredUpdates: NoopRenderer.deferredUpdates,
 
+    unbatchedUpdates: NoopRenderer.unbatchedUpdates,
+
     discreteUpdates: NoopRenderer.discreteUpdates,
 
     idleUpdates<T>(fn: () => T): T {
@@ -912,6 +914,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         currentEventPriority = prevEventPriority;
       }
     },
+
+    flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
 
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);
