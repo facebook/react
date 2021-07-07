@@ -17,6 +17,7 @@ import SuspendingErrorView from './SuspendingErrorView';
 type Props = {|
   children: React$Node,
   canDismiss?: boolean,
+  onBeforeDismissCallback?: () => void,
   store?: Store,
 |};
 
@@ -118,6 +119,11 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   _dismissError = () => {
+    const onBeforeDismissCallback = this.props.onBeforeDismissCallback;
+    if (typeof onBeforeDismissCallback === 'function') {
+      onBeforeDismissCallback();
+    }
+
     this.setState(InitialState);
   };
 

@@ -63,6 +63,19 @@ function getRecordMap(): WeakMap<Element, Record<InspectedElementFrontend>> {
   return getCacheForType(createMap);
 }
 
+/**
+ * Removes inspected element metadata from the cache.
+ *
+ * This function should only be called during render (since it reads from Context)
+ * and the callback it returns should be called prior to render.
+ */
+export function getClearElementCallback(element: Element): () => void {
+  const map = getRecordMap();
+  return function clearElementCallback(): void {
+    map.delete(element);
+  };
+}
+
 function createCacheSeed(
   element: Element,
   inspectedElement: InspectedElementFrontend,
