@@ -542,10 +542,15 @@ async function parseSourceAST(
       hookSourceData.originalSourceAST = sourceMetadata.originalSourceAST;
       hookSourceData.originalSourceCode = sourceMetadata.originalSourceCode;
     } else {
+      // TypeScript is the most commonly used typed JS variant so let's default to it
+      // unless we detect explicit Flow usage via the "@flow" pragma.
+      const plugin =
+        originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
+
       // TODO (named hooks) Parsing should ideally be done off of the main thread.
       const originalSourceAST = parse(originalSourceCode, {
         sourceType: 'unambiguous',
-        plugins: ['jsx', 'typescript'],
+        plugins: ['jsx', plugin],
       });
       hookSourceData.originalSourceAST = originalSourceAST;
       if (__DEBUG__) {
