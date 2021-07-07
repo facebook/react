@@ -3240,6 +3240,17 @@ export function attach(
             // Never dehydrate the "hooks" object at the top levels.
             return true;
           }
+
+          if (
+            path[path.length - 2] === 'hookSource' &&
+            path[path.length - 1] === 'fileName'
+          ) {
+            // It's important to preserve the full file name (URL) for hook sources
+            // in case the user has enabled the named hooks feature.
+            // Otherwise the frontend may end up with a partial URL which it can't load.
+            return true;
+          }
+
           if (
             path[path.length - 1] === 'subHooks' ||
             path[path.length - 2] === 'subHooks'

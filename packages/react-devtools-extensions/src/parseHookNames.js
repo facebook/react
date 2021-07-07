@@ -27,7 +27,6 @@ import type {Thenable} from 'shared/ReactTypes';
 import type {SourceConsumer} from './astUtils';
 
 const SOURCE_MAP_REGEX = / ?sourceMappingURL=([^\s'"]+)/gm;
-const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
 const MAX_SOURCE_LENGTH = 100_000_000;
 
 type AST = mixed;
@@ -282,14 +281,7 @@ function extractAndLoadSourceMaps(
           }
 
           let url = sourceMappingURLs[i].split('=')[1];
-          if (ABSOLUTE_URL_REGEX.test(url)) {
-            const baseURL = url.slice(0, url.lastIndexOf('/'));
-            url = `${baseURL}/${url}`;
-
-            if (!isValidUrl(url)) {
-              throw new Error(`Invalid source map URL "${url}"`);
-            }
-          } else if (!url.startsWith('/')) {
+          if (!url.startsWith('http') && !url.startsWith('/')) {
             // Resolve paths relative to the location of the file name
             const lastSlashIdx = runtimeSourceURL.lastIndexOf('/');
             if (lastSlashIdx !== -1) {
@@ -438,16 +430,6 @@ function findHookNames(
   });
 
   return map;
-}
-
-function isValidUrl(possibleURL: string): boolean {
-  try {
-    // eslint-disable-next-line no-new
-    new URL(possibleURL);
-  } catch (_) {
-    return false;
-  }
-  return true;
 }
 
 function loadSourceFiles(
