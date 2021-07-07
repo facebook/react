@@ -82,3 +82,7 @@
 .HookName {
   color: var(--color-component-name);
 }
+
+.ToggleError {
+  color: var(--color-error-text);
+}

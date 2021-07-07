@@ -64,6 +64,17 @@ export function InspectedElementHooksTree({
     toggleParseHookNames();
   };
 
+  const hookParsingFailed = parseHookNames && hookNames === null;
+
+  let toggleTitle;
+  if (hookParsingFailed) {
+    toggleTitle = 'Hook parsing failed';
+  } else if (parseHookNames) {
+    toggleTitle = 'Parsing hook names ...';
+  } else {
+    toggleTitle = 'Parse hook names (may be slow)';
+  }
+
   const handleCopy = () => copy(serializeHooksForCopy(hooks));
 
   if (hooks === null) {
@@ -73,16 +84,13 @@ export function InspectedElementHooksTree({
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
-          {enableHookNameParsing && !parseHookNames && (
+          {enableHookNameParsing && (!parseHookNames || hookParsingFailed) && (
             <Toggle
+              className={hookParsingFailed ? styles.ToggleError : null}
               isChecked={parseHookNamesOptimistic}
-              isDisabled={parseHookNamesOptimistic}
+              isDisabled={parseHookNamesOptimistic || hookParsingFailed}
               onChange={handleChange}
-              title={
-                parseHookNames
-                  ? 'Parse hook names'
-                  : 'Parse hook names (may be slow)'
-              }>
+              title={toggleTitle}>
               <ButtonIcon type="parse-hook-names" />
             </Toggle>
           )}
