@@ -901,6 +901,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     deferredUpdates: NoopRenderer.deferredUpdates,
 
+    unbatchedUpdates: NoopRenderer.unbatchedUpdates,
+
     discreteUpdates: NoopRenderer.discreteUpdates,
 
     idleUpdates<T>(fn: () => T): T {

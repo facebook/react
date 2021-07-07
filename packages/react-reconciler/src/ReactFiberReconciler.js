@@ -18,6 +18,7 @@ import {
   createContainer as createContainer_old,
   updateContainer as updateContainer_old,
   batchedUpdates as batchedUpdates_old,
+  unbatchedUpdates as unbatchedUpdates_old,
   deferredUpdates as deferredUpdates_old,
   discreteUpdates as discreteUpdates_old,
   flushControlled as flushControlled_old,
@@ -55,6 +56,7 @@ import {
   createContainer as createContainer_new,
   updateContainer as updateContainer_new,
   batchedUpdates as batchedUpdates_new,
+  unbatchedUpdates as unbatchedUpdates_new,
   deferredUpdates as deferredUpdates_new,
   discreteUpdates as discreteUpdates_new,
   flushControlled as flushControlled_new,
@@ -97,6 +99,9 @@ export const updateContainer = enableNewReconciler
 export const batchedUpdates = enableNewReconciler
   ? batchedUpdates_new
   : batchedUpdates_old;
+export const unbatchedUpdates = enableNewReconciler
+  ? unbatchedUpdates_new
+  : unbatchedUpdates_old;
 export const deferredUpdates = enableNewReconciler
   ? deferredUpdates_new
   : deferredUpdates_old;
