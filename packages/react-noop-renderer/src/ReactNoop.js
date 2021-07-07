@@ -41,6 +41,7 @@ export const {
   unbatchedUpdates,
   discreteUpdates,
   idleUpdates,
+  flushDiscreteUpdates,
   flushSync,
   flushPassiveEffects,
   act,

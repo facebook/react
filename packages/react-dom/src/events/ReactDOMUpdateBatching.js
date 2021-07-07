@@ -23,7 +23,7 @@ let batchedUpdatesImpl = function(fn, bookkeeping) {
 let discreteUpdatesImpl = function(fn, a, b, c, d) {
   return fn(a, b, c, d);
 };
-let flushSyncImpl = function() {};
+let flushDiscreteUpdatesImpl = function() {};
 
 let isInsideEventHandler = false;
 
@@ -39,7 +39,7 @@ function finishEventHandler() {
     // bails out of the update without touching the DOM.
     // TODO: Restore state in the microtask, after the discrete updates flush,
     // instead of early flushing them here.
-    flushSyncImpl();
+    flushDiscreteUpdatesImpl();
     restoreStateIfNeeded();
   }
 }
@@ -67,9 +67,9 @@ export function discreteUpdates(fn, a, b, c, d) {
 export function setBatchingImplementation(
   _batchedUpdatesImpl,
   _discreteUpdatesImpl,
-  _flushSyncImpl,
+  _flushDiscreteUpdatesImpl,
 ) {
   batchedUpdatesImpl = _batchedUpdatesImpl;
   discreteUpdatesImpl = _discreteUpdatesImpl;
-  flushSyncImpl = _flushSyncImpl;
+  flushDiscreteUpdatesImpl = _flushDiscreteUpdatesImpl;
 }

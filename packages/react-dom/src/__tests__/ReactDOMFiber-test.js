@@ -1154,13 +1154,19 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual(['A']);
 
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
+      const errorCalls = console.error.calls.count();
       expect(console.error.calls.argsFor(0)[0]).toMatch(
         'ReactDOM.render is no longer supported in React 18',
       );
       expect(console.error.calls.argsFor(1)[0]).toMatch(
         'ReactDOM.render is no longer supported in React 18',
       );
+      // TODO: this warning shouldn't be firing in the first place if user didn't call it.
+      for (let i = 2; i < errorCalls; i++) {
+        expect(console.error.calls.argsFor(i)[0]).toMatch(
+          'unstable_flushDiscreteUpdates: Cannot flush updates when React is already rendering.',
+        );
+      }
     }
   });
 
