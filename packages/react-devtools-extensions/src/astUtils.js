@@ -20,14 +20,6 @@ export type SourceFileASTWithHookDetails = {
   source: string,
 };
 
-export type SourceMap = {|
-  mappings: string,
-  names: Array<string>,
-  sources: Array<string>,
-  sourcesContent: Array<string>,
-  version: number,
-|};
-
 const AST_NODE_TYPES = Object.freeze({
   CALL_EXPRESSION: 'CallExpression',
   MEMBER_EXPRESSION: 'MemberExpression',

@@ -19,4 +19,3 @@ function Component() {
   return count;
 }
 //# sourceMappingURL=InlineRequire.js.map
-//# sourceURL=InlineRequire.js

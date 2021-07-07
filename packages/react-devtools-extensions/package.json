@@ -19,6 +19,7 @@
     "update-mock-source-maps": "node ./src/__tests__/updateMockSourceMaps.js"
   },
   "devDependencies": {
+    "acorn-jsx": "^5.2.0",
     "@babel/core": "^7.11.1",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-transform-flow-strip-types": "^7.10.4",
@@ -44,6 +45,10 @@
     "open": "^7.0.2",
     "os-name": "^3.1.0",
     "raw-loader": "^3.1.0",
+    "rollup": "^1.19.4",
+    "rollup-plugin-babel": "^4.0.1",
+    "rollup-plugin-commonjs": "^9.3.4",
+    "rollup-plugin-node-resolve": "^2.1.1",
     "source-map": "^0.8.0-beta.0",
     "style-loader": "^0.23.1",
     "web-ext": "^3.0.0",
