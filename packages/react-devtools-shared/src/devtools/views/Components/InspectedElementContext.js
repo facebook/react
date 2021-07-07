@@ -18,13 +18,19 @@ import {
   useMemo,
   useState,
 } from 'react';
+import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
   checkForUpdate,
   inspectElement,
 } from 'react-devtools-shared/src/inspectedElementCache';
+import {loadHookNames} from 'react-devtools-shared/src/hookNamesCache';
+import {ElementTypeFunction} from 'react-devtools-shared/src/types';
+import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 
+import type {HookNames} from 'react-devtools-shared/src/types';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Element,
@@ -33,10 +39,14 @@ import type {
 
 type Path = Array<string | number>;
 type InspectPathFunction = (path: Path) => void;
+export type ToggleParseHookNames = () => void;
 
 type Context = {|
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement | null,
   inspectPaths: InspectPathFunction,
+  parseHookNames: boolean,
+  toggleParseHookNames: ToggleParseHookNames,
 |};
 
 export const InspectedElementContext = createContext<Context>(
@@ -51,8 +61,10 @@ export type Props = {|
 
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
+  const loadHookNamesFunction = useContext(LoadHookNamesFunctionContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
 
   const refresh = useCacheRefresh();
 
@@ -68,6 +80,13 @@ export function InspectedElementContextController({children}: Props) {
     path: null,
   });
 
+  // Parse the currently inspected element's hook names.
+  // This may be enabled by default (for all elements)
+  // or it may be opted into on a per-element basis (if it's too slow to be on by default).
+  const [parseHookNames, setParseHookNames] = useState<boolean>(
+    parseHookNamesByDefault,
+  );
+
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
@@ -79,13 +98,40 @@ export function InspectedElementContextController({children}: Props) {
       element,
       path: null,
     });
+
+    setParseHookNames(parseHookNamesByDefault);
   }
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
   let inspectedElement = null;
+  let hookNames: HookNames | null = null;
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
+
+    if (enableHookNameParsing) {
+      if (parseHookNames) {
+        if (
+          inspectedElement !== null &&
+          inspectedElement.type === ElementTypeFunction &&
+          inspectedElement.hooks !== null &&
+          loadHookNamesFunction !== null
+        ) {
+          hookNames = loadHookNames(
+            element,
+            inspectedElement.hooks,
+            loadHookNamesFunction,
+          );
+        }
+      }
+    }
   }
+
+  const toggleParseHookNames: ToggleParseHookNames = useCallback<ToggleParseHookNames>(() => {
+    startTransition(() => {
+      setParseHookNames(value => !value);
+      refresh();
+    });
+  }, [setParseHookNames]);
 
   const inspectPaths: InspectPathFunction = useCallback<InspectPathFunction>(
     (path: Path) => {
@@ -125,6 +171,7 @@ export function InspectedElementContextController({children}: Props) {
     }
   }, [
     element,
+    hookNames,
     // Reset this timer any time the element we're inspecting gets a new response.
     // No sense to ping right away after e.g. inspecting/hydrating a path.
     inspectedElement,
@@ -133,10 +180,19 @@ export function InspectedElementContextController({children}: Props) {
 
   const value = useMemo<Context>(
     () => ({
+      hookNames,
       inspectedElement,
       inspectPaths,
+      parseHookNames,
+      toggleParseHookNames,
     }),
-    [inspectedElement, inspectPaths],
+    [
+      hookNames,
+      inspectedElement,
+      inspectPaths,
+      parseHookNames,
+      toggleParseHookNames,
+    ],
   );
 
   return (

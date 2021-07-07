@@ -55,11 +55,19 @@ module.exports = Object.assign({}, baseConfig, {
   // Don't run bundle tests on -test.internal.* files
   testPathIgnorePatterns: ['/node_modules/', '-test.internal.js$'],
   // Exclude the build output from transforms
-  transformIgnorePatterns: ['/node_modules/', '<rootDir>/build2/'],
-  testRegex: 'packages/react-devtools-shared/src/__tests__/[^]+.test.js$',
+  transformIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/build2/',
+    '/__compiled__/',
+  ],
+  testRegex:
+    'packages/react-devtools-(extensions|shared)/src/__tests__/[^]+.test.js$',
   snapshotSerializers: [
     require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/dehydratedValueSerializer.js'
+    ),
+    require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/hookSerializer.js'
     ),
     require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/inspectedElementSerializer.js'

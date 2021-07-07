@@ -25,6 +25,7 @@ describe('InspectedElement', () => {
   let BridgeContext;
   let InspectedElementContext;
   let InspectedElementContextController;
+  let SettingsContextController;
   let StoreContext;
   let TreeContextController;
 
@@ -57,6 +58,8 @@ describe('InspectedElement', () => {
       .InspectedElementContext;
     InspectedElementContextController = require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext')
       .InspectedElementContextController;
+    SettingsContextController = require('react-devtools-shared/src/devtools/views/Settings/SettingsContext')
+      .SettingsContextController;
     StoreContext = require('react-devtools-shared/src/devtools/views/context')
       .StoreContext;
     TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
@@ -79,15 +82,17 @@ describe('InspectedElement', () => {
   }) => (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
-        <TreeContextController
-          defaultSelectedElementID={defaultSelectedElementID}
-          defaultSelectedElementIndex={defaultSelectedElementIndex}>
-          <React.Suspense fallback="Loading...">
-            <InspectedElementContextController>
-              {children}
-            </InspectedElementContextController>
-          </React.Suspense>
-        </TreeContextController>
+        <SettingsContextController>
+          <TreeContextController
+            defaultSelectedElementID={defaultSelectedElementID}
+            defaultSelectedElementIndex={defaultSelectedElementIndex}>
+            <React.Suspense fallback="Loading...">
+              <InspectedElementContextController>
+                {children}
+              </InspectedElementContextController>
+            </React.Suspense>
+          </TreeContextController>
+        </SettingsContextController>
       </StoreContext.Provider>
     </BridgeContext.Provider>
   );

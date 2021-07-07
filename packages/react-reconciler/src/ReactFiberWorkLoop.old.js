@@ -246,13 +246,11 @@ const {
 
 type ExecutionContext = number;
 
-export const NoContext = /*             */ 0b000000;
-const BatchedContext = /*               */ 0b000001;
-const EventContext = /*                 */ 0b000010;
-const LegacyUnbatchedContext = /*       */ 0b000100;
-const RenderContext = /*                */ 0b001000;
-const CommitContext = /*                */ 0b010000;
-export const RetryAfterError = /*       */ 0b100000;
+export const NoContext = /*             */ 0b0000;
+const BatchedContext = /*               */ 0b0001;
+const RenderContext = /*                */ 0b0010;
+const CommitContext = /*                */ 0b0100;
+export const RetryAfterError = /*       */ 0b1000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
@@ -516,35 +514,19 @@ export function scheduleUpdateOnFiber(
     }
   }
 
-  if (lane === SyncLane) {
-    if (
-      // Check if we're inside unbatchedUpdates
-      (executionContext & LegacyUnbatchedContext) !== NoContext &&
-      // Check if we're not already rendering
-      (executionContext & (RenderContext | CommitContext)) === NoContext
-    ) {
-      // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
-      // root inside of batchedUpdates should be synchronous, but layout updates
-      // should be deferred until the end of the batch.
-      performSyncWorkOnRoot(root);
-    } else {
-      ensureRootIsScheduled(root, eventTime);
-      if (
-        executionContext === NoContext &&
-        (fiber.mode & ConcurrentMode) === NoMode
-      ) {
-        // Flush the synchronous work now, unless we're already working or inside
-        // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
-        // scheduleCallbackForFiber to preserve the ability to schedule a callback
-        // without immediately flushing it. We only do this for user-initiated
-        // updates, to preserve historical behavior of legacy mode.
-        resetRenderTimer();
-        flushSyncCallbacksOnlyInLegacyMode();
-      }
-    }
-  } else {
-    // Schedule other updates after in case the callback is sync.
-    ensureRootIsScheduled(root, eventTime);
+  ensureRootIsScheduled(root, eventTime);
+  if (
+    lane === SyncLane &&
+    executionContext === NoContext &&
+    (fiber.mode & ConcurrentMode) === NoMode
+  ) {
+    // Flush the synchronous work now, unless we're already working or inside
+    // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
+    // scheduleCallbackForFiber to preserve the ability to schedule a callback
+    // without immediately flushing it. We only do this for user-initiated
+    // updates, to preserve historical behavior of legacy mode.
+    resetRenderTimer();
+    flushSyncCallbacksOnlyInLegacyMode();
   }
 
   return root;
@@ -1045,34 +1027,6 @@ export function getExecutionContext(): ExecutionContext {
   return executionContext;
 }
 
-export function flushDiscreteUpdates() {
-  // TODO: Should be able to flush inside batchedUpdates, but not inside `act`.
-  // However, `act` uses `batchedUpdates`, so there's no way to distinguish
-  // those two cases. Need to fix this before exposing flushDiscreteUpdates
-  // as a public API.
-  if (
-    (executionContext & (BatchedContext | RenderContext | CommitContext)) !==
-    NoContext
-  ) {
-    if (__DEV__) {
-      if ((executionContext & RenderContext) !== NoContext) {
-        console.error(
-          'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
-            'already rendering.',
-        );
-      }
-    }
-    // We're already rendering, so we can't synchronously flush pending work.
-    // This is probably a nested event dispatch triggered by a lifecycle/effect,
-    // like `el.focus()`. Exit.
-    return;
-  }
-  flushSyncCallbacks();
-  // If the discrete updates scheduled passive effects, flush them now so that
-  // they fire before the next serial event.
-  flushPassiveEffects();
-}
-
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1089,22 +1043,6 @@ export function deferredUpdates<A>(fn: () => A): A {
 export function batchedUpdates<A, R>(fn: A => R, a: A): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  try {
-    return fn(a);
-  } finally {
-    executionContext = prevExecutionContext;
-    // If there were legacy sync updates, flush them at the end of the outer
-    // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
-      resetRenderTimer();
-      flushSyncCallbacksOnlyInLegacyMode();
-    }
-  }
-}
-
-export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
-  const prevExecutionContext = executionContext;
-  executionContext |= EventContext;
   try {
     return fn(a);
   } finally {
@@ -1140,26 +1078,10 @@ export function discreteUpdates<A, B, C, D, R>(
   }
 }
 
-export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
-  const prevExecutionContext = executionContext;
-  executionContext &= ~BatchedContext;
-  executionContext |= LegacyUnbatchedContext;
-  try {
-    return fn(a);
-  } finally {
-    executionContext = prevExecutionContext;
-    // If there were legacy sync updates, flush them at the end of the outer
-    // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
-      resetRenderTimer();
-      // TODO: I think this call is redundant, because we flush inside
-      // scheduleUpdateOnFiber when LegacyUnbatchedContext is set.
-      flushSyncCallbacksOnlyInLegacyMode();
-    }
-  }
-}
-
-export function flushSync<A, R>(fn: A => R, a: A): R {
+export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
+  fn: A => R,
+  a: A,
+): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
@@ -1182,16 +1104,21 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     // the stack.
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       flushSyncCallbacks();
-    } else {
-      if (__DEV__) {
-        console.error(
-          'flushSync was called from inside a lifecycle method. React cannot ' +
-            'flush when React is already rendering. Consider moving this call to ' +
-            'a scheduler task or micro task.',
-        );
-      }
     }
   }
+}
+
+export function flushSync<A, R>(fn: A => R, a: A): R {
+  if (__DEV__) {
+    if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' +
+          'flush when React is already rendering. Consider moving this call to ' +
+          'a scheduler task or micro task.',
+      );
+    }
+  }
+  return flushSyncWithoutWarningIfAlreadyRendering(fn, a);
 }
 
 export function flushControlled(fn: () => mixed): void {
@@ -1989,24 +1916,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     const error = firstUncaughtError;
     firstUncaughtError = null;
     throw error;
-  }
-
-  if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logCommitStopped();
-      }
-    }
-
-    if (enableSchedulingProfiler) {
-      markCommitStopped();
-    }
-
-    // This is a legacy edge case. We just committed the initial mount of
-    // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
-    // synchronously, but layout updates should be deferred until the end
-    // of the batch.
-    return null;
   }
 
   // If the passive effects are the result of a discrete render, flush them

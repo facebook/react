@@ -37,6 +37,11 @@ module.exports = {
     'react-is': 'react-is',
     scheduler: 'scheduler',
   },
+  node: {
+    // source-maps package has a dependency on 'fs'
+    // but this build won't trigger that code path
+    fs: 'empty',
+  },
   resolve: {
     alias: {
       'react-devtools-feature-flags': resolveFeatureFlags('inline'),

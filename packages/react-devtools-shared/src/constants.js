@@ -23,6 +23,9 @@ export const LOCAL_STORAGE_FILTER_PREFERENCES_KEY =
 export const SESSION_STORAGE_LAST_SELECTION_KEY =
   'React::DevTools::lastSelection';
 
+export const LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY =
+  'React::DevTools::parseHookNames';
+
 export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
@@ -44,7 +47,7 @@ export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
 export const PROFILER_EXPORT_VERSION = 5;
 
 export const CHANGE_LOG_URL =
-  'https://github.com/facebook/react/blob/master/packages/react-devtools/CHANGELOG.md';
+  'https://github.com/facebook/react/blob/main/packages/react-devtools/CHANGELOG.md';
 
 export const UNSUPPORTED_VERSION_URL =
   'https://reactjs.org/blog/2019/08/15/new-react-devtools.html#how-do-i-get-the-old-version-back';

@@ -78,3 +78,7 @@
   border-radius: 0.125rem;
   padding: 0.125rem 0.25rem;
 }
+
+.HookName {
+  color: var(--color-component-name);
+}

@@ -139,3 +139,7 @@
 .ReleaseNotesLink {
   color: var(--color-button-active);
 }
+
+.Warning {
+  color: var(--color-error-text);
+}
