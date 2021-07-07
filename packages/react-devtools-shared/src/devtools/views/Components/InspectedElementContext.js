@@ -26,7 +26,6 @@ import {
   inspectElement,
 } from 'react-devtools-shared/src/inspectedElementCache';
 import {loadHookNames} from 'react-devtools-shared/src/hookNamesCache';
-import {ElementTypeFunction} from 'react-devtools-shared/src/types';
 import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
@@ -112,7 +111,6 @@ export function InspectedElementContextController({children}: Props) {
       if (parseHookNames) {
         if (
           inspectedElement !== null &&
-          inspectedElement.type === ElementTypeFunction &&
           inspectedElement.hooks !== null &&
           loadHookNamesFunction !== null
         ) {
