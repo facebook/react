@@ -9,6 +9,7 @@
 
 import {unstable_getCacheForType as getCacheForType} from 'react';
 import {enableHookNameParsing} from 'react-devtools-feature-flags';
+import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
@@ -108,6 +109,10 @@ export function loadHookNames(
           return;
         }
 
+        if (__DEBUG__) {
+          console.log('[hookNamesCache] onSuccess() hookNames:', hookNames);
+        }
+
         if (hookNames) {
           const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
           resolvedRecord.status = Resolved;
@@ -121,6 +126,10 @@ export function loadHookNames(
         wake();
       },
       function onError(error) {
+        if (__DEBUG__) {
+          console.log('[hookNamesCache] onError() error:', error);
+        }
+
         if (didTimeout) {
           return;
         }
@@ -134,7 +143,11 @@ export function loadHookNames(
     );
 
     // Eventually timeout and stop trying to load names.
-    let timeoutID = setTimeout(() => {
+    let timeoutID = setTimeout(function onTimeout() {
+      if (__DEBUG__) {
+        console.log('[hookNamesCache] onTimeout()');
+      }
+
       timeoutID = null;
 
       didTimeout = true;
