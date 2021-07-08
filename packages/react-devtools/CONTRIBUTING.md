@@ -65,3 +65,5 @@ yarn build:chrome && yarn test:chrome --url=<url-to-test>
 
 # Finding the right first issue
 The React team maintains [this list of "good first issues"](https://github.com/facebook/react/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22Component%3A+Developer+Tools%22+label%3A%22good+first+issue%22) for anyone interested in contributing to DevTools. If you see one that interests you, leave a comment!
+
+If you have ideas or suggestions of your own, you can also put together a PR demonstrating them. We suggest filing an issue before making any substantial changes though, to ensure that the idea is something the team feels comfortable landing.
