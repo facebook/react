@@ -18,13 +18,15 @@ yarn install
 # Build React and React DOM
 Next, check out (or build) the local version of React that DevTools uses:
 
-### Option 1 (fastest): Checkout DevTools dependencies
+### Option 1 (fastest): Checkout pre-built React
+To check out the latest version of React (built by CI from the `main` branch) run:
 ```sh
 cd <react-repo>
 scripts/release/download-experimental-build.js --commit=main
 ```
 
-### Option 2 (if you've ade local changes to react): Build from source
+### Option 2: Build from source
+If your DevTools change includes local changes to React (or if CI is down for some reason) you can also build from source:
 ```sh
 cd <react-repo>
 yarn build-for-devtools
