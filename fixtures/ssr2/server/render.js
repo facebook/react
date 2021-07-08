@@ -47,7 +47,6 @@ module.exports = function render(url, res) {
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;
         res.setHeader('Content-type', 'text/html');
-        res.write('<!DOCTYPE html>');
         startWriting();
       },
       onError(x) {
