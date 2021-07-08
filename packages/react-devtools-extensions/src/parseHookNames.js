@@ -13,7 +13,7 @@ import {parse} from '@babel/parser';
 import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import LRU from 'lru-cache';
 import {SourceMapConsumer} from 'source-map';
-import {getHookName, isNonDeclarativePrimitiveHook} from './astUtils';
+import {getHookName} from './astUtils';
 import {areSourceMapsAppliedToErrors} from './ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
@@ -345,17 +345,6 @@ function findHookNames(
   const map: HookNames = new Map();
 
   hooksList.map(hook => {
-    // TODO (named hooks) We should probably filter before this point,
-    // otherwise we are loading and parsing source maps and ASTs for nothing.
-    if (isNonDeclarativePrimitiveHook(hook)) {
-      if (__DEBUG__) {
-        console.log('findHookNames() Non declarative primitive hook');
-      }
-
-      // Not all hooks have names (e.g. useEffect or useLayoutEffect)
-      return null;
-    }
-
     // We already guard against a null HookSource in parseHookNames()
     const hookSource = ((hook.hookSource: any): HookSource);
     const fileName = hookSource.fileName;
@@ -570,11 +559,27 @@ function flattenHooksList(
 ): void {
   for (let i = 0; i < hooksTree.length; i++) {
     const hook = hooksTree[i];
+
+    if (isUnnamedBuiltInHook(hook)) {
+      // No need to load source code or do any parsing for unnamed hooks.
+      if (__DEBUG__) {
+        console.log('flattenHooksList() Skipping unnamed hook', hook);
+      }
+      continue;
+    }
+
     hooksList.push(hook);
     if (hook.subHooks.length > 0) {
       flattenHooksList(hook.subHooks, hooksList);
     }
   }
+}
+
+// Determines whether incoming hook is a primitive hook that gets assigned to variables.
+function isUnnamedBuiltInHook(hook: HooksNode) {
+  return ['Effect', 'ImperativeHandle', 'LayoutEffect', 'DebugValue'].includes(
+    hook.name,
+  );
 }
 
 function updateLruCache(
