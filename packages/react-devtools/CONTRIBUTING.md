@@ -8,10 +8,6 @@ git clone git@github.com:facebook/react.git
 Next install dependencies:
 ```sh
 cd <react-repo>
-
-yarn install
-
-cd scripts/release
 yarn install
 ```
 
@@ -22,7 +18,11 @@ Next, check out (or build) the local version of React that DevTools uses:
 To check out the latest version of React (built by CI from the `main` branch) run:
 ```sh
 cd <react-repo>
-scripts/release/download-experimental-build.js --commit=main
+
+cd scripts/release
+yarn install
+
+./download-experimental-build.js --commit=main
 ```
 
 ### Option 2: Build from source
