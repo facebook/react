@@ -19,9 +19,9 @@ const RESERVED_PROPS = {
   __source: true,
 };
 
-let specialPropKeyWarningShown;
-let specialPropRefWarningShown;
-let didWarnAboutStringRefs;
+let specialPropKeyWarningShown,
+  specialPropRefWarningShown,
+  didWarnAboutStringRefs;
 
 if (__DEV__) {
   didWarnAboutStringRefs = {};
