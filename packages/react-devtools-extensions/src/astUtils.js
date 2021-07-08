@@ -292,13 +292,6 @@ function isHookName(name: string): boolean {
   return /^use[A-Z0-9].*$/.test(name);
 }
 
-// Determines whether incoming hook is a primitive hook that gets assigned to variables.
-export function isNonDeclarativePrimitiveHook(hook: HooksNode) {
-  return ['Effect', 'ImperativeHandle', 'LayoutEffect', 'DebugValue'].includes(
-    hook.name,
-  );
-}
-
 // Check if the AST Node COULD be a React Hook
 function isPotentialHookDeclaration(path: NodePath): boolean {
   // The array potentialHooksFound will contain all potential hook declaration cases we support
