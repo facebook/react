@@ -680,9 +680,9 @@ function updateWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
-function useContext<T, S>(
+function useContext<T>(
   context: ReactContext<T>,
-  options?: {unstable_selector?: T => S},
+  options?: {unstable_selector?: T => mixed},
 ): T {
   if (options !== undefined) {
     const selector = options.unstable_selector;
@@ -2216,9 +2216,9 @@ if (__DEV__) {
       checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
-    useContext<T, S>(
+    useContext<T>(
       context: ReactContext<T>,
-      options?: {unstable_selector?: T => S},
+      options?: {unstable_selector?: T => mixed},
     ): T {
       currentHookNameInDev = 'useContext';
       mountHookTypesDev();
@@ -2347,9 +2347,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T, S>(
+    useContext<T>(
       context: ReactContext<T>,
-      options?: {unstable_selector?: T => S},
+      options?: {unstable_selector?: T => mixed},
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
@@ -2474,9 +2474,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T, S>(
+    useContext<T>(
       context: ReactContext<T>,
-      options?: {unstable_selector?: T => S},
+      options?: {unstable_selector?: T => mixed},
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
@@ -2602,9 +2602,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T, S>(
+    useContext<T>(
       context: ReactContext<T>,
-      options?: {unstable_selector?: T => S},
+      options?: {unstable_selector?: T => mixed},
     ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
@@ -2731,9 +2731,9 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T, S>(
+    useContext<T>(
       context: ReactContext<T>,
-      options?: {unstable_selector?: T => S},
+      options?: {unstable_selector?: T => mixed},
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
@@ -2873,9 +2873,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T, S>(
+    useContext<T>(
       context: ReactContext<T>,
-      options?: {unstable_selector?: T => S},
+      options?: {unstable_selector?: T => mixed},
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
@@ -3016,9 +3016,9 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T, S>(
+    useContext<T>(
       context: ReactContext<T>,
-      options?: {unstable_selector?: T => S},
+      options?: {unstable_selector?: T => mixed},
     ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();

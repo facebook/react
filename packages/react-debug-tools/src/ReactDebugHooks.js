@@ -114,9 +114,9 @@ function readContext<T>(context: ReactContext<T>): T {
   return context._currentValue;
 }
 
-function useContext<T, S>(
+function useContext<T>(
   context: ReactContext<T>,
-  options?: {unstable_selector?: T => S},
+  options?: {unstable_selector?: T => mixed},
 ): T {
   hookLog.push({
     primitive: 'Context',

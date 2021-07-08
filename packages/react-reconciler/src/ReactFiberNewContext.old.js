@@ -212,7 +212,6 @@ function propagateContextChange_eager<T>(
       let dependency = list.firstContext;
       while (dependency !== null) {
         // Check if the context matches.
-        // TODO: Compare selected values to bail out early.
         if (dependency.context === context) {
           // Match! Schedule an update on this fiber.
           if (fiber.tag === ClassComponent) {
@@ -348,8 +347,19 @@ function propagateContextChanges<T>(
         findContext: for (let i = 0; i < contexts.length; i++) {
           const context: ReactContext<T> = contexts[i];
           // Check if the context matches.
-          // TODO: Compare selected values to bail out early.
           if (dependency.context === context) {
+            const selector = dependency.selector;
+            if (selector !== null) {
+              const newValue = isPrimaryRenderer
+                ? context._currentValue
+                : context._currentValue2;
+              const newSelectedValue = selector(newValue);
+              const oldSelectedValue = dependency.selectedValue;
+              if (is(oldSelectedValue, selector(newSelectedValue))) {
+                // Selected value hasn't changed. Bail out early.
+                continue findContext;
+              }
+            }
             // Match! Schedule an update on this fiber.
 
             // In the lazy implemenation, don't mark a dirty flag on the
@@ -571,10 +581,8 @@ export function checkIfContextChanged(currentDependencies: Dependencies) {
     const oldValue = dependency.memoizedValue;
     const selector = dependency.selector;
     if (selector !== null) {
-      // TODO: Alternatively, we could store the selected value on the context.
-      // However, we expect selectors to do nothing except access a subfield,
-      // so this is probably fine, too.
-      if (!is(selector(newValue), selector(oldValue))) {
+      const oldSelectedValue = dependency.selectedValue;
+      if (!is(selector(newValue), oldSelectedValue)) {
         return true;
       }
     } else {
@@ -659,8 +667,11 @@ function readContextImpl<C, S>(
     const contextItem = {
       context: ((context: any): ReactContext<mixed>),
       selector: ((selector: any): ContextSelector<mixed, mixed> | null),
-      // TODO: Store selected value so we can compare to that during propagation
       memoizedValue: value,
+      // TODO: If useContextSelector becomes a built-in API, then
+      // readContextWithSelector should return the selected value so that we
+      // don't call the selector twice. Will need to inline readContextImpl.
+      selectedValue: selector !== null ? selector(value) : null,
       next: null,
     };
 

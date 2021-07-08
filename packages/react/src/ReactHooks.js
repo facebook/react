@@ -47,9 +47,9 @@ export function getCacheForType<T>(resourceType: () => T): T {
   return dispatcher.getCacheForType(resourceType);
 }
 
-export function useContext<T, S>(
+export function useContext<T>(
   Context: ReactContext<T>,
-  options?: {unstable_selector?: T => S},
+  options?: {unstable_selector?: T => mixed},
 ): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {

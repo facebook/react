@@ -235,9 +235,9 @@ function readContext<T>(context: ReactContext<T>): T {
   return context[threadID];
 }
 
-function useContext<T, S>(
+function useContext<T>(
   context: ReactContext<T>,
-  options?: {unstable_selector?: T => S},
+  options?: {unstable_selector?: T => mixed},
 ): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';

@@ -51,6 +51,7 @@ export type ContextDependency<C, S> = {
   selector: (C => S) | null,
   next: ContextDependency<mixed, mixed> | null,
   memoizedValue: C,
+  selectedValue: S | null,
   ...
 };
 
@@ -282,9 +283,9 @@ export type Dispatcher = {|
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
-  useContext<T, S>(
+  useContext<T>(
     context: ReactContext<T>,
-    options?: {unstable_selector?: T => S},
+    options?: {unstable_selector?: T => mixed},
   ): T,
   useRef<T>(initialValue: T): {|current: T|},
   useEffect(
