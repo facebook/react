@@ -25,7 +25,10 @@ import {
   checkForUpdate,
   inspectElement,
 } from 'react-devtools-shared/src/inspectedElementCache';
-import {loadHookNames} from 'react-devtools-shared/src/hookNamesCache';
+import {
+  hasAlreadyLoadedHookNames,
+  loadHookNames,
+} from 'react-devtools-shared/src/hookNamesCache';
 import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
@@ -79,15 +82,18 @@ export function InspectedElementContextController({children}: Props) {
     path: null,
   });
 
+  const element =
+    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
+
+  const alreadyLoadedHookNames =
+    element != null && hasAlreadyLoadedHookNames(element);
+
   // Parse the currently inspected element's hook names.
   // This may be enabled by default (for all elements)
   // or it may be opted into on a per-element basis (if it's too slow to be on by default).
   const [parseHookNames, setParseHookNames] = useState<boolean>(
-    parseHookNamesByDefault,
+    parseHookNamesByDefault || alreadyLoadedHookNames,
   );
-
-  const element =
-    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
   const elementHasChanged = element !== null && element !== state.element;
 
@@ -98,7 +104,7 @@ export function InspectedElementContextController({children}: Props) {
       path: null,
     });
 
-    setParseHookNames(parseHookNamesByDefault);
+    setParseHookNames(parseHookNamesByDefault || alreadyLoadedHookNames);
   }
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
@@ -108,7 +114,7 @@ export function InspectedElementContextController({children}: Props) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
     if (enableHookNameParsing) {
-      if (parseHookNames) {
+      if (parseHookNames || alreadyLoadedHookNames) {
         if (
           inspectedElement !== null &&
           inspectedElement.hooks !== null &&

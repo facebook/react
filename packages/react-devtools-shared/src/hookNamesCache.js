@@ -7,16 +7,19 @@
  * @flow
  */
 
-import {unstable_getCacheForType as getCacheForType} from 'react';
 import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
 import type {Element} from './devtools/views/Components/types';
-import type {HookNames} from 'react-devtools-shared/src/types';
+import type {
+  HookNames,
+  HookSourceLocationKey,
+} from 'react-devtools-shared/src/types';
+import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 
-const TIMEOUT = 3000;
+const TIMEOUT = 5000;
 
 const Pending = 0;
 const Resolved = 1;
@@ -51,14 +54,15 @@ function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   }
 }
 
-type HookNamesMap = WeakMap<Element, Record<HookNames>>;
+// This is intentionally a module-level Map, rather than a React-managed one.
+// Otherwise, refreshing the inspected element cache would also clear this cache.
+// TODO Rethink this if the React API constraints change.
+// See https://github.com/reactwg/react-18/discussions/25#discussioncomment-980435
+const map: WeakMap<Element, Record<HookNames>> = new WeakMap();
 
-function createMap(): HookNamesMap {
-  return new WeakMap();
-}
-
-function getRecordMap(): WeakMap<Element, Record<HookNames>> {
-  return getCacheForType(createMap);
+export function hasAlreadyLoadedHookNames(element: Element): boolean {
+  const record = map.get(element);
+  return record != null && record.status === Resolved;
 }
 
 export function loadHookNames(
@@ -70,14 +74,15 @@ export function loadHookNames(
     return null;
   }
 
-  const map = getRecordMap();
-
   let record = map.get(element);
-  if (record) {
-    // TODO Do we need to update the Map to use new the hooks list objects as keys
-    // or will these be stable between inspections as a component updates?
-    // It seems like they're stable.
-  } else {
+
+  if (__DEBUG__) {
+    console.groupCollapsed('loadHookNames() record:');
+    console.log(record);
+    console.groupEnd();
+  }
+
+  if (!record) {
     const callbacks = new Set();
     const wakeable: Wakeable = {
       then(callback) {
@@ -126,12 +131,12 @@ export function loadHookNames(
         wake();
       },
       function onError(error) {
-        if (__DEBUG__) {
-          console.log('[hookNamesCache] onError() error:', error);
-        }
-
         if (didTimeout) {
           return;
+        }
+
+        if (__DEBUG__) {
+          console.log('[hookNamesCache] onError() error:', error);
         }
 
         const thrownRecord = ((newRecord: any): RejectedRecord);
@@ -164,4 +169,15 @@ export function loadHookNames(
 
   const response = readRecord(record).value;
   return response;
+}
+
+export function getHookSourceLocationKey({
+  fileName,
+  lineNumber,
+  columnNumber,
+}: HookSource): HookSourceLocationKey {
+  if (fileName == null || lineNumber == null || columnNumber == null) {
+    throw Error('Hook source code location not found.');
+  }
+  return `${fileName}:${lineNumber}:${columnNumber}`;
 }

@@ -21,6 +21,7 @@ import Store from '../../store';
 import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 import {
   enableHookNameParsing,
   enableProfilerChangedHookIndices,
@@ -235,7 +236,11 @@ function HookView({
   let displayValue;
   let isComplexDisplayValue = false;
 
-  const hookName = hookNames != null ? hookNames.get(hook) : null;
+  const hookSource = hook.hookSource;
+  const hookName =
+    hookNames != null && hookSource != null
+      ? hookNames.get(getHookSourceLocationKey(hookSource))
+      : null;
   const hookDisplayName = hookName ? (
     <>
       {name}

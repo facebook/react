@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {HooksNode} from 'react-debug-tools/src/ReactDebugHooks';
-
 export type Wall = {|
   // `listen` returns the "unlisten" function.
   listen: (fn: Function) => Function,
@@ -80,7 +78,11 @@ export type ComponentFilter =
   | RegExpComponentFilter;
 
 export type HookName = string | null;
-export type HookNames = Map<HooksNode, HookName>;
+// Map of hook source ("<filename>:<line-number>:<column-number>") to name.
+// Hook source is used instead of the hook itself becuase the latter is not stable between element inspections.
+// We use a Map rather than an Array because of nested hooks and traversal ordering.
+export type HookSourceLocationKey = string;
+export type HookNames = Map<HookSourceLocationKey, HookName>;
 
 export type LRUCache<K, V> = {|
   get: (key: K) => V,
