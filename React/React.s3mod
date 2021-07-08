@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<ui_module id="a5e32491-7b02-45b1-b65d-53e9723ec0cd" name="React" package="Платформа" responsible="Могилевский И.В." required="1" version="1.00">
+<ui_module id="a5e32491-7b02-45b1-b65d-53e9723ec0cd" name="React" package="Платформа" responsible="Санников К.А." required="1" version="1.00">
 
   <description>Библиотека, содержащая в себе сборки react в формате amd</description>
 
