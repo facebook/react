@@ -71,7 +71,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
             'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
             'https://reactjs.org/link/strict-mode-string-ref',
-          getComponentNameFromType(ReactCurrentOwner.current.type),
+          componentName,
           config.ref,
         );
         didWarnAboutStringRefs[componentName] = true;
