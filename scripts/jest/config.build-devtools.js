@@ -59,6 +59,7 @@ module.exports = Object.assign({}, baseConfig, {
     '/node_modules/',
     '<rootDir>/build2/',
     '/__compiled__/',
+    '/__untransformed__/',
   ],
   testRegex:
     'packages/react-devtools-(extensions|shared)/src/__tests__/[^]+.test.js$',

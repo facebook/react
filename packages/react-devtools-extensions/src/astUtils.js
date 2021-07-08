@@ -29,9 +29,25 @@ const AST_NODE_TYPES = Object.freeze({
 });
 
 // Check if line number obtained from source map and the line number in hook node match
-function checkNodeLocation(path: NodePath, line: number): boolean {
+function checkNodeLocation(
+  path: NodePath,
+  line: number,
+  column: number,
+): boolean {
   const {start, end} = path.node.loc;
-  return line >= start.line && line <= end.line;
+
+  if (line < start.line || line > end.line) {
+    return false;
+  }
+
+  if (
+    (line === start.line && column < start.column) ||
+    (line === end.line && column > end.column)
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 // Checks whether hookNode is a member of targetHookNode
@@ -91,13 +107,15 @@ export function getHookName(
   originalSourceAST: mixed,
   originalSourceCode: string,
   originalSourceLineNumber: number,
+  originalSourceColumnNumber: number,
 ): string | null {
   const hooksFromAST = getPotentialHookDeclarationsFromAST(originalSourceAST);
 
   const potentialReactHookASTNode = hooksFromAST.find(node => {
     const nodeLocationCheck = checkNodeLocation(
       node,
-      ((originalSourceLineNumber: any): number),
+      originalSourceLineNumber,
+      originalSourceColumnNumber,
     );
     const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
     return nodeLocationCheck && hookDeclaractionCheck;

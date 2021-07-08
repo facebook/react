@@ -15,6 +15,12 @@ Object.defineProperty(exports, "ComponentWithExternalCustomHooks", {
     return _ComponentWithExternalCustomHooks.Component;
   }
 });
+Object.defineProperty(exports, "ComponentWithMultipleHooksPerLine", {
+  enumerable: true,
+  get: function () {
+    return _ComponentWithMultipleHooksPerLine.Component;
+  }
+});
 Object.defineProperty(exports, "Example", {
   enumerable: true,
   get: function () {
@@ -38,6 +44,8 @@ exports.ToDoList = void 0;
 var _ComponentWithCustomHook = require("./ComponentWithCustomHook");
 
 var _ComponentWithExternalCustomHooks = require("./ComponentWithExternalCustomHooks");
+
+var _ComponentWithMultipleHooksPerLine = require("./ComponentWithMultipleHooksPerLine");
 
 var _Example = require("./Example");
 
