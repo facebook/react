@@ -190,6 +190,7 @@ export default function Element({data, index, style}: Props) {
             }
           />
         )}
+        {isHovered || isSelected ? `[${element.children.length}]`: null}
       </div>
     </div>
   );
