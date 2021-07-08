@@ -71,7 +71,27 @@ function Component$1() {
  *
  * @flow
  */
+const A = /*#__PURE__*/React.createContext(1);
+const B = /*#__PURE__*/React.createContext(2);
 function Component$2() {
+  const a = React.useContext(A);
+  const b = React.useContext(B); // prettier-ignore
+
+  const c = React.useContext(A),
+        d = React.useContext(B); // eslint-disable-line one-var
+
+  return a + b + c + d;
+}
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+function Component$3() {
   const [count, setCount] = React.useState(0);
   return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
     onClick: () => setCount(count + 1)
@@ -86,7 +106,7 @@ function Component$2() {
  *
  * @flow
  */
-function Component$3() {
+function Component$4() {
   const [count] = require('react').useState(0);
 
   return count;
@@ -191,8 +211,9 @@ var ToDoList = /*#__PURE__*/Object.freeze({
 
 exports.ComponentWithCustomHook = Component;
 exports.ComponentWithExternalCustomHooks = Component$1;
-exports.Example = Component$2;
-exports.InlineRequire = Component$3;
+exports.ComponentWithMultipleHooksPerLine = Component$2;
+exports.Example = Component$3;
+exports.InlineRequire = Component$4;
 exports.ToDoList = ToDoList;
 exports.useTheme = useTheme;
 //# sourceMappingURL=index.js.map

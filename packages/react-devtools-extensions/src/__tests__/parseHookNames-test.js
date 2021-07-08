@@ -7,6 +7,10 @@
  * @flow
  */
 
+// Note that this test uses React components declared in the "__source__" directory.
+// This is done to control if and how the code is transformed at runtime.
+// Do not declare test components within this test file as it is very fragile.
+
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
@@ -87,65 +91,29 @@ describe('parseHookNames', () => {
   }
 
   it('should parse names for useState()', async () => {
-    const React = require('react');
-    const {useState} = React;
-    function Component(props) {
-      const [foo] = useState(true);
-      const bar = useState(true);
-      const [baz] = React.useState(true);
-      return `${foo}-${bar}-${baz}`;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
   });
 
   it('should parse names for useReducer()', async () => {
-    const React = require('react');
-    const {useReducer} = React;
-    function Component(props) {
-      const [foo] = useReducer(true);
-      const [bar] = useReducer(true);
-      const [baz] = React.useReducer(true);
-      return `${foo}-${bar}-${baz}`;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithUseReducer')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
   });
 
   it('should return null for hooks without names like useEffect', async () => {
-    const React = require('react');
-    const {useEffect} = React;
-    function Component(props) {
-      useEffect(() => {});
-      React.useLayoutEffect(() => () => {});
-      return null;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithUseEffect')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, []); // No hooks with names
   });
 
   it('should parse names for custom hooks', async () => {
-    const {useDebugValue, useState} = require('react');
-    function useCustomHookOne() {
-      // DebugValue hook should not appear in log.
-      useDebugValue('example');
-      return true;
-    }
-    function useCustomHookTwo() {
-      const [baz, setBaz] = useState(true);
-      return [baz, setBaz];
-    }
-    function Component(props) {
-      const foo = useCustomHookOne();
-      // This cae is ignored;
-      // the meaning of a tuple assignment for a custom hook is unclear.
-      const [bar] = useCustomHookTwo();
-      return `${foo}-${bar}`;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithNamedCustomHooks')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, [
       'foo',
@@ -155,22 +123,8 @@ describe('parseHookNames', () => {
   });
 
   it('should return null for custom hooks without explicit names', async () => {
-    const {useDebugValue} = require('react');
-    function useCustomHookOne() {
-      // DebugValue hook should not appear in log.
-      useDebugValue('example');
-    }
-    function useCustomHookTwo() {
-      // DebugValue hook should not appear in log.
-      useDebugValue('example');
-      return [true];
-    }
-    function Component(props) {
-      useCustomHookOne();
-      const [bar] = useCustomHookTwo();
-      return bar;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithUnnamedCustomHooks')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, [
       null, // Custom hooks can have names, but this one does not even return a value.
@@ -264,6 +218,30 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/bundle',
         'ComponentWithExternalCustomHooks',
+      ); // bundle source map
+    });
+
+    it('should work when multiple hooks are on a line', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'a', // useContext()
+          'b', // useContext()
+          'c', // useContext()
+          'd', // useContext()
+        ]);
+      }
+
+      await test(
+        './__source__/__compiled__/inline/ComponentWithMultipleHooksPerLine',
+      ); // inline source map
+      await test(
+        './__source__/__compiled__/external/ComponentWithMultipleHooksPerLine',
+      ); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ComponentWithMultipleHooksPerLine',
       ); // bundle source map
     });
 

@@ -376,32 +376,37 @@ function findHookNames(
 
     const sourceConsumer = hookSourceData.sourceConsumer;
 
+    let originalSourceColumnNumber;
     let originalSourceLineNumber;
     if (areSourceMapsAppliedToErrors() || !sourceConsumer) {
       // Either the current environment automatically applies source maps to errors,
       // or the current code had no source map to begin with.
       // Either way, we don't need to convert the Error stack frame locations.
+      originalSourceColumnNumber = columnNumber;
       originalSourceLineNumber = lineNumber;
     } else {
-      originalSourceLineNumber = sourceConsumer.originalPositionFor({
+      const position = sourceConsumer.originalPositionFor({
         line: lineNumber,
 
         // Column numbers are representated differently between tools/engines.
         // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
         column: columnNumber - 1,
-      }).line;
+      });
+
+      originalSourceColumnNumber = position.column;
+      originalSourceLineNumber = position.line;
     }
 
     if (__DEBUG__) {
       console.log(
-        'findHookNames() mapped line number',
-        lineNumber,
-        'to',
-        originalSourceLineNumber,
+        `findHookNames() mapped line ${lineNumber}->${originalSourceLineNumber} and column ${columnNumber}->${originalSourceColumnNumber}`,
       );
     }
 
-    if (originalSourceLineNumber === null) {
+    if (
+      originalSourceLineNumber === null ||
+      originalSourceColumnNumber === null
+    ) {
       return null;
     }
 
@@ -410,6 +415,7 @@ function findHookNames(
       hookSourceData.originalSourceAST,
       ((hookSourceData.originalSourceCode: any): string),
       ((originalSourceLineNumber: any): number),
+      originalSourceColumnNumber,
     );
 
     if (__DEBUG__) {

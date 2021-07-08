@@ -30,6 +30,7 @@ const files = glob
       '**/node_modules/**',
       '**/cjs/**',
       '**/__compiled__/**',
+      '**/__untransformed__/**',
       'packages/react-devtools-extensions/src/ErrorTesterCompiled.js',
     ],
   })
