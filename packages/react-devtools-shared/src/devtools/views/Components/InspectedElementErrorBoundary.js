@@ -8,11 +8,14 @@
  */
 
 import * as React from 'react';
-import {useCallback, useContext} from 'react';
+import {
+  useCallback,
+  useContext,
+  unstable_useCacheRefresh as useCacheRefresh,
+} from 'react';
 import ErrorBoundary from '../ErrorBoundary';
 import {TreeStateContext} from './TreeContext';
-import {StoreContext} from '../context';
-import {getClearElementCallback} from '../../../inspectedElementCache';
+import {clearCacheBecauseOfError} from '../../../inspectedElementCache';
 import styles from './InspectedElementErrorBoundary.css';
 
 type WrapperProps = {|
@@ -26,22 +29,10 @@ export default function InspectedElementErrorBoundaryWrapper({
   // This seems best since an error inspecting one element isn't likely to be relevant to another element.
   const {selectedElementID} = useContext(TreeStateContext);
 
-  // Note that getClearElementCallback(), like useContext(), must be called during render.
-  const store = useContext(StoreContext);
-  const selectedElement =
-    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
-  const clearElementCallback = useCallback(
-    () =>
-      selectedElement !== null
-        ? getClearElementCallback(selectedElement)
-        : null,
-    [selectedElement],
-  );
+  const refresh = useCacheRefresh();
   const handleDsmiss = useCallback(() => {
-    if (clearElementCallback !== null) {
-      clearElementCallback();
-    }
-  }, [clearElementCallback]);
+    clearCacheBecauseOfError(refresh);
+  }, [refresh]);
 
   return (
     <div className={styles.Wrapper}>
