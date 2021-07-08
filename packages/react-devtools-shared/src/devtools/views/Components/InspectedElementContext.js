@@ -108,8 +108,8 @@ export function InspectedElementContextController({children}: Props) {
   }
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
-  let inspectedElement = null;
   let hookNames: HookNames | null = null;
+  let inspectedElement = null;
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
