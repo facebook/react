@@ -105,6 +105,9 @@ type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {|
 type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {|
   type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE',
 |};
+type ACTION_SELECT_FIRST_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+  type: 'SELECT_FIRST_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
+|};
 type ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
   type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
 |};
@@ -139,6 +142,7 @@ type Action =
   | ACTION_SELECT_OWNER
   | ACTION_SELECT_PARENT_ELEMENT_IN_TREE
   | ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE
+  | ACTION_SELECT_FIRST_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE
@@ -376,6 +380,22 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           }
         }
         break;
+      case 'SELECT_FIRST_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        if (store.errorCount === 0 && store.warningCount === 0) {
+          return state;
+        }
+
+        const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
+
+        if (elementIndicesWithErrorsOrWarnings.length > 0) {
+          const firstEntry = elementIndicesWithErrorsOrWarnings[0];
+          selectedElementID = firstEntry.id;
+          selectedElementIndex = firstEntry.index;
+        }
+
+        lookupIDForIndex = false;
+        break;
+      }
       case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
         if (store.errorCount === 0 && store.warningCount === 0) {
           return state;
@@ -863,6 +883,7 @@ function TreeContextController({
         case 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE':
         case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
+        case 'SELECT_FIRST_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
         case 'SELECT_OWNER':

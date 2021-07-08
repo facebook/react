@@ -304,6 +304,10 @@ export default function Tree(props: Props) {
     [store],
   );
 
+  const handleSelectFirstErrorOrWarning = React.useCallback(() => {
+    dispatch({type: 'SELECT_FIRST_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'});
+  }, []);
+
   const handlePreviousErrorOrWarningClick = React.useCallback(() => {
     dispatch({type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'});
   }, []);
@@ -350,16 +354,22 @@ export default function Tree(props: Props) {
             (errors > 0 || warnings > 0) && (
               <React.Fragment>
                 {errors > 0 && (
-                  <div className={styles.IconAndCount}>
+                  <Button
+                    onClick={handleSelectFirstErrorOrWarning}
+                    title="Scroll to first error or warning"
+                    className={styles.IconAndCount}>
                     <Icon className={styles.ErrorIcon} type="error" />
                     {errors}
-                  </div>
+                  </Button>
                 )}
                 {warnings > 0 && (
-                  <div className={styles.IconAndCount}>
+                  <Button
+                    onClick={handleSelectFirstErrorOrWarning}
+                    title="Scroll to first error or warning"
+                    className={styles.IconAndCount}>
                     <Icon className={styles.WarningIcon} type="warning" />
                     {warnings}
-                  </div>
+                  </Button>
                 )}
                 <Button
                   onClick={handlePreviousErrorOrWarningClick}
