@@ -31,7 +31,6 @@ export type HookType =
   | 'useState'
   | 'useReducer'
   | 'useContext'
-  | 'useContextSelector'
   | 'useRef'
   | 'useEffect'
   | 'useLayoutEffect'
@@ -283,8 +282,10 @@ export type Dispatcher = {|
     initialArg: I,
     init?: (I) => S,
   ): [S, Dispatch<A>],
-  useContext<T>(context: ReactContext<T>): T,
-  useContextSelector<C, S>(context: ReactContext<C>, selector: (C) => S): C,
+  useContext<T, S>(
+    context: ReactContext<T>,
+    options?: {unstable_selector?: T => S},
+  ): T,
   useRef<T>(initialValue: T): {|current: T|},
   useEffect(
     create: () => (() => void) | void,

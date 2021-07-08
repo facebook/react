@@ -114,21 +114,12 @@ function readContext<T>(context: ReactContext<T>): T {
   return context._currentValue;
 }
 
-function useContext<T>(context: ReactContext<T>): T {
+function useContext<T, S>(
+  context: ReactContext<T>,
+  options?: {unstable_selector?: T => S},
+): T {
   hookLog.push({
     primitive: 'Context',
-    stackError: new Error(),
-    value: context._currentValue,
-  });
-  return context._currentValue;
-}
-
-function useContextSelector<C, S>(
-  context: ReactContext<C>,
-  selector: C => S,
-): C {
-  hookLog.push({
-    primitive: 'ContextSelector',
     stackError: new Error(),
     value: context._currentValue,
   });
@@ -328,7 +319,6 @@ const Dispatcher: DispatcherType = {
   useCacheRefresh,
   useCallback,
   useContext,
-  useContextSelector,
   useEffect,
   useImperativeHandle,
   useDebugValue,

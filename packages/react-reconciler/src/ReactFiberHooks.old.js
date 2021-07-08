@@ -680,6 +680,19 @@ function updateWorkInProgressHook(): Hook {
   return workInProgressHook;
 }
 
+function useContext<T, S>(
+  context: ReactContext<T>,
+  options?: {unstable_selector?: T => S},
+): T {
+  if (options !== undefined) {
+    const selector = options.unstable_selector;
+    if (selector !== undefined) {
+      return readContextWithSelector(context, selector);
+    }
+  }
+  return readContext(context);
+}
+
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
   return {
     lastEffect: null,
@@ -2071,7 +2084,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
 
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
-  useContextSelector: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
@@ -2096,8 +2108,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   readContext,
 
   useCallback: mountCallback,
-  useContext: readContext,
-  useContextSelector: readContextWithSelector,
+  useContext: useContext,
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
@@ -2122,8 +2133,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
-  useContext: readContext,
-  useContextSelector: readContextWithSelector,
+  useContext: useContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,
@@ -2148,8 +2158,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
-  useContext: readContext,
-  useContextSelector: readContextWithSelector,
+  useContext: useContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useLayoutEffect: updateLayoutEffect,
@@ -2207,21 +2216,13 @@ if (__DEV__) {
       checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>): T {
+    useContext<T, S>(
+      context: ReactContext<T>,
+      options?: {unstable_selector?: T => S},
+    ): T {
       currentHookNameInDev = 'useContext';
       mountHookTypesDev();
-      return readContext(context);
-    },
-    useContextSelector<C, S>(context: ReactContext<C>, selector: C => S): C {
-      currentHookNameInDev = 'useContextSelector';
-      mountHookTypesDev();
-      const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
-      try {
-        return readContextWithSelector(context, selector);
-      } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
+      return useContext(context, options);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2346,21 +2347,13 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>): T {
+    useContext<T, S>(
+      context: ReactContext<T>,
+      options?: {unstable_selector?: T => S},
+    ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context);
-    },
-    useContextSelector<C, S>(context: ReactContext<C>, selector: C => S): C {
-      currentHookNameInDev = 'useContextSelector';
-      updateHookTypesDev();
-      const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
-      try {
-        return readContextWithSelector(context, selector);
-      } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
+      return useContext(context, options);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2481,21 +2474,13 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>): T {
+    useContext<T, S>(
+      context: ReactContext<T>,
+      options?: {unstable_selector?: T => S},
+    ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context);
-    },
-    useContextSelector<C, S>(context: ReactContext<C>, selector: C => S): C {
-      currentHookNameInDev = 'useContextSelector';
-      updateHookTypesDev();
-      const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
-      try {
-        return readContextWithSelector(context, selector);
-      } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
+      return useContext(context, options);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2617,21 +2602,13 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>): T {
+    useContext<T, S>(
+      context: ReactContext<T>,
+      options?: {unstable_selector?: T => S},
+    ): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context);
-    },
-    useContextSelector<C, S>(context: ReactContext<C>, selector: C => S): C {
-      currentHookNameInDev = 'useContextSelector';
-      updateHookTypesDev();
-      const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnRerenderInDEV;
-      try {
-        return readContextWithSelector(context, selector);
-      } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
+      return useContext(context, options);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2754,23 +2731,14 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>): T {
+    useContext<T, S>(
+      context: ReactContext<T>,
+      options?: {unstable_selector?: T => S},
+    ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return readContext(context);
-    },
-    useContextSelector<C, S>(context: ReactContext<C>, selector: C => S): C {
-      currentHookNameInDev = 'useContextSelector';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnMountInDEV;
-      try {
-        return readContextWithSelector(context, selector);
-      } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
+      return useContext(context, options);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2905,23 +2873,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>): T {
+    useContext<T, S>(
+      context: ReactContext<T>,
+      options?: {unstable_selector?: T => S},
+    ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context);
-    },
-    useContextSelector<C, S>(context: ReactContext<C>, selector: C => S): C {
-      currentHookNameInDev = 'useContextSelector';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
-      try {
-        return readContextWithSelector(context, selector);
-      } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
+      return useContext(context, options);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -3057,23 +3016,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(context: ReactContext<T>): T {
+    useContext<T, S>(
+      context: ReactContext<T>,
+      options?: {unstable_selector?: T => S},
+    ): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context);
-    },
-    useContextSelector<C, S>(context: ReactContext<C>, selector: C => S): C {
-      currentHookNameInDev = 'useContextSelector';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      const prevDispatcher = ReactCurrentDispatcher.current;
-      ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
-      try {
-        return readContextWithSelector(context, selector);
-      } finally {
-        ReactCurrentDispatcher.current = prevDispatcher;
-      }
+      return useContext(context, options);
     },
     useEffect(
       create: () => (() => void) | void,

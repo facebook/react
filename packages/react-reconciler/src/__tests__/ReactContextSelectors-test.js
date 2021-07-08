@@ -4,7 +4,6 @@ let Scheduler;
 let act;
 let useState;
 let useContext;
-let useContextSelector;
 
 describe('ReactContextSelectors', () => {
   beforeEach(() => {
@@ -16,12 +15,15 @@ describe('ReactContextSelectors', () => {
     act = require('jest-react').act;
     useState = React.useState;
     useContext = React.useContext;
-    useContextSelector = React.unstable_useContextSelector;
   });
 
   function Text({text}) {
     Scheduler.unstable_yieldValue(text);
     return text;
+  }
+
+  function useContextSelector(Context, selector) {
+    return useContext(Context, {unstable_selector: selector});
   }
 
   // @gate enableLazyContextPropagation

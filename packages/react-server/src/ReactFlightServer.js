@@ -819,7 +819,6 @@ const Dispatcher: DispatcherType = {
   },
   readContext: (unsupportedHook: any),
   useContext: (unsupportedHook: any),
-  useContextSelector: (unsupportedHook: any),
   useReducer: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
   useState: (unsupportedHook: any),

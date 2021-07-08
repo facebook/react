@@ -235,22 +235,12 @@ function readContext<T>(context: ReactContext<T>): T {
   return context[threadID];
 }
 
-function useContext<T>(context: ReactContext<T>): T {
+function useContext<T, S>(
+  context: ReactContext<T>,
+  options?: {unstable_selector?: T => S},
+): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
-  }
-  resolveCurrentlyRenderingComponent();
-  const threadID = currentPartialRenderer.threadID;
-  validateContextBounds(context, threadID);
-  return context[threadID];
-}
-
-function useContextSelector<C, S>(
-  context: ReactContext<C>,
-  selector: C => S,
-): C {
-  if (__DEV__) {
-    currentHookNameInDev = 'useContextSelector';
   }
   resolveCurrentlyRenderingComponent();
   const threadID = currentPartialRenderer.threadID;
@@ -510,7 +500,6 @@ export function setCurrentPartialRenderer(renderer: PartialRenderer) {
 export const Dispatcher: DispatcherType = {
   readContext,
   useContext,
-  useContextSelector,
   useMemo,
   useReducer,
   useRef,
