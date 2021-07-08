@@ -16,6 +16,7 @@ import {SourceMapConsumer} from 'source-map';
 import {getHookName, isNonDeclarativePrimitiveHook} from './astUtils';
 import {areSourceMapsAppliedToErrors} from './ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 
 import type {
   HooksNode,
@@ -101,17 +102,6 @@ const originalURLToMetadataCache: LRUCache<
   },
 });
 
-function getLocationKey({
-  fileName,
-  lineNumber,
-  columnNumber,
-}: HookSource): string {
-  if (fileName == null || lineNumber == null || columnNumber == null) {
-    throw Error('Hook source code location not found.');
-  }
-  return `${fileName}:${lineNumber}:${columnNumber}`;
-}
-
 export default async function parseHookNames(
   hooksTree: HooksTree,
 ): Thenable<HookNames | null> {
@@ -138,9 +128,9 @@ export default async function parseHookNames(
       throw Error('Hook source code location not found.');
     }
 
-    const locationKey = getLocationKey(hookSource);
+    const locationKey = getHookSourceLocationKey(hookSource);
     if (!locationKeyToHookSourceData.has(locationKey)) {
-      // Can't be null because getLocationKey() would have thrown
+      // Can't be null because getHookSourceLocationKey() would have thrown
       const runtimeSourceURL = ((hookSource.fileName: any): string);
 
       const hookSourceData: HookSourceData = {
@@ -373,7 +363,7 @@ function findHookNames(
       return null; // Should not be reachable.
     }
 
-    const locationKey = getLocationKey(hookSource);
+    const locationKey = getHookSourceLocationKey(hookSource);
     const hookSourceData = locationKeyToHookSourceData.get(locationKey);
     if (!hookSourceData) {
       return null; // Should not be reachable.
@@ -426,7 +416,8 @@ function findHookNames(
       console.log(`findHookNames() Found name "${name || '-'}"`);
     }
 
-    map.set(hook, name);
+    const key = getHookSourceLocationKey(hookSource);
+    map.set(key, name);
   });
 
   return map;
