@@ -1064,4 +1064,36 @@ describe('ReactFabric', () => {
     expect(TextInputState.focusTextInput).toHaveBeenCalledTimes(1);
     expect(TextInputState.focusTextInput).toHaveBeenCalledWith(viewRef.current);
   });
+
+  it('should no-op if calling sendAccessibilityEvent on unmounted refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    nativeFabricUIManager.sendAccessibilityEvent.mockReset();
+
+    let viewRef;
+    act(() => {
+      ReactFabric.render(
+        <View
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+    });
+    const dangerouslyRetainedViewRef = viewRef;
+    act(() => {
+      ReactFabric.stopSurface(11);
+    });
+
+    ReactFabric.sendAccessibilityEvent(
+      dangerouslyRetainedViewRef,
+      'eventTypeName',
+    );
+
+    expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
+  });
 });
