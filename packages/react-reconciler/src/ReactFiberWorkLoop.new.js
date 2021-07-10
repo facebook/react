@@ -1082,6 +1082,15 @@ export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
   fn: A => R,
   a: A,
 ): R {
+  // In legacy mode, we flush pending passive effects at the beginning of the
+  // next event, not at the end of the previous one.
+  if (
+    rootWithPendingPassiveEffects !== null &&
+    rootWithPendingPassiveEffects.tag === LegacyRoot
+  ) {
+    flushPassiveEffects();
+  }
+
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
