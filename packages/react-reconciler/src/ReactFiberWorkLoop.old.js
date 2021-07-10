@@ -1086,7 +1086,8 @@ export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
   // next event, not at the end of the previous one.
   if (
     rootWithPendingPassiveEffects !== null &&
-    rootWithPendingPassiveEffects.tag === LegacyRoot
+    rootWithPendingPassiveEffects.tag === LegacyRoot &&
+    (executionContext & (RenderContext | CommitContext)) === NoContext
   ) {
     flushPassiveEffects();
   }
