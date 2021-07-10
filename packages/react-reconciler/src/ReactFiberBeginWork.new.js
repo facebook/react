@@ -409,7 +409,6 @@ function updateMemoComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps: any,
-  updateLanes: Lanes,
   renderLanes: Lanes,
 ): null | Fiber {
   if (current === null) {
@@ -437,7 +436,6 @@ function updateMemoComponent(
         workInProgress,
         resolvedType,
         nextProps,
-        updateLanes,
         renderLanes,
       );
     }
@@ -482,7 +480,11 @@ function updateMemoComponent(
     }
   }
   const currentChild = ((current.child: any): Fiber); // This is always exactly one child
-  if (!includesSomeLane(updateLanes, renderLanes)) {
+  const hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(
+    current,
+    renderLanes,
+  );
+  if (!hasScheduledUpdateOrContext) {
     // This will be the props with resolved defaultProps,
     // unlike current.memoizedProps which will be the unresolved ones.
     const prevProps = currentChild.memoizedProps;
@@ -507,7 +509,6 @@ function updateSimpleMemoComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps: any,
-  updateLanes: Lanes,
   renderLanes: Lanes,
 ): null | Fiber {
   // TODO: current can be non-null here even if the component
@@ -553,7 +554,7 @@ function updateSimpleMemoComponent(
       (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
-      if (!includesSomeLane(renderLanes, updateLanes)) {
+      if (!checkScheduledUpdateOrContext(current, renderLanes)) {
         // The pending lanes were cleared at the beginning of beginWork. We're
         // about to bail out, but there might be other lanes that weren't
         // included in the current render. Usually, the priority level of the
@@ -740,7 +741,6 @@ const updateLegacyHiddenComponent = updateOffscreenComponent;
 function updateCacheComponent(
   current: Fiber | null,
   workInProgress: Fiber,
-  updateLanes: Lanes,
   renderLanes: Lanes,
 ) {
   if (!enableCache) {
@@ -762,7 +762,7 @@ function updateCacheComponent(
     pushCacheProvider(workInProgress, freshCache);
   } else {
     // Check for updates
-    if (includesSomeLane(renderLanes, updateLanes)) {
+    if (includesSomeLane(current.lanes, renderLanes)) {
       cloneUpdateQueue(current, workInProgress);
       processUpdateQueue(workInProgress, null, null, renderLanes);
     }
@@ -1306,7 +1306,6 @@ function mountLazyComponent(
   _current,
   workInProgress,
   elementType,
-  updateLanes,
   renderLanes,
 ) {
   if (_current !== null) {
@@ -1396,7 +1395,6 @@ function mountLazyComponent(
         workInProgress,
         Component,
         resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
-        updateLanes,
         renderLanes,
       );
       return child;
@@ -3214,6 +3212,27 @@ function remountFiber(
   }
 }
 
+function checkScheduledUpdateOrContext(
+  current: Fiber,
+  renderLanes: Lanes,
+): boolean {
+  // Before performing an early bailout, we must check if there are pending
+  // updates or context.
+  const updateLanes = current.lanes;
+  if (includesSomeLane(updateLanes, renderLanes)) {
+    return true;
+  }
+  // No pending update, but because context is propagated lazily, we need
+  // to check for a context change before we bail out.
+  if (enableLazyContextPropagation) {
+    const dependencies = current.dependencies;
+    if (dependencies !== null && checkIfContextChanged(dependencies)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function attemptEarlyBailoutIfNoScheduledUpdate(
   current: Fiber,
   workInProgress: Fiber,
@@ -3428,8 +3447,6 @@ function beginWork(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ): Fiber | null {
-  let updateLanes = workInProgress.lanes;
-
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
@@ -3449,17 +3466,6 @@ function beginWork(
   }
 
   if (current !== null) {
-    // TODO: The factoring of this block is weird.
-    if (
-      enableLazyContextPropagation &&
-      !includesSomeLane(renderLanes, updateLanes)
-    ) {
-      const dependencies = current.dependencies;
-      if (dependencies !== null && checkIfContextChanged(dependencies)) {
-        updateLanes = mergeLanes(updateLanes, renderLanes);
-      }
-    }
-
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
 
@@ -3472,14 +3478,27 @@ function beginWork(
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true;
-    } else if (!includesSomeLane(renderLanes, updateLanes)) {
-      didReceiveUpdate = false;
-      return attemptEarlyBailoutIfNoScheduledUpdate(
+    } else {
+      // Neither props nor legacy context changes. Check if there's a pending
+      // update or context change.
+      const hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(
         current,
-        workInProgress,
         renderLanes,
       );
-    } else {
+      if (
+        !hasScheduledUpdateOrContext &&
+        // If this is the second pass of an error or suspense boundary, there
+        // may not be work scheduled on `current`, so we check for this flag.
+        (workInProgress.flags & DidCapture) === NoFlags
+      ) {
+        // No pending updates or context. Bail out now.
+        didReceiveUpdate = false;
+        return attemptEarlyBailoutIfNoScheduledUpdate(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
       if ((current.flags & ForceUpdateForLegacySuspense) !== NoFlags) {
         // This is a special case that only exists for legacy mode.
         // See https://github.com/facebook/react/pull/19216.
@@ -3518,7 +3537,6 @@ function beginWork(
         current,
         workInProgress,
         elementType,
-        updateLanes,
         renderLanes,
       );
     }
@@ -3611,7 +3629,6 @@ function beginWork(
         workInProgress,
         type,
         resolvedProps,
-        updateLanes,
         renderLanes,
       );
     }
@@ -3621,7 +3638,6 @@ function beginWork(
         workInProgress,
         workInProgress.type,
         workInProgress.pendingProps,
-        updateLanes,
         renderLanes,
       );
     }
@@ -3657,12 +3673,7 @@ function beginWork(
     }
     case CacheComponent: {
       if (enableCache) {
-        return updateCacheComponent(
-          current,
-          workInProgress,
-          updateLanes,
-          renderLanes,
-        );
+        return updateCacheComponent(current, workInProgress, renderLanes);
       }
       break;
     }
