@@ -23,8 +23,8 @@ import {createEventHandle} from './ReactDOMEventHandle';
 import {
   batchedUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
   flushSync,
+  flushSyncWithoutWarningIfAlreadyRendering,
   flushControlled,
   injectIntoDevTools,
   attemptSynchronousHydration,
@@ -100,7 +100,7 @@ setRestoreImplementation(restoreControlledState);
 setBatchingImplementation(
   batchedUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
+  flushSyncWithoutWarningIfAlreadyRendering,
 );
 
 function createPortal(
