@@ -1795,10 +1795,11 @@ describe('ReactHooksWithNoopRenderer', () => {
           return <Text text={'Count: ' + count} />;
         }
         await act(async () => {
-          ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
+          ReactNoop.flushSync(() => {
+            ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
+          });
 
           // Even in legacy mode, effects are deferred until after paint
-          ReactNoop.flushSync();
           expect(Scheduler).toHaveYielded(['Count: (empty)']);
           expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
         });
