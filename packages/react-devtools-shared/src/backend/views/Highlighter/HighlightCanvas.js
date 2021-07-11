@@ -17,7 +17,6 @@ let canvas: HTMLCanvasElement | null = null;
 
 type Box = {|top: number, left: number, width: number, height: number|};
 
-
 class OverlayTip {
   tip: HTMLElement;
   nameSpan: HTMLElement;
@@ -104,7 +103,6 @@ export default class HighlightCanvas {
     doc.body.appendChild(this.container);
   }
 
-
   initialize(): void {
     canvas = window.document.createElement('canvas');
     canvas.style.cssText = `
@@ -158,7 +156,7 @@ export default class HighlightCanvas {
       );
       outerBox.left = Math.min(outerBox.left, box.left - dims.marginLeft);
 
-      const rectNode = this.measureNode(element)
+      const rectNode = this.measureNode(element);
 
       this.fillCanvas(context, rectNode, dims);
 
@@ -210,7 +208,6 @@ export default class HighlightCanvas {
         },
       );
     });
-
   }
   measureNode(node: Object): Rect | null {
     if (!node || typeof node.getBoundingClientRect !== 'function') {
@@ -222,11 +219,7 @@ export default class HighlightCanvas {
     return getNestedBoundingClientRect(node, currentWindow);
   }
 
-  fillCanvas(
-    context: CanvasRenderingContext2D,
-    rect: Rect,
-    dims: any
-  ): void {
+  fillCanvas(context: CanvasRenderingContext2D, rect: Rect, dims: any): void {
     const {height, left, top, width} = rect;
 
     //fill margin
@@ -236,24 +229,38 @@ export default class HighlightCanvas {
     const fillHeightMargin = height + dims.marginTop + dims.marginBottom;
 
     context.fillStyle = highlightStyles.margin;
-    context.fillRect(fillLeftMargin, fillTopMargin, fillWidthMargin, fillHeightMargin)
+    context.fillRect(
+      fillLeftMargin,
+      fillTopMargin,
+      fillWidthMargin,
+      fillHeightMargin,
+    );
 
     //fill padding
     context.fillStyle = highlightStyles.padding;
-    context.clearRect(left, top, width, height)
-    context.fillRect(left, top, width, height)
+    context.clearRect(left, top, width, height);
+    context.fillRect(left, top, width, height);
 
     //fill content
     const fillLeft = left + dims.borderLeft + dims.paddingLeft;
     const fillTop = top + dims.borderTop + dims.paddingTop;
-    const fillWidth = width - dims.borderLeft - dims.borderRight - dims.paddingLeft - dims.paddingRight;
-    const fillHeight = height - dims.borderTop - dims.borderBottom - dims.paddingTop - dims.paddingBottom;
+    const fillWidth =
+      width -
+      dims.borderLeft -
+      dims.borderRight -
+      dims.paddingLeft -
+      dims.paddingRight;
+    const fillHeight =
+      height -
+      dims.borderTop -
+      dims.borderBottom -
+      dims.paddingTop -
+      dims.paddingBottom;
 
     context.fillStyle = highlightStyles.background;
 
-    context.clearRect(fillLeft, fillTop , fillWidth, fillHeight)
-    context.fillRect(fillLeft, fillTop , fillWidth, fillHeight)
-
+    context.clearRect(fillLeft, fillTop, fillWidth, fillHeight);
+    context.fillRect(fillLeft, fillTop, fillWidth, fillHeight);
   }
 
   remove() {

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import HighlightCanvas from './HighlightCanvas'
+import HighlightCanvas from './HighlightCanvas';
 
 const SHOW_DURATION = 2000;
 

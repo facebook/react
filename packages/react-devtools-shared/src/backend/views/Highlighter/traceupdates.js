@@ -90,9 +90,9 @@ function traceUpdates(nodes: Set<NativeType>): void {
       expirationTime:
         data != null
           ? Math.min(
-          now + MAX_DISPLAY_DURATION,
-          data.expirationTime + DISPLAY_DURATION,
-          )
+              now + MAX_DISPLAY_DURATION,
+              data.expirationTime + DISPLAY_DURATION,
+            )
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
       rect,
