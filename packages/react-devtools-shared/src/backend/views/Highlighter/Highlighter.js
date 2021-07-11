@@ -7,19 +7,20 @@
  * @flow
  */
 
-import Overlay from './Overlay';
+// import Overlay from './Overlay';
+import HighlightCanvas from './Canvas'
 
 const SHOW_DURATION = 2000;
 
 let timeoutID: TimeoutID | null = null;
-let overlay: Overlay | null = null;
+let highlightCanvas: HighlightCanvas | null = null;
 
 export function hideOverlay() {
   timeoutID = null;
 
-  if (overlay !== null) {
-    overlay.remove();
-    overlay = null;
+  if (highlightCanvas !== null) {
+    highlightCanvas.remove();
+    highlightCanvas = null;
   }
 }
 
@@ -41,11 +42,11 @@ export function showOverlay(
     return;
   }
 
-  if (overlay === null) {
-    overlay = new Overlay();
+  if (highlightCanvas === null) {
+    highlightCanvas = new HighlightCanvas();
   }
 
-  overlay.inspect(elements, componentName);
+  highlightCanvas.inspect(elements, componentName);
 
   if (hideAfterTimeout) {
     timeoutID = setTimeout(hideOverlay, SHOW_DURATION);
