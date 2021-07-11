@@ -47,6 +47,9 @@ module.exports = {
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
+  node: {
+    fs: 'empty',
+  },
   plugins: [
     new DefinePlugin({
       __DEV__,

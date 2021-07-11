@@ -47,13 +47,17 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
+
 import type {ComponentFilter, ElementType} from './types';
+import type {LRUCache} from 'react-devtools-shared/src/types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-const encodedStringCache = new LRU({max: 1000});
+const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
+  max: 1000,
+});
 
 export function alphaSortKeys(
   a: string | number | Symbol,
