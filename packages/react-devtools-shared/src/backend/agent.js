@@ -24,7 +24,7 @@ import setupHighlighter from './views/Highlighter';
 import {
   initialize as setupTraceUpdates,
   toggleEnabled as setTraceUpdatesEnabled,
-} from './views/TraceUpdates';
+} from './views/Highlighter/traceupdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
 import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 

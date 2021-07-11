@@ -7,8 +7,7 @@
  * @flow
  */
 
-// import Overlay from './Overlay';
-import HighlightCanvas from './Canvas'
+import HighlightCanvas from './HighlightCanvas'
 
 const SHOW_DURATION = 2000;
 

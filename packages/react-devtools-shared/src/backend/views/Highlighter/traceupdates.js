@@ -8,7 +8,7 @@
  */
 
 import Agent from 'react-devtools-shared/src/backend/agent';
-import {destroy as destroyCanvas, draw} from './canvas';
+import {destroy as destroyCanvas, draw} from './traceupdates-canvas';
 import {getNestedBoundingClientRect} from '../utils';
 
 import type {NativeType} from '../../types';
@@ -90,9 +90,9 @@ function traceUpdates(nodes: Set<NativeType>): void {
       expirationTime:
         data != null
           ? Math.min(
-              now + MAX_DISPLAY_DURATION,
-              data.expirationTime + DISPLAY_DURATION,
-            )
+          now + MAX_DISPLAY_DURATION,
+          data.expirationTime + DISPLAY_DURATION,
+          )
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
       rect,
