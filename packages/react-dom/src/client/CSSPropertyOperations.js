@@ -10,6 +10,7 @@ import {shorthandToLonghand} from './CSSShorthandProperty';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
 import warnValidStyle from '../shared/warnValidStyle';
+import warnAssignedStyle from './warnAssignedStyle';
 
 /**
  * Operations for dealing with CSS properties.
@@ -63,10 +64,10 @@ export function setValueForStyles(node, styles) {
       continue;
     }
     const isCustomProperty = styleName.indexOf('--') === 0;
-    if (__DEV__) {
-      if (!isCustomProperty) {
-        warnValidStyle(styleName, styles[styleName]);
-      }
+    const isNeedValidateStyle = __DEV__ && !isCustomProperty;
+
+    if (isNeedValidateStyle) {
+      warnValidStyle(styleName, styles[styleName]);
     }
     const styleValue = dangerousStyleValue(
       styleName,
@@ -80,6 +81,10 @@ export function setValueForStyles(node, styles) {
       style.setProperty(styleName, styleValue);
     } else {
       style[styleName] = styleValue;
+    }
+
+    if (isNeedValidateStyle) {
+      warnAssignedStyle(node, styleName, styles[styleName]);
     }
   }
 }
