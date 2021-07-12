@@ -16,7 +16,12 @@ function welcome(event) {
 
   window.removeEventListener('message', welcome);
 
-  setup(window.__REACT_DEVTOOLS_GLOBAL_HOOK__);
+  const {bridge} = setup(window.__REACT_DEVTOOLS_GLOBAL_HOOK__);
+  window.dispatchEvent(
+    new CustomEvent('react-devtools-setup', {
+      bridge,
+    }),
+  );
 }
 
 window.addEventListener('message', welcome);
@@ -84,4 +89,6 @@ function setup(hook) {
       hook.nativeStyleEditorValidAttributes,
     );
   }
+
+  return {bridge};
 }
