@@ -337,6 +337,28 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    `
+      // Valid because finally is called after either try or catch blocks
+      function ComponentWithTryCatchFinally(props) {
+        try {
+        } catch {
+        } finally {
+          useNonConditionalHook();
+        }
+      }
+    `,
+    `
+      // Valid because we don't try/catch on a hook. Throwing inside the catch
+      // block is also valid since the component will then error completely
+      function ComponentWithTryCatch(props) {
+        try {
+          throwingFunction();
+        } catch {
+          throwingFunction();
+        }
+        useNonConditionalHook();
+      }
+    `,
   ],
   invalid: [
     {
@@ -886,6 +908,55 @@ const tests = {
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
+    },
+    {
+      code: `
+        // Invalid because useConditionalHook can be a custom hook that throws
+        // conditionally during render, causing subsequent hooks to be skipped
+        function ComponentWithTryCatchHook() {
+          try {
+            useConditionalHook();
+          } catch {
+          }
+        }
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: `
+        // Invalid because the catch block isn't necessarily called every time
+        function ComponentWithTryCaughtHook() {
+          try {
+          } catch {
+            useConditionalHook();
+          }
+        }
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: `
+        // Invalid because either of the hooks in the try block might throw
+        function ComponentWithTryCatchMultipleHooks() {
+          useNonConditionalHook1();
+          useNonConditionalHook2();
+          try {
+            useConditionalHook1();
+            useConditionalHook2();
+            useConditionalHook3();
+          } catch {
+            useConditionalHook4();
+            useConditionalHook5();
+          }
+        }
+      `,
+      errors: [
+        conditionalError('useConditionalHook1'),
+        conditionalError('useConditionalHook2'),
+        conditionalError('useConditionalHook3'),
+        conditionalError('useConditionalHook4'),
+        conditionalError('useConditionalHook5'),
+      ],
     },
   ],
 };
