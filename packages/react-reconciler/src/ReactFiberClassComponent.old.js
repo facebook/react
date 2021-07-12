@@ -606,6 +606,11 @@ function constructClassInstance(
       const isValid =
         // Allow null for conditional declaration
         contextType === null ||
+        (Array.isArray(contextType) && contextType.every(item =>
+          item !== undefined &&
+          item.$$typeof === REACT_CONTEXT_TYPE &&
+          item._context === undefined
+        )) ||
         (contextType !== undefined &&
           contextType.$$typeof === REACT_CONTEXT_TYPE &&
           contextType._context === undefined); // Not a <Context.Consumer>
@@ -643,7 +648,9 @@ function constructClassInstance(
     }
   }
 
-  if (typeof contextType === 'object' && contextType !== null) {
+  if (Array.isArray(contextType)) {
+    context = contextType.map(c => readContext(c))
+  } else if (typeof contextType === 'object' && contextType !== null) {
     context = readContext((contextType: any));
   } else if (!disableLegacyContext) {
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
@@ -843,7 +850,9 @@ function mountClassInstance(
   initializeUpdateQueue(workInProgress);
 
   const contextType = ctor.contextType;
-  if (typeof contextType === 'object' && contextType !== null) {
+  if (Array.isArray(contextType)) {
+    instance.context = contextType.map(c => readContext(c))
+  } else if (typeof contextType === 'object' && contextType !== null) {
     instance.context = readContext(contextType);
   } else if (disableLegacyContext) {
     instance.context = emptyContextObject;
@@ -939,7 +948,9 @@ function resumeMountClassInstance(
   const oldContext = instance.context;
   const contextType = ctor.contextType;
   let nextContext = emptyContextObject;
-  if (typeof contextType === 'object' && contextType !== null) {
+  if (Array.isArray(contextType)) {
+    nextContext = contextType.map(c => readContext(c))
+  } else if (typeof contextType === 'object' && contextType !== null) {
     nextContext = readContext(contextType);
   } else if (!disableLegacyContext) {
     const nextLegacyUnmaskedContext = getUnmaskedContext(
@@ -1114,7 +1125,9 @@ function updateClassInstance(
   const oldContext = instance.context;
   const contextType = ctor.contextType;
   let nextContext = emptyContextObject;
-  if (typeof contextType === 'object' && contextType !== null) {
+  if (Array.isArray(contextType)) {
+    nextContext = contextType.map(c => readContext(c))
+  } else if (typeof contextType === 'object' && contextType !== null) {
     nextContext = readContext(contextType);
   } else if (!disableLegacyContext) {
     const nextUnmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
