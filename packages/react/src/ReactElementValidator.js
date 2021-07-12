@@ -358,9 +358,7 @@ export function jsxWithValidation(
             validateChildKeys(children[i], type);
           }
 
-          if (Object.freeze) {
-            Object.freeze(children);
-          }
+          Object.freeze(children);
         } else {
           if (__DEV__) {
             console.error(

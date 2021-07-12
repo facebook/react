@@ -191,10 +191,9 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       writable: false,
       value: source,
     });
-    if (Object.freeze) {
-      Object.freeze(element.props);
-      Object.freeze(element);
-    }
+
+    Object.freeze(element.props);
+    Object.freeze(element);
   }
 
   return element;
@@ -393,9 +392,7 @@ export function createElement(type, config, children) {
       childArray[i] = arguments[i + 2];
     }
     if (__DEV__) {
-      if (Object.freeze) {
-        Object.freeze(childArray);
-      }
+      Object.freeze(childArray);
     }
     props.children = childArray;
   }
