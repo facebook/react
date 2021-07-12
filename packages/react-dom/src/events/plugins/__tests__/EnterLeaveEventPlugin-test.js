@@ -292,4 +292,28 @@ describe('EnterLeaveEventPlugin', () => {
 
     expect(onMouseEnter).toHaveBeenCalledTimes(1);
   });
+
+  it('should not trigger mouseEnter events for disabled elements', () => {
+    const onMouseEnter = jest.fn();
+    const node = ReactDOM.render(
+      <button disabled={true} onMouseEnter={onMouseEnter} />,
+      container,
+    );
+
+    node.dispatchEvent(new MouseEvent('mouseover', {bubbles: true}));
+
+    expect(onMouseEnter).toBeCalledTimes(0);
+  });
+
+  it('should not trigger mouseLeave events for disabled elements', () => {
+    const onMouseLeave = jest.fn();
+    const node = ReactDOM.render(
+      <button disabled={true} onMouseLeave={onMouseLeave} />,
+      container,
+    );
+
+    node.dispatchEvent(new MouseEvent('mouseout', {bubbles: true}));
+
+    expect(onMouseLeave).toBeCalledTimes(0);
+  });
 });
