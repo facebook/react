@@ -60,10 +60,8 @@ import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
   removeEventListener,
-  addEventCaptureListener,
-  addEventBubbleListener,
-  addEventBubbleListenerWithPassiveFlag,
-  addEventCaptureListenerWithPassiveFlag,
+  addEventToTarget,
+  addEventToTargetWithPassiveFlag,
 } from './EventListener';
 import * as BeforeInputEventPlugin from './plugins/BeforeInputEventPlugin';
 import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
@@ -469,37 +467,21 @@ function addTrappedEventListener(
       return originalListener.apply(this, p);
     };
   }
-  // TODO: There are too many combinations here. Consolidate them.
-  if (isCapturePhaseListener) {
-    if (isPassiveListener !== undefined) {
-      unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
-        targetContainer,
-        domEventName,
-        listener,
-        isPassiveListener,
-      );
-    } else {
-      unsubscribeListener = addEventCaptureListener(
-        targetContainer,
-        domEventName,
-        listener,
-      );
-    }
+
+  if (isPassiveListener !== undefined) {
+    unsubscribeListener = addEventToTargetWithPassiveFlag(
+      targetContainer,
+      domEventName,
+      listener,
+      isCapturePhaseListener,
+    );
   } else {
-    if (isPassiveListener !== undefined) {
-      unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
-        targetContainer,
-        domEventName,
-        listener,
-        isPassiveListener,
-      );
-    } else {
-      unsubscribeListener = addEventBubbleListener(
-        targetContainer,
-        domEventName,
-        listener,
-      );
-    }
+    unsubscribeListener = addEventToTarget(
+      targetContainer,
+      domEventName,
+      listener,
+      isCapturePhaseListener,
+    );
   }
 }
 

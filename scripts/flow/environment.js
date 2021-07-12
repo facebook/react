@@ -49,17 +49,9 @@ declare module 'EventListener' {
       target: EventTarget,
       type: string,
       callback: Function,
-      priority?: number,
-      options?: {passive: boolean, ...},
+      capture: boolean,
     ) => mixed,
-    capture: (target: EventTarget, type: string, callback: Function) => mixed,
-    captureWithPassiveFlag: (
-      target: EventTarget,
-      type: string,
-      callback: Function,
-      passive: boolean,
-    ) => mixed,
-    bubbleWithPassiveFlag: (
+    listenWithPassiveFlag: (
       target: EventTarget,
       type: string,
       callback: Function,
