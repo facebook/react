@@ -28,8 +28,13 @@ module.exports = function closure(flags = {}) {
       flags = Object.assign({}, flags, {js: tempPath});
       await writeFileAsync(tempPath, code, 'utf8');
       const compiledCode = await compile(flags);
+      // Write the result
+      await writeFileAsync(tempPath, compiledCode, 'utf8');
+      // Compile again a second pass to ensure we've done as much inlining
+      // as we can.
+      const compiledCodeSecondPass = await compile(flags);
       inputFile.removeCallback();
-      return {code: compiledCode};
+      return {code: compiledCodeSecondPass};
     },
   };
 };
