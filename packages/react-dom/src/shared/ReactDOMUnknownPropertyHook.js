@@ -207,6 +207,23 @@ if (__DEV__) {
       return true;
     }
 
+    if (
+      typeof value === 'string' &&
+      tagName !== 'select' &&
+      tagName !== 'input' &&
+      shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
+    ) {
+      if (name === 'size') {
+        console.error(
+          'The size attribute value of %s has the wrong type. The size attribute is a well-known HTML attribute. You should be using data-size="%s" instead.',
+          value,
+          value,
+        );
+      }
+      warnedProperties[name] = true;
+      return true;
+    }
+
     // Warn when a known attribute is a bad type
     if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;
