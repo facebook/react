@@ -96,7 +96,11 @@ export default {
       reactiveHookName,
       isEffect,
     ) {
-      if (isEffect && node.async) {
+      const isCustomAdditionalHook =
+        options.additionalHooks &&
+        options.additionalHooks.test(reactiveHookName);
+      // specified custom additional hooks do not have limits imposed on their argument types
+      if (isEffect && node.async && !isCustomAdditionalHook) {
         reportProblem({
           node: node,
           message:
