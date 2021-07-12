@@ -165,6 +165,13 @@ if (__DEV__) {
       function handleWindowError(event) {
         error = event.error;
         didSetError = true;
+        if (error != null) {
+          try {
+            error._loggedByBrowser = true;
+          } catch (inner) {
+            // Ignore.
+          }
+        }
         if (error === null && event.colno === 0 && event.lineno === 0) {
           isCrossOriginError = true;
         }

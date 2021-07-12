@@ -200,21 +200,33 @@ describe('ReactIncrementalErrorLogging', () => {
       ].filter(Boolean),
     );
 
-    expect(console.error).toHaveBeenCalledTimes(1);
-    expect(console.error).toHaveBeenCalledWith(
-      __DEV__
-        ? expect.stringMatching(
-            new RegExp(
-              'The above error occurred in the <Foo> component:\n' +
-                '\\s+(in|at) Foo (.*)\n' +
-                '\\s+(in|at) ErrorBoundary (.*)\n\n' +
-                'React will try to recreate this component tree from scratch ' +
-                'using the error boundary you provided, ErrorBoundary.',
-            ),
-          )
-        : expect.objectContaining({
-            message: 'oops',
-          }),
-    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          message: 'oops',
+        }),
+      );
+      expect(console.error).toHaveBeenNthCalledWith(
+        2,
+        expect.stringMatching(
+          new RegExp(
+            'The above error occurred in the <Foo> component:\n' +
+              '\\s+(in|at) Foo (.*)\n' +
+              '\\s+(in|at) ErrorBoundary (.*)\n\n' +
+              'React will try to recreate this component tree from scratch ' +
+              'using the error boundary you provided, ErrorBoundary.',
+          ),
+        ),
+      );
+    } else {
+      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(console.error).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'oops',
+        }),
+      );
+    }
   });
 });
