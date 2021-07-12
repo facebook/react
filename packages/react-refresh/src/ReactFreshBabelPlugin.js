@@ -230,6 +230,10 @@ export default function(babel, opts = {}) {
       case 'React.useImperativeHandle':
       case 'useDebugValue':
       case 'React.useDebugValue':
+      case 'useTransition':
+      case 'React.useTransition':
+      case 'useDeferredValue':
+      case 'React.useDeferredValue':
         return true;
       default:
         return false;
