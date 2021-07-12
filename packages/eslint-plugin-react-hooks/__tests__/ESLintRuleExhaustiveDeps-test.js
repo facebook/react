@@ -3557,6 +3557,101 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent(props) {
+          useCustomEffect0(() => {
+            console.log(props.foo);
+          }, []);
+          useCustomEffect1(bar, () => {
+            console.log(props.foo);
+          }, []);
+          useCustomEffect2(bar, qux, () => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [
+        {
+          additionalHooks: {
+            useCustomEffect0: {},
+            useCustomEffect1: {callbackIndex: 1},
+            useCustomEffect2: {callbackIndex: 2},
+          },
+        },
+      ],
+      errors: [
+        {
+          message:
+            "React Hook useCustomEffect0 has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomEffect0(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                  useCustomEffect1(bar, () => {
+                    console.log(props.foo);
+                  }, []);
+                  useCustomEffect2(bar, qux, () => {
+                    console.log(props.foo);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook useCustomEffect1 has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomEffect0(() => {
+                    console.log(props.foo);
+                  }, []);
+                  useCustomEffect1(bar, () => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                  useCustomEffect2(bar, qux, () => {
+                    console.log(props.foo);
+                  }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook useCustomEffect2 has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomEffect0(() => {
+                    console.log(props.foo);
+                  }, []);
+                  useCustomEffect1(bar, () => {
+                    console.log(props.foo);
+                  }, []);
+                  useCustomEffect2(bar, qux, () => {
+                    console.log(props.foo);
+                  }, [props.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           const local = {};
           useEffect(() => {

@@ -64,6 +64,18 @@ This option accepts a regex to match the names of custom Hooks that have depende
 }
 ```
 
+Alternatively, you can specify `additionalHooks` as a dictionary, providing the `callbackIndex` parameter.
+You might need that if you have custom Hooks that have some extra parameters preceding the callback.
+
+```js
+    "react-hooks/exhaustive-deps": ["warn", {
+      "additionalHooks": {
+        "useMyCustomHook": {"callbackIndex": 0}
+        "useMyOtherCustomHook": {"callbackIndex": 1}
+      }
+    }]
+```
+
 We suggest to use this option **very sparingly, if at all**. Generally saying, we recommend most custom Hooks to not use the dependencies argument, and instead provide a higher-level API that is more focused around a specific use case.
 
 ## Valid and Invalid Examples
