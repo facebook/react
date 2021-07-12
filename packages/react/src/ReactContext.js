@@ -8,7 +8,7 @@
  */
 
 import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-
+import callOnce from 'shared/callOnce';
 import type {ReactContext} from 'shared/ReactTypes';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {
@@ -37,9 +37,9 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     _context: context,
   };
 
-  let hasWarnedAboutUsingNestedContextConsumers = false;
-  let hasWarnedAboutUsingConsumerProvider = false;
-  let hasWarnedAboutDisplayNameOnConsumer = false;
+  const needWarnedAboutUsingNestedContextConsumers = callOnce();
+  const needWarnedAboutUsingConsumerProvider = callOnce();
+  const needWarnedAboutDisplayNameOnConsumer = callOnce();
 
   if (__DEV__) {
     // A separate object, but proxies back to the original context object for
@@ -53,13 +53,11 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     Object.defineProperties(Consumer, {
       Provider: {
         get() {
-          if (!hasWarnedAboutUsingConsumerProvider) {
-            hasWarnedAboutUsingConsumerProvider = true;
+          needWarnedAboutUsingConsumerProvider() &&
             console.error(
               'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
                 'a future major release. Did you mean to render <Context.Provider> instead?',
             );
-          }
           return context.Provider;
         },
         set(_Provider) {
@@ -92,13 +90,11 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
       },
       Consumer: {
         get() {
-          if (!hasWarnedAboutUsingNestedContextConsumers) {
-            hasWarnedAboutUsingNestedContextConsumers = true;
+          needWarnedAboutUsingNestedContextConsumers() &&
             console.error(
               'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
                 'a future major release. Did you mean to render <Context.Consumer> instead?',
             );
-          }
           return context.Consumer;
         },
       },
@@ -107,14 +103,12 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
           return context.displayName;
         },
         set(displayName) {
-          if (!hasWarnedAboutDisplayNameOnConsumer) {
+          needWarnedAboutDisplayNameOnConsumer() &&
             console.warn(
               'Setting `displayName` on Context.Consumer has no effect. ' +
                 "You should set it directly on the context with Context.displayName = '%s'.",
               displayName,
             );
-            hasWarnedAboutDisplayNameOnConsumer = true;
-          }
         },
       },
     });

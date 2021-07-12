@@ -18,6 +18,7 @@ import {
 } from 'shared/ReactSymbols';
 
 import {isValidElement, cloneAndReplaceKey} from './ReactElement';
+import callOnce from 'shared/callOnce';
 
 const SEPARATOR = '.';
 const SUBSEPARATOR = ':';
@@ -46,7 +47,7 @@ function escape(key: string): string {
  * pattern.
  */
 
-let didWarnAboutMaps = false;
+const needWarnAboutMaps = callOnce();
 
 const userProvidedKeyEscapeRegex = /\/+/g;
 function escapeUserProvidedKey(text: string): string {
@@ -165,13 +166,11 @@ function mapIntoArray(
       if (__DEV__) {
         // Warn about using Maps as children
         if (iteratorFn === iterableChildren.entries) {
-          if (!didWarnAboutMaps) {
+          needWarnAboutMaps() &&
             console.warn(
               'Using Maps as children is not supported. ' +
                 'Use an array of keyed ReactElements instead.',
             );
-          }
-          didWarnAboutMaps = true;
         }
       }
 

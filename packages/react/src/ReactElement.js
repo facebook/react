@@ -9,7 +9,7 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import hasOwnProperty from 'shared/hasOwnProperty';
-
+import callOnce from 'shared/callOnce';
 import ReactCurrentOwner from './ReactCurrentOwner';
 
 const RESERVED_PROPS = {
@@ -19,13 +19,9 @@ const RESERVED_PROPS = {
   __source: true,
 };
 
-let specialPropKeyWarningShown,
-  specialPropRefWarningShown,
-  didWarnAboutStringRefs;
-
-if (__DEV__) {
-  didWarnAboutStringRefs = {};
-}
+const needWarnAboutSpecialPropKey = callOnce();
+const needWarnAboutSpecialPropRef = callOnce();
+const needWarnAboutStringRefs = callOnce(true);
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -54,8 +50,7 @@ function hasValidKey(config) {
 function defineKeyPropWarningGetter(props, displayName) {
   const warnAboutAccessingKey = function() {
     if (__DEV__) {
-      if (!specialPropKeyWarningShown) {
-        specialPropKeyWarningShown = true;
+      needWarnAboutSpecialPropKey() &&
         console.error(
           '%s: `key` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
@@ -63,7 +58,6 @@ function defineKeyPropWarningGetter(props, displayName) {
             'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
-      }
     }
   };
   warnAboutAccessingKey.isReactWarning = true;
@@ -76,8 +70,7 @@ function defineKeyPropWarningGetter(props, displayName) {
 function defineRefPropWarningGetter(props, displayName) {
   const warnAboutAccessingRef = function() {
     if (__DEV__) {
-      if (!specialPropRefWarningShown) {
-        specialPropRefWarningShown = true;
+      needWarnAboutSpecialPropRef() &&
         console.error(
           '%s: `ref` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
@@ -85,7 +78,6 @@ function defineRefPropWarningGetter(props, displayName) {
             'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
-      }
     }
   };
   warnAboutAccessingRef.isReactWarning = true;
@@ -107,7 +99,7 @@ function warnIfStringRefCannotBeAutoConverted(config) {
         ReactCurrentOwner.current.type,
       );
 
-      if (!didWarnAboutStringRefs[componentName]) {
+      needWarnAboutStringRefs(componentName) &&
         console.error(
           'Component "%s" contains the string ref "%s". ' +
             'Support for string refs will be removed in a future major release. ' +
@@ -118,8 +110,6 @@ function warnIfStringRefCannotBeAutoConverted(config) {
           componentName,
           config.ref,
         );
-        didWarnAboutStringRefs[componentName] = true;
-      }
     }
   }
 }
