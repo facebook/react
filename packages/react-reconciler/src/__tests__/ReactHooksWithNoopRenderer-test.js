@@ -166,7 +166,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     // Schedule some updates
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
       React.startTransition(() => {
-        // TODO: Batched updates need to be inside startTransition?
         ReactNoop.batchedUpdates(() => {
           counter.current.updateCount(1);
           counter.current.updateCount(count => count + 10);
