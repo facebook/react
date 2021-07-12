@@ -771,6 +771,89 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  it('boundaries without fallbacks can be coordinate with SuspenseList', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    function Foo({showMore}) {
+      return (
+        <Suspense fallback={<Text text="Loading" />}>
+          <SuspenseList revealOrder="together">
+            <Suspense>
+              <A />
+            </Suspense>
+            {showMore ? (
+              <>
+                <Suspense>
+                  <B />
+                </Suspense>
+                <Suspense>
+                  <C />
+                </Suspense>
+              </>
+            ) : null}
+          </SuspenseList>
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend! [A]',
+      // null
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    await A.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A']);
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
+
+    // Let's do an update that should consult the avoided boundaries.
+    ReactNoop.render(<Foo showMore={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      // null
+      'Suspend! [C]',
+      // null
+      'A',
+      // null
+      // null
+    ]);
+
+    // This will suspend, since the boundaries are avoided. Give them
+    // time to display their loading states.
+    jest.advanceTimersByTime(500);
+
+    // A is already showing content so it doesn't turn into a fallback.
+    expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]']);
+
+    // Even though we could now show B, we're still waiting on C.
+    expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
   it('displays each items in "forwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
