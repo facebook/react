@@ -32,6 +32,10 @@ export default {
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
+          ignoreThisDependency: {
+            type: 'string',
+            enum: ['never', 'props', 'always'],
+          },
         },
       },
     ],
@@ -51,9 +55,16 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
+    const ignoreThisDependency =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].ignoreThisDependency) ||
+      'never';
+
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      ignoreThisDependency,
     };
 
     function reportProblem(problem) {
@@ -384,7 +395,10 @@ export default {
             node,
             reference.identifier,
           );
-          const dependencyNode = getDependency(referenceNode);
+          const dependencyNode = getDependency(
+            referenceNode,
+            ignoreThisDependency,
+          );
           const dependency = analyzePropertyChain(
             dependencyNode,
             optionalChains,
@@ -1576,13 +1590,25 @@ function scanForConstructions({
 }
 
 /**
- * Assuming () means the passed/returned node:
- * (props) => (props)
- * props.(foo) => (props.foo)
- * props.foo.(bar) => (props).foo.bar
- * props.foo.bar.(baz) => (props).foo.bar.baz
+ * Assuming {} means the passed/returned node:
+ * {props} => {props}
+ * {props}.foo => {props.foo}
+ * {props}.foo.bar => {props.foo.bar}
+ * {props}.foo.bar.baz => {props.foo.bar.baz}
+ *
+ * if ignoreThisDependency is never
+ * {props}.doSomething() => {props}.doSomething()
+ * {foo}.bar.doSomething() => {foo.bar}.doSomething()
+ *
+ * if ignoreThisDependency is props
+ * {props}.doSomething() => {props.doSomething}()
+ * {foo}.bar.doSomething() => {foo.bar}.doSomething()
+ *
+ * if ignoreThisDependency is always
+ * {props}.doSomething() => {props.doSomething}()
+ * {foo}.bar.doSomething() => {foo.bar.doSomething}()
  */
-function getDependency(node) {
+function getDependency(node, ignoreThisDependency) {
   if (
     (node.parent.type === 'MemberExpression' ||
       node.parent.type === 'OptionalMemberExpression') &&
@@ -1590,13 +1616,15 @@ function getDependency(node) {
     node.parent.property.name !== 'current' &&
     !node.parent.computed &&
     !(
+      ignoreThisDependency !== 'always' &&
+      !(ignoreThisDependency === 'props' && node.name === 'props') &&
       node.parent.parent != null &&
       (node.parent.parent.type === 'CallExpression' ||
         node.parent.parent.type === 'OptionalCallExpression') &&
       node.parent.parent.callee === node.parent
     )
   ) {
-    return getDependency(node.parent);
+    return getDependency(node.parent, ignoreThisDependency);
   } else if (
     // Note: we don't check OptionalMemberExpression because it can't be LHS.
     node.type === 'MemberExpression' &&
