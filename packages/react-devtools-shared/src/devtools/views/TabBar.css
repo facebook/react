@@ -46,6 +46,10 @@
   font-size: var(--font-size-sans-normal);
   padding: 0.25rem 0.5rem;
 }
+.TabSizeComponents {
+  font-size: var(--font-size-sans-normal);
+  padding: 0.25rem 0.5rem;
+}
 
 .Input {
   width: 0;
@@ -61,6 +65,9 @@
 .IconSizeSettings {
   margin-right: 0.5rem;
   color: var(--color-button-active);
+}
+.IconSizeComponents {
+  display: none;
 }
 
 .IconDisabled {
@@ -82,7 +89,8 @@
 
 .TabLabelNavigation,
 .TabLabelProfiler,
-.TabLabelSettings {
+.TabLabelSettings,
+.TabLabelComponents {
 }
 
 @media screen and (max-width: 525px) {
