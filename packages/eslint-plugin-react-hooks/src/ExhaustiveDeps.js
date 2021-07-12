@@ -9,6 +9,23 @@
 
 'use strict';
 
+/**
+ * Check if the given hook is "safe", meaning we assume its return value is
+ * stable and therefore doesn't need to appear in dependency arrays. This
+ * automatically applies to useRef, but can be extended to apply to other hooks
+ * as well with a regex.
+ * @param {object} id Identifier AST node
+ * @param {string} name Identifier name
+ * @param {RegExp} safeHooks Optional regex that defines which extra hooks have
+ *  been declared safe via the user's config
+ */
+function isHookSafe(id, name, safeHooks) {
+  return (
+    id.type === 'Identifier' &&
+    (name === 'useRef' || (safeHooks && safeHooks.test(name)))
+  );
+}
+
 export default {
   meta: {
     type: 'suggestion',
@@ -29,6 +46,7 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          safeHooks: {type: 'string'},
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -37,22 +55,27 @@ export default {
     ],
   },
   create(context) {
+    const inputOptions = context.options && context.options[0];
     // Parse the `additionalHooks` regex.
     const additionalHooks =
-      context.options &&
-      context.options[0] &&
-      context.options[0].additionalHooks
-        ? new RegExp(context.options[0].additionalHooks)
+      inputOptions && inputOptions.additionalHooks
+        ? new RegExp(inputOptions.additionalHooks)
+        : undefined;
+
+    // Parse the `safeHooks` regex
+    const safeHooks =
+      inputOptions && inputOptions.safeHooks
+        ? new RegExp(inputOptions.safeHooks)
         : undefined;
 
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
-      (context.options &&
-        context.options[0] &&
-        context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
+      (inputOptions &&
+        inputOptions.enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
     const options = {
       additionalHooks,
+      safeHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -220,8 +243,8 @@ export default {
         }
         const id = def.node.id;
         const {name} = callee;
-        if (name === 'useRef' && id.type === 'Identifier') {
-          // useRef() return value is stable.
+        if (isHookSafe(id, name, safeHooks)) {
+          // Assume the return value is stable
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
           // Only consider second value in initializing tuple stable.
