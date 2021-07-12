@@ -76,6 +76,7 @@ const Children = {
 };
 
 export {
+  act as unstable_act,
   Children,
   createMutableSource,
   createRef,
@@ -121,5 +122,4 @@ export {
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
   useOpaqueIdentifier as unstable_useOpaqueIdentifier,
-  act,
 };

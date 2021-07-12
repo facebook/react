@@ -9,7 +9,6 @@
 
 export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  act as unstable_act,
   Children,
   Component,
   Fragment,
@@ -31,6 +30,7 @@ export {
   memo,
   startTransition,
   startTransition as unstable_startTransition, // TODO: Remove once call sights updated to startTransition
+  unstable_act,
   unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
