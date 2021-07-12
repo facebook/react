@@ -27,7 +27,26 @@ export default {
         enableDangerousAutofixThisMayCauseInfiniteLoops: false,
         properties: {
           additionalHooks: {
-            type: 'string',
+            anyOf: [
+              // An abbreviated form with a single RegExp with the implicit
+              // callback index == 0.
+              {type: 'string'},
+              // An expanded form: an array with RegExp and callback index
+              // values.
+              {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {
+                    // The RegExp string.
+                    test: {type: 'string'},
+                    // The callback index.
+                    callbackIndex: {type: 'number'},
+                  },
+                },
+              },
+            ],
           },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
@@ -38,12 +57,11 @@ export default {
   },
   create(context) {
     // Parse the `additionalHooks` regex.
-    const additionalHooks =
+    const additionalHooks = parseAdditionalHooks(
       context.options &&
-      context.options[0] &&
-      context.options[0].additionalHooks
-        ? new RegExp(context.options[0].additionalHooks)
-        : undefined;
+        context.options[0] &&
+        context.options[0].additionalHooks,
+    );
 
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
@@ -1710,8 +1728,8 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
       return 1;
     default:
       if (node === calleeNode && options && options.additionalHooks) {
-        // Allow the user to provide a regular expression which enables the lint to
-        // target custom reactive hooks.
+        // Allow the user to provide an array of regular expressions which
+        // enables the lint to target custom reactive hooks.
         let name;
         try {
           name = analyzePropertyChain(node, null);
@@ -1722,11 +1740,44 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
             throw error;
           }
         }
-        return options.additionalHooks.test(name) ? 0 : -1;
+
+        const found = options.additionalHooks.find(({test}) => test.test(name));
+        return found ? found.callbackIndex : -1;
       } else {
         return -1;
       }
   }
+}
+
+/**
+ * Parses the `additionalHooks` configuration. It can be in one of the two
+ * formats:
+ * - a single string that indicates the RegExp and implicit callback index of 0;
+ * - an array of `{ test: string, callbackIndex: number }` objects.
+ *
+ * Returns the normalized form of this configuration object in the shape of
+ * `{  test: RegExp, callbackIndex: number }`.
+ *
+ * See `additionalHooks` schema definition for more info.
+ */
+function parseAdditionalHooks(additionalHooksConfig) {
+  if (!additionalHooksConfig) {
+    return undefined;
+  }
+
+  // A single string format.
+  if (typeof additionalHooksConfig === 'string') {
+    return [{test: new RegExp(additionalHooksConfig), callbackIndex: 0}];
+  }
+
+  // An array format.
+  if (Array.isArray(additionalHooksConfig)) {
+    return additionalHooksConfig.map(({test, callbackIndex}) => ({
+      test: new RegExp(test),
+      callbackIndex,
+    }));
+  }
+  throw new Error('Unknown format of additionalHooks');
 }
 
 /**
