@@ -1185,6 +1185,35 @@ describe('ReactDOMComponent', () => {
         ),
       ).toBe(true);
     });
+
+    it('should warn once when rendering script tag in HTML on client', () => {
+      const container = document.createElement('div');
+
+      expect(() => {
+        ReactDOM.render(
+          <div
+            dangerouslySetInnerHTML={{
+              __html: '<script>alert("I am not executed")</script>',
+            }}
+          />,
+          container,
+        );
+      }).toErrorDev(
+        'Encountered a script tag while rendering using dangerouslySetInnerHTML. ' +
+          'Scripts rendered using dangerouslySetInnerHTML are never executed when rendering ' +
+          'on the client.',
+      );
+
+      // check that the warning is printed only once
+      ReactDOM.render(
+        <div
+          dangerouslySetInnerHTML={{
+            __html: '<script>alert("I am not executed")</script>',
+          }}
+        />,
+        container,
+      );
+    });
   });
 
   describe('mountComponent', () => {
