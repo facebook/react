@@ -65,6 +65,35 @@ const tests = {
       `,
     },
     {
+      // Mentioning explicity undefined in the dependency array
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo);
+          }, undefined);
+          useMemo(() => {
+            console.log(props.foo);
+          }, undefined);
+          useCallback(() => {
+            console.log(props.foo);
+          }, undefined);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        useEffect(() => {
+          console.log(props.foo);
+        }, undefined);
+        useMemo(() => {
+          console.log(props.foo);
+        }, undefined);
+        useCallback(() => {
+          console.log(props.foo);
+        }, undefined);
+      `,
+    },
+    {
       // OK because `props` wasn't defined.
       // We don't technically know if `props` is supposed
       // to be an import that hasn't been added yet, or
