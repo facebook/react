@@ -17,9 +17,14 @@ import type {ToStringValue} from './ToStringValue';
 import {disableTextareaChildren} from 'shared/ReactFeatureFlags';
 
 let didWarnValDefaultVal = false;
+let didWarnControlledToUncontrolled = false;
+let didWarnUncontrolledToControlled = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {|
-  _wrapperState: {|initialValue: ToStringValue|},
+  _wrapperState: {|
+    initialValue: ToStringValue,
+    controlled?: boolean,
+  |},
 |};
 
 /**
@@ -119,11 +124,46 @@ export function initWrapperState(element: Element, props: Object) {
 
   node._wrapperState = {
     initialValue: getToStringValue(initialValue),
+    controlled: props.value != null,
   };
 }
 
 export function updateWrapper(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
+
+  if (__DEV__) {
+    const controlled = props.value != null;
+
+    if (
+      !node._wrapperState.controlled &&
+      controlled &&
+      !didWarnUncontrolledToControlled
+    ) {
+      console.error(
+        'A component is changing an uncontrolled textarea to be controlled. ' +
+          'This is likely caused by the value changing from undefined to ' +
+          'a defined value, which should not happen. ' +
+          'Decide between using a controlled or uncontrolled textarea ' +
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+      );
+      didWarnUncontrolledToControlled = true;
+    }
+    if (
+      node._wrapperState.controlled &&
+      !controlled &&
+      !didWarnControlledToUncontrolled
+    ) {
+      console.error(
+        'A component is changing a controlled textarea to be uncontrolled. ' +
+          'This is likely caused by the value changing from a defined to ' +
+          'undefined, which should not happen. ' +
+          'Decide between using a controlled or uncontrolled textarea ' +
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+      );
+      didWarnControlledToUncontrolled = true;
+    }
+  }
+
   const value = getToStringValue(props.value);
   const defaultValue = getToStringValue(props.defaultValue);
   if (value != null) {
