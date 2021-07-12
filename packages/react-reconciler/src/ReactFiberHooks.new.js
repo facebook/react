@@ -202,6 +202,20 @@ let hookTypesUpdateIndexDev: number = -1;
 // When true, such Hooks will always be "remounted". Only used during hot reload.
 let ignorePreviousDependencies: boolean = false;
 
+function joinArray(collection: Array<mixed>, separator: string = ''): string {
+  let concatenatedString: string = '';
+
+  if (collection.length === 0) {
+    return concatenatedString;
+  }
+  for (let i = 0; i < collection.length - 1; i++) {
+    // eslint-disable-next-line react-internal/no-primitive-constructors
+    concatenatedString += String(collection[i]) + separator;
+  }
+  // eslint-disable-next-line react-internal/no-primitive-constructors
+  return concatenatedString + String(collection[collection.length - 1]);
+}
+
 function mountHookTypesDev() {
   if (__DEV__) {
     const hookName = ((currentHookNameInDev: any): HookType);
@@ -334,8 +348,8 @@ function areHookInputsEqual(
           'Previous: %s\n' +
           'Incoming: %s',
         currentHookNameInDev,
-        `[${prevDeps.join(', ')}]`,
-        `[${nextDeps.join(', ')}]`,
+        `[${joinArray(prevDeps, ', ')}]`,
+        `[${joinArray(nextDeps, ', ')}]`,
       );
     }
   }
