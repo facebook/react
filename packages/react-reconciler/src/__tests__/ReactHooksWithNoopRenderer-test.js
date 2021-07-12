@@ -209,6 +209,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
+        '4. You might be invoking the function directly rather than using React.createElement\n' +
         'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
@@ -239,6 +240,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
             '2. You might be breaking the Rules of Hooks\n' +
             '3. You might have more than one copy of React in the same app\n' +
+            '4. You might be invoking the function directly rather than using React.createElement\n' +
             'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
         ),
       ).toErrorDev(
@@ -270,6 +272,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
+        '4. You might be invoking the function directly rather than using React.createElement\n' +
         'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
       {withoutStack: true},
     );

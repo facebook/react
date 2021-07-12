@@ -49,6 +49,7 @@ describe('ReactHooks', () => {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
+          '4. You might be invoking the function directly rather than using React.createElement\n' +
           'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     });
@@ -904,6 +905,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
+        '4. You might be invoking the function directly rather than using React.createElement\n' +
         'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // the next round, it does a fresh mount, so should render
@@ -913,6 +915,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
+        '4. You might be invoking the function directly rather than using React.createElement\n' +
         'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // and then again, fail
@@ -922,6 +925,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
+        '4. You might be invoking the function directly rather than using React.createElement\n' +
         'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   });
