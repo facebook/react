@@ -49,7 +49,12 @@ function createFromFetch(
   const response: FlightResponse = createResponse();
   promiseForResponse.then(
     function(r) {
-      startReadingFromStream(response, (r.body: any));
+      if (r.ok) {
+        startReadingFromStream(response, (r.body: any));
+      } else {
+        const e = new TypeError('An error occurred on the server');
+        reportGlobalError(response, e);
+      }
     },
     function(e) {
       reportGlobalError(response, e);
@@ -61,10 +66,27 @@ function createFromFetch(
 function createFromXHR(request: XMLHttpRequest): FlightResponse {
   const response: FlightResponse = createResponse();
   let processedLength = 0;
+  let didError = false;
   function progress(e: ProgressEvent): void {
-    const chunk = request.responseText;
-    processStringChunk(response, chunk, processedLength);
-    processedLength = chunk.length;
+    if (didError) {
+      return;
+    }
+    if (request.status < 200 || request.status > 299) {
+      didError = true;
+      reportGlobalError(
+        response,
+        new TypeError('An error occurred on the server'),
+      );
+      return;
+    }
+    try {
+      const chunk = request.responseText;
+      processStringChunk(response, chunk, processedLength);
+      processedLength = chunk.length;
+    } catch (x) {
+      didError = true;
+      reportGlobalError(response, x);
+    }
   }
   function load(e: ProgressEvent): void {
     progress(e);
