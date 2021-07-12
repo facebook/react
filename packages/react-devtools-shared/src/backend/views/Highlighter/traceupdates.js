@@ -8,11 +8,13 @@
  */
 
 import Agent from 'react-devtools-shared/src/backend/agent';
-import {destroy as destroyCanvas, draw} from './traceupdates-canvas';
+import HighlightCanvas from './HighlightCanvas';
 import {getNestedBoundingClientRect} from '../utils';
 
 import type {NativeType} from '../../types';
 import type {Rect} from '../utils';
+
+let traceUpdatesCanvas: HighlightCanvas | null = null;
 
 // How long the rect should be shown for?
 const DISPLAY_DURATION = 250;
@@ -65,7 +67,7 @@ export function toggleEnabled(value: boolean): void {
       redrawTimeoutID = null;
     }
 
-    destroyCanvas();
+    traceUpdatesCanvas.destroy();
   }
 }
 
@@ -125,7 +127,10 @@ function prepareToDraw(): void {
     }
   });
 
-  draw(nodeToData);
+  if (traceUpdatesCanvas === null) {
+    traceUpdatesCanvas = new HighlightCanvas();
+  }
+  traceUpdatesCanvas.draw(nodeToData);
 
   if (earliestExpiration !== Number.MAX_VALUE) {
     redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);
