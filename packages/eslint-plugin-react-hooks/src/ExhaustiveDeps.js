@@ -9,6 +9,8 @@
 
 'use strict';
 
+const estraverse = require('estraverse');
+
 export default {
   meta: {
     type: 'suggestion',
@@ -448,6 +450,73 @@ export default {
 
         for (const childScope of currentScope.childScopes) {
           gatherDependenciesRecursively(childScope);
+        }
+      }
+
+      // Collect variables from all pure scopes, because parent scope variables
+      // does not include child scope variables
+      const pureScopeVariables = getVariablesFromScopeSet(pureScopes);
+
+      function getVariablesFromScopeSet(scopes) {
+        let variables = [];
+
+        scopes.forEach(currentScope => {
+          variables = variables.concat(...currentScope.variables);
+        });
+
+        return variables.map(variable => variable.name);
+      }
+
+      // Gather JSX Components and check if they came from pure scopes variables or not.
+      // If so, they are dependencies
+      gatherJSXDependencies(scope.block);
+
+      function gatherJSXDependencies(rootNode) {
+        estraverse.traverse(rootNode, {
+          enter: function(currentNode) {
+            const {name, type} = currentNode;
+            if (
+              isJSXComponent(name, type) &&
+              isPureScopeDependency(name) &&
+              !dependencies.has(name)
+            ) {
+              dependencies.set(name, {
+                references: [],
+              });
+            }
+          },
+          // a list of all JSX keys and its attributes that can contain
+          // other JSX elements and identifiers
+          keys: {
+            JSXElement: [
+              'type',
+              'openingElement',
+              'closingElement',
+              'children',
+            ],
+            JSXFragment: ['children'],
+            JSXAttribute: ['name', 'value'],
+            JSXIdentifier: ['name', 'type'],
+            JSXOpeningElement: ['name', 'attributes'],
+            JSXClosingElement: ['name'],
+            JSXNamespacedName: ['namespace', 'name'],
+            JSXSpreadAttribute: ['argument'],
+            JSXMemberExpression: ['object'],
+            JSXExpressionContainer: ['expression'],
+          },
+          fallback: () => [], // just skip all unknown nodes, otherwise there will be an exception
+        });
+
+        function isHTMLElement(name) {
+          return /^[a-z]/.test(name);
+        }
+
+        function isJSXComponent(name, type) {
+          return type === 'JSXIdentifier' && !isHTMLElement(name);
+        }
+
+        function isPureScopeDependency(dependencyKey) {
+          return pureScopeVariables.includes(dependencyKey);
         }
       }
 
@@ -943,7 +1012,10 @@ export default {
           // Is this a variable from top scope?
           const topScopeRef = componentScope.set.get(missingDep);
           const usedDep = dependencies.get(missingDep);
-          if (usedDep.references[0].resolved !== topScopeRef) {
+          if (
+            usedDep.references.length === 0 ||
+            usedDep.references[0].resolved !== topScopeRef
+          ) {
             return;
           }
           // Is this a destructured prop?
