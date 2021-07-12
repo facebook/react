@@ -13,6 +13,13 @@
  */
 const ReactCurrentBatchConfig = {
   transition: (0: number),
+  setTransition(transition: 0 | 1): () => void {
+    const prevTransition = ReactCurrentBatchConfig.transition;
+    ReactCurrentBatchConfig.transition = transition;
+    return () => {
+      ReactCurrentBatchConfig.transition = prevTransition;
+    };
+  },
 };
 
 export default ReactCurrentBatchConfig;

@@ -128,14 +128,13 @@ function dispatchContinuousEvent(
   nativeEvent,
 ) {
   const previousPriority = getCurrentUpdatePriority();
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 0;
+  const revertTransition = ReactCurrentBatchConfig.setTransition(0);
   try {
     setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    revertTransition();
   }
 }
 

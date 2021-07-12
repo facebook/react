@@ -1670,12 +1670,11 @@ function updateMemo<T>(
 function mountDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = mountState(value);
   mountEffect(() => {
-    const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    const revertTransition = ReactCurrentBatchConfig.setTransition(1);
     try {
       setValue(value);
     } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
+      revertTransition();
     }
   }, [value]);
   return prevValue;
@@ -1684,12 +1683,11 @@ function mountDeferredValue<T>(value: T): T {
 function updateDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = updateState(value);
   updateEffect(() => {
-    const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    const revertTransition = ReactCurrentBatchConfig.setTransition(1);
     try {
       setValue(value);
     } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
+      revertTransition();
     }
   }, [value]);
   return prevValue;
@@ -1698,12 +1696,11 @@ function updateDeferredValue<T>(value: T): T {
 function rerenderDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = rerenderState(value);
   updateEffect(() => {
-    const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    const revertTransition = ReactCurrentBatchConfig.setTransition(1);
     try {
       setValue(value);
     } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
+      revertTransition();
     }
   }, [value]);
   return prevValue;
@@ -1717,14 +1714,13 @@ function startTransition(setPending, callback) {
 
   setPending(true);
 
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
+  const revertTransition = ReactCurrentBatchConfig.setTransition(1);
   try {
     setPending(false);
     callback();
   } finally {
     setCurrentUpdatePriority(previousPriority);
-    ReactCurrentBatchConfig.transition = prevTransition;
+    revertTransition();
   }
 }
 
