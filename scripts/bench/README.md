@@ -14,17 +14,17 @@ The second command will run all benchmarks but skip the build process. This is u
 The other commands are as follows:
 
 ```bash
-# will compare local repo vs remote merge base repo
+# will compare local repo vs remote merge-base repo
 yarn start
 
-# will compare local repo vs remote merge base repo
+# will compare local repo vs remote merge-base repo
 # this can significantly improve bench times due to no build
 yarn start --skip-build
 
 # will only build and run local repo against benchmarks (no remote values will be shown)
 yarn start --local
 
-# will only build and run remote merge base repo against benchmarks (no local values will be shown)
+# will only build and run remote merge-base repo against benchmarks (no local values will be shown)
 yarn start --remote
 
 # will only build and run remote master repo against benchmarks

@@ -24,8 +24,8 @@ A typical release cycle goes like this:
    2. For advanced cases, you can [**manually prepare and publish to the `next` channel**](#publishing-release) using the [`prepare-release-from-ci`](#prepare-release-from-ci) and [`publish`](#publish) scripts; or to the [**`experimental` channel**](#publishing-an-experimental-release) using the the same scripts (but different build artifacts).
 3. Finally, a "next" release can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`prepare-release-from-npm`](#prepare-release-from-npm) and [`publish`](#publish) scripts. (This process is always manual.)
 
-The high level process of creating releases is [documented below](#process). Individual scripts are documented as well:
-* [`build-release-locally`](#build-release-locally): Build a release locally from the checked out source code.
+The high-level process of creating releases is [documented below](#process). Individual scripts are documented as well:
+* [`build-release-locally`](#build-release-locally): Build a release locally from the checked-out source code.
 * [`prepare-release-from-ci`](#prepare-release-from-ci): Download a pre-built release from CI.
 * [`prepare-release-from-npm`](#prepare-release-from-npm): Prepare an NPM "next" release to be published as a "stable" release.
 * [`publish`](#publish): Publish the downloaded (or prepared) release to NPM.
@@ -43,7 +43,7 @@ yarn publish-prereleases
 This will grab the most recent revision on the main branch and publish it to the Next and Experimental channels.
 ## Publishing Without Tags
 
-The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
+The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments are optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
 
 ## Publishing Next
 
@@ -80,6 +80,10 @@ Once the build has been checked out and tested locally, you're ready to publish 
 scripts/release/publish.js --tags experimental
 ```
 
+If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
+
+<sup>1: We have plans to make this less awkward. Ideally, these releases will be published by a cron job.</sup>
+
 ## Publishing a Stable Release
 
 Stable releases should always be created from the "next" channel. This encourages better testing of the actual release artifacts and reduces the chance of unintended changes accidentally being included in a stable release.
@@ -115,13 +119,13 @@ Begin by creating a branch from the previous git tag<sup>1</sup>:
 git checkout -b 16.8.3 v16.8.2
 ```
 
-Next cherry pick any changes from master that you want to include in the release:
+Next cherry-pick any changes from the master that you want to include in the release:
 
 ```sh
 git cherry-pick <commit-hash>
 ```
 
-Once you have cherry picked all of the commits you want to include in the release, push your feature branch and create a Pull Request (so that Circle CI will create a build):
+Once you have cherry-picked all of the commits you want to include in the release, push your feature branch and create a Pull Request (so that Circle CI will create a build):
 
 ```sh
 git push origin 16.8.3

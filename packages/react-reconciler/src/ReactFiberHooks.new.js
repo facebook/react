@@ -934,7 +934,7 @@ type MutableSourceMemoizedState<Source, Snapshot> = {|
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 |};
 
-function readFromUnsubcribedMutableSource<Source, Snapshot>(
+function readFromUnsubscribedMutableSource<Source, Snapshot>(
   root: FiberRoot,
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
@@ -1074,7 +1074,7 @@ function useMutableSource<Source, Snapshot>(
 
   // eslint-disable-next-line prefer-const
   let [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
-    readFromUnsubcribedMutableSource(root, source, getSnapshot),
+    readFromUnsubscribedMutableSource(root, source, getSnapshot),
   );
   let snapshot = currentSnapshot;
 
@@ -1208,7 +1208,7 @@ function useMutableSource<Source, Snapshot>(
     ): any);
     stateHook.queue = newQueue;
     stateHook.baseQueue = null;
-    snapshot = readFromUnsubcribedMutableSource(root, source, getSnapshot);
+    snapshot = readFromUnsubscribedMutableSource(root, source, getSnapshot);
     stateHook.memoizedState = stateHook.baseState = snapshot;
   }
 
