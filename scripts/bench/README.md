@@ -27,8 +27,8 @@ yarn start --local
 # will only build and run remote merge base repo against benchmarks (no local values will be shown)
 yarn start --remote
 
-# will only build and run remote master repo against benchmarks
-yarn start --remote=master
+# will only build and run remote main repo against benchmarks
+yarn start --remote=main
 
 # same as "yarn start"
 yarn start --remote --local

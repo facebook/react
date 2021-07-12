@@ -12,6 +12,7 @@ import {
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
 } from 'react-devtools-shared/src/utils';
+import parseHookNames from './parseHookNames';
 import {
   localStorageGetItem,
   localStorageRemoveItem,
@@ -214,6 +215,7 @@ function createPanelIfReactLoaded() {
               browserTheme: getBrowserTheme(),
               componentsPortalContainer,
               enabledInspectedElementContextMenu: true,
+              loadHookNamesFunction: parseHookNames,
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,

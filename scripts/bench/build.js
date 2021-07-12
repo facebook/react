@@ -55,7 +55,7 @@ async function getMergeBaseFromLocalGitRepo(localRepo) {
   return await Git.Merge.base(
     repo,
     await repo.getHeadCommit(),
-    await repo.getBranchCommit('master')
+    await repo.getBranchCommit('main')
   );
 }
 
@@ -82,15 +82,15 @@ async function buildBenchmarkBundlesFromGitRepo(
       // if not, clone the repo to remote-repo folder
       repo = await Git.Clone(url, remoteRepoDir);
     }
-    let commit = await repo.getBranchCommit('master');
+    let commit = await repo.getBranchCommit('main');
     // reset hard to this remote head
     await Git.Reset.reset(repo, commit, Git.Reset.TYPE.HARD);
-    // then we checkout the latest master head
-    await repo.checkoutBranch('master');
+    // then we checkout the latest main head
+    await repo.checkoutBranch('main');
     // make sure we pull in the latest changes
-    await repo.mergeBranches('master', 'origin/master');
+    await repo.mergeBranches('main', 'origin/main');
     // then we check if we need to move the HEAD to the merge base
-    if (commitId && commitId !== 'master') {
+    if (commitId && commitId !== 'main') {
       // as the commitId probably came from our local repo
       // we use it to lookup the right commit in our remote repo
       commit = await Git.Commit.lookup(repo, commitId);

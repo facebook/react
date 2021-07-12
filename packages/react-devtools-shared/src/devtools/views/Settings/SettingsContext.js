@@ -18,6 +18,7 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
@@ -44,6 +45,9 @@ type Context = {|
 
   breakOnConsoleErrors: boolean,
   setBreakOnConsoleErrors: (value: boolean) => void,
+
+  parseHookNames: boolean,
+  setParseHookNames: (value: boolean) => void,
 
   showInlineWarningsAndErrors: boolean,
   setShowInlineWarningsAndErrors: (value: boolean) => void,
@@ -92,6 +96,10 @@ function SettingsContextController({
     setBreakOnConsoleErrors,
   ] = useLocalStorage<boolean>(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    false,
+  );
+  const [parseHookNames, setParseHookNames] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY,
     false,
   );
   const [
@@ -180,9 +188,11 @@ function SettingsContextController({
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
+      parseHookNames,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
       setDisplayDensity,
+      setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
@@ -194,9 +204,11 @@ function SettingsContextController({
       appendComponentStack,
       breakOnConsoleErrors,
       displayDensity,
+      parseHookNames,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
       setDisplayDensity,
+      setParseHookNames,
       setTheme,
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,

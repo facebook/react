@@ -36,19 +36,26 @@ import styles from './InspectedElementView.css';
 
 import type {ContextMenuContextType} from '../context';
 import type {Element, InspectedElement, SerializedElement} from './types';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType, HookNames} from 'react-devtools-shared/src/types';
+import type {ToggleParseHookNames} from './InspectedElementContext';
 
 export type CopyPath = (path: Array<string | number>) => void;
 export type InspectPath = (path: Array<string | number>) => void;
 
 type Props = {|
   element: Element,
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement,
+  parseHookNames: boolean,
+  toggleParseHookNames: ToggleParseHookNames,
 |};
 
 export default function InspectedElementView({
   element,
+  hookNames,
   inspectedElement,
+  parseHookNames,
+  toggleParseHookNames,
 }: Props) {
   const {id} = element;
   const {
@@ -103,8 +110,11 @@ export default function InspectedElementView({
         <InspectedElementHooksTree
           bridge={bridge}
           element={element}
+          hookNames={hookNames}
           inspectedElement={inspectedElement}
+          parseHookNames={parseHookNames}
           store={store}
+          toggleParseHookNames={toggleParseHookNames}
         />
 
         <InspectedElementContextTree

@@ -17,7 +17,6 @@ import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 import {
   createContainer as createContainer_old,
   updateContainer as updateContainer_old,
-  batchedEventUpdates as batchedEventUpdates_old,
   batchedUpdates as batchedUpdates_old,
   unbatchedUpdates as unbatchedUpdates_old,
   deferredUpdates as deferredUpdates_old,
@@ -56,7 +55,6 @@ import {
 import {
   createContainer as createContainer_new,
   updateContainer as updateContainer_new,
-  batchedEventUpdates as batchedEventUpdates_new,
   batchedUpdates as batchedUpdates_new,
   unbatchedUpdates as unbatchedUpdates_new,
   deferredUpdates as deferredUpdates_new,
@@ -98,9 +96,6 @@ export const createContainer = enableNewReconciler
 export const updateContainer = enableNewReconciler
   ? updateContainer_new
   : updateContainer_old;
-export const batchedEventUpdates = enableNewReconciler
-  ? batchedEventUpdates_new
-  : batchedEventUpdates_old;
 export const batchedUpdates = enableNewReconciler
   ? batchedUpdates_new
   : batchedUpdates_old;

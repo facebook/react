@@ -2,7 +2,7 @@
 
 <details>
   <summary>
-    Changes that have landed in master but are not yet released.
+    Changes that have landed in main but are not yet released.
     Click to see more.
   </summary>
 
@@ -380,7 +380,7 @@ New keys can be added to object props/state/hooks now. Existing keys can be rena
 #### Improved performance
 The legacy DevTools extension used to add significant performance overhead, making it unusable for some larger React applications. That overhead has been effectively eliminated in version 4.
 
-[Learn more](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) about the performance optimizations that made this possible.
+[Learn more](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md) about the performance optimizations that made this possible.
 
 #### Component stacks
 
@@ -406,7 +406,7 @@ Filter preferences are remembered between sessions.
 
 #### No more inline props
 
-Components in the tree no longer show inline props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
+Components in the tree no longer show inline props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
 
 You can view a component's props, state, and hooks by selecting it:
 

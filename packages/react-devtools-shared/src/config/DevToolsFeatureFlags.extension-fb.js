@@ -13,6 +13,7 @@
  * It should always be imported from "react-devtools-feature-flags".
  ************************************************************************/
 
+export const enableHookNameParsing = true;
 export const enableProfilerChangedHookIndices = true;
 export const isInternalFacebookBuild = true;
 

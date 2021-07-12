@@ -52,6 +52,7 @@ module.exports = Object.assign({}, baseConfig, {
   moduleNameMapper,
   modulePathIgnorePatterns: [
     ...baseConfig.modulePathIgnorePatterns,
+    'packages/react-devtools-extensions',
     'packages/react-devtools-shared',
   ],
   // Don't run bundle tests on -test.internal.* files

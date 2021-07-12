@@ -10,6 +10,7 @@ export function test(maybeInspectedElement) {
   const hasOwnProperty = Object.prototype.hasOwnProperty.bind(
     maybeInspectedElement,
   );
+
   return (
     hasOwnProperty('canEditFunctionProps') &&
     hasOwnProperty('canEditHooks') &&

@@ -22,6 +22,7 @@ import TabBar from './TabBar';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
+import LoadHookNamesFunctionContext from './Components/LoadHookNamesFunctionContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
@@ -34,15 +35,22 @@ import styles from './DevTools.css';
 
 import './root.css';
 
+import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {HookNames} from 'react-devtools-shared/src/types';
+import type {Thenable} from '../cache';
 
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
+
 export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement,
 ) => void;
+export type LoadHookNamesFunction = (
+  hooksTree: HooksTree,
+) => Thenable<HookNames>;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
@@ -75,6 +83,11 @@ export type Props = {|
   // but individual tabs (e.g. Components, Profiling) can be rendered into portals within their browser panels.
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
+
+  // Loads and parses source maps for function components
+  // and extracts hook "names" based on the variables the hook return values get assigned to.
+  // Not every DevTools build can load source maps, so this property is optional.
+  loadHookNamesFunction?: ?LoadHookNamesFunction,
 |};
 
 const componentsTab = {
@@ -99,6 +112,7 @@ export default function DevTools({
   componentsPortalContainer,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
+  loadHookNamesFunction,
   overrideTab,
   profilerPortalContainer,
   showTabBar = false,
@@ -180,7 +194,6 @@ export default function DevTools({
       }
     };
   }, [bridge]);
-
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
@@ -191,40 +204,43 @@ export default function DevTools({
               componentsPortalContainer={componentsPortalContainer}
               profilerPortalContainer={profilerPortalContainer}>
               <ViewElementSourceContext.Provider value={viewElementSource}>
-                <TreeContextController>
-                  <ProfilerContextController>
-                    <div className={styles.DevTools} ref={devToolsRef}>
-                      {showTabBar && (
-                        <div className={styles.TabBar}>
-                          <ReactLogo />
-                          <span className={styles.DevToolsVersion}>
-                            {process.env.DEVTOOLS_VERSION}
-                          </span>
-                          <div className={styles.Spacer} />
-                          <TabBar
-                            currentTab={tab}
-                            id="DevTools"
-                            selectTab={setTab}
-                            tabs={tabs}
-                            type="navigation"
+                <LoadHookNamesFunctionContext.Provider
+                  value={loadHookNamesFunction || null}>
+                  <TreeContextController>
+                    <ProfilerContextController>
+                      <div className={styles.DevTools} ref={devToolsRef}>
+                        {showTabBar && (
+                          <div className={styles.TabBar}>
+                            <ReactLogo />
+                            <span className={styles.DevToolsVersion}>
+                              {process.env.DEVTOOLS_VERSION}
+                            </span>
+                            <div className={styles.Spacer} />
+                            <TabBar
+                              currentTab={tab}
+                              id="DevTools"
+                              selectTab={setTab}
+                              tabs={tabs}
+                              type="navigation"
+                            />
+                          </div>
+                        )}
+                        <div
+                          className={styles.TabContent}
+                          hidden={tab !== 'components'}>
+                          <Components
+                            portalContainer={componentsPortalContainer}
                           />
                         </div>
-                      )}
-                      <div
-                        className={styles.TabContent}
-                        hidden={tab !== 'components'}>
-                        <Components
-                          portalContainer={componentsPortalContainer}
-                        />
+                        <div
+                          className={styles.TabContent}
+                          hidden={tab !== 'profiler'}>
+                          <Profiler portalContainer={profilerPortalContainer} />
+                        </div>
                       </div>
-                      <div
-                        className={styles.TabContent}
-                        hidden={tab !== 'profiler'}>
-                        <Profiler portalContainer={profilerPortalContainer} />
-                      </div>
-                    </div>
-                  </ProfilerContextController>
-                </TreeContextController>
+                    </ProfilerContextController>
+                  </TreeContextController>
+                </LoadHookNamesFunctionContext.Provider>
               </ViewElementSourceContext.Provider>
             </SettingsContextController>
             <UnsupportedBridgeProtocolDialog />

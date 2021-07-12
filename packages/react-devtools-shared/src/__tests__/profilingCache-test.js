@@ -672,7 +672,7 @@ describe('ProfilingCache', () => {
 
     const About = () => <div>About</div>;
 
-    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Router.js
+    // Mimics https://github.com/ReactTraining/react-router/blob/main/packages/react-router/modules/Router.js
     function Router({children}) {
       const [path, setPath] = React.useState('/');
       return (
@@ -682,7 +682,7 @@ describe('ProfilingCache', () => {
       );
     }
 
-    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Switch.js
+    // Mimics https://github.com/ReactTraining/react-router/blob/main/packages/react-router/modules/Switch.js
     function Switch({children}) {
       return (
         <RouterContext.Consumer>
@@ -699,14 +699,14 @@ describe('ProfilingCache', () => {
       );
     }
 
-    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Route.js
+    // Mimics https://github.com/ReactTraining/react-router/blob/main/packages/react-router/modules/Route.js
     function Route({children, path}) {
       return null;
     }
 
     const linkRef = React.createRef();
 
-    // Mimics https://github.com/ReactTraining/react-router/blob/master/packages/react-router-dom/modules/Link.js
+    // Mimics https://github.com/ReactTraining/react-router/blob/main/packages/react-router-dom/modules/Link.js
     function Link({children, path}) {
       return (
         <RouterContext.Consumer>

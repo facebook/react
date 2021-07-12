@@ -122,6 +122,16 @@ env.beforeEach(() => {
   global.agent = agent;
   global.bridge = bridge;
   global.store = store;
+
+  const readFileSync = require('fs').readFileSync;
+  async function mockFetch(url) {
+    return {
+      ok: true,
+      status: 200,
+      text: async () => readFileSync(__dirname + url, 'utf-8'),
+    };
+  }
+  global.fetch = mockFetch;
 });
 env.afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;

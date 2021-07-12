@@ -43,6 +43,7 @@ type KeyValueProps = {|
   element: Element,
   hidden: boolean,
   hookID?: ?number,
+  hookName?: ?string,
   inspectedElement: InspectedElement,
   isDirectChildOfAnArray?: boolean,
   name: string,
@@ -65,6 +66,7 @@ export default function KeyValue({
   isDirectChildOfAnArray,
   hidden,
   hookID,
+  hookName,
   name,
   path,
   pathRoot,
@@ -202,7 +204,12 @@ export default function KeyValue({
         <DeleteToggle name={name} deletePath={deletePath} path={path} />
       );
     } else {
-      renderedName = <span className={styles.Name}>{name}</span>;
+      renderedName = (
+        <span className={styles.Name}>
+          {name}
+          {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+        </span>
+      );
     }
   } else if (canRenameTheCurrentPath) {
     renderedName = (
@@ -215,7 +222,12 @@ export default function KeyValue({
       />
     );
   } else {
-    renderedName = <span className={styles.Name}>{name}</span>;
+    renderedName = (
+      <span className={styles.Name}>
+        {name}
+        {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+      </span>
+    );
   }
 
   let children = null;

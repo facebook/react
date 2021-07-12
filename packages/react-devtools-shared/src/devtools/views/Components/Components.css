@@ -68,4 +68,5 @@
   justify-content: center;
   font-size: var(--font-size-sans-large);
   color: var(--color-dim);
+  border-left: 1px solid var(--color-border);
 }

@@ -332,12 +332,20 @@ const Dispatcher: DispatcherType = {
 
 // Inspect
 
+export type HookSource = {
+  lineNumber: number | null,
+  columnNumber: number | null,
+  fileName: string | null,
+  functionName: string | null,
+};
+
 export type HooksNode = {
   id: number | null,
   isStateEditable: boolean,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
+  hookSource?: HookSource,
   ...
 };
 export type HooksTree = Array<HooksNode>;
@@ -473,7 +481,11 @@ function parseCustomHookName(functionName: void | string): string {
   return functionName.substr(startIndex);
 }
 
-function buildTree(rootStack, readHookLog): HooksTree {
+function buildTree(
+  rootStack,
+  readHookLog,
+  includeHooksSource: boolean,
+): HooksTree {
   const rootChildren = [];
   let prevStack = null;
   let levelChildren = rootChildren;
@@ -508,13 +520,25 @@ function buildTree(rootStack, readHookLog): HooksTree {
       // to the tree.
       for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
         const children = [];
-        levelChildren.push({
+        const stackFrame = stack[j];
+        const levelChild: HooksNode = {
           id: null,
           isStateEditable: false,
           name: parseCustomHookName(stack[j - 1].functionName),
           value: undefined,
           subHooks: children,
-        });
+        };
+
+        if (includeHooksSource) {
+          levelChild.hookSource = {
+            lineNumber: stackFrame.lineNumber,
+            columnNumber: stackFrame.columnNumber,
+            functionName: stackFrame.functionName,
+            fileName: stackFrame.fileName,
+          };
+        }
+
+        levelChildren.push(levelChild);
         stackOfChildren.push(levelChildren);
         levelChildren = children;
       }
@@ -531,14 +555,33 @@ function buildTree(rootStack, readHookLog): HooksTree {
 
     // For the time being, only State and Reducer hooks support runtime overrides.
     const isStateEditable = primitive === 'Reducer' || primitive === 'State';
-
-    levelChildren.push({
+    const levelChild: HooksNode = {
       id,
       isStateEditable,
       name: primitive,
       value: hook.value,
       subHooks: [],
-    });
+    };
+
+    if (includeHooksSource) {
+      const hookSource: HookSource = {
+        lineNumber: null,
+        functionName: null,
+        fileName: null,
+        columnNumber: null,
+      };
+      if (stack && stack.length >= 1) {
+        const stackFrame = stack[0];
+        hookSource.lineNumber = stackFrame.lineNumber;
+        hookSource.functionName = stackFrame.functionName;
+        hookSource.fileName = stackFrame.fileName;
+        hookSource.columnNumber = stackFrame.columnNumber;
+      }
+
+      levelChild.hookSource = hookSource;
+    }
+
+    levelChildren.push(levelChild);
   }
 
   // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
@@ -585,6 +628,7 @@ export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
   currentDispatcher: ?CurrentDispatcherRef,
+  includeHooksSource?: boolean = false,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -605,7 +649,7 @@ export function inspectHooks<Props>(
     currentDispatcher.current = previousDispatcher;
   }
   const rootStack = ErrorStackParser.parse(ancestorStackError);
-  return buildTree(rootStack, readHookLog);
+  return buildTree(rootStack, readHookLog, includeHooksSource);
 }
 
 function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
@@ -634,6 +678,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
   props: Props,
   ref: Ref,
   currentDispatcher: CurrentDispatcherRef,
+  includeHooksSource: boolean,
 ): HooksTree {
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
@@ -648,7 +693,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
     currentDispatcher.current = previousDispatcher;
   }
   const rootStack = ErrorStackParser.parse(ancestorStackError);
-  return buildTree(rootStack, readHookLog);
+  return buildTree(rootStack, readHookLog, includeHooksSource);
 }
 
 function resolveDefaultProps(Component, baseProps) {
@@ -669,6 +714,7 @@ function resolveDefaultProps(Component, baseProps) {
 export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
+  includeHooksSource?: boolean = false,
 ) {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -706,9 +752,10 @@ export function inspectHooksOfFiber(
         props,
         fiber.ref,
         currentDispatcher,
+        includeHooksSource,
       );
     }
-    return inspectHooks(type, props, currentDispatcher);
+    return inspectHooks(type, props, currentDispatcher, includeHooksSource);
   } finally {
     currentHook = null;
     restoreContexts(contextMap);

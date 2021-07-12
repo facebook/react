@@ -71,4 +71,4 @@
 
 ## 1.x
 
-The 1.x releases aren’t noted in this changelog, but you can find them in the [commit history](https://github.com/facebook/react/commits/master/packages/eslint-plugin-react-hooks).
+The 1.x releases aren’t noted in this changelog, but you can find them in the [commit history](https://github.com/facebook/react/commits/main/packages/eslint-plugin-react-hooks).

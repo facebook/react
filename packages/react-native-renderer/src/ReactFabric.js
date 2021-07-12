@@ -16,7 +16,6 @@ import './ReactFabricInjection';
 import {
   findHostInstance,
   findHostInstanceWithWarning,
-  batchedEventUpdates,
   batchedUpdates as batchedUpdatesImpl,
   discreteUpdates,
   createContainer,
@@ -24,6 +23,7 @@ import {
   injectIntoDevTools,
   getPublicRootInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
@@ -246,11 +246,7 @@ function createPortal(
   return createPortalImpl(children, containerTag, null, key);
 }
 
-setBatchingImplementation(
-  batchedUpdatesImpl,
-  discreteUpdates,
-  batchedEventUpdates,
-);
+setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
 
 const roots = new Map();
 
@@ -267,6 +263,8 @@ export {
   unmountComponentAtNode,
   stopSurface,
   createPortal,
+  // This export is undefined in production builds.
+  getInspectorDataForInstance,
 };
 
 injectIntoDevTools({

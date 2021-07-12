@@ -105,6 +105,9 @@ export const enableNewReconciler = false;
 
 export const disableNativeComponentFrames = false;
 
+// Used by React Native in Facebook internal builds for UI review tools.
+export const enableGetInspectorDataForInstanceInProduction = false;
+
 // Errors that are thrown while unmounting (or after in the case of passive effects)
 // should bypass any error boundaries that are also unmounting (or have unmounted)
 // and be handled by the nearest still-mounted boundary.

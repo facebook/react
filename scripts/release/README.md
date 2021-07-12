@@ -50,7 +50,7 @@ The sections below include meaningful `--tags` in the instructions. However, kee
 "Next" builds are meant to be lightweight and published often. In most cases, they can be published using artifacts built by Circle CI.
 
 To prepare a build for a particular commit:
-1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/master).
+1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/main).
 2. Copy the SHA (by clicking the 📋 button)
 5. Run the [`prepare-release-from-ci`](#prepare-release-from-ci) script with the SHA <sup>1</sup> you found:
 ```sh
@@ -115,7 +115,7 @@ Begin by creating a branch from the previous git tag<sup>1</sup>:
 git checkout -b 16.8.3 v16.8.2
 ```
 
-Next cherry pick any changes from master that you want to include in the release:
+Next cherry pick any changes from main that you want to include in the release:
 
 ```sh
 git cherry-pick <commit-hash>

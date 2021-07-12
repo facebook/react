@@ -51,7 +51,6 @@ import {
   requestUpdateLane,
   scheduleUpdateOnFiber,
   flushRoot,
-  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   flushSync,
@@ -327,7 +326,6 @@ export function updateContainer(
 }
 
 export {
-  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   deferredUpdates,

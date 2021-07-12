@@ -32,6 +32,10 @@ module.exports = {
   node: {
     // Don't define a polyfill on window.setImmediate
     setImmediate: false,
+
+    // source-maps package has a dependency on 'fs'
+    // but this build won't trigger that code path
+    fs: 'empty',
   },
   resolve: {
     alias: {
