@@ -116,7 +116,13 @@ export function restoreSelection(priorSelectionInformation) {
   const curFocusedElem = getActiveElementDeep();
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
-  if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
+  // With disabled elements, they are not focusable
+  if (
+    priorFocusedElem &&
+    !priorFocusedElem.disabled &&
+    curFocusedElem !== priorFocusedElem &&
+    isInDocument(priorFocusedElem)
+  ) {
     if (
       priorSelectionRange !== null &&
       hasSelectionCapabilities(priorFocusedElem)
