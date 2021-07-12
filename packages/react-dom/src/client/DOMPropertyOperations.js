@@ -16,10 +16,7 @@ import {
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
-import {
-  disableJavaScriptURLs,
-  enableTrustedTypesIntegration,
-} from 'shared/ReactFeatureFlags';
+import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 import {isOpaqueHydratingObject} from './ReactDOMHostConfig';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
@@ -153,10 +150,8 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       } else {
-        node.setAttribute(
-          attributeName,
-          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
-        );
+        // Node.setAttribute(NS) stringifies the value implicitly in all browsers apart from IE <= 9.
+        node.setAttribute(attributeName, (value: any));
       }
     }
     return;
@@ -186,15 +181,10 @@ export function setValueForProperty(
       // and we won't require Trusted Type here.
       attributeValue = '';
     } else {
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
-      if (enableTrustedTypesIntegration) {
-        attributeValue = (value: any);
-      } else {
-        attributeValue = '' + (value: any);
-      }
+      // Node.setAttribute(NS) stringifies the value implicitly in all browsers apart from IE <= 9.
+      attributeValue = (value: any);
       if (propertyInfo.sanitizeURL) {
-        sanitizeURL(attributeValue.toString());
+        attributeValue = sanitizeURL(attributeValue);
       }
     }
     if (attributeNamespace) {
