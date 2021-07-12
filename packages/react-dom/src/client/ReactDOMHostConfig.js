@@ -18,7 +18,9 @@ import type {ReactScopeInstance} from 'shared/ReactTypes';
 
 import {
   precacheFiberNode,
+  clearFiberNodeCache,
   updateFiberProps,
+  clearFiberPropsCache,
   getClosestInstanceFromNode,
   getFiberFromScopeInstance,
   getInstanceFromNode as getInstanceFromNodeDOMTree,
@@ -561,6 +563,7 @@ export function removeChild(
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
   parentInstance.removeChild(child);
+  recursivelyClearFiberAndPropsCache(child);
 }
 
 export function removeChildFromContainer(
@@ -571,6 +574,24 @@ export function removeChildFromContainer(
     (container.parentNode: any).removeChild(child);
   } else {
     container.removeChild(child);
+  }
+  recursivelyClearFiberAndPropsCache(child);
+}
+
+// Removes the references to the fibers and component props from the specified
+// node and all of its child nodes.
+// This is necessary because browsers may keep certain DOM nodes around after
+// they have been detached from the document (most prominently text inputs).
+// Without this function the entire fiber tree and its props would also remain
+// in memory as long as the browser holds on to the DOM nodes (sometimes
+// indefinitely).
+function recursivelyClearFiberAndPropsCache(
+  node: Instance | TextInstance | SuspenseInstance,
+): void {
+  clearFiberNodeCache(node);
+  clearFiberPropsCache(node);
+  for (let i = 0; i < node.childNodes.length; i++) {
+    recursivelyClearFiberAndPropsCache((node.childNodes[i]: any));
   }
 }
 

@@ -60,6 +60,12 @@ export function precacheFiberNode(
   (node: any)[internalInstanceKey] = hostInst;
 }
 
+export function clearFiberNodeCache(
+  node: Instance | TextInstance | SuspenseInstance | ReactScopeInstance,
+): void {
+  (node: any)[internalInstanceKey] = null;
+}
+
 export function markContainerAsRoot(hostRoot: Fiber, node: Container): void {
   node[internalContainerInstanceKey] = hostRoot;
 }
@@ -204,6 +210,12 @@ export function updateFiberProps(
   props: Props,
 ): void {
   (node: any)[internalPropsKey] = props;
+}
+
+export function clearFiberPropsCache(
+  node: Instance | TextInstance | SuspenseInstance,
+): void {
+  (node: any)[internalPropsKey] = null;
 }
 
 export function getEventListenerSet(node: EventTarget): Set<string> {
