@@ -69,8 +69,13 @@ export function injectInternals(internals: Object): boolean {
       console.error('React instrumentation encountered an error: %s.', err);
     }
   }
-  // DevTools exists
-  return true;
+  if (hook.checkDCE) {
+    // This is the real DevTools.
+    return true;
+  } else {
+    // This is likely a hook installed by Fast Refresh runtime.
+    return false;
+  }
 }
 
 export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
