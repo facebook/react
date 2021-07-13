@@ -264,13 +264,19 @@ function extractAndLoadSourceMaps(
             break;
           }
         } else {
-          if (sourceMappingURLs.length > 1) {
+          let url = sourceMappingURLs[i].split('=')[1];
+
+          if (i !== sourceMappingURLs.length - 1) {
+            // Files with external source maps should only have a single source map.
+            // More than one result might indicate an edge case,
+            // like a string in the source code that matched our "sourceMappingURL" regex.
+            // We should just skip over cases like this.
             console.warn(
-              'More than one external source map detected in the source file',
+              `More than one external source map detected in the source file; skipping "${url}"`,
             );
+            continue;
           }
 
-          let url = sourceMappingURLs[i].split('=')[1];
           if (!url.startsWith('http') && !url.startsWith('/')) {
             // Resolve paths relative to the location of the file name
             const lastSlashIdx = runtimeSourceURL.lastIndexOf('/');
@@ -290,7 +296,13 @@ function extractAndLoadSourceMaps(
             fetchFile(url).then(
               sourceMapContents =>
                 new SourceMapConsumer(JSON.parse(sourceMapContents)),
+
+              // In this case, we fall back to the assumption that the source has no source map.
+              // This might indicate an (unlikely) edge case that had no source map,
+              // but contained the string "sourceMappingURL".
+              error => null,
             );
+
           if (__DEBUG__) {
             if (!fetchPromises.has(url)) {
               console.log(
@@ -315,26 +327,34 @@ function extractAndLoadSourceMaps(
 
 function fetchFile(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    fetch(url).then(response => {
-      if (response.ok) {
-        response
-          .text()
-          .then(text => {
-            resolve(text);
-          })
-          .catch(error => {
-            if (__DEBUG__) {
-              console.log(`fetchFile() Could not read text for url "${url}"`);
-            }
-            reject(null);
-          });
-      } else {
+    fetch(url).then(
+      response => {
+        if (response.ok) {
+          response
+            .text()
+            .then(text => {
+              resolve(text);
+            })
+            .catch(error => {
+              if (__DEBUG__) {
+                console.log(`fetchFile() Could not read text for url "${url}"`);
+              }
+              reject(null);
+            });
+        } else {
+          if (__DEBUG__) {
+            console.log(`fetchFile() Got bad response for url "${url}"`);
+          }
+          reject(null);
+        }
+      },
+      error => {
         if (__DEBUG__) {
-          console.log(`fetchFile() Got bad response for url "${url}"`);
+          console.log(`fetchFile() Could not fetch file "${error.message}"`);
         }
         reject(null);
-      }
-    });
+      },
+    );
   });
 }
 

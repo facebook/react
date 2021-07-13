@@ -48,7 +48,7 @@ describe('parseHookNames', () => {
     };
 
     fetchMock.mockIf(/.+$/, request => {
-      return Promise.resolve(requireText(request.url, 'utf8'));
+      return requireText(request.url, 'utf8');
     });
 
     // Mock out portion of browser API used by parseHookNames to initialize "source-map".
@@ -80,8 +80,12 @@ describe('parseHookNames', () => {
   }
 
   function requireText(path, encoding) {
-    const {readFileSync} = require('fs');
-    return readFileSync(path, encoding);
+    const {existsSync, readFileSync} = require('fs');
+    if (existsSync(path)) {
+      return Promise.resolve(readFileSync(path, encoding));
+    } else {
+      return Promise.reject(`File not found "${path}"`);
+    }
   }
 
   async function getHookNamesForComponent(Component, props = {}) {
@@ -126,7 +130,7 @@ describe('parseHookNames', () => {
       if (request.url.endsWith('useCustom.js')) {
         throw Error(`Unexpected file request for "${request.url}"`);
       }
-      return Promise.resolve(requireText(request.url, 'utf8'));
+      return requireText(request.url, 'utf8');
     });
 
     const hookNames = await getHookNamesForComponent(Component);
@@ -261,10 +265,10 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/ComponentWithMultipleHooksPerLine',
       ); // external source map
-      // await test(
-      //   './__source__/__compiled__/bundle',
-      //   'ComponentWithMultipleHooksPerLine',
-      // ); // bundle source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ComponentWithMultipleHooksPerLine',
+      ); // bundle source map
     });
 
     // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
@@ -283,6 +287,31 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
       await test('./__source__/__compiled__/external/InlineRequire'); // external source map
       await test('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
+    });
+
+    it('should support sources that contain the string "sourceMappingURL="', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+        ]);
+      }
+
+      // We expect the inline sourceMappingURL to be invalid in this case; mute the warning.
+      console.warn = () => {};
+
+      await test('./__source__/ContainingStringSourceMappingURL'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/ContainingStringSourceMappingURL',
+      ); // inline source map
+      await test(
+        './__source__/__compiled__/external/ContainingStringSourceMappingURL',
+      ); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ContainingStringSourceMappingURL',
+      ); // bundle source map
     });
   });
 });
