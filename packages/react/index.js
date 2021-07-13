@@ -7,7 +7,7 @@
  * @flow
  */
 
-// Keep in sync with https://github.com/facebook/flow/blob/main/lib/react.js
+// Keep in sync with https://github.com/facebook/flow/blob/master/lib/react.js
 export type StatelessFunctionalComponent<
   P,
 > = React$StatelessFunctionalComponent<P>;
