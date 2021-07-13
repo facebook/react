@@ -22,6 +22,16 @@ const sha = (
   spawnSync('git', ['show', '-s', '--format=%h']).stdout + ''
 ).trim();
 
+let dateString = (
+  spawnSync('git', ['show', '-s', '--format=%cd', '--date=format:%Y%m%d', sha])
+    .stdout + ''
+).trim();
+
+// On CI environment, this string is wrapped with quotes '...'s
+if (dateString.startsWith("'")) {
+  dateString = dateString.substr(1, 8);
+}
+
 if (process.env.CIRCLE_NODE_TOTAL) {
   // In CI, we use multiple concurrent processes. Allocate half the processes to
   // build the stable channel, and the other half for experimental. Override
@@ -32,14 +42,16 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   if (index < halfTotal) {
     const nodeTotal = halfTotal;
     const nodeIndex = index;
-    updateTheReactVersionThatDevToolsReads(ReactVersion + '-' + sha);
+    updateTheReactVersionThatDevToolsReads(
+      ReactVersion + '-' + sha + '-' + dateString
+    );
     buildForChannel('stable', nodeTotal, nodeIndex);
     processStable('./build');
   } else {
     const nodeTotal = total - halfTotal;
     const nodeIndex = index - halfTotal;
     updateTheReactVersionThatDevToolsReads(
-      ReactVersion + '-experimental-' + sha
+      ReactVersion + '-experimental-' + sha + '-' + dateString
     );
     buildForChannel('experimental', nodeTotal, nodeIndex);
     processExperimental('./build');
@@ -51,12 +63,16 @@ if (process.env.CIRCLE_NODE_TOTAL) {
 } else {
   // Running locally, no concurrency. Move each channel's build artifacts into
   // a temporary directory so that they don't conflict.
-  updateTheReactVersionThatDevToolsReads(ReactVersion + '-' + sha);
+  updateTheReactVersionThatDevToolsReads(
+    ReactVersion + '-' + sha + '-' + dateString
+  );
   buildForChannel('stable', '', '');
   const stableDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', stableDir);
   processStable(stableDir);
-  updateTheReactVersionThatDevToolsReads(ReactVersion + '-experimental-' + sha);
+  updateTheReactVersionThatDevToolsReads(
+    ReactVersion + '-experimental-' + sha + '-' + dateString
+  );
   buildForChannel('experimental', '', '');
   const experimentalDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', experimentalDir);
@@ -88,13 +104,13 @@ function buildForChannel(channel, nodeTotal, nodeIndex) {
 
 function processStable(buildDir) {
   if (fs.existsSync(buildDir + '/node_modules')) {
-    const defaultVersionIfNotFound = '0.0.0' + '-' + sha;
+    const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();
     for (const moduleName in stablePackages) {
       const version = stablePackages[moduleName];
       versionsMap.set(
         moduleName,
-        version + '-' + nextChannelLabel + '-' + sha,
+        version + '-' + nextChannelLabel + '-' + sha + '-' + dateString,
         defaultVersionIfNotFound
       );
     }
@@ -143,7 +159,8 @@ function processStable(buildDir) {
 
 function processExperimental(buildDir, version) {
   if (fs.existsSync(buildDir + '/node_modules')) {
-    const defaultVersionIfNotFound = '0.0.0' + '-' + 'experimental' + '-' + sha;
+    const defaultVersionIfNotFound =
+      '0.0.0' + '-' + 'experimental' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();
     for (const moduleName in stablePackages) {
       versionsMap.set(moduleName, defaultVersionIfNotFound);
@@ -195,7 +212,7 @@ function crossDeviceRenameSync(source, destination) {
 
 /*
  * Grabs the built packages in ${tmp_build_dir}/node_modules and updates the
- * `version` key in their package.json to 0.0.0-${commitHash} for the commit
+ * `version` key in their package.json to 0.0.0-${date}-${commitHash} for the commit
  * you're building. Also updates the dependencies and peerDependencies
  * to match this version for all of the 'React' packages
  * (packages available in this repo).

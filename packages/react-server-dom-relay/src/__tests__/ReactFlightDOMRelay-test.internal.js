@@ -18,7 +18,7 @@ describe('ReactFlightDOMRelay', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFlightRelayServer = require('react-server-dom-relay/server');

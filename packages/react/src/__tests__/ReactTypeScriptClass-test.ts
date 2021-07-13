@@ -1,7 +1,7 @@
 /// <reference path="./testDefinitions/PropTypes.d.ts" />
 /// <reference path="./testDefinitions/React.d.ts" />
 /// <reference path="./testDefinitions/ReactDOM.d.ts" />
-/// <reference path="./testDefinitions/ReactDOMTestUtils.d.ts" />
+/// <reference path="./testDefinitions/ReactInternalAct.d.ts" />
 
 /*!
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -14,6 +14,7 @@ import React = require('react');
 import ReactDOM = require('react-dom');
 import ReactDOMTestUtils = require('react-dom/test-utils');
 import PropTypes = require('prop-types');
+import internalAct = require('jest-react');
 
 // Before Each
 
@@ -21,7 +22,7 @@ let container;
 let root;
 let attachedListener = null;
 let renderedName = null;
-let act = ReactDOMTestUtils.unstable_concurrentAct;
+let act = internalAct.act;
 
 class Inner extends React.Component {
   getName() {

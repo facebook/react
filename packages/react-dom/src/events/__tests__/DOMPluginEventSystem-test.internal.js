@@ -16,7 +16,6 @@ let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
-let ReactTestUtils;
 let act;
 
 function dispatchEvent(element, type) {
@@ -67,7 +66,7 @@ describe('DOMPluginEventSystem', () => {
           ReactDOM = require('react-dom');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
-          act = require('react-dom/test-utils').unstable_concurrentAct;
+          act = require('jest-react').act;
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -1253,8 +1252,7 @@ describe('DOMPluginEventSystem', () => {
             ReactDOM = require('react-dom');
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
-            ReactTestUtils = require('react-dom/test-utils');
-            act = ReactTestUtils.unstable_concurrentAct;
+            act = require('jest-react').act;
           });
 
           // @gate www

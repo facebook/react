@@ -14,9 +14,9 @@
 //
 //   18.0.0-alpha-a1c2d3e4
 //
-// The @experimental channel doesn't include a version, only a sha, e.g.:
+// The @experimental channel doesn't include a version, only a date and a sha, e.g.:
 //
-//   0.0.0-experimental-a1c2d3e4
+//   0.0.0-experimental-241c4467e-20200129
 
 const ReactVersion = '18.0.0';
 

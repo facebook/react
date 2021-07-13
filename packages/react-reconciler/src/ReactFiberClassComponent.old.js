@@ -169,7 +169,7 @@ function applyDerivedStateFromProps(
   nextProps: any,
 ) {
   const prevState = workInProgress.memoizedState;
-
+  let partialState = getDerivedStateFromProps(nextProps, prevState);
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
@@ -178,16 +178,11 @@ function applyDerivedStateFromProps(
       disableLogs();
       try {
         // Invoke the function an extra time to help detect side-effects.
-        getDerivedStateFromProps(nextProps, prevState);
+        partialState = getDerivedStateFromProps(nextProps, prevState);
       } finally {
         reenableLogs();
       }
     }
-  }
-
-  const partialState = getDerivedStateFromProps(nextProps, prevState);
-
-  if (__DEV__) {
     warnOnUndefinedDerivedState(ctor, partialState);
   }
   // Merge the partial state and the previous state.
@@ -323,6 +318,11 @@ function checkShouldComponentUpdate(
 ) {
   const instance = workInProgress.stateNode;
   if (typeof instance.shouldComponentUpdate === 'function') {
+    let shouldUpdate = instance.shouldComponentUpdate(
+      newProps,
+      newState,
+      nextContext,
+    );
     if (__DEV__) {
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
@@ -331,19 +331,15 @@ function checkShouldComponentUpdate(
         disableLogs();
         try {
           // Invoke the function an extra time to help detect side-effects.
-          instance.shouldComponentUpdate(newProps, newState, nextContext);
+          shouldUpdate = instance.shouldComponentUpdate(
+            newProps,
+            newState,
+            nextContext,
+          );
         } finally {
           reenableLogs();
         }
       }
-    }
-    const shouldUpdate = instance.shouldComponentUpdate(
-      newProps,
-      newState,
-      nextContext,
-    );
-
-    if (__DEV__) {
       if (shouldUpdate === undefined) {
         console.error(
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
@@ -659,6 +655,7 @@ function constructClassInstance(
       : emptyContextObject;
   }
 
+  let instance = new ctor(props, context);
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
     if (
@@ -667,14 +664,13 @@ function constructClassInstance(
     ) {
       disableLogs();
       try {
-        new ctor(props, context); // eslint-disable-line no-new
+        instance = new ctor(props, context); // eslint-disable-line no-new
       } finally {
         reenableLogs();
       }
     }
   }
 
-  const instance = new ctor(props, context);
   const state = (workInProgress.memoizedState =
     instance.state !== null && instance.state !== undefined
       ? instance.state

@@ -78,7 +78,6 @@ export const enableCreateEventHandleAPI = false;
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
-export const warnAboutUnmockedScheduler = false;
 
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing

@@ -18,12 +18,15 @@ describe('ProfilingCache', () => {
   let Scheduler;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
+  let legacyRender;
   let store: Store;
   let utils;
 
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
+
+    legacyRender = utils.legacyRender;
 
     bridge = global.bridge;
     store = global.store;
@@ -60,14 +63,14 @@ describe('ProfilingCache', () => {
     const containerB = document.createElement('div');
     const containerC = document.createElement('div');
 
-    utils.act(() => ReactDOM.render(<Parent count={2} />, containerA));
-    utils.act(() => ReactDOM.render(<Parent count={1} />, containerB));
+    utils.act(() => legacyRender(<Parent count={2} />, containerA));
+    utils.act(() => legacyRender(<Parent count={1} />, containerB));
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => ReactDOM.render(<Parent count={3} />, containerA));
-    utils.act(() => ReactDOM.render(<Parent count={1} />, containerC));
-    utils.act(() => ReactDOM.render(<Parent count={1} />, containerA));
+    utils.act(() => legacyRender(<Parent count={3} />, containerA));
+    utils.act(() => legacyRender(<Parent count={1} />, containerC));
+    utils.act(() => legacyRender(<Parent count={1} />, containerA));
     utils.act(() => ReactDOM.unmountComponentAtNode(containerB));
-    utils.act(() => ReactDOM.render(<Parent count={0} />, containerA));
+    utils.act(() => legacyRender(<Parent count={0} />, containerA));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allProfilingDataForRoots = [];
@@ -143,10 +146,10 @@ describe('ProfilingCache', () => {
     const container = document.createElement('div');
 
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => ReactDOM.render(<Parent count={2} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={3} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={1} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={0} />, container));
+    utils.act(() => legacyRender(<Parent count={2} />, container));
+    utils.act(() => legacyRender(<Parent count={3} />, container));
+    utils.act(() => legacyRender(<Parent count={1} />, container));
+    utils.act(() => legacyRender(<Parent count={0} />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
@@ -248,16 +251,16 @@ describe('ProfilingCache', () => {
     const container = document.createElement('div');
 
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => ReactDOM.render(<LegacyContextProvider />, container));
+    utils.act(() => legacyRender(<LegacyContextProvider />, container));
     expect(instance).not.toBeNull();
     utils.act(() => (instance: any).setState({count: 1}));
     utils.act(() =>
-      ReactDOM.render(<LegacyContextProvider foo={123} />, container),
+      legacyRender(<LegacyContextProvider foo={123} />, container),
     );
     utils.act(() =>
-      ReactDOM.render(<LegacyContextProvider bar="abc" />, container),
+      legacyRender(<LegacyContextProvider bar="abc" />, container),
     );
-    utils.act(() => ReactDOM.render(<LegacyContextProvider />, container));
+    utils.act(() => legacyRender(<LegacyContextProvider />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
@@ -346,7 +349,7 @@ describe('ProfilingCache', () => {
 
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() =>
-      ReactDOM.render(
+      legacyRender(
         <Context.Provider value={true}>
           <Component count={1} />
         </Context.Provider>,
@@ -356,7 +359,7 @@ describe('ProfilingCache', () => {
 
     // Second render has no changed hooks, only changed props.
     utils.act(() =>
-      ReactDOM.render(
+      legacyRender(
         <Context.Provider value={true}>
           <Component count={2} />
         </Context.Provider>,
@@ -373,7 +376,7 @@ describe('ProfilingCache', () => {
     // Fifth render has a changed context value, but no changed hook.
     // Technically, DevTools will miss this "context" change since it only tracks legacy context.
     utils.act(() =>
-      ReactDOM.render(
+      legacyRender(
         <Context.Provider value={false}>
           <Component count={2} />
         </Context.Provider>,
@@ -453,7 +456,7 @@ describe('ProfilingCache', () => {
 
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div')),
+      legacyRender(<Grandparent />, document.createElement('div')),
     );
     utils.act(() => store.profilerStore.stopProfiling());
 
@@ -508,7 +511,7 @@ describe('ProfilingCache', () => {
 
     utils.act(() => store.profilerStore.startProfiling());
     await utils.actAsync(() =>
-      ReactDOM.render(<Parent />, document.createElement('div')),
+      legacyRender(<Parent />, document.createElement('div')),
     );
     utils.act(() => store.profilerStore.stopProfiling());
 
@@ -558,9 +561,9 @@ describe('ProfilingCache', () => {
     const container = document.createElement('div');
 
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => ReactDOM.render(<Parent count={1} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={2} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={3} />, container));
+    utils.act(() => legacyRender(<Parent count={1} />, container));
+    utils.act(() => legacyRender(<Parent count={2} />, container));
+    utils.act(() => legacyRender(<Parent count={3} />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allFiberCommits = [];
@@ -624,7 +627,7 @@ describe('ProfilingCache', () => {
     const container = document.createElement('div');
 
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => ReactDOM.render(<React.Suspense />, container));
+    utils.act(() => legacyRender(<React.Suspense />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
     function Validator({commitIndex, rootID}) {
@@ -721,7 +724,7 @@ describe('ProfilingCache', () => {
     const {Simulate} = require('react-dom/test-utils');
 
     const container = document.createElement('div');
-    utils.act(() => ReactDOM.render(<App />, container));
+    utils.act(() => legacyRender(<App />, container));
     expect(container.textContent).toBe('Home');
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => Simulate.click(linkRef.current));

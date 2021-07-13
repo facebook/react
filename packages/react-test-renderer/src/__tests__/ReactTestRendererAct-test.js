@@ -40,23 +40,6 @@ describe('ReactTestRenderer.act()', () => {
     expect(root.toJSON()).toEqual('1');
   });
 
-  it("warns if you don't use .act", () => {
-    let setCtr;
-    function App(props) {
-      const [ctr, _setCtr] = React.useState(0);
-      setCtr = _setCtr;
-      return ctr;
-    }
-
-    ReactTestRenderer.create(<App />);
-
-    expect(() => {
-      setCtr(1);
-    }).toErrorDev([
-      'An update to App inside a test was not wrapped in act(...)',
-    ]);
-  });
-
   describe('async', () => {
     // @gate __DEV__
     it('should work with async/await', async () => {

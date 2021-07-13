@@ -36,7 +36,7 @@ describe('ReactFlightDOM', () => {
     jest.resetModules();
     webpackModules = {};
     webpackMap = {};
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');

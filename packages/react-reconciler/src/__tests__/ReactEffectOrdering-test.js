@@ -15,6 +15,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let useEffect;
 let useLayoutEffect;
 
@@ -26,6 +27,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
   });
@@ -47,11 +49,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       return 'Child';
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<Parent />);
     });
     expect(root).toMatchRenderedOutput('Child');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(null);
     });
     expect(Scheduler).toHaveYielded(['Unmount parent', 'Unmount child']);
@@ -74,11 +76,11 @@ describe('ReactHooksWithNoopRenderer', () => {
       return 'Child';
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<Parent />);
     });
     expect(root).toMatchRenderedOutput('Child');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(null);
     });
     expect(Scheduler).toHaveYielded(['Unmount parent', 'Unmount child']);

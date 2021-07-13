@@ -13,8 +13,8 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 describe('editing interface', () => {
   let PropTypes;
   let React;
-  let ReactDOM;
   let bridge: FrontendBridge;
+  let legacyRender;
   let store: Store;
   let utils;
 
@@ -25,6 +25,8 @@ describe('editing interface', () => {
   beforeEach(() => {
     utils = require('./utils');
 
+    legacyRender = utils.legacyRender;
+
     bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -32,7 +34,6 @@ describe('editing interface', () => {
 
     PropTypes = require('prop-types');
     React = require('react');
-    ReactDOM = require('react-dom');
   });
 
   describe('props', () => {
@@ -67,7 +68,7 @@ describe('editing interface', () => {
 
       const container = document.createElement('div');
       await utils.actAsync(() =>
-        ReactDOM.render(
+        legacyRender(
           <>
             <ClassComponent
               array={[1, 2, 3]}
@@ -435,7 +436,7 @@ describe('editing interface', () => {
 
       const container = document.createElement('div');
       await utils.actAsync(() =>
-        ReactDOM.render(
+        legacyRender(
           <ClassComponent object={{nested: 'initial'}} shallow="initial" />,
           container,
         ),
@@ -652,7 +653,7 @@ describe('editing interface', () => {
 
       const container = document.createElement('div');
       await utils.actAsync(() =>
-        ReactDOM.render(<FunctionComponent />, container),
+        legacyRender(<FunctionComponent />, container),
       );
 
       hookID = 0; // index
@@ -902,7 +903,7 @@ describe('editing interface', () => {
 
       const container = document.createElement('div');
       await utils.actAsync(() =>
-        ReactDOM.render(
+        legacyRender(
           <LegacyContextProvider>
             <ClassComponent />
           </LegacyContextProvider>,
