@@ -391,18 +391,6 @@ function createOpenTagMarkup(
   return ret;
 }
 
-function validateRenderResult(child, type) {
-  if (child === undefined) {
-    invariant(
-      false,
-      '%s(...): Nothing was returned from render. This usually means a ' +
-        'return statement is missing. Or, to render nothing, ' +
-        'return null.',
-      getComponentNameFromType(type) || 'Component',
-    );
-  }
-}
-
 function resolve(
   child: mixed,
   context: Object,
@@ -631,7 +619,6 @@ function resolve(
         inst.render == null
       ) {
         child = inst;
-        validateRenderResult(child, Component);
         return;
       }
     }
@@ -719,15 +706,6 @@ function resolve(
       }
     }
     child = inst.render();
-
-    if (__DEV__) {
-      if (child === undefined && inst.render._isMockFunction) {
-        // This is probably bad practice. Consider warning here and
-        // deprecating this convenience.
-        child = null;
-      }
-    }
-    validateRenderResult(child, Component);
 
     let childContext;
     if (disableLegacyContext) {
