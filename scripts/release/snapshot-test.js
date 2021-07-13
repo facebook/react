@@ -6,7 +6,7 @@ const {exec, spawn} = require('child-process-promise');
 const {join} = require('path');
 const {readFileSync} = require('fs');
 const theme = require('./theme');
-const {logPromise, printDiff} = require('./utils');
+const {getDateStringForCommit, logPromise, printDiff} = require('./utils');
 
 const cwd = join(__dirname, '..', '..');
 
@@ -37,6 +37,8 @@ const run = async () => {
     );
     await promise;
 
+    const dateString = await getDateStringForCommit(COMMIT);
+
     // Upgrade the above build top a known React version.
     // Note that using the --local flag skips NPM checkout.
     // This isn't totally necessary but is useful if we want to test an unpublished "next" build.
@@ -44,7 +46,7 @@ const run = async () => {
       'node',
       [
         './scripts/release/prepare-release-from-npm.js',
-        `--version=0.0.0-${COMMIT}`,
+        `--version=0.0.0-${COMMIT}-${dateString}`,
         '--local',
       ],
       defaultOptions

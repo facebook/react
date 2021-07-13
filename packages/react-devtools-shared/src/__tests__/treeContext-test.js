@@ -20,6 +20,7 @@ describe('TreeListContext', () => {
   let ReactDOM;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
+  let legacyRender;
   let store: Store;
   let utils;
   let withErrorsOrWarningsIgnored;
@@ -35,6 +36,7 @@ describe('TreeListContext', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
+    legacyRender = utils.legacyRender;
     withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
 
     bridge = global.bridge;
@@ -88,7 +90,7 @@ describe('TreeListContext', () => {
       const Child = () => null;
 
       utils.act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
+        legacyRender(<Grandparent />, document.createElement('div')),
       );
 
       let renderer;
@@ -214,7 +216,7 @@ describe('TreeListContext', () => {
       const Child = () => null;
 
       utils.act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
+        legacyRender(<Grandparent />, document.createElement('div')),
       );
 
       let renderer;
@@ -300,7 +302,7 @@ describe('TreeListContext', () => {
       const Child = () => null;
 
       utils.act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
+        legacyRender(<Grandparent />, document.createElement('div')),
       );
 
       let renderer;
@@ -391,7 +393,7 @@ describe('TreeListContext', () => {
 
       const container = document.createElement('div');
       utils.act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Grandparent>
             <Parent>
               <Child />
@@ -425,7 +427,7 @@ describe('TreeListContext', () => {
 
       // Remove the child (which should auto-select the parent)
       await utils.actAsync(() =>
-        ReactDOM.render(
+        legacyRender(
           <Grandparent>
             <Parent />
           </Grandparent>,
@@ -458,7 +460,7 @@ describe('TreeListContext', () => {
       const Child = () => null;
 
       utils.act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
+        legacyRender(<Grandparent />, document.createElement('div')),
       );
 
       let renderer;
@@ -619,7 +621,7 @@ describe('TreeListContext', () => {
       const Child = () => null;
 
       utils.act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
+        legacyRender(<Grandparent />, document.createElement('div')),
       );
 
       let renderer;
@@ -918,7 +920,7 @@ describe('TreeListContext', () => {
       Qux.displayName = `withHOC(${Qux.name})`;
 
       utils.act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Foo />
             <Bar />
@@ -990,7 +992,7 @@ describe('TreeListContext', () => {
       const Baz = () => null;
 
       utils.act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Foo />
             <Baz />
@@ -1097,7 +1099,7 @@ describe('TreeListContext', () => {
       const container = document.createElement('div');
 
       utils.act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Foo />
             <Bar />
@@ -1123,7 +1125,7 @@ describe('TreeListContext', () => {
       `);
 
       await utils.actAsync(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Foo />
             <Bar />
@@ -1158,7 +1160,7 @@ describe('TreeListContext', () => {
       const container = document.createElement('div');
 
       utils.act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Foo />
             <Bar />
@@ -1196,7 +1198,7 @@ describe('TreeListContext', () => {
       `);
 
       await utils.actAsync(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Foo />
             <Bar />
@@ -1242,7 +1244,7 @@ describe('TreeListContext', () => {
       const Child = () => null;
 
       utils.act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
+        legacyRender(<Grandparent />, document.createElement('div')),
       );
 
       let renderer;
@@ -1283,7 +1285,7 @@ describe('TreeListContext', () => {
       const Child = () => null;
 
       const container = document.createElement('div');
-      utils.act(() => ReactDOM.render(<Grandparent count={2} />, container));
+      utils.act(() => legacyRender(<Grandparent count={2} />, container));
 
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
@@ -1306,7 +1308,7 @@ describe('TreeListContext', () => {
       `);
 
       await utils.actAsync(() =>
-        ReactDOM.render(<Grandparent count={1} />, container),
+        legacyRender(<Grandparent count={1} />, container),
       );
       expect(state).toMatchInlineSnapshot(`
         [owners]
@@ -1315,7 +1317,7 @@ describe('TreeListContext', () => {
       `);
 
       await utils.actAsync(() =>
-        ReactDOM.render(<Grandparent count={0} />, container),
+        legacyRender(<Grandparent count={0} />, container),
       );
       expect(state).toMatchInlineSnapshot(`
         [owners]
@@ -1329,7 +1331,7 @@ describe('TreeListContext', () => {
 
       const container = document.createElement('div');
       utils.act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Parent>
             <Child />
           </Parent>,
@@ -1353,7 +1355,7 @@ describe('TreeListContext', () => {
         →    <Child>
       `);
 
-      await utils.actAsync(() => ReactDOM.render(<Parent />, container));
+      await utils.actAsync(() => legacyRender(<Parent />, container));
       expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Parent>
@@ -1386,7 +1388,7 @@ describe('TreeListContext', () => {
       );
 
       const container = document.createElement('div');
-      utils.act(() => ReactDOM.render(<Parent />, container));
+      utils.act(() => legacyRender(<Parent />, container));
 
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
@@ -1493,7 +1495,7 @@ describe('TreeListContext', () => {
 
     it('should handle when there are no errors/warnings', () => {
       utils.act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Child />
             <Child />
@@ -1556,7 +1558,7 @@ describe('TreeListContext', () => {
     it('should cycle through the next errors/warnings and wrap around', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />
@@ -1617,7 +1619,7 @@ describe('TreeListContext', () => {
     it('should cycle through the previous errors/warnings and wrap around', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />
@@ -1678,14 +1680,14 @@ describe('TreeListContext', () => {
     it('should cycle through the next errors/warnings and wrap around with multiple roots', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         utils.act(() => {
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />,
             </React.Fragment>,
             document.createElement('div'),
           );
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logError={true} />
@@ -1748,14 +1750,14 @@ describe('TreeListContext', () => {
     it('should cycle through the previous errors/warnings and wrap around with multiple roots', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         utils.act(() => {
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />,
             </React.Fragment>,
             document.createElement('div'),
           );
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logError={true} />
@@ -1818,7 +1820,7 @@ describe('TreeListContext', () => {
     it('should select the next or previous element relative to the current selection', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />
@@ -1880,7 +1882,7 @@ describe('TreeListContext', () => {
     it('should update correctly when errors/warnings are cleared for a fiber in the list', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child logWarning={true} />
               <Child logError={true} />
@@ -1953,7 +1955,7 @@ describe('TreeListContext', () => {
     it('should update correctly when errors/warnings are cleared for the currently selected fiber', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child logWarning={true} />
               <Child logError={true} />
@@ -1994,7 +1996,7 @@ describe('TreeListContext', () => {
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child logWarning={true} />
               <Child />
@@ -2028,7 +2030,7 @@ describe('TreeListContext', () => {
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />
@@ -2074,7 +2076,7 @@ describe('TreeListContext', () => {
     it('should update correctly when all errors/warnings are cleared', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Child logWarning={true} />
               <Child logError={true} />
@@ -2124,7 +2126,7 @@ describe('TreeListContext', () => {
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Wrapper>
                 <Child logWarning={true} />
@@ -2174,7 +2176,7 @@ describe('TreeListContext', () => {
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Wrapper>
                 <Child logWarning={true} />
@@ -2260,7 +2262,7 @@ describe('TreeListContext', () => {
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Wrapper>
                 <Child logWarning={true} />
@@ -2318,7 +2320,7 @@ describe('TreeListContext', () => {
 
         withErrorsOrWarningsIgnored(['test-only:'], () =>
           utils.act(() =>
-            ReactDOM.render(
+            legacyRender(
               <React.Suspense fallback={null}>
                 <Child logWarning={true} />
                 <NeverResolves />
@@ -2354,7 +2356,7 @@ describe('TreeListContext', () => {
 
         withErrorsOrWarningsIgnored(['test-only:'], () =>
           utils.act(() =>
-            ReactDOM.render(
+            legacyRender(
               <React.Suspense fallback={null}>
                 <Child logWarning={true} />
                 <LazyComponent />
@@ -2373,7 +2375,7 @@ describe('TreeListContext', () => {
         await Promise.resolve();
         withErrorsOrWarningsIgnored(['test-only:'], () =>
           utils.act(() =>
-            ReactDOM.render(
+            legacyRender(
               <React.Suspense fallback={null}>
                 <Child logWarning={true} />
                 <LazyComponent />
@@ -2404,7 +2406,7 @@ describe('TreeListContext', () => {
 
         withErrorsOrWarningsIgnored(['test-only:'], () =>
           utils.act(() =>
-            ReactDOM.render(
+            legacyRender(
               <React.Suspense fallback={<Fallback />}>
                 <LazyComponent />
               </React.Suspense>,
@@ -2425,7 +2427,7 @@ describe('TreeListContext', () => {
         await Promise.resolve();
         withErrorsOrWarningsIgnored(['test-only:'], () =>
           utils.act(() =>
-            ReactDOM.render(
+            legacyRender(
               <React.Suspense fallback={<Fallback />}>
                 <LazyComponent />
               </React.Suspense>,
@@ -2469,7 +2471,7 @@ describe('TreeListContext', () => {
           ['test-only:', 'React will try to recreate this component tree'],
           () => {
             utils.act(() =>
-              ReactDOM.render(
+              legacyRender(
                 <ErrorBoundary>
                   <BadRender />
                 </ErrorBoundary>,
@@ -2533,7 +2535,7 @@ describe('TreeListContext', () => {
           ['test-only:', 'React will try to recreate this component tree'],
           () => {
             utils.act(() =>
-              ReactDOM.render(
+              legacyRender(
                 <ErrorBoundary>
                   <LogsWarning />
                 </ErrorBoundary>,
@@ -2592,7 +2594,7 @@ describe('TreeListContext', () => {
           ['test-only:', 'React will try to recreate this component tree'],
           () => {
             utils.act(() =>
-              ReactDOM.render(
+              legacyRender(
                 <ErrorBoundary>
                   <BadRender />
                 </ErrorBoundary>,

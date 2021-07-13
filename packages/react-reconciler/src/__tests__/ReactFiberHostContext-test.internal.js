@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let act;
 let ReactFiberReconciler;
 let ConcurrentRoot;
 let DefaultEventPriority;
@@ -19,6 +20,7 @@ describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    act = React.unstable_act;
     ReactFiberReconciler = require('react-reconciler');
     ConcurrentRoot = require('react-reconciler/src/ReactRootTags')
       .ConcurrentRoot;
@@ -71,7 +73,7 @@ describe('ReactFiberHostContext', () => {
       false,
       null,
     );
-    Renderer.act(() => {
+    act(() => {
       Renderer.updateContainer(
         <a>
           <b />
@@ -132,7 +134,7 @@ describe('ReactFiberHostContext', () => {
       false,
       null,
     );
-    Renderer.act(() => {
+    act(() => {
       Renderer.updateContainer(
         <a>
           <b />

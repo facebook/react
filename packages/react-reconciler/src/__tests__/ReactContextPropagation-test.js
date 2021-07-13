@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let useState;
 let useContext;
 let Suspense;
@@ -16,6 +17,7 @@ describe('ReactLazyContextPropagation', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     useState = React.useState;
     useContext = React.useContext;
     Suspense = React.Suspense;
@@ -195,13 +197,13 @@ describe('ReactLazyContextPropagation', () => {
         return <Text text={value} />;
       }
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         root.render(<App />);
       });
       expect(Scheduler).toHaveYielded([0]);
       expect(root).toMatchRenderedOutput('0');
 
-      await ReactNoop.act(async () => {
+      await act(async () => {
         setValue(1);
       });
       expect(Scheduler).toHaveYielded([1]);
@@ -237,13 +239,13 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setValue(1);
     });
     expect(Scheduler).toHaveYielded([1]);
@@ -280,13 +282,13 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setValue(1);
     });
     expect(Scheduler).toHaveYielded([1]);
@@ -318,13 +320,13 @@ describe('ReactLazyContextPropagation', () => {
       return <Text text={value} />;
     });
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Consumer', 0]);
     expect(root).toMatchRenderedOutput('0');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Intentionally calling setState to some other arbitrary value before
       // setting it back to the current one. That way an update is scheduled,
       // but we'll bail out during render when nothing has changed.
@@ -380,13 +382,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
@@ -394,7 +396,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...', 'B']);
     expect(root).toMatchRenderedOutput('Loading...B');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       await resolveText('B');
     });
     expect(Scheduler).toHaveYielded(['B']);
@@ -460,13 +462,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A', 'A']);
     expect(root).toMatchRenderedOutput('AAA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
@@ -474,7 +476,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...', 'B']);
     expect(root).toMatchRenderedOutput('Loading...B');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       await resolveText('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B']);
@@ -521,13 +523,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       // Intentionally not wrapping in startTransition, so that the fallback
       // the fallback displays despite this being a refresh.
       setContext('B');
@@ -535,7 +537,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...', 'B']);
     expect(root).toMatchRenderedOutput('Loading...B');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       await resolveText('B');
     });
     expect(Scheduler).toHaveYielded(['B']);
@@ -575,13 +577,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setContext('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B']);
@@ -636,13 +638,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     await seedNextTextCache('A');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A', 'A']);
     expect(root).toMatchRenderedOutput('AAA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setContext('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B', 'B']);
@@ -677,13 +679,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setContext('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B']);
@@ -731,13 +733,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setContext('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B']);
@@ -794,19 +796,19 @@ describe('ReactLazyContextPropagation', () => {
 
     const root = ReactNoop.createRoot();
     await seedNextTextCache('A');
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setContext('B');
     });
     expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...']);
     expect(root).toMatchRenderedOutput('Loading...');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       await resolveText('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B']);
@@ -855,13 +857,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setContext('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B']);
@@ -904,13 +906,13 @@ describe('ReactLazyContextPropagation', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setContext('B');
     });
     expect(Scheduler).toHaveYielded(['B', 'B']);

@@ -15,7 +15,6 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let useFocusWithin;
-let ReactTestRenderer;
 let act;
 let Scheduler;
 
@@ -27,9 +26,8 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  ReactTestRenderer = require('react-test-renderer');
   Scheduler = require('scheduler');
-  act = ReactTestRenderer.unstable_concurrentAct;
+  act = require('jest-react').act;
 
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.

@@ -9,13 +9,13 @@
 
 describe('Fast Refresh', () => {
   let React;
-  let ReactDOM;
   let ReactFreshRuntime;
   let act;
   let babel;
   let container;
   let exportsObj;
   let freshPlugin;
+  let legacyRender;
   let store;
   let withErrorsOrWarningsIgnored;
 
@@ -37,10 +37,9 @@ describe('Fast Refresh', () => {
     ReactFreshRuntime = require('react-refresh/runtime');
     ReactFreshRuntime.injectIntoGlobalHook(global);
 
-    ReactDOM = require('react-dom');
-
     const utils = require('./utils');
     act = utils.act;
+    legacyRender = utils.legacyRender;
     withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
   });
 
@@ -74,7 +73,7 @@ describe('Fast Refresh', () => {
   function render(source) {
     const Component = execute(source);
     act(() => {
-      ReactDOM.render(<Component />, container);
+      legacyRender(<Component />, container);
     });
     // Module initialization shouldn't be counted as a hot update.
     expect(ReactFreshRuntime.performReactRefresh()).toBe(null);
@@ -99,7 +98,7 @@ describe('Fast Refresh', () => {
       // Here, we'll just force a re-render using the newer type to emulate this.
       const NextComponent = nextExports.default;
       act(() => {
-        ReactDOM.render(<NextComponent />, container);
+        legacyRender(<NextComponent />, container);
       });
     }
     act(() => {

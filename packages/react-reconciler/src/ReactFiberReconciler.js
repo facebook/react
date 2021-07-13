@@ -17,16 +17,13 @@ import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 import {
   createContainer as createContainer_old,
   updateContainer as updateContainer_old,
-  batchedEventUpdates as batchedEventUpdates_old,
   batchedUpdates as batchedUpdates_old,
-  unbatchedUpdates as unbatchedUpdates_old,
   deferredUpdates as deferredUpdates_old,
   discreteUpdates as discreteUpdates_old,
-  flushDiscreteUpdates as flushDiscreteUpdates_old,
   flushControlled as flushControlled_old,
   flushSync as flushSync_old,
+  flushSyncWithoutWarningIfAlreadyRendering as flushSyncWithoutWarningIfAlreadyRendering_old,
   flushPassiveEffects as flushPassiveEffects_old,
-  IsThisRendererActing as IsThisRendererActing_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
   attemptDiscreteHydration as attemptDiscreteHydration_old,
@@ -38,7 +35,6 @@ import {
   shouldError as shouldError_old,
   shouldSuspend as shouldSuspend_old,
   injectIntoDevTools as injectIntoDevTools_old,
-  act as act_old,
   createPortal as createPortal_old,
   createComponentSelector as createComponentSelector_old,
   createHasPseudoClassSelector as createHasPseudoClassSelector_old,
@@ -58,16 +54,13 @@ import {
 import {
   createContainer as createContainer_new,
   updateContainer as updateContainer_new,
-  batchedEventUpdates as batchedEventUpdates_new,
   batchedUpdates as batchedUpdates_new,
-  unbatchedUpdates as unbatchedUpdates_new,
   deferredUpdates as deferredUpdates_new,
   discreteUpdates as discreteUpdates_new,
-  flushDiscreteUpdates as flushDiscreteUpdates_new,
   flushControlled as flushControlled_new,
   flushSync as flushSync_new,
+  flushSyncWithoutWarningIfAlreadyRendering as flushSyncWithoutWarningIfAlreadyRendering_new,
   flushPassiveEffects as flushPassiveEffects_new,
-  IsThisRendererActing as IsThisRendererActing_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
   attemptDiscreteHydration as attemptDiscreteHydration_new,
@@ -79,7 +72,6 @@ import {
   shouldError as shouldError_new,
   shouldSuspend as shouldSuspend_new,
   injectIntoDevTools as injectIntoDevTools_new,
-  act as act_new,
   createPortal as createPortal_new,
   createComponentSelector as createComponentSelector_new,
   createHasPseudoClassSelector as createHasPseudoClassSelector_new,
@@ -102,34 +94,25 @@ export const createContainer = enableNewReconciler
 export const updateContainer = enableNewReconciler
   ? updateContainer_new
   : updateContainer_old;
-export const batchedEventUpdates = enableNewReconciler
-  ? batchedEventUpdates_new
-  : batchedEventUpdates_old;
 export const batchedUpdates = enableNewReconciler
   ? batchedUpdates_new
   : batchedUpdates_old;
-export const unbatchedUpdates = enableNewReconciler
-  ? unbatchedUpdates_new
-  : unbatchedUpdates_old;
 export const deferredUpdates = enableNewReconciler
   ? deferredUpdates_new
   : deferredUpdates_old;
 export const discreteUpdates = enableNewReconciler
   ? discreteUpdates_new
   : discreteUpdates_old;
-export const flushDiscreteUpdates = enableNewReconciler
-  ? flushDiscreteUpdates_new
-  : flushDiscreteUpdates_old;
 export const flushControlled = enableNewReconciler
   ? flushControlled_new
   : flushControlled_old;
 export const flushSync = enableNewReconciler ? flushSync_new : flushSync_old;
+export const flushSyncWithoutWarningIfAlreadyRendering = enableNewReconciler
+  ? flushSyncWithoutWarningIfAlreadyRendering_new
+  : flushSyncWithoutWarningIfAlreadyRendering_old;
 export const flushPassiveEffects = enableNewReconciler
   ? flushPassiveEffects_new
   : flushPassiveEffects_old;
-export const IsThisRendererActing = enableNewReconciler
-  ? IsThisRendererActing_new
-  : IsThisRendererActing_old;
 export const getPublicRootInstance = enableNewReconciler
   ? getPublicRootInstance_new
   : getPublicRootInstance_old;
@@ -166,7 +149,6 @@ export const shouldSuspend = enableNewReconciler
 export const injectIntoDevTools = enableNewReconciler
   ? injectIntoDevTools_new
   : injectIntoDevTools_old;
-export const act = enableNewReconciler ? act_new : act_old;
 export const createPortal = enableNewReconciler
   ? createPortal_new
   : createPortal_old;

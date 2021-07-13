@@ -9,7 +9,6 @@
 
 export * from './index.js';
 export {
-  act,
   createComponentSelector,
   createHasPseudoClassSelector,
   createRoleSelector,

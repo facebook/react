@@ -21,15 +21,7 @@ import {
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {
-  FunctionComponent,
-  ClassComponent,
-  HostText,
-  HostPortal,
-  ForwardRef,
-  Fragment,
-  SimpleMemoComponent,
-} from './ReactWorkTags';
+import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {
@@ -1300,36 +1292,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (__DEV__) {
       if (typeof newChild === 'function') {
         warnOnFunctionType(returnFiber);
-      }
-    }
-    if (typeof newChild === 'undefined' && !isUnkeyedTopLevelFragment) {
-      // If the new child is undefined, and the return fiber is a composite
-      // component, throw an error. If Fiber return types are disabled,
-      // we already threw above.
-      switch (returnFiber.tag) {
-        case ClassComponent: {
-          if (__DEV__) {
-            const instance = returnFiber.stateNode;
-            if (instance.render._isMockFunction) {
-              // We allow auto-mocks to proceed as if they're returning null.
-              break;
-            }
-          }
-        }
-        // Intentionally fall through to the next case, which handles both
-        // functions and classes
-        // eslint-disable-next-lined no-fallthrough
-        case FunctionComponent:
-        case ForwardRef:
-        case SimpleMemoComponent: {
-          invariant(
-            false,
-            '%s(...): Nothing was returned from render. This usually means a ' +
-              'return statement is missing. Or, to render nothing, ' +
-              'return null.',
-            getComponentNameFromFiber(returnFiber) || 'Component',
-          );
-        }
       }
     }
 

@@ -26,7 +26,7 @@ export default function Badge({
   type,
   children,
 }: Props) {
-  if (hocDisplayNames === null) {
+  if (hocDisplayNames === null || hocDisplayNames.length === 0) {
     return null;
   }
 

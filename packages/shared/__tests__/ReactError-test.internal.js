@@ -46,18 +46,12 @@ describe('ReactError', () => {
     );
   });
 
-  // @gate build === "production"
   it('should serialize arguments', () => {
     function Oops() {
       return;
     }
     Oops.displayName = '#wtf';
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Oops />, container)).toThrowError(
-      'Minified React error #152; visit ' +
-        'https://reactjs.org/docs/error-decoder.html?invariant=152&args[]=%23wtf' +
-        ' for the full message or use the non-minified dev environment' +
-        ' for full errors and additional helpful warnings.',
-    );
+    expect(() => ReactDOM.render(<Oops />, container)).not.toThrowError();
   });
 });

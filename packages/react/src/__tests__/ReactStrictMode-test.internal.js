@@ -19,8 +19,7 @@ describe('ReactStrictMode', () => {
     React = require('react');
     ReactDOM = require('react-dom');
 
-    const TestUtils = require('react-dom/test-utils');
-    act = TestUtils.unstable_concurrentAct;
+    act = require('jest-react').act;
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableStrictEffects = __DEV__;

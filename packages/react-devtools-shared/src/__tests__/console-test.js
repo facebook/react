@@ -9,9 +9,9 @@
 
 describe('console', () => {
   let React;
-  let ReactDOM;
   let act;
   let fakeConsole;
+  let legacyRender;
   let mockError;
   let mockInfo;
   let mockLog;
@@ -58,10 +58,10 @@ describe('console', () => {
     };
 
     React = require('react');
-    ReactDOM = require('react-dom');
 
     const utils = require('./utils');
     act = utils.act;
+    legacyRender = utils.legacyRender;
   });
 
   function normalizeCodeLocInfo(str) {
@@ -176,7 +176,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Child />, document.createElement('div')));
+    act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -203,7 +203,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -243,7 +243,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -298,8 +298,8 @@ describe('console', () => {
     }
 
     const container = document.createElement('div');
-    act(() => ReactDOM.render(<Parent />, container));
-    act(() => ReactDOM.render(<Parent />, container));
+    act(() => legacyRender(<Parent />, container));
+    act(() => legacyRender(<Parent />, container));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -350,7 +350,7 @@ describe('console', () => {
       }
     }
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -377,7 +377,7 @@ describe('console', () => {
     };
 
     unpatchConsole();
-    act(() => ReactDOM.render(<Child />, document.createElement('div')));
+    act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -391,7 +391,7 @@ describe('console', () => {
       breakOnWarn: false,
       showInlineWarningsAndErrors: false,
     });
-    act(() => ReactDOM.render(<Child />, document.createElement('div')));
+    act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
@@ -435,7 +435,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -460,7 +460,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Component />, document.createElement('div')));
+    act(() => legacyRender(<Component />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0][0]).toBe('Symbol:');

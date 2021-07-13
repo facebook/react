@@ -15,10 +15,11 @@ const shouldIgnoreConsoleError = require('../../../../../scripts/jest/shouldIgno
 module.exports = function(initModules) {
   let ReactDOM;
   let ReactDOMServer;
-  let ReactTestUtils;
+  let act;
 
   function resetModules() {
-    ({ReactDOM, ReactDOMServer, ReactTestUtils} = initModules());
+    ({ReactDOM, ReactDOMServer} = initModules());
+    act = require('jest-react').act;
   }
 
   function shouldUseDocument(reactElement) {
@@ -50,11 +51,11 @@ module.exports = function(initModules) {
   function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     return new Promise(resolve => {
       if (forceHydrate) {
-        ReactTestUtils.unstable_concurrentAct(() => {
+        act(() => {
           ReactDOM.hydrate(reactElement, domElement);
         });
       } else {
-        ReactTestUtils.unstable_concurrentAct(() => {
+        act(() => {
           ReactDOM.render(reactElement, domElement);
         });
       }
@@ -241,7 +242,7 @@ module.exports = function(initModules) {
     await asyncReactDOMRender(element, cleanContainer, true);
     // This gives us the expected text content.
     const cleanTextContent =
-      cleanContainer.lastChild && cleanContainer.lastChild.textContent;
+      (cleanContainer.lastChild && cleanContainer.lastChild.textContent) || '';
 
     // The only guarantee is that text content has been patched up if needed.
     expect(hydratedTextContent).toBe(cleanTextContent);

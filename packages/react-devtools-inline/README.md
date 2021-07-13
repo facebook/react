@@ -211,4 +211,4 @@ Once the above packages have been built or downloaded, you can watch for changes
 yarn start
 ```
 
-To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/master/packages/react-devtools-shell/README.md).
+To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/main/packages/react-devtools-shell/README.md).

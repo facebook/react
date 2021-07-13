@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 
 describe('ReactClassSetStateCallback', () => {
   beforeEach(() => {
@@ -9,6 +10,7 @@ describe('ReactClassSetStateCallback', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
   });
 
   function Text({text}) {
@@ -27,12 +29,12 @@ describe('ReactClassSetStateCallback', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([0]);
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       app.setState({step: 1}, () =>
         Scheduler.unstable_yieldValue('Callback 1'),
       );

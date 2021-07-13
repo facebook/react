@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable, Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
@@ -24,7 +24,6 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableProfilerNestedUpdateScheduledHook,
-  warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
   enableSchedulingProfiler,
@@ -37,8 +36,9 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
 import {
-  scheduleCallback,
-  cancelCallback,
+  // Aliased because `act` will override and push to an internal queue
+  scheduleCallback as Scheduler_scheduleCallback,
+  cancelCallback as Scheduler_cancelCallback,
   shouldYield,
   requestPaint,
   now,
@@ -78,9 +78,6 @@ import {
   markRenderYielded,
   markRenderStopped,
 } from './SchedulingProfiler';
-
-// The scheduler is imported here *only* to detect whether it's been mocked
-import * as Scheduler from 'scheduler';
 
 import {
   resetAfterCommit,
@@ -238,27 +235,22 @@ import {
 } from './ReactFiberDevToolsHook.old';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 
-// Used by `act`
-import enqueueTask from 'shared/enqueueTask';
-
 const ceil = Math.ceil;
 
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
   ReactCurrentBatchConfig,
-  IsSomeRendererActing,
+  ReactCurrentActQueue,
 } = ReactSharedInternals;
 
 type ExecutionContext = number;
 
-export const NoContext = /*             */ 0b000000;
-const BatchedContext = /*               */ 0b000001;
-const EventContext = /*                 */ 0b000010;
-const LegacyUnbatchedContext = /*       */ 0b000100;
-const RenderContext = /*                */ 0b001000;
-const CommitContext = /*                */ 0b010000;
-export const RetryAfterError = /*       */ 0b100000;
+export const NoContext = /*             */ 0b0000;
+const BatchedContext = /*               */ 0b0001;
+const RenderContext = /*                */ 0b0010;
+const CommitContext = /*                */ 0b0100;
+export const RetryAfterError = /*       */ 0b1000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
@@ -522,35 +514,21 @@ export function scheduleUpdateOnFiber(
     }
   }
 
-  if (lane === SyncLane) {
-    if (
-      // Check if we're inside unbatchedUpdates
-      (executionContext & LegacyUnbatchedContext) !== NoContext &&
-      // Check if we're not already rendering
-      (executionContext & (RenderContext | CommitContext)) === NoContext
-    ) {
-      // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
-      // root inside of batchedUpdates should be synchronous, but layout updates
-      // should be deferred until the end of the batch.
-      performSyncWorkOnRoot(root);
-    } else {
-      ensureRootIsScheduled(root, eventTime);
-      if (
-        executionContext === NoContext &&
-        (fiber.mode & ConcurrentMode) === NoMode
-      ) {
-        // Flush the synchronous work now, unless we're already working or inside
-        // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
-        // scheduleCallbackForFiber to preserve the ability to schedule a callback
-        // without immediately flushing it. We only do this for user-initiated
-        // updates, to preserve historical behavior of legacy mode.
-        resetRenderTimer();
-        flushSyncCallbacksOnlyInLegacyMode();
-      }
-    }
-  } else {
-    // Schedule other updates after in case the callback is sync.
-    ensureRootIsScheduled(root, eventTime);
+  ensureRootIsScheduled(root, eventTime);
+  if (
+    lane === SyncLane &&
+    executionContext === NoContext &&
+    (fiber.mode & ConcurrentMode) === NoMode &&
+    // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+    !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
+  ) {
+    // Flush the synchronous work now, unless we're already working or inside
+    // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
+    // scheduleCallbackForFiber to preserve the ability to schedule a callback
+    // without immediately flushing it. We only do this for user-initiated
+    // updates, to preserve historical behavior of legacy mode.
+    resetRenderTimer();
+    flushSyncCallbacksOnlyInLegacyMode();
   }
 
   return root;
@@ -653,7 +631,17 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackPriority = root.callbackPriority;
-  if (existingCallbackPriority === newCallbackPriority) {
+  if (
+    existingCallbackPriority === newCallbackPriority &&
+    // Special case related to `act`. If the currently scheduled task is a
+    // Scheduler task, rather than an `act` task, cancel it and re-scheduled
+    // on the `act` queue.
+    !(
+      __DEV__ &&
+      ReactCurrentActQueue.current !== null &&
+      existingCallbackNode !== fakeActCallbackNode
+    )
+  ) {
     if (__DEV__) {
       // If we're going to re-use an existing task, it needs to exist.
       // Assume that discrete update microtasks are non-cancellable and null.
@@ -682,13 +670,23 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
+      if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy !== null) {
+        ReactCurrentActQueue.didScheduleLegacyUpdate = true;
+      }
       scheduleLegacySyncCallback(performSyncWorkOnRoot.bind(null, root));
     } else {
       scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
     }
     if (supportsMicrotasks) {
       // Flush the queue in a microtask.
-      scheduleMicrotask(flushSyncCallbacks);
+      if (__DEV__ && ReactCurrentActQueue.current !== null) {
+        // Inside `act`, use our internal `act` queue so that these get flushed
+        // at the end of the current scope even when using the sync version
+        // of `act`.
+        ReactCurrentActQueue.current.push(flushSyncCallbacks);
+      } else {
+        scheduleMicrotask(flushSyncCallbacks);
+      }
     } else {
       // Flush the queue in an Immediate task.
       scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbacks);
@@ -781,6 +779,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       : renderRootSync(root, lanes);
   if (exitStatus !== RootIncomplete) {
     if (exitStatus === RootErrored) {
+      const prevExecutionContext = executionContext;
       executionContext |= RetryAfterError;
 
       // If an error occurred during hydration,
@@ -802,6 +801,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         lanes = errorRetryLanes;
         exitStatus = renderRootSync(root, errorRetryLanes);
       }
+
+      executionContext = prevExecutionContext;
     }
 
     if (exitStatus === RootFatalErrored) {
@@ -974,6 +975,7 @@ function performSyncWorkOnRoot(root) {
 
   let exitStatus = renderRootSync(root, lanes);
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
+    const prevExecutionContext = executionContext;
     executionContext |= RetryAfterError;
 
     // If an error occurred during hydration,
@@ -995,6 +997,8 @@ function performSyncWorkOnRoot(root) {
       lanes = errorRetryLanes;
       exitStatus = renderRootSync(root, lanes);
     }
+
+    executionContext = prevExecutionContext;
   }
 
   if (exitStatus === RootFatalErrored) {
@@ -1034,34 +1038,6 @@ export function getExecutionContext(): ExecutionContext {
   return executionContext;
 }
 
-export function flushDiscreteUpdates() {
-  // TODO: Should be able to flush inside batchedUpdates, but not inside `act`.
-  // However, `act` uses `batchedUpdates`, so there's no way to distinguish
-  // those two cases. Need to fix this before exposing flushDiscreteUpdates
-  // as a public API.
-  if (
-    (executionContext & (BatchedContext | RenderContext | CommitContext)) !==
-    NoContext
-  ) {
-    if (__DEV__) {
-      if ((executionContext & RenderContext) !== NoContext) {
-        console.error(
-          'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
-            'already rendering.',
-        );
-      }
-    }
-    // We're already rendering, so we can't synchronously flush pending work.
-    // This is probably a nested event dispatch triggered by a lifecycle/effect,
-    // like `el.focus()`. Exit.
-    return;
-  }
-  flushSyncCallbacks();
-  // If the discrete updates scheduled passive effects, flush them now so that
-  // they fire before the next serial event.
-  flushPassiveEffects();
-}
-
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1084,23 +1060,11 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
     executionContext = prevExecutionContext;
     // If there were legacy sync updates, flush them at the end of the outer
     // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
-      resetRenderTimer();
-      flushSyncCallbacksOnlyInLegacyMode();
-    }
-  }
-}
-
-export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
-  const prevExecutionContext = executionContext;
-  executionContext |= EventContext;
-  try {
-    return fn(a);
-  } finally {
-    executionContext = prevExecutionContext;
-    // If there were legacy sync updates, flush them at the end of the outer
-    // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
+    if (
+      executionContext === NoContext &&
+      // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+      !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
+    ) {
       resetRenderTimer();
       flushSyncCallbacksOnlyInLegacyMode();
     }
@@ -1129,26 +1093,20 @@ export function discreteUpdates<A, B, C, D, R>(
   }
 }
 
-export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
-  const prevExecutionContext = executionContext;
-  executionContext &= ~BatchedContext;
-  executionContext |= LegacyUnbatchedContext;
-  try {
-    return fn(a);
-  } finally {
-    executionContext = prevExecutionContext;
-    // If there were legacy sync updates, flush them at the end of the outer
-    // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
-      resetRenderTimer();
-      // TODO: I think this call is redundant, because we flush inside
-      // scheduleUpdateOnFiber when LegacyUnbatchedContext is set.
-      flushSyncCallbacksOnlyInLegacyMode();
-    }
+export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
+  fn: A => R,
+  a: A,
+): R {
+  // In legacy mode, we flush pending passive effects at the beginning of the
+  // next event, not at the end of the previous one.
+  if (
+    rootWithPendingPassiveEffects !== null &&
+    rootWithPendingPassiveEffects.tag === LegacyRoot &&
+    (executionContext & (RenderContext | CommitContext)) === NoContext
+  ) {
+    flushPassiveEffects();
   }
-}
 
-export function flushSync<A, R>(fn: A => R, a: A): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
@@ -1171,16 +1129,21 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     // the stack.
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       flushSyncCallbacks();
-    } else {
-      if (__DEV__) {
-        console.error(
-          'flushSync was called from inside a lifecycle method. React cannot ' +
-            'flush when React is already rendering. Consider moving this call to ' +
-            'a scheduler task or micro task.',
-        );
-      }
     }
   }
+}
+
+export function flushSync<A, R>(fn: A => R, a: A): R {
+  if (__DEV__) {
+    if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' +
+          'flush when React is already rendering. Consider moving this call to ' +
+          'a scheduler task or micro task.',
+      );
+    }
+  }
+  return flushSyncWithoutWarningIfAlreadyRendering(fn, a);
 }
 
 export function flushControlled(fn: () => mixed): void {
@@ -1980,24 +1943,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     throw error;
   }
 
-  if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        logCommitStopped();
-      }
-    }
-
-    if (enableSchedulingProfiler) {
-      markCommitStopped();
-    }
-
-    // This is a legacy edge case. We just committed the initial mount of
-    // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
-    // synchronously, but layout updates should be deferred until the end
-    // of the batch.
-    return null;
-  }
-
   // If the passive effects are the result of a discrete render, flush them
   // synchronously at the end of the current task so that the result is
   // immediately observable. Otherwise, we assume that they are not
@@ -2763,9 +2708,6 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   }
 }
 
-// a 'shared' variable that changes when act() opens/closes in tests.
-export const IsThisRendererActing = {current: (false: boolean)};
-
 export function restorePendingUpdaters(root: FiberRoot, lanes: Lanes): void {
   if (enableUpdaterTracking) {
     if (isDevToolsPresent) {
@@ -2781,42 +2723,35 @@ export function restorePendingUpdaters(root: FiberRoot, lanes: Lanes): void {
   }
 }
 
-export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
+const fakeActCallbackNode = {};
+function scheduleCallback(priorityLevel, callback) {
   if (__DEV__) {
-    if (
-      warnsIfNotActing === true &&
-      IsSomeRendererActing.current === true &&
-      IsThisRendererActing.current !== true
-    ) {
-      const previousFiber = ReactCurrentFiberCurrent;
-      try {
-        setCurrentDebugFiberInDEV(fiber);
-        console.error(
-          "It looks like you're using the wrong act() around your test interactions.\n" +
-            'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
-            '// for react-dom:\n' +
-            // Break up imports to avoid accidentally parsing them as dependencies.
-            'import {act} fr' +
-            "om 'react-dom/test-utils';\n" +
-            '// ...\n' +
-            'act(() => ...);\n\n' +
-            '// for react-test-renderer:\n' +
-            // Break up imports to avoid accidentally parsing them as dependencies.
-            'import TestRenderer fr' +
-            "om 'react-test-renderer';\n" +
-            'const {act} = TestRenderer;\n' +
-            '// ...\n' +
-            'act(() => ...);',
-        );
-      } finally {
-        if (previousFiber) {
-          setCurrentDebugFiberInDEV(fiber);
-        } else {
-          resetCurrentDebugFiberInDEV();
-        }
-      }
+    // If we're currently inside an `act` scope, bypass Scheduler and push to
+    // the `act` queue instead.
+    const actQueue = ReactCurrentActQueue.current;
+    if (actQueue !== null) {
+      actQueue.push(callback);
+      return fakeActCallbackNode;
+    } else {
+      return Scheduler_scheduleCallback(priorityLevel, callback);
     }
+  } else {
+    // In production, always call Scheduler. This function will be stripped out.
+    return Scheduler_scheduleCallback(priorityLevel, callback);
   }
+}
+
+function cancelCallback(callbackNode) {
+  if (__DEV__ && callbackNode === fakeActCallbackNode) {
+    return;
+  }
+  // In production, always call Scheduler. This function will be stripped out.
+  return Scheduler_cancelCallback(callbackNode);
+}
+
+function shouldForceFlushFallbacksInDEV() {
+  // Never force flush in production. This function should get stripped out.
+  return __DEV__ && ReactCurrentActQueue.current !== null;
 }
 
 export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
@@ -2824,8 +2759,13 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
     if (
       warnsIfNotActing === true &&
       (fiber.mode & StrictLegacyMode) !== NoMode &&
-      IsSomeRendererActing.current === false &&
-      IsThisRendererActing.current === false
+      ReactCurrentActQueue.current === null &&
+      // Our internal tests use a custom implementation of `act` that works by
+      // mocking the Scheduler package. Disable the `act` warning.
+      // TODO: Maybe the warning should be disabled by default, and then turned
+      // on at the testing frameworks layer? Instead of what we do now, which
+      // is check if a `jest` global is defined.
+      ReactCurrentActQueue.disableActWarning === false
     ) {
       console.error(
         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
@@ -2849,8 +2789,13 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
     if (
       warnsIfNotActing === true &&
       executionContext === NoContext &&
-      IsSomeRendererActing.current === false &&
-      IsThisRendererActing.current === false
+      ReactCurrentActQueue.current === null &&
+      // Our internal tests use a custom implementation of `act` that works by
+      // mocking the Scheduler package. Disable the `act` warning.
+      // TODO: Maybe the warning should be disabled by default, and then turned
+      // on at the testing frameworks layer? Instead of what we do now, which
+      // is check if a `jest` global is defined.
+      ReactCurrentActQueue.disableActWarning === false
     ) {
       const previousFiber = ReactCurrentFiberCurrent;
       try {
@@ -2880,252 +2825,3 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 }
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
-
-// In tests, we want to enforce a mocked scheduler.
-let didWarnAboutUnmockedScheduler = false;
-// TODO Before we release concurrent mode, revisit this and decide whether a mocked
-// scheduler is the actual recommendation. The alternative could be a testing build,
-// a new lib, or whatever; we dunno just yet. This message is for early adopters
-// to get their tests right.
-
-export function warnIfUnmockedScheduler(fiber: Fiber) {
-  if (__DEV__) {
-    if (
-      didWarnAboutUnmockedScheduler === false &&
-      Scheduler.unstable_flushAllWithoutAsserting === undefined
-    ) {
-      if (fiber.mode & ConcurrentMode) {
-        didWarnAboutUnmockedScheduler = true;
-        console.error(
-          'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
-            'to guarantee consistent behaviour across tests and browsers. ' +
-            'For example, with jest: \n' +
-            // Break up requires to avoid accidentally parsing them as dependencies.
-            "jest.mock('scheduler', () => require" +
-            "('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://reactjs.org/link/mock-scheduler',
-        );
-      } else if (warnAboutUnmockedScheduler === true) {
-        didWarnAboutUnmockedScheduler = true;
-        console.error(
-          'Starting from React v18, the "scheduler" module will need to be mocked ' +
-            'to guarantee consistent behaviour across tests and browsers. ' +
-            'For example, with jest: \n' +
-            // Break up requires to avoid accidentally parsing them as dependencies.
-            "jest.mock('scheduler', () => require" +
-            "('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://reactjs.org/link/mock-scheduler',
-        );
-      }
-    }
-  }
-}
-
-// `act` testing API
-//
-// TODO: This is mostly a copy-paste from the legacy `act`, which does not have
-// access to the same internals that we do here. Some trade offs in the
-// implementation no longer make sense.
-
-let isFlushingAct = false;
-let isInsideThisAct = false;
-
-function shouldForceFlushFallbacksInDEV() {
-  // Never force flush in production. This function should get stripped out.
-  return __DEV__ && actingUpdatesScopeDepth > 0;
-}
-
-const flushMockScheduler = Scheduler.unstable_flushAllWithoutAsserting;
-const isSchedulerMocked = typeof flushMockScheduler === 'function';
-
-// Returns whether additional work was scheduled. Caller should keep flushing
-// until there's no work left.
-function flushActWork(): boolean {
-  if (flushMockScheduler !== undefined) {
-    const prevIsFlushing = isFlushingAct;
-    isFlushingAct = true;
-    try {
-      return flushMockScheduler();
-    } finally {
-      isFlushingAct = prevIsFlushing;
-    }
-  } else {
-    // No mock scheduler available. However, the only type of pending work is
-    // passive effects, which we control. So we can flush that.
-    const prevIsFlushing = isFlushingAct;
-    isFlushingAct = true;
-    try {
-      let didFlushWork = false;
-      while (flushPassiveEffects()) {
-        didFlushWork = true;
-      }
-      return didFlushWork;
-    } finally {
-      isFlushingAct = prevIsFlushing;
-    }
-  }
-}
-
-function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
-  try {
-    flushActWork();
-    enqueueTask(() => {
-      if (flushActWork()) {
-        flushWorkAndMicroTasks(onDone);
-      } else {
-        onDone();
-      }
-    });
-  } catch (err) {
-    onDone(err);
-  }
-}
-
-// we track the 'depth' of the act() calls with this counter,
-// so we can tell if any async act() calls try to run in parallel.
-
-let actingUpdatesScopeDepth = 0;
-
-export function act(callback: () => Thenable<mixed>): Thenable<void> {
-  if (!__DEV__) {
-    invariant(
-      false,
-      'act(...) is not supported in production builds of React.',
-    );
-  }
-
-  const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  actingUpdatesScopeDepth++;
-
-  const previousIsSomeRendererActing = IsSomeRendererActing.current;
-  const previousIsThisRendererActing = IsThisRendererActing.current;
-  const previousIsInsideThisAct = isInsideThisAct;
-  IsSomeRendererActing.current = true;
-  IsThisRendererActing.current = true;
-  isInsideThisAct = true;
-
-  function onDone() {
-    actingUpdatesScopeDepth--;
-    IsSomeRendererActing.current = previousIsSomeRendererActing;
-    IsThisRendererActing.current = previousIsThisRendererActing;
-    isInsideThisAct = previousIsInsideThisAct;
-    if (__DEV__) {
-      if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-        // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
-        console.error(
-          'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
-        );
-      }
-    }
-  }
-
-  let result;
-  try {
-    result = batchedUpdates(callback);
-  } catch (error) {
-    // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
-    onDone();
-    throw error;
-  }
-
-  if (
-    result !== null &&
-    typeof result === 'object' &&
-    typeof result.then === 'function'
-  ) {
-    // setup a boolean that gets set to true only
-    // once this act() call is await-ed
-    let called = false;
-    if (__DEV__) {
-      if (typeof Promise !== 'undefined') {
-        //eslint-disable-next-line no-undef
-        Promise.resolve()
-          .then(() => {})
-          .then(() => {
-            if (called === false) {
-              console.error(
-                'You called act(async () => ...) without await. ' +
-                  'This could lead to unexpected testing behaviour, interleaving multiple act ' +
-                  'calls and mixing their scopes. You should - await act(async () => ...);',
-              );
-            }
-          });
-      }
-    }
-
-    // in the async case, the returned thenable runs the callback, flushes
-    // effects and  microtasks in a loop until flushPassiveEffects() === false,
-    // and cleans up
-    return {
-      then(resolve, reject) {
-        called = true;
-        result.then(
-          () => {
-            if (
-              actingUpdatesScopeDepth > 1 ||
-              (isSchedulerMocked === true &&
-                previousIsSomeRendererActing === true)
-            ) {
-              onDone();
-              resolve();
-              return;
-            }
-            // we're about to exit the act() scope,
-            // now's the time to flush tasks/effects
-            flushWorkAndMicroTasks((err: ?Error) => {
-              onDone();
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          },
-          err => {
-            onDone();
-            reject(err);
-          },
-        );
-      },
-    };
-  } else {
-    if (__DEV__) {
-      if (result !== undefined) {
-        console.error(
-          'The callback passed to act(...) function ' +
-            'must return undefined, or a Promise. You returned %s',
-          result,
-        );
-      }
-    }
-
-    // flush effects until none remain, and cleanup
-    try {
-      if (
-        actingUpdatesScopeDepth === 1 &&
-        (isSchedulerMocked === false || previousIsSomeRendererActing === false)
-      ) {
-        // we're about to exit the act() scope,
-        // now's the time to flush effects
-        flushActWork();
-      }
-      onDone();
-    } catch (err) {
-      onDone();
-      throw err;
-    }
-
-    // in the sync case, the returned thenable only warns *if* await-ed
-    return {
-      then(resolve) {
-        if (__DEV__) {
-          console.error(
-            'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
-          );
-        }
-        resolve();
-      },
-    };
-  }
-}

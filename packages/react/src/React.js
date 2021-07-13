@@ -60,6 +60,7 @@ import {
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
+import {act} from './ReactAct';
 
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
@@ -120,4 +121,5 @@ export {
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
   useOpaqueIdentifier as unstable_useOpaqueIdentifier,
+  act,
 };

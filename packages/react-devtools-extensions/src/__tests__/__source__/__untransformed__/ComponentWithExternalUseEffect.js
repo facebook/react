@@ -7,11 +7,13 @@
  * @flow
  */
 
-/**
- * Used by act() to track whether you're inside an act() scope.
- */
+const {useState} = require('react');
+const {useCustom} = require('./useCustom');
 
-const IsSomeRendererActing = {
-  current: (false: boolean),
-};
-export default IsSomeRendererActing;
+function Component(props) {
+  const [count] = useState(0);
+  useCustom();
+  return count;
+}
+
+module.exports = {Component};

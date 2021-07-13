@@ -13,6 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 
 describe('ReactIncrementalScheduling', () => {
   beforeEach(() => {
@@ -21,6 +22,7 @@ describe('ReactIncrementalScheduling', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
   });
 
   function span(prop) {
@@ -94,7 +96,7 @@ describe('ReactIncrementalScheduling', () => {
       return text;
     }
 
-    ReactNoop.act(() => {
+    act(() => {
       ReactNoop.renderToRootWithID(<Text text="a:1" />, 'a');
       ReactNoop.renderToRootWithID(<Text text="b:1" />, 'b');
       ReactNoop.renderToRootWithID(<Text text="c:1" />, 'c');
@@ -106,7 +108,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:1');
 
     // Schedule deferred work in the reverse order
-    ReactNoop.act(() => {
+    act(() => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
         React.startTransition(() => {
           ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
@@ -346,64 +348,5 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.flushNextYield();
     // The updates should all be flushed with Task priority
     expect(ReactNoop).toMatchRenderedOutput(<span prop={5} />);
-  });
-
-  it('can opt-out of batching using unbatchedUpdates', () => {
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<span prop={0} />);
-      expect(ReactNoop.getChildren()).toEqual([]);
-      // Should not have flushed yet because we're still batching
-
-      // unbatchedUpdates reverses the effect of batchedUpdates, so sync
-      // updates are not batched
-      ReactNoop.unbatchedUpdates(() => {
-        ReactNoop.render(<span prop={1} />);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
-        ReactNoop.render(<span prop={2} />);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
-      });
-
-      ReactNoop.render(<span prop={3} />);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
-    });
-    // Remaining update is now flushed
-    expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
-  });
-
-  it('nested updates are always deferred, even inside unbatchedUpdates', () => {
-    let instance;
-    class Foo extends React.Component {
-      state = {step: 0};
-      componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate: ' + this.state.step);
-        if (this.state.step === 1) {
-          ReactNoop.unbatchedUpdates(() => {
-            // This is a nested state update, so it should not be
-            // flushed synchronously, even though we wrapped it
-            // in unbatchedUpdates.
-            this.setState({step: 2});
-          });
-          expect(Scheduler).toHaveYielded([
-            'render: 1',
-            'componentDidUpdate: 1',
-          ]);
-          expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
-        }
-      }
-      render() {
-        Scheduler.unstable_yieldValue('render: ' + this.state.step);
-        instance = this;
-        return <span prop={this.state.step} />;
-      }
-    }
-    ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushAndYield(['render: 0']);
-    expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
-
-    ReactNoop.flushSync(() => {
-      instance.setState({step: 1});
-    });
-    expect(Scheduler).toHaveYielded(['render: 2', 'componentDidUpdate: 2']);
-    expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
   });
 });

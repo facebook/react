@@ -40,7 +40,7 @@ Object {
     6 => 1,
   },
   "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 16,
   "updaters": Array [
     Object {
@@ -87,7 +87,7 @@ Object {
     4 => 2,
   },
   "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 15,
   "updaters": Array [
     Object {
@@ -186,7 +186,7 @@ Object {
     6 => 1,
   },
   "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 12,
   "updaters": Array [
     Object {
@@ -445,7 +445,7 @@ Object {
             ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 12,
           "updaters": Array [
             Object {
@@ -938,7 +938,7 @@ Object {
             ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 11,
           "updaters": Array [
             Object {
@@ -1597,7 +1597,7 @@ Object {
         17 => 1,
       },
       "passiveEffectDuration": null,
-      "priorityLevel": "Normal",
+      "priorityLevel": "Immediate",
       "timestamp": 24,
       "updaters": Array [
         Object {
@@ -1687,7 +1687,7 @@ Object {
       "fiberActualDurations": Map {},
       "fiberSelfDurations": Map {},
       "passiveEffectDuration": 0,
-      "priorityLevel": "Normal",
+      "priorityLevel": "Immediate",
       "timestamp": 34,
       "updaters": Array [
         Object {
@@ -2223,7 +2223,7 @@ Object {
             ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 24,
           "updaters": Array [
             Object {
@@ -2310,7 +2310,7 @@ Object {
           "fiberActualDurations": Array [],
           "fiberSelfDurations": Array [],
           "passiveEffectDuration": 0,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 34,
           "updaters": Array [
             Object {
@@ -2431,7 +2431,7 @@ Object {
         2 => 0,
       },
       "passiveEffectDuration": null,
-      "priorityLevel": "Normal",
+      "priorityLevel": "Immediate",
       "timestamp": 0,
       "updaters": Array [
         Object {
@@ -2506,7 +2506,7 @@ Object {
     3 => 0,
   },
   "passiveEffectDuration": 0,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 0,
   "updaters": Array [
     Object {
@@ -2715,7 +2715,7 @@ Object {
             ],
           ],
           "passiveEffectDuration": 0,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
             Object {
@@ -3071,7 +3071,7 @@ Object {
     7 => 0,
   },
   "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 0,
   "updaters": Array [
     Object {
@@ -3515,7 +3515,7 @@ Object {
             ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
             Object {

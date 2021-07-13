@@ -43,7 +43,7 @@ import {
   getEventHandlerListeners,
 } from '../client/ReactDOMComponentTree';
 import {COMMENT_NODE} from '../shared/HTMLNodeType';
-import {batchedEventUpdates} from './ReactDOMUpdateBatching';
+import {batchedUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
@@ -630,7 +630,7 @@ export function dispatchEventForPluginEventSystem(
     }
   }
 
-  batchedEventUpdates(() =>
+  batchedUpdates(() =>
     dispatchEventsForPlugins(
       domEventName,
       eventSystemFlags,

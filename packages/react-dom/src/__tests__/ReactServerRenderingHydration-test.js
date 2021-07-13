@@ -471,10 +471,12 @@ describe('ReactDOMServerHydration', () => {
       element,
     );
 
-    // Because this didn't have a fallback, it was hydrated as if it's
-    // not a Suspense boundary.
-    expect(ref.current).toBe(div);
-    expect(element.innerHTML).toBe('<div>Hello World</div>');
+    // The content should've been client rendered.
+    expect(ref.current).not.toBe(div);
+    // Unfortunately, since we don't delete the tail at the root, a duplicate will remain.
+    expect(element.innerHTML).toBe(
+      '<div>Hello World</div><div>Hello World</div>',
+    );
   });
 
   // regression test for https://github.com/facebook/react/issues/17170
