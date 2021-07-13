@@ -32,7 +32,7 @@ const AST_NODE_TYPES = Object.freeze({
 function checkNodeLocation(
   path: NodePath,
   line: number,
-  column: number,
+  column?: number | null = null,
 ): boolean {
   const {start, end} = path.node.loc;
 
@@ -40,22 +40,24 @@ function checkNodeLocation(
     return false;
   }
 
-  // Column numbers are representated differently between tools/engines.
-  // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
-  //
-  // In practice this will probably never matter,
-  // because this code matches the 1-based Error stack location for the hook Identifier (e.g. useState)
-  // with the larger 0-based VariableDeclarator (e.g. [foo, setFoo] = useState())
-  // so the ranges should always overlap.
-  //
-  // For more info see https://github.com/facebook/react/pull/21833#discussion_r666831276
-  column -= 1;
+  if (column !== null) {
+    // Column numbers are representated differently between tools/engines.
+    // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
+    //
+    // In practice this will probably never matter,
+    // because this code matches the 1-based Error stack location for the hook Identifier (e.g. useState)
+    // with the larger 0-based VariableDeclarator (e.g. [foo, setFoo] = useState())
+    // so the ranges should always overlap.
+    //
+    // For more info see https://github.com/facebook/react/pull/21833#discussion_r666831276
+    column -= 1;
 
-  if (
-    (line === start.line && column < start.column) ||
-    (line === end.line && column > end.column)
-  ) {
-    return false;
+    if (
+      (line === start.line && column < start.column) ||
+      (line === end.line && column > end.column)
+    ) {
+      return false;
+    }
   }
 
   return true;
@@ -122,15 +124,35 @@ export function getHookName(
 ): string | null {
   const hooksFromAST = getPotentialHookDeclarationsFromAST(originalSourceAST);
 
-  const potentialReactHookASTNode = hooksFromAST.find(node => {
-    const nodeLocationCheck = checkNodeLocation(
-      node,
-      originalSourceLineNumber,
-      originalSourceColumnNumber,
-    );
-    const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
-    return nodeLocationCheck && hookDeclaractionCheck;
-  });
+  let potentialReactHookASTNode = null;
+  if (originalSourceColumnNumber === 0) {
+    // This most likely indicates a source map type like 'cheap-module-source-map'
+    // that intentionally drops column numbers for compilation speed in DEV builds.
+    // In this case, we can assume there's probably only one hook per line (true in most cases)
+    // and just fail if we find more than one match.
+    const matchingNodes = hooksFromAST.filter(node => {
+      const nodeLocationCheck = checkNodeLocation(
+        node,
+        originalSourceLineNumber,
+      );
+      const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
+      return nodeLocationCheck && hookDeclaractionCheck;
+    });
+
+    if (matchingNodes.length === 1) {
+      potentialReactHookASTNode = matchingNodes[0];
+    }
+  } else {
+    potentialReactHookASTNode = hooksFromAST.find(node => {
+      const nodeLocationCheck = checkNodeLocation(
+        node,
+        originalSourceLineNumber,
+        originalSourceColumnNumber,
+      );
+      const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
+      return nodeLocationCheck && hookDeclaractionCheck;
+    });
+  }
 
   if (!potentialReactHookASTNode) {
     return null;

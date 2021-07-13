@@ -350,7 +350,7 @@ function fetchFile(url: string): Promise<string> {
       },
       error => {
         if (__DEBUG__) {
-          console.log(`fetchFile() Could not fetch file "${error.message}"`);
+          console.log(`fetchFile() Could not fetch file: ${error.message}`);
         }
         reject(null);
       },
