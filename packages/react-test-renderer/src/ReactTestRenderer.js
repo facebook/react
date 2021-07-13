@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
@@ -50,12 +49,7 @@ import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
-const act_notBatchedInLegacyMode = React.unstable_act;
-function act<T>(callback: () => T): Thenable<T> {
-  return act_notBatchedInLegacyMode(() => {
-    return batchedUpdates(callback);
-  });
-}
+const act = React.unstable_act;
 
 // TODO: Remove from public bundle
 

@@ -518,7 +518,9 @@ export function scheduleUpdateOnFiber(
   if (
     lane === SyncLane &&
     executionContext === NoContext &&
-    (fiber.mode & ConcurrentMode) === NoMode
+    (fiber.mode & ConcurrentMode) === NoMode &&
+    // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+    !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
   ) {
     // Flush the synchronous work now, unless we're already working or inside
     // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
@@ -668,6 +670,9 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
+      if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy !== null) {
+        ReactCurrentActQueue.didScheduleLegacyUpdate = true;
+      }
       scheduleLegacySyncCallback(performSyncWorkOnRoot.bind(null, root));
     } else {
       scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
@@ -1049,7 +1054,11 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
     executionContext = prevExecutionContext;
     // If there were legacy sync updates, flush them at the end of the outer
     // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
+    if (
+      executionContext === NoContext &&
+      // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+      !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
+    ) {
       resetRenderTimer();
       flushSyncCallbacksOnlyInLegacyMode();
     }
