@@ -779,6 +779,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       : renderRootSync(root, lanes);
   if (exitStatus !== RootIncomplete) {
     if (exitStatus === RootErrored) {
+      const prevExecutionContext = executionContext;
       executionContext |= RetryAfterError;
 
       // If an error occurred during hydration,
@@ -800,6 +801,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         lanes = errorRetryLanes;
         exitStatus = renderRootSync(root, errorRetryLanes);
       }
+
+      executionContext = prevExecutionContext;
     }
 
     if (exitStatus === RootFatalErrored) {
@@ -972,6 +975,7 @@ function performSyncWorkOnRoot(root) {
 
   let exitStatus = renderRootSync(root, lanes);
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
+    const prevExecutionContext = executionContext;
     executionContext |= RetryAfterError;
 
     // If an error occurred during hydration,
@@ -993,6 +997,8 @@ function performSyncWorkOnRoot(root) {
       lanes = errorRetryLanes;
       exitStatus = renderRootSync(root, lanes);
     }
+
+    executionContext = prevExecutionContext;
   }
 
   if (exitStatus === RootFatalErrored) {
