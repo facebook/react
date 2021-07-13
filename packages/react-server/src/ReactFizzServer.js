@@ -554,16 +554,6 @@ function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
 }
 
-function invalidRenderResult(type: any): void {
-  invariant(
-    false,
-    '%s(...): Nothing was returned from render. This usually means a ' +
-      'return statement is missing. Or, to render nothing, ' +
-      'return null.',
-    getComponentNameFromType(type) || 'Component',
-  );
-}
-
 function renderWithHooks<Props, SecondArg>(
   request: Request,
   task: Task,
@@ -574,11 +564,7 @@ function renderWithHooks<Props, SecondArg>(
   const componentIdentity = {};
   prepareToUseHooks(componentIdentity);
   const result = Component(props, secondArg);
-  const children = finishHooks(Component, props, result, secondArg);
-  if (children === undefined) {
-    invalidRenderResult(Component);
-  }
-  return children;
+  return finishHooks(Component, props, result, secondArg);
 }
 
 function finishClassComponent(
@@ -589,13 +575,6 @@ function finishClassComponent(
   props: any,
 ): ReactNodeList {
   const nextChildren = instance.render();
-  if (nextChildren === undefined) {
-    if (__DEV__ && instance.render._isMockFunction) {
-      // We allow auto-mocks to proceed as if they're returning null.
-    } else {
-      invalidRenderResult(Component);
-    }
-  }
 
   if (__DEV__) {
     if (instance.props !== props) {

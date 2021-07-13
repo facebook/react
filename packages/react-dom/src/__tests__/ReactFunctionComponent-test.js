@@ -136,7 +136,7 @@ describe('ReactFunctionComponent', () => {
     );
   });
 
-  it('should throw when stateless component returns undefined', () => {
+  it('should not throw when stateless component returns undefined', () => {
     function NotAComponent() {}
     expect(function() {
       ReactTestUtils.renderIntoDocument(
@@ -144,10 +144,7 @@ describe('ReactFunctionComponent', () => {
           <NotAComponent />
         </div>,
       );
-    }).toThrowError(
-      'NotAComponent(...): Nothing was returned from render. ' +
-        'This usually means a return statement is missing. Or, to render nothing, return null.',
-    );
+    }).not.toThrowError();
   });
 
   it('should throw on string refs in pure functions', () => {
