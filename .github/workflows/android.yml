@@ -1,25 +1,34 @@
-name: Android CI
-
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ v11.0.0]
-
-jobs:
-  build:
-
-    runs-on: expo go
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-        distribution: 'adopt'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>circleci_config</title>
+  <style type="text/css">
+      code{white-space: pre-wrap;}
+      span.smallcaps{font-variant: small-caps;}
+      span.underline{text-decoration: underline;}
+      div.column{display: inline-block; vertical-align: top; width: 50%;}
+  </style>
+</head>
+<body>
+<h2 id="circleci-config">circleci config</h2>
+<p>Operate on build config files</p>
+<h3 id="synopsis">Synopsis</h3>
+<p>Operate on build config files</p>
+<h3 id="flags">Flags</h3>
+<pre><code>  -h, --help   help for config</code></pre>
+<h3 id="flags-inherited-from-parent-commands">Flags inherited from parent commands</h3>
+<pre><code>      --host string         URL to your CircleCI host, also CIRCLECI_CLI_HOST (default &quot;https://circleci.com&quot;)
+      --skip-update-check   Skip the check for updates check run before every command. (default true)
+      --token string        your token for using CircleCI, also CIRCLECI_CLI_TOKEN</code></pre>
+<h3 id="see-also">SEE ALSO</h3>
+<ul>
+<li><a href="index.html">circleci</a> -</li>
+<li><a href="circleci_config_pack.html">circleci config pack</a> - Pack up your CircleCI configuration into a single file.</li>
+<li><a href="circleci_config_process.html">circleci config process</a> - Validate config and display expanded configuration.</li>
+<li><a href="circleci_config_validate.html">circleci config validate</a> - Check that the config file is well formed.</li>
+</ul>
+</body>
+</html>
