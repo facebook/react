@@ -91,6 +91,7 @@ function Component$2() {
  *
  * @flow
  */
+
 function Component$3() {
   const [count, setCount] = React.useState(0);
   return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
@@ -107,6 +108,21 @@ function Component$3() {
  * @flow
  */
 function Component$4() {
+  const [count, setCount] = React.useState(0);
+  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
+    onClick: () => setCount(count + 1)
+  }, "Click me"));
+}
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+function Component$5() {
   const [count] = require('react').useState(0);
 
   return count;
@@ -212,8 +228,9 @@ var ToDoList = /*#__PURE__*/Object.freeze({
 exports.ComponentWithCustomHook = Component;
 exports.ComponentWithExternalCustomHooks = Component$1;
 exports.ComponentWithMultipleHooksPerLine = Component$2;
-exports.Example = Component$3;
-exports.InlineRequire = Component$4;
+exports.ContainingStringSourceMappingURL = Component$3;
+exports.Example = Component$4;
+exports.InlineRequire = Component$5;
 exports.ToDoList = ToDoList;
 exports.useTheme = useTheme;
 //# sourceMappingURL=index.js.map
