@@ -23,6 +23,9 @@ export const LOCAL_STORAGE_FILTER_PREFERENCES_KEY =
 export const SESSION_STORAGE_LAST_SELECTION_KEY =
   'React::DevTools::lastSelection';
 
+export const LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY =
+  'React::DevTools::parseHookNames';
+
 export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 

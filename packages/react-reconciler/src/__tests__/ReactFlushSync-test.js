@@ -128,7 +128,7 @@ describe('ReactFlushSync', () => {
     });
   });
 
-  test('do not flush passive effects synchronously in legacy mode', async () => {
+  test('do not flush passive effects synchronously after render in legacy mode', async () => {
     function App() {
       useEffect(() => {
         Scheduler.unstable_yieldValue('Effect');
@@ -152,6 +152,40 @@ describe('ReactFlushSync', () => {
     expect(Scheduler).toHaveYielded(['Effect']);
   });
 
+  test('flush pending passive effects before scope is called in legacy mode', async () => {
+    let currentStep = 0;
+
+    function App({step}) {
+      useEffect(() => {
+        currentStep = step;
+        Scheduler.unstable_yieldValue('Effect: ' + step);
+      }, [step]);
+      return <Text text={step} />;
+    }
+
+    const root = ReactNoop.createLegacyRoot();
+    await act(async () => {
+      ReactNoop.flushSync(() => {
+        root.render(<App step={1} />);
+      });
+      expect(Scheduler).toHaveYielded([
+        1,
+        // Because we're in legacy mode, we shouldn't have flushed the passive
+        // effects yet.
+      ]);
+      expect(root).toMatchRenderedOutput('1');
+
+      ReactNoop.flushSync(() => {
+        // This should render step 2 because the passive effect has already
+        // fired, before the scope function is called.
+        root.render(<App step={currentStep + 1} />);
+      });
+      expect(Scheduler).toHaveYielded(['Effect: 1', 2]);
+      expect(root).toMatchRenderedOutput('2');
+    });
+    expect(Scheduler).toHaveYielded(['Effect: 2']);
+  });
+
   test("do not flush passive effects synchronously when they aren't the result of a sync render", async () => {
     function App() {
       useEffect(() => {
@@ -171,6 +205,29 @@ describe('ReactFlushSync', () => {
       expect(root).toMatchRenderedOutput('Child');
     });
     // Effect flushes after paint.
+    expect(Scheduler).toHaveYielded(['Effect']);
+  });
+
+  test('does not flush pending passive effects', async () => {
+    function App() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Effect');
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+      expect(Scheduler).toFlushUntilNextPaint(['Child']);
+      expect(root).toMatchRenderedOutput('Child');
+
+      // Passive effects are pending. Calling flushSync should not affect them.
+      ReactNoop.flushSync();
+      // Effects still haven't fired.
+      expect(Scheduler).toHaveYielded([]);
+    });
+    // Now the effects have fired.
     expect(Scheduler).toHaveYielded(['Effect']);
   });
 });

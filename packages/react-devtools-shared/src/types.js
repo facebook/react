@@ -76,3 +76,16 @@ export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
   | RegExpComponentFilter;
+
+export type HookName = string | null;
+// Map of hook source ("<filename>:<line-number>:<column-number>") to name.
+// Hook source is used instead of the hook itself becuase the latter is not stable between element inspections.
+// We use a Map rather than an Array because of nested hooks and traversal ordering.
+export type HookSourceLocationKey = string;
+export type HookNames = Map<HookSourceLocationKey, HookName>;
+
+export type LRUCache<K, V> = {|
+  get: (key: K) => V,
+  has: (key: K) => boolean,
+  set: (key: K, value: V) => void,
+|};

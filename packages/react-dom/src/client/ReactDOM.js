@@ -21,11 +21,10 @@ import {createRoot, hydrateRoot, isValidContainer} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
 
 import {
-  batchedEventUpdates,
   batchedUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
   flushSync,
+  flushSyncWithoutWarningIfAlreadyRendering,
   flushControlled,
   injectIntoDevTools,
   attemptSynchronousHydration,
@@ -101,8 +100,7 @@ setRestoreImplementation(restoreControlledState);
 setBatchingImplementation(
   batchedUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
-  batchedEventUpdates,
+  flushSyncWithoutWarningIfAlreadyRendering,
 );
 
 function createPortal(

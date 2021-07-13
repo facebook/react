@@ -1045,9 +1045,7 @@ function completeWork(
       const nextDidTimeout = nextState !== null;
       let prevDidTimeout = false;
       if (current === null) {
-        if (workInProgress.memoizedProps.fallback !== undefined) {
-          popHydrationState(workInProgress);
-        }
+        popHydrationState(workInProgress);
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;

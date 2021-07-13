@@ -80,7 +80,10 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 import {format} from './utils';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import {
+  enableHookNameParsing,
+  enableProfilerChangedHookIndices,
+} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 
@@ -3092,6 +3095,7 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
+          enableHookNameParsing, // Include source location info for hooks
         );
       } finally {
         // Restore original console functionality.
@@ -3236,6 +3240,17 @@ export function attach(
             // Never dehydrate the "hooks" object at the top levels.
             return true;
           }
+
+          if (
+            path[path.length - 2] === 'hookSource' &&
+            path[path.length - 1] === 'fileName'
+          ) {
+            // It's important to preserve the full file name (URL) for hook sources
+            // in case the user has enabled the named hooks feature.
+            // Otherwise the frontend may end up with a partial URL which it can't load.
+            return true;
+          }
+
           if (
             path[path.length - 1] === 'subHooks' ||
             path[path.length - 2] === 'subHooks'

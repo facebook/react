@@ -33,14 +33,8 @@ const getNodeFromInstance = EventInternals[1];
 const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
-const batchedUpdates = EventInternals[5];
 
-const act_notBatchedInLegacyMode = React.unstable_act;
-function act(callback) {
-  return act_notBatchedInLegacyMode(() => {
-    return batchedUpdates(callback);
-  });
-}
+const act = React.unstable_act;
 
 function Event(suffix) {}
 

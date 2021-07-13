@@ -190,3 +190,10 @@ export function checkForUpdate({
     );
   }
 }
+
+export function clearCacheBecauseOfError(refresh: RefreshFunction): void {
+  startTransition(() => {
+    const map = createMap();
+    refresh(createMap, map);
+  });
+}
