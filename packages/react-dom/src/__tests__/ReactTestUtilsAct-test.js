@@ -251,7 +251,7 @@ function runActTests(label, render, unmount, rerender) {
         let setValue = null;
         function App({defaultValue}) {
           if (defaultValue === undefined) {
-            throw new Error();
+            throw new Error('some error');
           }
           const [value, _setValue] = React.useState(defaultValue);
           setValue = _setValue;
@@ -262,7 +262,7 @@ function runActTests(label, render, unmount, rerender) {
           act(() => {
             render(<App defaultValue={undefined} />, container);
           });
-        }).toThrow();
+        }).toThrow('some error');
 
         act(() => {
           rerender(<App defaultValue={0} />, container);
