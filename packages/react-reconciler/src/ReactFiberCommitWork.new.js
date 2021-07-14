@@ -66,7 +66,6 @@ import {
   ChildDeletion,
   Snapshot,
   Update,
-  Callback,
   Ref,
   Hydrating,
   HydratingAndUpdate,
@@ -75,6 +74,7 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
+  Visibility,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import invariant from 'shared/invariant';
@@ -615,7 +615,7 @@ function commitLayoutEffectOnFiber(
   finishedWork: Fiber,
   committedLanes: Lanes,
 ): void {
-  if ((finishedWork.flags & (Update | Callback)) !== NoFlags) {
+  if ((finishedWork.flags & LayoutMask) !== NoFlags) {
     switch (finishedWork.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -1776,7 +1776,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         return;
       }
       case SuspenseComponent: {
-        commitSuspenseComponent(finishedWork);
+        commitSuspenseCallback(finishedWork);
         attachSuspenseRetryListeners(finishedWork);
         return;
       }
@@ -1899,7 +1899,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case SuspenseComponent: {
-      commitSuspenseComponent(finishedWork);
+      commitSuspenseCallback(finishedWork);
       attachSuspenseRetryListeners(finishedWork);
       return;
     }
@@ -1918,13 +1918,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       break;
     }
-    case OffscreenComponent:
-    case LegacyHiddenComponent: {
-      const newState: OffscreenState | null = finishedWork.memoizedState;
-      const isHidden = newState !== null;
-      hideOrUnhideAllChildren(finishedWork, isHidden);
-      return;
-    }
   }
   invariant(
     false,
@@ -1933,27 +1926,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   );
 }
 
-function commitSuspenseComponent(finishedWork: Fiber) {
+function commitSuspenseCallback(finishedWork: Fiber) {
+  // TODO: Move this to passive phase
   const newState: SuspenseState | null = finishedWork.memoizedState;
-
-  if (newState !== null) {
-    markCommitTimeOfFallback();
-
-    if (supportsMutation) {
-      // Hide the Offscreen component that contains the primary children. TODO:
-      // Ideally, this effect would have been scheduled on the Offscreen fiber
-      // itself. That's how unhiding works: the Offscreen component schedules an
-      // effect on itself. However, in this case, the component didn't complete,
-      // so the fiber was never added to the effect list in the normal path. We
-      // could have appended it to the effect list in the Suspense component's
-      // second pass, but doing it this way is less complicated. This would be
-      // simpler if we got rid of the effect list and traversed the tree, like
-      // we're planning to do.
-      const primaryChildParent: Fiber = (finishedWork.child: any);
-      hideOrUnhideAllChildren(primaryChildParent, true);
-    }
-  }
-
   if (enableSuspenseCallback && newState !== null) {
     const suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
     if (typeof suspenseCallback === 'function') {
@@ -2127,6 +2102,10 @@ function commitMutationEffects_complete(root: FiberRoot) {
 }
 
 function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
+  // TODO: The factoring of this phase could probably be improved. Consider
+  // switching on the type of work before checking the flags. That's what
+  // we do in all the other phases. I think this one is only different
+  // because of the shared reconcilation logic below.
   const flags = finishedWork.flags;
 
   if (flags & ContentReset) {
@@ -2143,6 +2122,37 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
       // from React Flare on www.
       if (finishedWork.tag === ScopeComponent) {
         commitAttachRef(finishedWork);
+      }
+    }
+  }
+
+  if (flags & Visibility) {
+    switch (finishedWork.tag) {
+      case SuspenseComponent: {
+        const newState: OffscreenState | null = finishedWork.memoizedState;
+        if (newState !== null) {
+          markCommitTimeOfFallback();
+          // Hide the Offscreen component that contains the primary children.
+          // TODO: Ideally, this effect would have been scheduled on the
+          // Offscreen fiber itself. That's how unhiding works: the Offscreen
+          // component schedules an effect on itself. However, in this case, the
+          // component didn't complete, so the fiber was never added to the
+          // effect list in the normal path. We could have appended it to the
+          // effect list in the Suspense component's second pass, but doing it
+          // this way is less complicated. This would be simpler if we got rid
+          // of the effect list and traversed the tree, like we're planning to
+          // do.
+          const primaryChildParent: Fiber = (finishedWork.child: any);
+          hideOrUnhideAllChildren(primaryChildParent, true);
+        }
+        break;
+      }
+      case OffscreenComponent:
+      case LegacyHiddenComponent: {
+        const newState: OffscreenState | null = finishedWork.memoizedState;
+        const isHidden = newState !== null;
+        hideOrUnhideAllChildren(finishedWork, isHidden);
+        break;
       }
     }
   }
