@@ -210,6 +210,7 @@ export function convertInspectedElementBackendToFrontend(
     key,
     errors,
     warnings,
+    ref,
   } = inspectedElementBackend;
 
   const inspectedElement: InspectedElementFrontend = {
@@ -252,6 +253,7 @@ export function convertInspectedElementBackendToFrontend(
     state: hydrateHelper(state),
     errors,
     warnings,
+    ref: hydrateHelper(ref),
   };
 
   return inspectedElement;
