@@ -220,6 +220,7 @@ describe('ReactOffscreen', () => {
 
   // @gate experimental || www
   // @gate enableSuspenseLayoutEffectSemantics
+  // @gate !persistent
   it('mounts/unmounts layout effects when visibility changes (starting visible)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -270,6 +271,7 @@ describe('ReactOffscreen', () => {
 
   // @gate experimental || www
   // @gate enableSuspenseLayoutEffectSemantics
+  // @gate !persistent
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
