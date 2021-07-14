@@ -592,7 +592,11 @@ export function getDataType(data: Object): DataType {
     return 'react_element';
   }
 
-  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
+  if (
+    (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) ||
+    // cross-realm HTMLElement?
+    /^\[object HTML.+Element\]$/.test(Object.prototype.toString.call(data))
+  ) {
     return 'html_element';
   }
 

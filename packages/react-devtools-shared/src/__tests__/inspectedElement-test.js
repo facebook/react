@@ -2898,4 +2898,79 @@ describe('InspectedElement', () => {
       );
     });
   });
+
+  describe('refs', () => {
+    it('has no ref by default', async () => {
+      const container = document.createElement('div');
+      function Example() {
+        return <div />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(0);
+      expect(inspectedElement.ref).toEqual(null);
+    });
+
+    it('supports useRef on host components', async () => {
+      const container = document.createElement('div');
+      const ForwardRefComponent = React.forwardRef((props, ref) => (
+        <div ref={ref} />
+      ));
+      function Example() {
+        const ref = React.useRef(null);
+        return <ForwardRefComponent ref={ref} />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.ref).toMatchInlineSnapshot(`
+        Object {
+          "current": Dehydrated {
+            "preview_short": <div />,
+            "preview_long": <div />,
+          },
+        }
+      `);
+    });
+
+    it('supports useRef on class components', async () => {
+      const container = document.createElement('div');
+      class ClassComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+      function Example() {
+        const ref = React.useRef(null);
+        return <ClassComponent ref={ref} />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.ref).toEqual({current: expect.any(Object)});
+    });
+
+    it('supports ref callbacks', async () => {
+      const container = document.createElement('div');
+      const ForwardRefComponent = React.forwardRef((props, ref) => (
+        <div ref={ref} />
+      ));
+      function Example() {
+        const ref = () => {};
+        return <ForwardRefComponent ref={ref} />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.ref).toMatchInlineSnapshot(`
+        Object {
+          "inspectable": false,
+          "name": "ref",
+          "preview_long": "ƒ ref() {}",
+          "preview_short": "ƒ ref() {}",
+          "type": "function",
+        }
+      `);
+    });
+  });
 });

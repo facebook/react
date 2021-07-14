@@ -22,6 +22,7 @@ import InspectedElementContextTree from './InspectedElementContextTree';
 import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWarningsTree';
 import InspectedElementHooksTree from './InspectedElementHooksTree';
 import InspectedElementPropsTree from './InspectedElementPropsTree';
+import InspectedElementRefTree from './InspectedElementRefTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
 import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
@@ -136,6 +137,13 @@ export default function InspectedElementView({
         )}
 
         <InspectedElementErrorsAndWarningsTree
+          bridge={bridge}
+          element={element}
+          inspectedElement={inspectedElement}
+          store={store}
+        />
+
+        <InspectedElementRefTree
           bridge={bridge}
           element={element}
           inspectedElement={inspectedElement}
