@@ -17,6 +17,8 @@ let caches;
 let seededCache;
 let ErrorBoundary;
 
+// TODO: These tests don't pass in persistent mode yet. Need to implement.
+
 describe('ReactSuspenseEffectsSemantics', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -565,6 +567,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be destroyed and recreated for function components', async () => {
       function App({children = null}) {
         Scheduler.unstable_yieldValue('App render');
@@ -694,6 +697,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be destroyed and recreated for class components', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -839,6 +843,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be destroyed and recreated when nested below host components', async () => {
       function App({children = null}) {
         Scheduler.unstable_yieldValue('App render');
@@ -949,6 +954,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be destroyed and recreated even if there is a bailout because of memoization', async () => {
       const MemoizedText = React.memo(Text, () => true);
 
@@ -1065,6 +1071,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should respect nested suspense boundaries', async () => {
       function App({innerChildren = null, outerChildren = null}) {
         return (
@@ -1288,6 +1295,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should show nested host nodes if multiple boundaries resolve at the same time', async () => {
       function App({innerChildren = null, outerChildren = null}) {
         return (
@@ -1398,6 +1406,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be cleaned up inside of a fallback that suspends', async () => {
       function App({fallbackChildren = null, outerChildren = null}) {
         return (
@@ -1541,6 +1550,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be cleaned up inside of a fallback that suspends (alternate)', async () => {
       function App({fallbackChildren = null, outerChildren = null}) {
         return (
@@ -1661,6 +1671,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be cleaned up deeper inside of a subtree that suspends', async () => {
       function ConditionalSuspense({shouldSuspend}) {
         if (shouldSuspend) {
@@ -1744,6 +1755,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     describe('that throw errors', () => {
       // @gate enableSuspenseLayoutEffectSemantics
       // @gate enableCache
+      // @gate !persistent
       it('are properly handled for componentDidMount', async () => {
         let componentDidMountShouldThrow = false;
 
@@ -1883,6 +1895,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // @gate enableSuspenseLayoutEffectSemantics
       // @gate enableCache
+      // @gate !persistent
       it('are properly handled for componentWillUnmount', async () => {
         class ThrowsInWillUnmount extends React.Component {
           componentDidMount() {
@@ -1996,6 +2009,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // @gate enableSuspenseLayoutEffectSemantics
       // @gate enableCache
+      // @gate !persistent
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect creation', async () => {
         let useLayoutEffectShouldThrow = false;
@@ -2136,6 +2150,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
       // @gate enableSuspenseLayoutEffectSemantics
       // @gate enableCache
+      // @gate !persistent
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled for layout effect descruction', async () => {
         function ThrowsInLayoutEffectDestroy() {
@@ -2248,6 +2263,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be only destroy layout effects once if a tree suspends in multiple places', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -2387,6 +2403,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be only destroy layout effects once if a component suspends multiple times', async () => {
       class ClassText extends React.Component {
         componentDidMount() {
@@ -2671,6 +2688,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be cleared and reset for host components', async () => {
       function App({children}) {
         Scheduler.unstable_yieldValue(`App render`);
@@ -2768,6 +2786,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be cleared and reset for class components', async () => {
       class ClassComponent extends React.Component {
         render() {
@@ -2869,6 +2888,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should be cleared and reset for function components with useImperativeHandle', async () => {
       const FunctionComponent = React.forwardRef((props, ref) => {
         Scheduler.unstable_yieldValue('FunctionComponent render');
@@ -2974,6 +2994,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
 
     // @gate enableSuspenseLayoutEffectSemantics
     // @gate enableCache
+    // @gate !persistent
     it('should not reset for user-managed values', async () => {
       function RefChecker({forwardedRef}) {
         Scheduler.unstable_yieldValue(`RefChecker render`);
@@ -3072,6 +3093,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
     describe('that throw errors', () => {
       // @gate enableSuspenseLayoutEffectSemantics
       // @gate enableCache
+      // @gate !persistent
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
       it('are properly handled in ref callbacks', async () => {
         let useRefCallbackShouldThrow = false;
