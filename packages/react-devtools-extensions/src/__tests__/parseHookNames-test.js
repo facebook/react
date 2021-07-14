@@ -172,6 +172,7 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/inline/Example'); // inline source map
       await test('./__source__/__compiled__/external/Example'); // external source map
       await test('./__source__/__compiled__/bundle/index', 'Example'); // bundle source map
+      await test('./__source__/__compiled__/no-columns/Example'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work with more complex files and components', async () => {
@@ -203,6 +204,7 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/inline/ToDoList'); // inline source map
       await test('./__source__/__compiled__/external/ToDoList'); // external source map
       await test('./__source__/__compiled__/bundle', 'ToDoList'); // bundle source map
+      await test('./__source__/__compiled__/no-columns/ToDoList'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work for custom hook', async () => {
@@ -220,6 +222,9 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
       await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
       await test('./__source__/__compiled__/bundle', 'ComponentWithCustomHook'); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ComponentWithCustomHook',
+      ); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work for external hooks', async () => {
@@ -245,6 +250,9 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/bundle',
         'ComponentWithExternalCustomHooks',
       ); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ComponentWithExternalCustomHooks',
+      ); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work when multiple hooks are on a line', async () => {
@@ -269,6 +277,24 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/bundle',
         'ComponentWithMultipleHooksPerLine',
       ); // bundle source map
+
+      async function noColumnTest(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'a', // useContext()
+          'b', // useContext()
+          null, // useContext()
+          null, // useContext()
+        ]);
+      }
+
+      // Note that this test is expected to only match the first two hooks
+      // because the 3rd and 4th hook are on the same line,
+      // and this type of source map doesn't have column numbers.
+      await noColumnTest(
+        './__source__/__compiled__/no-columns/ComponentWithMultipleHooksPerLine',
+      ); // simulated Webpack 'cheap-module-source-map'
     });
 
     // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
@@ -287,6 +313,7 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
       await test('./__source__/__compiled__/external/InlineRequire'); // external source map
       await test('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
+      await test('./__source__/__compiled__/no-columns/InlineRequire'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should support sources that contain the string "sourceMappingURL="', async () => {
@@ -312,6 +339,9 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/bundle',
         'ContainingStringSourceMappingURL',
       ); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ContainingStringSourceMappingURL',
+      ); // simulated Webpack 'cheap-module-source-map'
     });
   });
 });
