@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useCallback, useContext, useMemo, useRef} from 'react';
+import {Fragment, useContext, useMemo} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {ProfilerContext} from './ProfilerContext';
@@ -85,88 +85,90 @@ export default function SnapshotSelector(_: Props) {
   }
 
   let label = null;
-  const commitInputRef = useRef(null);
-  const handleCommitInputKeyDown = useCallback(event => {
-    switch (event.key) {
-      case 'Enter':
-        event.stopPropagation();
-        if (commitInputRef.current) {
-          commitInputRef.current.blur();
-        }
-        break;
-      default:
-        break;
-    }
-  }, []);
-  const handleCommitInputChange = useCallback(
-    event => {
-      const value = parseInt(event.target.value, 10);
+  if (numFilteredCommits > 0) {
+    const handleCommitInputChange = event => {
+      const value = parseInt(event.currentTarget.value, 10);
       if (!isNaN(value)) {
         const filteredIndex = Math.min(
           Math.max(value - 1, 0),
+
+          // Snashots are shown to the user as 1-based
+          // but the indices within the profiler data array ar 0-based.
           numFilteredCommits - 1,
         );
         selectCommitIndex(filteredCommitIndices[filteredIndex]);
       }
-    },
-    [numFilteredCommits, selectCommitIndex, filteredCommitIndices],
-  );
-  if (numFilteredCommits > 0) {
-    const numFilteredCommitsString = `${numFilteredCommits}`;
-    const selectedFilteredCommitIndexString = `${selectedFilteredCommitIndex +
-      1}`;
-    const input = (
-      <input
-        ref={commitInputRef}
-        className={styles.Input}
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={selectedFilteredCommitIndexString}
-        size={numFilteredCommitsString.length}
-        onChange={handleCommitInputChange}
-        onKeyDown={handleCommitInputKeyDown}
-      />
-    );
-    label = (
-      <Fragment>
-        {input} / {numFilteredCommitsString}
-      </Fragment>
-    );
-  }
+    };
 
-  const viewNextCommit = useCallback(() => {
-    let nextCommitIndex = ((selectedFilteredCommitIndex: any): number) + 1;
-    if (nextCommitIndex === filteredCommitIndices.length) {
-      nextCommitIndex = 0;
-    }
-    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
-  const viewPrevCommit = useCallback(() => {
-    let nextCommitIndex = ((selectedFilteredCommitIndex: any): number) - 1;
-    if (nextCommitIndex < 0) {
-      nextCommitIndex = filteredCommitIndices.length - 1;
-    }
-    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
+    const handleClick = event => {
+      event.currentTarget.select();
+    };
 
-  const handleKeyDown = useCallback(
-    event => {
+    const handleKeyDown = event => {
       switch (event.key) {
-        case 'ArrowLeft':
+        case 'ArrowDown':
           viewPrevCommit();
           event.stopPropagation();
           break;
-        case 'ArrowRight':
+        case 'ArrowUp':
           viewNextCommit();
           event.stopPropagation();
           break;
         default:
           break;
       }
-    },
-    [viewNextCommit, viewPrevCommit],
-  );
+    };
+
+    const input = (
+      <input
+        className={styles.Input}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={selectedFilteredCommitIndex + 1}
+        size={`${numFilteredCommits}`.length}
+        onChange={handleCommitInputChange}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+      />
+    );
+
+    label = (
+      <Fragment>
+        {input} / {numFilteredCommits}
+      </Fragment>
+    );
+  }
+
+  const viewNextCommit = () => {
+    let nextCommitIndex = ((selectedFilteredCommitIndex: any): number) + 1;
+    if (nextCommitIndex === filteredCommitIndices.length) {
+      nextCommitIndex = 0;
+    }
+    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+  };
+  const viewPrevCommit = () => {
+    let nextCommitIndex = ((selectedFilteredCommitIndex: any): number) - 1;
+    if (nextCommitIndex < 0) {
+      nextCommitIndex = filteredCommitIndices.length - 1;
+    }
+    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+  };
+
+  const handleKeyDown = event => {
+    switch (event.key) {
+      case 'ArrowLeft':
+        viewPrevCommit();
+        event.stopPropagation();
+        break;
+      case 'ArrowRight':
+        viewNextCommit();
+        event.stopPropagation();
+        break;
+      default:
+        break;
+    }
+  };
 
   if (commitData.length === 0) {
     return null;
