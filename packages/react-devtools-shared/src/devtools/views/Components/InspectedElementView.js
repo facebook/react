@@ -22,7 +22,7 @@ import InspectedElementContextTree from './InspectedElementContextTree';
 import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWarningsTree';
 import InspectedElementHooksTree from './InspectedElementHooksTree';
 import InspectedElementPropsTree from './InspectedElementPropsTree';
-import InspectedElementRefTree from './InspectedElementRefTree';
+import InspectedElementSpecialPropsTree from './InspectedElementSpecialPropsTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
@@ -88,6 +88,13 @@ export default function InspectedElementView({
       <div className={styles.InspectedElement}>
         <HocBadges element={element} />
 
+        <InspectedElementSpecialPropsTree
+          bridge={bridge}
+          element={element}
+          inspectedElement={inspectedElement}
+          store={store}
+        />
+
         <InspectedElementPropsTree
           bridge={bridge}
           element={element}
@@ -126,13 +133,6 @@ export default function InspectedElementView({
         />
 
         <InspectedElementErrorsAndWarningsTree
-          bridge={bridge}
-          element={element}
-          inspectedElement={inspectedElement}
-          store={store}
-        />
-
-        <InspectedElementRefTree
           bridge={bridge}
           element={element}
           inspectedElement={inspectedElement}

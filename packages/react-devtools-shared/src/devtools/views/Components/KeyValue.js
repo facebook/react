@@ -37,6 +37,7 @@ type KeyValueProps = {|
   bridge: FrontendBridge,
   canDeletePaths: boolean,
   canEditValues: boolean,
+  canInspectValues: boolean,
   canRenamePaths: boolean,
   canRenamePathsAtDepth?: (depth: number) => boolean,
   depth: number,
@@ -58,6 +59,7 @@ export default function KeyValue({
   bridge,
   canDeletePaths,
   canEditValues,
+  canInspectValues,
   canRenamePaths,
   canRenamePathsAtDepth,
   depth,
@@ -94,7 +96,7 @@ export default function KeyValue({
     } else {
       setIsOpen(true);
 
-      if (isInspectable) {
+      if (canInspectValues && isInspectable) {
         startInspectPathsTransition(() => {
           inspectPaths([pathRoot, ...path]);
         });
@@ -275,7 +277,7 @@ export default function KeyValue({
         hidden={hidden}
         ref={contextMenuTriggerRef}
         style={style}>
-        {isInspectable ? (
+        {canInspectValues && isInspectable ? (
           <ExpandCollapseToggle isOpen={isOpen} setIsOpen={toggleIsOpen} />
         ) : (
           <div className={styles.ExpandCollapseToggleSpacer} />
@@ -284,7 +286,9 @@ export default function KeyValue({
         <div className={styles.AfterName}>:</div>
         <span
           className={styles.Value}
-          onClick={isInspectable ? toggleIsOpen : undefined}>
+          onClick={
+            canInspectValues && isInspectable ? toggleIsOpen : undefined
+          }>
           {getMetaValueLabel(value)}
         </span>
       </div>

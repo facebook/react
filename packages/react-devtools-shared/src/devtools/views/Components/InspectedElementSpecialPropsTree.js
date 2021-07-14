@@ -7,14 +7,14 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import KeyValue from './KeyValue';
-import {serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
+
+// This is a little janky but it keeps the visual styles in sync.
+import keyValueStyles from './KeyValue.css';
 
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -33,39 +33,37 @@ export default function InspectedElementPropsTree({
   inspectedElement,
   store,
 }: Props) {
+  const {key} = element;
   const {ref} = inspectedElement;
 
-  if (ref === null) {
+  if (key === null && ref === null) {
     return null;
   }
 
-  const handleCopy = () => copy(serializeDataForCopy({ref}));
+  const learnMore = () => {};
 
   return (
     <div className={styles.InspectedElementTree}>
       <div className={styles.HeaderRow}>
-        <div className={styles.Header}>Ref</div>
-        <Button onClick={handleCopy} title="Copy to clipboard">
-          <ButtonIcon type="copy" />
+        <div className={styles.Header}>special props</div>
+        <Button onClick={learnMore} title="Learn more">
+          <ButtonIcon type="info" />
         </Button>
       </div>
-      <KeyValue
-        key="value"
-        alphaSort={true}
-        bridge={bridge}
-        canDeletePaths={false}
-        canEditValues={false}
-        canRenamePaths={false}
-        depth={1}
-        element={element}
-        hidden={false}
-        inspectedElement={inspectedElement}
-        name={'ref'}
-        path={['value']}
-        pathRoot="ref"
-        store={store}
-        value={ref}
-      />
+      {key && (
+        <div className={keyValueStyles.Item} style={{paddingLeft: '0.75rem'}}>
+          key
+          <div className={keyValueStyles.AfterName}>:</div>
+          <span className={keyValueStyles.Value}>{`"${key}"`}</span>
+        </div>
+      )}
+      {ref && (
+        <div className={keyValueStyles.Item} style={{paddingLeft: '0.75rem'}}>
+          ref
+          <div className={keyValueStyles.AfterName}>:</div>
+          <span className={keyValueStyles.Value}>{ref}</span>
+        </div>
+      )}
     </div>
   );
 }

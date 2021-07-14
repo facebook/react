@@ -23,6 +23,7 @@ export type IconType =
   | 'export'
   | 'filter'
   | 'import'
+  | 'info'
   | 'log-data'
   | 'more'
   | 'next'
@@ -83,6 +84,9 @@ export default function ButtonIcon({className = '', type}: Props) {
       break;
     case 'import':
       pathData = PATH_IMPORT;
+      break;
+    case 'info':
+      pathData = PATH_INFO;
       break;
     case 'log-data':
       pathData = PATH_LOG_DATA;
@@ -190,6 +194,9 @@ const PATH_EXPORT = 'M15.82,2.14v7H21l-9,9L3,9.18H8.18v-7ZM3,20.13H21v1.73H3Z';
 const PATH_FILTER = 'M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z';
 
 const PATH_IMPORT = 'M8.18,18.13v-7H3l9-8.95,9,9H15.82v7ZM3,20.13H21v1.73H3Z';
+
+const PATH_INFO =
+  'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z';
 
 const PATH_LOG_DATA = `
   M20 8h-2.81c-.45-.78-1.07-1.45-1.82-1.96L17 4.41 15.59 3l-2.17 2.17C12.96 5.06 12.49 5 12 5c-.49 0-.96.06-1.41.17L8.41

@@ -36,6 +36,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
+import {formatDataForPreview} from 'react-devtools-shared/src/utils';
 import {
   cleanForBridge,
   copyToClipboard,
@@ -3444,9 +3445,13 @@ export function attach(
       cleanedInspectedElement.state,
       createIsPathAllowed('state', null),
     );
-    cleanedInspectedElement.ref = cleanForBridge(
-      cleanedInspectedElement.ref,
-      createIsPathAllowed('ref', null),
+
+    // Ref is a special case;
+    // don't dehydrate it in the same way (because it's not hydratable/inspectable).
+    // Just stringify it instead...
+    cleanedInspectedElement.ref = formatDataForPreview(
+      mostRecentlyInspectedElement.ref,
+      true,
     );
 
     return {

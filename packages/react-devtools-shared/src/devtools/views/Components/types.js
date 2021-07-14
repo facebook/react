@@ -96,7 +96,7 @@ export type InspectedElement = {|
   props: Object | null,
   state: Object | null,
   key: number | string | null,
-  ref: Object | Function | null,
+  ref: string | null,
   errors: Array<[string, number]>,
   warnings: Array<[string, number]>,
 
