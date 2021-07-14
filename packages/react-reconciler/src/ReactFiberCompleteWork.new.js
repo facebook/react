@@ -9,7 +9,11 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
-import type {ReactScopeInstance, ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactScopeInstance,
+  ReactContext,
+  Wakeable,
+} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {
   Instance,
@@ -60,6 +64,7 @@ import {
   Ref,
   RefStatic,
   Update,
+  Visibility,
   NoFlags,
   DidCapture,
   Snapshot,
@@ -320,7 +325,7 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        if ((node.flags & Update) !== NoFlags) {
+        if ((node.flags & Visibility) !== NoFlags) {
           // Need to toggle the visibility of the primary children.
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
@@ -405,7 +410,7 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        if ((node.flags & Update) !== NoFlags) {
+        if ((node.flags & Visibility) !== NoFlags) {
           // Need to toggle the visibility of the primary children.
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
@@ -1084,32 +1089,40 @@ function completeWork(
         }
       }
 
-      if (supportsPersistence) {
-        // TODO: Only schedule updates if not prevDidTimeout.
-        if (nextDidTimeout) {
-          // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the promise. This flag is also used to hide the
-          // primary children.
-          workInProgress.flags |= Update;
-        }
+      const wakeables: Set<Wakeable> | null = (workInProgress.updateQueue: any);
+      if (wakeables !== null) {
+        // Schedule an effect to attach a retry listener to the promise.
+        // TODO: Move to passive phase
+        workInProgress.flags |= Update;
       }
+
       if (supportsMutation) {
-        // TODO: Only schedule updates if these values are non equal, i.e. it changed.
-        if (nextDidTimeout || prevDidTimeout) {
-          // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the promise. This flag is also used to hide the
-          // primary children. In mutation mode, we also need the flag to
-          // *unhide* children that were previously hidden, so check if this
-          // is currently timed out, too.
-          workInProgress.flags |= Update;
+        if (nextDidTimeout !== prevDidTimeout) {
+          // In mutation mode, visibility is toggled by mutating the nearest
+          // host nodes whenever they switch from hidden -> visible or vice
+          // versa. We don't need to switch when the boundary updates but its
+          // visibility hasn't changed.
+          workInProgress.flags |= Visibility;
         }
       }
+      if (supportsPersistence) {
+        if (nextDidTimeout) {
+          // In persistent mode, visibility is toggled by cloning the nearest
+          // host nodes in the complete phase whenever the boundary is hidden.
+          // TODO: The plan is to add a transparent host wrapper (no layout)
+          // around the primary children and hide that node. Then we don't need
+          // to do the funky cloning business.
+          workInProgress.flags |= Visibility;
+        }
+      }
+
       if (
         enableSuspenseCallback &&
         workInProgress.updateQueue !== null &&
         workInProgress.memoizedProps.suspenseCallback != null
       ) {
         // Always notify the callback
+        // TODO: Move to passive phase
         workInProgress.flags |= Update;
       }
       bubbleProperties(workInProgress);
@@ -1396,7 +1409,7 @@ function completeWork(
           prevIsHidden !== nextIsHidden &&
           newProps.mode !== 'unstable-defer-without-hiding'
         ) {
-          workInProgress.flags |= Update;
+          workInProgress.flags |= Visibility;
         }
       }
 
