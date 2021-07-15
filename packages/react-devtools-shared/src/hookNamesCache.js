@@ -58,7 +58,7 @@ function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // TODO Rethink this if the React API constraints change.
 // See https://github.com/reactwg/react-18/discussions/25#discussioncomment-980435
-const map: WeakMap<Element, Record<HookNames>> = new WeakMap();
+let map: WeakMap<Element, Record<HookNames>> = new WeakMap();
 
 export function hasAlreadyLoadedHookNames(element: Element): boolean {
   const record = map.get(element);
@@ -180,4 +180,8 @@ export function getHookSourceLocationKey({
     throw Error('Hook source code location not found.');
   }
   return `${fileName}:${lineNumber}:${columnNumber}`;
+}
+
+export function clearHookNamesCache(): void {
+  map = new WeakMap();
 }

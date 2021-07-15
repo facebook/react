@@ -690,6 +690,14 @@ export default class Agent extends EventEmitter<{|
     this.emit('traceUpdates', nodes);
   };
 
+  onFastRefreshScheduled = () => {
+    if (__DEBUG__) {
+      debug('onFastRefreshScheduled');
+    }
+
+    this._bridge.send('fastRefreshScheduled');
+  };
+
   onHookOperations = (operations: Array<number>) => {
     if (__DEBUG__) {
       debug(
