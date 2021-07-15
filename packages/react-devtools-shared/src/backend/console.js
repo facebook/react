@@ -170,7 +170,7 @@ export function patch({
               try {
                 if (shouldShowInlineWarningsAndErrors) {
                   // patch() is called by two places: (1) the hook and (2) the renderer backend.
-                  // The backend is what impliments a message queue, so it's the only one that injects onErrorOrWarning.
+                  // The backend is what implements a message queue, so it's the only one that injects onErrorOrWarning.
                   if (typeof onErrorOrWarning === 'function') {
                     onErrorOrWarning(
                       current,

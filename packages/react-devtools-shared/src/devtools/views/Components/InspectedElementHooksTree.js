@@ -214,7 +214,7 @@ function HookView({
   }
 
   // Certain hooks are not editable at all (as identified by react-debug-tools).
-  // Primative hook names (e.g. the "State" name for useState) are also never editable.
+  // Primitive hook names (e.g. the "State" name for useState) are also never editable.
   const canRenamePathsAtDepth = depth => isStateEditable && depth > 1;
 
   const isCustomHook = subHooks.length > 0;

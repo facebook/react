@@ -255,7 +255,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -285,7 +285,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -315,7 +315,7 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
