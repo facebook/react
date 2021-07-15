@@ -1,15 +1,15 @@
 'use strict';
 
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('rollup-plugin-commonjs');
+const commonjs = require('@rollup/plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
-const replace = require('rollup-plugin-replace');
+const replace = require('@rollup/plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const path = require('path');
-const resolve = require('rollup-plugin-node-resolve');
+const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
@@ -157,6 +157,7 @@ function getBabelConfig(
     exclude: '/**/node_modules/**',
     babelrc: false,
     configFile: false,
+    sourceMaps: true,
     presets: [],
     plugins: [...babelPlugins],
   };
@@ -235,7 +236,7 @@ function getRollupOutputOptions(
     freeze: !isProduction,
     interop: false,
     name: globalName,
-    sourcemap: false,
+    sourcemap: true,
     esModule: false,
   };
 }
@@ -364,26 +365,38 @@ function getPlugins(
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
-    // Extract error codes from invariant() messages into a file.
+    // // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
       transform(source) {
         findAndRecordErrorCodes(source);
         return source;
       },
     },
-    // Shim any modules that need forking in this environment.
-    useForks(forks),
-    // Ensure we don't try to bundle any fbjs modules.
-    forbidFBJSImports(),
-    // Use Node resolution mechanism.
-    resolve({
-      skip: externals,
+    // // Turn __DEV__ and process.env checks into constants.
+    replace({
+      preventAssignment: true,
+      values: {
+        __DEV__: isProduction ? 'false' : 'true',
+        __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+        __UMD__: isUMDBundle ? 'true' : 'false',
+        'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+        __EXPERIMENTAL__,
+        // Enable forked reconciler.
+        // NOTE: I did not put much thought into how to configure this.
+        __VARIANT__: bundle.enableNewReconciler === true,
+      },
     }),
-    // Remove license headers from individual modules
+    // // Shim any modules that need forking in this environment.
+    useForks(forks),
+    // // Ensure we don't try to bundle any fbjs modules.
+    forbidFBJSImports(),
+    // // Use Node resolution mechanism.
+    resolve(),
+    // // Remove license headers from individual modules
     stripBanner({
       exclude: 'node_modules/**/*',
     }),
-    // Compile to ES2015.
+    // // Compile to ES2015.
     babel(
       getBabelConfig(
         updateBabelOptions,
@@ -393,78 +406,72 @@ function getPlugins(
         !isProduction
       )
     ),
-    // Remove 'use strict' from individual source files.
+    // // Remove 'use strict' from individual source files.
     {
+      name: 'use-strict',
       transform(source) {
-        return source.replace(/['"]use strict["']/g, '');
+        return {
+          code: source.replace(/['"]use strict["']/g, ''),
+          map: null,
+        };
       },
     },
-    // Turn __DEV__ and process.env checks into constants.
-    replace({
-      __DEV__: isProduction ? 'false' : 'true',
-      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-      __UMD__: isUMDBundle ? 'true' : 'false',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__,
-      // Enable forked reconciler.
-      // NOTE: I did not put much thought into how to configure this.
-      __VARIANT__: bundle.enableNewReconciler === true,
-    }),
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
-    // Apply dead code elimination and/or minification.
-    isProduction &&
-      closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-        })
-      ),
-    // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
-    // Note that this plugin must be called after closure applies DCE.
-    isProduction && stripUnusedImports(pureExternalModules),
-    // Add the whitespace back if necessary.
-    shouldStayReadable &&
-      prettier({
-        parser: 'babel',
-        singleQuote: false,
-        trailingComma: 'none',
-        bracketSpacing: true,
-      }),
-    // License and haste headers, top-level `if` blocks.
-    {
-      renderChunk(source) {
-        return Wrappers.wrapBundle(
-          source,
-          bundleType,
-          globalName,
-          filename,
-          moduleType
-        );
-      },
-    },
-    // Record bundle size.
-    sizes({
-      getSize: (size, gzip) => {
-        const currentSizes = Stats.currentBuildResults.bundleSizes;
-        const recordIndex = currentSizes.findIndex(
-          record =>
-            record.filename === filename && record.bundleType === bundleType
-        );
-        const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
-        currentSizes[index] = {
-          filename,
-          bundleType,
-          packageName,
-          size,
-          gzip,
-        };
-      },
-    }),
+    // // Apply dead code elimination and/or minification.
+    // isProduction &&
+    //   closure(
+    //     Object.assign({}, closureOptions, {
+    //       // Don't let it create global variables in the browser.
+    //       // https://github.com/facebook/react/issues/10909
+    //       assume_function_wrapper: !isUMDBundle,
+    //       renaming: !shouldStayReadable,
+    //     })
+    //   ),
+    // // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
+    // // Note that this plugin must be called after closure applies DCE.
+    // isProduction && stripUnusedImports(pureExternalModules),
+    // // Add the whitespace back if necessary.
+    // shouldStayReadable &&
+    //   prettier({
+    //     parser: 'babel',
+    //     singleQuote: false,
+    //     trailingComma: 'none',
+    //     bracketSpacing: true,
+    //     sourcemap: true,
+    //   }),
+    // // License and haste headers, top-level `if` blocks.
+    // {
+    //   renderChunk(source) {
+    //     return Wrappers.wrapBundle(
+    //       source,
+    //       bundleType,
+    //       globalName,
+    //       filename,
+    //       moduleType
+    //     );
+    //   },
+    // },
+    // // Record bundle size.
+    // sizes({
+    //   getSize: (size, gzip) => {
+    //     const currentSizes = Stats.currentBuildResults.bundleSizes;
+    //     const recordIndex = currentSizes.findIndex(
+    //       record =>
+    //         record.filename === filename && record.bundleType === bundleType
+    //     );
+    //     const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
+    //     currentSizes[index] = {
+    //       filename,
+    //       bundleType,
+    //       packageName,
+    //       size,
+    //       gzip,
+    //     };
+    //   },
+    // }),
   ].filter(Boolean);
 }
 
@@ -576,7 +583,7 @@ async function createBundle(bundle, bundleType) {
   const rollupConfig = {
     input: resolvedEntry,
     treeshake: {
-      pureExternalModules,
+      moduleSideEffects: pureExternalModules,
     },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
