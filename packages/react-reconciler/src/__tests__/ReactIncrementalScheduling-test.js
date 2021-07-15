@@ -287,12 +287,12 @@ describe('ReactIncrementalScheduling', () => {
         instance.setState({tick: 2});
       });
 
-      // TODO: why does this flush sync?
       expect(Scheduler).toFlushAndYieldThrough([
         'render: 2',
         'componentDidUpdate: 2',
         'componentDidUpdate (before setState): 2',
         'componentDidUpdate (after setState): 2',
+        // This renders because the scheduled update is default, which is sync.
         'render: 3',
         'componentDidUpdate: 3',
       ]);
