@@ -392,6 +392,7 @@ export const scheduleTimeout: any =
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
+const localPromise = Promise;
 
 // -------------------
 //     Microtasks
@@ -400,9 +401,10 @@ export const supportsMicrotasks = true;
 export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function'
     ? queueMicrotask
-    : typeof Promise !== 'undefined'
+    : typeof localPromise !== 'undefined'
     ? callback =>
-        Promise.resolve(null)
+        localPromise
+          .resolve(null)
           .then(callback)
           .catch(handleErrorInNextTick)
     : scheduleTimeout; // TODO: Determine the best fallback here.
