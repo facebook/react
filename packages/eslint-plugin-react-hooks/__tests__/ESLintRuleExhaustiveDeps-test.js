@@ -7646,6 +7646,15 @@ const testsTypescript = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function useMyThing<T>(): void {
+          useEffect(() => {
+            let foo: T;
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {
