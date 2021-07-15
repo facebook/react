@@ -820,6 +820,9 @@ export function attach(
 
       key: key != null ? key : null,
 
+      // TODO: Support in legacy versions?
+      ref: null,
+
       // Inspectable properties.
       context,
       hooks: null,

@@ -36,6 +36,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
+import {formatDataForPreview} from 'react-devtools-shared/src/utils';
 import {
   cleanForBridge,
   copyToClipboard,
@@ -2980,6 +2981,7 @@ export function attach(
       memoizedProps,
       memoizedState,
       dependencies,
+      ref,
       tag,
       type,
     } = fiber;
@@ -3173,6 +3175,8 @@ export function attach(
       hasLegacyContext,
 
       key: key != null ? key : null,
+
+      ref,
 
       displayName: getDisplayNameForFiber(fiber),
       type: elementType,
@@ -3440,6 +3444,14 @@ export function attach(
     cleanedInspectedElement.state = cleanForBridge(
       cleanedInspectedElement.state,
       createIsPathAllowed('state', null),
+    );
+
+    // Ref is a special case;
+    // don't dehydrate it in the same way (because it's not hydratable/inspectable).
+    // Just stringify it instead...
+    cleanedInspectedElement.ref = formatDataForPreview(
+      mostRecentlyInspectedElement.ref,
+      true,
     );
 
     return {

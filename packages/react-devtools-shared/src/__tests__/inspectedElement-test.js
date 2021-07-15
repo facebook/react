@@ -1850,6 +1850,10 @@ describe('InspectedElement', () => {
             "preview_short": ƒ () {},
             "preview_long": ƒ () {},
           },
+          "Symbol(Symbol.toStringTag)": Dehydrated {
+            "preview_short": ƒ () {},
+            "preview_long": ƒ () {},
+          },
           "constructor": Dehydrated {
             "preview_short": ƒ () {},
             "preview_long": ƒ () {},
@@ -2453,8 +2457,7 @@ describe('InspectedElement', () => {
         0,
       ): any): number);
       const inspect = index => {
-        // HACK: Recreate TestRenderer instance so we can inspect different
-        // elements
+        // HACK: Recreate TestRenderer instance so we can inspect different elements
         testRendererInstance = TestRenderer.create(null, {
           unstable_isConcurrent: true,
         });
@@ -2476,8 +2479,7 @@ describe('InspectedElement', () => {
         });
       };
 
-      // Inspect <ErrorBoundary /> and see that we cannot toggle error state
-      // on error boundary itself
+      // Inspect <ErrorBoundary /> and see that we cannot toggle error state on error boundary itself
       let inspectedElement = await inspect(0);
       expect(inspectedElement.canToggleError).toBe(false);
       expect(inspectedElement.targetErrorBoundaryID).toBe(null);
@@ -2490,8 +2492,16 @@ describe('InspectedElement', () => {
         targetErrorBoundaryID,
       );
 
+      const originalErrorFn = console.error;
+      const originalWarnFn = console.warn;
+      console.error = () => {};
+      console.warn = () => {};
+
       // now force error state on <Example />
       await toggleError(true);
+
+      console.error = originalErrorFn;
+      console.warn = originalWarnFn;
 
       // we are in error state now, <Example /> won't show up
       withErrorsOrWarningsIgnored(['Invalid index'], () => {
@@ -2516,6 +2526,68 @@ describe('InspectedElement', () => {
       expect(inspectedElement.targetErrorBoundaryID).toBe(
         targetErrorBoundaryID,
       );
+    });
+  });
+
+  describe('refs', () => {
+    it('has no ref by default', async () => {
+      const container = document.createElement('div');
+      function Example() {
+        return <div />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(0);
+      expect(inspectedElement.ref).toEqual(null);
+    });
+
+    it('supports useRef on host components', async () => {
+      const container = document.createElement('div');
+      const ForwardRefComponent = React.forwardRef((props, ref) => (
+        <div ref={ref} />
+      ));
+      function Example() {
+        const ref = React.useRef(null);
+        return <ForwardRefComponent ref={ref} />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.ref).toMatchInlineSnapshot(
+        `"{current: <div />}"`,
+      );
+    });
+
+    it('supports useRef on class components', async () => {
+      const container = document.createElement('div');
+      class ClassComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+      function Example() {
+        const ref = React.useRef(null);
+        return <ClassComponent ref={ref} />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.ref).toEqual('{current: {…}}');
+    });
+
+    it('supports ref callbacks', async () => {
+      const container = document.createElement('div');
+      const ForwardRefComponent = React.forwardRef((props, ref) => (
+        <div ref={ref} />
+      ));
+      function Example() {
+        const ref = () => {};
+        return <ForwardRefComponent ref={ref} />;
+      }
+      await utils.actAsync(() => legacyRender(<Example />, container));
+
+      const inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.ref).toMatchInlineSnapshot(`"ƒ ref() {}"`);
     });
   });
 });
