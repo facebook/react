@@ -383,6 +383,8 @@ function throwException(
         attachPingListener(root, wakeable, rootRenderLanes);
 
         workInProgress.flags |= ShouldCapture;
+        // TODO: I think we can remove this, since we now use `DidCapture` in
+        // the begin phase to prevent an early bailout.
         workInProgress.lanes = rootRenderLanes;
 
         return;
