@@ -113,6 +113,30 @@ describe('ReactTestUtils.act()', () => {
         'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
+
+    it('does not warn on other effects if root is strict', () => {
+      function Component(props) {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout');
+        });
+        React.useImperativeHandle(React.createRef(), () => {
+          Scheduler.unstable_yieldValue('imperative handle');
+        });
+        return null;
+      }
+
+      expect(() => {
+        const root = ReactDOM.createRoot(document.createElement('div'), {
+          unstable_strictMode: true,
+        });
+        root.render(<Component />);
+        // confidence check that effects were mounted
+        expect(Scheduler).toFlushAndYield(['layout', 'imperative handle']);
+        root.render(<Component />);
+        // confidence check that effects were updated
+        expect(Scheduler).toFlushAndYield(['layout', 'imperative handle']);
+      }).toErrorDev([]);
+    });
   });
 });
 
@@ -379,6 +403,39 @@ function runActTests(label, render, unmount, rerender) {
           });
 
           expect(container.innerHTML).toBe('2');
+        });
+
+        // @gate __DEV__
+        it('does not warn on effects that were not queued', () => {
+          function Component() {
+            React.useEffect(() => {
+              Scheduler.unstable_yieldValue('effect');
+            }, []);
+            return null;
+          }
+
+          act(() => {
+            render(
+              <React.StrictMode>
+                <Component />
+              </React.StrictMode>,
+              container,
+            );
+          });
+
+          expect(Scheduler).toHaveYielded(['effect']);
+
+          expect(() => {
+            rerender(
+              <React.StrictMode>
+                <Component />
+              </React.StrictMode>,
+              container,
+            );
+          }).toErrorDev([]);
+
+          // Nothing scheduled so we should not have any unexpected errors regarding missing act();
+          expect(Scheduler).toFlushAndYield([]);
         });
       });
     });
