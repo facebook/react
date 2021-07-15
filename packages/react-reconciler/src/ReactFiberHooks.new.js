@@ -821,7 +821,9 @@ function updateReducer<S, I, A>(
           newState = ((update.eagerState: any): S);
         } else {
           const action = update.action;
-          newState = reducer(newState, action);
+          const reducerImpl =
+            update.eagerReducer !== null ? update.eagerReducer : reducer;
+          newState = reducerImpl(newState, action);
         }
       }
       update = update.next;
