@@ -102,7 +102,7 @@ const originalURLToMetadataCache: LRUCache<
   },
 });
 
-export default async function parseHookNames(
+export async function parseHookNames(
   hooksTree: HooksTree,
 ): Thenable<HookNames | null> {
   if (!enableHookNameParsing) {
@@ -622,4 +622,9 @@ function updateLruCache(
     }
   });
   return Promise.resolve();
+}
+
+export function purgeCachedMetadata(): void {
+  originalURLToMetadataCache.reset();
+  runtimeURLToMetadataCache.reset();
 }

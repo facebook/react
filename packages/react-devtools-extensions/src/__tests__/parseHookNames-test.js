@@ -33,7 +33,7 @@ describe('parseHookNames', () => {
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
-    parseHookNames = require('../parseHookNames').default;
+    parseHookNames = require('../parseHookNames').parseHookNames;
 
     // Jest (jest-runner?) configures Errors to automatically account for source maps.
     // This changes behavior between our tests and the browser.
@@ -157,6 +157,10 @@ describe('parseHookNames', () => {
       null, // Custom hooks can have names, but not when using destructuring.
     ]);
   });
+
+  // TODO Test that cache purge works
+
+  // TODO Test that cached metadata is purged when Fast Refresh scheduled
 
   describe('inline, external and bundle source maps', () => {
     it('should work for simple components', async () => {
