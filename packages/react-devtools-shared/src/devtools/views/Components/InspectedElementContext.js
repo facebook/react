@@ -18,7 +18,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
@@ -117,19 +116,17 @@ export function InspectedElementContextController({children}: Props) {
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
-    if (enableHookNameParsing) {
-      if (parseHookNames || alreadyLoadedHookNames) {
-        if (
-          inspectedElement !== null &&
-          inspectedElement.hooks !== null &&
-          loadHookNamesFunction !== null
-        ) {
-          hookNames = loadHookNames(
-            element,
-            inspectedElement.hooks,
-            loadHookNamesFunction,
-          );
-        }
+    if (parseHookNames || alreadyLoadedHookNames) {
+      if (
+        inspectedElement !== null &&
+        inspectedElement.hooks !== null &&
+        loadHookNamesFunction !== null
+      ) {
+        hookNames = loadHookNames(
+          element,
+          inspectedElement.hooks,
+          loadHookNamesFunction,
+        );
       }
     }
   }
@@ -155,20 +152,18 @@ export function InspectedElementContextController({children}: Props) {
   );
 
   useEffect(() => {
-    if (enableHookNameParsing) {
-      if (typeof purgeCachedMetadata === 'function') {
-        // When Fast Refresh updates a component, any cached AST metadata may be invalid.
-        const fastRefreshScheduled = () => {
-          startTransition(() => {
-            clearHookNamesCache();
-            purgeCachedMetadata();
-            refresh();
-          });
-        };
-        bridge.addListener('fastRefreshScheduled', fastRefreshScheduled);
-        return () =>
-          bridge.removeListener('fastRefreshScheduled', fastRefreshScheduled);
-      }
+    if (typeof purgeCachedMetadata === 'function') {
+      // When Fast Refresh updates a component, any cached AST metadata may be invalid.
+      const fastRefreshScheduled = () => {
+        startTransition(() => {
+          clearHookNamesCache();
+          purgeCachedMetadata();
+          refresh();
+        });
+      };
+      bridge.addListener('fastRefreshScheduled', fastRefreshScheduled);
+      return () =>
+        bridge.removeListener('fastRefreshScheduled', fastRefreshScheduled);
     }
   }, [bridge]);
 

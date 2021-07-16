@@ -22,10 +22,7 @@ import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
-import {
-  enableHookNameParsing,
-  enableProfilerChangedHookIndices,
-} from 'react-devtools-feature-flags';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -85,7 +82,7 @@ export function InspectedElementHooksTree({
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
-          {enableHookNameParsing && (!parseHookNames || hookParsingFailed) && (
+          {(!parseHookNames || hookParsingFailed) && (
             <Toggle
               className={hookParsingFailed ? styles.ToggleError : null}
               isChecked={parseHookNamesOptimistic}

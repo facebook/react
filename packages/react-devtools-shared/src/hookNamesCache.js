@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -70,10 +69,6 @@ export function loadHookNames(
   hooksTree: HooksTree,
   loadHookNamesFunction: (hookLog: HooksTree) => Thenable<HookNames>,
 ): HookNames | null {
-  if (!enableHookNameParsing) {
-    return null;
-  }
-
   let record = map.get(element);
 
   if (__DEBUG__) {

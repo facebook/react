@@ -16,7 +16,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
@@ -262,17 +261,15 @@ export default function ComponentsSettings(_: {||}) {
         Expand component tree by default
       </label>
 
-      {enableHookNameParsing && (
-        <label className={styles.Setting}>
-          <input
-            type="checkbox"
-            checked={parseHookNames}
-            onChange={updateParseHookNames}
-          />{' '}
-          Always parse hook names from source{' '}
-          <span className={styles.Warning}>(may be slow)</span>
-        </label>
-      )}
+      <label className={styles.Setting}>
+        <input
+          type="checkbox"
+          checked={parseHookNames}
+          onChange={updateParseHookNames}
+        />{' '}
+        Always parse hook names from source{' '}
+        <span className={styles.Warning}>(may be slow)</span>
+      </label>
 
       <div className={styles.Header}>Hide components where...</div>
 
