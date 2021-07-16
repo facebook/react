@@ -23,11 +23,6 @@ describe('parseHookNames', () => {
       console.trace('source-map-support');
     });
 
-    const {
-      overrideFeatureFlags,
-    } = require('react-devtools-shared/src/__tests__/utils');
-    overrideFeatureFlags({enableHookNameParsing: true});
-
     fetchMock = require('jest-fetch-mock');
     fetchMock.enableMocks();
 

@@ -157,6 +157,12 @@ describe('InspectedElement', () => {
         "events": undefined,
         "hooks": Array [
           Object {
+            "hookSource": Object {
+              "columnNumber": "removed by Jest serializer",
+              "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+              "functionName": "Example",
+              "lineNumber": "removed by Jest serializer",
+            },
             "id": 0,
             "isStateEditable": true,
             "name": "State",
@@ -1041,6 +1047,12 @@ describe('InspectedElement', () => {
     expect(inspectedElement.hooks).toMatchInlineSnapshot(`
       Array [
         Object {
+          "hookSource": Object {
+            "columnNumber": "removed by Jest serializer",
+            "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+            "functionName": "Example",
+            "lineNumber": "removed by Jest serializer",
+          },
           "id": 0,
           "isStateEditable": true,
           "name": "State",
@@ -1062,6 +1074,12 @@ describe('InspectedElement', () => {
     expect(inspectedElement.hooks).toMatchInlineSnapshot(`
       Array [
         Object {
+          "hookSource": Object {
+            "columnNumber": "removed by Jest serializer",
+            "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+            "functionName": "Example",
+            "lineNumber": "removed by Jest serializer",
+          },
           "id": 0,
           "isStateEditable": true,
           "name": "State",
@@ -1547,6 +1565,12 @@ describe('InspectedElement', () => {
         "events": undefined,
         "hooks": Array [
           Object {
+            "hookSource": Object {
+              "columnNumber": "removed by Jest serializer",
+              "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+              "functionName": "Example",
+              "lineNumber": "removed by Jest serializer",
+            },
             "id": null,
             "isStateEditable": false,
             "name": "Context",
@@ -1799,11 +1823,23 @@ describe('InspectedElement', () => {
     expect(hooks).toMatchInlineSnapshot(`
       Array [
         Object {
+          "hookSource": Object {
+            "columnNumber": "removed by Jest serializer",
+            "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+            "functionName": "DisplayedComplexValue",
+            "lineNumber": "removed by Jest serializer",
+          },
           "id": null,
           "isStateEditable": false,
           "name": "DebuggableHook",
           "subHooks": Array [
             Object {
+              "hookSource": Object {
+                "columnNumber": "removed by Jest serializer",
+                "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+                "functionName": "useDebuggableHook",
+                "lineNumber": "removed by Jest serializer",
+              },
               "id": 0,
               "isStateEditable": true,
               "name": "State",
@@ -1877,6 +1913,12 @@ describe('InspectedElement', () => {
         Object {
           "hooks": Array [
             Object {
+              "hookSource": Object {
+                "columnNumber": "removed by Jest serializer",
+                "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+                "functionName": "Example",
+                "lineNumber": "removed by Jest serializer",
+              },
               "id": 0,
               "isStateEditable": true,
               "name": "State",
@@ -1910,6 +1952,12 @@ describe('InspectedElement', () => {
         Object {
           "hooks": Array [
             Object {
+              "hookSource": Object {
+                "columnNumber": "removed by Jest serializer",
+                "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+                "functionName": "Example",
+                "lineNumber": "removed by Jest serializer",
+              },
               "id": 0,
               "isStateEditable": true,
               "name": "State",
@@ -1943,6 +1991,12 @@ describe('InspectedElement', () => {
         Object {
           "hooks": Array [
             Object {
+              "hookSource": Object {
+                "columnNumber": "removed by Jest serializer",
+                "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
+                "functionName": "Example",
+                "lineNumber": "removed by Jest serializer",
+              },
               "id": 0,
               "isStateEditable": true,
               "name": "State",
