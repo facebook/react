@@ -2544,8 +2544,17 @@ describe('InspectedElement', () => {
         targetErrorBoundaryID,
       );
 
+      // Suppress expected error and warning.
+      const originalError = console.error;
+      const originalWarn = console.warn;
+      console.error = () => {};
+      console.warn = () => {};
+
       // now force error state on <Example />
       await toggleError(true);
+
+      console.error = originalError;
+      console.warn = originalWarn;
 
       // we are in error state now, <Example /> won't show up
       withErrorsOrWarningsIgnored(['Invalid index'], () => {
