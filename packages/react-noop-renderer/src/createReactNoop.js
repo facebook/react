@@ -913,10 +913,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    flushSync(fn: () => mixed) {
-      NoopRenderer.flushSync(fn);
-    },
-
+    flushSync: NoopRenderer.flushSync,
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
 
     // Logs the current state of the tree.
