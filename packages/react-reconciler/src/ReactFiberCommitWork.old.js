@@ -980,12 +980,6 @@ function reappearLayoutEffectsOnFiber(node: Fiber) {
 }
 
 function hideOrUnhideAllChildren(finishedWork, isHidden) {
-  // Suspense layout effects semantics don't change for legacy roots.
-  const isModernRoot = (finishedWork.mode & ConcurrentMode) !== NoMode;
-
-  const current = finishedWork.alternate;
-  const wasHidden = current !== null && current.memoizedState !== null;
-
   // Only hide or unhide the top-most host nodes.
   let hostSubtreeRoot = null;
 
@@ -1005,22 +999,6 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
             unhideInstance(node.stateNode, node.memoizedProps);
           }
         }
-
-        if (enableSuspenseLayoutEffectSemantics && isModernRoot) {
-          // This method is called during mutation; it should detach refs within a hidden subtree.
-          // Attaching refs should be done elsewhere though (during layout).
-          // TODO (Offscreen) Also check: flags & RefStatic
-          if (isHidden) {
-            safelyDetachRef(node, finishedWork);
-          }
-
-          // TODO (Offscreen) Also check: subtreeFlags & (RefStatic | LayoutStatic)
-          if (node.child !== null) {
-            node.child.return = node;
-            node = node.child;
-            continue;
-          }
-        }
       } else if (node.tag === HostText) {
         if (hostSubtreeRoot === null) {
           const instance = node.stateNode;
@@ -1038,52 +1016,6 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
       ) {
         // Found a nested Offscreen component that is hidden.
         // Don't search any deeper. This tree should remain hidden.
-      } else if (enableSuspenseLayoutEffectSemantics && isModernRoot) {
-        // When a mounted Suspense subtree gets hidden again, destroy any nested layout effects.
-        // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
-        switch (node.tag) {
-          case FunctionComponent:
-          case ForwardRef:
-          case MemoComponent:
-          case SimpleMemoComponent: {
-            // Note that refs are attached by the useImperativeHandle() hook, not by commitAttachRef()
-            if (isHidden && !wasHidden) {
-              if (
-                enableProfilerTimer &&
-                enableProfilerCommitHooks &&
-                node.mode & ProfileMode
-              ) {
-                try {
-                  startLayoutEffectTimer();
-                  commitHookEffectListUnmount(HookLayout, node, finishedWork);
-                } finally {
-                  recordLayoutEffectDuration(node);
-                }
-              } else {
-                commitHookEffectListUnmount(HookLayout, node, finishedWork);
-              }
-            }
-            break;
-          }
-          case ClassComponent: {
-            if (isHidden && !wasHidden) {
-              // TODO (Offscreen) Check: flags & RefStatic
-              safelyDetachRef(node, finishedWork);
-
-              const instance = node.stateNode;
-              if (typeof instance.componentWillUnmount === 'function') {
-                safelyCallComponentWillUnmount(node, finishedWork, instance);
-              }
-            }
-            break;
-          }
-        }
-
-        if (node.child !== null) {
-          node.child.return = node;
-          node = node.child;
-          continue;
-        }
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -1801,6 +1733,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         // This prevents sibling component effects from interfering with each other,
         // e.g. a destroy function in one component should never override a ref set
         // by a create function in another component during the same commit.
+        // TODO: Check if we're inside an Offscreen subtree that disappeared
+        // during this commit. If so, we would have already unmounted its
+        // layout hooks. (However, since we null out the `destroy` function
+        // right before calling it, the behavior is already correct, so this
+        // would mostly be for modeling purposes.)
         if (
           enableProfilerTimer &&
           enableProfilerCommitHooks &&
@@ -2183,20 +2120,36 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
     switch (finishedWork.tag) {
       case SuspenseComponent: {
         const newState: OffscreenState | null = finishedWork.memoizedState;
-        if (newState !== null) {
-          markCommitTimeOfFallback();
-          // Hide the Offscreen component that contains the primary children.
-          // TODO: Ideally, this effect would have been scheduled on the
-          // Offscreen fiber itself. That's how unhiding works: the Offscreen
-          // component schedules an effect on itself. However, in this case, the
-          // component didn't complete, so the fiber was never added to the
-          // effect list in the normal path. We could have appended it to the
-          // effect list in the Suspense component's second pass, but doing it
-          // this way is less complicated. This would be simpler if we got rid
-          // of the effect list and traversed the tree, like we're planning to
-          // do.
-          const primaryChildParent: Fiber = (finishedWork.child: any);
-          hideOrUnhideAllChildren(primaryChildParent, true);
+        const isHidden = newState !== null;
+        const current = finishedWork.alternate;
+        const wasHidden = current !== null && current.memoizedState !== null;
+        const offscreenBoundary: Fiber = (finishedWork.child: any);
+
+        if (isHidden) {
+          if (!wasHidden) {
+            markCommitTimeOfFallback();
+            if (supportsMutation) {
+              hideOrUnhideAllChildren(offscreenBoundary, true);
+            }
+            if (
+              enableSuspenseLayoutEffectSemantics &&
+              (offscreenBoundary.mode & ConcurrentMode) !== NoMode
+            ) {
+              let offscreenChild = offscreenBoundary.child;
+              while (offscreenChild !== null) {
+                nextEffect = offscreenChild;
+                disappearLayoutEffects_begin(offscreenChild);
+                offscreenChild = offscreenChild.sibling;
+              }
+            }
+          }
+        } else {
+          if (wasHidden) {
+            if (supportsMutation) {
+              hideOrUnhideAllChildren(offscreenBoundary, false);
+            }
+            // TODO: Move re-appear call here for symmetry?
+          }
         }
         break;
       }
@@ -2204,7 +2157,36 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
       case LegacyHiddenComponent: {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
-        hideOrUnhideAllChildren(finishedWork, isHidden);
+        const current = finishedWork.alternate;
+        const wasHidden = current !== null && current.memoizedState !== null;
+        const offscreenBoundary: Fiber = finishedWork;
+
+        if (supportsMutation) {
+          // TODO: This needs to run whenever there's an insertion or update
+          // inside a hidden Offscreen tree.
+          hideOrUnhideAllChildren(offscreenBoundary, isHidden);
+        }
+
+        if (isHidden) {
+          if (!wasHidden) {
+            if (
+              enableSuspenseLayoutEffectSemantics &&
+              (offscreenBoundary.mode & ConcurrentMode) !== NoMode
+            ) {
+              nextEffect = offscreenBoundary;
+              let offscreenChild = offscreenBoundary.child;
+              while (offscreenChild !== null) {
+                nextEffect = offscreenChild;
+                disappearLayoutEffects_begin(offscreenChild);
+                offscreenChild = offscreenChild.sibling;
+              }
+            }
+          }
+        } else {
+          if (wasHidden) {
+            // TODO: Move re-appear call here for symmetry?
+          }
+        }
         break;
       }
     }
@@ -2381,6 +2363,90 @@ function commitLayoutMountEffects_complete(
   }
 }
 
+function disappearLayoutEffects_begin(subtreeRoot: Fiber) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    const firstChild = fiber.child;
+
+    // TODO (Offscreen) Check: flags & (RefStatic | LayoutStatic)
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case MemoComponent:
+      case SimpleMemoComponent: {
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          fiber.mode & ProfileMode
+        ) {
+          try {
+            startLayoutEffectTimer();
+            commitHookEffectListUnmount(HookLayout, fiber, fiber.return);
+          } finally {
+            recordLayoutEffectDuration(fiber);
+          }
+        } else {
+          commitHookEffectListUnmount(HookLayout, fiber, fiber.return);
+        }
+        break;
+      }
+      case ClassComponent: {
+        // TODO (Offscreen) Check: flags & RefStatic
+        safelyDetachRef(fiber, fiber.return);
+
+        const instance = fiber.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(fiber, fiber.return, instance);
+        }
+        break;
+      }
+      case HostComponent: {
+        safelyDetachRef(fiber, fiber.return);
+        break;
+      }
+      case OffscreenComponent: {
+        // Check if this is a
+        const isHidden = fiber.memoizedState !== null;
+        if (isHidden) {
+          // Nested Offscreen tree is already hidden. Don't disappear
+          // its effects.
+          disappearLayoutEffects_complete(subtreeRoot);
+          continue;
+        }
+        break;
+      }
+    }
+
+    // TODO (Offscreen) Check: subtreeFlags & LayoutStatic
+    if (firstChild !== null) {
+      firstChild.return = fiber;
+      nextEffect = firstChild;
+    } else {
+      disappearLayoutEffects_complete(subtreeRoot);
+    }
+  }
+}
+
+function disappearLayoutEffects_complete(subtreeRoot: Fiber) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+
+    if (fiber === subtreeRoot) {
+      nextEffect = null;
+      return;
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = fiber.return;
+  }
+}
+
 function reappearLayoutEffects_begin(subtreeRoot: Fiber) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -2397,7 +2463,9 @@ function reappearLayoutEffects_begin(subtreeRoot: Fiber) {
 
     // TODO (Offscreen) Check: subtreeFlags & LayoutStatic
     if (firstChild !== null) {
-      ensureCorrectReturnPointer(firstChild, fiber);
+      // This node may have been reused from a previous render, so we can't
+      // assume its return pointer is correct.
+      firstChild.return = fiber;
       nextEffect = firstChild;
     } else {
       reappearLayoutEffects_complete(subtreeRoot);
@@ -2426,7 +2494,9 @@ function reappearLayoutEffects_complete(subtreeRoot: Fiber) {
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
+      // This node may have been reused from a previous render, so we can't
+      // assume its return pointer is correct.
+      sibling.return = fiber.return;
       nextEffect = sibling;
       return;
     }
