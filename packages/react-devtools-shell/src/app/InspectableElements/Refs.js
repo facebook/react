@@ -34,6 +34,14 @@ export default function Refs() {
       <div ref={() => {}} />
       <ClassComponent ref={classComponentRef} />
       <ForwardRefComponent ref={forwardRefComponentRef} />
+      <ClassComponent ref={() => {}} />
+      <ClassComponent
+        key={0}
+        ref={function namedRefCallback() {}}
+        foo="foo"
+        bar={123}
+        baz={function namedProp() {}}
+      />
     </React.Fragment>
   );
 }
