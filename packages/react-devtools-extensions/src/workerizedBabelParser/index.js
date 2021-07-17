@@ -14,7 +14,7 @@
 import {parse} from '@babel/parser';
 import WorkerizedBabelParser from './babelParser.worker';
 
-const workerizedBabelParser = Worker && WorkerizedBabelParser();
+const workerizedBabelParser = window.Worker && WorkerizedBabelParser();
 
 export const workerizedParse = async (
   input: string,

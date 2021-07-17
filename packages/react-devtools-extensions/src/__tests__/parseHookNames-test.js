@@ -11,6 +11,8 @@
 // This is done to control if and how the code is transformed at runtime.
 // Do not declare test components within this test file as it is very fragile.
 
+const babelParserWorker = require('../workerizedBabelParser/babelParser.worker.js');
+
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
@@ -21,6 +23,26 @@ describe('parseHookNames', () => {
 
     jest.mock('source-map-support', () => {
       console.trace('source-map-support');
+    });
+
+    class Worker {
+      constructor(stringUrl) {
+        this.url = stringUrl;
+        this.onmessage = () => {};
+      }
+
+      postMessage(msg) {
+        this.onmessage(msg);
+      }
+    }
+
+    window.Worker = Worker;
+
+    jest.mock('../workerizedBabelParser/babelParser.worker.js', () => {
+      return {
+        __esModule: true,
+        default: () => babelParserWorker,
+      };
     });
 
     fetchMock = require('jest-fetch-mock');
