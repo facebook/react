@@ -1,0 +1,113 @@
+# A sample workflow which checks out your Infrastructure as Code Configuration files,
+# such as Kubernetes, Helm & Terraform and scans them for any security issues.
+# The results are then uploaded to GitHub Security Code Scanning
+#
+# For more examples, including how to limit scans to only high-severity issues
+# and fail PR checks, see https://github.com/snyk/actions/
+
+name: Snyk Infrastructure as Code
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ master ]
+  schedule:
+    - cron: '36 18 * * 6'
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Snyk to check configuration files for security issues
+        # Snyk can be used to break the build when it detects security issues.
+        # In this case we want to upload the issues to GitHub Code Scanning
+        continue-on-error: true
+        uses: snyk/actions/iac@master
+        env:
+          # In order to use the Snyk Action you will need to have a Snyk API token.
+          # More details in https://github.com/snyk/actions#getting-your-snyk-token
+          # or you can signup for free at https://snyk.io/login
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          # Add the path to the configuration file that you would like to test.
+          # For example `deployment.yaml` for a Kubernetes deployment manifest
+          # or `main.tf` for a Terraform configuration file
+          file: your-file-to-test.yaml
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: snyk.sarif
+---
+- name: Setup Go environment
+  uses: actions/setup-go@v2.1.3
+  with:
+    # The Go version to download (if necessary) and use. Supports semver spec and ranges.
+    go-version: # optional
+    # Whether to download only stable versions
+    stable: # optional, default is true
+    # Used to pull node distributions from go-versions.  Since there's a default, this is typically not supplied by the user.
+    token: # optional, default is ${{ github.token }}
+    on:
+  push:
+    branches:
+    - main
+    - release/*
+on:
+  pull_request:
+    branches:
+    - main
+    on:
+  schedule:
+  - cron: "0 2 * * 1-5"
+  on:
+  workflow_dispatch:
+  jobs:
+  my_job:
+    name: deploy to staging
+    runs-on: ubuntu-18.04
+    The available virtual machine types are:
+
+ubuntu-latest, ubuntu-18.04, or ubuntu-16.04
+windows-latest or windows-2019
+macos-latest or macos-10.15
+- name: Setup Node
+  uses: actions/setup-node@v1
+  with:
+    node-version: '10.x'
+    - name: Install Dependencies
+  run: npm install
+  jobs:
+  test:
+    name: Test on node ${{ matrix.node_version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node_version: ['8', '10', '12']
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node_version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node_version }}
+
+    - name: npm install, build and test
+      run: |
+        npm install
+        npm run build --if-present
+        npm test
+For more information, see "Workflow syntax for GitHub Actions."
+
+Running steps or jobs conditionally
+GitHub Actions supports conditions on steps and jobs using data present in your workflow context.
+
+For example, to run a step only as part of a push and not in a pull_request, you can specify a condition in the if: property based on the event name:
+
+steps:
+- run: npm publish
+  if: github.event == 'push'
+For more information, see "Contexts and expression syntax for GitHub Actions."
