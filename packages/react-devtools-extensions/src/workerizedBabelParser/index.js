@@ -16,6 +16,8 @@ import WorkerizedBabelParser from './babelParser.worker';
 
 const workerizedBabelParser = window.Worker && WorkerizedBabelParser();
 
+type Parse = typeof parse;
+
 export const workerizedParse = async (
   input: string,
   options?: {
@@ -24,7 +26,7 @@ export const workerizedParse = async (
 ) => {
   // Checks if worker is not available runs regular babel parse
   if (workerizedBabelParser) {
-    const workerParse: typeof parse = WorkerizedBabelParser().workerizedParse;
+    const workerParse: Parse = workerizedBabelParser.workerizedParse;
     return workerParse(input, options);
   }
   return parse(input, options);
