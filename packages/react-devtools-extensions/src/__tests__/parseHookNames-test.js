@@ -11,12 +11,15 @@
 // This is done to control if and how the code is transformed at runtime.
 // Do not declare test components within this test file as it is very fragile.
 
+const {parse} = require('@babel/parser');
 const babelParserWorker = require('../workerizedBabelParser/babelParser.worker.js');
 
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
   let parseHookNames;
+  let babelParserMock;
+  let workerizedParseMock;
 
   beforeEach(() => {
     jest.resetModules();
@@ -25,23 +28,22 @@ describe('parseHookNames', () => {
       console.trace('source-map-support');
     });
 
-    class Worker {
-      constructor(stringUrl) {
-        this.url = stringUrl;
-        this.onmessage = () => {};
-      }
+    window.Worker = undefined;
 
-      postMessage(msg) {
-        this.onmessage(msg);
-      }
-    }
+    babelParserMock = jest.fn(parse);
+    workerizedParseMock = jest.fn(babelParserWorker.workerizedParse);
 
-    window.Worker = Worker;
+    jest.mock('@babel/parser', () => {
+      return {
+        __esModule: true,
+        parse: babelParserMock,
+      };
+    });
 
     jest.mock('../workerizedBabelParser/babelParser.worker.js', () => {
       return {
         __esModule: true,
-        default: () => babelParserWorker,
+        default: () => ({workerizedParse: workerizedParseMock}),
       };
     });
 
@@ -110,6 +112,30 @@ describe('parseHookNames', () => {
     const hookNames = await parseHookNames(hooksTree);
     return hookNames;
   }
+
+  it('should use worker when available', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
+      .Component;
+
+    window.Worker = true;
+    // resets module so mocked worker instance can be updated
+    jest.resetModules();
+    parseHookNames = require('../parseHookNames').parseHookNames;
+
+    const hookNames = await getHookNamesForComponent(Component);
+    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
+    expect(workerizedParseMock).toHaveBeenCalledTimes(3);
+  });
+
+  it('should use babel parser when worker is not available', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
+      .Component;
+
+    const hookNames = await getHookNamesForComponent(Component);
+    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
+    expect(workerizedParseMock).toHaveBeenCalledTimes(0);
+    expect(babelParserMock).toHaveBeenCalledTimes(3);
+  });
 
   it('should parse names for useState()', async () => {
     const Component = require('./__source__/__untransformed__/ComponentWithUseState')
