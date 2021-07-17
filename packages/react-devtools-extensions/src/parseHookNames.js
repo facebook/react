@@ -9,11 +9,11 @@
  * @flow
  */
 
-import {parse} from '@babel/parser';
 import LRU from 'lru-cache';
 import {SourceMapConsumer} from 'source-map';
 import {getHookName} from './astUtils';
 import {areSourceMapsAppliedToErrors} from './ErrorTester';
+import {workerizedParse} from './workerizedBabelParser';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 
@@ -471,6 +471,7 @@ function loadSourceFiles(
 async function parseSourceAST(
   locationKeyToHookSourceData: Map<string, HookSourceData>,
 ): Promise<*> {
+  const promises = [];
   locationKeyToHookSourceData.forEach(hookSourceData => {
     if (hookSourceData.originalSourceAST !== null) {
       // Use cached metadata.
@@ -550,24 +551,26 @@ async function parseSourceAST(
       const plugin =
         originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
 
-      // TODO (named hooks) Parsing should ideally be done off of the main thread.
-      const originalSourceAST = parse(originalSourceCode, {
+      const parsePromise = workerizedParse(originalSourceCode, {
         sourceType: 'unambiguous',
         plugins: ['jsx', plugin],
+      }).then(originalSourceAST => {
+        hookSourceData.originalSourceAST = originalSourceAST;
+        if (__DEBUG__) {
+          console.log(
+            `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
+          );
+        }
+        originalURLToMetadataCache.set(originalSourceURL, {
+          originalSourceAST,
+          originalSourceCode,
+        });
       });
-      hookSourceData.originalSourceAST = originalSourceAST;
-      if (__DEBUG__) {
-        console.log(
-          `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
-        );
-      }
-      originalURLToMetadataCache.set(originalSourceURL, {
-        originalSourceAST,
-        originalSourceCode,
-      });
+
+      promises.push(parsePromise);
     }
   });
-  return Promise.resolve();
+  return Promise.all(promises);
 }
 
 function flattenHooksList(
