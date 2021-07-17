@@ -1,5 +1,13 @@
-name: DevTools Check for bug repro
-on:
+function HelloMessage({ name }) {
+  return <div>Hello {name}</div>;
+}
+
+ReactDOM.render(
+  <HelloMessage name="Taylor" />,
+  document.getElementById('container')
+);
+name: ***Dev***[,'[Check for bug repro]
+' *on:
   issues:
     types: [opened, edited]
   issue_comment:
