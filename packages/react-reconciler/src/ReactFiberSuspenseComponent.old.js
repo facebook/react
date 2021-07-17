@@ -77,10 +77,6 @@ export function shouldCaptureSuspense(
     return false;
   }
   const props = workInProgress.memoizedProps;
-  // In order to capture, the Suspense component must have a fallback prop.
-  if (props.fallback === undefined) {
-    return false;
-  }
   // Regular boundaries always capture.
   if (props.unstable_avoidThisFallback !== true) {
     return true;

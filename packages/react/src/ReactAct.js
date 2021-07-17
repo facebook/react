@@ -28,12 +28,34 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
       ReactCurrentActQueue.current = [];
     }
 
+    const prevIsBatchingLegacy = ReactCurrentActQueue.isBatchingLegacy;
     let result;
     try {
+      // Used to reproduce behavior of `batchedUpdates` in legacy mode. Only
+      // set to `true` while the given callback is executed, not for updates
+      // triggered during an async event, because this is how the legacy
+      // implementation of `act` behaved.
+      ReactCurrentActQueue.isBatchingLegacy = true;
       result = callback();
+
+      // Replicate behavior of original `act` implementation in legacy mode,
+      // which flushed updates immediately after the scope function exits, even
+      // if it's an async function.
+      if (
+        !prevIsBatchingLegacy &&
+        ReactCurrentActQueue.didScheduleLegacyUpdate
+      ) {
+        const queue = ReactCurrentActQueue.current;
+        if (queue !== null) {
+          ReactCurrentActQueue.didScheduleLegacyUpdate = false;
+          flushActQueue(queue);
+        }
+      }
     } catch (error) {
       popActScope(prevActScopeDepth);
       throw error;
+    } finally {
+      ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
     }
 
     if (

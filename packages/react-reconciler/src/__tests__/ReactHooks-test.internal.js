@@ -19,8 +19,6 @@ let Scheduler;
 let ReactDOMServer;
 let act;
 
-// Additional tests can be found in ReactHooksWithNoopRenderer. Plan is to
-// gradually migrate those to this file.
 describe('ReactHooks', () => {
   beforeEach(() => {
     jest.resetModules();

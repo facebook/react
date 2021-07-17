@@ -335,8 +335,8 @@ export default class Store extends EventEmitter<{|
     // Update persisted filter preferences stored in localStorage.
     saveComponentFilters(value);
 
-    // Notify the renderer that filter prefernces have changed.
-    // This is an expensive opreation; it unmounts and remounts the entire tree,
+    // Notify the renderer that filter preferences have changed.
+    // This is an expensive operation; it unmounts and remounts the entire tree,
     // so only do it if the set of enabled component filters has changed.
     if (haveEnabledFiltersChanged) {
       this._bridge.send('updateComponentFilters', value);

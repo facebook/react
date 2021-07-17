@@ -23,11 +23,9 @@ let batchedUpdatesImpl = function(fn, bookkeeping) {
 let discreteUpdatesImpl = function(fn, a, b, c, d) {
   return fn(a, b, c, d);
 };
-let flushDiscreteUpdatesImpl = function() {};
-let batchedEventUpdatesImpl = batchedUpdatesImpl;
+let flushSyncImpl = function() {};
 
 let isInsideEventHandler = false;
-let isBatchingEventUpdates = false;
 
 function finishEventHandler() {
   // Here we wait until all updates have propagated, which is important
@@ -41,63 +39,37 @@ function finishEventHandler() {
     // bails out of the update without touching the DOM.
     // TODO: Restore state in the microtask, after the discrete updates flush,
     // instead of early flushing them here.
-    flushDiscreteUpdatesImpl();
+    flushSyncImpl();
     restoreStateIfNeeded();
   }
 }
 
-export function batchedUpdates(fn, bookkeeping) {
+export function batchedUpdates(fn, a, b) {
   if (isInsideEventHandler) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state.
-    return fn(bookkeeping);
+    return fn(a, b);
   }
   isInsideEventHandler = true;
   try {
-    return batchedUpdatesImpl(fn, bookkeeping);
+    return batchedUpdatesImpl(fn, a, b);
   } finally {
     isInsideEventHandler = false;
     finishEventHandler();
   }
 }
 
-export function batchedEventUpdates(fn, a, b) {
-  if (isBatchingEventUpdates) {
-    // If we are currently inside another batch, we need to wait until it
-    // fully completes before restoring state.
-    return fn(a, b);
-  }
-  isBatchingEventUpdates = true;
-  try {
-    return batchedEventUpdatesImpl(fn, a, b);
-  } finally {
-    isBatchingEventUpdates = false;
-    finishEventHandler();
-  }
-}
-
 // TODO: Replace with flushSync
 export function discreteUpdates(fn, a, b, c, d) {
-  const prevIsInsideEventHandler = isInsideEventHandler;
-  isInsideEventHandler = true;
-  try {
-    return discreteUpdatesImpl(fn, a, b, c, d);
-  } finally {
-    isInsideEventHandler = prevIsInsideEventHandler;
-    if (!isInsideEventHandler) {
-      finishEventHandler();
-    }
-  }
+  return discreteUpdatesImpl(fn, a, b, c, d);
 }
 
 export function setBatchingImplementation(
   _batchedUpdatesImpl,
   _discreteUpdatesImpl,
-  _flushDiscreteUpdatesImpl,
-  _batchedEventUpdatesImpl,
+  _flushSyncImpl,
 ) {
   batchedUpdatesImpl = _batchedUpdatesImpl;
   discreteUpdatesImpl = _discreteUpdatesImpl;
-  flushDiscreteUpdatesImpl = _flushDiscreteUpdatesImpl;
-  batchedEventUpdatesImpl = _batchedEventUpdatesImpl;
+  flushSyncImpl = _flushSyncImpl;
 }

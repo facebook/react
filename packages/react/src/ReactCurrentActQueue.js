@@ -17,6 +17,10 @@ const ReactCurrentActQueue = {
   // on at the testing frameworks layer? Instead of what we do now, which
   // is check if a `jest` global is defined.
   disableActWarning: (false: boolean),
+
+  // Used to reproduce behavior of `batchedUpdates` in legacy mode.
+  isBatchingLegacy: false,
+  didScheduleLegacyUpdate: false,
 };
 
 export default ReactCurrentActQueue;
