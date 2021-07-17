@@ -14,13 +14,13 @@
 import {parse} from '@babel/parser';
 import WorkerizedBabelParser from './babelParser.worker';
 
-import type {ParserOptions} from '@babel/parser';
-
 const workerizedBabelParser = Worker && WorkerizedBabelParser();
 
 export const workerizedParse = async (
   input: string,
-  options?: ParserOptions,
+  options?: {
+    plugins: string[],
+  },
 ) => {
   // Checks if worker is not available runs regular babel parse
   if (workerizedBabelParser) {
