@@ -12,7 +12,7 @@ import {
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
 } from 'react-devtools-shared/src/utils';
-import parseHookNames from './parseHookNames';
+import {parseHookNames, purgeCachedMetadata} from './parseHookNames';
 import {
   localStorageGetItem,
   localStorageRemoveItem,
@@ -215,9 +215,10 @@ function createPanelIfReactLoaded() {
               browserTheme: getBrowserTheme(),
               componentsPortalContainer,
               enabledInspectedElementContextMenu: true,
-              loadHookNamesFunction: parseHookNames,
+              loadHookNames: parseHookNames,
               overrideTab,
               profilerPortalContainer,
+              purgeCachedHookNamesMetadata: purgeCachedMetadata,
               showTabBar: false,
               store,
               warnIfUnsupportedVersionDetected: true,

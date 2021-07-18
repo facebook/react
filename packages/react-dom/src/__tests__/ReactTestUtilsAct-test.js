@@ -246,6 +246,33 @@ function runActTests(label, render, unmount, rerender) {
         ]);
       });
 
+      // @gate __DEV__
+      it('warns if a setState is called outside of act(...) after a component threw', () => {
+        let setValue = null;
+        function App({defaultValue}) {
+          if (defaultValue === undefined) {
+            throw new Error('some error');
+          }
+          const [value, _setValue] = React.useState(defaultValue);
+          setValue = _setValue;
+          return value;
+        }
+
+        expect(() => {
+          act(() => {
+            render(<App defaultValue={undefined} />, container);
+          });
+        }).toThrow('some error');
+
+        act(() => {
+          rerender(<App defaultValue={0} />, container);
+        });
+
+        expect(() => setValue(1)).toErrorDev([
+          'An update to App inside a test was not wrapped in act(...).',
+        ]);
+      });
+
       describe('fake timers', () => {
         beforeEach(() => {
           jest.useFakeTimers();

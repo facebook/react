@@ -8,9 +8,14 @@
  */
 
 import * as React from 'react';
-import {useContext} from 'react';
+import {
+  useCallback,
+  useContext,
+  unstable_useCacheRefresh as useCacheRefresh,
+} from 'react';
 import ErrorBoundary from '../ErrorBoundary';
 import {TreeStateContext} from './TreeContext';
+import {clearCacheBecauseOfError} from '../../../inspectedElementCache';
 import styles from './InspectedElementErrorBoundary.css';
 
 type WrapperProps = {|
@@ -23,9 +28,18 @@ export default function InspectedElementErrorBoundaryWrapper({
   // Key on the selected element ID so that changing the selected element automatically hides the boundary.
   // This seems best since an error inspecting one element isn't likely to be relevant to another element.
   const {selectedElementID} = useContext(TreeStateContext);
+
+  const refresh = useCacheRefresh();
+  const handleDsmiss = useCallback(() => {
+    clearCacheBecauseOfError(refresh);
+  }, [refresh]);
+
   return (
     <div className={styles.Wrapper}>
-      <ErrorBoundary key={selectedElementID} canDismiss={true}>
+      <ErrorBoundary
+        key={selectedElementID}
+        canDismiss={true}
+        onBeforeDismissCallback={handleDsmiss}>
         {children}
       </ErrorBoundary>
     </div>

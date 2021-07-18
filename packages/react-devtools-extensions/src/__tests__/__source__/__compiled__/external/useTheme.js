@@ -25,4 +25,3 @@ function useTheme() {
   return theme;
 }
 //# sourceMappingURL=useTheme.js.map
-//# sourceURL=useTheme.js

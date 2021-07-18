@@ -31,7 +31,6 @@ import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
-import {discreteUpdates} from './ReactDOMUpdateBatching';
 
 import {
   getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
@@ -112,13 +111,16 @@ function dispatchDiscreteEvent(
   container,
   nativeEvent,
 ) {
-  discreteUpdates(
-    dispatchEvent,
-    domEventName,
-    eventSystemFlags,
-    container,
-    nativeEvent,
-  );
+  const previousPriority = getCurrentUpdatePriority();
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 0;
+  try {
+    setCurrentUpdatePriority(DiscreteEventPriority);
+    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
+  } finally {
+    setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
 }
 
 function dispatchContinuousEvent(

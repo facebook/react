@@ -169,6 +169,7 @@ type UpdateConsolePatchSettingsParams = {|
 export type BackendEvents = {|
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
+  fastRefreshScheduled: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   isSynchronousXHRSupported: [boolean],

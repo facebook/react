@@ -18,16 +18,18 @@ import {
   useMemo,
   useState,
 } from 'react';
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
   checkForUpdate,
   inspectElement,
 } from 'react-devtools-shared/src/inspectedElementCache';
-import {loadHookNames} from 'react-devtools-shared/src/hookNamesCache';
-import {ElementTypeFunction} from 'react-devtools-shared/src/types';
-import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
+import {
+  clearHookNamesCache,
+  hasAlreadyLoadedHookNames,
+  loadHookNames,
+} from 'react-devtools-shared/src/hookNamesCache';
+import HookNamesContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
 import type {HookNames} from 'react-devtools-shared/src/types';
@@ -61,7 +63,10 @@ export type Props = {|
 
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
-  const loadHookNamesFunction = useContext(LoadHookNamesFunctionContext);
+  const {
+    loadHookNames: loadHookNamesFunction,
+    purgeCachedMetadata,
+  } = useContext(HookNamesContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
@@ -80,15 +85,18 @@ export function InspectedElementContextController({children}: Props) {
     path: null,
   });
 
+  const element =
+    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
+
+  const alreadyLoadedHookNames =
+    element != null && hasAlreadyLoadedHookNames(element);
+
   // Parse the currently inspected element's hook names.
   // This may be enabled by default (for all elements)
   // or it may be opted into on a per-element basis (if it's too slow to be on by default).
   const [parseHookNames, setParseHookNames] = useState<boolean>(
-    parseHookNamesByDefault,
+    parseHookNamesByDefault || alreadyLoadedHookNames,
   );
-
-  const element =
-    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
   const elementHasChanged = element !== null && element !== state.element;
 
@@ -99,29 +107,26 @@ export function InspectedElementContextController({children}: Props) {
       path: null,
     });
 
-    setParseHookNames(parseHookNamesByDefault);
+    setParseHookNames(parseHookNamesByDefault || alreadyLoadedHookNames);
   }
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
-  let inspectedElement = null;
   let hookNames: HookNames | null = null;
+  let inspectedElement = null;
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
-    if (enableHookNameParsing) {
-      if (parseHookNames) {
-        if (
-          inspectedElement !== null &&
-          inspectedElement.type === ElementTypeFunction &&
-          inspectedElement.hooks !== null &&
-          loadHookNamesFunction !== null
-        ) {
-          hookNames = loadHookNames(
-            element,
-            inspectedElement.hooks,
-            loadHookNamesFunction,
-          );
-        }
+    if (parseHookNames || alreadyLoadedHookNames) {
+      if (
+        inspectedElement !== null &&
+        inspectedElement.hooks !== null &&
+        loadHookNamesFunction !== null
+      ) {
+        hookNames = loadHookNames(
+          element,
+          inspectedElement.hooks,
+          loadHookNamesFunction,
+        );
       }
     }
   }
@@ -145,6 +150,22 @@ export function InspectedElementContextController({children}: Props) {
     },
     [setState, state],
   );
+
+  useEffect(() => {
+    if (typeof purgeCachedMetadata === 'function') {
+      // When Fast Refresh updates a component, any cached AST metadata may be invalid.
+      const fastRefreshScheduled = () => {
+        startTransition(() => {
+          clearHookNamesCache();
+          purgeCachedMetadata();
+          refresh();
+        });
+      };
+      bridge.addListener('fastRefreshScheduled', fastRefreshScheduled);
+      return () =>
+        bridge.removeListener('fastRefreshScheduled', fastRefreshScheduled);
+    }
+  }, [bridge]);
 
   // Reset path now that we've asked the backend to hydrate it.
   // The backend is stateful, so we don't need to remember this path the next time we inspect.

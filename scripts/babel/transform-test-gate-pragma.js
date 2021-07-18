@@ -93,6 +93,10 @@ function transform(babel) {
           tokens.push({type: next2});
           i += 2;
           continue;
+        case '//':
+          // This is the beginning of a line comment. The rest of the line
+          // is ignored.
+          return tokens;
       }
 
       switch (char) {

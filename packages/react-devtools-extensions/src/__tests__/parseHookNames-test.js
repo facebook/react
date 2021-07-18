@@ -7,6 +7,10 @@
  * @flow
  */
 
+// Note that this test uses React components declared in the "__source__" directory.
+// This is done to control if and how the code is transformed at runtime.
+// Do not declare test components within this test file as it is very fragile.
+
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
@@ -19,39 +23,27 @@ describe('parseHookNames', () => {
       console.trace('source-map-support');
     });
 
-    const {
-      overrideFeatureFlags,
-    } = require('react-devtools-shared/src/__tests__/utils');
-    overrideFeatureFlags({enableHookNameParsing: true});
-
     fetchMock = require('jest-fetch-mock');
     fetchMock.enableMocks();
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
-    parseHookNames = require('../parseHookNames').default;
+    parseHookNames = require('../parseHookNames').parseHookNames;
 
     // Jest (jest-runner?) configures Errors to automatically account for source maps.
     // This changes behavior between our tests and the browser.
-    // To "fix" this, clear the prepareStackTrace() method on the Error object.
-    delete Error.prepareStackTrace;
+    // Ideally we would clear the prepareStackTrace() method on the Error object,
+    // but Node falls back to looking for it on the main context's Error constructor,
+    // which may still be patched.
+    // To ensure we get the default behavior, override prepareStackTrace ourselves.
+    // NOTE: prepareStackTrace is called from the error.stack getter, but the getter
+    // has a recursion breaker which falls back to the default behavior.
+    Error.prepareStackTrace = (error, trace) => {
+      return error.stack;
+    };
 
     fetchMock.mockIf(/.+$/, request => {
-      const {resolve} = require('path');
-      const url = request.url;
-      if (url.endsWith('js.map')) {
-        // Source maps are relative URLs (e.g. "path/to/Exmaple.js" specifies "Exmaple.js.map").
-        const sourceMapURL = resolve(
-          __dirname,
-          '__source__',
-          '__compiled__',
-          'external',
-          url,
-        );
-        return Promise.resolve(requireText(sourceMapURL, 'utf8'));
-      } else {
-        return Promise.resolve(requireText(url, 'utf8'));
-      }
+      return requireText(request.url, 'utf8');
     });
 
     // Mock out portion of browser API used by parseHookNames to initialize "source-map".
@@ -83,8 +75,12 @@ describe('parseHookNames', () => {
   }
 
   function requireText(path, encoding) {
-    const {readFileSync} = require('fs');
-    return readFileSync(path, encoding);
+    const {existsSync, readFileSync} = require('fs');
+    if (existsSync(path)) {
+      return Promise.resolve(readFileSync(path, encoding));
+    } else {
+      return Promise.reject(`File not found "${path}"`);
+    }
   }
 
   async function getHookNamesForComponent(Component, props = {}) {
@@ -94,65 +90,51 @@ describe('parseHookNames', () => {
   }
 
   it('should parse names for useState()', async () => {
-    const React = require('react');
-    const {useState} = React;
-    function Component(props) {
-      const [foo] = useState(true);
-      const bar = useState(true);
-      const [baz] = React.useState(true);
-      return `${foo}-${bar}-${baz}`;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
   });
 
   it('should parse names for useReducer()', async () => {
-    const React = require('react');
-    const {useReducer} = React;
-    function Component(props) {
-      const [foo] = useReducer(true);
-      const [bar] = useReducer(true);
-      const [baz] = React.useReducer(true);
-      return `${foo}-${bar}-${baz}`;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithUseReducer')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
   });
 
-  it('should return null for hooks without names like useEffect', async () => {
-    const React = require('react');
-    const {useEffect} = React;
-    function Component(props) {
-      useEffect(() => {});
-      React.useLayoutEffect(() => () => {});
-      return null;
-    }
+  it('should skip loading source files for unnamed hooks like useEffect', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithUseEffect')
+      .Component;
+
+    // Since this component contains only unnamed hooks, the source code should not even be loaded.
+    fetchMock.mockIf(/.+$/, request => {
+      throw Error(`Unexpected file request for "${request.url}"`);
+    });
 
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, []); // No hooks with names
   });
 
-  it('should parse names for custom hooks', async () => {
-    const {useDebugValue, useState} = require('react');
-    function useCustomHookOne() {
-      // DebugValue hook should not appear in log.
-      useDebugValue('example');
-      return true;
-    }
-    function useCustomHookTwo() {
-      const [baz, setBaz] = useState(true);
-      return [baz, setBaz];
-    }
-    function Component(props) {
-      const foo = useCustomHookOne();
-      // This cae is ignored;
-      // the meaning of a tuple assignment for a custom hook is unclear.
-      const [bar] = useCustomHookTwo();
-      return `${foo}-${bar}`;
-    }
+  it('should skip loading source files for unnamed hooks like useEffect (alternate)', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithExternalUseEffect')
+      .Component;
 
+    fetchMock.mockIf(/.+$/, request => {
+      // Since th custom hook contains only unnamed hooks, the source code should not be loaded.
+      if (request.url.endsWith('useCustom.js')) {
+        throw Error(`Unexpected file request for "${request.url}"`);
+      }
+      return requireText(request.url, 'utf8');
+    });
+
+    const hookNames = await getHookNamesForComponent(Component);
+    expectHookNamesToEqual(hookNames, ['count', null]); // No hooks with names
+  });
+
+  it('should parse names for custom hooks', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithNamedCustomHooks')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, [
       'foo',
@@ -162,22 +144,8 @@ describe('parseHookNames', () => {
   });
 
   it('should return null for custom hooks without explicit names', async () => {
-    const {useDebugValue} = require('react');
-    function useCustomHookOne() {
-      // DebugValue hook should not appear in log.
-      useDebugValue('example');
-    }
-    function useCustomHookTwo() {
-      // DebugValue hook should not appear in log.
-      useDebugValue('example');
-      return [true];
-    }
-    function Component(props) {
-      useCustomHookOne();
-      const [bar] = useCustomHookTwo();
-      return bar;
-    }
-
+    const Component = require('./__source__/__untransformed__/ComponentWithUnnamedCustomHooks')
+      .Component;
     const hookNames = await getHookNamesForComponent(Component);
     expectHookNamesToEqual(hookNames, [
       null, // Custom hooks can have names, but this one does not even return a value.
@@ -185,10 +153,14 @@ describe('parseHookNames', () => {
     ]);
   });
 
-  describe('inline and external source maps', () => {
+  // TODO Test that cache purge works
+
+  // TODO Test that cached metadata is purged when Fast Refresh scheduled
+
+  describe('inline, external and bundle source maps', () => {
     it('should work for simple components', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'count', // useState
@@ -198,11 +170,13 @@ describe('parseHookNames', () => {
       await test('./__source__/Example'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/Example'); // inline source map
       await test('./__source__/__compiled__/external/Example'); // external source map
+      await test('./__source__/__compiled__/bundle/index', 'Example'); // bundle source map
+      await test('./__source__/__compiled__/no-columns/Example'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work with more complex files and components', async () => {
-      async function test(path) {
-        const components = require(path);
+      async function test(path, name = undefined) {
+        const components = name != null ? require(path)[name] : require(path);
 
         let hookNames = await getHookNamesForComponent(components.List);
         expectHookNamesToEqual(hookNames, [
@@ -228,11 +202,13 @@ describe('parseHookNames', () => {
       await test('./__source__/ToDoList'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ToDoList'); // inline source map
       await test('./__source__/__compiled__/external/ToDoList'); // external source map
+      await test('./__source__/__compiled__/bundle', 'ToDoList'); // bundle source map
+      await test('./__source__/__compiled__/no-columns/ToDoList'); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work for custom hook', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
@@ -244,11 +220,15 @@ describe('parseHookNames', () => {
       await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
       await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
+      await test('./__source__/__compiled__/bundle', 'ComponentWithCustomHook'); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ComponentWithCustomHook',
+      ); // simulated Webpack 'cheap-module-source-map'
     });
 
     it('should work for external hooks', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'theme', // useTheme()
@@ -265,14 +245,63 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/ComponentWithExternalCustomHooks',
       ); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ComponentWithExternalCustomHooks',
+      ); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ComponentWithExternalCustomHooks',
+      ); // simulated Webpack 'cheap-module-source-map'
+    });
+
+    it('should work when multiple hooks are on a line', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'a', // useContext()
+          'b', // useContext()
+          'c', // useContext()
+          'd', // useContext()
+        ]);
+      }
+
+      await test(
+        './__source__/__compiled__/inline/ComponentWithMultipleHooksPerLine',
+      ); // inline source map
+      await test(
+        './__source__/__compiled__/external/ComponentWithMultipleHooksPerLine',
+      ); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ComponentWithMultipleHooksPerLine',
+      ); // bundle source map
+
+      async function noColumnTest(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'a', // useContext()
+          'b', // useContext()
+          null, // useContext()
+          null, // useContext()
+        ]);
+      }
+
+      // Note that this test is expected to only match the first two hooks
+      // because the 3rd and 4th hook are on the same line,
+      // and this type of source map doesn't have column numbers.
+      await noColumnTest(
+        './__source__/__compiled__/no-columns/ComponentWithMultipleHooksPerLine',
+      ); // simulated Webpack 'cheap-module-source-map'
     });
 
     // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
     // Maybe this isn't an important use case to support,
     // since inline requires are most likely to exist in compiled source (if at all).
     xit('should work for inline requires', async () => {
-      async function test(path) {
-        const Component = require(path).Component;
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
         const hookNames = await getHookNamesForComponent(Component);
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
@@ -282,6 +311,36 @@ describe('parseHookNames', () => {
       await test('./__source__/InlineRequire'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
       await test('./__source__/__compiled__/external/InlineRequire'); // external source map
+      await test('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
+      await test('./__source__/__compiled__/no-columns/InlineRequire'); // simulated Webpack 'cheap-module-source-map'
+    });
+
+    it('should support sources that contain the string "sourceMappingURL="', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+        ]);
+      }
+
+      // We expect the inline sourceMappingURL to be invalid in this case; mute the warning.
+      console.warn = () => {};
+
+      await test('./__source__/ContainingStringSourceMappingURL'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/ContainingStringSourceMappingURL',
+      ); // inline source map
+      await test(
+        './__source__/__compiled__/external/ContainingStringSourceMappingURL',
+      ); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ContainingStringSourceMappingURL',
+      ); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ContainingStringSourceMappingURL',
+      ); // simulated Webpack 'cheap-module-source-map'
     });
   });
 });

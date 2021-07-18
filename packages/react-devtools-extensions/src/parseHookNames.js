@@ -10,12 +10,12 @@
  */
 
 import {parse} from '@babel/parser';
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import LRU from 'lru-cache';
 import {SourceMapConsumer} from 'source-map';
-import {getHookName, isNonDeclarativePrimitiveHook} from './astUtils';
+import {getHookName} from './astUtils';
 import {areSourceMapsAppliedToErrors} from './ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 
 import type {
   HooksNode,
@@ -24,10 +24,9 @@ import type {
 } from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
 import type {Thenable} from 'shared/ReactTypes';
-import type {SourceConsumer, SourceMap} from './astUtils';
+import type {SourceConsumer} from './astUtils';
 
 const SOURCE_MAP_REGEX = / ?sourceMappingURL=([^\s'"]+)/gm;
-const ABSOLUTE_URL_REGEX = /^https?:\/\//i;
 const MAX_SOURCE_LENGTH = 100_000_000;
 
 type AST = mixed;
@@ -43,8 +42,14 @@ type HookSourceData = {|
   // If no source map has been provided, this code will be the same as runtimeSourceCode.
   originalSourceCode: string | null,
 
+  // Original source URL if there is a source map, or the same as runtimeSourceURL.
+  originalSourceURL: string | null,
+
   // Compiled code (React components or custom hooks) containing primitive hook calls.
   runtimeSourceCode: string | null,
+
+  // Same as hookSource.fileName but guaranteed to be non-null.
+  runtimeSourceURL: string,
 
   // APIs from source-map for parsing source maps (if detected).
   sourceConsumer: SourceConsumer | null,
@@ -52,27 +57,21 @@ type HookSourceData = {|
   // External URL of source map.
   // Sources without source maps (or with inline source maps) won't have this.
   sourceMapURL: string | null,
-
-  // Parsed source map object.
-  sourceMapContents: SourceMap | null,
 |};
 
-type CachedMetadata = {|
-  originalSourceAST: AST,
-  originalSourceCode: string,
+type CachedRuntimeCodeMetadata = {|
   sourceConsumer: SourceConsumer | null,
 |};
 
-// On large trees, encoding takes significant time.
-// Try to reuse the already encoded strings.
-const fileNameToMetadataCache: LRUCache<string, CachedMetadata> = new LRU({
+const runtimeURLToMetadataCache: LRUCache<
+  string,
+  CachedRuntimeCodeMetadata,
+> = new LRU({
   max: 50,
-  dispose: (fileName: string, metadata: CachedMetadata) => {
+  dispose: (runtimeSourceURL: string, metadata: CachedRuntimeCodeMetadata) => {
     if (__DEBUG__) {
       console.log(
-        'fileNameToHookSourceData.dispose() Evicting cached metadata for "' +
-          fileName +
-          '"',
+        `runtimeURLToMetadataCache.dispose() Evicting cached metadata for "${runtimeSourceURL}"`,
       );
     }
 
@@ -83,13 +82,28 @@ const fileNameToMetadataCache: LRUCache<string, CachedMetadata> = new LRU({
   },
 });
 
-export default async function parseHookNames(
+type CachedSourceCodeMetadata = {|
+  originalSourceAST: AST,
+  originalSourceCode: string,
+|};
+
+const originalURLToMetadataCache: LRUCache<
+  string,
+  CachedSourceCodeMetadata,
+> = new LRU({
+  max: 50,
+  dispose: (originalSourceURL: string, metadata: CachedSourceCodeMetadata) => {
+    if (__DEBUG__) {
+      console.log(
+        `originalURLToMetadataCache.dispose() Evicting cached metadata for "${originalSourceURL}"`,
+      );
+    }
+  },
+});
+
+export async function parseHookNames(
   hooksTree: HooksTree,
 ): Thenable<HookNames | null> {
-  if (!enableHookNameParsing) {
-    return Promise.resolve(null);
-  }
-
   const hooksList: Array<HooksNode> = [];
   flattenHooksList(hooksTree, hooksList);
 
@@ -97,8 +111,8 @@ export default async function parseHookNames(
     console.log('parseHookNames() hooksList:', hooksList);
   }
 
-  // Gather the unique set of source files to load for the built-in hooks.
-  const fileNameToHookSourceData: Map<string, HookSourceData> = new Map();
+  // Create map of unique source locations (file names plus line and column numbers) to metadata about hooks.
+  const locationKeyToHookSourceData: Map<string, HookSourceData> = new Map();
   for (let i = 0; i < hooksList.length; i++) {
     const hook = hooksList[i];
 
@@ -109,50 +123,47 @@ export default async function parseHookNames(
       throw Error('Hook source code location not found.');
     }
 
-    const fileName = hookSource.fileName;
-    if (fileName == null) {
-      throw Error('Hook source code location not found.');
-    } else {
-      if (!fileNameToHookSourceData.has(fileName)) {
-        const hookSourceData: HookSourceData = {
-          hookSource,
-          originalSourceAST: null,
-          originalSourceCode: null,
-          runtimeSourceCode: null,
-          sourceConsumer: null,
-          sourceMapURL: null,
-          sourceMapContents: null,
-        };
+    const locationKey = getHookSourceLocationKey(hookSource);
+    if (!locationKeyToHookSourceData.has(locationKey)) {
+      // Can't be null because getHookSourceLocationKey() would have thrown
+      const runtimeSourceURL = ((hookSource.fileName: any): string);
 
-        // If we've already loaded source/source map info for this file,
-        // we can skip reloading it (and more importantly, re-parsing it).
-        const metadata = fileNameToMetadataCache.get(fileName);
-        if (metadata != null) {
-          if (__DEBUG__) {
-            console.groupCollapsed(
-              'parseHookNames() Found cached metadata for file "' +
-                fileName +
-                '"',
-            );
-            console.log(metadata);
-            console.groupEnd();
-          }
+      const hookSourceData: HookSourceData = {
+        hookSource,
+        originalSourceAST: null,
+        originalSourceCode: null,
+        originalSourceURL: null,
+        runtimeSourceCode: null,
+        runtimeSourceURL,
+        sourceConsumer: null,
+        sourceMapURL: null,
+      };
 
-          hookSourceData.originalSourceAST = metadata.originalSourceAST;
-          hookSourceData.originalSourceCode = metadata.originalSourceCode;
-          hookSourceData.sourceConsumer = metadata.sourceConsumer;
+      // If we've already loaded the source map info for this file,
+      // we can skip reloading it (and more importantly, re-parsing it).
+      const runtimeMetadata = runtimeURLToMetadataCache.get(
+        hookSourceData.runtimeSourceURL,
+      );
+      if (runtimeMetadata != null) {
+        if (__DEBUG__) {
+          console.groupCollapsed(
+            `parseHookNames() Found cached runtime metadata for file "${hookSourceData.runtimeSourceURL}"`,
+          );
+          console.log(runtimeMetadata);
+          console.groupEnd();
         }
-
-        fileNameToHookSourceData.set(fileName, hookSourceData);
+        hookSourceData.sourceConsumer = runtimeMetadata.sourceConsumer;
       }
+
+      locationKeyToHookSourceData.set(locationKey, hookSourceData);
     }
   }
 
-  return loadSourceFiles(fileNameToHookSourceData)
-    .then(() => extractAndLoadSourceMaps(fileNameToHookSourceData))
-    .then(() => parseSourceAST(fileNameToHookSourceData))
-    .then(() => updateLruCache(fileNameToHookSourceData))
-    .then(() => findHookNames(hooksList, fileNameToHookSourceData));
+  return loadSourceFiles(locationKeyToHookSourceData)
+    .then(() => extractAndLoadSourceMaps(locationKeyToHookSourceData))
+    .then(() => parseSourceAST(locationKeyToHookSourceData))
+    .then(() => updateLruCache(locationKeyToHookSourceData))
+    .then(() => findHookNames(hooksList, locationKeyToHookSourceData));
 }
 
 function decodeBase64String(encoded: string): Object {
@@ -170,12 +181,31 @@ function decodeBase64String(encoded: string): Object {
 }
 
 function extractAndLoadSourceMaps(
-  fileNameToHookSourceData: Map<string, HookSourceData>,
+  locationKeyToHookSourceData: Map<string, HookSourceData>,
 ): Promise<*> {
-  const promises = [];
-  fileNameToHookSourceData.forEach(hookSourceData => {
-    if (hookSourceData.originalSourceAST !== null) {
-      // Use cached metadata.
+  // SourceMapConsumer.initialize() does nothing when running in Node (aka Jest)
+  // because the wasm file is automatically read from the file system
+  // so we can avoid triggering a warning message about this.
+  if (!__TEST__) {
+    if (__DEBUG__) {
+      console.log(
+        'extractAndLoadSourceMaps() Initializing source-map library ...',
+      );
+    }
+
+    // $FlowFixMe
+    const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
+
+    SourceMapConsumer.initialize({'lib/mappings.wasm': wasmMappingsURL});
+  }
+
+  // Deduplicate fetches, since there can be multiple location keys per source map.
+  const fetchPromises = new Map();
+
+  const setPromises = [];
+  locationKeyToHookSourceData.forEach(hookSourceData => {
+    if (hookSourceData.sourceConsumer != null) {
+      // Use cached source map consumer.
       return;
     }
 
@@ -189,9 +219,13 @@ function extractAndLoadSourceMaps(
       }
     } else {
       for (let i = 0; i < sourceMappingURLs.length; i++) {
+        const {runtimeSourceURL} = hookSourceData;
         const sourceMappingURL = sourceMappingURLs[i];
         const index = sourceMappingURL.indexOf('base64,');
         if (index >= 0) {
+          // TODO (named hooks) deduplicate parsing in this branch (similar to fetching in the other branch)
+          // since there can be multiple location keys per source map.
+
           // Web apps like Code Sandbox embed multiple inline source maps.
           // In this case, we need to loop through and find the right one.
           // We may also need to trim any part of this string that isn't based64 encoded data.
@@ -211,43 +245,71 @@ function extractAndLoadSourceMaps(
 
           // Hook source might be a URL like "https://4syus.csb.app/src/App.js"
           // Parsed source map might be a partial path like "src/App.js"
-          const fileName = ((hookSourceData.hookSource.fileName: any): string);
           const match = parsed.sources.find(
             source =>
-              source === 'Inline Babel script' || fileName.includes(source),
+              source === 'Inline Babel script' ||
+              runtimeSourceURL.endsWith(source),
           );
           if (match) {
-            hookSourceData.sourceMapContents = parsed;
+            setPromises.push(
+              new SourceMapConsumer(parsed).then(sourceConsumer => {
+                hookSourceData.sourceConsumer = sourceConsumer;
+              }),
+            );
             break;
           }
         } else {
-          if (sourceMappingURLs.length > 1) {
+          let url = sourceMappingURLs[i].split('=')[1];
+
+          if (i !== sourceMappingURLs.length - 1) {
+            // Files with external source maps should only have a single source map.
+            // More than one result might indicate an edge case,
+            // like a string in the source code that matched our "sourceMappingURL" regex.
+            // We should just skip over cases like this.
             console.warn(
-              'More than one external source map detected in the source file',
+              `More than one external source map detected in the source file; skipping "${url}"`,
             );
+            continue;
           }
 
-          let url = sourceMappingURLs[0].split('=')[1];
-          if (ABSOLUTE_URL_REGEX.test(url)) {
-            const baseURL = url.slice(0, url.lastIndexOf('/'));
-            url = `${baseURL}/${url}`;
-
-            if (!isValidUrl(url)) {
-              throw new Error(`Invalid source map URL "${url}"`);
+          if (!url.startsWith('http') && !url.startsWith('/')) {
+            // Resolve paths relative to the location of the file name
+            const lastSlashIdx = runtimeSourceURL.lastIndexOf('/');
+            if (lastSlashIdx !== -1) {
+              const baseURL = runtimeSourceURL.slice(
+                0,
+                runtimeSourceURL.lastIndexOf('/'),
+              );
+              url = `${baseURL}/${url}`;
             }
           }
 
           hookSourceData.sourceMapURL = url;
 
-          if (__DEBUG__) {
-            console.log(
-              'extractAndLoadSourceMaps() External source map "' + url + '"',
+          const fetchPromise =
+            fetchPromises.get(url) ||
+            fetchFile(url).then(
+              sourceMapContents =>
+                new SourceMapConsumer(JSON.parse(sourceMapContents)),
+
+              // In this case, we fall back to the assumption that the source has no source map.
+              // This might indicate an (unlikely) edge case that had no source map,
+              // but contained the string "sourceMappingURL".
+              error => null,
             );
+
+          if (__DEBUG__) {
+            if (!fetchPromises.has(url)) {
+              console.log(
+                `extractAndLoadSourceMaps() External source map "${url}"`,
+              );
+            }
           }
 
-          promises.push(
-            fetchFile(url).then(sourceMapContents => {
-              hookSourceData.sourceMapContents = JSON.parse(sourceMapContents);
+          fetchPromises.set(url, fetchPromise);
+          setPromises.push(
+            fetchPromise.then(sourceConsumer => {
+              hookSourceData.sourceConsumer = sourceConsumer;
             }),
           );
           break;
@@ -255,44 +317,49 @@ function extractAndLoadSourceMaps(
       }
     }
   });
-  return Promise.all(promises);
+  return Promise.all(setPromises);
 }
 
 function fetchFile(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    fetch(url).then(response => {
-      if (response.ok) {
-        response
-          .text()
-          .then(text => {
-            resolve(text);
-          })
-          .catch(error => {
-            reject(null);
-          });
-      } else {
+    fetch(url).then(
+      response => {
+        if (response.ok) {
+          response
+            .text()
+            .then(text => {
+              resolve(text);
+            })
+            .catch(error => {
+              if (__DEBUG__) {
+                console.log(`fetchFile() Could not read text for url "${url}"`);
+              }
+              reject(null);
+            });
+        } else {
+          if (__DEBUG__) {
+            console.log(`fetchFile() Got bad response for url "${url}"`);
+          }
+          reject(null);
+        }
+      },
+      error => {
+        if (__DEBUG__) {
+          console.log(`fetchFile() Could not fetch file: ${error.message}`);
+        }
         reject(null);
-      }
-    });
+      },
+    );
   });
 }
 
 function findHookNames(
   hooksList: Array<HooksNode>,
-  fileNameToHookSourceData: Map<string, HookSourceData>,
+  locationKeyToHookSourceData: Map<string, HookSourceData>,
 ): HookNames {
   const map: HookNames = new Map();
 
   hooksList.map(hook => {
-    if (isNonDeclarativePrimitiveHook(hook)) {
-      if (__DEBUG__) {
-        console.log('findHookNames() Non declarative primitive hook');
-      }
-
-      // Not all hooks have names (e.g. useEffect or useLayoutEffect)
-      return null;
-    }
-
     // We already guard against a null HookSource in parseHookNames()
     const hookSource = ((hook.hookSource: any): HookSource);
     const fileName = hookSource.fileName;
@@ -300,7 +367,8 @@ function findHookNames(
       return null; // Should not be reachable.
     }
 
-    const hookSourceData = fileNameToHookSourceData.get(fileName);
+    const locationKey = getHookSourceLocationKey(hookSource);
+    const hookSourceData = locationKeyToHookSourceData.get(locationKey);
     if (!hookSourceData) {
       return null; // Should not be reachable.
     }
@@ -312,29 +380,38 @@ function findHookNames(
 
     const sourceConsumer = hookSourceData.sourceConsumer;
 
+    let originalSourceColumnNumber;
     let originalSourceLineNumber;
     if (areSourceMapsAppliedToErrors() || !sourceConsumer) {
       // Either the current environment automatically applies source maps to errors,
       // or the current code had no source map to begin with.
       // Either way, we don't need to convert the Error stack frame locations.
+      originalSourceColumnNumber = columnNumber;
       originalSourceLineNumber = lineNumber;
     } else {
-      originalSourceLineNumber = sourceConsumer.originalPositionFor({
+      const position = sourceConsumer.originalPositionFor({
         line: lineNumber,
-        column: columnNumber,
-      }).line;
+
+        // Column numbers are representated differently between tools/engines.
+        // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
+        // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
+        column: columnNumber - 1,
+      });
+
+      originalSourceColumnNumber = position.column;
+      originalSourceLineNumber = position.line;
     }
 
     if (__DEBUG__) {
       console.log(
-        'findHookNames() mapped line number',
-        lineNumber,
-        'to',
-        originalSourceLineNumber,
+        `findHookNames() mapped line ${lineNumber}->${originalSourceLineNumber} and column ${columnNumber}->${originalSourceColumnNumber}`,
       );
     }
 
-    if (originalSourceLineNumber === null) {
+    if (
+      originalSourceLineNumber === null ||
+      originalSourceColumnNumber === null
+    ) {
       return null;
     }
 
@@ -343,126 +420,154 @@ function findHookNames(
       hookSourceData.originalSourceAST,
       ((hookSourceData.originalSourceCode: any): string),
       ((originalSourceLineNumber: any): number),
+      originalSourceColumnNumber,
     );
 
     if (__DEBUG__) {
-      console.log('findHookNames() Found name "' + (name || '-') + '"');
+      console.log(`findHookNames() Found name "${name || '-'}"`);
     }
 
-    map.set(hook, name);
+    const key = getHookSourceLocationKey(hookSource);
+    map.set(key, name);
   });
 
   return map;
 }
 
-function isValidUrl(possibleURL: string): boolean {
-  try {
-    // eslint-disable-next-line no-new
-    new URL(possibleURL);
-  } catch (_) {
-    return false;
-  }
-  return true;
-}
-
 function loadSourceFiles(
-  fileNameToHookSourceData: Map<string, HookSourceData>,
+  locationKeyToHookSourceData: Map<string, HookSourceData>,
 ): Promise<*> {
-  const promises = [];
-  fileNameToHookSourceData.forEach((hookSourceData, fileName) => {
-    promises.push(
-      fetchFile(fileName).then(runtimeSourceCode => {
+  // Deduplicate fetches, since there can be multiple location keys per file.
+  const fetchPromises = new Map();
+
+  const setPromises = [];
+  locationKeyToHookSourceData.forEach(hookSourceData => {
+    const {runtimeSourceURL} = hookSourceData;
+    const fetchPromise =
+      fetchPromises.get(runtimeSourceURL) ||
+      fetchFile(runtimeSourceURL).then(runtimeSourceCode => {
         if (runtimeSourceCode.length > MAX_SOURCE_LENGTH) {
           throw Error('Source code too large to parse');
         }
-
         if (__DEBUG__) {
           console.groupCollapsed(
-            'loadSourceFiles() fileName "' + fileName + '"',
+            `loadSourceFiles() runtimeSourceURL "${runtimeSourceURL}"`,
           );
           console.log(runtimeSourceCode);
           console.groupEnd();
         }
-
+        return runtimeSourceCode;
+      });
+    fetchPromises.set(runtimeSourceURL, fetchPromise);
+    setPromises.push(
+      fetchPromise.then(runtimeSourceCode => {
         hookSourceData.runtimeSourceCode = runtimeSourceCode;
       }),
     );
   });
-  return Promise.all(promises);
+  return Promise.all(setPromises);
 }
 
 async function parseSourceAST(
-  fileNameToHookSourceData: Map<string, HookSourceData>,
+  locationKeyToHookSourceData: Map<string, HookSourceData>,
 ): Promise<*> {
-  // SourceMapConsumer.initialize() does nothing when running in Node (aka Jest)
-  // because the wasm file is automatically read from the file system
-  // so we can avoid triggering a warning message about this.
-  if (!__TEST__) {
-    if (__DEBUG__) {
-      console.log('parseSourceAST() Initializing source-map library ...');
-    }
-
-    // $FlowFixMe
-    const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
-
-    SourceMapConsumer.initialize({'lib/mappings.wasm': wasmMappingsURL});
-  }
-
-  const promises = [];
-  fileNameToHookSourceData.forEach(hookSourceData => {
+  locationKeyToHookSourceData.forEach(hookSourceData => {
     if (hookSourceData.originalSourceAST !== null) {
       // Use cached metadata.
       return;
     }
 
-    const {runtimeSourceCode, sourceMapContents} = hookSourceData;
-    if (sourceMapContents !== null) {
+    const {sourceConsumer} = hookSourceData;
+    const runtimeSourceCode = ((hookSourceData.runtimeSourceCode: any): string);
+    let originalSourceURL, originalSourceCode;
+    if (sourceConsumer !== null) {
       // Parse and extract the AST from the source map.
-      promises.push(
-        SourceMapConsumer.with(
-          sourceMapContents,
-          null,
-          (sourceConsumer: SourceConsumer) => {
-            hookSourceData.sourceConsumer = sourceConsumer;
+      const {lineNumber, columnNumber} = hookSourceData.hookSource;
+      if (lineNumber == null || columnNumber == null) {
+        throw Error('Hook source code location not found.');
+      }
+      // Now that the source map has been loaded,
+      // extract the original source for later.
+      const {source} = sourceConsumer.originalPositionFor({
+        line: lineNumber,
 
-            // Now that the source map has been loaded,
-            // extract the original source for later.
-            const source = sourceMapContents.sources[0];
-            const originalSourceCode = sourceConsumer.sourceContentFor(
-              source,
-              true,
-            );
+        // Column numbers are representated differently between tools/engines.
+        // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
+        // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
+        column: columnNumber - 1,
+      });
 
-            if (__DEBUG__) {
-              console.groupCollapsed(
-                'parseSourceAST() Extracted source code from source map',
-              );
-              console.log(originalSourceCode);
-              console.groupEnd();
-            }
+      if (source == null) {
+        // TODO (named hooks) maybe fall back to the runtime source instead of throwing?
+        throw new Error(
+          'Could not map hook runtime location to original source location',
+        );
+      }
 
-            hookSourceData.originalSourceCode = originalSourceCode;
+      // TODO (named hooks) maybe canonicalize this URL somehow?
+      // It can be relative if the source map specifies it that way,
+      // but we use it as a cache key across different source maps and there can be collisions.
+      originalSourceURL = (source: string);
+      originalSourceCode = (sourceConsumer.sourceContentFor(
+        source,
+        true,
+      ): string);
 
-            // TODO Parsing should ideally be done off of the main thread.
-            hookSourceData.originalSourceAST = parse(originalSourceCode, {
-              sourceType: 'unambiguous',
-              plugins: ['jsx', 'typescript'],
-            });
-          },
-        ),
-      );
+      if (__DEBUG__) {
+        console.groupCollapsed(
+          'parseSourceAST() Extracted source code from source map',
+        );
+        console.log(originalSourceCode);
+        console.groupEnd();
+      }
     } else {
       // There's no source map to parse here so we can just parse the original source itself.
-      hookSourceData.originalSourceCode = runtimeSourceCode;
+      originalSourceCode = runtimeSourceCode;
+      // TODO (named hooks) This mixes runtimeSourceURLs with source mapped URLs in the same cache key space.
+      // Namespace them?
+      originalSourceURL = hookSourceData.runtimeSourceURL;
+    }
 
-      // TODO Parsing should ideally be done off of the main thread.
-      hookSourceData.originalSourceAST = parse(runtimeSourceCode, {
+    hookSourceData.originalSourceCode = originalSourceCode;
+    hookSourceData.originalSourceURL = originalSourceURL;
+
+    // The cache also serves to deduplicate parsing by URL in our loop over
+    // location keys. This may need to change if we switch to async parsing.
+    const sourceMetadata = originalURLToMetadataCache.get(originalSourceURL);
+    if (sourceMetadata != null) {
+      if (__DEBUG__) {
+        console.groupCollapsed(
+          `parseSourceAST() Found cached source metadata for "${originalSourceURL}"`,
+        );
+        console.log(sourceMetadata);
+        console.groupEnd();
+      }
+      hookSourceData.originalSourceAST = sourceMetadata.originalSourceAST;
+      hookSourceData.originalSourceCode = sourceMetadata.originalSourceCode;
+    } else {
+      // TypeScript is the most commonly used typed JS variant so let's default to it
+      // unless we detect explicit Flow usage via the "@flow" pragma.
+      const plugin =
+        originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
+
+      // TODO (named hooks) Parsing should ideally be done off of the main thread.
+      const originalSourceAST = parse(originalSourceCode, {
         sourceType: 'unambiguous',
-        plugins: ['jsx', 'typescript'],
+        plugins: ['jsx', plugin],
+      });
+      hookSourceData.originalSourceAST = originalSourceAST;
+      if (__DEBUG__) {
+        console.log(
+          `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
+        );
+      }
+      originalURLToMetadataCache.set(originalSourceURL, {
+        originalSourceAST,
+        originalSourceCode,
       });
     }
   });
-  return Promise.all(promises);
+  return Promise.resolve();
 }
 
 function flattenHooksList(
@@ -471,6 +576,15 @@ function flattenHooksList(
 ): void {
   for (let i = 0; i < hooksTree.length; i++) {
     const hook = hooksTree[i];
+
+    if (isUnnamedBuiltInHook(hook)) {
+      // No need to load source code or do any parsing for unnamed hooks.
+      if (__DEBUG__) {
+        console.log('flattenHooksList() Skipping unnamed hook', hook);
+      }
+      continue;
+    }
+
     hooksList.push(hook);
     if (hook.subHooks.length > 0) {
       flattenHooksList(hook.subHooks, hooksList);
@@ -478,24 +592,34 @@ function flattenHooksList(
   }
 }
 
-function updateLruCache(
-  fileNameToHookSourceData: Map<string, HookSourceData>,
-): Promise<*> {
-  fileNameToHookSourceData.forEach(
-    ({originalSourceAST, originalSourceCode, sourceConsumer}, fileName) => {
-      // Only set once to avoid triggering eviction/cleanup code.
-      if (!fileNameToMetadataCache.has(fileName)) {
-        if (__DEBUG__) {
-          console.log('updateLruCache() Caching metada for "' + fileName + '"');
-        }
-
-        fileNameToMetadataCache.set(fileName, {
-          originalSourceAST,
-          originalSourceCode: ((originalSourceCode: any): string),
-          sourceConsumer,
-        });
-      }
-    },
+// Determines whether incoming hook is a primitive hook that gets assigned to variables.
+function isUnnamedBuiltInHook(hook: HooksNode) {
+  return ['Effect', 'ImperativeHandle', 'LayoutEffect', 'DebugValue'].includes(
+    hook.name,
   );
+}
+
+function updateLruCache(
+  locationKeyToHookSourceData: Map<string, HookSourceData>,
+): Promise<*> {
+  locationKeyToHookSourceData.forEach(({sourceConsumer, runtimeSourceURL}) => {
+    // Only set once to avoid triggering eviction/cleanup code.
+    if (!runtimeURLToMetadataCache.has(runtimeSourceURL)) {
+      if (__DEBUG__) {
+        console.log(
+          `updateLruCache() Caching runtime metadata for "${runtimeSourceURL}"`,
+        );
+      }
+
+      runtimeURLToMetadataCache.set(runtimeSourceURL, {
+        sourceConsumer,
+      });
+    }
+  });
   return Promise.resolve();
+}
+
+export function purgeCachedMetadata(): void {
+  originalURLToMetadataCache.reset();
+  runtimeURLToMetadataCache.reset();
 }

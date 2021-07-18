@@ -48,6 +48,7 @@ export function initBackend(
       agent.onUnsupportedRenderer(id);
     }),
 
+    hook.sub('fastRefreshScheduled', agent.onFastRefreshScheduled),
     hook.sub('operations', agent.onHookOperations),
     hook.sub('traceUpdates', agent.onTraceUpdates),
 

@@ -21,10 +21,8 @@ import Store from '../../store';
 import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
-import {
-  enableHookNameParsing,
-  enableProfilerChangedHookIndices,
-} from 'react-devtools-feature-flags';
+import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -64,6 +62,17 @@ export function InspectedElementHooksTree({
     toggleParseHookNames();
   };
 
+  const hookParsingFailed = parseHookNames && hookNames === null;
+
+  let toggleTitle;
+  if (hookParsingFailed) {
+    toggleTitle = 'Hook parsing failed';
+  } else if (parseHookNames) {
+    toggleTitle = 'Parsing hook names ...';
+  } else {
+    toggleTitle = 'Parse hook names (may be slow)';
+  }
+
   const handleCopy = () => copy(serializeHooksForCopy(hooks));
 
   if (hooks === null) {
@@ -73,16 +82,13 @@ export function InspectedElementHooksTree({
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
-          {enableHookNameParsing && !parseHookNames && (
+          {(!parseHookNames || hookParsingFailed) && (
             <Toggle
+              className={hookParsingFailed ? styles.ToggleError : null}
               isChecked={parseHookNamesOptimistic}
-              isDisabled={parseHookNamesOptimistic}
+              isDisabled={parseHookNamesOptimistic || hookParsingFailed}
               onChange={handleChange}
-              title={
-                parseHookNames
-                  ? 'Parse hook names'
-                  : 'Parse hook names (may be slow)'
-              }>
+              title={toggleTitle}>
               <ButtonIcon type="parse-hook-names" />
             </Toggle>
           )}
@@ -205,7 +211,7 @@ function HookView({
   }
 
   // Certain hooks are not editable at all (as identified by react-debug-tools).
-  // Primative hook names (e.g. the "State" name for useState) are also never editable.
+  // Primitive hook names (e.g. the "State" name for useState) are also never editable.
   const canRenamePathsAtDepth = depth => isStateEditable && depth > 1;
 
   const isCustomHook = subHooks.length > 0;
@@ -227,7 +233,11 @@ function HookView({
   let displayValue;
   let isComplexDisplayValue = false;
 
-  const hookName = hookNames != null ? hookNames.get(hook) : null;
+  const hookSource = hook.hookSource;
+  const hookName =
+    hookNames != null && hookSource != null
+      ? hookNames.get(getHookSourceLocationKey(hookSource))
+      : null;
   const hookDisplayName = hookName ? (
     <>
       {name}
