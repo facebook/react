@@ -67,6 +67,7 @@ export {
   useDeferredValue,
   useEffect,
   useImperativeHandle,
+  unstable_useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useMutableSource,
