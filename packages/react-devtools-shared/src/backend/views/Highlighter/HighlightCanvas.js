@@ -195,7 +195,9 @@ export default class HighlightCanvas {
 
       const rectNode = this.measureNode(element);
 
-      this.fillCanvas(context, rectNode, dims);
+      if (rectNode !== null) {
+        this.fillCanvas(context, rectNode, dims);
+      }
 
       if (!name) {
         name = elements[0].nodeName.toLowerCase();

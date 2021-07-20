@@ -67,7 +67,9 @@ export function toggleEnabled(value: boolean): void {
       redrawTimeoutID = null;
     }
 
-    traceUpdatesCanvas.destroy();
+    if (traceUpdatesCanvas !== null) {
+      traceUpdatesCanvas.destroy();
+    }
   }
 }
 
