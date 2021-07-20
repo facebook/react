@@ -80,10 +80,7 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 import {format} from './utils';
-import {
-  enableHookNameParsing,
-  enableProfilerChangedHookIndices,
-} from 'react-devtools-feature-flags';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 
@@ -255,7 +252,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -285,7 +282,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -315,7 +312,7 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
@@ -568,6 +565,7 @@ export function attach(
     overrideProps,
     overridePropsDeletePath,
     overridePropsRenamePath,
+    scheduleRefresh,
     setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
@@ -578,6 +576,22 @@ export function attach(
   const supportsTogglingSuspense =
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
+
+  if (typeof scheduleRefresh === 'function') {
+    // When Fast Refresh updates a component, the frontend may need to purge cached information.
+    // For example, ASTs cached for the component (for named hooks) may no longer be valid.
+    // Send a signal to the frontend to purge this cached information.
+    // The "fastRefreshScheduled" dispatched is global (not Fiber or even Renderer specific).
+    // This is less effecient since it means the front-end will need to purge the entire cache,
+    // but this is probably an okay trade off in order to reduce coupling between the DevTools and Fast Refresh.
+    renderer.scheduleRefresh = (...args) => {
+      try {
+        hook.emit('fastRefreshScheduled');
+      } finally {
+        return scheduleRefresh(...args);
+      }
+    };
+  }
 
   // Tracks Fibers with recently changed number of error/warning messages.
   // These collections store the Fiber rather than the ID,
@@ -3095,7 +3109,7 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
-          enableHookNameParsing, // Include source location info for hooks
+          true, // Include source location info for hooks
         );
       } finally {
         // Restore original console functionality.

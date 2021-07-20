@@ -82,7 +82,7 @@ export const MutationMask =
   Ref |
   Hydrating |
   Visibility;
-export const LayoutMask = Update | Callback | Ref;
+export const LayoutMask = Update | Callback | Ref | Visibility;
 
 // TODO: Split into PassiveMountMask and PassiveUnmountMask
 export const PassiveMask = Passive | ChildDeletion;

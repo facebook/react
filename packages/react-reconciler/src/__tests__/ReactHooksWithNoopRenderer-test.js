@@ -164,34 +164,31 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
     // Schedule some updates
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        // TODO: Batched updates need to be inside startTransition?
-        ReactNoop.batchedUpdates(() => {
+    act(() => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
           counter.current.updateCount(1);
           counter.current.updateCount(count => count + 10);
         });
-      });
-    } else {
-      ReactNoop.batchedUpdates(() => {
+      } else {
         counter.current.updateCount(1);
         counter.current.updateCount(count => count + 10);
+      }
+
+      // Partially flush without committing
+      expect(Scheduler).toFlushAndYieldThrough(['Count: 11']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      // Interrupt with a high priority update
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(<Counter label="Total" />);
       });
-    }
+      expect(Scheduler).toHaveYielded(['Total: 0']);
 
-    // Partially flush without committing
-    expect(Scheduler).toFlushAndYieldThrough(['Count: 11']);
-    expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-
-    // Interrupt with a high priority update
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<Counter label="Total" />);
+      // Resume rendering
+      expect(Scheduler).toFlushAndYield(['Total: 11']);
+      expect(ReactNoop.getChildren()).toEqual([span('Total: 11')]);
     });
-    expect(Scheduler).toHaveYielded(['Total: 0']);
-
-    // Resume rendering
-    expect(Scheduler).toFlushAndYield(['Total: 11']);
-    expect(ReactNoop.getChildren()).toEqual([span('Total: 11')]);
   });
 
   it('throws inside class components', () => {

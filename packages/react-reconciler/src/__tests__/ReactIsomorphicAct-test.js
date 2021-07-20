@@ -78,4 +78,53 @@ describe('isomorphic act()', () => {
     });
     expect(returnValue).toEqual('hi');
   });
+
+  // @gate __DEV__
+  test('in legacy mode, updates are batched', () => {
+    const root = ReactNoop.createLegacyRoot();
+
+    // Outside of `act`, legacy updates are flushed completely synchronously
+    root.render('A');
+    expect(root).toMatchRenderedOutput('A');
+
+    // `act` will batch the updates and flush them at the end
+    act(() => {
+      root.render('B');
+      // Hasn't flushed yet
+      expect(root).toMatchRenderedOutput('A');
+
+      // Confirm that a nested `batchedUpdates` call won't cause the updates
+      // to flush early.
+      ReactNoop.batchedUpdates(() => {
+        root.render('C');
+      });
+
+      // Still hasn't flushed
+      expect(root).toMatchRenderedOutput('A');
+    });
+
+    // Now everything renders in a single batch.
+    expect(root).toMatchRenderedOutput('C');
+  });
+
+  // @gate __DEV__
+  test('in legacy mode, in an async scope, updates are batched until the first `await`', async () => {
+    const root = ReactNoop.createLegacyRoot();
+
+    await act(async () => {
+      // These updates are batched. This replicates the behavior of the original
+      // `act` implementation, for compatibility.
+      root.render('A');
+      root.render('B');
+      // Nothing has rendered yet.
+      expect(root).toMatchRenderedOutput(null);
+      await null;
+      // Updates are flushed after the first await.
+      expect(root).toMatchRenderedOutput('B');
+
+      // Subsequent updates in the same scope aren't batched.
+      root.render('C');
+      expect(root).toMatchRenderedOutput('C');
+    });
+  });
 });

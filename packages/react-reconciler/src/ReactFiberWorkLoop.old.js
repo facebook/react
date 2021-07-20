@@ -518,7 +518,9 @@ export function scheduleUpdateOnFiber(
   if (
     lane === SyncLane &&
     executionContext === NoContext &&
-    (fiber.mode & ConcurrentMode) === NoMode
+    (fiber.mode & ConcurrentMode) === NoMode &&
+    // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+    !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
   ) {
     // Flush the synchronous work now, unless we're already working or inside
     // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
@@ -668,6 +670,9 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     if (root.tag === LegacyRoot) {
+      if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy !== null) {
+        ReactCurrentActQueue.didScheduleLegacyUpdate = true;
+      }
       scheduleLegacySyncCallback(performSyncWorkOnRoot.bind(null, root));
     } else {
       scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
@@ -774,6 +779,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       : renderRootSync(root, lanes);
   if (exitStatus !== RootIncomplete) {
     if (exitStatus === RootErrored) {
+      const prevExecutionContext = executionContext;
       executionContext |= RetryAfterError;
 
       // If an error occurred during hydration,
@@ -795,6 +801,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         lanes = errorRetryLanes;
         exitStatus = renderRootSync(root, errorRetryLanes);
       }
+
+      executionContext = prevExecutionContext;
     }
 
     if (exitStatus === RootFatalErrored) {
@@ -967,6 +975,7 @@ function performSyncWorkOnRoot(root) {
 
   let exitStatus = renderRootSync(root, lanes);
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
+    const prevExecutionContext = executionContext;
     executionContext |= RetryAfterError;
 
     // If an error occurred during hydration,
@@ -988,6 +997,8 @@ function performSyncWorkOnRoot(root) {
       lanes = errorRetryLanes;
       exitStatus = renderRootSync(root, lanes);
     }
+
+    executionContext = prevExecutionContext;
   }
 
   if (exitStatus === RootFatalErrored) {
@@ -1049,7 +1060,11 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
     executionContext = prevExecutionContext;
     // If there were legacy sync updates, flush them at the end of the outer
     // most batchedUpdates-like method.
-    if (executionContext === NoContext) {
+    if (
+      executionContext === NoContext &&
+      // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+      !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
+    ) {
       resetRenderTimer();
       flushSyncCallbacksOnlyInLegacyMode();
     }
@@ -1078,10 +1093,13 @@ export function discreteUpdates<A, B, C, D, R>(
   }
 }
 
-export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
-  fn: A => R,
-  a: A,
-): R {
+// Overload the definition to the two valid signatures.
+// Warning, this opts-out of checking the function body.
+declare function flushSyncWithoutWarningIfAlreadyRendering<R>(fn: () => R): R;
+// eslint-disable-next-line no-redeclare
+declare function flushSyncWithoutWarningIfAlreadyRendering(): void;
+// eslint-disable-next-line no-redeclare
+export function flushSyncWithoutWarningIfAlreadyRendering(fn) {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1101,9 +1119,9 @@ export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
     ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
     if (fn) {
-      return fn(a);
+      return fn();
     } else {
-      return (undefined: $FlowFixMe);
+      return undefined;
     }
   } finally {
     setCurrentUpdatePriority(previousPriority);
@@ -1118,7 +1136,13 @@ export function flushSyncWithoutWarningIfAlreadyRendering<A, R>(
   }
 }
 
-export function flushSync<A, R>(fn: A => R, a: A): R {
+// Overload the definition to the two valid signatures.
+// Warning, this opts-out of checking the function body.
+declare function flushSync<R>(fn: () => R): R;
+// eslint-disable-next-line no-redeclare
+declare function flushSync(): void;
+// eslint-disable-next-line no-redeclare
+export function flushSync(fn) {
   if (__DEV__) {
     if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
       console.error(
@@ -1128,7 +1152,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
       );
     }
   }
-  return flushSyncWithoutWarningIfAlreadyRendering(fn, a);
+  return flushSyncWithoutWarningIfAlreadyRendering(fn);
 }
 
 export function flushControlled(fn: () => mixed): void {

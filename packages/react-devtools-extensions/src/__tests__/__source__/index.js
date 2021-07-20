@@ -10,6 +10,7 @@
 export {Component as ComponentWithCustomHook} from './ComponentWithCustomHook';
 export {Component as ComponentWithExternalCustomHooks} from './ComponentWithExternalCustomHooks';
 export {Component as ComponentWithMultipleHooksPerLine} from './ComponentWithMultipleHooksPerLine';
+export {Component as ContainingStringSourceMappingURL} from './ContainingStringSourceMappingURL';
 export {Component as Example} from './Example';
 export {Component as InlineRequire} from './InlineRequire';
 import * as ToDoList from './ToDoList';

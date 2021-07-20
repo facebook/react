@@ -456,6 +456,7 @@ workflows:
 
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
+                - '-r=experimental --env=development --persistent'
       - yarn_build_combined:
           requires:
             - setup

@@ -18,7 +18,6 @@ import {
   useMemo,
   useState,
 } from 'react';
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
@@ -26,10 +25,11 @@ import {
   inspectElement,
 } from 'react-devtools-shared/src/inspectedElementCache';
 import {
+  clearHookNamesCache,
   hasAlreadyLoadedHookNames,
   loadHookNames,
 } from 'react-devtools-shared/src/hookNamesCache';
-import LoadHookNamesFunctionContext from 'react-devtools-shared/src/devtools/views/Components/LoadHookNamesFunctionContext';
+import HookNamesContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
 import type {HookNames} from 'react-devtools-shared/src/types';
@@ -63,7 +63,10 @@ export type Props = {|
 
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
-  const loadHookNamesFunction = useContext(LoadHookNamesFunctionContext);
+  const {
+    loadHookNames: loadHookNamesFunction,
+    purgeCachedMetadata,
+  } = useContext(HookNamesContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
@@ -113,19 +116,17 @@ export function InspectedElementContextController({children}: Props) {
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
-    if (enableHookNameParsing) {
-      if (parseHookNames || alreadyLoadedHookNames) {
-        if (
-          inspectedElement !== null &&
-          inspectedElement.hooks !== null &&
-          loadHookNamesFunction !== null
-        ) {
-          hookNames = loadHookNames(
-            element,
-            inspectedElement.hooks,
-            loadHookNamesFunction,
-          );
-        }
+    if (parseHookNames || alreadyLoadedHookNames) {
+      if (
+        inspectedElement !== null &&
+        inspectedElement.hooks !== null &&
+        loadHookNamesFunction !== null
+      ) {
+        hookNames = loadHookNames(
+          element,
+          inspectedElement.hooks,
+          loadHookNamesFunction,
+        );
       }
     }
   }
@@ -149,6 +150,22 @@ export function InspectedElementContextController({children}: Props) {
     },
     [setState, state],
   );
+
+  useEffect(() => {
+    if (typeof purgeCachedMetadata === 'function') {
+      // When Fast Refresh updates a component, any cached AST metadata may be invalid.
+      const fastRefreshScheduled = () => {
+        startTransition(() => {
+          clearHookNamesCache();
+          purgeCachedMetadata();
+          refresh();
+        });
+      };
+      bridge.addListener('fastRefreshScheduled', fastRefreshScheduled);
+      return () =>
+        bridge.removeListener('fastRefreshScheduled', fastRefreshScheduled);
+    }
+  }, [bridge]);
 
   // Reset path now that we've asked the backend to hydrate it.
   // The backend is stateful, so we don't need to remember this path the next time we inspect.

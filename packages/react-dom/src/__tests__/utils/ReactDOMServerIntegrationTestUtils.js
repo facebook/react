@@ -242,7 +242,7 @@ module.exports = function(initModules) {
     await asyncReactDOMRender(element, cleanContainer, true);
     // This gives us the expected text content.
     const cleanTextContent =
-      cleanContainer.lastChild && cleanContainer.lastChild.textContent;
+      (cleanContainer.lastChild && cleanContainer.lastChild.textContent) || '';
 
     // The only guarantee is that text content has been patched up if needed.
     expect(hydratedTextContent).toBe(cleanTextContent);

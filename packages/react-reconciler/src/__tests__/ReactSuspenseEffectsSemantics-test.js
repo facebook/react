@@ -17,6 +17,8 @@ let caches;
 let seededCache;
 let ErrorBoundary;
 
+// TODO: These tests don't pass in persistent mode yet. Need to implement.
+
 describe('ReactSuspenseEffectsSemantics', () => {
   beforeEach(() => {
     jest.resetModules();
