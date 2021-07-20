@@ -392,7 +392,7 @@ export const scheduleTimeout: any =
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
-const localPromise = Promise;
+const localPromise = typeof Promise === 'function' ? Promise : undefined;
 
 // -------------------
 //     Microtasks
