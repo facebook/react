@@ -49,6 +49,11 @@ export type LazyComponent<T, P> = {
 };
 
 function lazyInitializer<T>(payload: Payload<T>): T {
+  // Retry on remount of failed initializer
+  if (payload._status === Rejected) {
+    payload._status = Uninitialized;
+  }
+
   if (payload._status === Uninitialized) {
     const ctor = payload._result;
     const thenable = ctor();
