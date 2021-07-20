@@ -367,7 +367,6 @@ export default class HighlightCanvas {
       canvas = null;
     }
   }
-
 }
 
 function findTipPos(dims, bounds, tipSize) {
