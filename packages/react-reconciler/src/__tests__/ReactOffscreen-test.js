@@ -201,10 +201,14 @@ describe('ReactOffscreen', () => {
     });
     // No layout effect.
     expect(Scheduler).toHaveYielded(['Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    if (gate(flags => flags.persistent)) {
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+    } else {
+      // TODO: Offscreen does not yet hide/unhide children correctly in mutation
+      // mode. Until we do, it should only be used inside a host component
+      // wrapper whose visibility is toggled simultaneously.
+      expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    }
 
     // Unhide the tree. The layout effect is mounted.
     await act(async () => {
@@ -251,10 +255,14 @@ describe('ReactOffscreen', () => {
       );
     });
     expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    if (gate(flags => flags.persistent)) {
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+    } else {
+      // TODO: Offscreen does not yet hide/unhide children correctly in mutation
+      // mode. Until we do, it should only be used inside a host component
+      // wrapper whose visibility is toggled simultaneously.
+      expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    }
 
     // Unhide the tree. The layout effect is re-mounted.
     await act(async () => {
@@ -291,10 +299,14 @@ describe('ReactOffscreen', () => {
       );
     });
     expect(Scheduler).toHaveYielded(['Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    if (gate(flags => flags.persistent)) {
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+    } else {
+      // TODO: Offscreen does not yet hide/unhide children correctly in mutation
+      // mode. Until we do, it should only be used inside a host component
+      // wrapper whose visibility is toggled simultaneously.
+      expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    }
 
     // Show the tree. The layout effect is mounted.
     await act(async () => {
@@ -316,9 +328,13 @@ describe('ReactOffscreen', () => {
       );
     });
     expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    if (gate(flags => flags.persistent)) {
+      expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+    } else {
+      // TODO: Offscreen does not yet hide/unhide children correctly in mutation
+      // mode. Until we do, it should only be used inside a host component
+      // wrapper whose visibility is toggled simultaneously.
+      expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    }
   });
 });
