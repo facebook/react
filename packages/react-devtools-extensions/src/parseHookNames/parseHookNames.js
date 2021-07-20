@@ -1,5 +1,3 @@
-/* global chrome */
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -9,11 +7,11 @@
  * @flow
  */
 
+import {parse} from '@babel/parser';
 import LRU from 'lru-cache';
 import {SourceMapConsumer} from 'source-map';
-import {getHookName} from './astUtils';
-import {areSourceMapsAppliedToErrors} from './ErrorTester';
-import {workerizedParse} from './workerizedBabelParser';
+import {getHookName} from '../astUtils';
+import {areSourceMapsAppliedToErrors} from '../ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 
@@ -24,7 +22,7 @@ import type {
 } from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
 import type {Thenable} from 'shared/ReactTypes';
-import type {SourceConsumer} from './astUtils';
+import type {SourceConsumer} from '../astUtils';
 
 const SOURCE_MAP_REGEX = / ?sourceMappingURL=([^\s'"]+)/gm;
 const MAX_SOURCE_LENGTH = 100_000_000;
@@ -103,6 +101,7 @@ const originalURLToMetadataCache: LRUCache<
 
 export async function parseHookNames(
   hooksTree: HooksTree,
+  wasmMappingsURL: string,
 ): Thenable<HookNames | null> {
   const hooksList: Array<HooksNode> = [];
   flattenHooksList(hooksTree, hooksList);
@@ -160,7 +159,9 @@ export async function parseHookNames(
   }
 
   return loadSourceFiles(locationKeyToHookSourceData)
-    .then(() => extractAndLoadSourceMaps(locationKeyToHookSourceData))
+    .then(() =>
+      extractAndLoadSourceMaps(locationKeyToHookSourceData, wasmMappingsURL),
+    )
     .then(() => parseSourceAST(locationKeyToHookSourceData))
     .then(() => updateLruCache(locationKeyToHookSourceData))
     .then(() => findHookNames(hooksList, locationKeyToHookSourceData));
@@ -182,6 +183,7 @@ function decodeBase64String(encoded: string): Object {
 
 function extractAndLoadSourceMaps(
   locationKeyToHookSourceData: Map<string, HookSourceData>,
+  wasmMappingsURL: string,
 ): Promise<*> {
   // SourceMapConsumer.initialize() does nothing when running in Node (aka Jest)
   // because the wasm file is automatically read from the file system
@@ -192,9 +194,6 @@ function extractAndLoadSourceMaps(
         'extractAndLoadSourceMaps() Initializing source-map library ...',
       );
     }
-
-    // $FlowFixMe
-    const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
 
     SourceMapConsumer.initialize({'lib/mappings.wasm': wasmMappingsURL});
   }
@@ -471,7 +470,6 @@ function loadSourceFiles(
 async function parseSourceAST(
   locationKeyToHookSourceData: Map<string, HookSourceData>,
 ): Promise<*> {
-  const promises = [];
   locationKeyToHookSourceData.forEach(hookSourceData => {
     if (hookSourceData.originalSourceAST !== null) {
       // Use cached metadata.
@@ -551,26 +549,24 @@ async function parseSourceAST(
       const plugin =
         originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
 
-      const parsePromise = workerizedParse(originalSourceCode, {
+      // TODO (named hooks) Parsing should ideally be done off of the main thread.
+      const originalSourceAST = parse(originalSourceCode, {
         sourceType: 'unambiguous',
         plugins: ['jsx', plugin],
-      }).then(originalSourceAST => {
-        hookSourceData.originalSourceAST = originalSourceAST;
-        if (__DEBUG__) {
-          console.log(
-            `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
-          );
-        }
-        originalURLToMetadataCache.set(originalSourceURL, {
-          originalSourceAST,
-          originalSourceCode,
-        });
       });
-
-      promises.push(parsePromise);
+      hookSourceData.originalSourceAST = originalSourceAST;
+      if (__DEBUG__) {
+        console.log(
+          `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
+        );
+      }
+      originalURLToMetadataCache.set(originalSourceURL, {
+        originalSourceAST,
+        originalSourceCode,
+      });
     }
   });
-  return Promise.all(promises);
+  return Promise.resolve();
 }
 
 function flattenHooksList(
