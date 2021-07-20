@@ -11,15 +11,41 @@
 // This is done to control if and how the code is transformed at runtime.
 // Do not declare test components within this test file as it is very fragile.
 
-const {parse} = require('@babel/parser');
-const babelParserWorker = require('../workerizedBabelParser/babelParser.worker.js');
+function expectHookNamesToEqual(map, expectedNamesArray) {
+  // Slightly hacky since it relies on the iterable order of values()
+  expect(Array.from(map.values())).toEqual(expectedNamesArray);
+}
+
+function requireText(path, encoding) {
+  const {existsSync, readFileSync} = require('fs');
+  if (existsSync(path)) {
+    return Promise.resolve(readFileSync(path, encoding));
+  } else {
+    return Promise.reject(`File not found "${path}"`);
+  }
+}
+
+const chromeGlobal = {
+  extension: {
+    getURL: jest.fn((...args) => {
+      const {join} = require('path');
+      return join(
+        __dirname,
+        '..',
+        '..',
+        'node_modules',
+        'source-map',
+        'lib',
+        'mappings.wasm',
+      );
+    }),
+  },
+};
 
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
   let parseHookNames;
-  let babelParserMock;
-  let workerizedParseMock;
 
   beforeEach(() => {
     jest.resetModules();
@@ -28,27 +54,11 @@ describe('parseHookNames', () => {
       console.trace('source-map-support');
     });
 
-    window.Worker = undefined;
-
-    babelParserMock = jest.fn(parse);
-    workerizedParseMock = jest.fn(babelParserWorker.workerizedParse);
-
-    jest.mock('@babel/parser', () => {
-      return {
-        __esModule: true,
-        parse: babelParserMock,
-      };
-    });
-
-    jest.mock('../workerizedBabelParser/babelParser.worker.js', () => {
-      return {
-        __esModule: true,
-        default: () => ({workerizedParse: workerizedParseMock}),
-      };
-    });
-
     fetchMock = require('jest-fetch-mock');
     fetchMock.enableMocks();
+
+    // Mock out portion of browser API used by parseHookNames to initialize "source-map".
+    global.chrome = chromeGlobal;
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
@@ -69,73 +79,17 @@ describe('parseHookNames', () => {
     fetchMock.mockIf(/.+$/, request => {
       return requireText(request.url, 'utf8');
     });
-
-    // Mock out portion of browser API used by parseHookNames to initialize "source-map".
-    global.chrome = {
-      extension: {
-        getURL: jest.fn((...args) => {
-          const {join} = require('path');
-          return join(
-            __dirname,
-            '..',
-            '..',
-            'node_modules',
-            'source-map',
-            'lib',
-            'mappings.wasm',
-          );
-        }),
-      },
-    };
   });
 
   afterEach(() => {
     fetch.resetMocks();
   });
 
-  function expectHookNamesToEqual(map, expectedNamesArray) {
-    // Slightly hacky since it relies on the iterable order of values()
-    expect(Array.from(map.values())).toEqual(expectedNamesArray);
-  }
-
-  function requireText(path, encoding) {
-    const {existsSync, readFileSync} = require('fs');
-    if (existsSync(path)) {
-      return Promise.resolve(readFileSync(path, encoding));
-    } else {
-      return Promise.reject(`File not found "${path}"`);
-    }
-  }
-
   async function getHookNamesForComponent(Component, props = {}) {
     const hooksTree = inspectHooks(Component, props, undefined, true);
     const hookNames = await parseHookNames(hooksTree);
     return hookNames;
   }
-
-  it('should use worker when available', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
-      .Component;
-
-    window.Worker = true;
-    // resets module so mocked worker instance can be updated
-    jest.resetModules();
-    parseHookNames = require('../parseHookNames').parseHookNames;
-
-    const hookNames = await getHookNamesForComponent(Component);
-    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
-    expect(workerizedParseMock).toHaveBeenCalledTimes(3);
-  });
-
-  it('should use babel parser when worker is not available', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
-      .Component;
-
-    const hookNames = await getHookNamesForComponent(Component);
-    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
-    expect(workerizedParseMock).toHaveBeenCalledTimes(0);
-    expect(babelParserMock).toHaveBeenCalledTimes(3);
-  });
 
   it('should parse names for useState()', async () => {
     const Component = require('./__source__/__untransformed__/ComponentWithUseState')
@@ -390,5 +344,70 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/no-columns/ContainingStringSourceMappingURL',
       ); // simulated Webpack 'cheap-module-source-map'
     });
+  });
+});
+
+describe('parseHookNames worker', () => {
+  let inspectHooks;
+  let parseHookNames;
+  let originalParseHookNamesMock;
+  let workerizedParseHookNamesMock;
+
+  beforeEach(() => {
+    window.Worker = undefined;
+
+    originalParseHookNamesMock = jest.fn();
+    workerizedParseHookNamesMock = jest.fn();
+
+    jest.mock('../parseHookNames/parseHookNames.js', () => {
+      return {
+        __esModule: true,
+        parseHookNames: originalParseHookNamesMock,
+      };
+    });
+
+    jest.mock('../parseHookNames/parseHookNames.worker.js', () => {
+      return {
+        __esModule: true,
+        default: () => ({
+          parseHookNames: workerizedParseHookNamesMock,
+        }),
+      };
+    });
+
+    // Mock out portion of browser API used by parseHookNames to initialize "source-map".
+    global.chrome = chromeGlobal;
+
+    inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
+      .inspectHooks;
+    parseHookNames = require('../parseHookNames').parseHookNames;
+  });
+
+  async function getHookNamesForComponent(Component, props = {}) {
+    const hooksTree = inspectHooks(Component, props, undefined, true);
+    const hookNames = await parseHookNames(hooksTree);
+    return hookNames;
+  }
+
+  it('should use worker when available', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
+      .Component;
+
+    window.Worker = true;
+    // resets module so mocked worker instance can be updated
+    jest.resetModules();
+    parseHookNames = require('../parseHookNames').parseHookNames;
+
+    await getHookNamesForComponent(Component);
+    expect(workerizedParseHookNamesMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should use main thread when worker is not available', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
+      .Component;
+
+    await getHookNamesForComponent(Component);
+    expect(workerizedParseHookNamesMock).toHaveBeenCalledTimes(0);
+    expect(originalParseHookNamesMock).toHaveBeenCalledTimes(1);
   });
 });
