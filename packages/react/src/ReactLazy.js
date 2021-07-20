@@ -48,14 +48,13 @@ export type LazyComponent<T, P> = {
   _init: (payload: P) => T,
 };
 
-function lazyInitializer<T>(payload: Payload<T>): T {
+const lazyInitializer = (ctor: Function) => <T>(payload: Payload<T>): T => {
   // Retry on remount of failed initializer
   if (payload._status === Rejected) {
     payload._status = Uninitialized;
   }
 
   if (payload._status === Uninitialized) {
-    const ctor = payload._result;
     const thenable = ctor();
     // Transition to the next state.
     // This might throw either because it's missing or throws. If so, we treat it
@@ -133,7 +132,7 @@ export function lazy<T>(
   const lazyType: LazyComponent<T, Payload<T>> = {
     $$typeof: REACT_LAZY_TYPE,
     _payload: payload,
-    _init: lazyInitializer,
+    _init: lazyInitializer(ctor),
   };
 
   if (__DEV__) {
