@@ -2121,34 +2121,12 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
       case SuspenseComponent: {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
-        const current = finishedWork.alternate;
-        const wasHidden = current !== null && current.memoizedState !== null;
-        const offscreenBoundary: Fiber = (finishedWork.child: any);
-
         if (isHidden) {
+          const current = finishedWork.alternate;
+          const wasHidden = current !== null && current.memoizedState !== null;
           if (!wasHidden) {
+            // TODO: Move to passive phase
             markCommitTimeOfFallback();
-            if (supportsMutation) {
-              hideOrUnhideAllChildren(offscreenBoundary, true);
-            }
-            if (
-              enableSuspenseLayoutEffectSemantics &&
-              (offscreenBoundary.mode & ConcurrentMode) !== NoMode
-            ) {
-              let offscreenChild = offscreenBoundary.child;
-              while (offscreenChild !== null) {
-                nextEffect = offscreenChild;
-                disappearLayoutEffects_begin(offscreenChild);
-                offscreenChild = offscreenChild.sibling;
-              }
-            }
-          }
-        } else {
-          if (wasHidden) {
-            if (supportsMutation) {
-              hideOrUnhideAllChildren(offscreenBoundary, false);
-            }
-            // TODO: Move re-appear call here for symmetry?
           }
         }
         break;

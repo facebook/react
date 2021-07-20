@@ -324,37 +324,17 @@ if (supportsMutation) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
-      } else if (node.tag === SuspenseComponent) {
-        if ((node.flags & Visibility) !== NoFlags) {
-          // Need to toggle the visibility of the primary children.
-          const newIsHidden = node.memoizedState !== null;
-          if (newIsHidden) {
-            const primaryChildParent = node.child;
-            if (primaryChildParent !== null) {
-              if (primaryChildParent.child !== null) {
-                primaryChildParent.child.return = primaryChildParent;
-                appendAllChildren(
-                  parent,
-                  primaryChildParent,
-                  true,
-                  newIsHidden,
-                );
-              }
-              const fallbackChildParent = primaryChildParent.sibling;
-              if (fallbackChildParent !== null) {
-                fallbackChildParent.return = node;
-                node = fallbackChildParent;
-                continue;
-              }
-            }
-          }
+      } else if (
+        node.tag === OffscreenComponent &&
+        node.memoizedState !== null
+      ) {
+        // The children in this boundary are hidden. Toggle their visibility
+        // before appending.
+        const child = node.child;
+        if (child !== null) {
+          child.return = node;
         }
-        if (node.child !== null) {
-          // Continue traversing like normal
-          node.child.return = node;
-          node = node.child;
-          continue;
-        }
+        appendAllChildren(parent, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -409,37 +389,17 @@ if (supportsMutation) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
-      } else if (node.tag === SuspenseComponent) {
-        if ((node.flags & Visibility) !== NoFlags) {
-          // Need to toggle the visibility of the primary children.
-          const newIsHidden = node.memoizedState !== null;
-          if (newIsHidden) {
-            const primaryChildParent = node.child;
-            if (primaryChildParent !== null) {
-              if (primaryChildParent.child !== null) {
-                primaryChildParent.child.return = primaryChildParent;
-                appendAllChildrenToContainer(
-                  containerChildSet,
-                  primaryChildParent,
-                  true,
-                  newIsHidden,
-                );
-              }
-              const fallbackChildParent = primaryChildParent.sibling;
-              if (fallbackChildParent !== null) {
-                fallbackChildParent.return = node;
-                node = fallbackChildParent;
-                continue;
-              }
-            }
-          }
+      } else if (
+        node.tag === OffscreenComponent &&
+        node.memoizedState !== null
+      ) {
+        // The children in this boundary are hidden. Toggle their visibility
+        // before appending.
+        const child = node.child;
+        if (child !== null) {
+          child.return = node;
         }
-        if (node.child !== null) {
-          // Continue traversing like normal
-          node.child.return = node;
-          node = node.child;
-          continue;
-        }
+        appendAllChildrenToContainer(containerChildSet, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -1056,7 +1016,21 @@ function completeWork(
         prevDidTimeout = prevState !== null;
       }
 
+      // If the suspended state of the boundary changes, we need to schedule
+      // an effect to toggle the subtree's visibility. When we switch from
+      // fallback -> primary, the inner Offscreen fiber schedules this effect
+      // as part of its normal complete phase. But when we switch from
+      // primary -> fallback, the inner Offscreen fiber does not have a complete
+      // phase. So we need to schedule its effect here.
+      //
+      // We also use this flag to connect/disconnect the effects, but the same
+      // logic applies: when re-connecting, the Offscreen fiber's complete
+      // phase will handle scheduling the effect. It's only when the fallback
+      // is active that we have to do anything special.
       if (nextDidTimeout && !prevDidTimeout) {
+        const offscreenFiber: Fiber = (workInProgress.child: any);
+        offscreenFiber.flags |= Visibility;
+
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
@@ -1094,26 +1068,6 @@ function completeWork(
         // Schedule an effect to attach a retry listener to the promise.
         // TODO: Move to passive phase
         workInProgress.flags |= Update;
-      }
-
-      if (supportsMutation) {
-        if (nextDidTimeout !== prevDidTimeout) {
-          // In mutation mode, visibility is toggled by mutating the nearest
-          // host nodes whenever they switch from hidden -> visible or vice
-          // versa. We don't need to switch when the boundary updates but its
-          // visibility hasn't changed.
-          workInProgress.flags |= Visibility;
-        }
-      }
-      if (supportsPersistence) {
-        if (nextDidTimeout) {
-          // In persistent mode, visibility is toggled by cloning the nearest
-          // host nodes in the complete phase whenever the boundary is hidden.
-          // TODO: The plan is to add a transparent host wrapper (no layout)
-          // around the primary children and hide that node. Then we don't need
-          // to do the funky cloning business.
-          workInProgress.flags |= Visibility;
-        }
       }
 
       if (
