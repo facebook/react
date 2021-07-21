@@ -109,6 +109,11 @@ module.exports = {
           },
         ],
       },
+      {
+        test: /\.worker\.js$/,
+        // inline: true due to limitations with extensions
+        use: {loader: 'workerize-loader', options: {inline: true}},
+      },
     ],
   },
 };
