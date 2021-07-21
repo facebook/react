@@ -337,4 +337,52 @@ describe('ReactOffscreen', () => {
       expect(root).toMatchRenderedOutput(<span prop="Child" />);
     }
   });
+
+  // @gate experimental || www
+  it('does not toggle effects for LegacyHidden component', async () => {
+    // LegacyHidden is meant to be the same as offscreen except it doesn't
+    // do anything to effects. Only used by www, as a temporary migration step.
+    function Child({text}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout');
+        };
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <LegacyHidden mode="visible">
+          <Child />
+        </LegacyHidden>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+
+    await act(async () => {
+      root.render(
+        <LegacyHidden mode="hidden">
+          <Child />
+        </LegacyHidden>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child']);
+
+    await act(async () => {
+      root.render(
+        <LegacyHidden mode="visible">
+          <Child />
+        </LegacyHidden>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child']);
+
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout']);
+  });
 });
