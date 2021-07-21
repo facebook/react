@@ -22,7 +22,9 @@ const ReactSharedInternals = {
 
 if (__DEV__) {
   ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
-  ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
+  ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue || {
+    current: null,
+  };
 }
 
 export default ReactSharedInternals;
