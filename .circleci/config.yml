@@ -227,48 +227,6 @@ jobs:
       - store_artifacts:
           path: ./build/devtools.tgz
 
-  build_devtools_scheduling_profiler:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_yarn_cache
-      - *restore_node_modules
-      - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
-      - run:
-          name: Build and archive
-          command: |
-            mkdir -p build/devtools
-            cd packages/react-devtools-scheduling-profiler
-            yarn build
-            cd dist
-            tar -zcvf ../../../build/devtools-scheduling-profiler.tgz .
-      - store_artifacts:
-          path: ./build/devtools-scheduling-profiler.tgz
-      - persist_to_workspace:
-          root: packages/react-devtools-scheduling-profiler
-          paths:
-            - dist
-
-  deploy_devtools_scheduling_profiler:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace:
-          at: packages/react-devtools-scheduling-profiler
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run:
-          name: Deploy
-          command: |
-            cd packages/react-devtools-scheduling-profiler
-            yarn vercel deploy dist --prod --confirm --token $SCHEDULING_PROFILER_DEPLOY_VERCEL_TOKEN
-
   yarn_lint_build:
     docker: *docker
     environment: *environment
@@ -408,16 +366,6 @@ workflows:
       - build_devtools_and_process_artifacts:
           requires:
             - yarn_build
-      - build_devtools_scheduling_profiler:
-          requires:
-            - yarn_build
-      - deploy_devtools_scheduling_profiler:
-          requires:
-            - build_devtools_scheduling_profiler
-          filters:
-            branches:
-              only:
-                - main
 
   # New workflow that will replace "stable" and "experimental"
   build_and_test:

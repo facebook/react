@@ -16,6 +16,7 @@ import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import RootSelector from './RootSelector';
+import {SchedulingProfiler} from 'react-devtools-scheduling-profiler/src/SchedulingProfiler';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
@@ -26,6 +27,7 @@ import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/Set
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import portaledContent from '../portaledContent';
+import {StoreContext} from '../context';
 
 import styles from './Profiler.css';
 
@@ -41,14 +43,22 @@ function Profiler(_: {||}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
+  const {supportsSchedulingProfiler} = useContext(StoreContext);
+
+  let showRightColumn = true;
+
   let view = null;
-  if (didRecordCommits) {
+  if (didRecordCommits || selectedTabID === 'scheduling-profiler') {
     switch (selectedTabID) {
       case 'flame-chart':
         view = <CommitFlamegraph />;
         break;
       case 'ranked-chart':
         view = <CommitRanked />;
+        break;
+      case 'scheduling-profiler':
+        view = <SchedulingProfiler />;
+        showRightColumn = false;
         break;
       default:
         break;
@@ -101,7 +111,9 @@ function Profiler(_: {||}) {
               currentTab={selectedTabID}
               id="Profiler"
               selectTab={selectTab}
-              tabs={tabs}
+              tabs={
+                supportsSchedulingProfiler ? tabsWithSchedulingProfiler : tabs
+              }
               type="profiler"
             />
             <RootSelector />
@@ -119,7 +131,7 @@ function Profiler(_: {||}) {
             <ModalDialog />
           </div>
         </div>
-        <div className={styles.RightColumn}>{sidebar}</div>
+        {showRightColumn && <div className={styles.RightColumn}>{sidebar}</div>}
         <SettingsModal />
       </div>
     </SettingsModalContextController>
@@ -138,6 +150,17 @@ const tabs = [
     icon: 'ranked-chart',
     label: 'Ranked',
     title: 'Ranked chart',
+  },
+];
+
+const tabsWithSchedulingProfiler = [
+  ...tabs,
+  null, // Divider/separator
+  {
+    id: 'scheduling-profiler',
+    icon: 'scheduling-profiler',
+    label: 'Scheduling',
+    title: 'Scheduling Profiler',
   },
 ];
 

@@ -24,6 +24,7 @@ export function createStore(bridge: FrontendBridge): Store {
   return new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
+    supportsSchedulingProfiler: true,
   });
 }
 

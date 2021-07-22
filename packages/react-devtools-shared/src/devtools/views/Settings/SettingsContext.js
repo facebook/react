@@ -411,11 +411,16 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
+  updateStyleHelper(theme, 'color-resize-bar', documentElements);
   updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
   updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
-  updateStyleHelper(theme, 'color-shadow', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-flame-graph-label',
+    documentElements,
+  );
   updateStyleHelper(
     theme,
     'color-selected-tree-highlight-active',
@@ -426,6 +431,137 @@ export function updateThemeVariables(
     'color-selected-tree-highlight-inactive',
     documentElements,
   );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-priority-background',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-priority-border',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-user-timing',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-user-timing-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-idle',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-idle-selected',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-idle-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-render',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-render-selected',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-render-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-commit',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-commit-selected',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-commit-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-layout-effects',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-layout-effects-selected',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-layout-effects-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-passive-effects',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-passive-effects-selected',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-passive-effects-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-schedule',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-schedule-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-schedule-cascading',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-schedule-cascading-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-suspend',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-suspend-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-work-border',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-shadow', documentElements);
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
   updateStyleHelper(theme, 'color-text-invalid', documentElements);
