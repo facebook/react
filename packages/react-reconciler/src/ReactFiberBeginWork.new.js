@@ -2355,16 +2355,20 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
   fallbackChildren,
   renderLanes,
 ) {
-  const mode = workInProgress.mode;
+  const fiberMode = workInProgress.mode;
+  const primaryChildProps: OffscreenProps = {
+    mode: 'visible',
+    children: primaryChildren,
+  };
   const primaryChildFragment = createFiberFromOffscreen(
-    primaryChildren,
-    mode,
+    primaryChildProps,
+    fiberMode,
     NoLanes,
     null,
   );
   const fallbackChildFragment = createFiberFromFragment(
     fallbackChildren,
-    mode,
+    fiberMode,
     renderLanes,
     null,
   );
