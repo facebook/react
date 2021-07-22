@@ -1361,7 +1361,9 @@ function completeWork(
         const prevIsHidden = prevState !== null;
         if (
           prevIsHidden !== nextIsHidden &&
-          newProps.mode !== 'unstable-defer-without-hiding'
+          newProps.mode !== 'unstable-defer-without-hiding' &&
+          // LegacyHidden doesn't do any hiding — it only pre-renders.
+          workInProgress.tag !== LegacyHiddenComponent
         ) {
           workInProgress.flags |= Visibility;
         }

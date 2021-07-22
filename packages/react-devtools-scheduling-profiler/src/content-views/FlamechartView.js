@@ -203,7 +203,7 @@ class FlamechartStackLayerView extends View {
         );
 
         if (trimmedName !== null) {
-          context.fillStyle = COLORS.PRIORITY_LABEL;
+          context.fillStyle = COLORS.FLAME_GRAPH_LABEL;
 
           // Prevent text from being drawn outside `viewableArea`
           const textOverflowsViewableArea = !rectEqualToRect(

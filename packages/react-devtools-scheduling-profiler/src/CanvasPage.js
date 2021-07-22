@@ -52,9 +52,9 @@ import {
 import {COLORS} from './content-views/constants';
 
 import EventTooltip from './EventTooltip';
-import ContextMenu from './context/ContextMenu';
-import ContextMenuItem from './context/ContextMenuItem';
-import useContextMenu from './context/useContextMenu';
+import ContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenu';
+import ContextMenuItem from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenuItem';
+import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useContextMenu';
 import {getBatchRange} from './utils/getBatchRange';
 
 import styles from './CanvasPage.css';
@@ -94,6 +94,7 @@ const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
   );
 };
 
+// TODO (scheduling profiler) Why is the "zoom" feature so much slower than normal rendering?
 const zoomToBatch = (
   data: ReactProfilerData,
   measure: ReactMeasure,
@@ -102,8 +103,7 @@ const zoomToBatch = (
   const {batchUID} = measure;
   const [startTime, stopTime] = getBatchRange(batchUID, data);
   syncedHorizontalPanAndZoomViews.forEach(syncedView =>
-    // Using time as range works because the views' intrinsic content size is
-    // based on time.
+    // Using time as range works because the views' intrinsic content size is based on time.
     syncedView.zoomToRange(startTime, stopTime),
   );
 };
@@ -243,6 +243,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       defaultFrame,
       reactMeasuresHorizontalPanAndZoomView,
       flamechartHorizontalPanAndZoomView,
+      canvasRef,
     );
 
     const rootView = new View(
@@ -281,13 +282,17 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
   useCanvasInteraction(canvasRef, interactor);
 
+  const setIsContextMenuShownWrapper = (...args) => {
+    console.log('setIsContextMenuShown()', ...args);
+    setIsContextMenuShown(...args);
+  };
   useContextMenu({
     data: {
       data,
       hoveredEvent,
     },
     id: CONTEXT_MENU_ID,
-    onChange: setIsContextMenuShown,
+    onChange: setIsContextMenuShownWrapper,
     ref: canvasRef,
   });
 

@@ -29,7 +29,7 @@ export type Props = {|
   disabled?: boolean,
   id: string,
   selectTab: (tabID: any) => void,
-  tabs: Array<TabInfo>,
+  tabs: Array<TabInfo | null>,
   type: 'navigation' | 'profiler' | 'settings',
 |};
 
@@ -41,8 +41,9 @@ export default function TabBar({
   tabs,
   type,
 }: Props) {
-  if (!tabs.some(tab => tab.id === currentTab)) {
-    selectTab(tabs[0].id);
+  if (!tabs.some(tab => tab !== null && tab.id === currentTab)) {
+    const firstTab = ((tabs.find(tab => tab !== null): any): TabInfo);
+    selectTab(firstTab.id);
   }
 
   const onChange = useCallback(
@@ -88,7 +89,13 @@ export default function TabBar({
 
   return (
     <Fragment>
-      {tabs.map(({icon, id, label, title}) => {
+      {tabs.map(tab => {
+        if (tab === null) {
+          return <div className={styles.VRule} />;
+        }
+
+        const {icon, id, label, title} = tab;
+
         let button = (
           <label
             className={[
