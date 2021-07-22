@@ -9,8 +9,8 @@
 
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {MutableSource} from 'shared/ReactTypes';
 import type {
@@ -2112,11 +2112,10 @@ function mountSuspensePrimaryChildren(
     mode: 'visible',
     children: primaryChildren,
   };
-  const primaryChildFragment = createFiberFromOffscreen(
+  const primaryChildFragment = mountWorkInProgressOffscreenFiber(
     primaryChildProps,
     mode,
     renderLanes,
-    null,
   );
   primaryChildFragment.return = workInProgress;
   workInProgress.child = primaryChildFragment;
@@ -2167,11 +2166,10 @@ function mountSuspenseFallbackChildren(
       null,
     );
   } else {
-    primaryChildFragment = createFiberFromOffscreen(
+    primaryChildFragment = mountWorkInProgressOffscreenFiber(
       primaryChildProps,
       mode,
       NoLanes,
-      null,
     );
     fallbackChildFragment = createFiberFromFragment(
       fallbackChildren,
@@ -2188,7 +2186,17 @@ function mountSuspenseFallbackChildren(
   return fallbackChildFragment;
 }
 
-function createWorkInProgressOffscreenFiber(
+function mountWorkInProgressOffscreenFiber(
+  offscreenProps: OffscreenProps,
+  mode: TypeOfMode,
+  renderLanes: Lanes,
+) {
+  // The props argument to `createFiberFromOffscreen` is `any` typed, so we use
+  // this wrapper function to constrain it.
+  return createFiberFromOffscreen(offscreenProps, mode, NoLanes, null);
+}
+
+function updateWorkInProgressOffscreenFiber(
   current: Fiber,
   offscreenProps: OffscreenProps,
 ) {
@@ -2207,7 +2215,7 @@ function updateSuspensePrimaryChildren(
   const currentFallbackChildFragment: Fiber | null =
     currentPrimaryChildFragment.sibling;
 
-  const primaryChildFragment = createWorkInProgressOffscreenFiber(
+  const primaryChildFragment = updateWorkInProgressOffscreenFiber(
     currentPrimaryChildFragment,
     {
       mode: 'visible',
@@ -2287,7 +2295,7 @@ function updateSuspenseFallbackChildren(
     // to delete it.
     workInProgress.deletions = null;
   } else {
-    primaryChildFragment = createWorkInProgressOffscreenFiber(
+    primaryChildFragment = updateWorkInProgressOffscreenFiber(
       currentPrimaryChildFragment,
       primaryChildProps,
     );
@@ -2360,11 +2368,10 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
     mode: 'visible',
     children: primaryChildren,
   };
-  const primaryChildFragment = createFiberFromOffscreen(
+  const primaryChildFragment = mountWorkInProgressOffscreenFiber(
     primaryChildProps,
     fiberMode,
     NoLanes,
-    null,
   );
   const fallbackChildFragment = createFiberFromFragment(
     fallbackChildren,
