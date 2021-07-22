@@ -9,17 +9,17 @@
 
 import * as React from 'react';
 import {useCallback, useRef} from 'react';
-
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
 
 import styles from './ImportButton.css';
 
 type Props = {|
+  children?: mixed,
   onFileSelect: (file: File) => void,
 |};
 
-export default function ImportButton({onFileSelect}: Props) {
+export default function ImportButton({children = null, onFileSelect}: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFiles = useCallback(() => {
@@ -51,6 +51,7 @@ export default function ImportButton({onFileSelect}: Props) {
       />
       <Button onClick={uploadData} title="Load profile...">
         <ButtonIcon type="import" />
+        {children}
       </Button>
     </>
   );

@@ -7,102 +7,88 @@
  * @flow
  */
 
-import type {Resource} from 'react-devtools-shared/src/devtools/cache';
-import type {ReactProfilerData} from './types';
-import type {ImportWorkerOutputData} from './import-worker/import.worker';
+import type {DataResource} from './createDataResourceFromImportedFile';
 
 import * as React from 'react';
-import {Suspense, useCallback, useState} from 'react';
-import {createResource} from 'react-devtools-shared/src/devtools/cache';
-import ReactLogo from 'react-devtools-shared/src/devtools/views/ReactLogo';
-
+import {
+  Suspense,
+  useContext,
+  useDeferredValue,
+  useLayoutEffect,
+  useState,
+} from 'react';
+import {SettingsContext} from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
+import {updateColorsToMatchTheme} from './content-views/constants';
+import {SchedulingProfilerContext} from './SchedulingProfilerContext';
 import ImportButton from './ImportButton';
 import CanvasPage from './CanvasPage';
-import ImportWorker from './import-worker/import.worker';
 
-import profilerBrowser from './assets/profilerBrowser.png';
 import styles from './SchedulingProfiler.css';
 
-type DataResource = Resource<void, File, ReactProfilerData | Error>;
-
-function createDataResourceFromImportedFile(file: File): DataResource {
-  return createResource(
-    () => {
-      return new Promise<ReactProfilerData | Error>((resolve, reject) => {
-        const worker: Worker = new (ImportWorker: any)();
-
-        worker.onmessage = function(event) {
-          const data = ((event.data: any): ImportWorkerOutputData);
-          switch (data.status) {
-            case 'SUCCESS':
-              resolve(data.processedData);
-              break;
-            case 'INVALID_PROFILE_ERROR':
-              resolve(data.error);
-              break;
-            case 'UNEXPECTED_ERROR':
-              reject(data.error);
-              break;
-          }
-          worker.terminate();
-        };
-
-        worker.postMessage({file});
-      });
-    },
-    () => file,
-    {useWeakMap: true},
-  );
-}
-
 export function SchedulingProfiler(_: {||}) {
-  const [dataResource, setDataResource] = useState<DataResource | null>(null);
+  const {importSchedulingProfilerData, schedulingProfilerData} = useContext(
+    SchedulingProfilerContext,
+  );
 
-  const handleFileSelect = useCallback((file: File) => {
-    setDataResource(createDataResourceFromImportedFile(file));
-  }, []);
+  // HACK: Canvas rendering uses an imperative API,
+  // but DevTools colors are stored in CSS variables (see root.css and SettingsContext).
+  // When the theme changes, we need to trigger update the imperative colors and re-draw the Canvas.
+  const {theme} = useContext(SettingsContext);
+  // HACK: SettingsContext also uses a useLayoutEffect to update styles;
+  // make sure the theme context in SettingsContext updates before this code.
+  const deferredTheme = useDeferredValue(theme);
+  // HACK: Schedule a re-render of the Canvas once colors have been updated.
+  // The easiest way to guarangee this happens is to recreate the inner Canvas component.
+  const [key, setKey] = useState<string>(theme);
+  useLayoutEffect(() => {
+    updateColorsToMatchTheme();
+    setKey(deferredTheme);
+  }, [deferredTheme]);
 
   return (
-    <div className={styles.SchedulingProfiler}>
-      <div className={styles.Toolbar}>
-        <ReactLogo />
-        <span className={styles.AppName}>Concurrent Mode Profiler</span>
-        <div className={styles.VRule} />
-        <ImportButton onFileSelect={handleFileSelect} />
-        <div className={styles.Spacer} />
-      </div>
-      <div className={styles.Content}>
-        {dataResource ? (
-          <Suspense fallback={<ProcessingData />}>
-            <DataResourceComponent
-              dataResource={dataResource}
-              onFileSelect={handleFileSelect}
-            />
-          </Suspense>
-        ) : (
-          <Welcome onFileSelect={handleFileSelect} />
-        )}
-      </div>
+    <div className={styles.Content}>
+      {schedulingProfilerData ? (
+        <Suspense fallback={<ProcessingData />}>
+          <DataResourceComponent
+            dataResource={schedulingProfilerData}
+            key={key}
+            onFileSelect={importSchedulingProfilerData}
+          />
+        </Suspense>
+      ) : (
+        <Welcome onFileSelect={importSchedulingProfilerData} />
+      )}
     </div>
   );
 }
 
 const Welcome = ({onFileSelect}: {|onFileSelect: (file: File) => void|}) => (
-  <div className={styles.EmptyStateContainer}>
-    <div className={styles.ScreenshotWrapper}>
-      <img
-        src={profilerBrowser}
-        className={styles.Screenshot}
-        alt="Profiler screenshot"
-      />
-    </div>
-    <div className={styles.Header}>Welcome!</div>
-    <div className={styles.Row}>
-      Click the import button
-      <ImportButton onFileSelect={onFileSelect} /> to import a Chrome
-      performance profile.
-    </div>
-  </div>
+  <ol className={styles.WelcomeInstructionsList}>
+    <li className={styles.WelcomeInstructionsListItem}>
+      Open a website that's built with the
+      <a
+        className={styles.WelcomeInstructionsListItemLink}
+        href="https://reactjs.org/link/profiling"
+        rel="noopener noreferrer"
+        target="_blank">
+        profiling build of ReactDOM
+      </a>
+      .
+    </li>
+    <li className={styles.WelcomeInstructionsListItem}>
+      Open the "Performance" tab in Chrome and record some performance data.
+    </li>
+    <li className={styles.WelcomeInstructionsListItem}>
+      Click the "Save profile..." button in Chrome to export the data.
+    </li>
+    <li className={styles.WelcomeInstructionsListItem}>
+      Import the data into the profiler:
+      <br />
+      <ImportButton onFileSelect={onFileSelect}>
+        <span className={styles.ImportButtonLabel}>Import</span>
+      </ImportButton>
+    </li>
+  </ol>
 );
 
 const ProcessingData = () => (

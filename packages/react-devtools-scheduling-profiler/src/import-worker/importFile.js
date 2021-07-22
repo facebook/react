@@ -10,7 +10,7 @@
 import 'regenerator-runtime/runtime';
 
 import type {TimelineEvent} from '@elg/speedscope';
-import type {ReactProfilerData} from '../types';
+import type {ImportWorkerOutputData} from './index';
 
 import preprocessData from './preprocessData';
 import {readInputData} from './readInputData';
@@ -18,18 +18,7 @@ import InvalidProfileError from './InvalidProfileError';
 
 declare var self: DedicatedWorkerGlobalScope;
 
-type ImportWorkerInputData = {|
-  file: File,
-|};
-
-export type ImportWorkerOutputData =
-  | {|status: 'SUCCESS', processedData: ReactProfilerData|}
-  | {|status: 'INVALID_PROFILE_ERROR', error: Error|}
-  | {|status: 'UNEXPECTED_ERROR', error: Error|};
-
-self.onmessage = async function(event: MessageEvent) {
-  const {file} = ((event.data: any): ImportWorkerInputData);
-
+export async function importFile(file: File): Promise<ImportWorkerOutputData> {
   try {
     const readFile = await readInputData(file);
     const events: TimelineEvent[] = JSON.parse(readFile);
@@ -37,21 +26,21 @@ self.onmessage = async function(event: MessageEvent) {
       throw new InvalidProfileError('No profiling data found in file.');
     }
 
-    self.postMessage({
+    return {
       status: 'SUCCESS',
       processedData: preprocessData(events),
-    });
+    };
   } catch (error) {
     if (error instanceof InvalidProfileError) {
-      self.postMessage({
+      return {
         status: 'INVALID_PROFILE_ERROR',
         error,
-      });
+      };
     } else {
-      self.postMessage({
+      return {
         status: 'UNEXPECTED_ERROR',
         error,
-      });
+      };
     }
   }
-};
+}

@@ -23,6 +23,7 @@ import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import HookNamesContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesContext';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -51,6 +52,8 @@ export function InspectedElementHooksTree({
   toggleParseHookNames,
 }: HooksTreeViewProps) {
   const {hooks, id} = inspectedElement;
+
+  const {loadHookNames: loadHookNamesFunction} = useContext(HookNamesContext);
 
   // Changing parseHookNames is done in a transition, because it suspends.
   // This value is done outside of the transition, so the UI toggle feels responsive.
@@ -82,16 +85,17 @@ export function InspectedElementHooksTree({
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
-          {(!parseHookNames || hookParsingFailed) && (
-            <Toggle
-              className={hookParsingFailed ? styles.ToggleError : null}
-              isChecked={parseHookNamesOptimistic}
-              isDisabled={parseHookNamesOptimistic || hookParsingFailed}
-              onChange={handleChange}
-              title={toggleTitle}>
-              <ButtonIcon type="parse-hook-names" />
-            </Toggle>
-          )}
+          {loadHookNamesFunction !== null &&
+            (!parseHookNames || hookParsingFailed) && (
+              <Toggle
+                className={hookParsingFailed ? styles.ToggleError : null}
+                isChecked={parseHookNamesOptimistic}
+                isDisabled={parseHookNamesOptimistic || hookParsingFailed}
+                onChange={handleChange}
+                title={toggleTitle}>
+                <ButtonIcon type="parse-hook-names" />
+              </Toggle>
+            )}
           <Button onClick={handleCopy} title="Copy to clipboard">
             <ButtonIcon type="copy" />
           </Button>

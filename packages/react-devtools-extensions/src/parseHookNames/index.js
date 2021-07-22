@@ -9,9 +9,8 @@
  * @flow
  */
 
-// This file uses workerize to load ./parseHookNames.worker as a webworker
-// and instanciates it, exposing flow typed functions that can be used
-// on other files.
+// This file uses workerize to load ./parseHookNames.worker as a webworker and instanciates it,
+// exposing flow typed functions that can be used on other files.
 
 import * as parseHookNamesModule from './parseHookNames';
 import WorkerizedParseHookNames from './parseHookNames.worker';

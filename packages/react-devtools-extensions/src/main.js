@@ -140,6 +140,8 @@ function createPanelIfReactLoaded() {
           isProfiling,
           supportsReloadAndProfile: isChrome,
           supportsProfiling,
+          // At this time, the scheduling profiler can only parse Chrome performance profiles.
+          supportsSchedulingProfiler: isChrome,
           supportsTraceUpdates: true,
         });
         store.profilerStore.profilingData = profilingData;

@@ -103,7 +103,14 @@ export function loadHookNames(
 
     let didTimeout = false;
 
-    loadHookNamesFunction(hooksTree).then(
+    const response = loadHookNamesFunction(hooksTree);
+    console.log(
+      'loadHookNamesFunction:',
+      loadHookNamesFunction,
+      '->',
+      response,
+    );
+    response.then(
       function onSuccess(hookNames) {
         if (didTimeout) {
           return;
