@@ -282,17 +282,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
   useCanvasInteraction(canvasRef, interactor);
 
-  const setIsContextMenuShownWrapper = (...args) => {
-    console.log('setIsContextMenuShown()', ...args);
-    setIsContextMenuShown(...args);
-  };
   useContextMenu({
     data: {
       data,
       hoveredEvent,
     },
     id: CONTEXT_MENU_ID,
-    onChange: setIsContextMenuShownWrapper,
+    onChange: setIsContextMenuShown,
     ref: canvasRef,
   });
 
@@ -419,7 +415,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
                   Copy component name
                 </ContextMenuItem>
               )}
-              {event !== null && (
+              {event !== null && event.componentStack && (
                 <ContextMenuItem
                   onClick={() => copy(event.componentStack)}
                   title="Copy component stack">
