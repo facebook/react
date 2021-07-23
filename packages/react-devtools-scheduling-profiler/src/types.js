@@ -21,6 +21,12 @@ export type Milliseconds = number;
 
 export type ReactLane = number;
 
+export type NativeEvent = {|
+  +duration: Milliseconds,
+  +timestamp: Milliseconds,
+  +type: string,
+|};
+
 type BaseReactEvent = {|
   +componentName?: string,
   +componentStack?: string,
@@ -122,14 +128,16 @@ export type Flamechart = FlamechartStackLayer[];
 export type ReactProfilerData = {|
   startTime: number,
   duration: number,
-  events: ReactEvent[],
+  nativeEvents: NativeEvent[],
+  reactEvents: ReactEvent[],
   measures: ReactMeasure[],
   flamechart: Flamechart,
   otherUserTimingMarks: UserTimingMark[],
 |};
 
 export type ReactHoverContextInfo = {|
-  event: ReactEvent | null,
+  nativeEvent: NativeEvent | null,
+  reactEvent: ReactEvent | null,
   measure: ReactMeasure | null,
   data: $ReadOnly<ReactProfilerData> | null,
   flamechartStackFrame: FlamechartStackFrame | null,

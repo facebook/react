@@ -44,10 +44,12 @@ export const FLAMECHART_TEXT_PADDING = 3;
 // TODO Replace this with "export let" vars
 export let COLORS = {
   BACKGROUND: '',
+  FLAME_GRAPH_LABEL: '',
+  NATIVE_EVENT: '',
+  NATIVE_EVENT_HOVER: '',
   PRIORITY_BACKGROUND: '',
   PRIORITY_BORDER: '',
   PRIORITY_LABEL: '',
-  FLAME_GRAPH_LABEL: '',
   USER_TIMING: '',
   USER_TIMING_HOVER: '',
   REACT_IDLE: '',
@@ -81,6 +83,15 @@ export function updateColorsToMatchTheme(): void {
 
   COLORS = {
     BACKGROUND: computedStyle.getPropertyValue('--color-background'),
+    FLAME_GRAPH_LABEL: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-flame-graph-label',
+    ),
+    NATIVE_EVENT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-native-event',
+    ),
+    NATIVE_EVENT_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-native-event-hover',
+    ),
     PRIORITY_BACKGROUND: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-priority-background',
     ),
@@ -88,9 +99,6 @@ export function updateColorsToMatchTheme(): void {
       '--color-scheduling-profiler-priority-border',
     ),
     PRIORITY_LABEL: computedStyle.getPropertyValue('--color-text'),
-    FLAME_GRAPH_LABEL: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-flame-graph-label',
-    ),
     USER_TIMING: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-user-timing',
     ),
