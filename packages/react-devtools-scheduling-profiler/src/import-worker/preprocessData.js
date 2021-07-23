@@ -168,8 +168,14 @@ function processTimelineEvent(
         const type = args.data.type;
 
         if (type.startsWith('react-')) {
-          // Filter out fake React events dispatched by invokeGuardedCallbackDev.
-          return;
+          const stackTrace = args.data.stackTrace;
+          if (stackTrace) {
+            const topFrame = stackTrace[stackTrace.length - 1];
+            if (topFrame.url.includes('node_modules/react-dom')) {
+              // Filter out fake React events dispatched by invokeGuardedCallbackDev.
+              return;
+            }
+          }
         }
 
         const startTime = (ts - currentProfilerData.startTime) / 1000;
