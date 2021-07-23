@@ -90,6 +90,7 @@
     "rollup": "^2.53.2",
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-strip-banner": "^2.0.0",
+    "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.1.1",
     "targz": "^1.0.1",
     "through2": "^3.0.1",

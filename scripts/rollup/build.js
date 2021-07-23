@@ -19,6 +19,7 @@ const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
+const terser = require('rollup-plugin-terser').terser;
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
@@ -155,6 +156,7 @@ function getBabelConfig(
     packageName === 'react' || externals.indexOf('react') !== -1;
   let options = {
     exclude: '/**/node_modules/**',
+    babelHelpers: 'bundled',
     babelrc: false,
     configFile: false,
     sourceMaps: true,
@@ -225,7 +227,8 @@ function getRollupOutputOptions(
   format,
   globals,
   globalName,
-  bundleType
+  bundleType,
+  isPretty
 ) {
   const isProduction = isProductionBundleType(bundleType);
 
@@ -236,7 +239,7 @@ function getRollupOutputOptions(
     freeze: !isProduction,
     interop: false,
     name: globalName,
-    sourcemap: true,
+    sourcemap: !isPretty,
     esModule: false,
   };
 }
@@ -406,42 +409,26 @@ function getPlugins(
         !isProduction
       )
     ),
-    // // Remove 'use strict' from individual source files.
-    {
-      name: 'use-strict',
-      transform(source) {
-        return {
-          code: source.replace(/['"]use strict["']/g, ''),
-          map: null,
-        };
-      },
-    },
     // The CommonJS plugin *only* exists to pull "art" into "react-art".
     // I'm going to port "art" to ES modules to avoid this problem.
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
-    // // Apply dead code elimination and/or minification.
-    // isProduction &&
-    //   closure(
-    //     Object.assign({}, closureOptions, {
-    //       // Don't let it create global variables in the browser.
-    //       // https://github.com/facebook/react/issues/10909
-    //       assume_function_wrapper: !isUMDBundle,
-    //       renaming: !shouldStayReadable,
-    //     })
-    //   ),
-    // // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
-    // // Note that this plugin must be called after closure applies DCE.
-    // isProduction && stripUnusedImports(pureExternalModules),
-    // // Add the whitespace back if necessary.
-    // shouldStayReadable &&
-    //   prettier({
-    //     parser: 'babel',
-    //     singleQuote: false,
-    //     trailingComma: 'none',
-    //     bracketSpacing: true,
-    //     sourcemap: true,
-    //   }),
+
+    // Apply dead code elimination and/or minification.
+    isProduction &&
+      terser({
+        // Don't let it create global variables in the browser.
+        enclose: !isUMDBundle,
+        mangle: !shouldStayReadable,
+      }),
+    shouldStayReadable &&
+      prettier({
+        parser: 'babel',
+        singleQuote: false,
+        trailingComma: 'none',
+        bracketSpacing: true,
+        sourceMap: false,
+      }),
     // // License and haste headers, top-level `if` blocks.
     // {
     //   renderChunk(source) {
@@ -455,23 +442,23 @@ function getPlugins(
     //   },
     // },
     // // Record bundle size.
-    // sizes({
-    //   getSize: (size, gzip) => {
-    //     const currentSizes = Stats.currentBuildResults.bundleSizes;
-    //     const recordIndex = currentSizes.findIndex(
-    //       record =>
-    //         record.filename === filename && record.bundleType === bundleType
-    //     );
-    //     const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
-    //     currentSizes[index] = {
-    //       filename,
-    //       bundleType,
-    //       packageName,
-    //       size,
-    //       gzip,
-    //     };
-    //   },
-    // }),
+    sizes({
+      getSize: (size, gzip) => {
+        const currentSizes = Stats.currentBuildResults.bundleSizes;
+        const recordIndex = currentSizes.findIndex(
+          record =>
+            record.filename === filename && record.bundleType === bundleType
+        );
+        const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
+        currentSizes[index] = {
+          filename,
+          bundleType,
+          packageName,
+          size,
+          gzip,
+        };
+      },
+    }),
   ].filter(Boolean);
 }
 
@@ -622,6 +609,8 @@ async function createBundle(bundle, bundleType) {
       freeze: false,
       interop: false,
       esModule: false,
+      // Remove 'use strict' from individual source files.
+      strict: false,
     },
   };
   const mainOutputPath = Packaging.getBundleOutputPath(
@@ -634,7 +623,8 @@ async function createBundle(bundle, bundleType) {
     format,
     peerGlobals,
     bundle.global,
-    bundleType
+    bundleType,
+    isFBWWWBundle || forcePrettyOutput
   );
 
   if (isWatchMode) {
