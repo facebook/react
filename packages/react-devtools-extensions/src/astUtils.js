@@ -41,7 +41,7 @@ function checkNodeLocation(
   }
 
   if (column !== null) {
-    // Column numbers are representated differently between tools/engines.
+    // Column numbers are represented differently between tools/engines.
     // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
     //
     // In practice this will probably never matter,
@@ -359,7 +359,7 @@ function isPotentialHookDeclaration(path: NodePath): boolean {
   return false;
 }
 
-/// Check whether 'node' is hook decalration of form useState(0); OR React.useState(0);
+/// Check whether 'node' is hook declaration of form useState(0); OR React.useState(0);
 function isReactFunction(node: Node, functionName: string): boolean {
   return (
     node.name === functionName ||
