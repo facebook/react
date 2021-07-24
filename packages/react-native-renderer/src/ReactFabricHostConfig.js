@@ -21,8 +21,6 @@ import type {
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
-import invariant from 'shared/invariant';
-
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
 import {
@@ -251,10 +249,11 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  invariant(
-    hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
-  );
+  if (!hostContext.isInAParentText) {
+    if (__DEV__) {
+      console.error('Text strings must be rendered within a <Text> component.');
+    }
+  }
 
   const tag = nextReactTag;
   nextReactTag += 2;
