@@ -1505,7 +1505,7 @@ describe('Store', () => {
             <MyComponent> [ForwardRef]
           ▾ <Anonymous> [ForwardRef]
               <MyComponent2>
-            <Custom> [ForwardRef]
+            <Custom>
             <MyComponent4> [Memo]
           ▾ <MyComponent> [Memo]
               <MyComponent> [ForwardRef]
@@ -1513,8 +1513,8 @@ describe('Store', () => {
             <Baz> [Memo][withFoo][withBar]
             <Baz> [ForwardRef][withFoo][withBar]
             <Cache>
-            <memoRefOverride> [Memo]
-            <forwardRefOverride> [ForwardRef]
+            <memoRefOverride>
+            <forwardRefOverride>
     `);
   });
 
