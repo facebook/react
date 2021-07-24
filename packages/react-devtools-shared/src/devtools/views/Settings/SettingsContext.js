@@ -55,6 +55,8 @@ type Context = {|
   theme: Theme,
   setTheme(value: Theme): void,
 
+  browserTheme: Theme,
+
   traceUpdatesEnabled: boolean,
   setTraceUpdatesEnabled: (value: boolean) => void,
 |};
@@ -198,6 +200,7 @@ function SettingsContextController({
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
       theme,
+      browserTheme,
       traceUpdatesEnabled,
     }),
     [
@@ -214,6 +217,7 @@ function SettingsContextController({
       setShowInlineWarningsAndErrors,
       showInlineWarningsAndErrors,
       theme,
+      browserTheme,
       traceUpdatesEnabled,
     ],
   );
@@ -251,26 +255,6 @@ export function updateDisplayDensity(
   displayDensity: DisplayDensity,
   documentElements: DocumentElements,
 ): void {
-  updateStyleHelper(
-    displayDensity,
-    'font-size-monospace-normal',
-    documentElements,
-  );
-  updateStyleHelper(
-    displayDensity,
-    'font-size-monospace-large',
-    documentElements,
-  );
-  updateStyleHelper(
-    displayDensity,
-    'font-size-monospace-small',
-    documentElements,
-  );
-  updateStyleHelper(displayDensity, 'font-size-sans-normal', documentElements);
-  updateStyleHelper(displayDensity, 'font-size-sans-large', documentElements);
-  updateStyleHelper(displayDensity, 'font-size-sans-small', documentElements);
-  updateStyleHelper(displayDensity, 'line-height-data', documentElements);
-
   // Sizes and paddings/margins are all rem-based,
   // so update the root font-size as well when the display preference changes.
   const computedStyle = getComputedStyle((document.body: any));
@@ -285,304 +269,6 @@ export function updateThemeVariables(
   theme: Theme,
   documentElements: DocumentElements,
 ): void {
-  updateStyleHelper(theme, 'color-attribute-name', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-attribute-name-not-editable',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
-  updateStyleHelper(theme, 'color-attribute-value', documentElements);
-  updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
-  updateStyleHelper(theme, 'color-attribute-editable-value', documentElements);
-  updateStyleHelper(theme, 'color-background', documentElements);
-  updateStyleHelper(theme, 'color-background-hover', documentElements);
-  updateStyleHelper(theme, 'color-background-inactive', documentElements);
-  updateStyleHelper(theme, 'color-background-invalid', documentElements);
-  updateStyleHelper(theme, 'color-background-selected', documentElements);
-  updateStyleHelper(theme, 'color-border', documentElements);
-  updateStyleHelper(theme, 'color-button-background', documentElements);
-  updateStyleHelper(theme, 'color-button-background-focus', documentElements);
-  updateStyleHelper(theme, 'color-button', documentElements);
-  updateStyleHelper(theme, 'color-button-active', documentElements);
-  updateStyleHelper(theme, 'color-button-disabled', documentElements);
-  updateStyleHelper(theme, 'color-button-focus', documentElements);
-  updateStyleHelper(theme, 'color-button-hover', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-fill',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-fill-text',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-pattern',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-commit-did-not-render-pattern-text',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-commit-gradient-0', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-1', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-2', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-3', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-4', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-5', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-6', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-7', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-8', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-9', documentElements);
-  updateStyleHelper(theme, 'color-commit-gradient-text', documentElements);
-  updateStyleHelper(theme, 'color-component-name', documentElements);
-  updateStyleHelper(theme, 'color-component-name-inverted', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-component-badge-background',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-component-badge-background-inverted',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-component-badge-count', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-component-badge-count-inverted',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-console-error-badge-text', documentElements);
-  updateStyleHelper(theme, 'color-console-error-background', documentElements);
-  updateStyleHelper(theme, 'color-console-error-border', documentElements);
-  updateStyleHelper(theme, 'color-console-error-icon', documentElements);
-  updateStyleHelper(theme, 'color-console-error-text', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-console-warning-badge-text',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-console-warning-background',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-console-warning-border', documentElements);
-  updateStyleHelper(theme, 'color-console-warning-icon', documentElements);
-  updateStyleHelper(theme, 'color-console-warning-text', documentElements);
-  updateStyleHelper(theme, 'color-context-border', documentElements);
-  updateStyleHelper(theme, 'color-context-background', documentElements);
-  updateStyleHelper(theme, 'color-context-background-hover', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-context-background-selected',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-context-border', documentElements);
-  updateStyleHelper(theme, 'color-context-text', documentElements);
-  updateStyleHelper(theme, 'color-context-text-selected', documentElements);
-  updateStyleHelper(theme, 'color-dim', documentElements);
-  updateStyleHelper(theme, 'color-dimmer', documentElements);
-  updateStyleHelper(theme, 'color-dimmest', documentElements);
-  updateStyleHelper(theme, 'color-error-background', documentElements);
-  updateStyleHelper(theme, 'color-error-border', documentElements);
-  updateStyleHelper(theme, 'color-error-text', documentElements);
-  updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
-  updateStyleHelper(theme, 'color-link', documentElements);
-  updateStyleHelper(theme, 'color-modal-background', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-bridge-version-npm-background',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-bridge-version-npm-text', documentElements);
-  updateStyleHelper(theme, 'color-bridge-version-number', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-primitive-hook-badge-background',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-primitive-hook-badge-text', documentElements);
-  updateStyleHelper(theme, 'color-record-active', documentElements);
-  updateStyleHelper(theme, 'color-record-hover', documentElements);
-  updateStyleHelper(theme, 'color-record-inactive', documentElements);
-  updateStyleHelper(theme, 'color-resize-bar', documentElements);
-  updateStyleHelper(theme, 'color-resize-bar-active', documentElements);
-  updateStyleHelper(theme, 'color-resize-bar-border', documentElements);
-  updateStyleHelper(theme, 'color-resize-bar-dot', documentElements);
-  updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
-  updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
-  updateStyleHelper(theme, 'color-search-match', documentElements);
-  updateStyleHelper(theme, 'color-search-match-current', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-text-color',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-native-event',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-native-event-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-selected-tree-highlight-active',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-selected-tree-highlight-inactive',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-priority-background',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-priority-border',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-user-timing',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-user-timing-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-idle',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-idle-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-render',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-render-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-commit',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-commit-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-layout-effects',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-layout-effects-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-passive-effects',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-passive-effects-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-schedule',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-schedule-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-suspense-rejected-event',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-suspense-rejected-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-suspense-resolved',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-suspense-resolved-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-suspense-unresolved',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-suspense-unresolved-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-work-border',
-    documentElements,
-  );
-  updateStyleHelper(theme, 'color-scroll-caret', documentElements);
-  updateStyleHelper(theme, 'color-shadow', documentElements);
-  updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
-  updateStyleHelper(theme, 'color-text', documentElements);
-  updateStyleHelper(theme, 'color-text-invalid', documentElements);
-  updateStyleHelper(theme, 'color-text-selected', documentElements);
-  updateStyleHelper(theme, 'color-toggle-background-invalid', documentElements);
-  updateStyleHelper(theme, 'color-toggle-background-on', documentElements);
-  updateStyleHelper(theme, 'color-toggle-background-off', documentElements);
-  updateStyleHelper(theme, 'color-toggle-text', documentElements);
-  updateStyleHelper(theme, 'color-tooltip-background', documentElements);
-  updateStyleHelper(theme, 'color-tooltip-text', documentElements);
-  updateStyleHelper(theme, 'color-warning-background', documentElements);
-  updateStyleHelper(theme, 'color-warning-background-hover', documentElements);
-  updateStyleHelper(theme, 'color-warning-text-color', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-warning-text-color-inverted',
-    documentElements,
-  );
-
-  // Font smoothing varies based on the theme.
-  updateStyleHelper(theme, 'font-smoothing', documentElements);
-
   // Update scrollbar color to match theme.
   // this CSS property is currently only supported in Firefox,
   // but it makes a significant UI improvement in dark mode.
@@ -591,6 +277,12 @@ export function updateThemeVariables(
     // $FlowFixMe scrollbarColor is missing in CSSStyleDeclaration
     documentElement.style.scrollbarColor = `var(${`--${theme}-color-scroll-thumb`}) var(${`--${theme}-color-scroll-track`})`;
   });
+
+  // The ThemeProvider works by writing DOM style variables to an HTMLDivElement.
+  // Because Portals render in a different DOM subtree, these variables don't propagate.
+  // So we need to also set @reach/tooltip specific styles on the root.
+  updateStyleHelper(theme, 'color-tooltip-background', documentElements);
+  updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 }
 
 export {SettingsContext, SettingsContextController};

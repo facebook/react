@@ -12,6 +12,7 @@ import {useContext} from 'react';
 import {createPortal} from 'react-dom';
 import ErrorBoundary from './ErrorBoundary';
 import {StoreContext} from './context';
+import ThemeProvider from './ThemeProvider';
 
 export type Props = {portalContainer?: Element, ...};
 
@@ -28,7 +29,7 @@ export default function portaledContent(
     );
 
     return portalContainer != null
-      ? createPortal(children, portalContainer)
+      ? createPortal(<ThemeProvider>{children}</ThemeProvider>, portalContainer)
       : children;
   };
 }
