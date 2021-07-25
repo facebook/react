@@ -124,7 +124,7 @@ describe('ReactUpdatePriority', () => {
       });
     });
     expect(Scheduler).toHaveYielded([
-      // Because the hide update has continous priority, it should interrupt the
+      // Because the hide update has continuous priority, it should interrupt the
       // in-progress transition
       '(hidden)',
       // When the transition resumes, it's a no-op because the children are
