@@ -127,8 +127,10 @@ export const appendChildToContainerChildSet =
 export const finalizeContainerChildren =
   $$$hostConfig.finalizeContainerChildren;
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
-export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
-export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
+export const getOffscreenContainerType =
+  $$$hostConfig.getOffscreenContainerType;
+export const getOffscreenContainerProps =
+  $$$hostConfig.getOffscreenContainerProps;
 
 // -------------------
 //     Hydration

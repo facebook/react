@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {ElementRef} from 'react';
 import type {
   HostComponent,
@@ -301,6 +302,9 @@ export function getChildHostContext(
     type === 'RCTText' ||
     type === 'RCTVirtualText';
 
+  // TODO: If this is an offscreen host container, we should reuse the
+  // parent context.
+
   if (prevIsInAParentText !== isInAParentText) {
     return {isInAParentText};
   } else {
@@ -413,30 +417,32 @@ export function cloneInstance(
   };
 }
 
-export function cloneHiddenInstance(
-  instance: Instance,
-  type: string,
-  props: Props,
-  internalInstanceHandle: Object,
-): Instance {
-  const viewConfig = instance.canonical.viewConfig;
-  const node = instance.node;
-  const updatePayload = create(
-    {style: {display: 'none'}},
-    viewConfig.validAttributes,
-  );
-  return {
-    node: cloneNodeWithNewProps(node, updatePayload),
-    canonical: instance.canonical,
-  };
+// TODO: These two methods should be replaced with `createOffscreenInstance` and
+// `cloneOffscreenInstance`. I did it this way for now because the offscreen
+// instance is stored on an extra HostComponent fiber instead of the
+// OffscreenComponent fiber, and I didn't want to add an extra check to the
+// generic HostComponent path. Instead we should use the OffscreenComponent
+// fiber, but currently Fabric expects a 1:1 correspondence between Fabric
+// instances and host fibers, so I'm leaving this optimization for later once
+// we can confirm this won't break any downstream expectations.
+export function getOffscreenContainerType(): string {
+  return 'RCTView';
 }
 
-export function cloneHiddenTextInstance(
-  instance: Instance,
-  text: string,
-  internalInstanceHandle: Object,
-): TextInstance {
-  throw new Error('Not yet implemented.');
+export function getOffscreenContainerProps(
+  mode: OffscreenMode,
+  children: ReactNodeList,
+): Props {
+  if (mode === 'hidden') {
+    return {
+      children,
+      style: {display: 'none'},
+    };
+  } else {
+    return {
+      children,
+    };
+  }
 }
 
 export function createContainerChildSet(container: Container): ChildSet {

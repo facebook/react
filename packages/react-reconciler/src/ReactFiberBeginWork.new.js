@@ -142,6 +142,9 @@ import {
   registerSuspenseInstanceRetry,
   supportsHydration,
   isPrimaryRenderer,
+  supportsMutation,
+  supportsPersistence,
+  getOffscreenContainerProps,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldError, shouldSuspend} from './ReactFiberReconciler';
@@ -199,6 +202,7 @@ import {
   createFiberFromFragment,
   createFiberFromOffscreen,
   createWorkInProgress,
+  createOffscreenHostContainerFiber,
   isSimpleFunctionComponent,
 } from './ReactFiber.new';
 import {
@@ -224,6 +228,7 @@ import {
 } from './ReactFiberCacheComponent.new';
 import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.new';
+import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.new';
 import is from 'shared/objectIs';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -728,8 +733,69 @@ function updateOffscreenComponent(
     workInProgress.updateQueue = spawnedCachePool;
   }
 
-  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
-  return workInProgress.child;
+  if (supportsPersistence) {
+    // In persistent mode, the offscreen children are wrapped in a host node.
+    // TODO: Optimize this to use the OffscreenComponent fiber instead of
+    // an extra HostComponent fiber. Need to make sure this doesn't break Fabric
+    // or some other infra that expects a HostComponent.
+    const isHidden =
+      nextProps.mode === 'hidden' &&
+      workInProgress.tag !== LegacyHiddenComponent;
+    const offscreenContainer = reconcileOffscreenHostContainer(
+      current,
+      workInProgress,
+      isHidden,
+      nextChildren,
+      renderLanes,
+    );
+    return offscreenContainer;
+  }
+  if (supportsMutation) {
+    reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+    return workInProgress.child;
+  }
+  return null;
+}
+
+function reconcileOffscreenHostContainer(
+  currentOffscreen: Fiber | null,
+  offscreen: Fiber,
+  isHidden: boolean,
+  children: any,
+  renderLanes: Lanes,
+) {
+  const containerProps = getOffscreenContainerProps(
+    isHidden ? 'hidden' : 'visible',
+    children,
+  );
+  let hostContainer;
+  if (currentOffscreen === null) {
+    hostContainer = createOffscreenHostContainerFiber(
+      containerProps,
+      offscreen.mode,
+      renderLanes,
+      null,
+    );
+  } else {
+    const currentHostContainer = currentOffscreen.child;
+    if (currentHostContainer === null) {
+      hostContainer = createOffscreenHostContainerFiber(
+        containerProps,
+        offscreen.mode,
+        renderLanes,
+        null,
+      );
+      hostContainer.flags |= Placement;
+    } else {
+      hostContainer = createWorkInProgress(
+        currentHostContainer,
+        containerProps,
+      );
+    }
+  }
+  hostContainer.return = offscreen;
+  offscreen.child = hostContainer;
+  return hostContainer;
 }
 
 // Note: These happen to have identical begin phases, for now. We shouldn't hold
@@ -2148,6 +2214,21 @@ function mountSuspenseFallbackChildren(
     primaryChildFragment.childLanes = NoLanes;
     primaryChildFragment.pendingProps = primaryChildProps;
 
+    if (
+      supportsPersistence &&
+      (workInProgress.mode & ConcurrentMode) === NoMode
+    ) {
+      const isHidden = true;
+      const offscreenContainer: Fiber = (primaryChildFragment.child: any);
+      const containerProps = {
+        hidden: isHidden,
+        primaryChildren,
+      };
+      offscreenContainer.pendingProps = containerProps;
+      offscreenContainer.memoizedProps = containerProps;
+      completeSuspendedOffscreenHostContainer(null, offscreenContainer);
+    }
+
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
       // final amounts. This seems counterintuitive, since we're intentionally
@@ -2290,6 +2371,25 @@ function updateSuspenseFallbackChildren(
         currentPrimaryChildFragment.treeBaseDuration;
     }
 
+    if (supportsPersistence) {
+      // In persistent mode, the offscreen children are wrapped in a host node.
+      // We need to complete it now, because we're going to skip over its normal
+      // complete phase and go straight to rendering the fallback.
+      const isHidden = true;
+      const currentOffscreenContainer = currentPrimaryChildFragment.child;
+      const offscreenContainer: Fiber = (primaryChildFragment.child: any);
+      const containerProps = {
+        hidden: isHidden,
+        primaryChildren,
+      };
+      offscreenContainer.pendingProps = containerProps;
+      offscreenContainer.memoizedProps = containerProps;
+      completeSuspendedOffscreenHostContainer(
+        currentOffscreenContainer,
+        offscreenContainer,
+      );
+    }
+
     // The fallback fiber was added as a deletion during the first pass.
     // However, since we're going to remain on the fallback, we no longer want
     // to delete it.
@@ -2299,6 +2399,28 @@ function updateSuspenseFallbackChildren(
       currentPrimaryChildFragment,
       primaryChildProps,
     );
+
+    if (supportsPersistence) {
+      // In persistent mode, the offscreen children are wrapped in a host node.
+      // We need to complete it now, because we're going to skip over its normal
+      // complete phase and go straight to rendering the fallback.
+      const currentOffscreenContainer = currentPrimaryChildFragment.child;
+      if (currentOffscreenContainer !== null) {
+        const isHidden = true;
+        const offscreenContainer = reconcileOffscreenHostContainer(
+          currentPrimaryChildFragment,
+          primaryChildFragment,
+          isHidden,
+          primaryChildren,
+          renderLanes,
+        );
+        offscreenContainer.memoizedProps = offscreenContainer.pendingProps;
+        completeSuspendedOffscreenHostContainer(
+          currentOffscreenContainer,
+          offscreenContainer,
+        );
+      }
+    }
 
     // Since we're reusing a current tree, we need to reuse the flags, too.
     // (We don't do this in legacy mode, because in legacy mode we don't re-use

@@ -14,7 +14,7 @@ import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane.new';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseInstance, Props} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
 import invariant from 'shared/invariant';
@@ -27,6 +27,10 @@ import {
   enableSyncDefaultUpdates,
   allowConcurrentByDefault,
 } from 'shared/ReactFeatureFlags';
+import {
+  supportsPersistence,
+  getOffscreenContainerType,
+} from './ReactFiberHostConfig';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
 import {
@@ -583,6 +587,25 @@ export function createFiberFromTypeAndProps(
   }
 
   return fiber;
+}
+
+export function createOffscreenHostContainerFiber(
+  props: Props,
+  fiberMode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  if (supportsPersistence) {
+    const type = getOffscreenContainerType();
+    const fiber = createFiber(HostComponent, props, key, fiberMode);
+    fiber.elementType = type;
+    fiber.type = type;
+    fiber.lanes = lanes;
+    return fiber;
+  } else {
+    // Only implemented in persistent mode
+    invariant(false, 'Not implemented.');
+  }
 }
 
 export function createFiberFromElement(

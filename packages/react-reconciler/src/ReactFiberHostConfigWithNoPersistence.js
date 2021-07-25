@@ -28,5 +28,5 @@ export const createContainerChildSet = shim;
 export const appendChildToContainerChildSet = shim;
 export const finalizeContainerChildren = shim;
 export const replaceContainerChildren = shim;
-export const cloneHiddenInstance = shim;
-export const cloneHiddenTextInstance = shim;
+export const getOffscreenContainerType = shim;
+export const getOffscreenContainerProps = shim;
