@@ -161,247 +161,275 @@ function processTimelineEvent(
   /** Intermediate processor state. May be mutated. */
   state: ProcessorState,
 ) {
-  const {cat, name, ts, ph} = event;
-  if (cat !== 'blink.user_timing') {
-    return;
-  }
+  const {args, cat, name, ts, ph} = event;
+  switch (cat) {
+    case 'devtools.timeline':
+      if (name === 'EventDispatch') {
+        const type = args.data.type;
 
-  const startTime = (ts - currentProfilerData.startTime) / 1000;
+        if (type.startsWith('react-')) {
+          const stackTrace = args.data.stackTrace;
+          if (stackTrace) {
+            const topFrame = stackTrace[stackTrace.length - 1];
+            if (topFrame.url.includes('node_modules/react-dom')) {
+              // Filter out fake React events dispatched by invokeGuardedCallbackDev.
+              return;
+            }
+          }
+        }
 
-  // React Events - schedule
-  if (name.startsWith('--schedule-render-')) {
-    const [laneBitmaskString, laneLabels, ...splitComponentStack] = name
-      .substr(18)
-      .split('-');
-    currentProfilerData.events.push({
-      type: 'schedule-render',
-      lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
-      laneLabels: laneLabels ? laneLabels.split(',') : [],
-      componentStack: splitComponentStack.join('-'),
-      timestamp: startTime,
-    });
-  } else if (name.startsWith('--schedule-forced-update-')) {
-    const [
-      laneBitmaskString,
-      laneLabels,
-      componentName,
-      ...splitComponentStack
-    ] = name.substr(25).split('-');
-    const isCascading = !!state.measureStack.find(
-      ({type}) => type === 'commit',
-    );
-    currentProfilerData.events.push({
-      type: 'schedule-force-update',
-      lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
-      laneLabels: laneLabels ? laneLabels.split(',') : [],
-      componentName,
-      componentStack: splitComponentStack.join('-'),
-      timestamp: startTime,
-      isCascading,
-    });
-  } else if (name.startsWith('--schedule-state-update-')) {
-    const [
-      laneBitmaskString,
-      laneLabels,
-      componentName,
-      ...splitComponentStack
-    ] = name.substr(24).split('-');
-    const isCascading = !!state.measureStack.find(
-      ({type}) => type === 'commit',
-    );
-    currentProfilerData.events.push({
-      type: 'schedule-state-update',
-      lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
-      laneLabels: laneLabels ? laneLabels.split(',') : [],
-      componentName,
-      componentStack: splitComponentStack.join('-'),
-      timestamp: startTime,
-      isCascading,
-    });
-  } // eslint-disable-line brace-style
+        const startTime = (ts - currentProfilerData.startTime) / 1000;
+        const duration = event.dur / 1000;
 
-  // React Events - suspense
-  else if (name.startsWith('--suspense-suspend-')) {
-    const [id, componentName, ...splitComponentStack] = name
-      .substr(19)
-      .split('-');
-    currentProfilerData.events.push({
-      type: 'suspense-suspend',
-      id,
-      componentName,
-      componentStack: splitComponentStack.join('-'),
-      timestamp: startTime,
-    });
-  } else if (name.startsWith('--suspense-resolved-')) {
-    const [id, componentName, ...splitComponentStack] = name
-      .substr(20)
-      .split('-');
-    currentProfilerData.events.push({
-      type: 'suspense-resolved',
-      id,
-      componentName,
-      componentStack: splitComponentStack.join('-'),
-      timestamp: startTime,
-    });
-  } else if (name.startsWith('--suspense-rejected-')) {
-    const [id, componentName, ...splitComponentStack] = name
-      .substr(20)
-      .split('-');
-    currentProfilerData.events.push({
-      type: 'suspense-rejected',
-      id,
-      componentName,
-      componentStack: splitComponentStack.join('-'),
-      timestamp: startTime,
-    });
-  } // eslint-disable-line brace-style
+        // TODO (scheduling profiler) Should we filter out certain event types?
+        currentProfilerData.nativeEvents.push({
+          duration,
+          timestamp: startTime,
+          type,
+        });
+      }
+      break;
+    case 'blink.user_timing':
+      const startTime = (ts - currentProfilerData.startTime) / 1000;
 
-  // React Measures - render
-  else if (name.startsWith('--render-start-')) {
-    if (state.nextRenderShouldGenerateNewBatchID) {
-      state.nextRenderShouldGenerateNewBatchID = false;
-      state.batchUID = ((state.uidCounter++: any): BatchUID);
-    }
-    const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
-    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-    throwIfIncomplete('render', state.measureStack);
-    if (getLastType(state.measureStack) !== 'render-idle') {
-      markWorkStarted(
-        'render-idle',
-        startTime,
-        lanes,
-        laneLabels ? laneLabels.split(',') : [],
-        currentProfilerData,
-        state,
-      );
-    }
-    markWorkStarted(
-      'render',
-      startTime,
-      lanes,
-      laneLabels ? laneLabels.split(',') : [],
-      currentProfilerData,
-      state,
-    );
-  } else if (
-    name.startsWith('--render-stop') ||
-    name.startsWith('--render-yield')
-  ) {
-    markWorkCompleted(
-      'render',
-      startTime,
-      currentProfilerData,
-      state.measureStack,
-    );
-  } else if (name.startsWith('--render-cancel')) {
-    state.nextRenderShouldGenerateNewBatchID = true;
-    markWorkCompleted(
-      'render',
-      startTime,
-      currentProfilerData,
-      state.measureStack,
-    );
-    markWorkCompleted(
-      'render-idle',
-      startTime,
-      currentProfilerData,
-      state.measureStack,
-    );
-  } // eslint-disable-line brace-style
+      // React Events - schedule
+      if (name.startsWith('--schedule-render-')) {
+        const [
+          laneBitmaskString,
+          laneLabels,
+          ...splitComponentStack
+        ] = name.substr(18).split('-');
+        currentProfilerData.reactEvents.push({
+          type: 'schedule-render',
+          lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+          laneLabels: laneLabels ? laneLabels.split(',') : [],
+          componentStack: splitComponentStack.join('-'),
+          timestamp: startTime,
+        });
+      } else if (name.startsWith('--schedule-forced-update-')) {
+        const [
+          laneBitmaskString,
+          laneLabels,
+          componentName,
+          ...splitComponentStack
+        ] = name.substr(25).split('-');
+        const isCascading = !!state.measureStack.find(
+          ({type}) => type === 'commit',
+        );
+        currentProfilerData.reactEvents.push({
+          type: 'schedule-force-update',
+          lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+          laneLabels: laneLabels ? laneLabels.split(',') : [],
+          componentName,
+          componentStack: splitComponentStack.join('-'),
+          timestamp: startTime,
+          isCascading,
+        });
+      } else if (name.startsWith('--schedule-state-update-')) {
+        const [
+          laneBitmaskString,
+          laneLabels,
+          componentName,
+          ...splitComponentStack
+        ] = name.substr(24).split('-');
+        const isCascading = !!state.measureStack.find(
+          ({type}) => type === 'commit',
+        );
+        currentProfilerData.reactEvents.push({
+          type: 'schedule-state-update',
+          lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+          laneLabels: laneLabels ? laneLabels.split(',') : [],
+          componentName,
+          componentStack: splitComponentStack.join('-'),
+          timestamp: startTime,
+          isCascading,
+        });
+      } // eslint-disable-line brace-style
 
-  // React Measures - commits
-  else if (name.startsWith('--commit-start-')) {
-    state.nextRenderShouldGenerateNewBatchID = true;
-    const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
-    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-    markWorkStarted(
-      'commit',
-      startTime,
-      lanes,
-      laneLabels ? laneLabels.split(',') : [],
-      currentProfilerData,
-      state,
-    );
-  } else if (name.startsWith('--commit-stop')) {
-    markWorkCompleted(
-      'commit',
-      startTime,
-      currentProfilerData,
-      state.measureStack,
-    );
-    markWorkCompleted(
-      'render-idle',
-      startTime,
-      currentProfilerData,
-      state.measureStack,
-    );
-  } // eslint-disable-line brace-style
+      // React Events - suspense
+      else if (name.startsWith('--suspense-suspend-')) {
+        const [id, componentName, ...splitComponentStack] = name
+          .substr(19)
+          .split('-');
+        currentProfilerData.reactEvents.push({
+          type: 'suspense-suspend',
+          id,
+          componentName,
+          componentStack: splitComponentStack.join('-'),
+          timestamp: startTime,
+        });
+      } else if (name.startsWith('--suspense-resolved-')) {
+        const [id, componentName, ...splitComponentStack] = name
+          .substr(20)
+          .split('-');
+        currentProfilerData.reactEvents.push({
+          type: 'suspense-resolved',
+          id,
+          componentName,
+          componentStack: splitComponentStack.join('-'),
+          timestamp: startTime,
+        });
+      } else if (name.startsWith('--suspense-rejected-')) {
+        const [id, componentName, ...splitComponentStack] = name
+          .substr(20)
+          .split('-');
+        currentProfilerData.reactEvents.push({
+          type: 'suspense-rejected',
+          id,
+          componentName,
+          componentStack: splitComponentStack.join('-'),
+          timestamp: startTime,
+        });
+      } // eslint-disable-line brace-style
 
-  // React Measures - layout effects
-  else if (name.startsWith('--layout-effects-start-')) {
-    const [laneBitmaskString, laneLabels] = name.substr(23).split('-');
-    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-    markWorkStarted(
-      'layout-effects',
-      startTime,
-      lanes,
-      laneLabels ? laneLabels.split(',') : [],
-      currentProfilerData,
-      state,
-    );
-  } else if (name.startsWith('--layout-effects-stop')) {
-    markWorkCompleted(
-      'layout-effects',
-      startTime,
-      currentProfilerData,
-      state.measureStack,
-    );
-  } // eslint-disable-line brace-style
+      // React Measures - render
+      else if (name.startsWith('--render-start-')) {
+        if (state.nextRenderShouldGenerateNewBatchID) {
+          state.nextRenderShouldGenerateNewBatchID = false;
+          state.batchUID = ((state.uidCounter++: any): BatchUID);
+        }
+        const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
+        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        throwIfIncomplete('render', state.measureStack);
+        if (getLastType(state.measureStack) !== 'render-idle') {
+          markWorkStarted(
+            'render-idle',
+            startTime,
+            lanes,
+            laneLabels ? laneLabels.split(',') : [],
+            currentProfilerData,
+            state,
+          );
+        }
+        markWorkStarted(
+          'render',
+          startTime,
+          lanes,
+          laneLabels ? laneLabels.split(',') : [],
+          currentProfilerData,
+          state,
+        );
+      } else if (
+        name.startsWith('--render-stop') ||
+        name.startsWith('--render-yield')
+      ) {
+        markWorkCompleted(
+          'render',
+          startTime,
+          currentProfilerData,
+          state.measureStack,
+        );
+      } else if (name.startsWith('--render-cancel')) {
+        state.nextRenderShouldGenerateNewBatchID = true;
+        markWorkCompleted(
+          'render',
+          startTime,
+          currentProfilerData,
+          state.measureStack,
+        );
+        markWorkCompleted(
+          'render-idle',
+          startTime,
+          currentProfilerData,
+          state.measureStack,
+        );
+      } // eslint-disable-line brace-style
 
-  // React Measures - passive effects
-  else if (name.startsWith('--passive-effects-start-')) {
-    const [laneBitmaskString, laneLabels] = name.substr(24).split('-');
-    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-    markWorkStarted(
-      'passive-effects',
-      startTime,
-      lanes,
-      laneLabels ? laneLabels.split(',') : [],
-      currentProfilerData,
-      state,
-    );
-  } else if (name.startsWith('--passive-effects-stop')) {
-    markWorkCompleted(
-      'passive-effects',
-      startTime,
-      currentProfilerData,
-      state.measureStack,
-    );
-  } // eslint-disable-line brace-style
+      // React Measures - commits
+      else if (name.startsWith('--commit-start-')) {
+        state.nextRenderShouldGenerateNewBatchID = true;
+        const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
+        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        markWorkStarted(
+          'commit',
+          startTime,
+          lanes,
+          laneLabels ? laneLabels.split(',') : [],
+          currentProfilerData,
+          state,
+        );
+      } else if (name.startsWith('--commit-stop')) {
+        markWorkCompleted(
+          'commit',
+          startTime,
+          currentProfilerData,
+          state.measureStack,
+        );
+        markWorkCompleted(
+          'render-idle',
+          startTime,
+          currentProfilerData,
+          state.measureStack,
+        );
+      } // eslint-disable-line brace-style
 
-  // Other user timing marks/measures
-  else if (ph === 'R' || ph === 'n') {
-    // User Timing mark
-    currentProfilerData.otherUserTimingMarks.push({
-      name,
-      timestamp: startTime,
-    });
-  } else if (ph === 'b') {
-    // TODO: Begin user timing measure
-  } else if (ph === 'e') {
-    // TODO: End user timing measure
-  } else if (ph === 'i' || ph === 'I') {
-    // Instant events.
-    // Note that the capital "I" is a deprecated value that exists in Chrome Canary traces.
-  } // eslint-disable-line brace-style
+      // React Measures - layout effects
+      else if (name.startsWith('--layout-effects-start-')) {
+        const [laneBitmaskString, laneLabels] = name.substr(23).split('-');
+        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        markWorkStarted(
+          'layout-effects',
+          startTime,
+          lanes,
+          laneLabels ? laneLabels.split(',') : [],
+          currentProfilerData,
+          state,
+        );
+      } else if (name.startsWith('--layout-effects-stop')) {
+        markWorkCompleted(
+          'layout-effects',
+          startTime,
+          currentProfilerData,
+          state.measureStack,
+        );
+      } // eslint-disable-line brace-style
 
-  // Unrecognized event
-  else {
-    throw new InvalidProfileError(
-      `Unrecognized event ${JSON.stringify(
-        event,
-      )}! This is likely a bug in this profiler tool.`,
-    );
+      // React Measures - passive effects
+      else if (name.startsWith('--passive-effects-start-')) {
+        const [laneBitmaskString, laneLabels] = name.substr(24).split('-');
+        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        markWorkStarted(
+          'passive-effects',
+          startTime,
+          lanes,
+          laneLabels ? laneLabels.split(',') : [],
+          currentProfilerData,
+          state,
+        );
+      } else if (name.startsWith('--passive-effects-stop')) {
+        markWorkCompleted(
+          'passive-effects',
+          startTime,
+          currentProfilerData,
+          state.measureStack,
+        );
+      } // eslint-disable-line brace-style
+
+      // Other user timing marks/measures
+      else if (ph === 'R' || ph === 'n') {
+        // User Timing mark
+        currentProfilerData.otherUserTimingMarks.push({
+          name,
+          timestamp: startTime,
+        });
+      } else if (ph === 'b') {
+        // TODO: Begin user timing measure
+      } else if (ph === 'e') {
+        // TODO: End user timing measure
+      } else if (ph === 'i' || ph === 'I') {
+        // Instant events.
+        // Note that the capital "I" is a deprecated value that exists in Chrome Canary traces.
+      } // eslint-disable-line brace-style
+
+      // Unrecognized event
+      else {
+        throw new InvalidProfileError(
+          `Unrecognized event ${JSON.stringify(
+            event,
+          )}! This is likely a bug in this profiler tool.`,
+        );
+      }
+      break;
   }
 }
 
@@ -447,7 +475,8 @@ export default function preprocessData(
   const profilerData: ReactProfilerData = {
     startTime: 0,
     duration: 0,
-    events: [],
+    nativeEvents: [],
+    reactEvents: [],
     measures: [],
     flamechart,
     otherUserTimingMarks: [],

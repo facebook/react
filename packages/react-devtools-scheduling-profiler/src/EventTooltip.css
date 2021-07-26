@@ -29,6 +29,7 @@
 .DetailsGridLabel {
   color: var(--color-dim);
   text-align: right;
+  white-space: nowrap;
 }
 
 .DetailsGridURL {
@@ -45,7 +46,7 @@
 .ComponentName {
   font-weight: bold;
   word-break: break-word;
-  margin-right: 0.4rem;
+  margin-right: 0.25rem;
 }
 
 .ComponentStack {

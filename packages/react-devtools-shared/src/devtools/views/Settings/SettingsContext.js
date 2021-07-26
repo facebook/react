@@ -423,6 +423,16 @@ export function updateThemeVariables(
   );
   updateStyleHelper(
     theme,
+    'color-scheduling-profiler-native-event',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-native-event-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
     'color-selected-tree-highlight-active',
     documentElements,
   );

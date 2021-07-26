@@ -7,14 +7,13 @@
  * @flow
  */
 
-import type {ReactEvent, ReactProfilerData} from '../types';
+import type {NativeEvent, ReactProfilerData} from '../types';
 import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
 
 import {
   positioningScaleFactor,
   timestampToPosition,
   positionToTimestamp,
-  widthToDuration,
 } from './utils/positioning';
 import {
   View,
@@ -33,20 +32,12 @@ import {
 const EVENT_ROW_HEIGHT_FIXED =
   EVENT_ROW_PADDING + EVENT_DIAMETER + EVENT_ROW_PADDING;
 
-function isSuspenseEvent(event: ReactEvent): boolean %checks {
-  return (
-    event.type === 'suspense-suspend' ||
-    event.type === 'suspense-resolved' ||
-    event.type === 'suspense-rejected'
-  );
-}
-
-export class ReactEventsView extends View {
+export class NativeEventsView extends View {
   _profilerData: ReactProfilerData;
   _intrinsicSize: Size;
 
-  _hoveredEvent: ReactEvent | null = null;
-  onHover: ((event: ReactEvent | null) => void) | null = null;
+  _hoveredEvent: NativeEvent | null = null;
+  onHover: ((event: NativeEvent | null) => void) | null = null;
 
   constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
     super(surface, frame);
@@ -62,7 +53,7 @@ export class ReactEventsView extends View {
     return this._intrinsicSize;
   }
 
-  setHoveredEvent(hoveredEvent: ReactEvent | null) {
+  setHoveredEvent(hoveredEvent: NativeEvent | null) {
     if (this._hoveredEvent === hoveredEvent) {
       return;
     }
@@ -71,78 +62,51 @@ export class ReactEventsView extends View {
   }
 
   /**
-   * Draw a single `ReactEvent` as a circle in the canvas.
+   * Draw a single `NativeEvent` as a circle in the canvas.
    */
-  _drawSingleReactEvent(
+  _drawSingleNativeEvent(
     context: CanvasRenderingContext2D,
     rect: Rect,
-    event: ReactEvent,
+    event: NativeEvent,
     baseY: number,
     scaleFactor: number,
     showHoverHighlight: boolean,
   ) {
     const {frame} = this;
-    const {timestamp, type} = event;
+    const {duration, timestamp} = event;
 
-    const x = timestampToPosition(timestamp, scaleFactor, frame);
-    const radius = EVENT_DIAMETER / 2;
+    const xStart = timestampToPosition(timestamp, scaleFactor, frame);
+    const xStop = timestampToPosition(timestamp + duration, scaleFactor, frame);
     const eventRect: Rect = {
       origin: {
-        x: x - radius,
+        x: xStart,
         y: baseY,
       },
-      size: {width: EVENT_DIAMETER, height: EVENT_DIAMETER},
+      size: {width: xStop - xStart, height: EVENT_DIAMETER},
     };
     if (!rectIntersectsRect(eventRect, rect)) {
       return; // Not in view
     }
 
-    let fillStyle = null;
+    const fillStyle = showHoverHighlight
+      ? COLORS.NATIVE_EVENT_HOVER
+      : COLORS.NATIVE_EVENT;
 
-    switch (type) {
-      case 'native-event':
-        return;
-      case 'schedule-render':
-      case 'schedule-state-update':
-      case 'schedule-force-update':
-        if (event.isCascading) {
-          fillStyle = showHoverHighlight
-            ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
-            : COLORS.REACT_SCHEDULE_CASCADING;
-        } else {
-          fillStyle = showHoverHighlight
-            ? COLORS.REACT_SCHEDULE_HOVER
-            : COLORS.REACT_SCHEDULE;
-        }
-        break;
-      case 'suspense-suspend':
-      case 'suspense-resolved':
-      case 'suspense-rejected':
-        fillStyle = showHoverHighlight
-          ? COLORS.REACT_SUSPEND_HOVER
-          : COLORS.REACT_SUSPEND;
-        break;
-      default:
-        if (__DEV__) {
-          console.warn('Unexpected event type "%s"', type);
-        }
-        break;
-    }
-
-    if (fillStyle !== null) {
-      const y = eventRect.origin.y + radius;
-
-      context.beginPath();
-      context.fillStyle = fillStyle;
-      context.arc(x, y, radius, 0, 2 * Math.PI);
-      context.fill();
-    }
+    const drawableRect = intersectionOfRects(eventRect, rect);
+    context.beginPath();
+    context.fillStyle = fillStyle;
+    context.fillRect(
+      drawableRect.origin.x,
+      drawableRect.origin.y,
+      drawableRect.size.width,
+      drawableRect.size.height,
+    );
   }
 
   draw(context: CanvasRenderingContext2D) {
     const {
       frame,
-      _profilerData: {reactEvents},
+      _profilerData: {nativeEvents},
       _hoveredEvent,
       visibleArea,
     } = this;
@@ -162,40 +126,28 @@ export class ReactEventsView extends View {
       frame,
     );
 
-    const highlightedEvents: ReactEvent[] = [];
-
-    reactEvents.forEach(event => {
-      if (
-        event === _hoveredEvent ||
-        (_hoveredEvent &&
-          isSuspenseEvent(event) &&
-          isSuspenseEvent(_hoveredEvent) &&
-          event.id === _hoveredEvent.id)
-      ) {
-        highlightedEvents.push(event);
-        return;
+    nativeEvents.forEach(event => {
+      if (event === _hoveredEvent) {
+        // Draw the highlighted items on top so they stand out.
+        // This is helpful if there are multiple (overlapping) items close to each other.
+        this._drawSingleNativeEvent(
+          context,
+          visibleArea,
+          event,
+          baseY,
+          scaleFactor,
+          true,
+        );
+      } else {
+        this._drawSingleNativeEvent(
+          context,
+          visibleArea,
+          event,
+          baseY,
+          scaleFactor,
+          false,
+        );
       }
-      this._drawSingleReactEvent(
-        context,
-        visibleArea,
-        event,
-        baseY,
-        scaleFactor,
-        false,
-      );
-    });
-
-    // Draw the highlighted items on top so they stand out.
-    // This is helpful if there are multiple (overlapping) items close to each other.
-    highlightedEvents.forEach(event => {
-      this._drawSingleReactEvent(
-        context,
-        visibleArea,
-        event,
-        baseY,
-        scaleFactor,
-        true,
-      );
     });
 
     // Render bottom border.
@@ -226,7 +178,7 @@ export class ReactEventsView extends View {
    * @private
    */
   _handleMouseMove(interaction: MouseMoveInteraction) {
-    const {frame, onHover, visibleArea} = this;
+    const {frame, _intrinsicSize, onHover, visibleArea} = this;
     if (!onHover) {
       return;
     }
@@ -237,30 +189,24 @@ export class ReactEventsView extends View {
       return;
     }
 
-    const {
-      _profilerData: {reactEvents},
-    } = this;
-    const scaleFactor = positioningScaleFactor(
-      this._intrinsicSize.width,
-      frame,
-    );
-    const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
-    const eventTimestampAllowance = widthToDuration(
-      EVENT_DIAMETER / 2,
-      scaleFactor,
-    );
+    const {nativeEvents} = this._profilerData;
 
+    const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
+    const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
+
+    // Find the event being hovered over.
+    //
     // Because data ranges may overlap, we want to find the last intersecting item.
     // This will always be the one on "top" (the one the user is hovering over).
-    for (let index = reactEvents.length - 1; index >= 0; index--) {
-      const event = reactEvents[index];
-      const {timestamp} = event;
+    for (let index = nativeEvents.length - 1; index >= 0; index--) {
+      const nativeEvent = nativeEvents[index];
+      const {duration, timestamp} = nativeEvent;
 
       if (
-        timestamp - eventTimestampAllowance <= hoverTimestamp &&
-        hoverTimestamp <= timestamp + eventTimestampAllowance
+        hoverTimestamp >= timestamp &&
+        hoverTimestamp <= timestamp + duration
       ) {
-        onHover(event);
+        onHover(nativeEvent);
         return;
       }
     }

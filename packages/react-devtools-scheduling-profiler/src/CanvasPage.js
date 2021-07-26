@@ -44,6 +44,7 @@ import {
 } from './view-base';
 import {
   FlamechartView,
+  NativeEventsView,
   ReactEventsView,
   ReactMeasuresView,
   TimeAxisMarkersView,
@@ -126,6 +127,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
   const surfaceRef = useRef(new Surface());
   const userTimingMarksViewRef = useRef(null);
+  const nativeEventsViewRef = useRef(null);
   const reactEventsViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
@@ -175,6 +177,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       userTimingMarksViewRef.current = userTimingMarksView;
       topContentStack.addSubview(userTimingMarksView);
     }
+
+    const nativeEventsView = new NativeEventsView(surface, defaultFrame, data);
+    nativeEventsViewRef.current = nativeEventsView;
+    topContentStack.addSubview(nativeEventsView);
 
     const reactEventsView = new ReactEventsView(surface, defaultFrame, data);
     reactEventsViewRef.current = reactEventsView;
@@ -299,7 +305,24 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         if (!hoveredEvent || hoveredEvent.userTimingMark !== userTimingMark) {
           setHoveredEvent({
             userTimingMark,
-            event: null,
+            nativeEvent: null,
+            reactEvent: null,
+            flamechartStackFrame: null,
+            measure: null,
+            data,
+          });
+        }
+      };
+    }
+
+    const {current: nativeEventsView} = nativeEventsViewRef;
+    if (nativeEventsView) {
+      nativeEventsView.onHover = nativeEvent => {
+        if (!hoveredEvent || hoveredEvent.nativeEvent !== nativeEvent) {
+          setHoveredEvent({
+            userTimingMark: null,
+            nativeEvent,
+            reactEvent: null,
             flamechartStackFrame: null,
             measure: null,
             data,
@@ -310,11 +333,12 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
     const {current: reactEventsView} = reactEventsViewRef;
     if (reactEventsView) {
-      reactEventsView.onHover = event => {
-        if (!hoveredEvent || hoveredEvent.event !== event) {
+      reactEventsView.onHover = reactEvent => {
+        if (!hoveredEvent || hoveredEvent.reactEvent !== reactEvent) {
           setHoveredEvent({
             userTimingMark: null,
-            event,
+            nativeEvent: null,
+            reactEvent,
             flamechartStackFrame: null,
             measure: null,
             data,
@@ -329,7 +353,8 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
             userTimingMark: null,
-            event: null,
+            nativeEvent: null,
+            reactEvent: null,
             flamechartStackFrame: null,
             measure,
             data,
@@ -347,7 +372,8 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         ) {
           setHoveredEvent({
             userTimingMark: null,
-            event: null,
+            nativeEvent: null,
+            reactEvent: null,
             flamechartStackFrame,
             measure: null,
             data,
@@ -368,9 +394,18 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       );
     }
 
+    const {current: nativeEventsView} = nativeEventsViewRef;
+    if (nativeEventsView) {
+      nativeEventsView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.nativeEvent : null,
+      );
+    }
+
     const {current: reactEventsView} = reactEventsViewRef;
     if (reactEventsView) {
-      reactEventsView.setHoveredEvent(hoveredEvent ? hoveredEvent.event : null);
+      reactEventsView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.reactEvent : null,
+      );
     }
 
     const {current: reactMeasuresView} = reactMeasuresViewRef;
@@ -402,22 +437,22 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
             return null;
           }
           const {
-            event,
+            reactEvent,
             flamechartStackFrame,
             measure,
           } = contextData.hoveredEvent;
           return (
             <Fragment>
-              {event !== null && (
+              {reactEvent !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(event.componentName)}
+                  onClick={() => copy(reactEvent.componentName)}
                   title="Copy component name">
                   Copy component name
                 </ContextMenuItem>
               )}
-              {event !== null && event.componentStack && (
+              {reactEvent !== null && reactEvent.componentStack && (
                 <ContextMenuItem
-                  onClick={() => copy(event.componentStack)}
+                  onClick={() => copy(reactEvent.componentStack)}
                   title="Copy component stack">
                   Copy component stack
                 </ContextMenuItem>

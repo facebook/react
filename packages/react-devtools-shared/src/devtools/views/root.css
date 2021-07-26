@@ -79,8 +79,10 @@
   --light-color-record-inactive: #0088fa;
   --light-color-resize-bar: #cccccc;
   --light-color-scheduling-profiler-flame-graph-label: #000000;
-  --light-color-scheduling-profiler-priority-background: #ededf0;
-  --light-color-scheduling-profiler-priority-border: #d7d7db;
+  --light-color-scheduling-profiler-native-event: #aaaaaa;
+  --light-color-scheduling-profiler-native-event-hover: #888888;
+  --light-color-scheduling-profiler-priority-background: #f6f6f6;
+  --light-color-scheduling-profiler-priority-border: #eeeeee;
   --light-color-scheduling-profiler-user-timing: #c9cacd;
   --light-color-scheduling-profiler-user-timing-hover:#93959a;
   --light-color-scheduling-profiler-react-idle: #edf6ff;
@@ -199,6 +201,8 @@
   --dark-color-record-inactive: #61dafb;
   --dark-color-resize-bar: #3d424a;
   --dark-color-scheduling-profiler-flame-graph-label: #000000;
+  --dark-color-scheduling-profiler-native-event: #aaaaaa;
+  --dark-color-scheduling-profiler-native-event-hover: #888888;
   --dark-color-scheduling-profiler-priority-background: #1d2129;
   --dark-color-scheduling-profiler-priority-border: #282c34;
   --dark-color-scheduling-profiler-user-timing: #c9cacd;
