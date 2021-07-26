@@ -84,8 +84,6 @@ import {
   supportsMutation,
   supportsPersistence,
   cloneInstance,
-  cloneHiddenInstance,
-  cloneHiddenTextInstance,
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
@@ -200,12 +198,7 @@ let updateHostText;
 if (supportsMutation) {
   // Mutation mode
 
-  appendAllChildren = function(
-    parent: Instance,
-    workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
-  ) {
+  appendAllChildren = function(parent: Instance, workInProgress: Fiber) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
@@ -293,49 +286,22 @@ if (supportsMutation) {
 } else if (supportsPersistence) {
   // Persistent host tree mode
 
-  appendAllChildren = function(
-    parent: Instance,
-    workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
-  ) {
+  appendAllChildren = function(parent: Instance, workInProgress: Fiber) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
     while (node !== null) {
       // eslint-disable-next-line no-labels
       branches: if (node.tag === HostComponent) {
-        let instance = node.stateNode;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const props = node.memoizedProps;
-          const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
-        }
+        const instance = node.stateNode;
         appendInitialChild(parent, instance);
       } else if (node.tag === HostText) {
-        let instance = node.stateNode;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const text = node.memoizedProps;
-          instance = cloneHiddenTextInstance(instance, text, node);
-        }
+        const instance = node.stateNode;
         appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
-      } else if (
-        node.tag === OffscreenComponent &&
-        node.memoizedState !== null
-      ) {
-        // The children in this boundary are hidden. Toggle their visibility
-        // before appending.
-        const child = node.child;
-        if (child !== null) {
-          child.return = node;
-        }
-        appendAllChildren(parent, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -361,8 +327,6 @@ if (supportsMutation) {
   const appendAllChildrenToContainer = function(
     containerChildSet: ChildSet,
     workInProgress: Fiber,
-    needsVisibilityToggle: boolean,
-    isHidden: boolean,
   ) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
@@ -370,37 +334,15 @@ if (supportsMutation) {
     while (node !== null) {
       // eslint-disable-next-line no-labels
       branches: if (node.tag === HostComponent) {
-        let instance = node.stateNode;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const props = node.memoizedProps;
-          const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
-        }
+        const instance = node.stateNode;
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostText) {
-        let instance = node.stateNode;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const text = node.memoizedProps;
-          instance = cloneHiddenTextInstance(instance, text, node);
-        }
+        const instance = node.stateNode;
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
-      } else if (
-        node.tag === OffscreenComponent &&
-        node.memoizedState !== null
-      ) {
-        // The children in this boundary are hidden. Toggle their visibility
-        // before appending.
-        const child = node.child;
-        if (child !== null) {
-          child.return = node;
-        }
-        appendAllChildrenToContainer(containerChildSet, node, true, true);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -434,7 +376,7 @@ if (supportsMutation) {
       const container = portalOrRoot.containerInfo;
       const newChildSet = createContainerChildSet(container);
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
+      appendAllChildrenToContainer(newChildSet, workInProgress);
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
@@ -507,7 +449,7 @@ if (supportsMutation) {
       markUpdate(workInProgress);
     } else {
       // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress, false, false);
+      appendAllChildren(newInstance, workInProgress);
     }
   };
   updateHostText = function(
@@ -748,6 +690,65 @@ function bubbleProperties(completedWork: Fiber) {
   return didBailout;
 }
 
+export function completeSuspendedOffscreenHostContainer(
+  current: Fiber | null,
+  workInProgress: Fiber,
+) {
+  // This is a fork of the complete phase for HostComponent. We use it when
+  // a suspense tree is in its fallback state, because in that case the primary
+  // tree that includes the offscreen boundary is skipped over without a
+  // regular complete phase.
+  //
+  // We can optimize this path further by inlining the update logic for
+  // offscreen instances specifically, i.e. skipping the `prepareUpdate` call.
+  const rootContainerInstance = getRootHostContainer();
+  const type = workInProgress.type;
+  const newProps = workInProgress.memoizedProps;
+  if (current !== null) {
+    updateHostComponent(
+      current,
+      workInProgress,
+      type,
+      newProps,
+      rootContainerInstance,
+    );
+  } else {
+    const currentHostContext = getHostContext();
+    const instance = createInstance(
+      type,
+      newProps,
+      rootContainerInstance,
+      currentHostContext,
+      workInProgress,
+    );
+
+    appendAllChildren(instance, workInProgress);
+
+    workInProgress.stateNode = instance;
+
+    // Certain renderers require commit-time effects for initial mount.
+    // (eg DOM renderer supports auto-focus for certain elements).
+    // Make sure such renderers get scheduled for later work.
+    if (
+      finalizeInitialChildren(
+        instance,
+        type,
+        newProps,
+        rootContainerInstance,
+        currentHostContext,
+      )
+    ) {
+      markUpdate(workInProgress);
+    }
+
+    if (workInProgress.ref !== null) {
+      // If there is a ref on a host node we need to schedule a callback
+      markRef(workInProgress);
+    }
+  }
+  bubbleProperties(workInProgress);
+}
+
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -868,7 +869,7 @@ function completeWork(
             workInProgress,
           );
 
-          appendAllChildren(instance, workInProgress, false, false);
+          appendAllChildren(instance, workInProgress);
 
           workInProgress.stateNode = instance;
 
