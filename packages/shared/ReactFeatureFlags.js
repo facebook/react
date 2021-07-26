@@ -105,6 +105,9 @@ export const enableNewReconciler = false;
 
 export const disableNativeComponentFrames = false;
 
+// Internal only.
+export const enableGetInspectorDataForInstanceInProduction = false;
+
 // Errors that are thrown while unmounting (or after in the case of passive effects)
 // should bypass any error boundaries that are also unmounting (or have unmounted)
 // and be handled by the nearest still-mounted boundary.
