@@ -243,6 +243,13 @@ export default function KeyValue({
       displayValue = 'undefined';
     }
 
+    let shouldDisplayAsLink = false;
+    let protocolsAllowedAsLinks = ['file:///', 'http://', 'https://', 'vscode://'];
+
+    if (dataType === 'string' && protocolsAllowedAsLinks.some((protocolPrefix) => value.startsWith(protocolPrefix))) {
+      shouldDisplayAsLink = true;
+    }
+
     children = (
       <div
         key="root"
@@ -260,7 +267,11 @@ export default function KeyValue({
             value={value}
           />
         ) : (
-          <span className={styles.Value}>{displayValue}</span>
+          (shouldDisplayAsLink) ? (
+            <a href={value} target="_blank">{displayValue}</a>
+          ) : (
+            <span className={styles.Value}>{displayValue}</span>
+          )
         )}
       </div>
     );
