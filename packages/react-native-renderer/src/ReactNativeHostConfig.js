@@ -149,8 +149,8 @@ export function createTextInstance(
 ): TextInstance {
   if (__DEV__) {
     if (!hostContext.isInAParentText) {
-        console.error('Text strings must be rendered within a <Text> component.');
-      }
+      console.error('Text strings must be rendered within a <Text> component.');
+    }
   }
   const tag = allocateTag();
 
