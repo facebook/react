@@ -63,6 +63,7 @@ import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
   Ref,
   RefStatic,
+  Placement,
   Update,
   Visibility,
   NoFlags,
@@ -1369,13 +1370,26 @@ function completeWork(
         }
       }
 
-      // Don't bubble properties for hidden children.
-      if (
-        !nextIsHidden ||
-        includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) ||
-        (workInProgress.mode & ConcurrentMode) === NoMode
-      ) {
+      if (!nextIsHidden || (workInProgress.mode & ConcurrentMode) === NoMode) {
         bubbleProperties(workInProgress);
+      } else {
+        // Don't bubble properties for hidden children unless we're rendering
+        // at offscreen priority.
+        if (includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane))) {
+          bubbleProperties(workInProgress);
+          if (supportsMutation) {
+            // Check if there was an insertion or update in the hidden subtree.
+            // If so, we need to hide those nodes in the commit phase, so
+            // schedule a visibility effect.
+            if (
+              workInProgress.tag !== LegacyHiddenComponent &&
+              workInProgress.subtreeFlags & (Placement | Update) &&
+              newProps.mode !== 'unstable-defer-without-hiding'
+            ) {
+              workInProgress.flags |= Visibility;
+            }
+          }
+        }
       }
 
       if (enableCache) {
