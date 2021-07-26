@@ -32,9 +32,9 @@ import {
 } from './utils/positioning';
 import {
   COLORS,
-  FLAMECHART_FONT_SIZE,
+  FONT_SIZE,
   FLAMECHART_FRAME_HEIGHT,
-  FLAMECHART_TEXT_PADDING,
+  TEXT_PADDING,
   COLOR_HOVER_DIM_DELTA,
   BORDER_SIZE,
 } from './constants';
@@ -157,7 +157,7 @@ class FlamechartStackLayerView extends View {
 
     context.textAlign = 'left';
     context.textBaseline = 'middle';
-    context.font = `${FLAMECHART_FONT_SIZE}px sans-serif`;
+    context.font = `${FONT_SIZE}px sans-serif`;
 
     const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
 
@@ -195,15 +195,15 @@ class FlamechartStackLayerView extends View {
         drawableRect.size.height,
       );
 
-      if (width > FLAMECHART_TEXT_PADDING * 2) {
+      if (width > TEXT_PADDING * 2) {
         const trimmedName = trimFlamechartText(
           context,
           name,
-          width - FLAMECHART_TEXT_PADDING * 2 + (x < 0 ? x : 0),
+          width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
         );
 
         if (trimmedName !== null) {
-          context.fillStyle = COLORS.FLAME_GRAPH_LABEL;
+          context.fillStyle = COLORS.TEXT_COLOR;
 
           // Prevent text from being drawn outside `viewableArea`
           const textOverflowsViewableArea = !rectEqualToRect(
@@ -225,7 +225,7 @@ class FlamechartStackLayerView extends View {
 
           context.fillText(
             trimmedName,
-            nodeRect.origin.x + FLAMECHART_TEXT_PADDING - (x < 0 ? x : 0),
+            nodeRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
             nodeRect.origin.y + FLAMECHART_FRAME_HEIGHT / 2,
           );
 

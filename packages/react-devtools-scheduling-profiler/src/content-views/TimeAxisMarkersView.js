@@ -25,7 +25,7 @@ import {
   COLORS,
   INTERVAL_TIMES,
   LABEL_SIZE,
-  MARKER_FONT_SIZE,
+  FONT_SIZE,
   MARKER_HEIGHT,
   MARKER_TEXT_PADDING,
   MARKER_TICK_HEIGHT,
@@ -129,7 +129,7 @@ export class TimeAxisMarkersView extends View {
       context.fillStyle = COLORS.TIME_MARKER_LABEL;
       context.textAlign = 'right';
       context.textBaseline = 'middle';
-      context.font = `${MARKER_FONT_SIZE}px sans-serif`;
+      context.font = `${FONT_SIZE}px sans-serif`;
       context.fillText(
         `${markerLabel}ms`,
         x - MARKER_TEXT_PADDING,

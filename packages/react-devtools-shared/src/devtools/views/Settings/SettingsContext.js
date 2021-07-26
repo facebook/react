@@ -418,7 +418,7 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-flame-graph-label',
+    'color-scheduling-profiler-text-color',
     documentElements,
   );
   updateStyleHelper(
@@ -429,6 +429,21 @@ export function updateThemeVariables(
   updateStyleHelper(
     theme,
     'color-scheduling-profiler-native-event-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-native-event-warning',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-native-event-warning-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-native-event-warning-text',
     documentElements,
   );
   updateStyleHelper(

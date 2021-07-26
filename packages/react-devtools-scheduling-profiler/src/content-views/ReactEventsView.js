@@ -25,13 +25,13 @@ import {
 } from '../view-base';
 import {
   COLORS,
-  EVENT_ROW_PADDING,
-  EVENT_DIAMETER,
+  TOP_ROW_PADDING,
+  REACT_EVENT_DIAMETER,
   BORDER_SIZE,
 } from './constants';
 
 const EVENT_ROW_HEIGHT_FIXED =
-  EVENT_ROW_PADDING + EVENT_DIAMETER + EVENT_ROW_PADDING;
+  TOP_ROW_PADDING + REACT_EVENT_DIAMETER + TOP_ROW_PADDING;
 
 function isSuspenseEvent(event: ReactEvent): boolean %checks {
   return (
@@ -85,13 +85,13 @@ export class ReactEventsView extends View {
     const {timestamp, type} = event;
 
     const x = timestampToPosition(timestamp, scaleFactor, frame);
-    const radius = EVENT_DIAMETER / 2;
+    const radius = REACT_EVENT_DIAMETER / 2;
     const eventRect: Rect = {
       origin: {
         x: x - radius,
         y: baseY,
       },
-      size: {width: EVENT_DIAMETER, height: EVENT_DIAMETER},
+      size: {width: REACT_EVENT_DIAMETER, height: REACT_EVENT_DIAMETER},
     };
     if (!rectIntersectsRect(eventRect, rect)) {
       return; // Not in view
@@ -156,7 +156,7 @@ export class ReactEventsView extends View {
     );
 
     // Draw events
-    const baseY = frame.origin.y + EVENT_ROW_PADDING;
+    const baseY = frame.origin.y + TOP_ROW_PADDING;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
       frame,
@@ -246,7 +246,7 @@ export class ReactEventsView extends View {
     );
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
     const eventTimestampAllowance = widthToDuration(
-      EVENT_DIAMETER / 2,
+      REACT_EVENT_DIAMETER / 2,
       scaleFactor,
     );
 

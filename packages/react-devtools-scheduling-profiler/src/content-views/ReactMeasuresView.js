@@ -54,7 +54,7 @@ export class ReactMeasuresView extends View {
 
   _performPreflightComputations() {
     this._lanesToRender = [];
-    this._laneToMeasures = new Map<ReactLane, ReactMeasure[]>();
+    this._laneToMeasures = new Map();
 
     for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
       const measuresForLane = getMeasuresForLane(
