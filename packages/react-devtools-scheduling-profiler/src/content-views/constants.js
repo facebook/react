@@ -8,12 +8,19 @@
  */
 
 export const LABEL_SIZE = 80;
-export const LABEL_FONT_SIZE = 11;
 export const MARKER_HEIGHT = 20;
 export const MARKER_TICK_HEIGHT = 8;
-export const MARKER_FONT_SIZE = 10;
+export const FONT_SIZE = 10;
 export const MARKER_TEXT_PADDING = 8;
 export const COLOR_HOVER_DIM_DELTA = 5;
+export const TOP_ROW_PADDING = 4;
+export const NATIVE_EVENT_HEIGHT = 14;
+export const REACT_EVENT_DIAMETER = 6;
+export const USER_TIMING_MARK_SIZE = 8;
+export const REACT_MEASURE_HEIGHT = 9;
+export const BORDER_SIZE = 1;
+export const FLAMECHART_FRAME_HEIGHT = 14;
+export const TEXT_PADDING = 3;
 
 export const INTERVAL_TIMES = [
   1,
@@ -31,22 +38,14 @@ export const INTERVAL_TIMES = [
 ];
 export const MIN_INTERVAL_SIZE_PX = 70;
 
-export const EVENT_ROW_PADDING = 4;
-export const EVENT_DIAMETER = 6;
-export const USER_TIMING_MARK_SIZE = 8;
-export const REACT_MEASURE_HEIGHT = 9;
-export const BORDER_SIZE = 1;
-
-export const FLAMECHART_FONT_SIZE = 10;
-export const FLAMECHART_FRAME_HEIGHT = 16;
-export const FLAMECHART_TEXT_PADDING = 3;
-
 // TODO Replace this with "export let" vars
 export let COLORS = {
   BACKGROUND: '',
-  FLAME_GRAPH_LABEL: '',
   NATIVE_EVENT: '',
   NATIVE_EVENT_HOVER: '',
+  NATIVE_EVENT_WARNING: '',
+  NATIVE_EVENT_WARNING_HOVER: '',
+  NATIVE_EVENT_WARNING_TEXT: '',
   PRIORITY_BACKGROUND: '',
   PRIORITY_BORDER: '',
   PRIORITY_LABEL: '',
@@ -75,6 +74,7 @@ export let COLORS = {
   REACT_SUSPEND: '',
   REACT_SUSPEND_HOVER: '',
   REACT_WORK_BORDER: '',
+  TEXT_COLOR: '',
   TIME_MARKER_LABEL: '',
 };
 
@@ -83,14 +83,20 @@ export function updateColorsToMatchTheme(): void {
 
   COLORS = {
     BACKGROUND: computedStyle.getPropertyValue('--color-background'),
-    FLAME_GRAPH_LABEL: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-flame-graph-label',
-    ),
     NATIVE_EVENT: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-native-event',
     ),
     NATIVE_EVENT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-native-event-hover',
+    ),
+    NATIVE_EVENT_WARNING: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-native-event-warning',
+    ),
+    NATIVE_EVENT_WARNING_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-native-event-warning-hover',
+    ),
+    NATIVE_EVENT_WARNING_TEXT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-native-event-warning-text',
     ),
     PRIORITY_BACKGROUND: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-priority-background',
@@ -171,6 +177,9 @@ export function updateColorsToMatchTheme(): void {
     ),
     REACT_WORK_BORDER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-work-border',
+    ),
+    TEXT_COLOR: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-text-color',
     ),
     TIME_MARKER_LABEL: computedStyle.getPropertyValue('--color-text'),
   };

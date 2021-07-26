@@ -11,9 +11,10 @@ import type {NativeEvent, ReactProfilerData} from '../types';
 import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
 
 import {
+  durationToWidth,
   positioningScaleFactor,
-  timestampToPosition,
   positionToTimestamp,
+  timestampToPosition,
 } from './utils/positioning';
 import {
   View,
@@ -24,28 +25,77 @@ import {
 } from '../view-base';
 import {
   COLORS,
-  EVENT_ROW_PADDING,
-  EVENT_DIAMETER,
+  TEXT_PADDING,
+  NATIVE_EVENT_HEIGHT,
+  FONT_SIZE,
   BORDER_SIZE,
 } from './constants';
 
-const EVENT_ROW_HEIGHT_FIXED =
-  EVENT_ROW_PADDING + EVENT_DIAMETER + EVENT_ROW_PADDING;
+const ROW_WITH_BORDER_HEIGHT = NATIVE_EVENT_HEIGHT + BORDER_SIZE;
+
+// TODO (scheduling profiler) Make this a reusable util
+const cachedFlamechartTextWidths = new Map();
+const trimFlamechartText = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  width: number,
+) => {
+  for (let i = text.length - 1; i >= 0; i--) {
+    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
+
+    let measuredWidth = cachedFlamechartTextWidths.get(trimmedText);
+    if (measuredWidth == null) {
+      measuredWidth = context.measureText(trimmedText).width;
+      cachedFlamechartTextWidths.set(trimmedText, measuredWidth);
+    }
+
+    if (measuredWidth <= width) {
+      return trimmedText;
+    }
+  }
+
+  return null;
+};
 
 export class NativeEventsView extends View {
-  _profilerData: ReactProfilerData;
-  _intrinsicSize: Size;
-
+  _depthToNativeEvent: Map<number, NativeEvent[]>;
   _hoveredEvent: NativeEvent | null = null;
+  _intrinsicSize: Size;
+  _maxDepth: number = 0;
+  _profilerData: ReactProfilerData;
+
   onHover: ((event: NativeEvent | null) => void) | null = null;
 
   constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
     super(surface, frame);
+
     this._profilerData = profilerData;
 
+    this._performPreflightComputations();
+    console.log(this._depthToNativeEvent);
+  }
+
+  _performPreflightComputations() {
+    this._depthToNativeEvent = new Map();
+
+    const {duration, nativeEvents} = this._profilerData;
+
+    nativeEvents.forEach(event => {
+      const depth = event.depth;
+
+      this._maxDepth = Math.max(this._maxDepth, depth);
+
+      if (!this._depthToNativeEvent.has(depth)) {
+        this._depthToNativeEvent.set(depth, [event]);
+      } else {
+        // $FlowFixMe This is unnecessary.
+        this._depthToNativeEvent.get(depth).push(event);
+      }
+    });
+
     this._intrinsicSize = {
-      width: this._profilerData.duration,
-      height: EVENT_ROW_HEIGHT_FIXED,
+      width: duration,
+      height: (this._maxDepth + 1) * ROW_WITH_BORDER_HEIGHT,
     };
   }
 
@@ -73,7 +123,9 @@ export class NativeEventsView extends View {
     showHoverHighlight: boolean,
   ) {
     const {frame} = this;
-    const {duration, timestamp} = event;
+    const {depth, duration, highlight, timestamp, type} = event;
+
+    baseY += depth * ROW_WITH_BORDER_HEIGHT;
 
     const xStart = timestampToPosition(timestamp, scaleFactor, frame);
     const xStop = timestampToPosition(timestamp + duration, scaleFactor, frame);
@@ -82,25 +134,60 @@ export class NativeEventsView extends View {
         x: xStart,
         y: baseY,
       },
-      size: {width: xStop - xStart, height: EVENT_DIAMETER},
+      size: {width: xStop - xStart, height: NATIVE_EVENT_HEIGHT},
     };
     if (!rectIntersectsRect(eventRect, rect)) {
       return; // Not in view
     }
 
-    const fillStyle = showHoverHighlight
-      ? COLORS.NATIVE_EVENT_HOVER
-      : COLORS.NATIVE_EVENT;
+    const width = durationToWidth(duration, scaleFactor);
+    if (width < 1) {
+      return; // Too small to render at this zoom level
+    }
 
     const drawableRect = intersectionOfRects(eventRect, rect);
     context.beginPath();
-    context.fillStyle = fillStyle;
+    if (highlight) {
+      context.fillStyle = showHoverHighlight
+        ? COLORS.NATIVE_EVENT_WARNING_HOVER
+        : COLORS.NATIVE_EVENT_WARNING;
+    } else {
+      context.fillStyle = showHoverHighlight
+        ? COLORS.NATIVE_EVENT_HOVER
+        : COLORS.NATIVE_EVENT;
+    }
     context.fillRect(
       drawableRect.origin.x,
       drawableRect.origin.y,
       drawableRect.size.width,
       drawableRect.size.height,
     );
+
+    // Render event type label
+    context.textAlign = 'left';
+    context.textBaseline = 'middle';
+    context.font = `${FONT_SIZE}px sans-serif`;
+
+    if (width > TEXT_PADDING * 2) {
+      const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
+      const trimmedName = trimFlamechartText(
+        context,
+        type,
+        width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
+      );
+
+      if (trimmedName !== null) {
+        context.fillStyle = highlight
+          ? COLORS.NATIVE_EVENT_WARNING_TEXT
+          : COLORS.TEXT_COLOR;
+
+        context.fillText(
+          trimmedName,
+          eventRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
+          eventRect.origin.y + NATIVE_EVENT_HEIGHT / 2,
+        );
+      }
+    }
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -111,7 +198,7 @@ export class NativeEventsView extends View {
       visibleArea,
     } = this;
 
-    context.fillStyle = COLORS.BACKGROUND;
+    context.fillStyle = COLORS.PRIORITY_BACKGROUND;
     context.fillRect(
       visibleArea.origin.x,
       visibleArea.origin.y,
@@ -120,57 +207,43 @@ export class NativeEventsView extends View {
     );
 
     // Draw events
-    const baseY = frame.origin.y + EVENT_ROW_PADDING;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
       frame,
     );
 
     nativeEvents.forEach(event => {
-      if (event === _hoveredEvent) {
-        // Draw the highlighted items on top so they stand out.
-        // This is helpful if there are multiple (overlapping) items close to each other.
-        this._drawSingleNativeEvent(
-          context,
-          visibleArea,
-          event,
-          baseY,
-          scaleFactor,
-          true,
-        );
-      } else {
-        this._drawSingleNativeEvent(
-          context,
-          visibleArea,
-          event,
-          baseY,
-          scaleFactor,
-          false,
-        );
-      }
+      this._drawSingleNativeEvent(
+        context,
+        visibleArea,
+        event,
+        frame.origin.y,
+        scaleFactor,
+        event === _hoveredEvent,
+      );
     });
 
-    // Render bottom border.
-    // Propose border rect, check if intersects with `rect`, draw intersection.
-    const borderFrame: Rect = {
-      origin: {
-        x: frame.origin.x,
-        y: frame.origin.y + EVENT_ROW_HEIGHT_FIXED - BORDER_SIZE,
-      },
-      size: {
-        width: frame.size.width,
-        height: BORDER_SIZE,
-      },
-    };
-    if (rectIntersectsRect(borderFrame, visibleArea)) {
-      const borderDrawableRect = intersectionOfRects(borderFrame, visibleArea);
-      context.fillStyle = COLORS.PRIORITY_BORDER;
-      context.fillRect(
-        borderDrawableRect.origin.x,
-        borderDrawableRect.origin.y,
-        borderDrawableRect.size.width,
-        borderDrawableRect.size.height,
-      );
+    // Render bottom borders.
+    for (let i = 0; i <= this._maxDepth; i++) {
+      const borderFrame: Rect = {
+        origin: {
+          x: frame.origin.x,
+          y: frame.origin.y + NATIVE_EVENT_HEIGHT,
+        },
+        size: {
+          width: frame.size.width,
+          height: BORDER_SIZE,
+        },
+      };
+      if (rectIntersectsRect(borderFrame, visibleArea)) {
+        context.fillStyle = COLORS.PRIORITY_BORDER;
+        context.fillRect(
+          visibleArea.origin.x,
+          frame.origin.y + (i + 1) * ROW_WITH_BORDER_HEIGHT - BORDER_SIZE,
+          visibleArea.size.width,
+          BORDER_SIZE,
+        );
+      }
     }
   }
 
@@ -189,25 +262,26 @@ export class NativeEventsView extends View {
       return;
     }
 
-    const {nativeEvents} = this._profilerData;
-
     const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
 
-    // Find the event being hovered over.
-    //
-    // Because data ranges may overlap, we want to find the last intersecting item.
-    // This will always be the one on "top" (the one the user is hovering over).
-    for (let index = nativeEvents.length - 1; index >= 0; index--) {
-      const nativeEvent = nativeEvents[index];
-      const {duration, timestamp} = nativeEvent;
+    const adjustedCanvasMouseY = location.y - frame.origin.y;
+    const depth = Math.floor(adjustedCanvasMouseY / ROW_WITH_BORDER_HEIGHT);
+    const nativeEventsAtDepth = this._depthToNativeEvent.get(depth);
 
-      if (
-        hoverTimestamp >= timestamp &&
-        hoverTimestamp <= timestamp + duration
-      ) {
-        onHover(nativeEvent);
-        return;
+    if (nativeEventsAtDepth) {
+      // Find the event being hovered over.
+      for (let index = nativeEventsAtDepth.length - 1; index >= 0; index--) {
+        const nativeEvent = nativeEventsAtDepth[index];
+        const {duration, timestamp} = nativeEvent;
+
+        if (
+          hoverTimestamp >= timestamp &&
+          hoverTimestamp <= timestamp + duration
+        ) {
+          onHover(nativeEvent);
+          return;
+        }
       }
     }
 

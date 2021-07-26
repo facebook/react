@@ -22,7 +22,9 @@ export type Milliseconds = number;
 export type ReactLane = number;
 
 export type NativeEvent = {|
+  +depth: number,
   +duration: Milliseconds,
+  highlight: boolean,
   +timestamp: Milliseconds,
   +type: string,
 |};

@@ -16,6 +16,7 @@ import type {
   Milliseconds,
   BatchUID,
   Flamechart,
+  NativeEvent,
   ReactLane,
   ReactMeasureType,
   ReactProfilerData,
@@ -38,6 +39,8 @@ type ProcessorState = {|
   uidCounter: BatchUID,
   measureStack: MeasureStackElement[],
 |};
+
+let nativeEventStack: Array<NativeEvent> = [];
 
 // Exported for tests
 export function getLanesFromTransportDecimalBitmask(
@@ -178,15 +181,37 @@ function processTimelineEvent(
           }
         }
 
-        const startTime = (ts - currentProfilerData.startTime) / 1000;
+        const timestamp = (ts - currentProfilerData.startTime) / 1000;
         const duration = event.dur / 1000;
 
-        // TODO (scheduling profiler) Should we filter out certain event types?
-        currentProfilerData.nativeEvents.push({
+        let depth = 0;
+
+        while (nativeEventStack.length > 0) {
+          const prevNativeEvent = nativeEventStack[nativeEventStack.length - 1];
+          const prevStopTime =
+            prevNativeEvent.timestamp + prevNativeEvent.duration;
+
+          if (timestamp < prevStopTime) {
+            depth = prevNativeEvent.depth + 1;
+            break;
+          } else {
+            nativeEventStack.pop();
+          }
+        }
+
+        const nativeEvent = {
+          depth,
           duration,
-          timestamp: startTime,
+          highlight: false,
+          timestamp,
           type,
-        });
+        };
+
+        currentProfilerData.nativeEvents.push(nativeEvent);
+
+        // Keep track of curent event in case future ones overlap.
+        // We separate them into different vertical lanes in this case.
+        nativeEventStack.push(nativeEvent);
       }
       break;
     case 'blink.user_timing':
@@ -309,6 +334,15 @@ function processTimelineEvent(
           currentProfilerData,
           state,
         );
+
+        for (let i = 0; i < nativeEventStack.length; i++) {
+          const nativeEvent = nativeEventStack[i];
+          const stopTime = nativeEvent.timestamp + nativeEvent.duration;
+          if (stopTime > startTime) {
+            // Warn about sync updates that happen an event handler.
+            nativeEvent.highlight = true;
+          }
+        }
       } else if (
         name.startsWith('--render-stop') ||
         name.startsWith('--render-yield')
@@ -470,6 +504,8 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
 export default function preprocessData(
   timeline: TimelineEvent[],
 ): ReactProfilerData {
+  nativeEventStack = [];
+
   const flamechart = preprocessFlamechart(timeline);
 
   const profilerData: ReactProfilerData = {

@@ -78,9 +78,11 @@
   --light-color-record-hover: #3578e5;
   --light-color-record-inactive: #0088fa;
   --light-color-resize-bar: #cccccc;
-  --light-color-scheduling-profiler-flame-graph-label: #000000;
-  --light-color-scheduling-profiler-native-event: #aaaaaa;
-  --light-color-scheduling-profiler-native-event-hover: #888888;
+  --light-color-scheduling-profiler-native-event: #ccc;
+  --light-color-scheduling-profiler-native-event-hover: #aaa;
+  --light-color-scheduling-profiler-native-event-warning: #ee1638;
+  --light-color-scheduling-profiler-native-event-warning-hover: #da1030;
+  --light-color-scheduling-profiler-native-event-warning-text: #fff;
   --light-color-scheduling-profiler-priority-background: #f6f6f6;
   --light-color-scheduling-profiler-priority-border: #eeeeee;
   --light-color-scheduling-profiler-user-timing: #c9cacd;
@@ -106,6 +108,7 @@
   --light-color-scheduling-profiler-react-schedule-cascading-hover:#ed0030;
   --light-color-scheduling-profiler-react-suspend: #a6e59f;
   --light-color-scheduling-profiler-react-suspend-hover:#13bc00;
+  --light-color-scheduling-profiler-text-color: #000000;
   --light-color-scheduling-profiler-react-work-border:#ffffff;
   --light-color-scroll-thumb: #c2c2c2;
   --light-color-scroll-track: #fafafa;
@@ -200,9 +203,11 @@
   --dark-color-record-hover: #a2e9fc;
   --dark-color-record-inactive: #61dafb;
   --dark-color-resize-bar: #3d424a;
-  --dark-color-scheduling-profiler-flame-graph-label: #000000;
-  --dark-color-scheduling-profiler-native-event: #aaaaaa;
-  --dark-color-scheduling-profiler-native-event-hover: #888888;
+  --dark-color-scheduling-profiler-native-event: #b2b2b2;
+  --dark-color-scheduling-profiler-native-event-hover: #949494;
+  --dark-color-scheduling-profiler-native-event-warning: #ee1638;
+  --dark-color-scheduling-profiler-native-event-warning-hover: #da1030;
+  --dark-color-scheduling-profiler-native-event-warning-text: #fff;
   --dark-color-scheduling-profiler-priority-background: #1d2129;
   --dark-color-scheduling-profiler-priority-border: #282c34;
   --dark-color-scheduling-profiler-user-timing: #c9cacd;
@@ -228,6 +233,7 @@
   --dark-color-scheduling-profiler-react-schedule-cascading-hover:#ed0030;
   --dark-color-scheduling-profiler-react-suspend: #a6e59f;
   --dark-color-scheduling-profiler-react-suspend-hover:#13bc00;
+  --dark-color-scheduling-profiler-text-color: #000000;
   --dark-color-scheduling-profiler-react-work-border:#ffffff;
   --dark-color-scroll-thumb: #afb3b9;
   --dark-color-scroll-track: #313640;
