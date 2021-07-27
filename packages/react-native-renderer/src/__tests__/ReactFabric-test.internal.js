@@ -414,6 +414,37 @@ describe('ReactFabric', () => {
     expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100, 0, 0);
   });
 
+  it('should no-op if calling measure on unmounted refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    nativeFabricUIManager.measure.mockClear();
+
+    let viewRef;
+    act(() => {
+      ReactFabric.render(
+        <View
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+    });
+    const dangerouslyRetainedViewRef = viewRef;
+    act(() => {
+      ReactFabric.stopSurface(11);
+    });
+
+    expect(nativeFabricUIManager.measure).not.toBeCalled();
+    const successCallback = jest.fn();
+    dangerouslyRetainedViewRef.measure(successCallback);
+    expect(nativeFabricUIManager.measure).not.toBeCalled();
+    expect(successCallback).not.toBeCalled();
+  });
+
   it('should call FabricUIManager.measureInWindow on ref.measureInWindow', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
@@ -440,6 +471,37 @@ describe('ReactFabric', () => {
     expect(nativeFabricUIManager.measureInWindow).toHaveBeenCalledTimes(1);
     expect(successCallback).toHaveBeenCalledTimes(1);
     expect(successCallback).toHaveBeenCalledWith(10, 10, 100, 100);
+  });
+
+  it('should no-op if calling measureInWindow on unmounted refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    nativeFabricUIManager.measureInWindow.mockClear();
+
+    let viewRef;
+    act(() => {
+      ReactFabric.render(
+        <View
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+    });
+    const dangerouslyRetainedViewRef = viewRef;
+    act(() => {
+      ReactFabric.stopSurface(11);
+    });
+
+    expect(nativeFabricUIManager.measureInWindow).not.toBeCalled();
+    const successCallback = jest.fn();
+    dangerouslyRetainedViewRef.measureInWindow(successCallback);
+    expect(nativeFabricUIManager.measureInWindow).not.toBeCalled();
+    expect(successCallback).not.toBeCalled();
   });
 
   it('should support ref in ref.measureLayout', () => {
@@ -478,6 +540,119 @@ describe('ReactFabric', () => {
     expect(nativeFabricUIManager.measureLayout).toHaveBeenCalledTimes(1);
     expect(successCallback).toHaveBeenCalledTimes(1);
     expect(successCallback).toHaveBeenCalledWith(1, 1, 100, 100);
+  });
+
+  it('should no-op if calling measureLayout on unmounted "from" ref', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    nativeFabricUIManager.measureLayout.mockClear();
+
+    let viewRef;
+    let otherRef;
+    act(() => {
+      ReactFabric.render(
+        <View>
+          <View
+            foo="bar"
+            ref={ref => {
+              viewRef = ref;
+            }}
+          />
+          <View
+            ref={ref => {
+              otherRef = ref;
+            }}
+          />
+        </View>,
+        11,
+      );
+    });
+    const dangerouslyRetainedOtherRef = otherRef;
+    act(() => {
+      ReactFabric.render(
+        <View>
+          <View
+            foo="bar"
+            ref={ref => {
+              viewRef = ref;
+            }}
+          />
+          {null}
+        </View>,
+        11,
+      );
+    });
+
+    expect(nativeFabricUIManager.measureLayout).not.toBeCalled();
+    const successCallback = jest.fn();
+    const failureCallback = jest.fn();
+    viewRef.measureLayout(
+      dangerouslyRetainedOtherRef,
+      successCallback,
+      failureCallback,
+    );
+    expect(nativeFabricUIManager.measureLayout).not.toBeCalled();
+    expect(successCallback).not.toBeCalled();
+    expect(failureCallback).not.toBeCalled();
+  });
+
+  it('should no-op if calling measureLayout on unmounted "to" ref', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    nativeFabricUIManager.measureLayout.mockClear();
+
+    let viewRef;
+    let otherRef;
+    act(() => {
+      ReactFabric.render(
+        <View>
+          <View
+            foo="bar"
+            ref={ref => {
+              viewRef = ref;
+            }}
+          />
+          <View
+            ref={ref => {
+              otherRef = ref;
+            }}
+          />
+        </View>,
+        11,
+      );
+    });
+    const dangerouslyRetainedViewRef = viewRef;
+    act(() => {
+      ReactFabric.render(
+        <View>
+          {null}
+          <View
+            ref={ref => {
+              otherRef = ref;
+            }}
+          />
+        </View>,
+        11,
+      );
+    });
+
+    expect(nativeFabricUIManager.measureLayout).not.toBeCalled();
+    const successCallback = jest.fn();
+    const failureCallback = jest.fn();
+    dangerouslyRetainedViewRef.measureLayout(
+      otherRef,
+      successCallback,
+      failureCallback,
+    );
+    expect(nativeFabricUIManager.measureLayout).not.toBeCalled();
+    expect(successCallback).not.toBeCalled();
+    expect(failureCallback).not.toBeCalled();
   });
 
   it('returns the correct instance and calls it in the callback', () => {
