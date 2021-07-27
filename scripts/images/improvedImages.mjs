@@ -64,22 +64,21 @@ const optimized = async (filename) => {
 
   try {
     await imagemin([filename], pluginsOptions)
+
+    const fileSizeAfter = size(filename)
+    const fileSizeDiff = fileSizeBefore - fileSizeAfter
+    if (fileSizeDiff > 0){
+      savedSize += fileSizeDiff
+      console.info(chalk.green(`Optimized ${filename}: ${chalk.yellow(readableSize(fileSizeAfter))}`))
+    } else { // file after same or bigger
+      // restore previous file
+      fs.renameSync(filenameBackup, filename)
+
+      console.info(`${filename} ${chalk.red(`already optimized`)}`)
+    }
+
   } catch (err) {
     console.info(chalk.red(`Skip ${filename} due to error when optimizing`));
-
-    return;
-  }
-
-  const fileSizeAfter = size(filename)
-  const fileSizeDiff = fileSizeBefore - fileSizeAfter
-  if (fileSizeDiff > 0){
-    savedSize += fileSizeDiff
-    console.info(chalk.green(`Optimized ${filename}: ${chalk.yellow(readableSize(fileSizeAfter))}`))
-  } else { // file after same or bigger
-    // restore previous file
-    fs.renameSync(filenameBackup, filename)
-
-    console.info(`${filename} ${chalk.red(`already optimized`)}`)
   }
 
   // delete backup file
