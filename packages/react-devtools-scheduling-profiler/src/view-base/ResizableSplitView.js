@@ -14,6 +14,7 @@ import type {
   MouseUpInteraction,
 } from './useCanvasInteraction';
 import type {Rect, Size} from './geometry';
+import type {ViewRef} from './Surface';
 
 import {COLORS} from '../content-views/constants';
 import nullthrows from 'nullthrows';
@@ -82,28 +83,49 @@ class ResizeBar extends View {
     this._updateColor();
   }
 
-  _handleMouseDown(interaction: MouseDownInteraction) {
+  _handleMouseDown(
+    interaction: MouseDownInteraction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
     );
     if (cursorInView) {
       this._setInteractionState('dragging');
+      activeViewRef.current = this;
     }
   }
 
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(
+    interaction: MouseMoveInteraction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
     );
+
+    if (cursorInView || activeViewRef.current === this) {
+      this.currentCursor = 'ns-resize';
+    }
+    if (cursorInView) {
+      hoveredViewRef.current = this;
+    }
+
     if (this._interactionState === 'dragging') {
       return;
     }
     this._setInteractionState(cursorInView ? 'hovered' : 'normal');
   }
 
-  _handleMouseUp(interaction: MouseUpInteraction) {
+  _handleMouseUp(
+    interaction: MouseUpInteraction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
@@ -111,18 +133,26 @@ class ResizeBar extends View {
     if (this._interactionState === 'dragging') {
       this._setInteractionState(cursorInView ? 'hovered' : 'normal');
     }
+
+    if (activeViewRef.current === this) {
+      activeViewRef.current = null;
+    }
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(
+    interaction: Interaction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     switch (interaction.type) {
       case 'mousedown':
-        this._handleMouseDown(interaction);
+        this._handleMouseDown(interaction, activeViewRef, hoveredViewRef);
         return;
       case 'mousemove':
-        this._handleMouseMove(interaction);
+        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
         return;
       case 'mouseup':
-        this._handleMouseUp(interaction);
+        this._handleMouseUp(interaction, activeViewRef, hoveredViewRef);
         return;
     }
   }
@@ -281,18 +311,6 @@ export class ResizableSplitView extends View {
   }
 
   _handleMouseMove(interaction: MouseMoveInteraction) {
-    const cursorLocation = interaction.payload.location;
-    const resizeBarFrame = this._getResizeBar().frame;
-
-    const canvas = this._canvasRef.current;
-    if (canvas !== null) {
-      if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
-        canvas.style.cursor = 'ns-resize';
-      } else {
-        canvas.style.cursor = 'default';
-      }
-    }
-
     const {_resizingState} = this;
     if (_resizingState) {
       this._resizingState = {
@@ -309,7 +327,23 @@ export class ResizableSplitView extends View {
     }
   }
 
-  handleInteraction(interaction: Interaction) {
+  _didGrab: boolean = false;
+
+  getCursorActiveSubView(interaction: Interaction): View | null {
+    const cursorLocation = interaction.payload.location;
+    const resizeBarFrame = this._getResizeBar().frame;
+    if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
+      return this;
+    } else {
+      return null;
+    }
+  }
+
+  handleInteraction(
+    interaction: Interaction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     switch (interaction.type) {
       case 'mousedown':
         this._handleMouseDown(interaction);

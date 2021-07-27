@@ -8,7 +8,13 @@
  */
 
 import type {UserTimingMark} from '../types';
-import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
+import type {
+  Interaction,
+  MouseMoveInteraction,
+  Rect,
+  Size,
+  ViewRef,
+} from '../view-base';
 
 import {
   positioningScaleFactor,
@@ -185,7 +191,11 @@ export class UserTimingMarksView extends View {
   /**
    * @private
    */
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(
+    interaction: MouseMoveInteraction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     const {frame, onHover, visibleArea} = this;
     if (!onHover) {
       return;
@@ -218,6 +228,8 @@ export class UserTimingMarksView extends View {
         timestamp - markTimestampAllowance <= hoverTimestamp &&
         hoverTimestamp <= timestamp + markTimestampAllowance
       ) {
+        this.currentCursor = 'pointer';
+        hoveredViewRef.current = this;
         onHover(mark);
         return;
       }
@@ -226,10 +238,14 @@ export class UserTimingMarksView extends View {
     onHover(null);
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(
+    interaction: Interaction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction);
+        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
         break;
     }
   }
