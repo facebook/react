@@ -128,7 +128,7 @@ export class NativeEventsView extends View {
     showHoverHighlight: boolean,
   ) {
     const {frame} = this;
-    const {depth, duration, highlight, timestamp, type} = event;
+    const {depth, duration, timestamp, type, warnings} = event;
 
     baseY += depth * ROW_WITH_BORDER_HEIGHT;
 
@@ -152,7 +152,7 @@ export class NativeEventsView extends View {
 
     const drawableRect = intersectionOfRects(eventRect, rect);
     context.beginPath();
-    if (highlight) {
+    if (warnings !== null) {
       context.fillStyle = showHoverHighlight
         ? COLORS.NATIVE_EVENT_WARNING_HOVER
         : COLORS.NATIVE_EVENT_WARNING;
@@ -182,9 +182,10 @@ export class NativeEventsView extends View {
       );
 
       if (trimmedName !== null) {
-        context.fillStyle = highlight
-          ? COLORS.NATIVE_EVENT_WARNING_TEXT
-          : COLORS.TEXT_COLOR;
+        context.fillStyle =
+          warnings !== null
+            ? COLORS.NATIVE_EVENT_WARNING_TEXT
+            : COLORS.TEXT_COLOR;
 
         context.fillText(
           trimmedName,

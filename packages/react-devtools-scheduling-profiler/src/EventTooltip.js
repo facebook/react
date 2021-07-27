@@ -209,7 +209,19 @@ const TooltipNativeEvent = ({
   nativeEvent: NativeEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {duration, timestamp, type} = nativeEvent;
+  const {duration, timestamp, type, warnings} = nativeEvent;
+
+  const warningElements = [];
+  if (warnings !== null) {
+    warnings.forEach((warning, index) => {
+      warningElements.push(
+        <Fragment key={index}>
+          <div className={styles.DetailsGridLabel}>Warning:</div>
+          <div>{warning}</div>
+        </Fragment>,
+      );
+    });
+  }
 
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
@@ -221,6 +233,7 @@ const TooltipNativeEvent = ({
         <div>{formatTimestamp(timestamp)}</div>
         <div className={styles.DetailsGridLabel}>Duration:</div>
         <div>{formatDuration(duration)}</div>
+        {warningElements}
       </div>
     </div>
   );

@@ -202,9 +202,9 @@ function processTimelineEvent(
         const nativeEvent = {
           depth,
           duration,
-          highlight: false,
           timestamp,
           type,
+          warnings: null,
         };
 
         currentProfilerData.nativeEvents.push(nativeEvent);
@@ -339,8 +339,13 @@ function processTimelineEvent(
           const nativeEvent = nativeEventStack[i];
           const stopTime = nativeEvent.timestamp + nativeEvent.duration;
           if (stopTime > startTime) {
-            // Warn about sync updates that happen an event handler.
-            nativeEvent.highlight = true;
+            const warning =
+              'An event handler scheduled a synchronous update with React.';
+            if (nativeEvent.warnings === null) {
+              nativeEvent.warnings = new Set([warning]);
+            } else {
+              nativeEvent.warnings.add(warning);
+            }
           }
         }
       } else if (
