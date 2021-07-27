@@ -71,6 +71,7 @@ import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
+  videoEventTypes,
   mediaEventTypes,
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
@@ -496,6 +497,10 @@ export function setInitialProperties(
       props = rawProps;
       break;
     case 'video':
+      for (let i = 0; i < videoEventTypes.length; i++) {
+        listenToNonDelegatedEvent(videoEventTypes[i], domElement);
+      }
+    // falls through
     case 'audio':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.
@@ -885,6 +890,10 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent('load', domElement);
       break;
     case 'video':
+      for (let i = 0; i < videoEventTypes.length; i++) {
+        listenToNonDelegatedEvent(videoEventTypes[i], domElement);
+      }
+    // falls through
     case 'audio':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.

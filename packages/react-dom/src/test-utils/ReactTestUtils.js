@@ -642,6 +642,7 @@ const simulatedEventTypes = [
   'pointerUp',
   'rateChange',
   'reset',
+  'resize',
   'seeked',
   'submit',
   'touchCancel',

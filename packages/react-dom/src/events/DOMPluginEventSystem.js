@@ -201,6 +201,9 @@ export const mediaEventTypes: Array<DOMEventName> = [
   'waiting',
 ];
 
+// List of events that need to be individually attached to video elements.
+export const videoEventTypes: Array<DOMEventName> = ['resize'];
+
 // We should not delegate these events to the container, but rather
 // set them on the actual target element itself. This is primarily
 // because these events do not consistently bubble in the DOM.
@@ -216,6 +219,7 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   // and can occur on other elements too. Rather than duplicate that event,
   // we just take it from the media events array.
   ...mediaEventTypes,
+  ...videoEventTypes,
 ]);
 
 function executeDispatch(
