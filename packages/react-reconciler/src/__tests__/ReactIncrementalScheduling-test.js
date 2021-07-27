@@ -230,7 +230,7 @@ describe('ReactIncrementalScheduling', () => {
       state = {tick: 0};
 
       componentDidMount() {
-        ReactNoop.deferredUpdates(() => {
+        React.startTransition(() => {
           Scheduler.unstable_yieldValue(
             'componentDidMount (before setState): ' + this.state.tick,
           );
@@ -242,7 +242,7 @@ describe('ReactIncrementalScheduling', () => {
       }
 
       componentDidUpdate() {
-        ReactNoop.deferredUpdates(() => {
+        React.startTransition(() => {
           Scheduler.unstable_yieldValue(
             'componentDidUpdate: ' + this.state.tick,
           );
@@ -280,38 +280,21 @@ describe('ReactIncrementalScheduling', () => {
     expect(Scheduler).toFlushAndYield(['render: 1', 'componentDidUpdate: 1']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
 
-    // Increment the tick to 2. This will trigger an update inside cDU. Flush
-    // the first update without flushing the second one.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        instance.setState({tick: 2});
-      });
-
-      // TODO: why does this flush sync?
-      expect(Scheduler).toFlushAndYieldThrough([
-        'render: 2',
-        'componentDidUpdate: 2',
-        'componentDidUpdate (before setState): 2',
-        'componentDidUpdate (after setState): 2',
-        'render: 3',
-        'componentDidUpdate: 3',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
-    } else {
+    React.startTransition(() => {
       instance.setState({tick: 2});
+    });
 
-      expect(Scheduler).toFlushAndYieldThrough([
-        'render: 2',
-        'componentDidUpdate: 2',
-        'componentDidUpdate (before setState): 2',
-        'componentDidUpdate (after setState): 2',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
+    expect(Scheduler).toFlushUntilNextPaint([
+      'render: 2',
+      'componentDidUpdate: 2',
+      'componentDidUpdate (before setState): 2',
+      'componentDidUpdate (after setState): 2',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
 
-      // Now flush the cDU update.
-      expect(Scheduler).toFlushAndYield(['render: 3', 'componentDidUpdate: 3']);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
-    }
+    // Now flush the cDU update.
+    expect(Scheduler).toFlushAndYield(['render: 3', 'componentDidUpdate: 3']);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
   });
 
   it('performs Task work even after time runs out', () => {

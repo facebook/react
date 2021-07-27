@@ -1612,7 +1612,7 @@ function flushSegment(
     // Assign an ID to refer to the future content by.
     boundary.rootSegmentID = request.nextSegmentId++;
     if (boundary.completedSegments.length > 0) {
-      // If this is at least partially complete, we can queue it to be partially emmitted early.
+      // If this is at least partially complete, we can queue it to be partially emitted early.
       request.partialBoundaries.push(boundary);
     }
 

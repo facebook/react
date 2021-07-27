@@ -536,9 +536,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
       return getPublicRootInstance(root);
     },
 
-    unstable_flushSync<T>(fn: () => T): T {
-      return flushSync(fn);
-    },
+    unstable_flushSync: flushSync,
   };
 
   Object.defineProperty(

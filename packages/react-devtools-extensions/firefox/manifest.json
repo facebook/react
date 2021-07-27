@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "React Developer Tools",
   "description": "Adds React debugging tools to the Firefox Developer Tools.",
-  "version": "4.13.5",
+  "version": "4.14.0",
 
   "applications": {
     "gecko": {
@@ -32,7 +32,7 @@
 
   "devtools_page": "main.html",
 
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": "script-src 'self' 'unsafe-eval' blob:; object-src 'self'",
   "web_accessible_resources": [
     "main.html",
     "panel.html",

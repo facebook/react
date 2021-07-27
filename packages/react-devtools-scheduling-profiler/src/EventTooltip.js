@@ -10,6 +10,7 @@
 import type {Point} from './view-base';
 import type {
   FlamechartStackFrame,
+  NativeEvent,
   ReactEvent,
   ReactHoverContextInfo,
   ReactMeasure,
@@ -47,8 +48,8 @@ function trimmedString(string: string, length: number): string {
   return string;
 }
 
-function getReactEventLabel(type): string | null {
-  switch (type) {
+function getReactEventLabel(event: ReactEvent): string | null {
+  switch (event.type) {
     case 'schedule-render':
       return 'render scheduled';
     case 'schedule-state-update':
@@ -111,10 +112,22 @@ export default function EventTooltip({data, hoveredEvent, origin}: Props) {
     return null;
   }
 
-  const {event, measure, flamechartStackFrame, userTimingMark} = hoveredEvent;
+  const {
+    nativeEvent,
+    reactEvent,
+    measure,
+    flamechartStackFrame,
+    userTimingMark,
+  } = hoveredEvent;
 
-  if (event !== null) {
-    return <TooltipReactEvent event={event} tooltipRef={tooltipRef} />;
+  if (nativeEvent !== null) {
+    return (
+      <TooltipNativeEvent nativeEvent={nativeEvent} tooltipRef={tooltipRef} />
+    );
+  } else if (reactEvent !== null) {
+    return (
+      <TooltipReactEvent reactEvent={reactEvent} tooltipRef={tooltipRef} />
+    );
   } else if (measure !== null) {
     return (
       <TooltipReactMeasure
@@ -189,23 +202,47 @@ const TooltipFlamechartNode = ({
   );
 };
 
-const TooltipReactEvent = ({
-  event,
+const TooltipNativeEvent = ({
+  nativeEvent,
   tooltipRef,
 }: {
-  event: ReactEvent,
+  nativeEvent: NativeEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const label = getReactEventLabel(event.type);
-  const color = getReactEventColor(event);
+  const {duration, timestamp, type} = nativeEvent;
+
+  return (
+    <div className={styles.Tooltip} ref={tooltipRef}>
+      <span className={styles.ComponentName}>{trimmedString(type, 768)}</span>
+      event
+      <div className={styles.Divider} />
+      <div className={styles.DetailsGrid}>
+        <div className={styles.DetailsGridLabel}>Timestamp:</div>
+        <div>{formatTimestamp(timestamp)}</div>
+        <div className={styles.DetailsGridLabel}>Duration:</div>
+        <div>{formatDuration(duration)}</div>
+      </div>
+    </div>
+  );
+};
+
+const TooltipReactEvent = ({
+  reactEvent,
+  tooltipRef,
+}: {
+  reactEvent: ReactEvent,
+  tooltipRef: Return<typeof useRef>,
+}) => {
+  const label = getReactEventLabel(reactEvent);
+  const color = getReactEventColor(reactEvent);
   if (!label || !color) {
     if (__DEV__) {
-      console.warn('Unexpected event type "%s"', event.type);
+      console.warn('Unexpected reactEvent type "%s"', reactEvent.type);
     }
     return null;
   }
 
-  const {componentName, componentStack, timestamp} = event;
+  const {componentName, componentStack, timestamp} = reactEvent;
 
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>

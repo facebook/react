@@ -87,5 +87,6 @@ export type HookNames = Map<HookSourceLocationKey, HookName>;
 export type LRUCache<K, V> = {|
   get: (key: K) => V,
   has: (key: K) => boolean,
+  reset: () => void,
   set: (key: K, value: V) => void,
 |};

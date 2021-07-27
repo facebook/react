@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -19,7 +18,7 @@ import type {
 } from 'react-devtools-shared/src/types';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 
-const TIMEOUT = 5000;
+const TIMEOUT = 30000;
 
 const Pending = 0;
 const Resolved = 1;
@@ -58,7 +57,7 @@ function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // TODO Rethink this if the React API constraints change.
 // See https://github.com/reactwg/react-18/discussions/25#discussioncomment-980435
-const map: WeakMap<Element, Record<HookNames>> = new WeakMap();
+let map: WeakMap<Element, Record<HookNames>> = new WeakMap();
 
 export function hasAlreadyLoadedHookNames(element: Element): boolean {
   const record = map.get(element);
@@ -70,10 +69,6 @@ export function loadHookNames(
   hooksTree: HooksTree,
   loadHookNamesFunction: (hookLog: HooksTree) => Thenable<HookNames>,
 ): HookNames | null {
-  if (!enableHookNameParsing) {
-    return null;
-  }
-
   let record = map.get(element);
 
   if (__DEBUG__) {
@@ -108,7 +103,14 @@ export function loadHookNames(
 
     let didTimeout = false;
 
-    loadHookNamesFunction(hooksTree).then(
+    const response = loadHookNamesFunction(hooksTree);
+    console.log(
+      'loadHookNamesFunction:',
+      loadHookNamesFunction,
+      '->',
+      response,
+    );
+    response.then(
       function onSuccess(hookNames) {
         if (didTimeout) {
           return;
@@ -180,4 +182,8 @@ export function getHookSourceLocationKey({
     throw Error('Hook source code location not found.');
   }
   return `${fileName}:${lineNumber}:${columnNumber}`;
+}
+
+export function clearHookNamesCache(): void {
+  map = new WeakMap();
 }

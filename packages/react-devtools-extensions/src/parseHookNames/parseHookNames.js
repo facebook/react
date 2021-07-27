@@ -1,5 +1,3 @@
-/* global chrome */
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -10,11 +8,10 @@
  */
 
 import {parse} from '@babel/parser';
-import {enableHookNameParsing} from 'react-devtools-feature-flags';
 import LRU from 'lru-cache';
 import {SourceMapConsumer} from 'source-map';
-import {getHookName} from './astUtils';
-import {areSourceMapsAppliedToErrors} from './ErrorTester';
+import {getHookName} from '../astUtils';
+import {areSourceMapsAppliedToErrors} from '../ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 
@@ -25,7 +22,7 @@ import type {
 } from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
 import type {Thenable} from 'shared/ReactTypes';
-import type {SourceConsumer} from './astUtils';
+import type {SourceConsumer} from '../astUtils';
 
 const SOURCE_MAP_REGEX = / ?sourceMappingURL=([^\s'"]+)/gm;
 const MAX_SOURCE_LENGTH = 100_000_000;
@@ -102,13 +99,10 @@ const originalURLToMetadataCache: LRUCache<
   },
 });
 
-export default async function parseHookNames(
+export async function parseHookNames(
   hooksTree: HooksTree,
+  wasmMappingsURL: string,
 ): Thenable<HookNames | null> {
-  if (!enableHookNameParsing) {
-    return Promise.resolve(null);
-  }
-
   const hooksList: Array<HooksNode> = [];
   flattenHooksList(hooksTree, hooksList);
 
@@ -165,7 +159,9 @@ export default async function parseHookNames(
   }
 
   return loadSourceFiles(locationKeyToHookSourceData)
-    .then(() => extractAndLoadSourceMaps(locationKeyToHookSourceData))
+    .then(() =>
+      extractAndLoadSourceMaps(locationKeyToHookSourceData, wasmMappingsURL),
+    )
     .then(() => parseSourceAST(locationKeyToHookSourceData))
     .then(() => updateLruCache(locationKeyToHookSourceData))
     .then(() => findHookNames(hooksList, locationKeyToHookSourceData));
@@ -187,6 +183,7 @@ function decodeBase64String(encoded: string): Object {
 
 function extractAndLoadSourceMaps(
   locationKeyToHookSourceData: Map<string, HookSourceData>,
+  wasmMappingsURL: string,
 ): Promise<*> {
   // SourceMapConsumer.initialize() does nothing when running in Node (aka Jest)
   // because the wasm file is automatically read from the file system
@@ -197,9 +194,6 @@ function extractAndLoadSourceMaps(
         'extractAndLoadSourceMaps() Initializing source-map library ...',
       );
     }
-
-    // $FlowFixMe
-    const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
 
     SourceMapConsumer.initialize({'lib/mappings.wasm': wasmMappingsURL});
   }
@@ -622,4 +616,9 @@ function updateLruCache(
     }
   });
   return Promise.resolve();
+}
+
+export function purgeCachedMetadata(): void {
+  originalURLToMetadataCache.reset();
+  runtimeURLToMetadataCache.reset();
 }

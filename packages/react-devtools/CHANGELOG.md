@@ -9,6 +9,18 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.14.0 (July 17, 2021)
+#### Features
+* Display hook names for inspected components ([saphal1998](https://github.com/saphal1998), [VibhorCodecianGupta](https://github.com/VibhorCodecianGupta), [bvaughn](https://github.com/bvaughn), and [motiz88](https://github.com/motiz88) in [#21641](https://github.com/facebook/react/pull/21641), [#21790](https://github.com/facebook/react/pull/21790), [#21814](https://github.com/facebook/react/pull/21814), [#21815](https://github.com/facebook/react/pull/21815), [#21831](https://github.com/facebook/react/pull/21831), [#21833](https://github.com/facebook/react/pull/21833), [#21835](https://github.com/facebook/react/pull/21835), [#21865](https://github.com/facebook/react/pull/21865), [#21871](https://github.com/facebook/react/pull/21871), [#21874](https://github.com/facebook/react/pull/21874), [#21891](https://github.com/facebook/react/pull/21891))
+* Control for manually toggling error boundaries ([baopham](https://github.com/baopham) in [#21583](https://github.com/facebook/react/pull/21583))
+* Allow user to manually enter Profiler commit number to jump between commits ([srubin](https://github.com/srubin) in [#19957](https://github.com/facebook/react/pull/19957))
+
+##### Display hook names for inspected components
+![DevTools parsing hook names](https://user-images.githubusercontent.com/29597/124013541-68c2cb00-d9b0-11eb-83ab-81a5180da46b.gif)
+
+##### Control for manually toggling error boundaries
+![DevTools error boundary toggle](https://user-images.githubusercontent.com/29597/125891522-30f0d99d-407f-4c31-b5a7-e9d0bd3fa554.gif)
+
 ## 4.13.5 (May 25, 2021)
 #### Bugfix
 * Handle edge case where a component mounts before its "owner" (in DEV mode) that previously caused a validation error ([bvaughn](https://github.com/bvaughn) in [#21562](https://github.com/facebook/react/pull/21562))

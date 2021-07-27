@@ -132,7 +132,7 @@ describe('ReactDOMFiberAsync', () => {
   it('flushSync logs an error if already performing work', () => {
     class Component extends React.Component {
       componentDidUpdate() {
-        ReactDOM.flushSync(() => {});
+        ReactDOM.flushSync();
       }
       render() {
         return null;

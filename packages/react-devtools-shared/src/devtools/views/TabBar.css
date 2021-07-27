@@ -85,6 +85,14 @@
 .TabLabelSettings {
 }
 
+.VRule {
+  height: 20px;
+  width: 1px;
+  border-left: 1px solid var(--color-border);
+  padding-left: 0.25rem;
+  margin-left: 0.25rem;
+}
+
 @media screen and (max-width: 525px) {
   .IconSizeNavigation {
     margin-right: 0;

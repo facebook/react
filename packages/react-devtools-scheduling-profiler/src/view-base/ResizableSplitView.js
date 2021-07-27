@@ -15,6 +15,7 @@ import type {
 } from './useCanvasInteraction';
 import type {Rect, Size} from './geometry';
 
+import {COLORS} from '../content-views/constants';
 import nullthrows from 'nullthrows';
 import {Surface} from './Surface';
 import {View} from './View';
@@ -38,14 +39,11 @@ type LayoutState = $ReadOnly<{|
 |}>;
 
 function getColorForBarState(state: ResizeBarState): string {
-  // Colors obtained from Firefox Profiler
   switch (state) {
     case 'normal':
-      return '#ccc';
     case 'hovered':
-      return '#bbb';
     case 'dragging':
-      return '#aaa';
+      return COLORS.REACT_RESIZE_BAR;
   }
   throw new Error(`Unknown resize bar state ${state}`);
 }
@@ -131,6 +129,7 @@ class ResizeBar extends View {
 }
 
 export class ResizableSplitView extends View {
+  _canvasRef: {current: HTMLCanvasElement | null};
   _resizingState: ResizingState | null = null;
   _layoutState: LayoutState;
 
@@ -139,8 +138,11 @@ export class ResizableSplitView extends View {
     frame: Rect,
     topSubview: View,
     bottomSubview: View,
+    canvasRef: {current: HTMLCanvasElement | null},
   ) {
     super(surface, frame, noopLayout);
+
+    this._canvasRef = canvasRef;
 
     this.addSubview(topSubview);
     this.addSubview(new ResizeBar(surface, frame));
@@ -279,6 +281,18 @@ export class ResizableSplitView extends View {
   }
 
   _handleMouseMove(interaction: MouseMoveInteraction) {
+    const cursorLocation = interaction.payload.location;
+    const resizeBarFrame = this._getResizeBar().frame;
+
+    const canvas = this._canvasRef.current;
+    if (canvas !== null) {
+      if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
+        canvas.style.cursor = 'ns-resize';
+      } else {
+        canvas.style.cursor = 'default';
+      }
+    }
+
     const {_resizingState} = this;
     if (_resizingState) {
       this._resizingState = {

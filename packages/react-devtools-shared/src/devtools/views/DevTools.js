@@ -22,8 +22,9 @@ import TabBar from './TabBar';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
-import LoadHookNamesFunctionContext from './Components/LoadHookNamesFunctionContext';
+import HookNamesContext from './Components/HookNamesContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
+import {SchedulingProfilerContextController} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
@@ -51,6 +52,7 @@ export type ViewElementSource = (
 export type LoadHookNamesFunction = (
   hooksTree: HooksTree,
 ) => Thenable<HookNames>;
+export type PurgeCachedHookNamesMetadata = () => void;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
@@ -87,7 +89,8 @@ export type Props = {|
   // Loads and parses source maps for function components
   // and extracts hook "names" based on the variables the hook return values get assigned to.
   // Not every DevTools build can load source maps, so this property is optional.
-  loadHookNamesFunction?: ?LoadHookNamesFunction,
+  loadHookNames?: ?LoadHookNamesFunction,
+  purgeCachedHookNamesMetadata?: ?PurgeCachedHookNamesMetadata,
 |};
 
 const componentsTab = {
@@ -112,9 +115,10 @@ export default function DevTools({
   componentsPortalContainer,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
-  loadHookNamesFunction,
+  loadHookNames,
   overrideTab,
   profilerPortalContainer,
+  purgeCachedHookNamesMetadata,
   showTabBar = false,
   store,
   warnIfLegacyBackendDetected = false,
@@ -147,6 +151,14 @@ export default function DevTools({
       viewAttributeSourceFunction: viewAttributeSourceFunction || null,
     }),
     [enabledInspectedElementContextMenu, viewAttributeSourceFunction],
+  );
+
+  const hookNamesContext = useMemo(
+    () => ({
+      loadHookNames: loadHookNames || null,
+      purgeCachedMetadata: purgeCachedHookNamesMetadata || null,
+    }),
+    [loadHookNames, purgeCachedHookNamesMetadata],
   );
 
   const devToolsRef = useRef<HTMLElement | null>(null);
@@ -204,43 +216,46 @@ export default function DevTools({
               componentsPortalContainer={componentsPortalContainer}
               profilerPortalContainer={profilerPortalContainer}>
               <ViewElementSourceContext.Provider value={viewElementSource}>
-                <LoadHookNamesFunctionContext.Provider
-                  value={loadHookNamesFunction || null}>
+                <HookNamesContext.Provider value={hookNamesContext}>
                   <TreeContextController>
                     <ProfilerContextController>
-                      <div className={styles.DevTools} ref={devToolsRef}>
-                        {showTabBar && (
-                          <div className={styles.TabBar}>
-                            <ReactLogo />
-                            <span className={styles.DevToolsVersion}>
-                              {process.env.DEVTOOLS_VERSION}
-                            </span>
-                            <div className={styles.Spacer} />
-                            <TabBar
-                              currentTab={tab}
-                              id="DevTools"
-                              selectTab={setTab}
-                              tabs={tabs}
-                              type="navigation"
+                      <SchedulingProfilerContextController>
+                        <div className={styles.DevTools} ref={devToolsRef}>
+                          {showTabBar && (
+                            <div className={styles.TabBar}>
+                              <ReactLogo />
+                              <span className={styles.DevToolsVersion}>
+                                {process.env.DEVTOOLS_VERSION}
+                              </span>
+                              <div className={styles.Spacer} />
+                              <TabBar
+                                currentTab={tab}
+                                id="DevTools"
+                                selectTab={setTab}
+                                tabs={tabs}
+                                type="navigation"
+                              />
+                            </div>
+                          )}
+                          <div
+                            className={styles.TabContent}
+                            hidden={tab !== 'components'}>
+                            <Components
+                              portalContainer={componentsPortalContainer}
                             />
                           </div>
-                        )}
-                        <div
-                          className={styles.TabContent}
-                          hidden={tab !== 'components'}>
-                          <Components
-                            portalContainer={componentsPortalContainer}
-                          />
+                          <div
+                            className={styles.TabContent}
+                            hidden={tab !== 'profiler'}>
+                            <Profiler
+                              portalContainer={profilerPortalContainer}
+                            />
+                          </div>
                         </div>
-                        <div
-                          className={styles.TabContent}
-                          hidden={tab !== 'profiler'}>
-                          <Profiler portalContainer={profilerPortalContainer} />
-                        </div>
-                      </div>
+                      </SchedulingProfilerContextController>
                     </ProfilerContextController>
                   </TreeContextController>
-                </LoadHookNamesFunctionContext.Provider>
+                </HookNamesContext.Provider>
               </ViewElementSourceContext.Provider>
             </SettingsContextController>
             <UnsupportedBridgeProtocolDialog />
