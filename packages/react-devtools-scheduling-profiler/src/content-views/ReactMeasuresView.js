@@ -13,7 +13,7 @@ import type {
   MouseMoveInteraction,
   Rect,
   Size,
-  ViewRef,
+  ViewRefs,
 } from '../view-base';
 
 import {
@@ -256,11 +256,7 @@ export class ReactMeasuresView extends View {
   /**
    * @private
    */
-  _handleMouseMove(
-    interaction: MouseMoveInteraction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
     const {
       frame,
       _intrinsicSize,
@@ -311,7 +307,7 @@ export class ReactMeasuresView extends View {
         hoverTimestamp <= timestamp + duration
       ) {
         this.currentCursor = 'pointer';
-        hoveredViewRef.current = this;
+        viewRefs.hoveredView = this;
         onHover(measure);
         return;
       }
@@ -320,14 +316,10 @@ export class ReactMeasuresView extends View {
     onHover(null);
   }
 
-  handleInteraction(
-    interaction: Interaction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
+        this._handleMouseMove(interaction, viewRefs);
         break;
     }
   }

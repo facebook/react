@@ -13,7 +13,7 @@ import type {
   MouseMoveInteraction,
   Rect,
   Size,
-  ViewRef,
+  ViewRefs,
 } from '../view-base';
 
 import {
@@ -191,11 +191,7 @@ export class UserTimingMarksView extends View {
   /**
    * @private
    */
-  _handleMouseMove(
-    interaction: MouseMoveInteraction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
     const {frame, onHover, visibleArea} = this;
     if (!onHover) {
       return;
@@ -229,7 +225,7 @@ export class UserTimingMarksView extends View {
         hoverTimestamp <= timestamp + markTimestampAllowance
       ) {
         this.currentCursor = 'pointer';
-        hoveredViewRef.current = this;
+        viewRefs.hoveredView = this;
         onHover(mark);
         return;
       }
@@ -238,14 +234,10 @@ export class UserTimingMarksView extends View {
     onHover(null);
   }
 
-  handleInteraction(
-    interaction: Interaction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
+        this._handleMouseMove(interaction, viewRefs);
         break;
     }
   }

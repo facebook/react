@@ -17,7 +17,7 @@ import type {
   MouseMoveInteraction,
   Rect,
   Size,
-  ViewRef,
+  ViewRefs,
 } from '../view-base';
 
 import {
@@ -246,11 +246,7 @@ class FlamechartStackLayerView extends View {
   /**
    * @private
    */
-  _handleMouseMove(
-    interaction: MouseMoveInteraction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
     const {_stackLayer, frame, _intrinsicSize, _onHover, visibleArea} = this;
     const {location} = interaction.payload;
     if (!_onHover || !rectContainsPoint(location, visibleArea)) {
@@ -270,7 +266,7 @@ class FlamechartStackLayerView extends View {
       const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
       if (x <= location.x && x + width >= location.x) {
         this.currentCursor = 'pointer';
-        hoveredViewRef.current = this;
+        viewRefs.hoveredView = this;
         _onHover(flamechartStackFrame);
         return;
       }
@@ -287,14 +283,10 @@ class FlamechartStackLayerView extends View {
 
   _didGrab: boolean = false;
 
-  handleInteraction(
-    interaction: Interaction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
+        this._handleMouseMove(interaction, viewRefs);
         break;
     }
   }

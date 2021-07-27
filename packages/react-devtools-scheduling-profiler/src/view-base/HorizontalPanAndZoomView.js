@@ -19,7 +19,7 @@ import type {
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {ScrollState} from './utils/scrollState';
-import type {ViewRef} from './Surface';
+import type {ViewRefs} from './Surface';
 
 import {Surface} from './Surface';
 import {View} from './View';
@@ -156,34 +156,26 @@ export class HorizontalPanAndZoomView extends View {
     this._setScrollState(newState);
   }
 
-  _handleMouseDown(
-    interaction: MouseDownInteraction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  _handleMouseDown(interaction: MouseDownInteraction, viewRefs: ViewRefs) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
       this._isPanning = true;
 
-      activeViewRef.current = this;
+      viewRefs.activeView = this;
 
       this.currentCursor = 'grabbing';
     }
   }
 
-  _handleMouseMove(
-    interaction: MouseMoveInteraction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
     const isHovered = rectContainsPoint(
       interaction.payload.location,
       this.frame,
     );
     if (isHovered) {
-      hoveredViewRef.current = this;
+      viewRefs.hoveredView = this;
     }
 
-    if (activeViewRef.current === this) {
+    if (viewRefs.activeView === this) {
       this.currentCursor = 'grabbing';
     } else if (isHovered) {
       this.currentCursor = 'grab';
@@ -200,17 +192,13 @@ export class HorizontalPanAndZoomView extends View {
     this._setStateAndInformCallbacksIfChanged(newState);
   }
 
-  _handleMouseUp(
-    interaction: MouseUpInteraction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  _handleMouseUp(interaction: MouseUpInteraction, viewRefs: ViewRefs) {
     if (this._isPanning) {
       this._isPanning = false;
     }
 
-    if (activeViewRef.current === this) {
-      activeViewRef.current = null;
+    if (viewRefs.activeView === this) {
+      viewRefs.activeView = null;
     }
   }
 
@@ -273,20 +261,16 @@ export class HorizontalPanAndZoomView extends View {
     this._setStateAndInformCallbacksIfChanged(newState);
   }
 
-  handleInteraction(
-    interaction: Interaction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousedown':
-        this._handleMouseDown(interaction, activeViewRef, hoveredViewRef);
+        this._handleMouseDown(interaction, viewRefs);
         break;
       case 'mousemove':
-        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
+        this._handleMouseMove(interaction, viewRefs);
         break;
       case 'mouseup':
-        this._handleMouseUp(interaction, activeViewRef, hoveredViewRef);
+        this._handleMouseUp(interaction, viewRefs);
         break;
       case 'wheel-plain':
         this._handleWheelPlain(interaction);
