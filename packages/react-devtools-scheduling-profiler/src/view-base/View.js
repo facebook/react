@@ -10,7 +10,7 @@
 import type {Interaction} from './useCanvasInteraction';
 import type {Rect, Size} from './geometry';
 import type {Layouter} from './layouter';
-import type {ViewRef} from './Surface';
+import type {ViewRefs} from './Surface';
 
 import {Surface} from './Surface';
 import {
@@ -256,11 +256,7 @@ export class View {
   // Internal note: Do not call directly! Use
   // `handleInteractionAndPropagateToSubviews` so that interactions are
   // propagated to subviews.
-  handleInteraction(
-    interaction: Interaction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
-  ) {}
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {}
 
   /**
    * Handle an `interaction` and propagates it to all of this view's
@@ -274,16 +270,11 @@ export class View {
    */
   handleInteractionAndPropagateToSubviews(
     interaction: Interaction,
-    activeViewRef: ViewRef,
-    hoveredViewRef: ViewRef,
+    viewRefs: ViewRefs,
   ) {
-    this.handleInteraction(interaction, activeViewRef, hoveredViewRef);
+    this.handleInteraction(interaction, viewRefs);
     this.subviews.forEach(subview =>
-      subview.handleInteractionAndPropagateToSubviews(
-        interaction,
-        activeViewRef,
-        hoveredViewRef,
-      ),
+      subview.handleInteractionAndPropagateToSubviews(interaction, viewRefs),
     );
   }
 }

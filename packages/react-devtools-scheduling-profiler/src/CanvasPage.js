@@ -507,7 +507,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           );
         }}
       </ContextMenu>
-      {!isContextMenuShown && (
+      {!isContextMenuShown && !surfaceRef.current.hasActiveView() && (
         <EventTooltip
           data={data}
           hoveredEvent={hoveredEvent}
