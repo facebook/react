@@ -28,6 +28,7 @@ import useSmartTooltip from './utils/useSmartTooltip';
 import styles from './EventTooltip.css';
 
 type Props = {|
+  canvasRef: {|current: HTMLCanvasElement | null|},
   data: ReactProfilerData,
   hoveredEvent: ReactHoverContextInfo | null,
   origin: Point,
@@ -102,8 +103,14 @@ function getReactMeasureLabel(type): string | null {
   }
 }
 
-export default function EventTooltip({data, hoveredEvent, origin}: Props) {
+export default function EventTooltip({
+  canvasRef,
+  data,
+  hoveredEvent,
+  origin,
+}: Props) {
   const tooltipRef = useSmartTooltip({
+    canvasRef,
     mouseX: origin.x,
     mouseY: origin.y,
   });
@@ -209,7 +216,19 @@ const TooltipNativeEvent = ({
   nativeEvent: NativeEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {duration, timestamp, type} = nativeEvent;
+  const {duration, timestamp, type, warnings} = nativeEvent;
+
+  const warningElements = [];
+  if (warnings !== null) {
+    warnings.forEach((warning, index) => {
+      warningElements.push(
+        <Fragment key={index}>
+          <div className={styles.DetailsGridLabel}>Warning:</div>
+          <div>{warning}</div>
+        </Fragment>,
+      );
+    });
+  }
 
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
@@ -221,6 +240,7 @@ const TooltipNativeEvent = ({
         <div>{formatTimestamp(timestamp)}</div>
         <div className={styles.DetailsGridLabel}>Duration:</div>
         <div>{formatDuration(duration)}</div>
+        {warningElements}
       </div>
     </div>
   );

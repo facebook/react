@@ -24,9 +24,9 @@ export type ReactLane = number;
 export type NativeEvent = {|
   +depth: number,
   +duration: Milliseconds,
-  highlight: boolean,
   +timestamp: Milliseconds,
   +type: string,
+  warnings: Set<string> | null,
 |};
 
 type BaseReactEvent = {|
