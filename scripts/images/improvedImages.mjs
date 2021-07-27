@@ -59,6 +59,9 @@ const optimized = async (filename) => {
     plugins
   }
 
+  const filenameBackup = `${filename}.bak`
+  fs.copyFileSync(filename, filenameBackup)
+
   await imagemin([filename], pluginsOptions)
   const fileSizeAfter = size(filename)
   const fileSizeDiff = fileSizeBefore - fileSizeAfter
@@ -66,8 +69,15 @@ const optimized = async (filename) => {
     savedSize += fileSizeDiff
     console.info(chalk.green(`Optimized ${filename}: ${chalk.yellow(readableSize(fileSizeAfter))}`))
   } else { // file after same or bigger
-    // TODO: restore the file
+    // restore previous file
+    fs.renameSync(filenameBackup, filename)
+
     console.info(`${filename} ${chalk.red(`already optimized`)}`)
+  }
+
+  // delete backup file
+  if (fs.existsSync(filenameBackup)) {
+    fs.unlinkSync(filenameBackup)
   }
 }
 
