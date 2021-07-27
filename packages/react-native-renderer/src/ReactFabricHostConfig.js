@@ -137,17 +137,23 @@ class ReactFabricHostComponent {
   }
 
   measure(callback: MeasureOnSuccessCallback) {
-    fabricMeasure(
-      this._internalInstanceHandle.stateNode.node,
-      mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-    );
+    const {stateNode} = this._internalInstanceHandle;
+    if (stateNode != null) {
+      fabricMeasure(
+        stateNode.node,
+        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
+      );
+    }
   }
 
   measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
-    fabricMeasureInWindow(
-      this._internalInstanceHandle.stateNode.node,
-      mountSafeCallback_NOT_REALLY_SAFE(this, callback),
-    );
+    const {stateNode} = this._internalInstanceHandle;
+    if (stateNode != null) {
+      fabricMeasureInWindow(
+        stateNode.node,
+        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
+      );
+    }
   }
 
   measureLayout(
@@ -168,12 +174,18 @@ class ReactFabricHostComponent {
       return;
     }
 
-    fabricMeasureLayout(
-      this._internalInstanceHandle.stateNode.node,
-      relativeToNativeNode._internalInstanceHandle.stateNode.node,
-      mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
-      mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
-    );
+    const toStateNode = this._internalInstanceHandle.stateNode;
+    const fromStateNode =
+      relativeToNativeNode._internalInstanceHandle.stateNode;
+
+    if (toStateNode != null && fromStateNode != null) {
+      fabricMeasureLayout(
+        toStateNode.node,
+        fromStateNode.node,
+        mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
+        mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
+      );
+    }
   }
 
   setNativeProps(nativeProps: Object) {
