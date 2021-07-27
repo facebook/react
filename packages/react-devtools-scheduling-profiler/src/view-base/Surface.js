@@ -62,6 +62,10 @@ export class Surface {
     hoveredView: null,
   };
 
+  hasActiveView(): boolean {
+    return this._viewRefs.activeView !== null;
+  }
+
   setCanvas(canvas: HTMLCanvasElement, canvasSize: Size) {
     this._context = getCanvasContext(
       canvas,
