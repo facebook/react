@@ -62,7 +62,14 @@ const optimized = async (filename) => {
   const filenameBackup = `${filename}.bak`
   fs.copyFileSync(filename, filenameBackup)
 
-  await imagemin([filename], pluginsOptions)
+  try {
+    await imagemin([filename], pluginsOptions)
+  } catch (err) {
+    console.info(chalk.red(`Skip ${filename} due to error when optimizing`));
+
+    return;
+  }
+
   const fileSizeAfter = size(filename)
   const fileSizeDiff = fileSizeBefore - fileSizeAfter
   if (fileSizeDiff > 0){
