@@ -8,7 +8,13 @@
  */
 
 import type {ReactLane, ReactMeasure, ReactProfilerData} from '../types';
-import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
+import type {
+  Interaction,
+  MouseMoveInteraction,
+  Rect,
+  Size,
+  ViewRef,
+} from '../view-base';
 
 import {
   durationToWidth,
@@ -250,7 +256,11 @@ export class ReactMeasuresView extends View {
   /**
    * @private
    */
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(
+    interaction: MouseMoveInteraction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     const {
       frame,
       _intrinsicSize,
@@ -300,6 +310,8 @@ export class ReactMeasuresView extends View {
         hoverTimestamp >= timestamp &&
         hoverTimestamp <= timestamp + duration
       ) {
+        this.currentCursor = 'pointer';
+        hoveredViewRef.current = this;
         onHover(measure);
         return;
       }
@@ -308,10 +320,14 @@ export class ReactMeasuresView extends View {
     onHover(null);
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(
+    interaction: Interaction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction);
+        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
         break;
     }
   }

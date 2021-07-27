@@ -273,10 +273,16 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   }, [width, height]);
 
   const interactor = useCallback(interaction => {
-    if (canvasRef.current === null) {
+    const canvas = canvasRef.current;
+    if (canvas === null) {
       return;
     }
-    surfaceRef.current.handleInteraction(interaction);
+
+    const surface = surfaceRef.current;
+    surface.handleInteraction(interaction);
+
+    canvas.style.cursor = surface.getCurrentCursor() || 'default';
+
     // Defer drawing to canvas until React's commit phase, to avoid drawing
     // twice and to ensure that both the canvas and DOM elements managed by
     // React are in sync.

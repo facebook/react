@@ -8,7 +8,13 @@
  */
 
 import type {NativeEvent, ReactProfilerData} from '../types';
-import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
+import type {
+  Interaction,
+  MouseMoveInteraction,
+  Rect,
+  Size,
+  ViewRef,
+} from '../view-base';
 
 import {
   durationToWidth,
@@ -72,7 +78,6 @@ export class NativeEventsView extends View {
     this._profilerData = profilerData;
 
     this._performPreflightComputations();
-    console.log(this._depthToNativeEvent);
   }
 
   _performPreflightComputations() {
@@ -250,7 +255,11 @@ export class NativeEventsView extends View {
   /**
    * @private
    */
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(
+    interaction: MouseMoveInteraction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     const {frame, _intrinsicSize, onHover, visibleArea} = this;
     if (!onHover) {
       return;
@@ -279,6 +288,10 @@ export class NativeEventsView extends View {
           hoverTimestamp >= timestamp &&
           hoverTimestamp <= timestamp + duration
         ) {
+          this.currentCursor = 'pointer';
+
+          hoveredViewRef.current = this;
+
           onHover(nativeEvent);
           return;
         }
@@ -288,10 +301,14 @@ export class NativeEventsView extends View {
     onHover(null);
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(
+    interaction: Interaction,
+    activeViewRef: ViewRef,
+    hoveredViewRef: ViewRef,
+  ) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction);
+        this._handleMouseMove(interaction, activeViewRef, hoveredViewRef);
         break;
     }
   }

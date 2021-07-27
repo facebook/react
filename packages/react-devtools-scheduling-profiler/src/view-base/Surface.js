@@ -10,10 +10,13 @@
 import type {Interaction} from './useCanvasInteraction';
 import type {Size} from './geometry';
 
+import {createRef} from 'react';
 import memoize from 'memoize-one';
 
 import {View} from './View';
 import {zeroPoint} from './geometry';
+
+export type ViewRef = {|current: View | null|};
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {
@@ -48,8 +51,12 @@ const getCanvasContext = memoize(
  */
 export class Surface {
   rootView: ?View;
+
   _context: ?CanvasRenderingContext2D;
   _canvasSize: ?Size;
+
+  _activeViewRef: ViewRef = createRef();
+  _hoveredViewRef: ViewRef = createRef();
 
   setCanvas(canvas: HTMLCanvasElement, canvasSize: Size) {
     this._context = getCanvasContext(
@@ -80,10 +87,28 @@ export class Surface {
     rootView.displayIfNeeded(_context);
   }
 
+  getCurrentCursor(): string | null {
+    const activeView = this._activeViewRef.current;
+    if (activeView !== null) {
+      return activeView.currentCursor;
+    } else {
+      const hoveredView = this._hoveredViewRef.current;
+      if (hoveredView !== null) {
+        return hoveredView.currentCursor;
+      }
+    }
+
+    return null;
+  }
+
   handleInteraction(interaction: Interaction) {
     if (!this.rootView) {
       return;
     }
-    this.rootView.handleInteractionAndPropagateToSubviews(interaction);
+    this.rootView.handleInteractionAndPropagateToSubviews(
+      interaction,
+      this._activeViewRef,
+      this._hoveredViewRef,
+    );
   }
 }
