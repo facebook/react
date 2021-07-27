@@ -10,8 +10,9 @@
 import * as React from 'react';
 import {useContext, useMemo} from 'react';
 import {SettingsContext} from './Settings/SettingsContext';
+import type {Theme, DisplayDensity} from './Settings/SettingsContext';
 
-const styles = {
+const styles: {[style: Theme | DisplayDensity]: any} = {
   light: {
     '--color-attribute-name': '#ef6632',
     '--color-attribute-name-not-editable': '#23272f',
@@ -284,7 +285,7 @@ const styles = {
   },
 };
 
-export default function ThemeProvider({children}) {
+export default function ThemeProvider({children}: {|children: React$Node|}) {
   const {theme, displayDensity, browserTheme} = useContext(SettingsContext);
 
   const style = useMemo(
