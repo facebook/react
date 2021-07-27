@@ -28,6 +28,7 @@ import useSmartTooltip from './utils/useSmartTooltip';
 import styles from './EventTooltip.css';
 
 type Props = {|
+  canvasRef: {|current: HTMLCanvasElement | null|},
   data: ReactProfilerData,
   hoveredEvent: ReactHoverContextInfo | null,
   origin: Point,
@@ -102,8 +103,14 @@ function getReactMeasureLabel(type): string | null {
   }
 }
 
-export default function EventTooltip({data, hoveredEvent, origin}: Props) {
+export default function EventTooltip({
+  canvasRef,
+  data,
+  hoveredEvent,
+  origin,
+}: Props) {
   const tooltipRef = useSmartTooltip({
+    canvasRef,
     mouseX: origin.x,
     mouseY: origin.y,
   });
