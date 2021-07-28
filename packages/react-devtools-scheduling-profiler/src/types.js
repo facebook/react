@@ -26,13 +26,14 @@ export type NativeEvent = {|
   +duration: Milliseconds,
   +timestamp: Milliseconds,
   +type: string,
-  warnings: Set<string> | null,
+  warning: string | null,
 |};
 
 type BaseReactEvent = {|
   +componentName?: string,
   +componentStack?: string,
   +timestamp: Milliseconds,
+  warning: string | null,
 |};
 
 type BaseReactScheduleEvent = {|
@@ -47,12 +48,10 @@ export type ReactScheduleRenderEvent = {|
 export type ReactScheduleStateUpdateEvent = {|
   ...BaseReactScheduleEvent,
   type: 'schedule-state-update',
-  isCascading: boolean,
 |};
 export type ReactScheduleForceUpdateEvent = {|
   ...BaseReactScheduleEvent,
   type: 'schedule-force-update',
-  isCascading: boolean,
 |};
 
 type BaseReactSuspenseEvent = {|

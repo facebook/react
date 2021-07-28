@@ -132,7 +132,7 @@ export class ReactMeasuresView extends View {
       case 'commit':
         fillStyle = COLORS.REACT_COMMIT;
         hoveredFillStyle = COLORS.REACT_COMMIT_HOVER;
-        groupSelectedFillStyle = COLORS.REACT_COMMIT_SELECTED;
+        groupSelectedFillStyle = COLORS.REACT_COMMIT_HOVER;
         break;
       case 'render-idle':
         // We could render idle time as diagonal hashes.
@@ -140,22 +140,22 @@ export class ReactMeasuresView extends View {
         // color = context.createPattern(getIdlePattern(), 'repeat');
         fillStyle = COLORS.REACT_IDLE;
         hoveredFillStyle = COLORS.REACT_IDLE_HOVER;
-        groupSelectedFillStyle = COLORS.REACT_IDLE_SELECTED;
+        groupSelectedFillStyle = COLORS.REACT_IDLE_HOVER;
         break;
       case 'render':
         fillStyle = COLORS.REACT_RENDER;
         hoveredFillStyle = COLORS.REACT_RENDER_HOVER;
-        groupSelectedFillStyle = COLORS.REACT_RENDER_SELECTED;
+        groupSelectedFillStyle = COLORS.REACT_RENDER_HOVER;
         break;
       case 'layout-effects':
         fillStyle = COLORS.REACT_LAYOUT_EFFECTS;
         hoveredFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
-        groupSelectedFillStyle = COLORS.REACT_LAYOUT_EFFECTS_SELECTED;
+        groupSelectedFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
         break;
       case 'passive-effects':
         fillStyle = COLORS.REACT_PASSIVE_EFFECTS;
         hoveredFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
-        groupSelectedFillStyle = COLORS.REACT_PASSIVE_EFFECTS_SELECTED;
+        groupSelectedFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
         break;
       default:
         throw new Error(`Unexpected measure type "${type}"`);

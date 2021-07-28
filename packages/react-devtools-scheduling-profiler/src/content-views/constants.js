@@ -43,39 +43,35 @@ export let COLORS = {
   BACKGROUND: '',
   NATIVE_EVENT: '',
   NATIVE_EVENT_HOVER: '',
-  NATIVE_EVENT_WARNING: '',
-  NATIVE_EVENT_WARNING_HOVER: '',
-  NATIVE_EVENT_WARNING_TEXT: '',
   PRIORITY_BACKGROUND: '',
   PRIORITY_BORDER: '',
   PRIORITY_LABEL: '',
   USER_TIMING: '',
   USER_TIMING_HOVER: '',
   REACT_IDLE: '',
-  REACT_IDLE_SELECTED: '',
   REACT_IDLE_HOVER: '',
   REACT_RENDER: '',
-  REACT_RENDER_SELECTED: '',
   REACT_RENDER_HOVER: '',
   REACT_COMMIT: '',
-  REACT_COMMIT_SELECTED: '',
   REACT_COMMIT_HOVER: '',
   REACT_LAYOUT_EFFECTS: '',
-  REACT_LAYOUT_EFFECTS_SELECTED: '',
   REACT_LAYOUT_EFFECTS_HOVER: '',
   REACT_PASSIVE_EFFECTS: '',
-  REACT_PASSIVE_EFFECTS_SELECTED: '',
   REACT_PASSIVE_EFFECTS_HOVER: '',
   REACT_RESIZE_BAR: '',
+  REACT_RESOLVE: '',
+  REACT_RESOLVE_HOVER: '',
   REACT_SCHEDULE: '',
   REACT_SCHEDULE_HOVER: '',
-  REACT_SCHEDULE_CASCADING: '',
-  REACT_SCHEDULE_CASCADING_HOVER: '',
   REACT_SUSPEND: '',
   REACT_SUSPEND_HOVER: '',
   REACT_WORK_BORDER: '',
   TEXT_COLOR: '',
   TIME_MARKER_LABEL: '',
+  WARNING_BACKGROUND: '',
+  WARNING_BACKGROUND_HOVER: '',
+  WARNING_TEXT: '',
+  WARNING_TEXT_INVERED: '',
 };
 
 export function updateColorsToMatchTheme(): void {
@@ -88,15 +84,6 @@ export function updateColorsToMatchTheme(): void {
     ),
     NATIVE_EVENT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-native-event-hover',
-    ),
-    NATIVE_EVENT_WARNING: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-native-event-warning',
-    ),
-    NATIVE_EVENT_WARNING_HOVER: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-native-event-warning-hover',
-    ),
-    NATIVE_EVENT_WARNING_TEXT: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-native-event-warning-text',
     ),
     PRIORITY_BACKGROUND: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-priority-background',
@@ -114,17 +101,11 @@ export function updateColorsToMatchTheme(): void {
     REACT_IDLE: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-idle',
     ),
-    REACT_IDLE_SELECTED: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-idle-selected',
-    ),
     REACT_IDLE_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-idle-hover',
     ),
     REACT_RENDER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-render',
-    ),
-    REACT_RENDER_SELECTED: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-render-selected',
     ),
     REACT_RENDER_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-render-hover',
@@ -132,17 +113,11 @@ export function updateColorsToMatchTheme(): void {
     REACT_COMMIT: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-commit',
     ),
-    REACT_COMMIT_SELECTED: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-commit-selected',
-    ),
     REACT_COMMIT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-commit-hover',
     ),
     REACT_LAYOUT_EFFECTS: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-layout-effects',
-    ),
-    REACT_LAYOUT_EFFECTS_SELECTED: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-layout-effects-selected',
     ),
     REACT_LAYOUT_EFFECTS_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-layout-effects-hover',
@@ -150,24 +125,21 @@ export function updateColorsToMatchTheme(): void {
     REACT_PASSIVE_EFFECTS: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-passive-effects',
     ),
-    REACT_PASSIVE_EFFECTS_SELECTED: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-passive-effects-selected',
-    ),
     REACT_PASSIVE_EFFECTS_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-passive-effects-hover',
     ),
     REACT_RESIZE_BAR: computedStyle.getPropertyValue('--color-resize-bar'),
+    REACT_RESOLVE: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-resolve',
+    ),
+    REACT_RESOLVE_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-resolve-hover',
+    ),
     REACT_SCHEDULE: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-schedule',
     ),
     REACT_SCHEDULE_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-schedule-hover',
-    ),
-    REACT_SCHEDULE_CASCADING: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-schedule-cascading',
-    ),
-    REACT_SCHEDULE_CASCADING_HOVER: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-schedule-cascading-hover',
     ),
     REACT_SUSPEND: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-suspend',
@@ -182,5 +154,15 @@ export function updateColorsToMatchTheme(): void {
       '--color-scheduling-profiler-text-color',
     ),
     TIME_MARKER_LABEL: computedStyle.getPropertyValue('--color-text'),
+    WARNING_BACKGROUND: computedStyle.getPropertyValue(
+      '--color-warning-background',
+    ),
+    WARNING_BACKGROUND_HOVER: computedStyle.getPropertyValue(
+      '--color-warning-background-hover',
+    ),
+    WARNING_TEXT: computedStyle.getPropertyValue('--color-warning-text-color'),
+    WARNING_TEXT_INVERED: computedStyle.getPropertyValue(
+      '--color-warning-text-color-inverted',
+    ),
   };
 }

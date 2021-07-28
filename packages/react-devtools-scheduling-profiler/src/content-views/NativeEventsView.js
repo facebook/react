@@ -22,6 +22,7 @@ import {
   positionToTimestamp,
   timestampToPosition,
 } from './utils/positioning';
+import {formatDuration} from '../utils/formatting';
 import {
   View,
   Surface,
@@ -128,7 +129,7 @@ export class NativeEventsView extends View {
     showHoverHighlight: boolean,
   ) {
     const {frame} = this;
-    const {depth, duration, timestamp, type, warnings} = event;
+    const {depth, duration, timestamp, type, warning} = event;
 
     baseY += depth * ROW_WITH_BORDER_HEIGHT;
 
@@ -152,10 +153,10 @@ export class NativeEventsView extends View {
 
     const drawableRect = intersectionOfRects(eventRect, rect);
     context.beginPath();
-    if (warnings !== null) {
+    if (warning !== null) {
       context.fillStyle = showHoverHighlight
-        ? COLORS.NATIVE_EVENT_WARNING_HOVER
-        : COLORS.NATIVE_EVENT_WARNING;
+        ? COLORS.WARNING_BACKGROUND_HOVER
+        : COLORS.WARNING_BACKGROUND;
     } else {
       context.fillStyle = showHoverHighlight
         ? COLORS.NATIVE_EVENT_HOVER
@@ -177,15 +178,13 @@ export class NativeEventsView extends View {
       const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
       const trimmedName = trimFlamechartText(
         context,
-        type,
+        `${type} - ${formatDuration(duration)}`,
         width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
       );
 
       if (trimmedName !== null) {
         context.fillStyle =
-          warnings !== null
-            ? COLORS.NATIVE_EVENT_WARNING_TEXT
-            : COLORS.TEXT_COLOR;
+          warning !== null ? COLORS.WARNING_TEXT : COLORS.TEXT_COLOR;
 
         context.fillText(
           trimmedName,

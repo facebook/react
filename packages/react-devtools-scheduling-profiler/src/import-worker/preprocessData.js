@@ -38,9 +38,17 @@ type ProcessorState = {|
   batchUID: BatchUID,
   uidCounter: BatchUID,
   measureStack: MeasureStackElement[],
+  nativeEventStack: NativeEvent[],
 |};
 
-let nativeEventStack: Array<NativeEvent> = [];
+const NATIVE_EVENT_DURATION_THRESHOLD = 20;
+
+const WARNING_STRINGS = {
+  LONG_EVENT_HANDLER:
+    'An event handler scheduled a big update with React. Consider using the startTransition API to defer some of this work.',
+  NESTED_UPDATE:
+    'A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint.',
+};
 
 // Exported for tests
 export function getLanesFromTransportDecimalBitmask(
@@ -186,8 +194,9 @@ function processTimelineEvent(
 
         let depth = 0;
 
-        while (nativeEventStack.length > 0) {
-          const prevNativeEvent = nativeEventStack[nativeEventStack.length - 1];
+        while (state.nativeEventStack.length > 0) {
+          const prevNativeEvent =
+            state.nativeEventStack[state.nativeEventStack.length - 1];
           const prevStopTime =
             prevNativeEvent.timestamp + prevNativeEvent.duration;
 
@@ -195,7 +204,7 @@ function processTimelineEvent(
             depth = prevNativeEvent.depth + 1;
             break;
           } else {
-            nativeEventStack.pop();
+            state.nativeEventStack.pop();
           }
         }
 
@@ -204,14 +213,14 @@ function processTimelineEvent(
           duration,
           timestamp,
           type,
-          warnings: null,
+          warning: null,
         };
 
         currentProfilerData.nativeEvents.push(nativeEvent);
 
         // Keep track of curent event in case future ones overlap.
         // We separate them into different vertical lanes in this case.
-        nativeEventStack.push(nativeEvent);
+        state.nativeEventStack.push(nativeEvent);
       }
       break;
     case 'blink.user_timing':
@@ -230,6 +239,7 @@ function processTimelineEvent(
           laneLabels: laneLabels ? laneLabels.split(',') : [],
           componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
+          warning: null,
         });
       } else if (name.startsWith('--schedule-forced-update-')) {
         const [
@@ -238,9 +248,12 @@ function processTimelineEvent(
           componentName,
           ...splitComponentStack
         ] = name.substr(25).split('-');
-        const isCascading = !!state.measureStack.find(
-          ({type}) => type === 'commit',
-        );
+
+        let warning = null;
+        if (state.measureStack.find(({type}) => type === 'commit')) {
+          warning = WARNING_STRINGS.NESTED_UPDATE;
+        }
+
         currentProfilerData.reactEvents.push({
           type: 'schedule-force-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
@@ -248,7 +261,7 @@ function processTimelineEvent(
           componentName,
           componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
-          isCascading,
+          warning,
         });
       } else if (name.startsWith('--schedule-state-update-')) {
         const [
@@ -257,9 +270,12 @@ function processTimelineEvent(
           componentName,
           ...splitComponentStack
         ] = name.substr(24).split('-');
-        const isCascading = !!state.measureStack.find(
-          ({type}) => type === 'commit',
-        );
+
+        let warning = null;
+        if (state.measureStack.find(({type}) => type === 'commit')) {
+          warning = WARNING_STRINGS.NESTED_UPDATE;
+        }
+
         currentProfilerData.reactEvents.push({
           type: 'schedule-state-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
@@ -267,7 +283,7 @@ function processTimelineEvent(
           componentName,
           componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
-          isCascading,
+          warning,
         });
       } // eslint-disable-line brace-style
 
@@ -282,6 +298,7 @@ function processTimelineEvent(
           componentName,
           componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
+          warning: null,
         });
       } else if (name.startsWith('--suspense-resolved-')) {
         const [id, componentName, ...splitComponentStack] = name
@@ -293,6 +310,7 @@ function processTimelineEvent(
           componentName,
           componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
+          warning: null,
         });
       } else if (name.startsWith('--suspense-rejected-')) {
         const [id, componentName, ...splitComponentStack] = name
@@ -304,6 +322,7 @@ function processTimelineEvent(
           componentName,
           componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
+          warning: null,
         });
       } // eslint-disable-line brace-style
 
@@ -335,17 +354,14 @@ function processTimelineEvent(
           state,
         );
 
-        for (let i = 0; i < nativeEventStack.length; i++) {
-          const nativeEvent = nativeEventStack[i];
+        for (let i = 0; i < state.nativeEventStack.length; i++) {
+          const nativeEvent = state.nativeEventStack[i];
           const stopTime = nativeEvent.timestamp + nativeEvent.duration;
-          if (stopTime > startTime) {
-            const warning =
-              'An event handler scheduled a synchronous update with React.';
-            if (nativeEvent.warnings === null) {
-              nativeEvent.warnings = new Set([warning]);
-            } else {
-              nativeEvent.warnings.add(warning);
-            }
+          if (
+            stopTime > startTime &&
+            nativeEvent.duration > NATIVE_EVENT_DURATION_THRESHOLD
+          ) {
+            nativeEvent.warning = WARNING_STRINGS.LONG_EVENT_HANDLER;
           }
         }
       } else if (
@@ -509,8 +525,6 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
 export default function preprocessData(
   timeline: TimelineEvent[],
 ): ReactProfilerData {
-  nativeEventStack = [];
-
   const flamechart = preprocessFlamechart(timeline);
 
   const profilerData: ReactProfilerData = {
@@ -554,6 +568,7 @@ export default function preprocessData(
     uidCounter: 0,
     nextRenderShouldGenerateNewBatchID: true,
     measureStack: [],
+    nativeEventStack: [],
   };
 
   timeline.forEach(event => processTimelineEvent(event, profilerData, state));

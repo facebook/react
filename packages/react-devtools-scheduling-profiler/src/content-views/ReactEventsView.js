@@ -111,10 +111,10 @@ export class ReactEventsView extends View {
       case 'schedule-render':
       case 'schedule-state-update':
       case 'schedule-force-update':
-        if (event.isCascading) {
+        if (event.warning !== null) {
           fillStyle = showHoverHighlight
-            ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
-            : COLORS.REACT_SCHEDULE_CASCADING;
+            ? COLORS.WARNING_BACKGROUND_HOVER
+            : COLORS.WARNING_BACKGROUND;
         } else {
           fillStyle = showHoverHighlight
             ? COLORS.REACT_SCHEDULE_HOVER
@@ -122,11 +122,19 @@ export class ReactEventsView extends View {
         }
         break;
       case 'suspense-suspend':
-      case 'suspense-resolved':
-      case 'suspense-rejected':
         fillStyle = showHoverHighlight
           ? COLORS.REACT_SUSPEND_HOVER
           : COLORS.REACT_SUSPEND;
+        break;
+      case 'suspense-resolved':
+        fillStyle = showHoverHighlight
+          ? COLORS.REACT_RESOLVE_HOVER
+          : COLORS.REACT_RESOLVE;
+        break;
+      case 'suspense-rejected':
+        fillStyle = showHoverHighlight
+          ? COLORS.WARNING_BACKGROUND_HOVER
+          : COLORS.WARNING_BACKGROUND;
         break;
       default:
         if (__DEV__) {

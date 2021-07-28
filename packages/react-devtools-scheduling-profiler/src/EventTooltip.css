@@ -1,6 +1,10 @@
 .Tooltip {
   position: fixed;
-  display: inline-block;
+}
+
+.TooltipSection,
+.TooltipWarningSection {
+  display: block;
   border-radius: 0.125rem;
   max-width: 300px;
   padding: 0.25rem;
@@ -12,11 +16,15 @@
   color: var(--color-tooltip-text);
   font-size: 11px;
 }
+.TooltipWarningSection {
+  margin-top: 0.25rem;
+  background-color: var(--color-warning-background);
+}
 
 .Divider {
   height: 1px;
   background-color: #aaa;
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
 }
 
 .DetailsGrid {
@@ -40,7 +48,6 @@
 
 .FlamechartStackFrameName {
   word-break: break-word;
-  margin-left: 0.4rem;
 }
 
 .ComponentName {
@@ -72,9 +79,19 @@
 }
 
 .ReactMeasureLabel {
-  margin-left: 0.4rem;
 }
 
 .UserTimingLabel {
   word-break: break-word;
+}
+
+.NativeEventName {
+  font-weight: bold;
+  word-break: break-word;
+  margin-right: 0.25rem;
+}
+
+.InfoText,
+.WarningText {
+  color: var(--color-warning-text-color);
 }
