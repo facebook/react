@@ -21,7 +21,7 @@ let savedSize = 0
 const run = async () => {
   const regex = new RegExp(/\.gif|\.jpeg|\.jpg|\.png$/)
 
-  const files = find.fileSync(regex, '.');
+  const files = find.fileSync(regex, 'icons/');
 
   for (const file of files) {
     await optimized(file)
