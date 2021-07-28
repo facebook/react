@@ -66,7 +66,7 @@
 * Console patching should handle Symbols without erroring ([bvaughn](https://github.com/bvaughn) in [#21368](https://github.com/facebook/react/pull/21368))
 
 ###### Bridge protocol version backend/frontend
-During initialization, DevTools now checks to ensure it's compatible with the ["backend"](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md#overview) that's embedded within a renderer like React Native. If the two aren't compatible, upgrade instructions will be shown:
+During initialization, DevTools now checks to ensure it's compatible with the ["backend"](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md#overview) that's embedded within a renderer like React Native. If the two aren't compatible, upgrade instructions will be shown:
 
 <img width="400" height="233" alt="Dialog displaying downgrade instructions for the React DevTools frontend to connect to an older backend version" src="https://user-images.githubusercontent.com/29597/115997927-f77f2a00-a5b2-11eb-9098-20042b664cea.png">
     

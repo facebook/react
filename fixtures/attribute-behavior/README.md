@@ -28,4 +28,4 @@ Right now, we use a purple outline to call out cases where the assigned property
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-You can find the guide for how to do things in a CRA [here](https://github.com/facebook/create-react-app/blob/master/packages/cra-template/template/README.md).
+You can find the guide for how to do things in a CRA [here](https://github.com/facebook/create-react-app/blob/main/packages/cra-template/template/README.md).
