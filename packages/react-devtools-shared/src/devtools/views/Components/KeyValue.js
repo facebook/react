@@ -24,6 +24,7 @@ import styles from './KeyValue.css';
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
 import {InspectedElementContext} from './InspectedElementContext';
+import {PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE} from './constants';
 
 import type {InspectedElement} from './types';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
@@ -243,11 +244,14 @@ export default function KeyValue({
       displayValue = 'undefined';
     }
 
-    let shouldDisplayAsLink = false;
-    let protocolsAllowedAsLinks = ['file:///', 'http://', 'https://', 'vscode://'];
-
-    if (dataType === 'string' && protocolsAllowedAsLinks.some((protocolPrefix) => value.startsWith(protocolPrefix))) {
-      shouldDisplayAsLink = true;
+    let shouldDisplayValueAsLink = false;
+    if (
+      dataType === 'string' &&
+      PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE.some(protocolPrefix =>
+        value.startsWith(protocolPrefix),
+      )
+    ) {
+      shouldDisplayValueAsLink = true;
     }
 
     children = (
@@ -266,12 +270,16 @@ export default function KeyValue({
             path={path}
             value={value}
           />
+        ) : shouldDisplayValueAsLink ? (
+          <a
+            className={styles.Link}
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer">
+            {displayValue}
+          </a>
         ) : (
-          (shouldDisplayAsLink) ? (
-            <a href={value} target="_blank">{displayValue}</a>
-          ) : (
-            <span className={styles.Value}>{displayValue}</span>
-          )
+          <span className={styles.Value}>{displayValue}</span>
         )}
       </div>
     );

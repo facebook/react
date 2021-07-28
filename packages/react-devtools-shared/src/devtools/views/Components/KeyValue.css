@@ -32,6 +32,14 @@
   flex: 1;
 }
 
+.Link {
+  color: var(--color-link);
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
 .None {
   color: var(--color-dimmer);
   font-style: italic;
