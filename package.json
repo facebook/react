@@ -118,7 +118,6 @@
     "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh --type=NODE && rm -rf build2 && mkdir build2 && cp -r ./build/node_modules build2/oss-experimental/",
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
-    "improve-images": "node ./scripts/images/improveImages.mjs",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",

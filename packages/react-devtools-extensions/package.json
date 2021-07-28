@@ -16,6 +16,7 @@
     "test:chrome": "node ./chrome/test",
     "test:firefox": "node ./firefox/test",
     "test:edge": "node ./edge/test",
+    "improve-images": "node ./scripts/images/improveImages.mjs",
     "update-mock-source-maps": "node ./src/__tests__/updateMockSourceMaps.js"
   },
   "devDependencies": {

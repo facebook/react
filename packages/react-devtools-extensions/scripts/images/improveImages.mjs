@@ -21,11 +21,9 @@ let savedSize = 0
 const run = async () => {
   const regex = new RegExp(/\.gif|\.jpeg|\.jpg|\.png$/)
 
-  const files = find.fileSync(regex, '.')
+  const files = find.fileSync(regex, '.');
 
-  const filteredFiles = files.filter(file => !file.match(/node_modules\//))
-
-  for (const file of filteredFiles) {
+  for (const file of files) {
     await optimized(file)
   }
 
