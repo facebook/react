@@ -1578,7 +1578,7 @@ function flushSubtree(
     default: {
       invariant(
         false,
-        'Errored or already flushed boundaries should not be flushed again. This is a bug in React.',
+        'Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React.',
       );
     }
   }
