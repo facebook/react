@@ -6,7 +6,7 @@
 * This source code is licensed under the MIT license found in the
 * LICENSE file in the root directory of this source tree.
 */
-var module = {require: requirejs};
+if (typeof window === 'undefined') {var module = {require: requirejs};}
 define('react-test-renderer', ['exports', 'react'], function (exports, React) { 'use strict';
 
   function _defineProperties(target, props) {
@@ -17587,7 +17587,7 @@ define('react-test-renderer', ['exports', 'react'], function (exports, React) { 
       scheduleRoot:  scheduleRoot ,
       setRefreshHandler:  setRefreshHandler ,
       // Enables DevTools to append owner stacks to error messages in DEV mode.
-      getCurrentFiber:  getCurrentFiberForDevTools 
+      getCurrentFiber:  getCurrentFiberForDevTools
     });
   }
 
