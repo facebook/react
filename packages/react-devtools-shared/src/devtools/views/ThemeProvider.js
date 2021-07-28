@@ -12,7 +12,7 @@ import {useContext, useMemo} from 'react';
 import {SettingsContext} from './Settings/SettingsContext';
 import type {Theme, DisplayDensity} from './Settings/SettingsContext';
 
-const styles: {[style: Theme | DisplayDensity]: any} = {
+export const styles: {[style: Theme | DisplayDensity]: any} = {
   light: {
     '--color-attribute-name': '#ef6632',
     '--color-attribute-name-not-editable': '#23272f',
