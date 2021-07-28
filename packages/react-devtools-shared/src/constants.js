@@ -59,8 +59,13 @@ export const REACT_DEVTOOLS_WORKPLACE_URL =
 //
 // Sometimes the inline target is rendered before root styles are applied,
 // which would result in e.g. NaN itemSize being passed to react-window list.
-const {styles} = require ('react-devtools-shared/src/devtools/views/ThemeProvider');
-const COMFORTABLE_LINE_HEIGHT = parseInt(styles.comfortable['--line-height-data'], 10);
+const {
+  styles,
+} = require('react-devtools-shared/src/devtools/views/ThemeProvider');
+const COMFORTABLE_LINE_HEIGHT = parseInt(
+  styles.comfortable['--line-height-data'],
+  10,
+);
 const COMPACT_LINE_HEIGHT = parseInt(styles.compact['--line-height-data'], 10);
 
 export {COMFORTABLE_LINE_HEIGHT, COMPACT_LINE_HEIGHT};
