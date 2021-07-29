@@ -414,7 +414,6 @@ function updateMemoComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps: any,
-  updateLanes: Lanes,
   renderLanes: Lanes,
 ): null | Fiber {
   if (current === null) {
@@ -442,7 +441,6 @@ function updateMemoComponent(
         workInProgress,
         resolvedType,
         nextProps,
-        updateLanes,
         renderLanes,
       );
     }
@@ -487,7 +485,11 @@ function updateMemoComponent(
     }
   }
   const currentChild = ((current.child: any): Fiber); // This is always exactly one child
-  if (!includesSomeLane(updateLanes, renderLanes)) {
+  const hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(
+    current,
+    renderLanes,
+  );
+  if (!hasScheduledUpdateOrContext) {
     // This will be the props with resolved defaultProps,
     // unlike current.memoizedProps which will be the unresolved ones.
     const prevProps = currentChild.memoizedProps;
@@ -512,7 +514,6 @@ function updateSimpleMemoComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps: any,
-  updateLanes: Lanes,
   renderLanes: Lanes,
 ): null | Fiber {
   // TODO: current can be non-null here even if the component
@@ -558,7 +559,7 @@ function updateSimpleMemoComponent(
       (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
-      if (!includesSomeLane(renderLanes, updateLanes)) {
+      if (!checkScheduledUpdateOrContext(current, renderLanes)) {
         // The pending lanes were cleared at the beginning of beginWork. We're
         // about to bail out, but there might be other lanes that weren't
         // included in the current render. Usually, the priority level of the
@@ -806,7 +807,6 @@ const updateLegacyHiddenComponent = updateOffscreenComponent;
 function updateCacheComponent(
   current: Fiber | null,
   workInProgress: Fiber,
-  updateLanes: Lanes,
   renderLanes: Lanes,
 ) {
   if (!enableCache) {
@@ -828,7 +828,7 @@ function updateCacheComponent(
     pushCacheProvider(workInProgress, freshCache);
   } else {
     // Check for updates
-    if (includesSomeLane(renderLanes, updateLanes)) {
+    if (includesSomeLane(current.lanes, renderLanes)) {
       cloneUpdateQueue(current, workInProgress);
       processUpdateQueue(workInProgress, null, null, renderLanes);
     }
@@ -1372,7 +1372,6 @@ function mountLazyComponent(
   _current,
   workInProgress,
   elementType,
-  updateLanes,
   renderLanes,
 ) {
   if (_current !== null) {
@@ -1462,7 +1461,6 @@ function mountLazyComponent(
         workInProgress,
         Component,
         resolveDefaultProps(Component.type, resolvedProps), // The inner type can have defaults too
-        updateLanes,
         renderLanes,
       );
       return child;
@@ -3347,13 +3345,241 @@ function remountFiber(
   }
 }
 
+function checkScheduledUpdateOrContext(
+  current: Fiber,
+  renderLanes: Lanes,
+): boolean {
+  // Before performing an early bailout, we must check if there are pending
+  // updates or context.
+  const updateLanes = current.lanes;
+  if (includesSomeLane(updateLanes, renderLanes)) {
+    return true;
+  }
+  // No pending update, but because context is propagated lazily, we need
+  // to check for a context change before we bail out.
+  if (enableLazyContextPropagation) {
+    const dependencies = current.dependencies;
+    if (dependencies !== null && checkIfContextChanged(dependencies)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function attemptEarlyBailoutIfNoScheduledUpdate(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  // This fiber does not have any pending work. Bailout without entering
+  // the begin phase. There's still some bookkeeping we that needs to be done
+  // in this optimized path, mostly pushing stuff onto the stack.
+  switch (workInProgress.tag) {
+    case HostRoot:
+      pushHostRootContext(workInProgress);
+      if (enableCache) {
+        const root: FiberRoot = workInProgress.stateNode;
+        const cache: Cache = current.memoizedState.cache;
+        pushCacheProvider(workInProgress, cache);
+        pushRootCachePool(root);
+      }
+      resetHydrationState();
+      break;
+    case HostComponent:
+      pushHostContext(workInProgress);
+      break;
+    case ClassComponent: {
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
+        pushLegacyContextProvider(workInProgress);
+      }
+      break;
+    }
+    case HostPortal:
+      pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
+      break;
+    case ContextProvider: {
+      const newValue = workInProgress.memoizedProps.value;
+      const context: ReactContext<any> = workInProgress.type._context;
+      pushProvider(workInProgress, context, newValue);
+      break;
+    }
+    case Profiler:
+      if (enableProfilerTimer) {
+        // Profiler should only call onRender when one of its descendants actually rendered.
+        const hasChildWork = includesSomeLane(
+          renderLanes,
+          workInProgress.childLanes,
+        );
+        if (hasChildWork) {
+          workInProgress.flags |= Update;
+        }
+
+        if (enableProfilerCommitHooks) {
+          // Reset effect durations for the next eventual effect phase.
+          // These are reset during render to allow the DevTools commit hook a chance to read them,
+          const stateNode = workInProgress.stateNode;
+          stateNode.effectDuration = 0;
+          stateNode.passiveEffectDuration = 0;
+        }
+      }
+      break;
+    case SuspenseComponent: {
+      const state: SuspenseState | null = workInProgress.memoizedState;
+      if (state !== null) {
+        if (enableSuspenseServerRenderer) {
+          if (state.dehydrated !== null) {
+            pushSuspenseContext(
+              workInProgress,
+              setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+            );
+            // We know that this component will suspend again because if it has
+            // been unsuspended it has committed as a resolved Suspense component.
+            // If it needs to be retried, it should have work scheduled on it.
+            workInProgress.flags |= DidCapture;
+            // We should never render the children of a dehydrated boundary until we
+            // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
+            return null;
+          }
+        }
+
+        // If this boundary is currently timed out, we need to decide
+        // whether to retry the primary children, or to skip over it and
+        // go straight to the fallback. Check the priority of the primary
+        // child fragment.
+        const primaryChildFragment: Fiber = (workInProgress.child: any);
+        const primaryChildLanes = primaryChildFragment.childLanes;
+        if (includesSomeLane(renderLanes, primaryChildLanes)) {
+          // The primary children have pending work. Use the normal path
+          // to attempt to render the primary children again.
+          return updateSuspenseComponent(current, workInProgress, renderLanes);
+        } else {
+          // The primary child fragment does not have pending work marked
+          // on it
+          pushSuspenseContext(
+            workInProgress,
+            setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+          );
+          // The primary children do not have pending work with sufficient
+          // priority. Bailout.
+          const child = bailoutOnAlreadyFinishedWork(
+            current,
+            workInProgress,
+            renderLanes,
+          );
+          if (child !== null) {
+            // The fallback children have pending work. Skip over the
+            // primary children and work on the fallback.
+            return child.sibling;
+          } else {
+            // Note: We can return `null` here because we already checked
+            // whether there were nested context consumers, via the call to
+            // `bailoutOnAlreadyFinishedWork` above.
+            return null;
+          }
+        }
+      } else {
+        pushSuspenseContext(
+          workInProgress,
+          setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+        );
+      }
+      break;
+    }
+    case SuspenseListComponent: {
+      const didSuspendBefore = (current.flags & DidCapture) !== NoFlags;
+
+      let hasChildWork = includesSomeLane(
+        renderLanes,
+        workInProgress.childLanes,
+      );
+
+      if (enableLazyContextPropagation && !hasChildWork) {
+        // Context changes may not have been propagated yet. We need to do
+        // that now, before we can decide whether to bail out.
+        // TODO: We use `childLanes` as a heuristic for whether there is
+        // remaining work in a few places, including
+        // `bailoutOnAlreadyFinishedWork` and
+        // `updateDehydratedSuspenseComponent`. We should maybe extract this
+        // into a dedicated function.
+        lazilyPropagateParentContextChanges(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+        hasChildWork = includesSomeLane(renderLanes, workInProgress.childLanes);
+      }
+
+      if (didSuspendBefore) {
+        if (hasChildWork) {
+          // If something was in fallback state last time, and we have all the
+          // same children then we're still in progressive loading state.
+          // Something might get unblocked by state updates or retries in the
+          // tree which will affect the tail. So we need to use the normal
+          // path to compute the correct tail.
+          return updateSuspenseListComponent(
+            current,
+            workInProgress,
+            renderLanes,
+          );
+        }
+        // If none of the children had any work, that means that none of
+        // them got retried so they'll still be blocked in the same way
+        // as before. We can fast bail out.
+        workInProgress.flags |= DidCapture;
+      }
+
+      // If nothing suspended before and we're rendering the same children,
+      // then the tail doesn't matter. Anything new that suspends will work
+      // in the "together" mode, so we can continue from the state we had.
+      const renderState = workInProgress.memoizedState;
+      if (renderState !== null) {
+        // Reset to the "together" mode in case we've started a different
+        // update in the past but didn't complete it.
+        renderState.rendering = null;
+        renderState.tail = null;
+        renderState.lastEffect = null;
+      }
+      pushSuspenseContext(workInProgress, suspenseStackCursor.current);
+
+      if (hasChildWork) {
+        break;
+      } else {
+        // If none of the children had any work, that means that none of
+        // them got retried so they'll still be blocked in the same way
+        // as before. We can fast bail out.
+        return null;
+      }
+    }
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
+      // Need to check if the tree still needs to be deferred. This is
+      // almost identical to the logic used in the normal update path,
+      // so we'll just enter that. The only difference is we'll bail out
+      // at the next level instead of this one, because the child props
+      // have not changed. Which is fine.
+      // TODO: Probably should refactor `beginWork` to split the bailout
+      // path from the normal path. I'm tempted to do a labeled break here
+      // but I won't :)
+      workInProgress.lanes = NoLanes;
+      return updateOffscreenComponent(current, workInProgress, renderLanes);
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        const cache: Cache = current.memoizedState.cache;
+        pushCacheProvider(workInProgress, cache);
+      }
+      break;
+    }
+  }
+  return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+}
+
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderLanes: Lanes,
 ): Fiber | null {
-  let updateLanes = workInProgress.lanes;
-
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
@@ -3373,17 +3599,6 @@ function beginWork(
   }
 
   if (current !== null) {
-    // TODO: The factoring of this block is weird.
-    if (
-      enableLazyContextPropagation &&
-      !includesSomeLane(renderLanes, updateLanes)
-    ) {
-      const dependencies = current.dependencies;
-      if (dependencies !== null && checkIfContextChanged(dependencies)) {
-        updateLanes = mergeLanes(updateLanes, renderLanes);
-      }
-    }
-
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
 
@@ -3396,221 +3611,27 @@ function beginWork(
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true;
-    } else if (!includesSomeLane(renderLanes, updateLanes)) {
-      didReceiveUpdate = false;
-      // This fiber does not have any pending work. Bailout without entering
-      // the begin phase. There's still some bookkeeping we that needs to be done
-      // in this optimized path, mostly pushing stuff onto the stack.
-      switch (workInProgress.tag) {
-        case HostRoot:
-          pushHostRootContext(workInProgress);
-          if (enableCache) {
-            const root: FiberRoot = workInProgress.stateNode;
-            const cache: Cache = current.memoizedState.cache;
-            pushCacheProvider(workInProgress, cache);
-            pushRootCachePool(root);
-          }
-          resetHydrationState();
-          break;
-        case HostComponent:
-          pushHostContext(workInProgress);
-          break;
-        case ClassComponent: {
-          const Component = workInProgress.type;
-          if (isLegacyContextProvider(Component)) {
-            pushLegacyContextProvider(workInProgress);
-          }
-          break;
-        }
-        case HostPortal:
-          pushHostContainer(
-            workInProgress,
-            workInProgress.stateNode.containerInfo,
-          );
-          break;
-        case ContextProvider: {
-          const newValue = workInProgress.memoizedProps.value;
-          const context: ReactContext<any> = workInProgress.type._context;
-          pushProvider(workInProgress, context, newValue);
-          break;
-        }
-        case Profiler:
-          if (enableProfilerTimer) {
-            // Profiler should only call onRender when one of its descendants actually rendered.
-            const hasChildWork = includesSomeLane(
-              renderLanes,
-              workInProgress.childLanes,
-            );
-            if (hasChildWork) {
-              workInProgress.flags |= Update;
-            }
-
-            if (enableProfilerCommitHooks) {
-              // Reset effect durations for the next eventual effect phase.
-              // These are reset during render to allow the DevTools commit hook a chance to read them,
-              const stateNode = workInProgress.stateNode;
-              stateNode.effectDuration = 0;
-              stateNode.passiveEffectDuration = 0;
-            }
-          }
-          break;
-        case SuspenseComponent: {
-          const state: SuspenseState | null = workInProgress.memoizedState;
-          if (state !== null) {
-            if (enableSuspenseServerRenderer) {
-              if (state.dehydrated !== null) {
-                pushSuspenseContext(
-                  workInProgress,
-                  setDefaultShallowSuspenseContext(suspenseStackCursor.current),
-                );
-                // We know that this component will suspend again because if it has
-                // been unsuspended it has committed as a resolved Suspense component.
-                // If it needs to be retried, it should have work scheduled on it.
-                workInProgress.flags |= DidCapture;
-                // We should never render the children of a dehydrated boundary until we
-                // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
-                return null;
-              }
-            }
-
-            // If this boundary is currently timed out, we need to decide
-            // whether to retry the primary children, or to skip over it and
-            // go straight to the fallback. Check the priority of the primary
-            // child fragment.
-            const primaryChildFragment: Fiber = (workInProgress.child: any);
-            const primaryChildLanes = primaryChildFragment.childLanes;
-            if (includesSomeLane(renderLanes, primaryChildLanes)) {
-              // The primary children have pending work. Use the normal path
-              // to attempt to render the primary children again.
-              return updateSuspenseComponent(
-                current,
-                workInProgress,
-                renderLanes,
-              );
-            } else {
-              // The primary child fragment does not have pending work marked
-              // on it
-              pushSuspenseContext(
-                workInProgress,
-                setDefaultShallowSuspenseContext(suspenseStackCursor.current),
-              );
-              // The primary children do not have pending work with sufficient
-              // priority. Bailout.
-              const child = bailoutOnAlreadyFinishedWork(
-                current,
-                workInProgress,
-                renderLanes,
-              );
-              if (child !== null) {
-                // The fallback children have pending work. Skip over the
-                // primary children and work on the fallback.
-                return child.sibling;
-              } else {
-                // Note: We can return `null` here because we already checked
-                // whether there were nested context consumers, via the call to
-                // `bailoutOnAlreadyFinishedWork` above.
-                return null;
-              }
-            }
-          } else {
-            pushSuspenseContext(
-              workInProgress,
-              setDefaultShallowSuspenseContext(suspenseStackCursor.current),
-            );
-          }
-          break;
-        }
-        case SuspenseListComponent: {
-          const didSuspendBefore = (current.flags & DidCapture) !== NoFlags;
-
-          let hasChildWork = includesSomeLane(
-            renderLanes,
-            workInProgress.childLanes,
-          );
-
-          if (enableLazyContextPropagation && !hasChildWork) {
-            // Context changes may not have been propagated yet. We need to do
-            // that now, before we can decide whether to bail out.
-            // TODO: We use `childLanes` as a heuristic for whether there is
-            // remaining work in a few places, including
-            // `bailoutOnAlreadyFinishedWork` and
-            // `updateDehydratedSuspenseComponent`. We should maybe extract this
-            // into a dedicated function.
-            lazilyPropagateParentContextChanges(
-              current,
-              workInProgress,
-              renderLanes,
-            );
-            hasChildWork = includesSomeLane(
-              renderLanes,
-              workInProgress.childLanes,
-            );
-          }
-
-          if (didSuspendBefore) {
-            if (hasChildWork) {
-              // If something was in fallback state last time, and we have all the
-              // same children then we're still in progressive loading state.
-              // Something might get unblocked by state updates or retries in the
-              // tree which will affect the tail. So we need to use the normal
-              // path to compute the correct tail.
-              return updateSuspenseListComponent(
-                current,
-                workInProgress,
-                renderLanes,
-              );
-            }
-            // If none of the children had any work, that means that none of
-            // them got retried so they'll still be blocked in the same way
-            // as before. We can fast bail out.
-            workInProgress.flags |= DidCapture;
-          }
-
-          // If nothing suspended before and we're rendering the same children,
-          // then the tail doesn't matter. Anything new that suspends will work
-          // in the "together" mode, so we can continue from the state we had.
-          const renderState = workInProgress.memoizedState;
-          if (renderState !== null) {
-            // Reset to the "together" mode in case we've started a different
-            // update in the past but didn't complete it.
-            renderState.rendering = null;
-            renderState.tail = null;
-            renderState.lastEffect = null;
-          }
-          pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-
-          if (hasChildWork) {
-            break;
-          } else {
-            // If none of the children had any work, that means that none of
-            // them got retried so they'll still be blocked in the same way
-            // as before. We can fast bail out.
-            return null;
-          }
-        }
-        case OffscreenComponent:
-        case LegacyHiddenComponent: {
-          // Need to check if the tree still needs to be deferred. This is
-          // almost identical to the logic used in the normal update path,
-          // so we'll just enter that. The only difference is we'll bail out
-          // at the next level instead of this one, because the child props
-          // have not changed. Which is fine.
-          // TODO: Probably should refactor `beginWork` to split the bailout
-          // path from the normal path. I'm tempted to do a labeled break here
-          // but I won't :)
-          workInProgress.lanes = NoLanes;
-          return updateOffscreenComponent(current, workInProgress, renderLanes);
-        }
-        case CacheComponent: {
-          if (enableCache) {
-            const cache: Cache = current.memoizedState.cache;
-            pushCacheProvider(workInProgress, cache);
-          }
-          break;
-        }
-      }
-      return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
     } else {
+      // Neither props nor legacy context changes. Check if there's a pending
+      // update or context change.
+      const hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(
+        current,
+        renderLanes,
+      );
+      if (
+        !hasScheduledUpdateOrContext &&
+        // If this is the second pass of an error or suspense boundary, there
+        // may not be work scheduled on `current`, so we check for this flag.
+        (workInProgress.flags & DidCapture) === NoFlags
+      ) {
+        // No pending updates or context. Bail out now.
+        didReceiveUpdate = false;
+        return attemptEarlyBailoutIfNoScheduledUpdate(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
       if ((current.flags & ForceUpdateForLegacySuspense) !== NoFlags) {
         // This is a special case that only exists for legacy mode.
         // See https://github.com/facebook/react/pull/19216.
@@ -3649,7 +3670,6 @@ function beginWork(
         current,
         workInProgress,
         elementType,
-        updateLanes,
         renderLanes,
       );
     }
@@ -3742,7 +3762,6 @@ function beginWork(
         workInProgress,
         type,
         resolvedProps,
-        updateLanes,
         renderLanes,
       );
     }
@@ -3752,7 +3771,6 @@ function beginWork(
         workInProgress,
         workInProgress.type,
         workInProgress.pendingProps,
-        updateLanes,
         renderLanes,
       );
     }
@@ -3788,12 +3806,7 @@ function beginWork(
     }
     case CacheComponent: {
       if (enableCache) {
-        return updateCacheComponent(
-          current,
-          workInProgress,
-          updateLanes,
-          renderLanes,
-        );
+        return updateCacheComponent(current, workInProgress, renderLanes);
       }
       break;
     }
