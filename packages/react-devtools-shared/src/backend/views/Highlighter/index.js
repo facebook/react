@@ -108,9 +108,9 @@ function traceUpdates(nodes: Set<NativeType>): void {
       expirationTime:
         data != null
           ? Math.min(
-          now + MAX_DISPLAY_DURATION,
-          data.expirationTime + DISPLAY_DURATION,
-          )
+              now + MAX_DISPLAY_DURATION,
+              data.expirationTime + DISPLAY_DURATION,
+            )
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
       rect,
@@ -163,10 +163,7 @@ function measureNode(node: Object): Rect | null {
   return getNestedBoundingClientRect(node, currentWindow);
 }
 
-export function setupHighlighter(
-  bridge: BackendBridge,
-  agent: Agent,
-): void {
+export function setupHighlighter(bridge: BackendBridge, agent: Agent): void {
   bridge.addListener(
     'clearNativeElementHighlight',
     clearNativeElementHighlight,

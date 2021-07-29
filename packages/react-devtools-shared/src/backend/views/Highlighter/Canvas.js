@@ -150,7 +150,8 @@ export default class Canvas {
       this.initialize();
     }
 
-    const canvasFlow: HTMLCanvasElement = ((this.canvas: any): HTMLCanvasElement);
+    const canvasFlow: HTMLCanvasElement = ((this
+      .canvas: any): HTMLCanvasElement);
     canvasFlow.width = window.innerWidth;
     canvasFlow.height = window.innerHeight;
 
@@ -302,7 +303,8 @@ export default class Canvas {
       this.initialize();
     }
     // const canvasFlow: HTMLCanvasElement = ((traceUpdatesCanvas: any): HTMLCanvasElement);
-    const canvasFlow: HTMLCanvasElement = ((this.canvas: any): HTMLCanvasElement);
+    const canvasFlow: HTMLCanvasElement = ((this
+      .canvas: any): HTMLCanvasElement);
     canvasFlow.width = window.innerWidth;
     canvasFlow.height = window.innerHeight;
 
