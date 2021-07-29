@@ -15,6 +15,7 @@ export const MARKER_TEXT_PADDING = 8;
 export const COLOR_HOVER_DIM_DELTA = 5;
 export const TOP_ROW_PADDING = 4;
 export const NATIVE_EVENT_HEIGHT = 14;
+export const SUSPENSE_EVENT_HEIGHT = 14;
 export const REACT_EVENT_DIAMETER = 6;
 export const USER_TIMING_MARK_SIZE = 8;
 export const REACT_MEASURE_HEIGHT = 9;
@@ -59,12 +60,14 @@ export let COLORS = {
   REACT_PASSIVE_EFFECTS: '',
   REACT_PASSIVE_EFFECTS_HOVER: '',
   REACT_RESIZE_BAR: '',
-  REACT_RESOLVE: '',
-  REACT_RESOLVE_HOVER: '',
   REACT_SCHEDULE: '',
   REACT_SCHEDULE_HOVER: '',
-  REACT_SUSPEND: '',
-  REACT_SUSPEND_HOVER: '',
+  REACT_SUSPENSE_PENDING_EVENT: '',
+  REACT_SUSPENSE_PENDING_EVENT_HOVER: '',
+  REACT_SUSPENSE_REJECTED_EVENT: '',
+  REACT_SUSPENSE_REJECTED_EVENT_HOVER: '',
+  REACT_SUSPENSE_RESOLVED_EVENT: '',
+  REACT_SUSPENSE_RESOLVED_EVENT_HOVER: '',
   REACT_WORK_BORDER: '',
   TEXT_COLOR: '',
   TIME_MARKER_LABEL: '',
@@ -129,23 +132,29 @@ export function updateColorsToMatchTheme(): void {
       '--color-scheduling-profiler-react-passive-effects-hover',
     ),
     REACT_RESIZE_BAR: computedStyle.getPropertyValue('--color-resize-bar'),
-    REACT_RESOLVE: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-resolve',
-    ),
-    REACT_RESOLVE_HOVER: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-resolve-hover',
-    ),
     REACT_SCHEDULE: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-schedule',
     ),
     REACT_SCHEDULE_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-schedule-hover',
     ),
-    REACT_SUSPEND: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-suspend',
+    REACT_SUSPENSE_PENDING_EVENT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-pending',
     ),
-    REACT_SUSPEND_HOVER: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-suspend-hover',
+    REACT_SUSPENSE_PENDING_EVENT_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-pending-hover',
+    ),
+    REACT_SUSPENSE_REJECTED_EVENT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-rejected',
+    ),
+    REACT_SUSPENSE_REJECTED_EVENT_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-rejected-hover',
+    ),
+    REACT_SUSPENSE_RESOLVED_EVENT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-resolved',
+    ),
+    REACT_SUSPENSE_RESOLVED_EVENT_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-resolved-hover',
     ),
     REACT_WORK_BORDER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-work-border',

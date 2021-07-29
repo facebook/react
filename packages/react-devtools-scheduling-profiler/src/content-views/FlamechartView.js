@@ -71,7 +71,8 @@ function hoverColorForStackFrame(stackFrame: FlamechartStackFrame): string {
   return hslaColorToString(color);
 }
 
-const cachedFlamechartTextWidths = new Map();
+// TODO (scheduling profiler) Make this a reusable util
+const cachedTextWidths = new Map();
 const trimFlamechartText = (
   context: CanvasRenderingContext2D,
   text: string,
@@ -80,10 +81,10 @@ const trimFlamechartText = (
   for (let i = text.length - 1; i >= 0; i--) {
     const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
 
-    let measuredWidth = cachedFlamechartTextWidths.get(trimmedText);
+    let measuredWidth = cachedTextWidths.get(trimmedText);
     if (measuredWidth == null) {
       measuredWidth = context.measureText(trimmedText).width;
-      cachedFlamechartTextWidths.set(trimmedText, measuredWidth);
+      cachedTextWidths.set(trimmedText, measuredWidth);
     }
 
     if (measuredWidth <= width) {

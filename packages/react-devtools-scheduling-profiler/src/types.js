@@ -31,7 +31,6 @@ export type NativeEvent = {|
 
 type BaseReactEvent = {|
   +componentName?: string,
-  +componentStack?: string,
   +timestamp: Milliseconds,
   warning: string | null,
 |};
@@ -43,42 +42,33 @@ type BaseReactScheduleEvent = {|
 |};
 export type ReactScheduleRenderEvent = {|
   ...BaseReactScheduleEvent,
-  type: 'schedule-render',
+  +type: 'schedule-render',
 |};
 export type ReactScheduleStateUpdateEvent = {|
   ...BaseReactScheduleEvent,
-  type: 'schedule-state-update',
+  +type: 'schedule-state-update',
 |};
 export type ReactScheduleForceUpdateEvent = {|
   ...BaseReactScheduleEvent,
-  type: 'schedule-force-update',
+  +type: 'schedule-force-update',
 |};
 
-type BaseReactSuspenseEvent = {|
+export type SuspenseEvent = {|
   ...BaseReactEvent,
-  id: string,
-|};
-export type ReactSuspenseSuspendEvent = {|
-  ...BaseReactSuspenseEvent,
-  type: 'suspense-suspend',
-|};
-export type ReactSuspenseResolvedEvent = {|
-  ...BaseReactSuspenseEvent,
-  type: 'suspense-resolved',
-|};
-export type ReactSuspenseRejectedEvent = {|
-  ...BaseReactSuspenseEvent,
-  type: 'suspense-rejected',
+  depth: number,
+  duration: number | null,
+  +id: string,
+  +phase: 'mount' | 'update' | null,
+  resolution: 'pending' | 'resolved' | 'rejected',
+  resuspendTimestamps: Array<number> | null,
+  +type: 'suspense',
 |};
 
-export type ReactEvent =
+export type SchedulingEvent =
   | ReactScheduleRenderEvent
   | ReactScheduleStateUpdateEvent
-  | ReactScheduleForceUpdateEvent
-  | ReactSuspenseSuspendEvent
-  | ReactSuspenseResolvedEvent
-  | ReactSuspenseRejectedEvent;
-export type ReactEventType = $PropertyType<ReactEvent, 'type'>;
+  | ReactScheduleForceUpdateEvent;
+export type SchedulingEventType = $PropertyType<SchedulingEvent, 'type'>;
 
 export type ReactMeasureType =
   | 'commit'
@@ -127,20 +117,22 @@ export type FlamechartStackLayer = FlamechartStackFrame[];
 export type Flamechart = FlamechartStackLayer[];
 
 export type ReactProfilerData = {|
-  startTime: number,
   duration: number,
-  nativeEvents: NativeEvent[],
-  reactEvents: ReactEvent[],
-  measures: ReactMeasure[],
   flamechart: Flamechart,
+  measures: ReactMeasure[],
+  nativeEvents: NativeEvent[],
   otherUserTimingMarks: UserTimingMark[],
+  schedulingEvents: SchedulingEvent[],
+  startTime: number,
+  suspenseEvents: SuspenseEvent[],
 |};
 
 export type ReactHoverContextInfo = {|
-  nativeEvent: NativeEvent | null,
-  reactEvent: ReactEvent | null,
-  measure: ReactMeasure | null,
   data: $ReadOnly<ReactProfilerData> | null,
   flamechartStackFrame: FlamechartStackFrame | null,
+  measure: ReactMeasure | null,
+  nativeEvent: NativeEvent | null,
+  schedulingEvent: SchedulingEvent | null,
+  suspenseEvent: SuspenseEvent | null,
   userTimingMark: UserTimingMark | null,
 |};

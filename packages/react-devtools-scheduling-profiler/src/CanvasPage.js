@@ -45,8 +45,9 @@ import {
 import {
   FlamechartView,
   NativeEventsView,
-  ReactEventsView,
   ReactMeasuresView,
+  SchedulingEventsView,
+  SuspenseEventsView,
   TimeAxisMarkersView,
   UserTimingMarksView,
 } from './content-views';
@@ -128,7 +129,8 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   const surfaceRef = useRef(new Surface());
   const userTimingMarksViewRef = useRef(null);
   const nativeEventsViewRef = useRef(null);
-  const reactEventsViewRef = useRef(null);
+  const schedulingEventsViewRef = useRef(null);
+  const suspenseEventsViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
   const syncedHorizontalPanAndZoomViewsRef = useRef<HorizontalPanAndZoomView[]>(
@@ -182,9 +184,21 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     nativeEventsViewRef.current = nativeEventsView;
     topContentStack.addSubview(nativeEventsView);
 
-    const reactEventsView = new ReactEventsView(surface, defaultFrame, data);
-    reactEventsViewRef.current = reactEventsView;
-    topContentStack.addSubview(reactEventsView);
+    const schedulingEventsView = new SchedulingEventsView(
+      surface,
+      defaultFrame,
+      data,
+    );
+    schedulingEventsViewRef.current = schedulingEventsView;
+    topContentStack.addSubview(schedulingEventsView);
+
+    const suspenseEventsView = new SuspenseEventsView(
+      surface,
+      defaultFrame,
+      data,
+    );
+    suspenseEventsViewRef.current = suspenseEventsView;
+    topContentStack.addSubview(suspenseEventsView);
 
     const topContentHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
       surface,
@@ -310,12 +324,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       userTimingMarksView.onHover = userTimingMark => {
         if (!hoveredEvent || hoveredEvent.userTimingMark !== userTimingMark) {
           setHoveredEvent({
-            userTimingMark,
-            nativeEvent: null,
-            reactEvent: null,
+            data,
             flamechartStackFrame: null,
             measure: null,
-            data,
+            nativeEvent: null,
+            schedulingEvent: null,
+            suspenseEvent: null,
+            userTimingMark,
           });
         }
       };
@@ -326,28 +341,47 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       nativeEventsView.onHover = nativeEvent => {
         if (!hoveredEvent || hoveredEvent.nativeEvent !== nativeEvent) {
           setHoveredEvent({
-            userTimingMark: null,
-            nativeEvent,
-            reactEvent: null,
+            data,
             flamechartStackFrame: null,
             measure: null,
-            data,
+            nativeEvent,
+            schedulingEvent: null,
+            suspenseEvent: null,
+            userTimingMark: null,
           });
         }
       };
     }
 
-    const {current: reactEventsView} = reactEventsViewRef;
-    if (reactEventsView) {
-      reactEventsView.onHover = reactEvent => {
-        if (!hoveredEvent || hoveredEvent.reactEvent !== reactEvent) {
+    const {current: schedulingEventsView} = schedulingEventsViewRef;
+    if (schedulingEventsView) {
+      schedulingEventsView.onHover = schedulingEvent => {
+        if (!hoveredEvent || hoveredEvent.schedulingEvent !== schedulingEvent) {
           setHoveredEvent({
-            userTimingMark: null,
-            nativeEvent: null,
-            reactEvent,
+            data,
             flamechartStackFrame: null,
             measure: null,
+            nativeEvent: null,
+            schedulingEvent,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: suspenseEventsView} = suspenseEventsViewRef;
+    if (suspenseEventsView) {
+      suspenseEventsView.onHover = suspenseEvent => {
+        if (!hoveredEvent || hoveredEvent.suspenseEvent !== suspenseEvent) {
+          setHoveredEvent({
             data,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            schedulingEvent: null,
+            suspenseEvent,
+            userTimingMark: null,
           });
         }
       };
@@ -358,12 +392,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       reactMeasuresView.onHover = measure => {
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
-            userTimingMark: null,
-            nativeEvent: null,
-            reactEvent: null,
+            data,
             flamechartStackFrame: null,
             measure,
-            data,
+            nativeEvent: null,
+            schedulingEvent: null,
+            suspenseEvent: null,
+            userTimingMark: null,
           });
         }
       };
@@ -377,12 +412,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           hoveredEvent.flamechartStackFrame !== flamechartStackFrame
         ) {
           setHoveredEvent({
-            userTimingMark: null,
-            nativeEvent: null,
-            reactEvent: null,
+            data,
             flamechartStackFrame,
             measure: null,
-            data,
+            nativeEvent: null,
+            schedulingEvent: null,
+            suspenseEvent: null,
+            userTimingMark: null,
           });
         }
       });
@@ -407,10 +443,17 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       );
     }
 
-    const {current: reactEventsView} = reactEventsViewRef;
-    if (reactEventsView) {
-      reactEventsView.setHoveredEvent(
-        hoveredEvent ? hoveredEvent.reactEvent : null,
+    const {current: schedulingEventsView} = schedulingEventsViewRef;
+    if (schedulingEventsView) {
+      schedulingEventsView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.schedulingEvent : null,
+      );
+    }
+
+    const {current: suspenseEventsView} = suspenseEventsViewRef;
+    if (suspenseEventsView) {
+      suspenseEventsView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.suspenseEvent : null,
       );
     }
 
@@ -443,24 +486,25 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
             return null;
           }
           const {
-            reactEvent,
             flamechartStackFrame,
             measure,
+            schedulingEvent,
+            suspenseEvent,
           } = contextData.hoveredEvent;
           return (
             <Fragment>
-              {reactEvent !== null && (
+              {schedulingEvent !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(reactEvent.componentName)}
+                  onClick={() => copy(schedulingEvent.componentName)}
                   title="Copy component name">
                   Copy component name
                 </ContextMenuItem>
               )}
-              {reactEvent !== null && reactEvent.componentStack && (
+              {suspenseEvent !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(reactEvent.componentStack)}
-                  title="Copy component stack">
-                  Copy component stack
+                  onClick={() => copy(suspenseEvent.componentName)}
+                  title="Copy component name">
+                  Copy component name
                 </ContextMenuItem>
               )}
               {measure !== null && (

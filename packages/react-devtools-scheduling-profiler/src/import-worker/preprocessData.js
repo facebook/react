@@ -20,6 +20,7 @@ import type {
   ReactLane,
   ReactMeasureType,
   ReactProfilerData,
+  SuspenseEvent,
 } from '../types';
 
 import {REACT_TOTAL_NUM_LANES} from '../constants';
@@ -34,20 +35,24 @@ type MeasureStackElement = {|
 |};
 
 type ProcessorState = {|
-  nextRenderShouldGenerateNewBatchID: boolean,
   batchUID: BatchUID,
-  uidCounter: BatchUID,
   measureStack: MeasureStackElement[],
   nativeEventStack: NativeEvent[],
+  nextRenderShouldGenerateNewBatchID: boolean,
+  uidCounter: BatchUID,
+  unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
 |};
 
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
 
 const WARNING_STRINGS = {
   LONG_EVENT_HANDLER:
-    'An event handler scheduled a big update with React. Consider using the startTransition API to defer some of this work.',
+    'An event handler scheduled a big update with React. Consider using the Transition API to defer some of this work.',
   NESTED_UPDATE:
     'A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint.',
+  SUSPENDD_DURING_UPATE:
+    'A component suspended during an update which caused a fallback to be shown. ' +
+    "Consider using the Transition API to avoid hiding components after they've been mounted.",
 };
 
 // Exported for tests
@@ -182,45 +187,54 @@ function processTimelineEvent(
           const stackTrace = args.data.stackTrace;
           if (stackTrace) {
             const topFrame = stackTrace[stackTrace.length - 1];
-            if (topFrame.url.includes('node_modules/react-dom')) {
+            if (topFrame.url.includes('/react-dom.')) {
               // Filter out fake React events dispatched by invokeGuardedCallbackDev.
               return;
             }
           }
         }
 
-        const timestamp = (ts - currentProfilerData.startTime) / 1000;
-        const duration = event.dur / 1000;
+        // Reduce noise from events like DOMActivate, load/unload, etc. which are usually not relevant
+        if (
+          type.startsWith('blur') ||
+          type.startsWith('click') ||
+          type.startsWith('focus') ||
+          type.startsWith('mouse') ||
+          type.startsWith('pointer')
+        ) {
+          const timestamp = (ts - currentProfilerData.startTime) / 1000;
+          const duration = event.dur / 1000;
 
-        let depth = 0;
+          let depth = 0;
 
-        while (state.nativeEventStack.length > 0) {
-          const prevNativeEvent =
-            state.nativeEventStack[state.nativeEventStack.length - 1];
-          const prevStopTime =
-            prevNativeEvent.timestamp + prevNativeEvent.duration;
+          while (state.nativeEventStack.length > 0) {
+            const prevNativeEvent =
+              state.nativeEventStack[state.nativeEventStack.length - 1];
+            const prevStopTime =
+              prevNativeEvent.timestamp + prevNativeEvent.duration;
 
-          if (timestamp < prevStopTime) {
-            depth = prevNativeEvent.depth + 1;
-            break;
-          } else {
-            state.nativeEventStack.pop();
+            if (timestamp < prevStopTime) {
+              depth = prevNativeEvent.depth + 1;
+              break;
+            } else {
+              state.nativeEventStack.pop();
+            }
           }
+
+          const nativeEvent = {
+            depth,
+            duration,
+            timestamp,
+            type,
+            warning: null,
+          };
+
+          currentProfilerData.nativeEvents.push(nativeEvent);
+
+          // Keep track of curent event in case future ones overlap.
+          // We separate them into different vertical lanes in this case.
+          state.nativeEventStack.push(nativeEvent);
         }
-
-        const nativeEvent = {
-          depth,
-          duration,
-          timestamp,
-          type,
-          warning: null,
-        };
-
-        currentProfilerData.nativeEvents.push(nativeEvent);
-
-        // Keep track of curent event in case future ones overlap.
-        // We separate them into different vertical lanes in this case.
-        state.nativeEventStack.push(nativeEvent);
       }
       break;
     case 'blink.user_timing':
@@ -228,60 +242,49 @@ function processTimelineEvent(
 
       // React Events - schedule
       if (name.startsWith('--schedule-render-')) {
-        const [
-          laneBitmaskString,
-          laneLabels,
-          ...splitComponentStack
-        ] = name.substr(18).split('-');
-        currentProfilerData.reactEvents.push({
+        const [laneBitmaskString, laneLabels] = name.substr(18).split('-');
+        currentProfilerData.schedulingEvents.push({
           type: 'schedule-render',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           laneLabels: laneLabels ? laneLabels.split(',') : [],
-          componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
           warning: null,
         });
       } else if (name.startsWith('--schedule-forced-update-')) {
-        const [
-          laneBitmaskString,
-          laneLabels,
-          componentName,
-          ...splitComponentStack
-        ] = name.substr(25).split('-');
+        const [laneBitmaskString, laneLabels, componentName] = name
+          .substr(25)
+          .split('-');
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
+          // TODO (scheduling profiler) Only warn if the subsequent updat is longer than some threshold.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
-        currentProfilerData.reactEvents.push({
+        currentProfilerData.schedulingEvents.push({
           type: 'schedule-force-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           laneLabels: laneLabels ? laneLabels.split(',') : [],
           componentName,
-          componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
           warning,
         });
       } else if (name.startsWith('--schedule-state-update-')) {
-        const [
-          laneBitmaskString,
-          laneLabels,
-          componentName,
-          ...splitComponentStack
-        ] = name.substr(24).split('-');
+        const [laneBitmaskString, laneLabels, componentName] = name
+          .substr(24)
+          .split('-');
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
+          // TODO (scheduling profiler) Only warn if the subsequent updat is longer than some threshold.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
-        currentProfilerData.reactEvents.push({
+        currentProfilerData.schedulingEvents.push({
           type: 'schedule-state-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           laneLabels: laneLabels ? laneLabels.split(',') : [],
           componentName,
-          componentStack: splitComponentStack.join('-'),
           timestamp: startTime,
           warning,
         });
@@ -289,41 +292,79 @@ function processTimelineEvent(
 
       // React Events - suspense
       else if (name.startsWith('--suspense-suspend-')) {
-        const [id, componentName, ...splitComponentStack] = name
-          .substr(19)
-          .split('-');
-        currentProfilerData.reactEvents.push({
-          type: 'suspense-suspend',
-          id,
-          componentName,
-          componentStack: splitComponentStack.join('-'),
-          timestamp: startTime,
-          warning: null,
+        const [id, componentName, ...rest] = name.substr(19).split('-');
+
+        // Older versions of the scheduling profiler data didn't contain phase or lane values.
+        let phase = null;
+        let warning = null;
+        if (rest.length === 3) {
+          switch (rest[0]) {
+            case 'mount':
+            case 'update':
+              phase = rest[0];
+              break;
+          }
+
+          if (phase === 'update') {
+            const laneLabels = rest[2];
+            // HACK This is a bit gross but the numeric lane value might change between render versions.
+            if (!laneLabels.includes('Transition')) {
+              warning = WARNING_STRINGS.SUSPENDD_DURING_UPATE;
+            }
+          }
+        }
+
+        let depth = 0;
+        state.unresolvedSuspenseEvents.forEach(unresolvedSuspenseEvent => {
+          depth = Math.max(depth, unresolvedSuspenseEvent.depth + 1);
         });
+
+        // TODO (scheduling profiler)
+        // Maybe default duration to be the end of the profiler data (for unresolved suspense?)
+        // Or should we just draw these are diamonds where they started instead?
+        const suspenseEvent = {
+          componentName,
+          depth,
+          duration: null,
+          id,
+          phase,
+          resolution: 'pending',
+          resuspendTimestamps: null,
+          timestamp: startTime,
+          type: 'suspense',
+          warning,
+        };
+
+        currentProfilerData.suspenseEvents.push(suspenseEvent);
+        state.unresolvedSuspenseEvents.set(id, suspenseEvent);
+      } else if (name.startsWith('--suspense-resuspend-')) {
+        const [id] = name.substr(21).split('-');
+        const suspenseEvent = state.unresolvedSuspenseEvents.get(id);
+        if (suspenseEvent != null) {
+          if (suspenseEvent.resuspendTimestamps === null) {
+            suspenseEvent.resuspendTimestamps = [startTime];
+          } else {
+            suspenseEvent.resuspendTimestamps.push(startTime);
+          }
+        }
       } else if (name.startsWith('--suspense-resolved-')) {
-        const [id, componentName, ...splitComponentStack] = name
-          .substr(20)
-          .split('-');
-        currentProfilerData.reactEvents.push({
-          type: 'suspense-resolved',
-          id,
-          componentName,
-          componentStack: splitComponentStack.join('-'),
-          timestamp: startTime,
-          warning: null,
-        });
+        const [id] = name.substr(20).split('-');
+        const suspenseEvent = state.unresolvedSuspenseEvents.get(id);
+        if (suspenseEvent != null) {
+          state.unresolvedSuspenseEvents.delete(id);
+
+          suspenseEvent.duration = startTime - suspenseEvent.timestamp;
+          suspenseEvent.resolution = 'resolved';
+        }
       } else if (name.startsWith('--suspense-rejected-')) {
-        const [id, componentName, ...splitComponentStack] = name
-          .substr(20)
-          .split('-');
-        currentProfilerData.reactEvents.push({
-          type: 'suspense-rejected',
-          id,
-          componentName,
-          componentStack: splitComponentStack.join('-'),
-          timestamp: startTime,
-          warning: null,
-        });
+        const [id] = name.substr(20).split('-');
+        const suspenseEvent = state.unresolvedSuspenseEvents.get(id);
+        if (suspenseEvent != null) {
+          state.unresolvedSuspenseEvents.delete(id);
+
+          suspenseEvent.duration = startTime - suspenseEvent.timestamp;
+          suspenseEvent.resolution = 'rejected';
+        }
       } // eslint-disable-line brace-style
 
       // React Measures - render
@@ -528,13 +569,14 @@ export default function preprocessData(
   const flamechart = preprocessFlamechart(timeline);
 
   const profilerData: ReactProfilerData = {
-    startTime: 0,
     duration: 0,
-    nativeEvents: [],
-    reactEvents: [],
-    measures: [],
     flamechart,
+    measures: [],
+    nativeEvents: [],
     otherUserTimingMarks: [],
+    schedulingEvents: [],
+    startTime: 0,
+    suspenseEvents: [],
   };
 
   // Sort `timeline`. JSON Array Format trace events need not be ordered. See:
@@ -565,10 +607,11 @@ export default function preprocessData(
 
   const state: ProcessorState = {
     batchUID: 0,
-    uidCounter: 0,
-    nextRenderShouldGenerateNewBatchID: true,
     measureStack: [],
     nativeEventStack: [],
+    nextRenderShouldGenerateNewBatchID: true,
+    uidCounter: 0,
+    unresolvedSuspenseEvents: new Map(),
   };
 
   timeline.forEach(event => processTimelineEvent(event, profilerData, state));

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {NativeEvent, ReactProfilerData} from '../types';
+import type {SuspenseEvent, ReactProfilerData} from '../types';
 import type {
   Interaction,
   MouseMoveInteraction,
@@ -33,12 +33,12 @@ import {
 import {
   COLORS,
   TEXT_PADDING,
-  NATIVE_EVENT_HEIGHT,
+  SUSPENSE_EVENT_HEIGHT,
   FONT_SIZE,
   BORDER_SIZE,
 } from './constants';
 
-const ROW_WITH_BORDER_HEIGHT = NATIVE_EVENT_HEIGHT + BORDER_SIZE;
+const ROW_WITH_BORDER_HEIGHT = SUSPENSE_EVENT_HEIGHT + BORDER_SIZE;
 
 // TODO (scheduling profiler) Make this a reusable util
 const cachedTextWidths = new Map();
@@ -64,14 +64,15 @@ const trimFlamechartText = (
   return null;
 };
 
-export class NativeEventsView extends View {
-  _depthToNativeEvent: Map<number, NativeEvent[]>;
-  _hoveredEvent: NativeEvent | null = null;
+// TODO (scheduling profiler) Make this a resizable view.
+export class SuspenseEventsView extends View {
+  _depthToSuspenseEvent: Map<number, SuspenseEvent[]>;
+  _hoveredEvent: SuspenseEvent | null = null;
   _intrinsicSize: Size;
   _maxDepth: number = 0;
   _profilerData: ReactProfilerData;
 
-  onHover: ((event: NativeEvent | null) => void) | null = null;
+  onHover: ((event: SuspenseEvent | null) => void) | null = null;
 
   constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
     super(surface, frame);
@@ -82,20 +83,20 @@ export class NativeEventsView extends View {
   }
 
   _performPreflightComputations() {
-    this._depthToNativeEvent = new Map();
+    this._depthToSuspenseEvent = new Map();
 
-    const {duration, nativeEvents} = this._profilerData;
+    const {duration, suspenseEvents} = this._profilerData;
 
-    nativeEvents.forEach(event => {
+    suspenseEvents.forEach(event => {
       const depth = event.depth;
 
       this._maxDepth = Math.max(this._maxDepth, depth);
 
-      if (!this._depthToNativeEvent.has(depth)) {
-        this._depthToNativeEvent.set(depth, [event]);
+      if (!this._depthToSuspenseEvent.has(depth)) {
+        this._depthToSuspenseEvent.set(depth, [event]);
       } else {
         // $FlowFixMe This is unnecessary.
-        this._depthToNativeEvent.get(depth).push(event);
+        this._depthToSuspenseEvent.get(depth).push(event);
       }
     });
 
@@ -109,7 +110,7 @@ export class NativeEventsView extends View {
     return this._intrinsicSize;
   }
 
-  setHoveredEvent(hoveredEvent: NativeEvent | null) {
+  setHoveredEvent(hoveredEvent: SuspenseEvent | null) {
     if (this._hoveredEvent === hoveredEvent) {
       return;
     }
@@ -118,18 +119,26 @@ export class NativeEventsView extends View {
   }
 
   /**
-   * Draw a single `NativeEvent` as a box/span with text inside of it.
+   * Draw a single `SuspenseEvent` as a box/span with text inside of it.
    */
-  _drawSingleNativeEvent(
+  _drawSingleSuspenseEvent(
     context: CanvasRenderingContext2D,
     rect: Rect,
-    event: NativeEvent,
+    event: SuspenseEvent,
     baseY: number,
     scaleFactor: number,
     showHoverHighlight: boolean,
   ) {
     const {frame} = this;
-    const {depth, duration, timestamp, type, warning} = event;
+    const {
+      componentName,
+      depth,
+      duration,
+      phase,
+      resolution,
+      timestamp,
+      warning,
+    } = event;
 
     baseY += depth * ROW_WITH_BORDER_HEIGHT;
 
@@ -140,10 +149,15 @@ export class NativeEventsView extends View {
         x: xStart,
         y: baseY,
       },
-      size: {width: xStop - xStart, height: NATIVE_EVENT_HEIGHT},
+      size: {width: xStop - xStart, height: SUSPENSE_EVENT_HEIGHT},
     };
     if (!rectIntersectsRect(eventRect, rect)) {
       return; // Not in view
+    }
+
+    if (duration === null) {
+      // TODO (scheduling profiler)
+      return; // For now, don't show unresolved.
     }
 
     const width = durationToWidth(duration, scaleFactor);
@@ -158,9 +172,23 @@ export class NativeEventsView extends View {
         ? COLORS.WARNING_BACKGROUND_HOVER
         : COLORS.WARNING_BACKGROUND;
     } else {
-      context.fillStyle = showHoverHighlight
-        ? COLORS.NATIVE_EVENT_HOVER
-        : COLORS.NATIVE_EVENT;
+      switch (resolution) {
+        case 'pending':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_SUSPENSE_PENDING_EVENT_HOVER
+            : COLORS.REACT_SUSPENSE_PENDING_EVENT;
+          break;
+        case 'rejected':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_SUSPENSE_REJECTED_EVENT_HOVER
+            : COLORS.REACT_SUSPENSE_REJECTED_EVENT;
+          break;
+        case 'resolved':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_SUSPENSE_RESOLVED_EVENT_HOVER
+            : COLORS.REACT_SUSPENSE_RESOLVED_EVENT;
+          break;
+      }
     }
     context.fillRect(
       drawableRect.origin.x,
@@ -176,9 +204,19 @@ export class NativeEventsView extends View {
 
     if (width > TEXT_PADDING * 2) {
       const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
+
+      let label = 'suspended';
+      if (componentName != null) {
+        label = `${componentName} ${label}`;
+      }
+      if (phase !== null) {
+        label += ` during ${phase}`;
+      }
+      label += ` - ${formatDuration(duration)}`;
+
       const trimmedName = trimFlamechartText(
         context,
-        `${type} - ${formatDuration(duration)}`,
+        label,
         width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
       );
 
@@ -189,7 +227,7 @@ export class NativeEventsView extends View {
         context.fillText(
           trimmedName,
           eventRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
-          eventRect.origin.y + NATIVE_EVENT_HEIGHT / 2,
+          eventRect.origin.y + SUSPENSE_EVENT_HEIGHT / 2,
         );
       }
     }
@@ -198,12 +236,12 @@ export class NativeEventsView extends View {
   draw(context: CanvasRenderingContext2D) {
     const {
       frame,
-      _profilerData: {nativeEvents},
+      _profilerData: {suspenseEvents},
       _hoveredEvent,
       visibleArea,
     } = this;
 
-    context.fillStyle = COLORS.PRIORITY_BACKGROUND;
+    context.fillStyle = COLORS.BACKGROUND;
     context.fillRect(
       visibleArea.origin.x,
       visibleArea.origin.y,
@@ -217,8 +255,8 @@ export class NativeEventsView extends View {
       frame,
     );
 
-    nativeEvents.forEach(event => {
-      this._drawSingleNativeEvent(
+    suspenseEvents.forEach(event => {
+      this._drawSingleSuspenseEvent(
         context,
         visibleArea,
         event,
@@ -227,29 +265,6 @@ export class NativeEventsView extends View {
         event === _hoveredEvent,
       );
     });
-
-    // Render bottom borders.
-    for (let i = 0; i <= this._maxDepth; i++) {
-      const borderFrame: Rect = {
-        origin: {
-          x: frame.origin.x,
-          y: frame.origin.y + NATIVE_EVENT_HEIGHT,
-        },
-        size: {
-          width: frame.size.width,
-          height: BORDER_SIZE,
-        },
-      };
-      if (rectIntersectsRect(borderFrame, visibleArea)) {
-        context.fillStyle = COLORS.PRIORITY_BORDER;
-        context.fillRect(
-          visibleArea.origin.x,
-          frame.origin.y + (i + 1) * ROW_WITH_BORDER_HEIGHT - BORDER_SIZE,
-          visibleArea.size.width,
-          BORDER_SIZE,
-        );
-      }
-    }
   }
 
   /**
@@ -272,13 +287,13 @@ export class NativeEventsView extends View {
 
     const adjustedCanvasMouseY = location.y - frame.origin.y;
     const depth = Math.floor(adjustedCanvasMouseY / ROW_WITH_BORDER_HEIGHT);
-    const nativeEventsAtDepth = this._depthToNativeEvent.get(depth);
+    const suspenseEventsAtDepth = this._depthToSuspenseEvent.get(depth);
 
-    if (nativeEventsAtDepth) {
+    if (suspenseEventsAtDepth) {
       // Find the event being hovered over.
-      for (let index = nativeEventsAtDepth.length - 1; index >= 0; index--) {
-        const nativeEvent = nativeEventsAtDepth[index];
-        const {duration, timestamp} = nativeEvent;
+      for (let index = suspenseEventsAtDepth.length - 1; index >= 0; index--) {
+        const suspenseEvent = suspenseEventsAtDepth[index];
+        const {duration, timestamp} = suspenseEvent;
 
         if (
           hoverTimestamp >= timestamp &&
@@ -288,7 +303,7 @@ export class NativeEventsView extends View {
 
           viewRefs.hoveredView = this;
 
-          onHover(nativeEvent);
+          onHover(suspenseEvent);
           return;
         }
       }

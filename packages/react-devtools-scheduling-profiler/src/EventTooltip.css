@@ -56,28 +56,6 @@
   margin-right: 0.25rem;
 }
 
-.ComponentStack {
-  overflow: hidden;
-  max-width: 35em;
-  max-height: 10em;
-  margin: 0;
-  font-size: 0.9em;
-  line-height: 1.5;
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    var(--color-tooltip-background),
-    var(--color-tooltip-background) 5em,
-    transparent
-  );
-  mask-image: linear-gradient(
-    180deg,
-    var(--color-tooltip-background),
-    var(--color-tooltip-background) 5em,
-    transparent
-  );
-  white-space: pre;
-}
-
 .ReactMeasureLabel {
 }
 
