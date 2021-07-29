@@ -106,10 +106,9 @@ export default class Canvas {
   tipBoundsWindow: window;
   container: HTMLElement;
   tip: OverlayTip;
+  canvas: HTMLCanvasElement | null = null;
 
   constructor() {
-    const canvas: HTMLCanvasElement | null = null;
-    this.canvas = canvas;
     // Find the root window, because overlays are positioned relative to it.
     const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
     this.window = currentWindow;
