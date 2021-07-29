@@ -239,6 +239,7 @@ export type ReactFabricEventTouch = {
   target: number,
   timestamp: number,
   force: number,
+  altitudeAngle: number,
   ...
 };
 
