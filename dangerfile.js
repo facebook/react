@@ -113,10 +113,6 @@ function row(result) {
     return;
   }
 
-  // Disable sizeBot in a Devtools PR like bellow title. Because that doesn't affect production bundle size.
-  // [Fix DevTools console announcement being suppressed by Fast Refresh #21864](https://github.com/facebook/react/pull/21864)
-  if (new RegExp('devtools?', 'i').test(danger.github.pr.title)) return;
-
   const resultsMap = new Map();
 
   // Find all the head (current) artifacts paths.
