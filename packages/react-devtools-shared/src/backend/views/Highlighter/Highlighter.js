@@ -7,12 +7,12 @@
  * @flow
  */
 
-import HighlightCanvas from './HighlightCanvas';
+import Canvas from './Canvas';
 
 const SHOW_DURATION = 2000;
 
 let timeoutID: TimeoutID | null = null;
-let highlightCanvas: HighlightCanvas | null = null;
+let highlightCanvas: Canvas | null = null;
 
 export function hideOverlay() {
   timeoutID = null;
@@ -42,7 +42,7 @@ export function showOverlay(
   }
 
   if (highlightCanvas === null) {
-    highlightCanvas = new HighlightCanvas();
+    highlightCanvas = new Canvas();
   }
 
   highlightCanvas.inspect(elements, componentName);

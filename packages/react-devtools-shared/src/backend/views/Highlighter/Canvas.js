@@ -13,7 +13,7 @@ import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 import type {Rect} from '../utils';
 
-import type {Data} from './traceupdates';
+import type {Data} from './index';
 import type {NativeType} from '../../types';
 
 const OUTLINE_COLOR = '#f0f0f0';
@@ -30,9 +30,12 @@ const COLORS = [
   '#efbb49',
   '#febc38',
 ];
-
-let canvas: HTMLCanvasElement | null = null;
-let traceUpdatesCanvas: HTMLCanvasElement | null = null;
+const highlightStyles = {
+  background: 'rgba(120, 170, 210, 0.7)',
+  padding: 'rgba(77, 200, 0, 0.3)',
+  margin: 'rgba(255, 155, 0, 0.3)',
+  border: 'rgba(255, 200, 50, 0.3)',
+};
 
 type Box = {|top: number, left: number, width: number, height: number|};
 
@@ -98,13 +101,15 @@ class OverlayTip {
   }
 }
 
-export default class HighlightCanvas {
+export default class Canvas {
   window: window;
   tipBoundsWindow: window;
   container: HTMLElement;
   tip: OverlayTip;
 
   constructor() {
+    const canvas: HTMLCanvasElement | null = null;
+    this.canvas = canvas;
     // Find the root window, because overlays are positioned relative to it.
     const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
     this.window = currentWindow;
@@ -123,8 +128,8 @@ export default class HighlightCanvas {
   }
 
   initialize(): void {
-    canvas = window.document.createElement('canvas');
-    canvas.style.cssText = `
+    this.canvas = window.document.createElement('canvas');
+    this.canvas.style.cssText = `
     xx-background-color: red;
     xx-opacity: 0.5;
     bottom: 0;
@@ -137,33 +142,15 @@ export default class HighlightCanvas {
   `;
 
     const root = window.document.documentElement;
-    root.insertBefore(canvas, root.firstChild);
-  }
-
-  initializeTraceUpdatesCanvas(): void {
-    traceUpdatesCanvas = window.document.createElement('canvas');
-    traceUpdatesCanvas.style.cssText = `
-    xx-background-color: red;
-    xx-opacity: 0.5;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    position: fixed;
-    right: 0;
-    top: 0;
-    z-index: 1000000000;
-  `;
-
-    const root = window.document.documentElement;
-    root.insertBefore(traceUpdatesCanvas, root.firstChild);
+    root.insertBefore(this.canvas, root.firstChild);
   }
 
   inspect(nodes: Array<HTMLElement>, name?: ?string): void {
-    if (canvas === null) {
+    if (this.canvas === null) {
       this.initialize();
     }
 
-    const canvasFlow: HTMLCanvasElement = ((canvas: any): HTMLCanvasElement);
+    const canvasFlow: HTMLCanvasElement = ((this.canvas: any): HTMLCanvasElement);
     canvasFlow.width = window.innerWidth;
     canvasFlow.height = window.innerHeight;
 
@@ -248,6 +235,7 @@ export default class HighlightCanvas {
       );
     });
   }
+
   measureNode(node: Object): Rect | null {
     if (!node || typeof node.getBoundingClientRect !== 'function') {
       return null;
@@ -304,19 +292,17 @@ export default class HighlightCanvas {
 
   remove() {
     this.tip.remove();
-    if (this.container.parentNode) {
-      this.container.parentNode.removeChild(this.container);
-    }
+    this.destroy();
   }
 
   //trace updates functions
 
   draw(nodeToData: Map<NativeType, Data>): void {
-    if (traceUpdatesCanvas === null) {
-      this.initializeTraceUpdatesCanvas();
+    if (this.canvas === null) {
+      this.initialize();
     }
-
-    const canvasFlow: HTMLCanvasElement = ((traceUpdatesCanvas: any): HTMLCanvasElement);
+    // const canvasFlow: HTMLCanvasElement = ((traceUpdatesCanvas: any): HTMLCanvasElement);
+    const canvasFlow: HTMLCanvasElement = ((this.canvas: any): HTMLCanvasElement);
     canvasFlow.width = window.innerWidth;
     canvasFlow.height = window.innerHeight;
 
@@ -362,11 +348,11 @@ export default class HighlightCanvas {
   }
 
   destroy(): void {
-    if (canvas !== null) {
-      if (canvas.parentNode != null) {
-        canvas.parentNode.removeChild(canvas);
+    if (this.canvas !== null) {
+      if (this.canvas.parentNode != null) {
+        this.canvas.parentNode.removeChild(this.canvas);
       }
-      canvas = null;
+      this.canvas = null;
     }
   }
 }
@@ -407,10 +393,3 @@ function findTipPos(dims, bounds, tipSize) {
     style: {top, left},
   };
 }
-
-const highlightStyles = {
-  background: 'rgba(120, 170, 210, 0.7)',
-  padding: 'rgba(77, 200, 0, 0.3)',
-  margin: 'rgba(255, 155, 0, 0.3)',
-  border: 'rgba(255, 200, 50, 0.3)',
-};

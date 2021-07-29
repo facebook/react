@@ -12,16 +12,158 @@ import throttle from 'lodash.throttle';
 import Agent from 'react-devtools-shared/src/backend/agent';
 import {hideOverlay, showOverlay} from './Highlighter';
 
+import Canvas from './Canvas';
+import {getNestedBoundingClientRect} from '../utils';
+
+import type {NativeType} from '../../types';
+import type {Rect} from '../utils';
+
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 
-// This plug-in provides in-page highlighting of the selected element.
+// This plug-in provides in-page highlighting of the selected element and trace updates highlighting.
 // It is used by the browser extension and the standalone DevTools shell (when connected to a browser).
 // It is not currently the mechanism used to highlight React Native views.
 // That is done by the React Native Inspector component.
 
 let iframesListeningTo: Set<HTMLIFrameElement> = new Set();
 
-export default function setupHighlighter(
+// Canvas for trace updates
+let traceUpdatesCanvas: Canvas | null = null;
+
+// How long the rect should be shown for?
+const DISPLAY_DURATION = 250;
+
+// What's the longest we are willing to show the overlay for?
+// This can be important if we're getting a flurry of events (e.g. scroll update).
+const MAX_DISPLAY_DURATION = 3000;
+
+// How long should a rect be considered valid for?
+const REMEASUREMENT_AFTER_DURATION = 250;
+
+// Some environments (e.g. React Native / Hermes) don't support the performance API yet.
+const getCurrentTime =
+  typeof performance === 'object' && typeof performance.now === 'function'
+    ? () => performance.now()
+    : () => Date.now();
+
+export type Data = {|
+  count: number,
+  expirationTime: number,
+  lastMeasuredAt: number,
+  rect: Rect | null,
+|};
+
+const nodeToData: Map<NativeType, Data> = new Map();
+
+let agent: Agent = ((null: any): Agent);
+let drawAnimationFrameID: AnimationFrameID | null = null;
+let isEnabled: boolean = false;
+let redrawTimeoutID: TimeoutID | null = null;
+
+export function setupTraceUpdates(injectedAgent: Agent): void {
+  agent = injectedAgent;
+  agent.addListener('traceUpdates', traceUpdates);
+}
+
+export function setTraceUpdatesEnabled(value: boolean): void {
+  isEnabled = value;
+
+  if (!isEnabled) {
+    nodeToData.clear();
+
+    if (drawAnimationFrameID !== null) {
+      cancelAnimationFrame(drawAnimationFrameID);
+      drawAnimationFrameID = null;
+    }
+
+    if (redrawTimeoutID !== null) {
+      clearTimeout(redrawTimeoutID);
+      redrawTimeoutID = null;
+    }
+
+    if (traceUpdatesCanvas !== null) {
+      traceUpdatesCanvas.destroy();
+    }
+  }
+}
+
+function traceUpdates(nodes: Set<NativeType>): void {
+  if (!isEnabled) {
+    return;
+  }
+
+  nodes.forEach(node => {
+    const data = nodeToData.get(node);
+    const now = getCurrentTime();
+
+    let lastMeasuredAt = data != null ? data.lastMeasuredAt : 0;
+    let rect = data != null ? data.rect : null;
+    if (rect === null || lastMeasuredAt + REMEASUREMENT_AFTER_DURATION < now) {
+      lastMeasuredAt = now;
+      rect = measureNode(node);
+    }
+
+    nodeToData.set(node, {
+      count: data != null ? data.count + 1 : 1,
+      expirationTime:
+        data != null
+          ? Math.min(
+          now + MAX_DISPLAY_DURATION,
+          data.expirationTime + DISPLAY_DURATION,
+          )
+          : now + DISPLAY_DURATION,
+      lastMeasuredAt,
+      rect,
+    });
+  });
+
+  if (redrawTimeoutID !== null) {
+    clearTimeout(redrawTimeoutID);
+    redrawTimeoutID = null;
+  }
+
+  if (drawAnimationFrameID === null) {
+    drawAnimationFrameID = requestAnimationFrame(prepareToDraw);
+  }
+}
+
+function prepareToDraw(): void {
+  drawAnimationFrameID = null;
+  redrawTimeoutID = null;
+
+  const now = getCurrentTime();
+  let earliestExpiration = Number.MAX_VALUE;
+
+  // Remove any items that have already expired.
+  nodeToData.forEach((data, node) => {
+    if (data.expirationTime < now) {
+      nodeToData.delete(node);
+    } else {
+      earliestExpiration = Math.min(earliestExpiration, data.expirationTime);
+    }
+  });
+
+  if (traceUpdatesCanvas === null) {
+    traceUpdatesCanvas = new Canvas();
+  }
+  traceUpdatesCanvas.draw(nodeToData);
+
+  if (earliestExpiration !== Number.MAX_VALUE) {
+    redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);
+  }
+}
+
+function measureNode(node: Object): Rect | null {
+  if (!node || typeof node.getBoundingClientRect !== 'function') {
+    return null;
+  }
+
+  const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
+
+  return getNestedBoundingClientRect(node, currentWindow);
+}
+
+export function setupHighlighter(
   bridge: BackendBridge,
   agent: Agent,
 ): void {
@@ -117,7 +259,6 @@ export default function setupHighlighter(
         // $FlowFixMe Flow only knows about 'start' | 'end'
         node.scrollIntoView({block: 'nearest', inline: 'nearest'});
       }
-
       showOverlay(nodes, displayName, hideAfterTimeout);
 
       if (openNativeElementsPanel) {
