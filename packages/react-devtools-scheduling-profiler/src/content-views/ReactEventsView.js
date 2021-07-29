@@ -8,7 +8,13 @@
  */
 
 import type {ReactEvent, ReactProfilerData} from '../types';
-import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
+import type {
+  Interaction,
+  MouseMoveInteraction,
+  Rect,
+  Size,
+  ViewRefs,
+} from '../view-base';
 
 import {
   positioningScaleFactor,
@@ -25,13 +31,13 @@ import {
 } from '../view-base';
 import {
   COLORS,
-  EVENT_ROW_PADDING,
-  EVENT_DIAMETER,
+  TOP_ROW_PADDING,
+  REACT_EVENT_DIAMETER,
   BORDER_SIZE,
 } from './constants';
 
 const EVENT_ROW_HEIGHT_FIXED =
-  EVENT_ROW_PADDING + EVENT_DIAMETER + EVENT_ROW_PADDING;
+  TOP_ROW_PADDING + REACT_EVENT_DIAMETER + TOP_ROW_PADDING;
 
 function isSuspenseEvent(event: ReactEvent): boolean %checks {
   return (
@@ -85,13 +91,13 @@ export class ReactEventsView extends View {
     const {timestamp, type} = event;
 
     const x = timestampToPosition(timestamp, scaleFactor, frame);
-    const radius = EVENT_DIAMETER / 2;
+    const radius = REACT_EVENT_DIAMETER / 2;
     const eventRect: Rect = {
       origin: {
         x: x - radius,
         y: baseY,
       },
-      size: {width: EVENT_DIAMETER, height: EVENT_DIAMETER},
+      size: {width: REACT_EVENT_DIAMETER, height: REACT_EVENT_DIAMETER},
     };
     if (!rectIntersectsRect(eventRect, rect)) {
       return; // Not in view
@@ -100,6 +106,8 @@ export class ReactEventsView extends View {
     let fillStyle = null;
 
     switch (type) {
+      case 'native-event':
+        return;
       case 'schedule-render':
       case 'schedule-state-update':
       case 'schedule-force-update':
@@ -140,7 +148,7 @@ export class ReactEventsView extends View {
   draw(context: CanvasRenderingContext2D) {
     const {
       frame,
-      _profilerData: {events},
+      _profilerData: {reactEvents},
       _hoveredEvent,
       visibleArea,
     } = this;
@@ -154,7 +162,7 @@ export class ReactEventsView extends View {
     );
 
     // Draw events
-    const baseY = frame.origin.y + EVENT_ROW_PADDING;
+    const baseY = frame.origin.y + TOP_ROW_PADDING;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
       frame,
@@ -162,7 +170,7 @@ export class ReactEventsView extends View {
 
     const highlightedEvents: ReactEvent[] = [];
 
-    events.forEach(event => {
+    reactEvents.forEach(event => {
       if (
         event === _hoveredEvent ||
         (_hoveredEvent &&
@@ -223,7 +231,7 @@ export class ReactEventsView extends View {
   /**
    * @private
    */
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
     const {frame, onHover, visibleArea} = this;
     if (!onHover) {
       return;
@@ -236,7 +244,7 @@ export class ReactEventsView extends View {
     }
 
     const {
-      _profilerData: {events},
+      _profilerData: {reactEvents},
     } = this;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
@@ -244,20 +252,22 @@ export class ReactEventsView extends View {
     );
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
     const eventTimestampAllowance = widthToDuration(
-      EVENT_DIAMETER / 2,
+      REACT_EVENT_DIAMETER / 2,
       scaleFactor,
     );
 
     // Because data ranges may overlap, we want to find the last intersecting item.
     // This will always be the one on "top" (the one the user is hovering over).
-    for (let index = events.length - 1; index >= 0; index--) {
-      const event = events[index];
+    for (let index = reactEvents.length - 1; index >= 0; index--) {
+      const event = reactEvents[index];
       const {timestamp} = event;
 
       if (
         timestamp - eventTimestampAllowance <= hoverTimestamp &&
         hoverTimestamp <= timestamp + eventTimestampAllowance
       ) {
+        this.currentCursor = 'pointer';
+        viewRefs.hoveredView = this;
         onHover(event);
         return;
       }
@@ -266,10 +276,10 @@ export class ReactEventsView extends View {
     onHover(null);
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction);
+        this._handleMouseMove(interaction, viewRefs);
         break;
     }
   }

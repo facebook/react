@@ -201,10 +201,7 @@ describe('ReactOffscreen', () => {
     });
     // No layout effect.
     expect(Scheduler).toHaveYielded(['Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Unhide the tree. The layout effect is mounted.
     await act(async () => {
@@ -251,10 +248,7 @@ describe('ReactOffscreen', () => {
       );
     });
     expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Unhide the tree. The layout effect is re-mounted.
     await act(async () => {
@@ -291,10 +285,7 @@ describe('ReactOffscreen', () => {
       );
     });
     expect(Scheduler).toHaveYielded(['Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
 
     // Show the tree. The layout effect is mounted.
     await act(async () => {
@@ -316,9 +307,130 @@ describe('ReactOffscreen', () => {
       );
     });
     expect(Scheduler).toHaveYielded(['Unmount layout', 'Child']);
-    // TODO: Offscreen does not yet hide/unhide children correctly. Until we do,
-    // it should only be used inside a host component wrapper whose visibility
-    // is toggled simultaneously.
-    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+    expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
+  });
+
+  // @gate experimental || www
+  it('does not toggle effects for LegacyHidden component', async () => {
+    // LegacyHidden is meant to be the same as offscreen except it doesn't
+    // do anything to effects. Only used by www, as a temporary migration step.
+    function Child({text}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout');
+        };
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <LegacyHidden mode="visible">
+          <Child />
+        </LegacyHidden>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child', 'Mount layout']);
+
+    await act(async () => {
+      root.render(
+        <LegacyHidden mode="hidden">
+          <Child />
+        </LegacyHidden>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child']);
+
+    await act(async () => {
+      root.render(
+        <LegacyHidden mode="visible">
+          <Child />
+        </LegacyHidden>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Child']);
+
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout']);
+  });
+
+  // @gate experimental || www
+  it('hides new insertions into an already hidden tree', async () => {
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <span>Hi</span>
+        </Offscreen>,
+      );
+    });
+    expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
+
+    // Insert a new node into the hidden tree
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <span>Hi</span>
+          <span>Something new</span>
+        </Offscreen>,
+      );
+    });
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span hidden={true}>Hi</span>
+        {/* This new node should also be hidden */}
+        <span hidden={true}>Something new</span>
+      </>,
+    );
+  });
+
+  // @gate experimental || www
+  it('hides updated nodes inside an already hidden tree', async () => {
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <span>Hi</span>
+        </Offscreen>,
+      );
+    });
+    expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
+
+    // Set the `hidden` prop to on an already hidden node
+    await act(async () => {
+      root.render(
+        <Offscreen mode="hidden">
+          <span hidden={false}>Hi</span>
+        </Offscreen>,
+      );
+    });
+    // It should still be hidden, because the Offscreen container overrides it
+    expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
+
+    // Unhide the boundary
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <span hidden={true}>Hi</span>
+        </Offscreen>,
+      );
+    });
+    // It should still be hidden, because of the prop
+    expect(root).toMatchRenderedOutput(<span hidden={true}>Hi</span>);
+
+    // Remove the `hidden` prop
+    await act(async () => {
+      root.render(
+        <Offscreen mode="visible">
+          <span>Hi</span>
+        </Offscreen>,
+      );
+    });
+    // Now it's visible
+    expect(root).toMatchRenderedOutput(<span>Hi</span>);
   });
 });

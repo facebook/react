@@ -15,6 +15,11 @@ import memoize from 'memoize-one';
 import {View} from './View';
 import {zeroPoint} from './geometry';
 
+export type ViewRefs = {|
+  activeView: View | null,
+  hoveredView: View | null,
+|};
+
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {
   const dpr: number = window.devicePixelRatio || 1;
@@ -48,8 +53,18 @@ const getCanvasContext = memoize(
  */
 export class Surface {
   rootView: ?View;
+
   _context: ?CanvasRenderingContext2D;
   _canvasSize: ?Size;
+
+  _viewRefs: ViewRefs = {
+    activeView: null,
+    hoveredView: null,
+  };
+
+  hasActiveView(): boolean {
+    return this._viewRefs.activeView !== null;
+  }
 
   setCanvas(canvas: HTMLCanvasElement, canvasSize: Size) {
     this._context = getCanvasContext(
@@ -80,10 +95,24 @@ export class Surface {
     rootView.displayIfNeeded(_context);
   }
 
+  getCurrentCursor(): string | null {
+    const {activeView, hoveredView} = this._viewRefs;
+    if (activeView !== null) {
+      return activeView.currentCursor;
+    } else if (hoveredView !== null) {
+      return hoveredView.currentCursor;
+    } else {
+      return null;
+    }
+  }
+
   handleInteraction(interaction: Interaction) {
     if (!this.rootView) {
       return;
     }
-    this.rootView.handleInteractionAndPropagateToSubviews(interaction);
+    this.rootView.handleInteractionAndPropagateToSubviews(
+      interaction,
+      this._viewRefs,
+    );
   }
 }

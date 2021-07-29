@@ -8,7 +8,13 @@
  */
 
 import type {UserTimingMark} from '../types';
-import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
+import type {
+  Interaction,
+  MouseMoveInteraction,
+  Rect,
+  Size,
+  ViewRefs,
+} from '../view-base';
 
 import {
   positioningScaleFactor,
@@ -25,13 +31,13 @@ import {
 } from '../view-base';
 import {
   COLORS,
-  EVENT_ROW_PADDING,
+  TOP_ROW_PADDING,
   USER_TIMING_MARK_SIZE,
   BORDER_SIZE,
 } from './constants';
 
 const ROW_HEIGHT_FIXED =
-  EVENT_ROW_PADDING + USER_TIMING_MARK_SIZE + EVENT_ROW_PADDING;
+  TOP_ROW_PADDING + USER_TIMING_MARK_SIZE + TOP_ROW_PADDING;
 
 export class UserTimingMarksView extends View {
   _marks: UserTimingMark[];
@@ -125,7 +131,7 @@ export class UserTimingMarksView extends View {
     );
 
     // Draw marks
-    const baseY = frame.origin.y + EVENT_ROW_PADDING;
+    const baseY = frame.origin.y + TOP_ROW_PADDING;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
       frame,
@@ -185,7 +191,7 @@ export class UserTimingMarksView extends View {
   /**
    * @private
    */
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
     const {frame, onHover, visibleArea} = this;
     if (!onHover) {
       return;
@@ -218,6 +224,8 @@ export class UserTimingMarksView extends View {
         timestamp - markTimestampAllowance <= hoverTimestamp &&
         hoverTimestamp <= timestamp + markTimestampAllowance
       ) {
+        this.currentCursor = 'pointer';
+        viewRefs.hoveredView = this;
         onHover(mark);
         return;
       }
@@ -226,10 +234,10 @@ export class UserTimingMarksView extends View {
     onHover(null);
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction);
+        this._handleMouseMove(interaction, viewRefs);
         break;
     }
   }

@@ -19,6 +19,7 @@ import type {
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {ScrollState} from './utils/scrollState';
+import type {ViewRefs} from './Surface';
 
 import {Surface} from './Surface';
 import {View} from './View';
@@ -155,13 +156,31 @@ export class HorizontalPanAndZoomView extends View {
     this._setScrollState(newState);
   }
 
-  _handleMouseDown(interaction: MouseDownInteraction) {
+  _handleMouseDown(interaction: MouseDownInteraction, viewRefs: ViewRefs) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
       this._isPanning = true;
+
+      viewRefs.activeView = this;
+
+      this.currentCursor = 'grabbing';
     }
   }
 
-  _handleMouseMove(interaction: MouseMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
+    const isHovered = rectContainsPoint(
+      interaction.payload.location,
+      this.frame,
+    );
+    if (isHovered) {
+      viewRefs.hoveredView = this;
+    }
+
+    if (viewRefs.activeView === this) {
+      this.currentCursor = 'grabbing';
+    } else if (isHovered) {
+      this.currentCursor = 'grab';
+    }
+
     if (!this._isPanning) {
       return;
     }
@@ -173,9 +192,13 @@ export class HorizontalPanAndZoomView extends View {
     this._setStateAndInformCallbacksIfChanged(newState);
   }
 
-  _handleMouseUp(interaction: MouseUpInteraction) {
+  _handleMouseUp(interaction: MouseUpInteraction, viewRefs: ViewRefs) {
     if (this._isPanning) {
       this._isPanning = false;
+    }
+
+    if (viewRefs.activeView === this) {
+      viewRefs.activeView = null;
     }
   }
 
@@ -238,16 +261,16 @@ export class HorizontalPanAndZoomView extends View {
     this._setStateAndInformCallbacksIfChanged(newState);
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousedown':
-        this._handleMouseDown(interaction);
+        this._handleMouseDown(interaction, viewRefs);
         break;
       case 'mousemove':
-        this._handleMouseMove(interaction);
+        this._handleMouseMove(interaction, viewRefs);
         break;
       case 'mouseup':
-        this._handleMouseUp(interaction);
+        this._handleMouseUp(interaction, viewRefs);
         break;
       case 'wheel-plain':
         this._handleWheelPlain(interaction);

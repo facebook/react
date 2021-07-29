@@ -204,10 +204,11 @@ describe(preprocessData, () => {
 
     expect(preprocessData([cpuProfilerSample, randomSample])).toStrictEqual({
       duration: 0.002,
-      events: [],
       flamechart: [],
       measures: [],
+      nativeEvents: [],
       otherUserTimingMarks: [],
+      reactEvents: [],
       startTime: 1,
     });
   });
@@ -258,15 +259,6 @@ describe(preprocessData, () => {
       ]),
     ).toStrictEqual({
       duration: 0.008,
-      events: [
-        {
-          componentStack: '',
-          laneLabels: [],
-          lanes: [9],
-          timestamp: 0.002,
-          type: 'schedule-render',
-        },
-      ],
       flamechart: [],
       measures: [
         {
@@ -306,7 +298,17 @@ describe(preprocessData, () => {
           type: 'layout-effects',
         },
       ],
+      nativeEvents: [],
       otherUserTimingMarks: [],
+      reactEvents: [
+        {
+          componentStack: '',
+          laneLabels: [],
+          lanes: [9],
+          timestamp: 0.002,
+          type: 'schedule-render',
+        },
+      ],
       startTime: 1,
     });
   });
@@ -320,15 +322,6 @@ describe(preprocessData, () => {
     const userTimingData = createUserTimingData(clearedMarks);
     expect(preprocessData(userTimingData)).toStrictEqual({
       duration: 0.011,
-      events: [
-        {
-          componentStack: '',
-          laneLabels: ['Sync'],
-          lanes: [0],
-          timestamp: 0.005,
-          type: 'schedule-render',
-        },
-      ],
       flamechart: [],
       measures: [
         {
@@ -368,6 +361,7 @@ describe(preprocessData, () => {
           type: 'layout-effects',
         },
       ],
+      nativeEvents: [],
       otherUserTimingMarks: [
         {
           name: '__v3',
@@ -376,6 +370,15 @@ describe(preprocessData, () => {
         {
           name: `--react-init-${reactVersion}`,
           timestamp: 0.004,
+        },
+      ],
+      reactEvents: [
+        {
+          componentStack: '',
+          laneLabels: ['Sync'],
+          lanes: [0],
+          timestamp: 0.005,
+          type: 'schedule-render',
         },
       ],
       startTime: 1,
@@ -400,24 +403,6 @@ describe(preprocessData, () => {
     const userTimingData = createUserTimingData(clearedMarks);
     expect(preprocessData(userTimingData)).toStrictEqual({
       duration: 0.022,
-      events: [
-        {
-          componentStack: '',
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.005,
-          type: 'schedule-render',
-        },
-        {
-          componentName: 'App',
-          componentStack: '',
-          isCascading: false,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.013,
-          type: 'schedule-state-update',
-        },
-      ],
       flamechart: [],
       measures: [
         {
@@ -511,6 +496,7 @@ describe(preprocessData, () => {
           type: 'passive-effects',
         },
       ],
+      nativeEvents: [],
       otherUserTimingMarks: [
         {
           name: '__v3',
@@ -519,6 +505,24 @@ describe(preprocessData, () => {
         {
           name: '--react-init-17.0.3',
           timestamp: 0.004,
+        },
+      ],
+      reactEvents: [
+        {
+          componentStack: '',
+          laneLabels: ['Default'],
+          lanes: [4],
+          timestamp: 0.005,
+          type: 'schedule-render',
+        },
+        {
+          componentName: 'App',
+          componentStack: '',
+          isCascading: false,
+          laneLabels: ['Default'],
+          lanes: [4],
+          timestamp: 0.013,
+          type: 'schedule-state-update',
         },
       ],
       startTime: 1,

@@ -1,12 +1,8 @@
 {
   "private": true,
   "name": "react-devtools-scheduling-profiler",
-  "version": "0.0.0",
+  "version": "4.14.0",
   "license": "MIT",
-  "scripts": {
-    "build": "cross-env NODE_ENV=production cross-env TARGET=remote webpack --config webpack.config.js",
-    "start": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open"
-  },
   "dependencies": {
     "@elg/speedscope": "1.9.0-a6f84db",
     "clipboard-js": "^0.3.6",

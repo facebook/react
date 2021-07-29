@@ -18,7 +18,7 @@ import type {
 } from 'react-devtools-shared/src/types';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 
-const TIMEOUT = 5000;
+const TIMEOUT = 30000;
 
 const Pending = 0;
 const Resolved = 1;
@@ -103,7 +103,14 @@ export function loadHookNames(
 
     let didTimeout = false;
 
-    loadHookNamesFunction(hooksTree).then(
+    const response = loadHookNamesFunction(hooksTree);
+    console.log(
+      'loadHookNamesFunction:',
+      loadHookNamesFunction,
+      '->',
+      response,
+    );
+    response.then(
       function onSuccess(hookNames) {
         if (didTimeout) {
           return;

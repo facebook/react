@@ -2121,40 +2121,17 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
       case SuspenseComponent: {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
-        const current = finishedWork.alternate;
-        const wasHidden = current !== null && current.memoizedState !== null;
-        const offscreenBoundary: Fiber = (finishedWork.child: any);
-
         if (isHidden) {
+          const current = finishedWork.alternate;
+          const wasHidden = current !== null && current.memoizedState !== null;
           if (!wasHidden) {
+            // TODO: Move to passive phase
             markCommitTimeOfFallback();
-            if (supportsMutation) {
-              hideOrUnhideAllChildren(offscreenBoundary, true);
-            }
-            if (
-              enableSuspenseLayoutEffectSemantics &&
-              (offscreenBoundary.mode & ConcurrentMode) !== NoMode
-            ) {
-              let offscreenChild = offscreenBoundary.child;
-              while (offscreenChild !== null) {
-                nextEffect = offscreenChild;
-                disappearLayoutEffects_begin(offscreenChild);
-                offscreenChild = offscreenChild.sibling;
-              }
-            }
-          }
-        } else {
-          if (wasHidden) {
-            if (supportsMutation) {
-              hideOrUnhideAllChildren(offscreenBoundary, false);
-            }
-            // TODO: Move re-appear call here for symmetry?
           }
         }
         break;
       }
-      case OffscreenComponent:
-      case LegacyHiddenComponent: {
+      case OffscreenComponent: {
         const newState: OffscreenState | null = finishedWork.memoizedState;
         const isHidden = newState !== null;
         const current = finishedWork.alternate;
@@ -2167,27 +2144,26 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
           hideOrUnhideAllChildren(offscreenBoundary, isHidden);
         }
 
-        if (isHidden) {
-          if (!wasHidden) {
-            if (
-              enableSuspenseLayoutEffectSemantics &&
-              (offscreenBoundary.mode & ConcurrentMode) !== NoMode
-            ) {
-              nextEffect = offscreenBoundary;
-              let offscreenChild = offscreenBoundary.child;
-              while (offscreenChild !== null) {
-                nextEffect = offscreenChild;
-                disappearLayoutEffects_begin(offscreenChild);
-                offscreenChild = offscreenChild.sibling;
+        if (enableSuspenseLayoutEffectSemantics) {
+          if (isHidden) {
+            if (!wasHidden) {
+              if ((offscreenBoundary.mode & ConcurrentMode) !== NoMode) {
+                nextEffect = offscreenBoundary;
+                let offscreenChild = offscreenBoundary.child;
+                while (offscreenChild !== null) {
+                  nextEffect = offscreenChild;
+                  disappearLayoutEffects_begin(offscreenChild);
+                  offscreenChild = offscreenChild.sibling;
+                }
               }
             }
+          } else {
+            if (wasHidden) {
+              // TODO: Move re-appear call here for symmetry?
+            }
           }
-        } else {
-          if (wasHidden) {
-            // TODO: Move re-appear call here for symmetry?
-          }
+          break;
         }
-        break;
       }
     }
   }

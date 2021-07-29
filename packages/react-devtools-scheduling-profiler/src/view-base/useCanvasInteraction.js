@@ -175,15 +175,16 @@ export function useCanvasInteraction(
       return false;
     };
 
-    document.addEventListener('mousemove', onDocumentMouseMove);
-    document.addEventListener('mouseup', onDocumentMouseUp);
+    const ownerDocument = canvas.ownerDocument;
+    ownerDocument.addEventListener('mousemove', onDocumentMouseMove);
+    ownerDocument.addEventListener('mouseup', onDocumentMouseUp);
 
     canvas.addEventListener('mousedown', onCanvasMouseDown);
     canvas.addEventListener('wheel', onCanvasWheel);
 
     return () => {
-      document.removeEventListener('mousemove', onDocumentMouseMove);
-      document.removeEventListener('mouseup', onDocumentMouseUp);
+      ownerDocument.removeEventListener('mousemove', onDocumentMouseMove);
+      ownerDocument.removeEventListener('mouseup', onDocumentMouseUp);
 
       canvas.removeEventListener('mousedown', onCanvasMouseDown);
       canvas.removeEventListener('wheel', onCanvasWheel);
