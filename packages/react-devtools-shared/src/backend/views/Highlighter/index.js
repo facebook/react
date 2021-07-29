@@ -163,6 +163,7 @@ function measureNode(node: Object): Rect | null {
   return getNestedBoundingClientRect(node, currentWindow);
 }
 
+// eslint-disable-next-line no-shadow
 export function setupHighlighter(bridge: BackendBridge, agent: Agent): void {
   bridge.addListener(
     'clearNativeElementHighlight',
