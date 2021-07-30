@@ -33,6 +33,10 @@ import {
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
 } from './ReactFiberFlags';
+import {
+  supportsPersistence,
+  getOffscreenContainerProps,
+} from './ReactFiberHostConfig';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
@@ -312,6 +316,26 @@ function throwException(
           // But we shouldn't call any lifecycle methods or callbacks. Remove
           // all lifecycle effect tags.
           sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
+
+          if (supportsPersistence) {
+            // Another legacy Suspense quirk. In persistent mode, if this is the
+            // initial mount, override the props of the host container to hide
+            // its contents.
+            const currentSuspenseBoundary = workInProgress.alternate;
+            if (currentSuspenseBoundary === null) {
+              const offscreenFiber: Fiber = (workInProgress.child: any);
+              const offscreenContainer = offscreenFiber.child;
+              if (offscreenContainer !== null) {
+                const children = offscreenContainer.memoizedProps.children;
+                const containerProps = getOffscreenContainerProps(
+                  'hidden',
+                  children,
+                );
+                offscreenContainer.pendingProps = containerProps;
+                offscreenContainer.memoizedProps = containerProps;
+              }
+            }
+          }
 
           if (sourceFiber.tag === ClassComponent) {
             const currentSourceFiber = sourceFiber.alternate;

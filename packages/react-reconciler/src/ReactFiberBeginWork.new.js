@@ -2212,21 +2212,6 @@ function mountSuspenseFallbackChildren(
     primaryChildFragment.childLanes = NoLanes;
     primaryChildFragment.pendingProps = primaryChildProps;
 
-    if (
-      supportsPersistence &&
-      (workInProgress.mode & ConcurrentMode) === NoMode
-    ) {
-      const offscreenContainer: Fiber = (primaryChildFragment.child: any);
-
-      const containerProps = getOffscreenContainerProps(
-        'hidden',
-        primaryChildren,
-      );
-      offscreenContainer.pendingProps = containerProps;
-      offscreenContainer.memoizedProps = containerProps;
-      completeSuspendedOffscreenHostContainer(null, offscreenContainer);
-    }
-
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
       // final amounts. This seems counterintuitive, since we're intentionally
