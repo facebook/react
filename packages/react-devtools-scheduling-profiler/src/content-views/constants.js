@@ -73,6 +73,7 @@ export let COLORS = {
   REACT_SUSPENSE_UNRESOLVED_EVENT: '',
   REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER: '',
   REACT_WORK_BORDER: '',
+  SCROLL_CARET: '',
   TEXT_COLOR: '',
   TIME_MARKER_LABEL: '',
   WARNING_BACKGROUND: '',
@@ -172,6 +173,7 @@ export function updateColorsToMatchTheme(): void {
     REACT_WORK_BORDER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-work-border',
     ),
+    SCROLL_CARET: computedStyle.getPropertyValue('--color-scroll-caret'),
     TEXT_COLOR: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-text-color',
     ),

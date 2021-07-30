@@ -559,6 +559,7 @@ export function updateThemeVariables(
     'color-scheduling-profiler-react-work-border',
     documentElements,
   );
+  updateStyleHelper(theme, 'color-scroll-caret', documentElements);
   updateStyleHelper(theme, 'color-shadow', documentElements);
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
