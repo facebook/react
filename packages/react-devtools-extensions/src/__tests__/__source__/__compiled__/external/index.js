@@ -3,6 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+Object.defineProperty(exports, "ComponentUsingHooksIndirectly", {
+  enumerable: true,
+  get: function () {
+    return _ComponentUsingHooksIndirectly.Component;
+  }
+});
 Object.defineProperty(exports, "ComponentWithCustomHook", {
   enumerable: true,
   get: function () {
@@ -46,6 +52,8 @@ Object.defineProperty(exports, "useTheme", {
   }
 });
 exports.ToDoList = void 0;
+
+var _ComponentUsingHooksIndirectly = require("./ComponentUsingHooksIndirectly");
 
 var _ComponentWithCustomHook = require("./ComponentWithCustomHook");
 

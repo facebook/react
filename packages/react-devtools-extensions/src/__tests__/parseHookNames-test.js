@@ -145,6 +145,13 @@ describe('parseHookNames', () => {
     ]);
   });
 
+  it('should parse names for code using hooks indirectly', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentUsingHooksIndirectly')
+      .Component;
+    const hookNames = await getHookNamesForComponent(Component);
+    expectHookNamesToEqual(hookNames, ['count', 'darkMode', 'isDarkMode']);
+  });
+
   it('should return null for custom hooks without explicit names', async () => {
     const Component = require('./__source__/__untransformed__/ComponentWithUnnamedCustomHooks')
       .Component;
@@ -225,6 +232,32 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/bundle', 'ComponentWithCustomHook'); // bundle source map
       await test(
         './__source__/__compiled__/no-columns/ComponentWithCustomHook',
+      ); // simulated Webpack 'cheap-module-source-map'
+    });
+
+    it('should work when code is using hooks indirectly', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+          'darkMode', // useDarkMode()
+          'isDarkMode', // useState()
+        ]);
+      }
+
+      await test(
+        './__source__/__compiled__/inline/ComponentUsingHooksIndirectly',
+      ); // inline source map
+      await test(
+        './__source__/__compiled__/external/ComponentUsingHooksIndirectly',
+      ); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ComponentUsingHooksIndirectly',
+      ); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ComponentUsingHooksIndirectly',
       ); // simulated Webpack 'cheap-module-source-map'
     });
 

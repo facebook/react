@@ -7,6 +7,7 @@
  * @flow
  */
 
+export {Component as ComponentUsingHooksIndirectly} from './ComponentUsingHooksIndirectly';
 export {Component as ComponentWithCustomHook} from './ComponentWithCustomHook';
 export {Component as ComponentWithExternalCustomHooks} from './ComponentWithExternalCustomHooks';
 export {Component as ComponentWithMultipleHooksPerLine} from './ComponentWithMultipleHooksPerLine';
