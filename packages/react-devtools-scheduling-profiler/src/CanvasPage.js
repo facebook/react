@@ -32,7 +32,7 @@ import prettyMilliseconds from 'pretty-ms';
 
 import {
   HorizontalPanAndZoomView,
-  ResizableSplitView,
+  ResizableView,
   Surface,
   VerticalScrollView,
   View,
@@ -154,21 +154,51 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       );
     };
 
-    // Top content
+    function createViewHelper(
+      view: View,
+      shouldScrollVertically: boolean = false,
+      shouldResizeVertically: boolean = false,
+    ): View {
+      let verticalScrollView = null;
+      if (shouldScrollVertically) {
+        verticalScrollView = new VerticalScrollView(
+          surface,
+          defaultFrame,
+          view,
+        );
+      }
 
-    const topContentStack = new View(
-      surface,
-      defaultFrame,
-      verticallyStackedLayout,
-    );
+      const horizontalPanAndZoomView = new HorizontalPanAndZoomView(
+        surface,
+        defaultFrame,
+        verticalScrollView !== null ? verticalScrollView : view,
+        data.duration,
+        syncAllHorizontalPanAndZoomViewStates,
+      );
+
+      syncedHorizontalPanAndZoomViewsRef.current.push(horizontalPanAndZoomView);
+
+      let viewToReturn = horizontalPanAndZoomView;
+      if (shouldResizeVertically) {
+        viewToReturn = new ResizableView(
+          surface,
+          defaultFrame,
+          horizontalPanAndZoomView,
+          canvasRef,
+        );
+      }
+
+      return viewToReturn;
+    }
 
     const axisMarkersView = new TimeAxisMarkersView(
       surface,
       defaultFrame,
       data.duration,
     );
-    topContentStack.addSubview(axisMarkersView);
+    const axisMarkersViewWrapper = createViewHelper(axisMarkersView);
 
+    let userTimingMarksViewWrapper = null;
     if (data.otherUserTimingMarks.length > 0) {
       const userTimingMarksView = new UserTimingMarksView(
         surface,
@@ -177,12 +207,16 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         data.duration,
       );
       userTimingMarksViewRef.current = userTimingMarksView;
-      topContentStack.addSubview(userTimingMarksView);
+      userTimingMarksViewWrapper = createViewHelper(userTimingMarksView);
     }
 
     const nativeEventsView = new NativeEventsView(surface, defaultFrame, data);
     nativeEventsViewRef.current = nativeEventsView;
-    topContentStack.addSubview(nativeEventsView);
+    const nativeEventsViewWrapper = createViewHelper(
+      nativeEventsView,
+      true,
+      true,
+    );
 
     const schedulingEventsView = new SchedulingEventsView(
       surface,
@@ -190,7 +224,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data,
     );
     schedulingEventsViewRef.current = schedulingEventsView;
-    topContentStack.addSubview(schedulingEventsView);
+    const schedulingEventsViewWrapper = createViewHelper(schedulingEventsView);
 
     const suspenseEventsView = new SuspenseEventsView(
       surface,
@@ -198,20 +232,11 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data,
     );
     suspenseEventsViewRef.current = suspenseEventsView;
-    topContentStack.addSubview(suspenseEventsView);
-
-    const topContentHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
-      surface,
-      defaultFrame,
-      topContentStack,
-      data.duration,
-      syncAllHorizontalPanAndZoomViewStates,
+    const suspenseEventsViewWrapper = createViewHelper(
+      suspenseEventsView,
+      true,
+      true,
     );
-    syncedHorizontalPanAndZoomViewsRef.current.push(
-      topContentHorizontalPanAndZoomView,
-    );
-
-    // Resizable content
 
     const reactMeasuresView = new ReactMeasuresView(
       surface,
@@ -219,20 +244,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data,
     );
     reactMeasuresViewRef.current = reactMeasuresView;
-    const reactMeasuresVerticalScrollView = new VerticalScrollView(
-      surface,
-      defaultFrame,
+    const reactMeasuresViewWrapper = createViewHelper(
       reactMeasuresView,
-    );
-    const reactMeasuresHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
-      surface,
-      defaultFrame,
-      reactMeasuresVerticalScrollView,
-      data.duration,
-      syncAllHorizontalPanAndZoomViewStates,
-    );
-    syncedHorizontalPanAndZoomViewsRef.current.push(
-      reactMeasuresHorizontalPanAndZoomView,
+      true,
+      true,
     );
 
     const flamechartView = new FlamechartView(
@@ -242,30 +257,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
-    const flamechartVerticalScrollView = new VerticalScrollView(
-      surface,
-      defaultFrame,
-      flamechartView,
-    );
-    const flamechartHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
-      surface,
-      defaultFrame,
-      flamechartVerticalScrollView,
-      data.duration,
-      syncAllHorizontalPanAndZoomViewStates,
-    );
-    syncedHorizontalPanAndZoomViewsRef.current.push(
-      flamechartHorizontalPanAndZoomView,
-    );
+    const flamechartViewWrapper = createViewHelper(flamechartView, true, true);
 
-    const resizableContentStack = new ResizableSplitView(
-      surface,
-      defaultFrame,
-      reactMeasuresHorizontalPanAndZoomView,
-      flamechartHorizontalPanAndZoomView,
-      canvasRef,
-    );
-
+    // Root view contains all of the sub views defined above.
+    // The order we add them below determines their vertical position.
     const rootView = new View(
       surface,
       defaultFrame,
@@ -274,8 +269,15 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         lastViewTakesUpRemainingSpaceLayout,
       ),
     );
-    rootView.addSubview(topContentHorizontalPanAndZoomView);
-    rootView.addSubview(resizableContentStack);
+    rootView.addSubview(axisMarkersViewWrapper);
+    if (userTimingMarksViewWrapper !== null) {
+      rootView.addSubview(userTimingMarksViewWrapper);
+    }
+    rootView.addSubview(nativeEventsViewWrapper);
+    rootView.addSubview(schedulingEventsViewWrapper);
+    rootView.addSubview(suspenseEventsViewWrapper);
+    rootView.addSubview(reactMeasuresViewWrapper);
+    rootView.addSubview(flamechartViewWrapper);
 
     surfaceRef.current.rootView = rootView;
   }, [data]);

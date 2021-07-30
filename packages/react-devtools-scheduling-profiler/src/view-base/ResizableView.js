@@ -17,7 +17,6 @@ import type {Rect, Size} from './geometry';
 import type {ViewRefs} from './Surface';
 
 import {COLORS} from '../content-views/constants';
-import nullthrows from 'nullthrows';
 import {Surface} from './Surface';
 import {View} from './View';
 import {rectContainsPoint} from './geometry';
@@ -142,100 +141,69 @@ class ResizeBar extends View {
   }
 }
 
-export class ResizableSplitView extends View {
+// TODO (ResizableView) Rename this to ResizableView
+// TODO (ResizableView) Clip sub-view somehow so text doesn't overflow.
+export class ResizableView extends View {
   _canvasRef: {current: HTMLCanvasElement | null};
   _resizingState: ResizingState | null = null;
   _layoutState: LayoutState;
+  _resizeBar: ResizeBar;
+  _subview: View;
 
   constructor(
     surface: Surface,
     frame: Rect,
-    topSubview: View,
-    bottomSubview: View,
+    subview: View,
     canvasRef: {current: HTMLCanvasElement | null},
   ) {
     super(surface, frame, noopLayout);
 
     this._canvasRef = canvasRef;
 
-    this.addSubview(topSubview);
-    this.addSubview(new ResizeBar(surface, frame));
-    this.addSubview(bottomSubview);
+    this._subview = subview;
+    this._resizeBar = new ResizeBar(surface, frame);
 
-    const topSubviewDesiredSize = topSubview.desiredSize();
+    this.addSubview(this._subview);
+    this.addSubview(this._resizeBar);
+
+    // TODO (ResizableView) Allow subviews to specify default sizes.
+    // Maybe that or set some % based default so all panels are visible to begin with.
+    const subviewDesiredSize = subview.desiredSize();
     this._layoutState = {
-      barOffsetY: topSubviewDesiredSize ? topSubviewDesiredSize.height : 0,
+      barOffsetY: subviewDesiredSize ? subviewDesiredSize.height : 0,
     };
   }
 
-  _getTopSubview(): View {
-    return this.subviews[0];
-  }
-
-  _getResizeBar(): View {
-    return this.subviews[1];
-  }
-
-  _getBottomSubview(): View {
-    return this.subviews[2];
-  }
-
-  _getResizeBarDesiredSize(): Size {
-    return nullthrows(
-      this._getResizeBar().desiredSize(),
-      'Resize bar must have desired size',
-    );
-  }
-
   desiredSize() {
-    const topSubviewDesiredSize = this._getTopSubview().desiredSize();
-    const resizeBarDesiredSize = this._getResizeBarDesiredSize();
-    const bottomSubviewDesiredSize = this._getBottomSubview().desiredSize();
+    const resizeBarDesiredSize = this._resizeBar.desiredSize();
+    const subviewDesiredSize = this._subview.desiredSize();
 
-    const topSubviewDesiredWidth = topSubviewDesiredSize
-      ? topSubviewDesiredSize.width
-      : 0;
-    const bottomSubviewDesiredWidth = bottomSubviewDesiredSize
-      ? bottomSubviewDesiredSize.width
-      : 0;
-
-    const topSubviewDesiredHeight = topSubviewDesiredSize
-      ? topSubviewDesiredSize.height
-      : 0;
-    const bottomSubviewDesiredHeight = bottomSubviewDesiredSize
-      ? bottomSubviewDesiredSize.height
+    const subviewDesiredWidth = subviewDesiredSize
+      ? subviewDesiredSize.width
       : 0;
 
     return {
-      width: Math.max(
-        topSubviewDesiredWidth,
-        resizeBarDesiredSize.width,
-        bottomSubviewDesiredWidth,
-      ),
-      height:
-        topSubviewDesiredHeight +
-        resizeBarDesiredSize.height +
-        bottomSubviewDesiredHeight,
+      width: Math.max(subviewDesiredWidth, resizeBarDesiredSize.width),
+      height: this._layoutState.barOffsetY + resizeBarDesiredSize.height,
     };
   }
 
   layoutSubviews() {
     this._updateLayoutState();
     this._updateSubviewFrames();
+
     super.layoutSubviews();
   }
 
+  // TODO (ResizableView) Change ResizeBar view style slightly when fully collapsed.
+  // TODO (ResizableView) Double click on ResizeBar to collapse/toggle.
   _updateLayoutState() {
-    const {frame, visibleArea, _resizingState} = this;
+    const {frame, _resizingState} = this;
 
-    const resizeBarDesiredSize = this._getResizeBarDesiredSize();
+    // TODO (ResizableView) Allow subviews to specify min size too.
     // Allow bar to travel to bottom of the visible area of this view but no further
-    const maxPossibleBarOffset =
-      visibleArea.size.height - resizeBarDesiredSize.height;
-    const topSubviewDesiredSize = this._getTopSubview().desiredSize();
-    const maxBarOffset = topSubviewDesiredSize
-      ? Math.min(maxPossibleBarOffset, topSubviewDesiredSize.height)
-      : maxPossibleBarOffset;
+    const subviewDesiredSize = this._subview.desiredSize();
+    const maxBarOffset = subviewDesiredSize.height;
 
     let proposedBarOffsetY = this._layoutState.barOffsetY;
     // Update bar offset if dragging bar
@@ -254,37 +222,31 @@ export class ResizableSplitView extends View {
     const {
       frame: {
         origin: {x, y},
-        size: {width, height},
+        size: {width},
       },
       _layoutState: {barOffsetY},
     } = this;
 
-    const resizeBarDesiredSize = this._getResizeBarDesiredSize();
+    const resizeBarDesiredSize = this._resizeBar.desiredSize();
 
     let currentY = y;
 
-    this._getTopSubview().setFrame({
+    this._subview.setFrame({
       origin: {x, y: currentY},
       size: {width, height: barOffsetY},
     });
-    currentY += this._getTopSubview().frame.size.height;
+    currentY += this._subview.frame.size.height;
 
-    this._getResizeBar().setFrame({
+    this._resizeBar.setFrame({
       origin: {x, y: currentY},
       size: {width, height: resizeBarDesiredSize.height},
     });
-    currentY += this._getResizeBar().frame.size.height;
-
-    this._getBottomSubview().setFrame({
-      origin: {x, y: currentY},
-      // Fill remaining height
-      size: {width, height: height + y - currentY},
-    });
+    currentY += this._resizeBar.frame.size.height;
   }
 
   _handleMouseDown(interaction: MouseDownInteraction) {
     const cursorLocation = interaction.payload.location;
-    const resizeBarFrame = this._getResizeBar().frame;
+    const resizeBarFrame = this._resizeBar.frame;
     if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
       const mouseY = cursorLocation.y;
       this._resizingState = {
@@ -315,7 +277,7 @@ export class ResizableSplitView extends View {
 
   getCursorActiveSubView(interaction: Interaction): View | null {
     const cursorLocation = interaction.payload.location;
-    const resizeBarFrame = this._getResizeBar().frame;
+    const resizeBarFrame = this._resizeBar.frame;
     if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
       return this;
     } else {

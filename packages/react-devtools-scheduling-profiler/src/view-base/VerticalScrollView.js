@@ -27,6 +27,7 @@ import {
 } from './utils/scrollState';
 import {MOVE_WHEEL_DELTA_THRESHOLD} from './constants';
 
+// TODO VerticalScrollView Draw caret over top+center and/or bottom+center to indicate scrollable content.
 export class VerticalScrollView extends View {
   _scrollState: ScrollState = {offset: 0, length: 0};
   _isPanning = false;

@@ -140,7 +140,7 @@ export class View {
    *
    * Can be overridden by subclasses.
    */
-  desiredSize(): ?Size {
+  desiredSize(): Size {
     if (this._needsDisplay) {
       this.layoutSubviews();
     }

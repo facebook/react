@@ -26,7 +26,6 @@ import {
   View,
   layeredLayout,
   rectContainsPoint,
-  rectEqualToRect,
   intersectionOfRects,
   rectIntersectsRect,
   verticallyStackedLayout,
@@ -36,11 +35,10 @@ import {
   positioningScaleFactor,
   timestampToPosition,
 } from './utils/positioning';
+import {drawText} from './utils/text';
 import {
   COLORS,
-  FONT_SIZE,
   FLAMECHART_FRAME_HEIGHT,
-  TEXT_PADDING,
   COLOR_HOVER_DIM_DELTA,
   BORDER_SIZE,
 } from './constants';
@@ -70,30 +68,6 @@ function hoverColorForStackFrame(stackFrame: FlamechartStackFrame): string {
   );
   return hslaColorToString(color);
 }
-
-// TODO (scheduling profiler) Make this a reusable util
-const cachedTextWidths = new Map();
-const trimFlamechartText = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  width: number,
-) => {
-  for (let i = text.length - 1; i >= 0; i--) {
-    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
-
-    let measuredWidth = cachedTextWidths.get(trimmedText);
-    if (measuredWidth == null) {
-      measuredWidth = context.measureText(trimmedText).width;
-      cachedTextWidths.set(trimmedText, measuredWidth);
-    }
-
-    if (measuredWidth <= width) {
-      return trimmedText;
-    }
-  }
-
-  return null;
-};
 
 class FlamechartStackLayerView extends View {
   /** Layer to display */
@@ -162,10 +136,6 @@ class FlamechartStackLayerView extends View {
       visibleArea.size.height,
     );
 
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font = `${FONT_SIZE}px sans-serif`;
-
     const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
 
     for (let i = 0; i < _stackLayer.length; i++) {
@@ -202,45 +172,7 @@ class FlamechartStackLayerView extends View {
         drawableRect.size.height,
       );
 
-      if (width > TEXT_PADDING * 2) {
-        const trimmedName = trimFlamechartText(
-          context,
-          name,
-          width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
-        );
-
-        if (trimmedName !== null) {
-          context.fillStyle = COLORS.TEXT_COLOR;
-
-          // Prevent text from being drawn outside `viewableArea`
-          const textOverflowsViewableArea = !rectEqualToRect(
-            drawableRect,
-            nodeRect,
-          );
-          if (textOverflowsViewableArea) {
-            context.save();
-            context.beginPath();
-            context.rect(
-              drawableRect.origin.x,
-              drawableRect.origin.y,
-              drawableRect.size.width,
-              drawableRect.size.height,
-            );
-            context.closePath();
-            context.clip();
-          }
-
-          context.fillText(
-            trimmedName,
-            nodeRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
-            nodeRect.origin.y + FLAMECHART_FRAME_HEIGHT / 2,
-          );
-
-          if (textOverflowsViewableArea) {
-            context.restore();
-          }
-        }
-      }
+      drawText(name, context, nodeRect, drawableRect, width);
     }
   }
 

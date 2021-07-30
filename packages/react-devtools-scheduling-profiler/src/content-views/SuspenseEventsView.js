@@ -22,6 +22,7 @@ import {
   positionToTimestamp,
   timestampToPosition,
 } from './utils/positioning';
+import {drawText} from './utils/text';
 import {formatDuration} from '../utils/formatting';
 import {
   View,
@@ -30,41 +31,10 @@ import {
   rectIntersectsRect,
   intersectionOfRects,
 } from '../view-base';
-import {
-  COLORS,
-  TEXT_PADDING,
-  SUSPENSE_EVENT_HEIGHT,
-  FONT_SIZE,
-  BORDER_SIZE,
-} from './constants';
+import {COLORS, SUSPENSE_EVENT_HEIGHT, BORDER_SIZE} from './constants';
 
 const ROW_WITH_BORDER_HEIGHT = SUSPENSE_EVENT_HEIGHT + BORDER_SIZE;
 
-// TODO (scheduling profiler) Make this a reusable util
-const cachedTextWidths = new Map();
-const trimFlamechartText = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  width: number,
-) => {
-  for (let i = text.length - 1; i >= 0; i--) {
-    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
-
-    let measuredWidth = cachedTextWidths.get(trimmedText);
-    if (measuredWidth == null) {
-      measuredWidth = context.measureText(trimmedText).width;
-      cachedTextWidths.set(trimmedText, measuredWidth);
-    }
-
-    if (measuredWidth <= width) {
-      return trimmedText;
-    }
-  }
-
-  return null;
-};
-
-// TODO (scheduling profiler) Make this a resizable view.
 export class SuspenseEventsView extends View {
   _depthToSuspenseEvent: Map<number, SuspenseEvent[]>;
   _hoveredEvent: SuspenseEvent | null = null;
@@ -156,7 +126,8 @@ export class SuspenseEventsView extends View {
     }
 
     if (duration === null) {
-      // TODO (scheduling profiler)
+      // TODO (scheduling profiler) We should probably draw a different representation for incomplete suspense measures.
+      // Maybe a dot? Maybe a gray measure?
       return; // For now, don't show unresolved.
     }
 
@@ -197,40 +168,16 @@ export class SuspenseEventsView extends View {
       drawableRect.size.height,
     );
 
-    // Render event type label
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font = `${FONT_SIZE}px sans-serif`;
-
-    if (width > TEXT_PADDING * 2) {
-      const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
-
-      let label = 'suspended';
-      if (componentName != null) {
-        label = `${componentName} ${label}`;
-      }
-      if (phase !== null) {
-        label += ` during ${phase}`;
-      }
-      label += ` - ${formatDuration(duration)}`;
-
-      const trimmedName = trimFlamechartText(
-        context,
-        label,
-        width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
-      );
-
-      if (trimmedName !== null) {
-        context.fillStyle =
-          warning !== null ? COLORS.WARNING_TEXT : COLORS.TEXT_COLOR;
-
-        context.fillText(
-          trimmedName,
-          eventRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
-          eventRect.origin.y + SUSPENSE_EVENT_HEIGHT / 2,
-        );
-      }
+    let label = 'suspended';
+    if (componentName != null) {
+      label = `${componentName} ${label}`;
     }
+    if (phase !== null) {
+      label += ` during ${phase}`;
+    }
+    label += ` - ${formatDuration(duration)}`;
+
+    drawText(label, context, eventRect, drawableRect, width);
   }
 
   draw(context: CanvasRenderingContext2D) {

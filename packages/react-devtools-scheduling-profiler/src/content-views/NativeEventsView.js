@@ -22,6 +22,7 @@ import {
   positionToTimestamp,
   timestampToPosition,
 } from './utils/positioning';
+import {drawText} from './utils/text';
 import {formatDuration} from '../utils/formatting';
 import {
   View,
@@ -30,39 +31,9 @@ import {
   rectIntersectsRect,
   intersectionOfRects,
 } from '../view-base';
-import {
-  COLORS,
-  TEXT_PADDING,
-  NATIVE_EVENT_HEIGHT,
-  FONT_SIZE,
-  BORDER_SIZE,
-} from './constants';
+import {COLORS, NATIVE_EVENT_HEIGHT, BORDER_SIZE} from './constants';
 
 const ROW_WITH_BORDER_HEIGHT = NATIVE_EVENT_HEIGHT + BORDER_SIZE;
-
-// TODO (scheduling profiler) Make this a reusable util
-const cachedTextWidths = new Map();
-const trimFlamechartText = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  width: number,
-) => {
-  for (let i = text.length - 1; i >= 0; i--) {
-    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
-
-    let measuredWidth = cachedTextWidths.get(trimmedText);
-    if (measuredWidth == null) {
-      measuredWidth = context.measureText(trimmedText).width;
-      cachedTextWidths.set(trimmedText, measuredWidth);
-    }
-
-    if (measuredWidth <= width) {
-      return trimmedText;
-    }
-  }
-
-  return null;
-};
 
 export class NativeEventsView extends View {
   _depthToNativeEvent: Map<number, NativeEvent[]>;
@@ -169,30 +140,9 @@ export class NativeEventsView extends View {
       drawableRect.size.height,
     );
 
-    // Render event type label
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font = `${FONT_SIZE}px sans-serif`;
+    const label = `${type} - ${formatDuration(duration)}`;
 
-    if (width > TEXT_PADDING * 2) {
-      const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
-      const trimmedName = trimFlamechartText(
-        context,
-        `${type} - ${formatDuration(duration)}`,
-        width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
-      );
-
-      if (trimmedName !== null) {
-        context.fillStyle =
-          warning !== null ? COLORS.WARNING_TEXT : COLORS.TEXT_COLOR;
-
-        context.fillText(
-          trimmedName,
-          eventRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
-          eventRect.origin.y + NATIVE_EVENT_HEIGHT / 2,
-        );
-      }
-    }
+    drawText(label, context, eventRect, drawableRect, width);
   }
 
   draw(context: CanvasRenderingContext2D) {
