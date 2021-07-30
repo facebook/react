@@ -257,7 +257,7 @@ function processTimelineEvent(
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
-          // TODO (scheduling profiler) Only warn if the subsequent updat is longer than some threshold.
+          // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
@@ -276,7 +276,7 @@ function processTimelineEvent(
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
-          // TODO (scheduling profiler) Only warn if the subsequent updat is longer than some threshold.
+          // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
@@ -314,21 +314,33 @@ function processTimelineEvent(
           }
         }
 
-        let depth = 0;
-        state.unresolvedSuspenseEvents.forEach(unresolvedSuspenseEvent => {
-          depth = Math.max(depth, unresolvedSuspenseEvent.depth + 1);
+        const availableDepths = new Array(
+          state.unresolvedSuspenseEvents.size + 1,
+        ).fill(true);
+        state.unresolvedSuspenseEvents.forEach(({depth}) => {
+          availableDepths[depth] = false;
         });
 
-        // TODO (scheduling profiler)
-        // Maybe default duration to be the end of the profiler data (for unresolved suspense?)
-        // Or should we just draw these are diamonds where they started instead?
+        let depth = 0;
+        for (let i = 0; i < availableDepths.length; i++) {
+          if (availableDepths[i]) {
+            depth = i;
+            break;
+          }
+        }
+
+        // TODO (scheduling profiler) Maybe we should calculate depth in post,
+        // so unresolved Suspense requests don't take up space.
+        // We can't know if they'll be resolved or not at this point.
+        // We'll just give them a default (fake) duration width.
+
         const suspenseEvent = {
           componentName,
           depth,
           duration: null,
           id,
           phase,
-          resolution: 'pending',
+          resolution: 'unresolved',
           resuspendTimestamps: null,
           timestamp: startTime,
           type: 'suspense',

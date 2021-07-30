@@ -59,7 +59,7 @@ export type SuspenseEvent = {|
   duration: number | null,
   +id: string,
   +phase: 'mount' | 'update' | null,
-  resolution: 'pending' | 'resolved' | 'rejected',
+  resolution: 'rejected' | 'resolved' | 'unresolved',
   resuspendTimestamps: Array<number> | null,
   +type: 'suspense',
 |};

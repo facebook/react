@@ -42,7 +42,6 @@ const RESIZE_BAR_SIZE = 8;
 const RESIZE_BAR_DOT_RADIUS = 1;
 const RESIZE_BAR_DOT_SPACING = 4;
 
-// TODO (ResizableView) Draw borders on top and bottom in case two bars are collapsed next to each other.
 class ResizeBar extends View {
   _intrinsicContentSize: Size = {
     width: 0,
@@ -222,12 +221,9 @@ export class ResizableView extends View {
     super.layoutSubviews();
   }
 
-  // TODO (ResizableView) Change ResizeBar view style slightly when fully collapsed.
-  // TODO (ResizableView) Double click on ResizeBar to collapse/toggle.
   _updateLayoutState() {
     const {frame, _resizingState} = this;
 
-    // TODO (ResizableView) Allow subviews to specify min size too.
     // Allow bar to travel to bottom of the visible area of this view but no further
     const subviewDesiredSize = this._subview.desiredSize();
     const maxBarOffset = subviewDesiredSize.height;
@@ -278,7 +274,6 @@ export class ResizableView extends View {
     );
     if (cursorInView) {
       if (this._layoutState.barOffsetY === 0) {
-        // TODO (ResizableView) Allow subviews to specify min size too.
         // Allow bar to travel to bottom of the visible area of this view but no further
         const subviewDesiredSize = this._subview.desiredSize();
         const maxBarOffset = subviewDesiredSize.height;

@@ -21,6 +21,7 @@ import {
   positioningScaleFactor,
   positionToTimestamp,
   timestampToPosition,
+  widthToDuration,
 } from './utils/positioning';
 import {drawText} from './utils/text';
 import {formatDuration} from '../utils/formatting';
@@ -31,7 +32,12 @@ import {
   rectIntersectsRect,
   intersectionOfRects,
 } from '../view-base';
-import {COLORS, SUSPENSE_EVENT_HEIGHT, BORDER_SIZE} from './constants';
+import {
+  BORDER_SIZE,
+  COLORS,
+  PENDING_SUSPENSE_EVENT_SIZE,
+  SUSPENSE_EVENT_HEIGHT,
+} from './constants';
 
 const ROW_WITH_BORDER_HEIGHT = SUSPENSE_EVENT_HEIGHT + BORDER_SIZE;
 
@@ -112,72 +118,106 @@ export class SuspenseEventsView extends View {
 
     baseY += depth * ROW_WITH_BORDER_HEIGHT;
 
-    const xStart = timestampToPosition(timestamp, scaleFactor, frame);
-    const xStop = timestampToPosition(timestamp + duration, scaleFactor, frame);
-    const eventRect: Rect = {
-      origin: {
-        x: xStart,
-        y: baseY,
-      },
-      size: {width: xStop - xStart, height: SUSPENSE_EVENT_HEIGHT},
-    };
-    if (!rectIntersectsRect(eventRect, rect)) {
-      return; // Not in view
-    }
-
-    if (duration === null) {
-      // TODO (scheduling profiler) We should probably draw a different representation for incomplete suspense measures.
-      // Maybe a dot? Maybe a gray measure?
-      return; // For now, don't show unresolved.
-    }
-
-    const width = durationToWidth(duration, scaleFactor);
-    if (width < 1) {
-      return; // Too small to render at this zoom level
-    }
-
-    const drawableRect = intersectionOfRects(eventRect, rect);
-    context.beginPath();
+    let fillStyle = ((null: any): string);
     if (warning !== null) {
-      context.fillStyle = showHoverHighlight
+      fillStyle = showHoverHighlight
         ? COLORS.WARNING_BACKGROUND_HOVER
         : COLORS.WARNING_BACKGROUND;
     } else {
       switch (resolution) {
-        case 'pending':
-          context.fillStyle = showHoverHighlight
-            ? COLORS.REACT_SUSPENSE_PENDING_EVENT_HOVER
-            : COLORS.REACT_SUSPENSE_PENDING_EVENT;
-          break;
         case 'rejected':
-          context.fillStyle = showHoverHighlight
+          fillStyle = showHoverHighlight
             ? COLORS.REACT_SUSPENSE_REJECTED_EVENT_HOVER
             : COLORS.REACT_SUSPENSE_REJECTED_EVENT;
           break;
         case 'resolved':
-          context.fillStyle = showHoverHighlight
+          fillStyle = showHoverHighlight
             ? COLORS.REACT_SUSPENSE_RESOLVED_EVENT_HOVER
             : COLORS.REACT_SUSPENSE_RESOLVED_EVENT;
           break;
+        case 'unresolved':
+          fillStyle = showHoverHighlight
+            ? COLORS.REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER
+            : COLORS.REACT_SUSPENSE_UNRESOLVED_EVENT;
+          break;
       }
     }
-    context.fillRect(
-      drawableRect.origin.x,
-      drawableRect.origin.y,
-      drawableRect.size.width,
-      drawableRect.size.height,
-    );
 
-    let label = 'suspended';
-    if (componentName != null) {
-      label = `${componentName} ${label}`;
-    }
-    if (phase !== null) {
-      label += ` during ${phase}`;
-    }
-    label += ` - ${formatDuration(duration)}`;
+    const xStart = timestampToPosition(timestamp, scaleFactor, frame);
 
-    drawText(label, context, eventRect, drawableRect, width);
+    // Pending suspense events (ones that never resolved) won't have durations.
+    // So instead we draw them as diamonds.
+    if (duration === null) {
+      const size = PENDING_SUSPENSE_EVENT_SIZE;
+      const halfSize = size / 2;
+
+      baseY += (SUSPENSE_EVENT_HEIGHT - PENDING_SUSPENSE_EVENT_SIZE) / 2;
+
+      const y = baseY + halfSize;
+
+      const suspenseRect: Rect = {
+        origin: {
+          x: xStart - halfSize,
+          y: baseY,
+        },
+        size: {width: size, height: size},
+      };
+      if (!rectIntersectsRect(suspenseRect, rect)) {
+        return; // Not in view
+      }
+
+      context.beginPath();
+      context.fillStyle = fillStyle;
+      context.moveTo(xStart, y - halfSize);
+      context.lineTo(xStart + halfSize, y);
+      context.lineTo(xStart, y + halfSize);
+      context.lineTo(xStart - halfSize, y);
+      context.fill();
+    } else {
+      const xStop = timestampToPosition(
+        timestamp + duration,
+        scaleFactor,
+        frame,
+      );
+      const eventRect: Rect = {
+        origin: {
+          x: xStart,
+          y: baseY,
+        },
+        size: {width: xStop - xStart, height: SUSPENSE_EVENT_HEIGHT},
+      };
+      if (!rectIntersectsRect(eventRect, rect)) {
+        return; // Not in view
+      }
+
+      const width = durationToWidth(duration, scaleFactor);
+      if (width < 1) {
+        return; // Too small to render at this zoom level
+      }
+
+      const drawableRect = intersectionOfRects(eventRect, rect);
+      context.beginPath();
+      context.fillStyle = fillStyle;
+      context.fillRect(
+        drawableRect.origin.x,
+        drawableRect.origin.y,
+        drawableRect.size.width,
+        drawableRect.size.height,
+      );
+
+      let label = 'suspended';
+      if (componentName != null) {
+        label = `${componentName} ${label}`;
+      }
+      if (phase !== null) {
+        label += ` during ${phase}`;
+      }
+      if (resolution !== 'unresolved') {
+        label += ` - ${formatDuration(duration)}`;
+      }
+
+      drawText(label, context, eventRect, drawableRect, width);
+    }
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -269,7 +309,24 @@ export class SuspenseEventsView extends View {
         const suspenseEvent = suspenseEventsAtDepth[index];
         const {duration, timestamp} = suspenseEvent;
 
-        if (
+        if (duration === null) {
+          const timestampAllowance = widthToDuration(
+            PENDING_SUSPENSE_EVENT_SIZE / 2,
+            scaleFactor,
+          );
+
+          if (
+            timestamp - timestampAllowance <= hoverTimestamp &&
+            hoverTimestamp <= timestamp + timestampAllowance
+          ) {
+            this.currentCursor = 'pointer';
+
+            viewRefs.hoveredView = this;
+
+            onHover(suspenseEvent);
+            return;
+          }
+        } else if (
           hoverTimestamp >= timestamp &&
           hoverTimestamp <= timestamp + duration
         ) {

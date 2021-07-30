@@ -526,16 +526,6 @@ export function updateThemeVariables(
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-suspense-pending',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-suspense-pending-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
     'color-scheduling-profiler-react-suspense-rejected-event',
     documentElements,
   );
@@ -552,6 +542,16 @@ export function updateThemeVariables(
   updateStyleHelper(
     theme,
     'color-scheduling-profiler-react-suspense-resolved-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-suspense-unresolved',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-suspense-unresolved-hover',
     documentElements,
   );
   updateStyleHelper(

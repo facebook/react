@@ -31,6 +31,7 @@ import {copy} from 'clipboard-js';
 import prettyMilliseconds from 'pretty-ms';
 
 import {
+  ColorView,
   HorizontalPanAndZoomView,
   ResizableView,
   Surface,
@@ -257,7 +258,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
-    const flamechartViewWrapper = createViewHelper(flamechartView, true);
+    const flamechartViewWrapper = createViewHelper(flamechartView, true, true);
 
     // Root view contains all of the sub views defined above.
     // The order we add them below determines their vertical position.
@@ -278,6 +279,11 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     rootView.addSubview(suspenseEventsViewWrapper);
     rootView.addSubview(reactMeasuresViewWrapper);
     rootView.addSubview(flamechartViewWrapper);
+
+    // If subviews are less than the available height, fill remaining height with a solid color.
+    rootView.addSubview(
+      new ColorView(surface, defaultFrame, COLORS.BACKGROUND),
+    );
 
     surfaceRef.current.rootView = rootView;
   }, [data]);

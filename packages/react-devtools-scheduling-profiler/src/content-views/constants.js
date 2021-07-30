@@ -16,6 +16,7 @@ export const COLOR_HOVER_DIM_DELTA = 5;
 export const TOP_ROW_PADDING = 4;
 export const NATIVE_EVENT_HEIGHT = 14;
 export const SUSPENSE_EVENT_HEIGHT = 14;
+export const PENDING_SUSPENSE_EVENT_SIZE = 8;
 export const REACT_EVENT_DIAMETER = 6;
 export const USER_TIMING_MARK_SIZE = 8;
 export const REACT_MEASURE_HEIGHT = 9;
@@ -65,12 +66,12 @@ export let COLORS = {
   REACT_RESIZE_BAR_DOT: '',
   REACT_SCHEDULE: '',
   REACT_SCHEDULE_HOVER: '',
-  REACT_SUSPENSE_PENDING_EVENT: '',
-  REACT_SUSPENSE_PENDING_EVENT_HOVER: '',
   REACT_SUSPENSE_REJECTED_EVENT: '',
   REACT_SUSPENSE_REJECTED_EVENT_HOVER: '',
   REACT_SUSPENSE_RESOLVED_EVENT: '',
   REACT_SUSPENSE_RESOLVED_EVENT_HOVER: '',
+  REACT_SUSPENSE_UNRESOLVED_EVENT: '',
+  REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER: '',
   REACT_WORK_BORDER: '',
   TEXT_COLOR: '',
   TIME_MARKER_LABEL: '',
@@ -150,12 +151,6 @@ export function updateColorsToMatchTheme(): void {
     REACT_SCHEDULE_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-schedule-hover',
     ),
-    REACT_SUSPENSE_PENDING_EVENT: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-suspense-pending',
-    ),
-    REACT_SUSPENSE_PENDING_EVENT_HOVER: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-suspense-pending-hover',
-    ),
     REACT_SUSPENSE_REJECTED_EVENT: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-suspense-rejected',
     ),
@@ -167,6 +162,12 @@ export function updateColorsToMatchTheme(): void {
     ),
     REACT_SUSPENSE_RESOLVED_EVENT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-suspense-resolved-hover',
+    ),
+    REACT_SUSPENSE_UNRESOLVED_EVENT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-unresolved',
+    ),
+    REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-suspense-unresolved-hover',
     ),
     REACT_WORK_BORDER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-work-border',

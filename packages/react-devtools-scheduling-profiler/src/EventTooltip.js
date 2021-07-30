@@ -137,14 +137,7 @@ const TooltipFlamechartNode = ({
   stackFrame: FlamechartStackFrame,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {
-    name,
-    timestamp,
-    duration,
-    scriptUrl,
-    locationLine,
-    locationColumn,
-  } = stackFrame;
+  const {name, timestamp, duration, locationLine, locationColumn} = stackFrame;
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
       <div className={styles.TooltipSection}>
@@ -154,12 +147,6 @@ const TooltipFlamechartNode = ({
           <div>{formatTimestamp(timestamp)}</div>
           <div className={styles.DetailsGridLabel}>Duration:</div>
           <div>{formatDuration(duration)}</div>
-          {scriptUrl && (
-            <>
-              <div className={styles.DetailsGridLabel}>Script URL:</div>
-              <div className={styles.DetailsGridURL}>{scriptUrl}</div>
-            </>
-          )}
           {(locationLine !== undefined || locationColumn !== undefined) && (
             <>
               <div className={styles.DetailsGridLabel}>Location:</div>
