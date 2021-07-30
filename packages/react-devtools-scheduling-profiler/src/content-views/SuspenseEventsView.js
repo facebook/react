@@ -188,7 +188,7 @@ export class SuspenseEventsView extends View {
       visibleArea,
     } = this;
 
-    context.fillStyle = COLORS.BACKGROUND;
+    context.fillStyle = COLORS.PRIORITY_BACKGROUND;
     context.fillRect(
       visibleArea.origin.x,
       visibleArea.origin.y,
@@ -212,6 +212,33 @@ export class SuspenseEventsView extends View {
         event === _hoveredEvent,
       );
     });
+
+    // Render bottom borders.
+    for (let i = 0; i <= this._maxDepth; i++) {
+      const borderFrame: Rect = {
+        origin: {
+          x: frame.origin.x,
+          y: frame.origin.y + SUSPENSE_EVENT_HEIGHT,
+        },
+        size: {
+          width: frame.size.width,
+          height: BORDER_SIZE,
+        },
+      };
+      if (rectIntersectsRect(borderFrame, visibleArea)) {
+        const borderDrawableRect = intersectionOfRects(
+          borderFrame,
+          visibleArea,
+        );
+        context.fillStyle = COLORS.PRIORITY_BORDER;
+        context.fillRect(
+          borderDrawableRect.origin.x,
+          borderDrawableRect.origin.y,
+          borderDrawableRect.size.width,
+          borderDrawableRect.size.height,
+        );
+      }
+    }
   }
 
   /**

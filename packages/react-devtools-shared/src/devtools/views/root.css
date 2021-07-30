@@ -77,7 +77,10 @@
   --light-color-record-active: #fc3a4b;
   --light-color-record-hover: #3578e5;
   --light-color-record-inactive: #0088fa;
-  --light-color-resize-bar: #cccccc;
+  --light-color-resize-bar: #eeeeee;
+  --light-color-resize-bar-active: #dcdcdc;
+  --light-color-resize-bar-border: #d1d1d1;
+  --light-color-resize-bar-dot: #333333;
   --light-color-scheduling-profiler-native-event: #ccc;
   --light-color-scheduling-profiler-native-event-hover: #aaa;
   --light-color-scheduling-profiler-priority-background: #f6f6f6;
@@ -200,7 +203,10 @@
   --dark-color-record-active: #fc3a4b;
   --dark-color-record-hover: #a2e9fc;
   --dark-color-record-inactive: #61dafb;
-  --dark-color-resize-bar: #3d424a;
+  --dark-color-resize-bar: #282c34;
+  --dark-color-resize-bar-active: #31363f;
+  --dark-color-resize-bar-border: #3d424a;
+  --dark-color-resize-bar-dot: #cfd1d5;
   --dark-color-scheduling-profiler-native-event: #b2b2b2;
   --dark-color-scheduling-profiler-native-event-hover: #949494;
   --dark-color-scheduling-profiler-priority-background: #1d2129;

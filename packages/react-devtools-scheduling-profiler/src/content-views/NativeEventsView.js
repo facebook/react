@@ -191,12 +191,16 @@ export class NativeEventsView extends View {
         },
       };
       if (rectIntersectsRect(borderFrame, visibleArea)) {
+        const borderDrawableRect = intersectionOfRects(
+          borderFrame,
+          visibleArea,
+        );
         context.fillStyle = COLORS.PRIORITY_BORDER;
         context.fillRect(
-          visibleArea.origin.x,
-          frame.origin.y + (i + 1) * ROW_WITH_BORDER_HEIGHT - BORDER_SIZE,
-          visibleArea.size.width,
-          BORDER_SIZE,
+          borderDrawableRect.origin.x,
+          borderDrawableRect.origin.y,
+          borderDrawableRect.size.width,
+          borderDrawableRect.size.height,
         );
       }
     }

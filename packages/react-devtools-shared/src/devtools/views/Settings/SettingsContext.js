@@ -412,6 +412,9 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
   updateStyleHelper(theme, 'color-resize-bar', documentElements);
+  updateStyleHelper(theme, 'color-resize-bar-active', documentElements);
+  updateStyleHelper(theme, 'color-resize-bar-border', documentElements);
+  updateStyleHelper(theme, 'color-resize-bar-dot', documentElements);
   updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
   updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);

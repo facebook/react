@@ -257,7 +257,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
-    const flamechartViewWrapper = createViewHelper(flamechartView, true, true);
+    const flamechartViewWrapper = createViewHelper(flamechartView, true);
 
     // Root view contains all of the sub views defined above.
     // The order we add them below determines their vertical position.

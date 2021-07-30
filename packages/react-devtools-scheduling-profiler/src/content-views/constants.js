@@ -60,6 +60,9 @@ export let COLORS = {
   REACT_PASSIVE_EFFECTS: '',
   REACT_PASSIVE_EFFECTS_HOVER: '',
   REACT_RESIZE_BAR: '',
+  REACT_RESIZE_BAR_ACTIVE: '',
+  REACT_RESIZE_BAR_BORDER: '',
+  REACT_RESIZE_BAR_DOT: '',
   REACT_SCHEDULE: '',
   REACT_SCHEDULE_HOVER: '',
   REACT_SUSPENSE_PENDING_EVENT: '',
@@ -132,6 +135,15 @@ export function updateColorsToMatchTheme(): void {
       '--color-scheduling-profiler-react-passive-effects-hover',
     ),
     REACT_RESIZE_BAR: computedStyle.getPropertyValue('--color-resize-bar'),
+    REACT_RESIZE_BAR_ACTIVE: computedStyle.getPropertyValue(
+      '--color-resize-bar-active',
+    ),
+    REACT_RESIZE_BAR_BORDER: computedStyle.getPropertyValue(
+      '--color-resize-bar-border',
+    ),
+    REACT_RESIZE_BAR_DOT: computedStyle.getPropertyValue(
+      '--color-resize-bar-dot',
+    ),
     REACT_SCHEDULE: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-schedule',
     ),

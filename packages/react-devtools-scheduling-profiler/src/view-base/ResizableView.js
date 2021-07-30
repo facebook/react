@@ -8,6 +8,7 @@
  */
 
 import type {
+  DoubleClickInteraction,
   Interaction,
   MouseDownInteraction,
   MouseMoveInteraction,
@@ -16,12 +17,11 @@ import type {
 import type {Rect, Size} from './geometry';
 import type {ViewRefs} from './Surface';
 
-import {COLORS} from '../content-views/constants';
+import {BORDER_SIZE, COLORS} from '../content-views/constants';
 import {Surface} from './Surface';
 import {View} from './View';
 import {rectContainsPoint} from './geometry';
-import {layeredLayout, noopLayout} from './layouter';
-import {ColorView} from './ColorView';
+import {noopLayout} from './layouter';
 import {clamp} from './utils/clamp';
 
 type ResizeBarState = 'normal' | 'hovered' | 'dragging';
@@ -38,40 +38,69 @@ type LayoutState = $ReadOnly<{|
   barOffsetY: number,
 |}>;
 
-function getColorForBarState(state: ResizeBarState): string {
-  switch (state) {
-    case 'normal':
-    case 'hovered':
-    case 'dragging':
-      return COLORS.REACT_RESIZE_BAR;
-  }
-  throw new Error(`Unknown resize bar state ${state}`);
-}
+const RESIZE_BAR_SIZE = 8;
+const RESIZE_BAR_DOT_RADIUS = 1;
+const RESIZE_BAR_DOT_SPACING = 4;
 
+// TODO (ResizableView) Draw borders on top and bottom in case two bars are collapsed next to each other.
 class ResizeBar extends View {
   _intrinsicContentSize: Size = {
     width: 0,
-    height: 5,
+    height: RESIZE_BAR_SIZE,
   };
 
   _interactionState: ResizeBarState = 'normal';
-
-  constructor(surface: Surface, frame: Rect) {
-    super(surface, frame, layeredLayout);
-    this.addSubview(new ColorView(surface, frame, ''));
-    this._updateColor();
-  }
 
   desiredSize() {
     return this._intrinsicContentSize;
   }
 
-  _getColorView(): ColorView {
-    return (this.subviews[0]: any);
-  }
+  draw(context: CanvasRenderingContext2D, viewRefs: ViewRefs) {
+    const {visibleArea} = this;
+    const {x, y} = visibleArea.origin;
+    const {width, height} = visibleArea.size;
 
-  _updateColor() {
-    this._getColorView().setColor(getColorForBarState(this._interactionState));
+    const isActive =
+      this._interactionState === 'dragging' ||
+      (this._interactionState === 'hovered' && viewRefs.activeView === null);
+
+    context.fillStyle = isActive
+      ? COLORS.REACT_RESIZE_BAR_ACTIVE
+      : COLORS.REACT_RESIZE_BAR;
+    context.fillRect(x, y, width, height);
+
+    context.fillStyle = COLORS.REACT_RESIZE_BAR_BORDER;
+    context.fillRect(x, y, width, BORDER_SIZE);
+    context.fillRect(x, y + height - BORDER_SIZE, width, BORDER_SIZE);
+
+    const horizontalCenter = x + width / 2;
+    const verticalCenter = y + height / 2;
+
+    // Draw resize bar dots
+    context.beginPath();
+    context.fillStyle = COLORS.REACT_RESIZE_BAR_DOT;
+    context.arc(
+      horizontalCenter,
+      verticalCenter,
+      RESIZE_BAR_DOT_RADIUS,
+      0,
+      2 * Math.PI,
+    );
+    context.arc(
+      horizontalCenter + RESIZE_BAR_DOT_SPACING,
+      verticalCenter,
+      RESIZE_BAR_DOT_RADIUS,
+      0,
+      2 * Math.PI,
+    );
+    context.arc(
+      horizontalCenter - RESIZE_BAR_DOT_SPACING,
+      verticalCenter,
+      RESIZE_BAR_DOT_RADIUS,
+      0,
+      2 * Math.PI,
+    );
+    context.fill();
   }
 
   _setInteractionState(state: ResizeBarState) {
@@ -79,7 +108,7 @@ class ResizeBar extends View {
       return;
     }
     this._interactionState = state;
-    this._updateColor();
+    this.setNeedsDisplay();
   }
 
   _handleMouseDown(interaction: MouseDownInteraction, viewRefs: ViewRefs) {
@@ -141,8 +170,6 @@ class ResizeBar extends View {
   }
 }
 
-// TODO (ResizableView) Rename this to ResizableView
-// TODO (ResizableView) Clip sub-view somehow so text doesn't overflow.
 export class ResizableView extends View {
   _canvasRef: {current: HTMLCanvasElement | null};
   _resizingState: ResizingState | null = null;
@@ -244,6 +271,32 @@ export class ResizableView extends View {
     currentY += this._resizeBar.frame.size.height;
   }
 
+  _handleDoubleClick(interaction: DoubleClickInteraction) {
+    const cursorInView = rectContainsPoint(
+      interaction.payload.location,
+      this.frame,
+    );
+    if (cursorInView) {
+      if (this._layoutState.barOffsetY === 0) {
+        // TODO (ResizableView) Allow subviews to specify min size too.
+        // Allow bar to travel to bottom of the visible area of this view but no further
+        const subviewDesiredSize = this._subview.desiredSize();
+        const maxBarOffset = subviewDesiredSize.height;
+
+        this._layoutState = {
+          ...this._layoutState,
+          barOffsetY: maxBarOffset,
+        };
+      } else {
+        this._layoutState = {
+          ...this._layoutState,
+          barOffsetY: 0,
+        };
+      }
+      this.setNeedsDisplay();
+    }
+  }
+
   _handleMouseDown(interaction: MouseDownInteraction) {
     const cursorLocation = interaction.payload.location;
     const resizeBarFrame = this._resizeBar.frame;
@@ -287,6 +340,9 @@ export class ResizableView extends View {
 
   handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
+      case 'double-click':
+        this._handleDoubleClick(interaction);
+        return;
       case 'mousedown':
         this._handleMouseDown(interaction);
         return;
