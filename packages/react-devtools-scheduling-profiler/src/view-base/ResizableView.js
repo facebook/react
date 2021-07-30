@@ -8,19 +8,21 @@
  */
 
 import type {
+  ClickInteraction,
   DoubleClickInteraction,
   Interaction,
   MouseDownInteraction,
   MouseMoveInteraction,
   MouseUpInteraction,
 } from './useCanvasInteraction';
-import type {Rect, Size} from './geometry';
+import type {Rect} from './geometry';
 import type {ViewRefs} from './Surface';
 
 import {BORDER_SIZE, COLORS} from '../content-views/constants';
+import {drawText} from '../content-views/utils/text';
 import {Surface} from './Surface';
 import {View} from './View';
-import {rectContainsPoint} from './geometry';
+import {intersectionOfRects, rectContainsPoint} from './geometry';
 import {noopLayout} from './layouter';
 import {clamp} from './utils/clamp';
 
@@ -38,20 +40,27 @@ type LayoutState = $ReadOnly<{|
   barOffsetY: number,
 |}>;
 
-const RESIZE_BAR_SIZE = 8;
 const RESIZE_BAR_DOT_RADIUS = 1;
 const RESIZE_BAR_DOT_SPACING = 4;
+const RESIZE_BAR_HEIGHT = 8;
+const RESIZE_BAR_WITH_LABEL_HEIGHT = 16;
 
 class ResizeBar extends View {
-  _intrinsicContentSize: Size = {
-    width: 0,
-    height: RESIZE_BAR_SIZE,
-  };
-
   _interactionState: ResizeBarState = 'normal';
+  _label: string;
+
+  showLabel: boolean = false;
+
+  constructor(surface: Surface, frame: Rect, label: string) {
+    super(surface, frame, noopLayout);
+
+    this._label = label;
+  }
 
   desiredSize() {
-    return this._intrinsicContentSize;
+    return this.showLabel
+      ? {height: RESIZE_BAR_WITH_LABEL_HEIGHT, width: 0}
+      : {height: RESIZE_BAR_HEIGHT, width: 0};
   }
 
   draw(context: CanvasRenderingContext2D, viewRefs: ViewRefs) {
@@ -75,31 +84,58 @@ class ResizeBar extends View {
     const horizontalCenter = x + width / 2;
     const verticalCenter = y + height / 2;
 
-    // Draw resize bar dots
-    context.beginPath();
-    context.fillStyle = COLORS.REACT_RESIZE_BAR_DOT;
-    context.arc(
-      horizontalCenter,
-      verticalCenter,
-      RESIZE_BAR_DOT_RADIUS,
-      0,
-      2 * Math.PI,
-    );
-    context.arc(
-      horizontalCenter + RESIZE_BAR_DOT_SPACING,
-      verticalCenter,
-      RESIZE_BAR_DOT_RADIUS,
-      0,
-      2 * Math.PI,
-    );
-    context.arc(
-      horizontalCenter - RESIZE_BAR_DOT_SPACING,
-      verticalCenter,
-      RESIZE_BAR_DOT_RADIUS,
-      0,
-      2 * Math.PI,
-    );
-    context.fill();
+    if (this.showLabel) {
+      // When the resize view is collapsed entirely,
+      // rather than showing a resize bar– this view displays a label.
+      const labelRect: Rect = {
+        origin: {
+          x: 0,
+          y: y + height - RESIZE_BAR_WITH_LABEL_HEIGHT,
+        },
+        size: {
+          width: visibleArea.size.width,
+          height: visibleArea.size.height,
+        },
+      };
+
+      const drawableRect = intersectionOfRects(labelRect, this.visibleArea);
+
+      drawText(
+        this._label,
+        context,
+        labelRect,
+        drawableRect,
+        visibleArea.size.width,
+        'center',
+        COLORS.REACT_RESIZE_BAR_DOT,
+      );
+    } else {
+      // Otherwise draw horizontally centered resize bar dots
+      context.beginPath();
+      context.fillStyle = COLORS.REACT_RESIZE_BAR_DOT;
+      context.arc(
+        horizontalCenter,
+        verticalCenter,
+        RESIZE_BAR_DOT_RADIUS,
+        0,
+        2 * Math.PI,
+      );
+      context.arc(
+        horizontalCenter + RESIZE_BAR_DOT_SPACING,
+        verticalCenter,
+        RESIZE_BAR_DOT_RADIUS,
+        0,
+        2 * Math.PI,
+      );
+      context.arc(
+        horizontalCenter - RESIZE_BAR_DOT_SPACING,
+        verticalCenter,
+        RESIZE_BAR_DOT_RADIUS,
+        0,
+        2 * Math.PI,
+      );
+      context.fill();
+    }
   }
 
   _setInteractionState(state: ResizeBarState) {
@@ -127,9 +163,18 @@ class ResizeBar extends View {
       this.frame,
     );
 
-    if (cursorInView || viewRefs.activeView === this) {
+    if (viewRefs.activeView === this) {
+      // If we're actively dragging this resize bar,
+      // show the cursor even if the pointer isn't hovering over this view.
       this.currentCursor = 'ns-resize';
+    } else if (cursorInView) {
+      if (this.showLabel) {
+        this.currentCursor = 'pointer';
+      } else {
+        this.currentCursor = 'ns-resize';
+      }
     }
+
     if (cursorInView) {
       viewRefs.hoveredView = this;
     }
@@ -171,9 +216,10 @@ class ResizeBar extends View {
 
 export class ResizableView extends View {
   _canvasRef: {current: HTMLCanvasElement | null};
-  _resizingState: ResizingState | null = null;
+  _didDrag: boolean = false;
   _layoutState: LayoutState;
   _resizeBar: ResizeBar;
+  _resizingState: ResizingState | null = null;
   _subview: View;
 
   constructor(
@@ -181,13 +227,14 @@ export class ResizableView extends View {
     frame: Rect,
     subview: View,
     canvasRef: {current: HTMLCanvasElement | null},
+    label: string,
   ) {
     super(surface, frame, noopLayout);
 
     this._canvasRef = canvasRef;
 
     this._subview = subview;
-    this._resizeBar = new ResizeBar(surface, frame);
+    this._resizeBar = new ResizeBar(surface, frame, label);
 
     this.addSubview(this._subview);
     this.addSubview(this._resizeBar);
@@ -195,9 +242,9 @@ export class ResizableView extends View {
     // TODO (ResizableView) Allow subviews to specify default sizes.
     // Maybe that or set some % based default so all panels are visible to begin with.
     const subviewDesiredSize = subview.desiredSize();
-    this._layoutState = {
-      barOffsetY: subviewDesiredSize ? subviewDesiredSize.height : 0,
-    };
+    this._updateLayoutStateAndResizeBar(
+      subviewDesiredSize ? subviewDesiredSize.height : 0,
+    );
   }
 
   desiredSize() {
@@ -221,6 +268,19 @@ export class ResizableView extends View {
     super.layoutSubviews();
   }
 
+  _updateLayoutStateAndResizeBar(barOffsetY: number) {
+    if (barOffsetY <= RESIZE_BAR_WITH_LABEL_HEIGHT - RESIZE_BAR_HEIGHT) {
+      barOffsetY = 0;
+    }
+
+    this._layoutState = {
+      ...this._layoutState,
+      barOffsetY,
+    };
+
+    this._resizeBar.showLabel = barOffsetY === 0;
+  }
+
   _updateLayoutState() {
     const {frame, _resizingState} = this;
 
@@ -235,10 +295,9 @@ export class ResizableView extends View {
       proposedBarOffsetY = mouseY - frame.origin.y - cursorOffsetInBarFrame;
     }
 
-    this._layoutState = {
-      ...this._layoutState,
-      barOffsetY: clamp(0, maxBarOffset, proposedBarOffsetY),
-    };
+    this._updateLayoutStateAndResizeBar(
+      clamp(0, maxBarOffset, proposedBarOffsetY),
+    );
   }
 
   _updateSubviewFrames() {
@@ -267,28 +326,37 @@ export class ResizableView extends View {
     currentY += this._resizeBar.frame.size.height;
   }
 
-  _handleDoubleClick(interaction: DoubleClickInteraction) {
+  _handleClick(interaction: ClickInteraction) {
+    if (this._didDrag) {
+      // Ignore click events that come after drag-to-resize.
+      return;
+    }
+
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
     );
     if (cursorInView) {
       if (this._layoutState.barOffsetY === 0) {
-        // Allow bar to travel to bottom of the visible area of this view but no further
+        // Clicking on the collapsed label should expand.
         const subviewDesiredSize = this._subview.desiredSize();
-        const maxBarOffset = subviewDesiredSize.height;
-
-        this._layoutState = {
-          ...this._layoutState,
-          barOffsetY: maxBarOffset,
-        };
-      } else {
-        this._layoutState = {
-          ...this._layoutState,
-          barOffsetY: 0,
-        };
+        this._updateLayoutStateAndResizeBar(subviewDesiredSize.height);
+        this.setNeedsDisplay();
       }
-      this.setNeedsDisplay();
+    }
+  }
+
+  _handleDoubleClick(interaction: DoubleClickInteraction) {
+    const cursorInView = rectContainsPoint(
+      interaction.payload.location,
+      this.frame,
+    );
+    if (cursorInView) {
+      if (this._layoutState.barOffsetY > 0) {
+        // Double clicking on the expanded view should collapse.
+        this._updateLayoutStateAndResizeBar(0);
+        this.setNeedsDisplay();
+      }
     }
   }
 
@@ -296,6 +364,7 @@ export class ResizableView extends View {
     const cursorLocation = interaction.payload.location;
     const resizeBarFrame = this._resizeBar.frame;
     if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
+      this._didDrag = false;
       const mouseY = cursorLocation.y;
       this._resizingState = {
         cursorOffsetInBarFrame: mouseY - resizeBarFrame.origin.y,
@@ -307,6 +376,7 @@ export class ResizableView extends View {
   _handleMouseMove(interaction: MouseMoveInteraction) {
     const {_resizingState} = this;
     if (_resizingState) {
+      this._didDrag = true;
       this._resizingState = {
         ..._resizingState,
         mouseY: interaction.payload.location.y,
@@ -335,6 +405,9 @@ export class ResizableView extends View {
 
   handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
+      case 'click':
+        this._handleClick(interaction);
+        return;
       case 'double-click':
         this._handleDoubleClick(interaction);
         return;

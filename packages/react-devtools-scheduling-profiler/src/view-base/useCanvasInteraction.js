@@ -13,6 +13,13 @@ import type {Point} from './geometry';
 import {useEffect} from 'react';
 import {normalizeWheel} from './utils/normalizeWheel';
 
+export type ClickInteraction = {|
+  type: 'click',
+  payload: {|
+    event: MouseEvent,
+    location: Point,
+  |},
+|};
 export type DoubleClickInteraction = {|
   type: 'double-click',
   payload: {|
@@ -75,6 +82,7 @@ export type WheelWithMetaInteraction = {|
 |};
 
 export type Interaction =
+  | ClickInteraction
   | DoubleClickInteraction
   | MouseDownInteraction
   | MouseMoveInteraction
@@ -120,6 +128,16 @@ export function useCanvasInteraction(
         y: localCoordinates.y - canvasRect.top,
       };
     }
+
+    const onCanvasClick: MouseEventHandler = event => {
+      interactor({
+        type: 'click',
+        payload: {
+          event,
+          location: localToCanvasCoordinates({x: event.x, y: event.y}),
+        },
+      });
+    };
 
     const onCanvasDoubleClick: MouseEventHandler = event => {
       interactor({
@@ -197,6 +215,7 @@ export function useCanvasInteraction(
     ownerDocument.addEventListener('mousemove', onDocumentMouseMove);
     ownerDocument.addEventListener('mouseup', onDocumentMouseUp);
 
+    canvas.addEventListener('click', onCanvasClick);
     canvas.addEventListener('dblclick', onCanvasDoubleClick);
     canvas.addEventListener('mousedown', onCanvasMouseDown);
     canvas.addEventListener('wheel', onCanvasWheel);
@@ -205,6 +224,7 @@ export function useCanvasInteraction(
       ownerDocument.removeEventListener('mousemove', onDocumentMouseMove);
       ownerDocument.removeEventListener('mouseup', onDocumentMouseUp);
 
+      canvas.removeEventListener('click', onCanvasClick);
       canvas.removeEventListener('dblclick', onCanvasDoubleClick);
       canvas.removeEventListener('mousedown', onCanvasMouseDown);
       canvas.removeEventListener('wheel', onCanvasWheel);

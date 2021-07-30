@@ -33,7 +33,6 @@ const CARET_MARGIN = 3;
 const CARET_WIDTH = 5;
 const CARET_HEIGHT = 3;
 
-// TODO VerticalScrollView Draw caret over top+center and/or bottom+center to indicate scrollable content.
 export class VerticalScrollView extends View {
   _scrollState: ScrollState = {offset: 0, length: 0};
   _isPanning = false;

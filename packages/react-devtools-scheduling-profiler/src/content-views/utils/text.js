@@ -42,9 +42,11 @@ export function drawText(
   fullRect: Rect,
   drawableRect: Rect,
   availableWidth: number,
+  textAlign: 'left' | 'center' = 'left',
+  fillStyle: string = COLORS.TEXT_COLOR,
 ): void {
   if (availableWidth > TEXT_PADDING * 2) {
-    context.textAlign = 'left';
+    context.textAlign = textAlign;
     context.textBaseline = 'middle';
     context.font = `${FONT_SIZE}px sans-serif`;
 
@@ -57,7 +59,7 @@ export function drawText(
     );
 
     if (trimmedName !== null) {
-      context.fillStyle = COLORS.TEXT_COLOR;
+      context.fillStyle = fillStyle;
 
       // Prevent text from visibly overflowing its container when clipped.
       const textOverflowsViewableArea = !rectEqualToRect(
@@ -77,11 +79,16 @@ export function drawText(
         context.clip();
       }
 
-      context.fillText(
-        trimmedName,
-        x + TEXT_PADDING - (x < 0 ? x : 0),
-        y + fullRect.size.height / 2,
-      );
+      let textX;
+      if (textAlign === 'center') {
+        textX = x + availableWidth / 2 + TEXT_PADDING - (x < 0 ? x : 0);
+      } else {
+        textX = x + TEXT_PADDING - (x < 0 ? x : 0);
+      }
+
+      const textY = y + fullRect.size.height / 2;
+
+      context.fillText(trimmedName, textX, textY);
 
       if (textOverflowsViewableArea) {
         context.restore();

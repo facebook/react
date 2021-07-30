@@ -157,6 +157,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
     function createViewHelper(
       view: View,
+      resizeLabel: string = '',
       shouldScrollVertically: boolean = false,
       shouldResizeVertically: boolean = false,
     ): View {
@@ -186,6 +187,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           defaultFrame,
           horizontalPanAndZoomView,
           canvasRef,
+          resizeLabel,
         );
       }
 
@@ -215,6 +217,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     nativeEventsViewRef.current = nativeEventsView;
     const nativeEventsViewWrapper = createViewHelper(
       nativeEventsView,
+      'events',
       true,
       true,
     );
@@ -235,6 +238,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     suspenseEventsViewRef.current = suspenseEventsView;
     const suspenseEventsViewWrapper = createViewHelper(
       suspenseEventsView,
+      'suspense',
       true,
       true,
     );
@@ -247,6 +251,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     reactMeasuresViewRef.current = reactMeasuresView;
     const reactMeasuresViewWrapper = createViewHelper(
       reactMeasuresView,
+      'react',
       true,
       true,
     );
@@ -258,7 +263,12 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
-    const flamechartViewWrapper = createViewHelper(flamechartView, true, true);
+    const flamechartViewWrapper = createViewHelper(
+      flamechartView,
+      'flamechart',
+      true,
+      true,
+    );
 
     // Root view contains all of the sub views defined above.
     // The order we add them below determines their vertical position.
