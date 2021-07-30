@@ -2212,21 +2212,6 @@ function mountSuspenseFallbackChildren(
     primaryChildFragment.childLanes = NoLanes;
     primaryChildFragment.pendingProps = primaryChildProps;
 
-    if (
-      supportsPersistence &&
-      (workInProgress.mode & ConcurrentMode) === NoMode
-    ) {
-      const isHidden = true;
-      const offscreenContainer: Fiber = (primaryChildFragment.child: any);
-      const containerProps = {
-        hidden: isHidden,
-        primaryChildren,
-      };
-      offscreenContainer.pendingProps = containerProps;
-      offscreenContainer.memoizedProps = containerProps;
-      completeSuspendedOffscreenHostContainer(null, offscreenContainer);
-    }
-
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
       // final amounts. This seems counterintuitive, since we're intentionally
@@ -2373,13 +2358,12 @@ function updateSuspenseFallbackChildren(
       // In persistent mode, the offscreen children are wrapped in a host node.
       // We need to complete it now, because we're going to skip over its normal
       // complete phase and go straight to rendering the fallback.
-      const isHidden = true;
       const currentOffscreenContainer = currentPrimaryChildFragment.child;
       const offscreenContainer: Fiber = (primaryChildFragment.child: any);
-      const containerProps = {
-        hidden: isHidden,
+      const containerProps = getOffscreenContainerProps(
+        'hidden',
         primaryChildren,
-      };
+      );
       offscreenContainer.pendingProps = containerProps;
       offscreenContainer.memoizedProps = containerProps;
       completeSuspendedOffscreenHostContainer(
