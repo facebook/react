@@ -12,7 +12,7 @@ import type {
   MouseDownInteraction,
   MouseMoveInteraction,
   MouseUpInteraction,
-  WheelPlainInteraction,
+  WheelWithShiftInteraction,
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {ScrollState} from './utils/scrollState';
@@ -157,7 +157,7 @@ export class VerticalScrollView extends View {
     }
   }
 
-  _handleWheelPlain(interaction: WheelPlainInteraction) {
+  _handleWheelShift(interaction: WheelWithShiftInteraction) {
     const {
       location,
       delta: {deltaX, deltaY},
@@ -195,8 +195,8 @@ export class VerticalScrollView extends View {
       case 'mouseup':
         this._handleMouseUp(interaction);
         break;
-      case 'wheel-plain':
-        this._handleWheelPlain(interaction);
+      case 'wheel-shift':
+        this._handleWheelShift(interaction);
         break;
     }
   }

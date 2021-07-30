@@ -216,7 +216,6 @@ class ResizeBar extends View {
 
 export class ResizableView extends View {
   _canvasRef: {current: HTMLCanvasElement | null};
-  _didDrag: boolean = false;
   _layoutState: LayoutState;
   _resizeBar: ResizeBar;
   _resizingState: ResizingState | null = null;
@@ -327,11 +326,6 @@ export class ResizableView extends View {
   }
 
   _handleClick(interaction: ClickInteraction) {
-    if (this._didDrag) {
-      // Ignore click events that come after drag-to-resize.
-      return;
-    }
-
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
@@ -364,7 +358,6 @@ export class ResizableView extends View {
     const cursorLocation = interaction.payload.location;
     const resizeBarFrame = this._resizeBar.frame;
     if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
-      this._didDrag = false;
       const mouseY = cursorLocation.y;
       this._resizingState = {
         cursorOffsetInBarFrame: mouseY - resizeBarFrame.origin.y,
@@ -376,7 +369,6 @@ export class ResizableView extends View {
   _handleMouseMove(interaction: MouseMoveInteraction) {
     const {_resizingState} = this;
     if (_resizingState) {
-      this._didDrag = true;
       this._resizingState = {
         ..._resizingState,
         mouseY: interaction.payload.location.y,

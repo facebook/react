@@ -310,6 +310,39 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       return;
     }
 
+    // Wheel events should always hide the current toolltip.
+    switch (interaction.type) {
+      case 'wheel-control':
+      case 'wheel-meta':
+      case 'wheel-plain':
+      case 'wheel-shift':
+        setHoveredEvent(prevHoverEvent => {
+          if (prevHoverEvent === null) {
+            return prevHoverEvent;
+          } else if (
+            prevHoverEvent.flamechartStackFrame !== null ||
+            prevHoverEvent.measure !== null ||
+            prevHoverEvent.nativeEvent !== null ||
+            prevHoverEvent.schedulingEvent !== null ||
+            prevHoverEvent.suspenseEvent !== null ||
+            prevHoverEvent.userTimingMark !== null
+          ) {
+            return {
+              data: prevHoverEvent.data,
+              flamechartStackFrame: null,
+              measure: null,
+              nativeEvent: null,
+              schedulingEvent: null,
+              suspenseEvent: null,
+              userTimingMark: null,
+            };
+          } else {
+            return prevHoverEvent;
+          }
+        });
+        break;
+    }
+
     const surface = surfaceRef.current;
     surface.handleInteraction(interaction);
 
