@@ -2216,12 +2216,12 @@ function mountSuspenseFallbackChildren(
       supportsPersistence &&
       (workInProgress.mode & ConcurrentMode) === NoMode
     ) {
-      const isHidden = true;
       const offscreenContainer: Fiber = (primaryChildFragment.child: any);
-      const containerProps = {
-        hidden: isHidden,
+
+      const containerProps = getOffscreenContainerProps(
+        'hidden',
         primaryChildren,
-      };
+      );
       offscreenContainer.pendingProps = containerProps;
       offscreenContainer.memoizedProps = containerProps;
       completeSuspendedOffscreenHostContainer(null, offscreenContainer);
@@ -2373,13 +2373,12 @@ function updateSuspenseFallbackChildren(
       // In persistent mode, the offscreen children are wrapped in a host node.
       // We need to complete it now, because we're going to skip over its normal
       // complete phase and go straight to rendering the fallback.
-      const isHidden = true;
       const currentOffscreenContainer = currentPrimaryChildFragment.child;
       const offscreenContainer: Fiber = (primaryChildFragment.child: any);
-      const containerProps = {
-        hidden: isHidden,
+      const containerProps = getOffscreenContainerProps(
+        'hidden',
         primaryChildren,
-      };
+      );
       offscreenContainer.pendingProps = containerProps;
       offscreenContainer.memoizedProps = containerProps;
       completeSuspendedOffscreenHostContainer(
