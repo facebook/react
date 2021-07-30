@@ -20,7 +20,7 @@ function Component() {
   const count = countState[0];
   const setCount = countState[1];
   const darkMode = useIsDarkMode();
-  const [isDarkMode, setDarkMode] = darkMode;
+  const [isDarkMode] = darkMode;
   React.useEffect(() => {// ...
   }, []);
 

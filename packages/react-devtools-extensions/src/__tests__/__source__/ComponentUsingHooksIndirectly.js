@@ -15,7 +15,7 @@ export function Component() {
   const setCount = countState[1];
 
   const darkMode = useIsDarkMode();
-  const [isDarkMode, setDarkMode] = darkMode;
+  const [isDarkMode] = darkMode;
 
   useEffect(() => {
     // ...
