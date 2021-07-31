@@ -208,8 +208,9 @@ describe(preprocessData, () => {
       measures: [],
       nativeEvents: [],
       otherUserTimingMarks: [],
-      reactEvents: [],
+      schedulingEvents: [],
       startTime: 1,
+      suspenseEvents: [],
     });
   });
 
@@ -300,16 +301,17 @@ describe(preprocessData, () => {
       ],
       nativeEvents: [],
       otherUserTimingMarks: [],
-      reactEvents: [
+      schedulingEvents: [
         {
-          componentStack: '',
           laneLabels: [],
           lanes: [9],
           timestamp: 0.002,
           type: 'schedule-render',
+          warning: null,
         },
       ],
       startTime: 1,
+      suspenseEvents: [],
     });
   });
 
@@ -372,16 +374,17 @@ describe(preprocessData, () => {
           timestamp: 0.004,
         },
       ],
-      reactEvents: [
+      schedulingEvents: [
         {
-          componentStack: '',
           laneLabels: ['Sync'],
           lanes: [0],
           timestamp: 0.005,
           type: 'schedule-render',
+          warning: null,
         },
       ],
       startTime: 1,
+      suspenseEvents: [],
     });
   });
 
@@ -507,25 +510,25 @@ describe(preprocessData, () => {
           timestamp: 0.004,
         },
       ],
-      reactEvents: [
+      schedulingEvents: [
         {
-          componentStack: '',
           laneLabels: ['Default'],
           lanes: [4],
           timestamp: 0.005,
           type: 'schedule-render',
+          warning: null,
         },
         {
           componentName: 'App',
-          componentStack: '',
-          isCascading: false,
           laneLabels: ['Default'],
           lanes: [4],
           timestamp: 0.013,
           type: 'schedule-state-update',
+          warning: null,
         },
       ],
       startTime: 1,
+      suspenseEvents: [],
     });
   });
 
