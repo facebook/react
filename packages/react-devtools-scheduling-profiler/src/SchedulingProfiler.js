@@ -41,8 +41,18 @@ export function SchedulingProfiler(_: {||}) {
   // The easiest way to guarangee this happens is to recreate the inner Canvas component.
   const [key, setKey] = useState<string>(theme);
   useLayoutEffect(() => {
-    updateColorsToMatchTheme();
-    setKey(deferredTheme);
+    const pollForTheme = () => {
+      if (updateColorsToMatchTheme()) {
+        clearInterval(intervalID);
+        setKey(deferredTheme);
+      }
+    };
+
+    const intervalID = setInterval(pollForTheme, 50);
+
+    return () => {
+      clearInterval(intervalID);
+    };
   }, [deferredTheme]);
 
   return (

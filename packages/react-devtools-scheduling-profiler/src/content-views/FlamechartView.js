@@ -21,7 +21,7 @@ import type {
 } from '../view-base';
 
 import {
-  ColorView,
+  BackgroundColorView,
   Surface,
   View,
   layeredLayout,
@@ -269,10 +269,8 @@ export class FlamechartView extends View {
       return rowView;
     });
 
-    // Add a plain background view to prevent gaps from appearing between
-    // flamechartRowViews.
-    const colorView = new ColorView(surface, frame, COLORS.BACKGROUND);
-    this.addSubview(colorView);
+    // Add a plain background view to prevent gaps from appearing between flamechartRowViews.
+    this.addSubview(new BackgroundColorView(surface, frame));
     this.addSubview(this._verticalStackView);
   }
 

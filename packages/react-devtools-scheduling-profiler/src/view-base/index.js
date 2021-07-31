@@ -7,7 +7,7 @@
  * @flow
  */
 
-export * from './ColorView';
+export * from './BackgroundColorView';
 export * from './HorizontalPanAndZoomView';
 export * from './ResizableView';
 export * from './Surface';

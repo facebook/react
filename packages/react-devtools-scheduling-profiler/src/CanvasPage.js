@@ -31,7 +31,7 @@ import {copy} from 'clipboard-js';
 import prettyMilliseconds from 'pretty-ms';
 
 import {
-  ColorView,
+  BackgroundColorView,
   HorizontalPanAndZoomView,
   ResizableView,
   Surface,
@@ -291,9 +291,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     rootView.addSubview(flamechartViewWrapper);
 
     // If subviews are less than the available height, fill remaining height with a solid color.
-    rootView.addSubview(
-      new ColorView(surface, defaultFrame, COLORS.BACKGROUND),
-    );
+    rootView.addSubview(new BackgroundColorView(surface, defaultFrame));
 
     surfaceRef.current.rootView = rootView;
   }, [data]);

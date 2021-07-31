@@ -7,33 +7,17 @@
  * @flow
  */
 
-import type {Rect} from './geometry';
-
-import {Surface} from './Surface';
 import {View} from './View';
+import {COLORS} from '../content-views/constants';
 
 /**
  * View that fills its visible area with a CSS color.
  */
-export class ColorView extends View {
-  _color: string;
-
-  constructor(surface: Surface, frame: Rect, color: string) {
-    super(surface, frame);
-    this._color = color;
-  }
-
-  setColor(color: string) {
-    if (this._color === color) {
-      return;
-    }
-    this._color = color;
-    this.setNeedsDisplay();
-  }
-
+export class BackgroundColorView extends View {
   draw(context: CanvasRenderingContext2D) {
-    const {_color, visibleArea} = this;
-    context.fillStyle = _color;
+    const {visibleArea} = this;
+
+    context.fillStyle = COLORS.BACKGROUND;
     context.fillRect(
       visibleArea.origin.x,
       visibleArea.origin.y,

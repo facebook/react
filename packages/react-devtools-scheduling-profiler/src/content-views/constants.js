@@ -82,8 +82,13 @@ export let COLORS = {
   WARNING_TEXT_INVERED: '',
 };
 
-export function updateColorsToMatchTheme(): void {
+export function updateColorsToMatchTheme(): boolean {
   const computedStyle = getComputedStyle((document.body: any));
+
+  // Check to see if styles have been initialized...
+  if (computedStyle.getPropertyValue('--color-background') == null) {
+    return false;
+  }
 
   COLORS = {
     BACKGROUND: computedStyle.getPropertyValue('--color-background'),
@@ -189,4 +194,6 @@ export function updateColorsToMatchTheme(): void {
       '--color-warning-text-color-inverted',
     ),
   };
+
+  return true;
 }
