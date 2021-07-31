@@ -242,7 +242,12 @@ export class ResizableView extends View {
     // Maybe that or set some % based default so all panels are visible to begin with.
     const subviewDesiredSize = subview.desiredSize();
     this._updateLayoutStateAndResizeBar(
-      subviewDesiredSize ? subviewDesiredSize.height : 0,
+      subviewDesiredSize.maxInitialHeight != null
+        ? Math.min(
+            subviewDesiredSize.maxInitialHeight,
+            subviewDesiredSize.height,
+          )
+        : subviewDesiredSize.height,
     );
   }
 

@@ -12,7 +12,7 @@ import type {
   Interaction,
   MouseMoveInteraction,
   Rect,
-  Size,
+  SizeWithMaxHeight,
   ViewRefs,
 } from '../view-base';
 
@@ -34,6 +34,7 @@ import {COLORS, BORDER_SIZE, REACT_MEASURE_HEIGHT} from './constants';
 import {REACT_TOTAL_NUM_LANES} from '../constants';
 
 const REACT_LANE_HEIGHT = REACT_MEASURE_HEIGHT + BORDER_SIZE;
+const MAX_ROWS_TO_SHOW_INITIALLY = 5;
 
 function getMeasuresForLane(
   allMeasures: ReactMeasure[],
@@ -44,7 +45,7 @@ function getMeasuresForLane(
 
 export class ReactMeasuresView extends View {
   _profilerData: ReactProfilerData;
-  _intrinsicSize: Size;
+  _intrinsicSize: SizeWithMaxHeight;
 
   _lanesToRender: ReactLane[];
   _laneToMeasures: Map<ReactLane, ReactMeasure[]>;
@@ -77,6 +78,7 @@ export class ReactMeasuresView extends View {
     this._intrinsicSize = {
       width: this._profilerData.duration,
       height: this._lanesToRender.length * REACT_LANE_HEIGHT,
+      maxInitialHeight: MAX_ROWS_TO_SHOW_INITIALLY * REACT_LANE_HEIGHT,
     };
   }
 

@@ -12,7 +12,7 @@ import type {
   Interaction,
   MouseMoveInteraction,
   Rect,
-  Size,
+  SizeWithMaxHeight,
   ViewRefs,
 } from '../view-base';
 
@@ -40,11 +40,12 @@ import {
 } from './constants';
 
 const ROW_WITH_BORDER_HEIGHT = SUSPENSE_EVENT_HEIGHT + BORDER_SIZE;
+const MAX_ROWS_TO_SHOW_INITIALLY = 3;
 
 export class SuspenseEventsView extends View {
   _depthToSuspenseEvent: Map<number, SuspenseEvent[]>;
   _hoveredEvent: SuspenseEvent | null = null;
-  _intrinsicSize: Size;
+  _intrinsicSize: SizeWithMaxHeight;
   _maxDepth: number = 0;
   _profilerData: ReactProfilerData;
 
@@ -79,6 +80,7 @@ export class SuspenseEventsView extends View {
     this._intrinsicSize = {
       width: duration,
       height: (this._maxDepth + 1) * ROW_WITH_BORDER_HEIGHT,
+      maxInitialHeight: ROW_WITH_BORDER_HEIGHT * MAX_ROWS_TO_SHOW_INITIALLY,
     };
   }
 

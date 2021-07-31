@@ -292,7 +292,12 @@ export class FlamechartView extends View {
 
   desiredSize() {
     // Ignore the wishes of the background color view
-    return this._verticalStackView.desiredSize();
+    const intrinsicSize = this._verticalStackView.desiredSize();
+    return {
+      ...intrinsicSize,
+      // Collapsed by default
+      maxInitialHeight: 0,
+    };
   }
 
   /**

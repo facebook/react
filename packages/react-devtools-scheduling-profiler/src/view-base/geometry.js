@@ -9,6 +9,10 @@
 
 export type Point = $ReadOnly<{|x: number, y: number|}>;
 export type Size = $ReadOnly<{|width: number, height: number|}>;
+export type SizeWithMaxHeight = {|
+  ...Size,
+  maxInitialHeight?: number,
+|};
 export type Rect = $ReadOnly<{|origin: Point, size: Size|}>;
 
 /**
