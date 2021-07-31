@@ -273,7 +273,7 @@ export class SuspenseEventsView extends View {
       const borderFrame: Rect = {
         origin: {
           x: frame.origin.x,
-          y: frame.origin.y + SUSPENSE_EVENT_HEIGHT,
+          y: frame.origin.y + (i + 1) * ROW_WITH_BORDER_HEIGHT - BORDER_SIZE,
         },
         size: {
           width: frame.size.width,
