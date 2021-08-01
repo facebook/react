@@ -238,8 +238,6 @@ export class NativeEventsView extends View {
           hoverTimestamp >= timestamp &&
           hoverTimestamp <= timestamp + duration
         ) {
-          this.currentCursor = 'pointer';
-
           viewRefs.hoveredView = this;
 
           onHover(nativeEvent);

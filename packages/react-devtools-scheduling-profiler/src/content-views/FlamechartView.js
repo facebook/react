@@ -198,7 +198,7 @@ class FlamechartStackLayerView extends View {
       const width = durationToWidth(duration, scaleFactor);
       const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
       if (x <= location.x && x + width >= location.x) {
-        this.currentCursor = 'pointer';
+        this.currentCursor = 'context-menu';
         viewRefs.hoveredView = this;
         _onHover(flamechartStackFrame);
         return;

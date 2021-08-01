@@ -308,7 +308,7 @@ export class ReactMeasuresView extends View {
         hoverTimestamp >= timestamp &&
         hoverTimestamp <= timestamp + duration
       ) {
-        this.currentCursor = 'pointer';
+        this.currentCursor = 'context-menu';
         viewRefs.hoveredView = this;
         onHover(measure);
         return;

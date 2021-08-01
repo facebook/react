@@ -224,7 +224,7 @@ export class UserTimingMarksView extends View {
         timestamp - timestampAllowance <= hoverTimestamp &&
         hoverTimestamp <= timestamp + timestampAllowance
       ) {
-        this.currentCursor = 'pointer';
+        this.currentCursor = 'context-menu';
         viewRefs.hoveredView = this;
         onHover(mark);
         return;

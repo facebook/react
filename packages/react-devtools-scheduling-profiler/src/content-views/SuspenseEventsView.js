@@ -334,7 +334,7 @@ export class SuspenseEventsView extends View {
             timestamp - timestampAllowance <= hoverTimestamp &&
             hoverTimestamp <= timestamp + timestampAllowance
           ) {
-            this.currentCursor = 'pointer';
+            this.currentCursor = 'context-menu';
 
             viewRefs.hoveredView = this;
 
@@ -345,7 +345,7 @@ export class SuspenseEventsView extends View {
           hoverTimestamp >= timestamp &&
           hoverTimestamp <= timestamp + duration
         ) {
-          this.currentCursor = 'pointer';
+          this.currentCursor = 'context-menu';
 
           viewRefs.hoveredView = this;
 

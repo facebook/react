@@ -243,7 +243,7 @@ export class SchedulingEventsView extends View {
         timestamp - eventTimestampAllowance <= hoverTimestamp &&
         hoverTimestamp <= timestamp + eventTimestampAllowance
       ) {
-        this.currentCursor = 'pointer';
+        this.currentCursor = 'context-menu';
         viewRefs.hoveredView = this;
         onHover(event);
         return;
