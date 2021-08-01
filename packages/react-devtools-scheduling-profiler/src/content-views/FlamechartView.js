@@ -195,13 +195,17 @@ class FlamechartStackLayerView extends View {
       const flamechartStackFrame = _stackLayer[currentIndex];
       const {timestamp, duration} = flamechartStackFrame;
 
-      const width = durationToWidth(duration, scaleFactor);
       const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
-      if (x <= location.x && x + width >= location.x) {
-        this.currentCursor = 'context-menu';
-        viewRefs.hoveredView = this;
-        _onHover(flamechartStackFrame);
-        return;
+      const width = durationToWidth(duration, scaleFactor);
+
+      // Don't show tooltips for nodes that are too small to render at this zoom level.
+      if (Math.floor(width - BORDER_SIZE) >= 1) {
+        if (x <= location.x && x + width >= location.x) {
+          this.currentCursor = 'context-menu';
+          viewRefs.hoveredView = this;
+          _onHover(flamechartStackFrame);
+          return;
+        }
       }
 
       if (x > location.x) {
