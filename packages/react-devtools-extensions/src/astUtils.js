@@ -26,6 +26,7 @@ const AST_NODE_TYPES = Object.freeze({
   ARRAY_PATTERN: 'ArrayPattern',
   IDENTIFIER: 'Identifier',
   NUMERIC_LITERAL: 'NumericLiteral',
+  VARIABLE_DECLARATOR: 'VariableDeclarator',
 });
 
 // Check if line number obtained from source map and the line number in hook node match
@@ -51,7 +52,6 @@ function checkNodeLocation(
     //
     // For more info see https://github.com/facebook/react/pull/21833#discussion_r666831276
     column -= 1;
-
     if (
       (line === start.line && column < start.column) ||
       (line === end.line && column > end.column)
@@ -284,13 +284,135 @@ function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
   return potentialHooksFound;
 }
 
+export function getHookNamesFromAST(sourceAST: File): Map<string, Node[]> {
+  const hookNames: Map<string, Node[]> = new Map();
+  const addToMap = (name, node) => {
+    const current = hookNames.get(name);
+    if (!current) {
+      hookNames.set(name, [node]);
+    } else {
+      current.push(node);
+    }
+  };
+
+  traverse(sourceAST, {
+    enter(path) {
+      // Check if this variable declaration corresponds to a variable
+      // declared by calling a Hook.
+      if (path.isVariableDeclarator() && isConfirmedHookDeclaration(path)) {
+        const hookDeclaredVariableName = getHookVariableName(path);
+        if (!hookDeclaredVariableName) {
+          return;
+        }
+
+        // Check if this variable declaration corresponds to a call to a
+        // built-in Hook that returns a tuple (useState, useReducer,
+        // useTransition).
+        // If it doesn't, we immediately use the declared variable name
+        // as the Hook name. We do this because for any other Hooks that
+        // aren't the built-in Hooks that return a tuple, we can't reliably
+        // extract a Hook name from other variable declartions derived from
+        // this one, since we don't know which of the declared variables
+        // are the relevant ones to track and show in dev tools.
+        if (!isBuiltInHookThatReturnsTuple(path)) {
+          addToMap(hookDeclaredVariableName, path.node);
+          return;
+        }
+
+        // Check if the variable declared by the Hook call is referenced
+        // anywhere else in the code. If not, we immediately use the
+        // declared variable name as the Hook name.
+        const referencePaths =
+          hookDeclaredVariableName != null
+            ? path.scope.bindings[hookDeclaredVariableName]?.referencePaths
+            : null;
+        if (referencePaths == null) {
+          addToMap(hookDeclaredVariableName, path.node);
+          return;
+        }
+
+        // Check each reference to the variable declared by the Hook call,
+        // and for each, we do the following:
+        let declaredVariableName = null;
+        for (const referencePath of referencePaths) {
+          if (declaredVariableName != null) {
+            break;
+          }
+
+          // 1. Check if the reference is contained within a VariableDeclarator
+          // Node. This will allow us to determine if the variable declared by
+          // the Hook call is being used to declare other variables.
+          let variableDeclaratorPath = referencePath;
+          while (
+            variableDeclaratorPath != null &&
+            variableDeclaratorPath.node.type !==
+              AST_NODE_TYPES.VARIABLE_DECLARATOR
+          ) {
+            variableDeclaratorPath = variableDeclaratorPath.parentPath;
+          }
+
+          // 2. If we find a VariableDeclarator containing the
+          // referenced variable, we extract the Hook name from the new
+          // variable declaration.
+          // E.g., a case like the following:
+          //    const countState = useState(0);
+          //    const count = countState[0];
+          //    const setCount = countState[1]
+          // Where the reference to `countState` is later referenced
+          // within a VariableDeclarator, so we can extract `count` as
+          // the Hook name.
+          const varDeclInit = variableDeclaratorPath?.node.init;
+          if (varDeclInit != null) {
+            switch (varDeclInit.type) {
+              case AST_NODE_TYPES.MEMBER_EXPRESSION: {
+                // When encountering a MemberExpression inside the new
+                // variable declaration, we only want to extract the variable
+                // name if we're assinging the value of the first member,
+                // which is handled by `filterMemberWithHookVariableName`.
+                // E.g.
+                //    const countState = useState(0);
+                //    const count = countState[0];    -> extract the name from this reference
+                //    const setCount = countState[1]; -> ignore this reference
+                if (filterMemberWithHookVariableName(variableDeclaratorPath)) {
+                  declaredVariableName = getHookVariableName(
+                    variableDeclaratorPath,
+                  );
+                }
+                break;
+              }
+              case AST_NODE_TYPES.IDENTIFIER: {
+                declaredVariableName = getHookVariableName(
+                  variableDeclaratorPath,
+                );
+                break;
+              }
+              default:
+                break;
+            }
+          }
+        }
+
+        // If we were able to extract a name from the new variable
+        // declaration, use it as the Hook name. Otherwise, use the
+        // original declared variable as the variable name.
+        if (declaredVariableName != null) {
+          addToMap(declaredVariableName, path.node);
+        } else {
+          addToMap(hookDeclaredVariableName, path.node);
+        }
+      }
+    },
+  });
+  return hookNames;
+}
+
 // Check if 'path' contains declaration of the form const X = useState(0);
 function isConfirmedHookDeclaration(path: NodePath): boolean {
-  const node = path.node.init;
-  if (node.type !== AST_NODE_TYPES.CALL_EXPRESSION) {
+  const nodeInit = path.node.init;
+  if (nodeInit == null || nodeInit.type !== AST_NODE_TYPES.CALL_EXPRESSION) {
     return false;
   }
-  const callee = node.callee;
+  const callee = nodeInit.callee;
   return isHook(callee);
 }
 
@@ -370,10 +492,12 @@ function isReactFunction(node: Node, functionName: string): boolean {
 }
 
 // Check if 'path' is either State or Reducer hook
-function isStateOrReducerHook(path: NodePath): boolean {
+function isBuiltInHookThatReturnsTuple(path: NodePath): boolean {
   const callee = path.node.init.callee;
   return (
-    isReactFunction(callee, 'useState') || isReactFunction(callee, 'useReducer')
+    isReactFunction(callee, 'useState') ||
+    isReactFunction(callee, 'useReducer') ||
+    isReactFunction(callee, 'useTransition')
   );
 }
 
@@ -394,7 +518,8 @@ function nodeContainsHookVariableName(hookNode: NodePath): boolean {
   const node = hookNode.node.id;
   if (
     node.type === AST_NODE_TYPES.ARRAY_PATTERN ||
-    (node.type === AST_NODE_TYPES.IDENTIFIER && !isStateOrReducerHook(hookNode))
+    (node.type === AST_NODE_TYPES.IDENTIFIER &&
+      !isBuiltInHookThatReturnsTuple(hookNode))
   ) {
     return true;
   }
