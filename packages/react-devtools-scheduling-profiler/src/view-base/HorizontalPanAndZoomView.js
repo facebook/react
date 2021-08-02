@@ -14,8 +14,6 @@ import type {
   MouseUpInteraction,
   WheelPlainInteraction,
   WheelWithShiftInteraction,
-  WheelWithControlInteraction,
-  WheelWithMetaInteraction,
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {ScrollState} from './utils/scrollState';
@@ -202,7 +200,7 @@ export class HorizontalPanAndZoomView extends View {
     }
   }
 
-  _handleWheelPlain(interaction: WheelPlainInteraction) {
+  _handleWheel(interaction: WheelPlainInteraction | WheelWithShiftInteraction) {
     const {
       location,
       delta: {deltaX, deltaY},
@@ -214,51 +212,41 @@ export class HorizontalPanAndZoomView extends View {
 
     const absDeltaX = Math.abs(deltaX);
     const absDeltaY = Math.abs(deltaY);
+
+    // Vertical scrolling zooms in and out (unless the SHIFT modifier is used).
+    // Horizontal scrolling pans.
     if (absDeltaY > absDeltaX) {
-      return; // Scrolling vertically
+      if (absDeltaY < MOVE_WHEEL_DELTA_THRESHOLD) {
+        return;
+      }
+
+      if (interaction.type === 'wheel-shift') {
+        // Shift modifier is for scrolling, not zooming.
+        return;
+      }
+
+      const newState = zoomState({
+        state: this._scrollState,
+        multiplier: 1 + 0.005 * -deltaY,
+        fixedPoint: location.x - this._scrollState.offset,
+
+        minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
+        maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
+        containerLength: this.frame.size.width,
+      });
+      this._setStateAndInformCallbacksIfChanged(newState);
+    } else {
+      if (absDeltaX < MOVE_WHEEL_DELTA_THRESHOLD) {
+        return;
+      }
+
+      const newState = translateState({
+        state: this._scrollState,
+        delta: -deltaX,
+        containerLength: this.frame.size.width,
+      });
+      this._setStateAndInformCallbacksIfChanged(newState);
     }
-    if (absDeltaX < MOVE_WHEEL_DELTA_THRESHOLD) {
-      return;
-    }
-
-    const newState = translateState({
-      state: this._scrollState,
-      delta: -deltaX,
-      containerLength: this.frame.size.width,
-    });
-    this._setStateAndInformCallbacksIfChanged(newState);
-  }
-
-  _handleWheelZoom(
-    interaction:
-      | WheelWithShiftInteraction
-      | WheelWithControlInteraction
-      | WheelWithMetaInteraction,
-  ) {
-    const {
-      location,
-      delta: {deltaY},
-    } = interaction.payload;
-
-    if (!rectContainsPoint(location, this.frame)) {
-      return; // Not scrolling on view
-    }
-
-    const absDeltaY = Math.abs(deltaY);
-    if (absDeltaY < MOVE_WHEEL_DELTA_THRESHOLD) {
-      return;
-    }
-
-    const newState = zoomState({
-      state: this._scrollState,
-      multiplier: 1 + 0.005 * -deltaY,
-      fixedPoint: location.x - this._scrollState.offset,
-
-      minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
-      maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
-      containerLength: this.frame.size.width,
-    });
-    this._setStateAndInformCallbacksIfChanged(newState);
   }
 
   handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
@@ -273,12 +261,8 @@ export class HorizontalPanAndZoomView extends View {
         this._handleMouseUp(interaction, viewRefs);
         break;
       case 'wheel-plain':
-        this._handleWheelPlain(interaction);
-        break;
       case 'wheel-shift':
-      case 'wheel-control':
-      case 'wheel-meta':
-        this._handleWheelZoom(interaction);
+        this._handleWheel(interaction);
         break;
     }
   }

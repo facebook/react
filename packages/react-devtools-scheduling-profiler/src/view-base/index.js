@@ -7,9 +7,9 @@
  * @flow
  */
 
-export * from './ColorView';
+export * from './BackgroundColorView';
 export * from './HorizontalPanAndZoomView';
-export * from './ResizableSplitView';
+export * from './ResizableView';
 export * from './Surface';
 export * from './VerticalScrollView';
 export * from './View';

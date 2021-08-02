@@ -91,7 +91,7 @@ export default function TabBar({
     <Fragment>
       {tabs.map(tab => {
         if (tab === null) {
-          return <div className={styles.VRule} />;
+          return <div key="VRule" className={styles.VRule} />;
         }
 
         const {icon, id, label, title} = tab;

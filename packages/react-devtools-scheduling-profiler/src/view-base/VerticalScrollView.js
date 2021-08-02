@@ -12,10 +12,11 @@ import type {
   MouseDownInteraction,
   MouseMoveInteraction,
   MouseUpInteraction,
-  WheelPlainInteraction,
+  WheelWithShiftInteraction,
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {ScrollState} from './utils/scrollState';
+import type {ViewRefs} from './Surface';
 
 import {Surface} from './Surface';
 import {View} from './View';
@@ -26,6 +27,11 @@ import {
   translateState,
 } from './utils/scrollState';
 import {MOVE_WHEEL_DELTA_THRESHOLD} from './constants';
+import {COLORS} from '../content-views/constants';
+
+const CARET_MARGIN = 3;
+const CARET_WIDTH = 5;
+const CARET_HEIGHT = 3;
 
 export class VerticalScrollView extends View {
   _scrollState: ScrollState = {offset: 0, length: 0};
@@ -46,6 +52,54 @@ export class VerticalScrollView extends View {
 
   desiredSize() {
     return this._contentView.desiredSize();
+  }
+
+  draw(context: CanvasRenderingContext2D, viewRefs: ViewRefs) {
+    super.draw(context, viewRefs);
+
+    // Show carets if there's scroll overflow above or below the viewable area.
+    if (this.frame.size.height > CARET_HEIGHT * 2 + CARET_MARGIN * 3) {
+      const offset = this._scrollState.offset;
+      const desiredSize = this._contentView.desiredSize();
+
+      const above = offset;
+      const below = this.frame.size.height - desiredSize.height - offset;
+
+      if (above < 0 || below < 0) {
+        const {visibleArea} = this;
+        const {x, y} = visibleArea.origin;
+        const {width, height} = visibleArea.size;
+        const horizontalCenter = x + width / 2;
+
+        const halfWidth = CARET_WIDTH;
+        const left = horizontalCenter + halfWidth;
+        const right = horizontalCenter - halfWidth;
+
+        if (above < 0) {
+          const topY = y + CARET_MARGIN;
+
+          context.beginPath();
+          context.moveTo(horizontalCenter, topY);
+          context.lineTo(left, topY + CARET_HEIGHT);
+          context.lineTo(right, topY + CARET_HEIGHT);
+          context.closePath();
+          context.fillStyle = COLORS.SCROLL_CARET;
+          context.fill();
+        }
+
+        if (below < 0) {
+          const bottomY = y + height - CARET_MARGIN;
+
+          context.beginPath();
+          context.moveTo(horizontalCenter, bottomY);
+          context.lineTo(left, bottomY - CARET_HEIGHT);
+          context.lineTo(right, bottomY - CARET_HEIGHT);
+          context.closePath();
+          context.fillStyle = COLORS.SCROLL_CARET;
+          context.fill();
+        }
+      }
+    }
   }
 
   /**
@@ -103,7 +157,7 @@ export class VerticalScrollView extends View {
     }
   }
 
-  _handleWheelPlain(interaction: WheelPlainInteraction) {
+  _handleWheelShift(interaction: WheelWithShiftInteraction) {
     const {
       location,
       delta: {deltaX, deltaY},
@@ -141,8 +195,8 @@ export class VerticalScrollView extends View {
       case 'mouseup':
         this._handleMouseUp(interaction);
         break;
-      case 'wheel-plain':
-        this._handleWheelPlain(interaction);
+      case 'wheel-shift':
+        this._handleWheelShift(interaction);
         break;
     }
   }

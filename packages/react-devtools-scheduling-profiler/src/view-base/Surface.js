@@ -92,7 +92,7 @@ export class Surface {
       origin: zeroPoint,
       size: _canvasSize,
     });
-    rootView.displayIfNeeded(_context);
+    rootView.displayIfNeeded(_context, this._viewRefs);
   }
 
   getCurrentCursor(): string | null {

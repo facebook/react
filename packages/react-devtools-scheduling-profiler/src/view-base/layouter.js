@@ -43,8 +43,7 @@ export function collapseLayoutIntoViews(layout: Layout) {
 export const noopLayout: Layouter = layout => layout;
 
 /**
- * Layer views on top of each other. All views' frames will be set to
- * `containerFrame`.
+ * Layer views on top of each other. All views' frames will be set to `containerFrame`.
  *
  * Equivalent to composing:
  * - `alignToContainerXLayout`,
@@ -52,12 +51,13 @@ export const noopLayout: Layouter = layout => layout;
  * - `containerWidthLayout`, and
  * - `containerHeightLayout`.
  */
-export const layeredLayout: Layouter = (layout, containerFrame) =>
-  layout.map(layoutInfo => ({...layoutInfo, frame: containerFrame}));
+export const layeredLayout: Layouter = (layout, containerFrame) => {
+  return layout.map(layoutInfo => ({...layoutInfo, frame: containerFrame}));
+};
 
 /**
- * Stacks `views` vertically in `frame`. All views in `views` will have their
- * widths set to the frame's width.
+ * Stacks `views` vertically in `frame`.
+ * All views in `views` will have their widths set to the frame's width.
  */
 export const verticallyStackedLayout: Layouter = (layout, containerFrame) => {
   let currentY = containerFrame.origin.y;

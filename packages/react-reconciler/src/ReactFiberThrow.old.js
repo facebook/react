@@ -244,7 +244,7 @@ function throwException(
     }
 
     if (enableSchedulingProfiler) {
-      markComponentSuspended(sourceFiber, wakeable);
+      markComponentSuspended(sourceFiber, wakeable, rootRenderLanes);
     }
 
     // Reset the memoizedState to what it was before we attempted to render it.

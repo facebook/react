@@ -22,6 +22,8 @@ import {
   positionToTimestamp,
   timestampToPosition,
 } from './utils/positioning';
+import {drawText} from './utils/text';
+import {formatDuration} from '../utils/formatting';
 import {
   View,
   Surface,
@@ -29,39 +31,9 @@ import {
   rectIntersectsRect,
   intersectionOfRects,
 } from '../view-base';
-import {
-  COLORS,
-  TEXT_PADDING,
-  NATIVE_EVENT_HEIGHT,
-  FONT_SIZE,
-  BORDER_SIZE,
-} from './constants';
+import {COLORS, NATIVE_EVENT_HEIGHT, BORDER_SIZE} from './constants';
 
 const ROW_WITH_BORDER_HEIGHT = NATIVE_EVENT_HEIGHT + BORDER_SIZE;
-
-// TODO (scheduling profiler) Make this a reusable util
-const cachedFlamechartTextWidths = new Map();
-const trimFlamechartText = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  width: number,
-) => {
-  for (let i = text.length - 1; i >= 0; i--) {
-    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
-
-    let measuredWidth = cachedFlamechartTextWidths.get(trimmedText);
-    if (measuredWidth == null) {
-      measuredWidth = context.measureText(trimmedText).width;
-      cachedFlamechartTextWidths.set(trimmedText, measuredWidth);
-    }
-
-    if (measuredWidth <= width) {
-      return trimmedText;
-    }
-  }
-
-  return null;
-};
 
 export class NativeEventsView extends View {
   _depthToNativeEvent: Map<number, NativeEvent[]>;
@@ -117,7 +89,7 @@ export class NativeEventsView extends View {
   }
 
   /**
-   * Draw a single `NativeEvent` as a circle in the canvas.
+   * Draw a single `NativeEvent` as a box/span with text inside of it.
    */
   _drawSingleNativeEvent(
     context: CanvasRenderingContext2D,
@@ -128,7 +100,7 @@ export class NativeEventsView extends View {
     showHoverHighlight: boolean,
   ) {
     const {frame} = this;
-    const {depth, duration, timestamp, type, warnings} = event;
+    const {depth, duration, timestamp, type, warning} = event;
 
     baseY += depth * ROW_WITH_BORDER_HEIGHT;
 
@@ -152,10 +124,10 @@ export class NativeEventsView extends View {
 
     const drawableRect = intersectionOfRects(eventRect, rect);
     context.beginPath();
-    if (warnings !== null) {
+    if (warning !== null) {
       context.fillStyle = showHoverHighlight
-        ? COLORS.NATIVE_EVENT_WARNING_HOVER
-        : COLORS.NATIVE_EVENT_WARNING;
+        ? COLORS.WARNING_BACKGROUND_HOVER
+        : COLORS.WARNING_BACKGROUND;
     } else {
       context.fillStyle = showHoverHighlight
         ? COLORS.NATIVE_EVENT_HOVER
@@ -168,32 +140,9 @@ export class NativeEventsView extends View {
       drawableRect.size.height,
     );
 
-    // Render event type label
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font = `${FONT_SIZE}px sans-serif`;
+    const label = `${type} - ${formatDuration(duration)}`;
 
-    if (width > TEXT_PADDING * 2) {
-      const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
-      const trimmedName = trimFlamechartText(
-        context,
-        type,
-        width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
-      );
-
-      if (trimmedName !== null) {
-        context.fillStyle =
-          warnings !== null
-            ? COLORS.NATIVE_EVENT_WARNING_TEXT
-            : COLORS.TEXT_COLOR;
-
-        context.fillText(
-          trimmedName,
-          eventRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
-          eventRect.origin.y + NATIVE_EVENT_HEIGHT / 2,
-        );
-      }
-    }
+    drawText(label, context, eventRect, drawableRect, width);
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -242,12 +191,16 @@ export class NativeEventsView extends View {
         },
       };
       if (rectIntersectsRect(borderFrame, visibleArea)) {
+        const borderDrawableRect = intersectionOfRects(
+          borderFrame,
+          visibleArea,
+        );
         context.fillStyle = COLORS.PRIORITY_BORDER;
         context.fillRect(
-          visibleArea.origin.x,
-          frame.origin.y + (i + 1) * ROW_WITH_BORDER_HEIGHT - BORDER_SIZE,
-          visibleArea.size.width,
-          BORDER_SIZE,
+          borderDrawableRect.origin.x,
+          borderDrawableRect.origin.y,
+          borderDrawableRect.size.width,
+          borderDrawableRect.size.height,
         );
       }
     }
@@ -285,8 +238,6 @@ export class NativeEventsView extends View {
           hoverTimestamp >= timestamp &&
           hoverTimestamp <= timestamp + duration
         ) {
-          this.currentCursor = 'pointer';
-
           viewRefs.hoveredView = this;
 
           onHover(nativeEvent);

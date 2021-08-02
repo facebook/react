@@ -9,7 +9,8 @@
 
 export * from './FlamechartView';
 export * from './NativeEventsView';
-export * from './ReactEventsView';
 export * from './ReactMeasuresView';
+export * from './SchedulingEventsView';
+export * from './SuspenseEventsView';
 export * from './TimeAxisMarkersView';
 export * from './UserTimingMarksView';

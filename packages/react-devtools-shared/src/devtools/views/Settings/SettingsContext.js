@@ -412,6 +412,9 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
   updateStyleHelper(theme, 'color-resize-bar', documentElements);
+  updateStyleHelper(theme, 'color-resize-bar-active', documentElements);
+  updateStyleHelper(theme, 'color-resize-bar-border', documentElements);
+  updateStyleHelper(theme, 'color-resize-bar-dot', documentElements);
   updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
   updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
@@ -429,21 +432,6 @@ export function updateThemeVariables(
   updateStyleHelper(
     theme,
     'color-scheduling-profiler-native-event-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-native-event-warning',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-native-event-warning-hover',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-native-event-warning-text',
     documentElements,
   );
   updateStyleHelper(
@@ -483,22 +471,12 @@ export function updateThemeVariables(
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-idle-selected',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
     'color-scheduling-profiler-react-idle-hover',
     documentElements,
   );
   updateStyleHelper(
     theme,
     'color-scheduling-profiler-react-render',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-render-selected',
     documentElements,
   );
   updateStyleHelper(
@@ -513,11 +491,6 @@ export function updateThemeVariables(
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-commit-selected',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
     'color-scheduling-profiler-react-commit-hover',
     documentElements,
   );
@@ -528,22 +501,12 @@ export function updateThemeVariables(
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-layout-effects-selected',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
     'color-scheduling-profiler-react-layout-effects-hover',
     documentElements,
   );
   updateStyleHelper(
     theme,
     'color-scheduling-profiler-react-passive-effects',
-    documentElements,
-  );
-  updateStyleHelper(
-    theme,
-    'color-scheduling-profiler-react-passive-effects-selected',
     documentElements,
   );
   updateStyleHelper(
@@ -563,22 +526,32 @@ export function updateThemeVariables(
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-schedule-cascading',
+    'color-scheduling-profiler-react-suspense-rejected-event',
     documentElements,
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-schedule-cascading-hover',
+    'color-scheduling-profiler-react-suspense-rejected-hover',
     documentElements,
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-suspend',
+    'color-scheduling-profiler-react-suspense-resolved',
     documentElements,
   );
   updateStyleHelper(
     theme,
-    'color-scheduling-profiler-react-suspend-hover',
+    'color-scheduling-profiler-react-suspense-resolved-hover',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-suspense-unresolved',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-scheduling-profiler-react-suspense-unresolved-hover',
     documentElements,
   );
   updateStyleHelper(
@@ -586,6 +559,7 @@ export function updateThemeVariables(
     'color-scheduling-profiler-react-work-border',
     documentElements,
   );
+  updateStyleHelper(theme, 'color-scroll-caret', documentElements);
   updateStyleHelper(theme, 'color-shadow', documentElements);
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
@@ -597,6 +571,14 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-toggle-text', documentElements);
   updateStyleHelper(theme, 'color-tooltip-background', documentElements);
   updateStyleHelper(theme, 'color-tooltip-text', documentElements);
+  updateStyleHelper(theme, 'color-warning-background', documentElements);
+  updateStyleHelper(theme, 'color-warning-background-hover', documentElements);
+  updateStyleHelper(theme, 'color-warning-text-color', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-warning-text-color-inverted',
+    documentElements,
+  );
 
   // Font smoothing varies based on the theme.
   updateStyleHelper(theme, 'font-smoothing', documentElements);

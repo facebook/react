@@ -208,7 +208,7 @@ describe('SchedulingProfiler', () => {
       `--react-init-${ReactVersion}`,
       `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
       `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--suspense-suspend-0-Example',
+      '--suspense-suspend-0-Example-mount-1-Sync',
       '--render-stop',
       `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
@@ -239,7 +239,7 @@ describe('SchedulingProfiler', () => {
       `--react-init-${ReactVersion}`,
       `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
       `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--suspense-suspend-0-Example',
+      '--suspense-suspend-0-Example-mount-1-Sync',
       '--render-stop',
       `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
       `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
@@ -278,7 +278,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--suspense-suspend-0-Example',
+      '--suspense-suspend-0-Example-mount-16-Default',
       '--render-stop',
       `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
@@ -317,7 +317,7 @@ describe('SchedulingProfiler', () => {
 
     expectMarksToEqual([
       `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--suspense-suspend-0-Example',
+      '--suspense-suspend-0-Example-mount-16-Default',
       '--render-stop',
       `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
       `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,

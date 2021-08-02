@@ -212,7 +212,10 @@ function ProfilerContextController({children}: Props) {
   const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
     null,
   );
-  const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
+  const [selectedTabID, selectTab] = useLocalStorage<TabID>(
+    'React::DevTools::Profiler::defaultTab',
+    'flame-chart',
+  );
 
   if (isProfiling) {
     batchedUpdates(() => {
