@@ -19,6 +19,14 @@ contentWindow.__REACT_DEVTOOLS_TARGET_WINDOW__ = window;
 
 initializeBackend(contentWindow);
 
+// Initialize the front end and activate the backend early so that we are able
+// to pass console settings in local storage to the backend before initial render
+const DevTools = initializeFrontend(contentWindow);
+
+// Activate the backend only once the DevTools frontend Store has been initialized.
+// Otherwise the Store may miss important initial tree op codes.
+activateBackend(contentWindow);
+
 const container = ((document.getElementById('devtools'): any): HTMLElement);
 
 let isTestAppMounted = true;
@@ -45,12 +53,6 @@ mountButton.addEventListener('click', function() {
 inject('dist/app.js', () => {
   initDevTools({
     connect(cb) {
-      const DevTools = initializeFrontend(contentWindow);
-
-      // Activate the backend only once the DevTools frontend Store has been initialized.
-      // Otherwise the Store may miss important initial tree op codes.
-      activateBackend(contentWindow);
-
       const root = createRoot(container);
       root.render(
         createElement(DevTools, {
