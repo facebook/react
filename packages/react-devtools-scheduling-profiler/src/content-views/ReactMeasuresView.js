@@ -10,9 +10,9 @@
 import type {ReactLane, ReactMeasure, ReactProfilerData} from '../types';
 import type {
   Interaction,
+  IntrinsicSize,
   MouseMoveInteraction,
   Rect,
-  SizeWithMaxHeight,
   ViewRefs,
 } from '../view-base';
 
@@ -45,7 +45,7 @@ function getMeasuresForLane(
 
 export class ReactMeasuresView extends View {
   _profilerData: ReactProfilerData;
-  _intrinsicSize: SizeWithMaxHeight;
+  _intrinsicSize: IntrinsicSize;
 
   _lanesToRender: ReactLane[];
   _laneToMeasures: Map<ReactLane, ReactMeasure[]>;
@@ -78,6 +78,7 @@ export class ReactMeasuresView extends View {
     this._intrinsicSize = {
       width: this._profilerData.duration,
       height: this._lanesToRender.length * REACT_LANE_HEIGHT,
+      hideScrollBarIfLessThanHeight: REACT_LANE_HEIGHT,
       maxInitialHeight: MAX_ROWS_TO_SHOW_INITIALLY * REACT_LANE_HEIGHT,
     };
   }
