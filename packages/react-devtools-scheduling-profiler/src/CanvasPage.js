@@ -34,6 +34,7 @@ import {
   BackgroundColorView,
   HorizontalPanAndZoomView,
   ResizableView,
+  VerticalScrollOverflowView,
   Surface,
   VerticalScrollView,
   View,
@@ -293,7 +294,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     // If subviews are less than the available height, fill remaining height with a solid color.
     rootView.addSubview(new BackgroundColorView(surface, defaultFrame));
 
-    surfaceRef.current.rootView = rootView;
+    const rootViewWithVerticalScroll = new VerticalScrollOverflowView(
+      surface,
+      defaultFrame,
+      rootView,
+    );
+
+    surfaceRef.current.rootView = rootViewWithVerticalScroll;
   }, [data]);
 
   useLayoutEffect(() => {
