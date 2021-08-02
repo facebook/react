@@ -1044,7 +1044,7 @@ function commitUnmount(
           } while (effect !== firstEffect);
         }
       }
-      return;
+      break;
     }
     case ClassComponent: {
       safelyDetachRef(current, nearestMountedAncestor);
@@ -1056,11 +1056,11 @@ function commitUnmount(
           nearestMountedAncestor,
         );
       }
-      return;
+      break;
     }
     case HostComponent: {
       safelyDetachRef(current, nearestMountedAncestor);
-      return;
+      break;
     }
     case HostPortal: {
       // TODO: this is recursive.
@@ -1076,7 +1076,7 @@ function commitUnmount(
       } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
-      return;
+      break;
     }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
@@ -1086,7 +1086,7 @@ function commitUnmount(
           current.stateNode = null;
         }
       }
-      return;
+      break;
     }
     case DehydratedFragment: {
       if (enableSuspenseCallback) {
@@ -1098,14 +1098,20 @@ function commitUnmount(
           }
         }
       }
-      return;
+      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
         safelyDetachRef(current, nearestMountedAncestor);
       }
-      return;
+      break;
     }
+  }
+
+  // Remove reference for GC
+  current.stateNode = null;
+  if (current.alternate != null) {
+    current.alternate.stateNode = null;
   }
 }
 
@@ -1460,6 +1466,8 @@ function unmountHostComponents(
     }
 
     if (node.tag === HostComponent || node.tag === HostText) {
+      // Save stateNode reference so commitUnmount can clear it.
+      const stateNode: Instance | TextInstance = node.stateNode;
       commitNestedUnmounts(
         finishedRoot,
         node,
@@ -1469,15 +1477,9 @@ function unmountHostComponents(
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
-        removeChildFromContainer(
-          ((currentParent: any): Container),
-          (node.stateNode: Instance | TextInstance),
-        );
+        removeChildFromContainer(((currentParent: any): Container), stateNode);
       } else {
-        removeChild(
-          ((currentParent: any): Instance),
-          (node.stateNode: Instance | TextInstance),
-        );
+        removeChild(((currentParent: any): Instance), stateNode);
       }
       // Don't visit children because we already visited them.
     } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
