@@ -1060,6 +1060,23 @@ function commitUnmount(
     }
     case HostComponent: {
       safelyDetachRef(current, nearestMountedAncestor);
+      // HACK: detach fiber references from DOM
+      current.stateNode.__reactFiber$ = null;
+      current.stateNode.__reactProps$ = null;
+      current.stateNode.__reactContainer$ = null;
+      current.stateNode.__reactEvents$ = null;
+      current.stateNode.__reactListeners$ = null;
+      current.stateNode.__reactHandles$ = null;
+      break;
+    }
+    case HostText: {
+      // HACK: detach fiber references from DOM
+      current.stateNode.__reactFiber$ = null;
+      current.stateNode.__reactProps$ = null;
+      current.stateNode.__reactContainer$ = null;
+      current.stateNode.__reactEvents$ = null;
+      current.stateNode.__reactListeners$ = null;
+      current.stateNode.__reactHandles$ = null;
       break;
     }
     case HostPortal: {
