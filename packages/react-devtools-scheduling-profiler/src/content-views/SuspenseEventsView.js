@@ -10,9 +10,9 @@
 import type {SuspenseEvent, ReactProfilerData} from '../types';
 import type {
   Interaction,
+  IntrinsicSize,
   MouseMoveInteraction,
   Rect,
-  SizeWithMaxHeight,
   ViewRefs,
 } from '../view-base';
 
@@ -45,7 +45,7 @@ const MAX_ROWS_TO_SHOW_INITIALLY = 3;
 export class SuspenseEventsView extends View {
   _depthToSuspenseEvent: Map<number, SuspenseEvent[]>;
   _hoveredEvent: SuspenseEvent | null = null;
-  _intrinsicSize: SizeWithMaxHeight;
+  _intrinsicSize: IntrinsicSize;
   _maxDepth: number = 0;
   _profilerData: ReactProfilerData;
 

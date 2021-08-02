@@ -9,8 +9,14 @@
 
 export type Point = $ReadOnly<{|x: number, y: number|}>;
 export type Size = $ReadOnly<{|width: number, height: number|}>;
-export type SizeWithMaxHeight = {|
+export type IntrinsicSize = {|
   ...Size,
+
+  // If content is this height or less, hide the scrollbar entirely,
+  // so that it doesn't take up vertical space unnecessarily (e.g. for a single row of content).
+  hideScrollBarIfLessThanHeight?: number,
+
+  // The initial height should be the height of the content, or this, whichever is less.
   maxInitialHeight?: number,
 |};
 export type Rect = $ReadOnly<{|origin: Point, size: Size|}>;

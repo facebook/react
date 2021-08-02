@@ -10,9 +10,9 @@
 import type {NativeEvent, ReactProfilerData} from '../types';
 import type {
   Interaction,
+  IntrinsicSize,
   MouseMoveInteraction,
   Rect,
-  Size,
   ViewRefs,
 } from '../view-base';
 
@@ -38,7 +38,7 @@ const ROW_WITH_BORDER_HEIGHT = NATIVE_EVENT_HEIGHT + BORDER_SIZE;
 export class NativeEventsView extends View {
   _depthToNativeEvent: Map<number, NativeEvent[]>;
   _hoveredEvent: NativeEvent | null = null;
-  _intrinsicSize: Size;
+  _intrinsicSize: IntrinsicSize;
   _maxDepth: number = 0;
   _profilerData: ReactProfilerData;
 
@@ -73,6 +73,7 @@ export class NativeEventsView extends View {
     this._intrinsicSize = {
       width: duration,
       height: (this._maxDepth + 1) * ROW_WITH_BORDER_HEIGHT,
+      hideScrollBarIfLessThanHeight: ROW_WITH_BORDER_HEIGHT,
     };
   }
 
@@ -239,7 +240,6 @@ export class NativeEventsView extends View {
           hoverTimestamp <= timestamp + duration
         ) {
           viewRefs.hoveredView = this;
-
           onHover(nativeEvent);
           return;
         }

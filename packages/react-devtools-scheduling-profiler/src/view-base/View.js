@@ -8,7 +8,7 @@
  */
 
 import type {Interaction} from './useCanvasInteraction';
-import type {Rect, Size, SizeWithMaxHeight} from './geometry';
+import type {IntrinsicSize, Rect, Size} from './geometry';
 import type {Layouter} from './layouter';
 import type {ViewRefs} from './Surface';
 
@@ -140,7 +140,7 @@ export class View {
    *
    * Can be overridden by subclasses.
    */
-  desiredSize(): Size | SizeWithMaxHeight {
+  desiredSize(): Size | IntrinsicSize {
     if (this._needsDisplay) {
       this.layoutSubviews();
     }

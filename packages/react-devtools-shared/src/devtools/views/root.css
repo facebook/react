@@ -1,4 +1,9 @@
 :root {
+  /**
+   * The light and dark theme styles below should be kept in sync with 'react-devtools-shared/src/constants'
+   * They are repeated here because they're used by e.g. tooltips or context menus
+   * which get rendered outside of the DOM subtree (where normal theme/styles are written).
+   */
 
   /* Light theme */
   --light-color-scroll-thumb: #c2c2c2;

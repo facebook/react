@@ -255,12 +255,21 @@ export class ResizableView extends View {
   }
 
   desiredSize() {
-    const resizeBarDesiredSize = this._resizeBar.desiredSize();
+    const subviewDesiredSize = this._subview.desiredSize();
 
-    return {
-      width: this.frame.size.width,
-      height: this._layoutState.barOffsetY + resizeBarDesiredSize.height,
-    };
+    if (this._shouldRenderResizeBar()) {
+      const resizeBarDesiredSize = this._resizeBar.desiredSize();
+
+      return {
+        width: this.frame.size.width,
+        height: this._layoutState.barOffsetY + resizeBarDesiredSize.height,
+      };
+    } else {
+      return {
+        width: this.frame.size.width,
+        height: subviewDesiredSize.height,
+      };
+    }
   }
 
   layoutSubviews() {
@@ -268,6 +277,14 @@ export class ResizableView extends View {
     this._updateSubviewFrames();
 
     super.layoutSubviews();
+  }
+
+  _shouldRenderResizeBar() {
+    const subviewDesiredSize = this._subview.desiredSize();
+    return subviewDesiredSize.hideScrollBarIfLessThanHeight != null
+      ? subviewDesiredSize.height >
+          subviewDesiredSize.hideScrollBarIfLessThanHeight
+      : true;
   }
 
   _updateLayoutStateAndResizeBar(barOffsetY: number) {
