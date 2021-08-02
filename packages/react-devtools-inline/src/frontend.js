@@ -10,6 +10,7 @@ import {
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
+  getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
@@ -88,6 +89,7 @@ export function initialize(
             breakOnConsoleErrors: getBreakOnConsoleErrors(),
             componentFilters: getSavedComponentFilters(),
             showInlineWarningsAndErrors: getShowInlineWarningsAndErrors(),
+            hideConsoleLogsInStrictMode: getHideConsoleLogsInStrictMode(),
           },
           '*',
         );

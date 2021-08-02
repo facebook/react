@@ -164,6 +164,7 @@ type UpdateConsolePatchSettingsParams = {|
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
 |};
 
 export type BackendEvents = {|

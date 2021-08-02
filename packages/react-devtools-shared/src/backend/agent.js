@@ -25,7 +25,7 @@ import {
   initialize as setupTraceUpdates,
   toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
-import {patch as patchConsole, unpatch as unpatchConsole} from './console';
+import {patch as patchConsole} from './console';
 import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
@@ -635,28 +635,23 @@ export default class Agent extends EventEmitter<{|
     appendComponentStack,
     breakOnConsoleErrors,
     showInlineWarningsAndErrors,
+    hideConsoleLogsInStrictMode,
   }: {|
     appendComponentStack: boolean,
     breakOnConsoleErrors: boolean,
     showInlineWarningsAndErrors: boolean,
+    hideConsoleLogsInStrictMode: boolean,
   |}) => {
     // If the frontend preference has change,
     // or in the case of React Native- if the backend is just finding out the preference-
-    // then install or uninstall the console overrides.
+    // then reinstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.
-    if (
-      appendComponentStack ||
-      breakOnConsoleErrors ||
-      showInlineWarningsAndErrors
-    ) {
-      patchConsole({
-        appendComponentStack,
-        breakOnConsoleErrors,
-        showInlineWarningsAndErrors,
-      });
-    } else {
-      unpatchConsole();
-    }
+    patchConsole({
+      appendComponentStack,
+      breakOnConsoleErrors,
+      showInlineWarningsAndErrors,
+      hideConsoleLogsInStrictMode,
+    });
   };
 
   updateComponentFilters = (componentFilters: Array<ComponentFilter>) => {

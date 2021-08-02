@@ -458,6 +458,8 @@ export function shouldSuspend(fiber: Fiber): boolean {
   return shouldSuspendImpl(fiber);
 }
 
+let isStrictMode = false;
+
 let overrideHookState = null;
 let overrideHookStateDeletePath = null;
 let overrideHookStateRenamePath = null;
@@ -707,6 +709,14 @@ function getCurrentFiberForDevTools() {
   return ReactCurrentFiberCurrent;
 }
 
+export function getIsStrictModeForDevtools() {
+  return isStrictMode;
+}
+
+export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
+  isStrictMode = newIsStrictMode;
+}
+
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
   const {ReactCurrentDispatcher} = ReactSharedInternals;
@@ -736,6 +746,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
     getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
+    getIsStrictMode: __DEV__ ? getIsStrictModeForDevtools : null,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,

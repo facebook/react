@@ -37,3 +37,7 @@ export function ignoreErrors(errorsToIgnore: Array<string>): void {
 export function ignoreWarnings(warningsToIgnore: Array<string>): void {
   ignoreStrings('warn', warningsToIgnore);
 }
+
+export function ignoreLogs(logsToIgnore: Array<string>): void {
+  ignoreStrings('log', logsToIgnore);
+}
