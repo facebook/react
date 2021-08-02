@@ -230,18 +230,21 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     schedulingEventsViewRef.current = schedulingEventsView;
     const schedulingEventsViewWrapper = createViewHelper(schedulingEventsView);
 
-    const suspenseEventsView = new SuspenseEventsView(
-      surface,
-      defaultFrame,
-      data,
-    );
-    suspenseEventsViewRef.current = suspenseEventsView;
-    const suspenseEventsViewWrapper = createViewHelper(
-      suspenseEventsView,
-      'suspense',
-      true,
-      true,
-    );
+    let suspenseEventsViewWrapper = null;
+    if (data.suspenseEvents.length > 0) {
+      const suspenseEventsView = new SuspenseEventsView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      suspenseEventsViewRef.current = suspenseEventsView;
+      suspenseEventsViewWrapper = createViewHelper(
+        suspenseEventsView,
+        'suspense',
+        true,
+        true,
+      );
+    }
 
     const reactMeasuresView = new ReactMeasuresView(
       surface,
@@ -286,7 +289,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     }
     rootView.addSubview(nativeEventsViewWrapper);
     rootView.addSubview(schedulingEventsViewWrapper);
-    rootView.addSubview(suspenseEventsViewWrapper);
+    if (suspenseEventsViewWrapper !== null) {
+      rootView.addSubview(suspenseEventsViewWrapper);
+    }
     rootView.addSubview(reactMeasuresViewWrapper);
     rootView.addSubview(flamechartViewWrapper);
 
