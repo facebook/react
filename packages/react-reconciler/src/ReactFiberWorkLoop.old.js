@@ -1330,23 +1330,6 @@ export function renderDidSuspendDelayIfPossible(): void {
   ) {
     workInProgressRootExitStatus = RootSuspendedWithDelay;
   }
-
-  // Check if there are updates that we skipped tree that might have unblocked
-  // this render.
-  if (
-    workInProgressRoot !== null &&
-    (includesNonIdleWork(workInProgressRootSkippedLanes) ||
-      includesNonIdleWork(workInProgressRootUpdatedLanes))
-  ) {
-    // Mark the current render as suspended so that we switch to working on
-    // the updates that were skipped. Usually we only suspend at the end of
-    // the render phase.
-    // TODO: We should probably always mark the root as suspended immediately
-    // (inside this function), since by suspending at the end of the render
-    // phase introduces a potential mistake where we suspend lanes that were
-    // pinged or updated while we were rendering.
-    markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes);
-  }
 }
 
 export function renderDidError() {
