@@ -51,8 +51,9 @@ export const noopLayout: Layouter = layout => layout;
  * - `containerWidthLayout`, and
  * - `containerHeightLayout`.
  */
-export const layeredLayout: Layouter = (layout, containerFrame) =>
-  layout.map(layoutInfo => ({...layoutInfo, frame: containerFrame}));
+export const layeredLayout: Layouter = (layout, containerFrame) => {
+  return layout.map(layoutInfo => ({...layoutInfo, frame: containerFrame}));
+};
 
 /**
  * Stacks `views` vertically in `frame`.

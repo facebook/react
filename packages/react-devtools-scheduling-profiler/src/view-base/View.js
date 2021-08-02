@@ -271,9 +271,18 @@ export class View {
     interaction: Interaction,
     viewRefs: ViewRefs,
   ) {
+    const {subviews, visibleArea} = this;
+
+    if (visibleArea.size.height === 0) {
+      return;
+    }
+
     this.handleInteraction(interaction, viewRefs);
-    this.subviews.forEach(subview =>
-      subview.handleInteractionAndPropagateToSubviews(interaction, viewRefs),
-    );
+
+    subviews.forEach(subview => {
+      if (rectIntersectsRect(visibleArea, subview.visibleArea)) {
+        subview.handleInteractionAndPropagateToSubviews(interaction, viewRefs);
+      }
+    });
   }
 }

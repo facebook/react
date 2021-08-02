@@ -45,6 +45,11 @@ const RESIZE_BAR_DOT_SPACING = 4;
 const RESIZE_BAR_HEIGHT = 8;
 const RESIZE_BAR_WITH_LABEL_HEIGHT = 16;
 
+const HIDDEN_RECT = {
+  origin: {x: 0, y: 0},
+  size: {width: 0, height: 0},
+};
+
 class ResizeBar extends View {
   _interactionState: ResizeBarState = 'normal';
   _label: string;
@@ -238,8 +243,6 @@ export class ResizableView extends View {
     this.addSubview(this._subview);
     this.addSubview(this._resizeBar);
 
-    // TODO (ResizableView) Allow subviews to specify default sizes.
-    // Maybe that or set some % based default so all panels are visible to begin with.
     const subviewDesiredSize = subview.desiredSize();
     this._updateLayoutStateAndResizeBar(
       subviewDesiredSize.maxInitialHeight != null
@@ -253,14 +256,9 @@ export class ResizableView extends View {
 
   desiredSize() {
     const resizeBarDesiredSize = this._resizeBar.desiredSize();
-    const subviewDesiredSize = this._subview.desiredSize();
-
-    const subviewDesiredWidth = subviewDesiredSize
-      ? subviewDesiredSize.width
-      : 0;
 
     return {
-      width: Math.max(subviewDesiredWidth, resizeBarDesiredSize.width),
+      width: this.frame.size.width,
       height: this._layoutState.barOffsetY + resizeBarDesiredSize.height,
     };
   }
@@ -315,19 +313,19 @@ export class ResizableView extends View {
 
     const resizeBarDesiredSize = this._resizeBar.desiredSize();
 
-    let currentY = y;
-
-    this._subview.setFrame({
-      origin: {x, y: currentY},
-      size: {width, height: barOffsetY},
-    });
-    currentY += this._subview.frame.size.height;
+    if (barOffsetY === 0) {
+      this._subview.setFrame(HIDDEN_RECT);
+    } else {
+      this._subview.setFrame({
+        origin: {x, y},
+        size: {width, height: barOffsetY},
+      });
+    }
 
     this._resizeBar.setFrame({
-      origin: {x, y: currentY},
+      origin: {x, y: y + barOffsetY},
       size: {width, height: resizeBarDesiredSize.height},
     });
-    currentY += this._resizeBar.frame.size.height;
   }
 
   _handleClick(interaction: ClickInteraction) {
@@ -387,8 +385,6 @@ export class ResizableView extends View {
       this._resizingState = null;
     }
   }
-
-  _didGrab: boolean = false;
 
   getCursorActiveSubView(interaction: Interaction): View | null {
     const cursorLocation = interaction.payload.location;
