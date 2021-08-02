@@ -32,7 +32,15 @@ export default function portaledContent(
       // The ThemeProvider works by writing DOM style variables to an HTMLDivElement.
       // Because Portals render in a different DOM subtree, these variables don't propagate.
       // So in this case, we need to re-wrap portaled content in a second ThemeProvider.
-      children = <ThemeProvider>{children}</ThemeProvider>;
+      children = (
+        <ThemeProvider>
+          <div
+            data-react-devtools-portal-root={true}
+            style={{width: '100vw', height: '100vh'}}>
+            {children}
+          </div>
+        </ThemeProvider>
+      );
     }
 
     return portalContainer != null

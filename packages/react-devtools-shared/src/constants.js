@@ -165,8 +165,6 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-scheduling-profiler-react-suspense-unresolved-hover': '#93959a',
     '--color-scheduling-profiler-text-color': '#000000',
     '--color-scheduling-profiler-react-work-border': '#ffffff',
-    '--color-scroll-thumb': '#c2c2c2',
-    '--color-scroll-track': '#fafafa',
     '--color-search-match': 'yellow',
     '--color-search-match-current': '#f7923b',
     '--color-selected-tree-highlight-active': 'rgba(0, 136, 250, 0.1)',
@@ -180,12 +178,18 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-toggle-background-on': '#0088fa',
     '--color-toggle-background-off': '#cfd1d5',
     '--color-toggle-text': '#ffffff',
-    '--color-tooltip-background': 'rgba(0, 0, 0, 0.9)',
-    '--color-tooltip-text': '#ffffff',
     '--color-warning-background': '#fb3655',
     '--color-warning-background-hover': '#f82042',
     '--color-warning-text-color': '#ffffff',
     '--color-warning-text-color-inverted': '#fd4d69',
+
+    // The styles below should be kept in sync with 'root.css'
+    // They are repeated there because they're used by e.g. tooltips or context menus
+    // which get rendered outside of the DOM subtree (where normal theme/styles are written).
+    '--color-scroll-thumb': '#c2c2c2',
+    '--color-scroll-track': '#fafafa',
+    '--color-tooltip-background': 'rgba(0, 0, 0, 0.9)',
+    '--color-tooltip-text': '#ffffff',
   },
   dark: {
     '--color-attribute-name': '#9d87d2',
@@ -291,8 +295,6 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-scheduling-profiler-react-suspense-unresolved-hover': '#93959a',
     '--color-scheduling-profiler-text-color': '#000000',
     '--color-scheduling-profiler-react-work-border': '#ffffff',
-    '--color-scroll-thumb': '#afb3b9',
-    '--color-scroll-track': '#313640',
     '--color-search-match': 'yellow',
     '--color-search-match-current': '#f7923b',
     '--color-selected-tree-highlight-active': 'rgba(23, 143, 185, 0.15)',
@@ -307,12 +309,18 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-toggle-background-on': '#178fb9',
     '--color-toggle-background-off': '#777d88',
     '--color-toggle-text': '#ffffff',
-    '--color-tooltip-background': 'rgba(255, 255, 255, 0.95)',
-    '--color-tooltip-text': '#000000',
     '--color-warning-background': '#ee1638',
     '--color-warning-background-hover': '#da1030',
     '--color-warning-text-color': '#ffffff',
     '--color-warning-text-color-inverted': '#ee1638',
+
+    // The styles below should be kept in sync with 'root.css'
+    // They are repeated there because they're used by e.g. tooltips or context menus
+    // which get rendered outside of the DOM subtree (where normal theme/styles are written).
+    '--color-scroll-thumb': '#afb3b9',
+    '--color-scroll-track': '#313640',
+    '--color-tooltip-background': 'rgba(255, 255, 255, 0.95)',
+    '--color-tooltip-text': '#000000',
   },
   compact: {
     '--font-size-monospace-small': '9px',

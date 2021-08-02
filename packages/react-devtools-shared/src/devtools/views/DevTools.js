@@ -222,7 +222,10 @@ export default function DevTools({
                     <ProfilerContextController>
                       <SchedulingProfilerContextController>
                         <ThemeProvider>
-                          <div className={styles.DevTools} ref={devToolsRef}>
+                          <div
+                            className={styles.DevTools}
+                            ref={devToolsRef}
+                            data-react-devtools-portal-root={true}>
                             {showTabBar && (
                               <div className={styles.TabBar}>
                                 <ReactLogo />
