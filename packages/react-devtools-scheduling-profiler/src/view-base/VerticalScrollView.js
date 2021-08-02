@@ -165,6 +165,7 @@ export class VerticalScrollView extends View {
 
   _handleMouseDown(interaction: MouseDownInteraction) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
+console.log('VerticalScrollView()\n  location:', interaction.payload.location, '\n  frame:', JSON.stringify(this.frame).replace('"', ''), '\n  visibleArea:', JSON.stringify(this.visibleArea).replace('"', ''));
       this._isPanning = true;
     }
   }

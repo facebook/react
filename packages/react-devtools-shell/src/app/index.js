@@ -12,7 +12,7 @@ import Iframe from './Iframe';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import Hydration from './Hydration';
-import InlineWarnings from './InlineWarnings';
+// import InlineWarnings from './InlineWarnings';
 import InspectableElements from './InspectableElements';
 import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
@@ -52,7 +52,7 @@ function mountTestApp() {
   mountHelper(Hydration);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
-  mountHelper(InlineWarnings);
+  // mountHelper(InlineWarnings);
   mountHelper(ReactNativeWeb);
   mountHelper(Toggle);
   mountHelper(ErrorBoundaries);

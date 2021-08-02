@@ -12,6 +12,7 @@ export * from './HorizontalPanAndZoomView';
 export * from './ResizableView';
 export * from './Surface';
 export * from './VerticalScrollView';
+export * from './VerticalScrollOverflowView';
 export * from './View';
 export * from './geometry';
 export * from './layouter';

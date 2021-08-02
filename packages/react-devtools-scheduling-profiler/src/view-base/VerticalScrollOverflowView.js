@@ -1,3 +1,316 @@
-// TODO Vertically stack views (via verticallyStackedLayout).
-// If stacked views are taller than the available height, a vertical scrollbar will be shown on the side,
-// and width will be adjusted to subtract the width of the scrollbar.
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
+import type {Interaction} from './useCanvasInteraction';
+import type {Rect} from './geometry';
+import type {Surface, ViewRefs} from './Surface';
+import type {
+  ClickInteraction,
+  MouseDownInteraction,
+  MouseMoveInteraction,
+  MouseUpInteraction,
+} from './useCanvasInteraction';
+
+import {
+  intersectionOfRects,
+  rectContainsPoint,
+  rectIntersectsRect,
+} from './geometry';
+import {View} from './View';
+import {BORDER_SIZE, COLORS} from '../content-views/constants';
+
+const SCROLL_BAR_SIZE = 14;
+
+const HIDDEN_RECT = {
+  origin: {
+    x: 0,
+    y: 0,
+  },
+  size: {
+    width: 0,
+    height: 0,
+  },
+};
+
+// TODO How do we handle resizing
+export class VerticalScrollOverflowView extends View {
+  _contentView: View;
+  _isScrolling: boolean = false;
+  _scrollOffset: number = 0;
+  _scrollBarView: VerticalScrollBarView;
+
+  constructor(surface: Surface, frame: Rect, contentView: View) {
+    super(surface, frame);
+
+    this._contentView = contentView;
+    this._scrollBarView = new VerticalScrollBarView(surface, frame, this);
+
+    this.addSubview(contentView);
+    this.addSubview(this._scrollBarView);
+  }
+
+  setScrollOffset(value: number) {
+    this._scrollOffset = value;
+
+    const proposedFrame = {
+      ...this._contentView.frame,
+      origin: {
+        ...this._contentView.frame.origin,
+        y: value,
+      }
+    };
+
+    // TODO How do we pass this down to the sub views?
+    // It doesn't currently seem to be working.
+    // this._contentView.setVisibleArea(visibleArea);
+
+    this._contentView.subviews.forEach((subview, subviewIndex) => {
+      if (rectIntersectsRect(proposedFrame, subview.frame)) {
+        subview.setFrame(intersectionOfRects(proposedFrame, subview.frame));
+      } else {
+        subview.setFrame(HIDDEN_RECT);
+      }
+    });
+
+    this.setNeedsDisplay();
+  }
+
+  layoutSubviews() {
+    super.layoutSubviews();
+
+    const {frame} = this;
+    const {x, y} = frame.origin;
+    const {width, height} = frame.size;
+
+    const contentHeight = this._contentView.desiredSize().height;
+    const shouldScroll = contentHeight > height;
+
+    const scrollBarView = this._scrollBarView;
+
+    this._contentView.setVisibleArea({
+      origin: {
+        x,
+        y: y + this._scrollOffset,
+      },
+      size: {
+        width: shouldScroll ? width - SCROLL_BAR_SIZE : width,
+        height,
+      },
+    });
+
+    if (shouldScroll) {
+      const scrollBarX = x + width - SCROLL_BAR_SIZE;
+
+      const proposedScrollBarFrame = {
+        origin: {
+          x: scrollBarX,
+          y,
+        },
+        size: {
+          width: SCROLL_BAR_SIZE,
+          height,
+        },
+      };
+
+      scrollBarView.setFrame(proposedScrollBarFrame);
+      scrollBarView.setContentHeight(contentHeight);
+      scrollBarView.setShouldScroll(true);
+    } else {
+      scrollBarView.setShouldScroll(false);
+    }
+
+    this.setNeedsDisplay();
+  }
+}
+
+export class VerticalScrollBarView extends View {
+  _contentHeight: number = 0;
+  _isScrolling: boolean = false;
+  _scrollBarRect: Rect = HIDDEN_RECT;
+  _scrollThumbRect: Rect = HIDDEN_RECT;
+  _shouldScroll: boolean = false;
+  _verticalScrollOverflowView: VerticalScrollOverflowView;
+
+  constructor(
+    surface: Surface,
+    frame: Rect,
+    verticalScrollOverflowView: VerticalScrollOverflowView,
+  ) {
+    super(surface, frame);
+
+    this._verticalScrollOverflowView = verticalScrollOverflowView;
+  }
+
+  get shouldScroll(): boolean {
+    return this._shouldScroll;
+  }
+
+  setContentHeight(contentHeight: number) {
+    if (this._contentHeight !== contentHeight) {
+      this._contentHeight = contentHeight;
+
+      const {height, width} = this.frame.size;
+
+      this._scrollThumbRect = {
+        origin: {
+          x: this.frame.origin.x,
+          y: this._scrollThumbRect.origin.y,
+        },
+        size: {
+          width,
+          height: height * (height / contentHeight),
+        },
+      };
+
+      this.setNeedsDisplay();
+    }
+  }
+
+  setShouldScroll(shouldScroll: boolean) {
+    if (this._shouldScroll !== shouldScroll) {
+      this._shouldScroll = shouldScroll;
+
+      this.setNeedsDisplay();
+    }
+  }
+
+  setScrollThumbY(value: number) {
+    const {height} = this.frame.size;
+    const scrollThumbRect = this._scrollThumbRect;
+
+    const maxScrollThumbY = height - scrollThumbRect.size.height;
+    const newScrollThumbY = Math.max(0, Math.min(maxScrollThumbY, value));
+
+    this._scrollThumbRect = {
+      ...scrollThumbRect,
+      origin: {
+        x: this.frame.origin.x,
+        y: newScrollThumbY,
+      },
+    };
+
+    this.setNeedsDisplay();
+
+    const maxContentOffset = this._contentHeight - height;
+    const contentScrollOffset =
+      (newScrollThumbY / maxScrollThumbY) * maxContentOffset * -1;
+
+    this._verticalScrollOverflowView.setScrollOffset(contentScrollOffset);
+  }
+
+  draw(context: CanvasRenderingContext2D, viewRefs: ViewRefs) {
+    if (this.shouldScroll) {
+      const {x, y} = this.frame.origin;
+      const {width, height} = this.frame.size;
+
+      // TODO Use real color
+      context.fillStyle = COLORS.REACT_RESIZE_BAR;
+      context.fillRect(x, y, width, height);
+
+      // TODO Use real color
+      context.fillStyle = COLORS.SCROLL_CARET;
+      context.fillRect(
+        this._scrollThumbRect.origin.x,
+        this._scrollThumbRect.origin.y,
+        this._scrollThumbRect.size.width,
+        this._scrollThumbRect.size.height,
+      );
+
+      // TODO Use real color
+      context.fillStyle = COLORS.REACT_RESIZE_BAR_BORDER;
+      context.fillRect(x, y, BORDER_SIZE, height);
+    }
+  }
+
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
+    if (!this.shouldScroll) {
+      // If content isn't scrollable, ignore.
+      return;
+    }
+
+    switch (interaction.type) {
+      case 'click':
+        this._handleClick(interaction, viewRefs);
+        break;
+      case 'mousedown':
+        this._handleMouseDown(interaction, viewRefs);
+        break;
+      case 'mousemove':
+        this._handleMouseMove(interaction, viewRefs);
+        break;
+      case 'mouseup':
+        this._handleMouseUp(interaction, viewRefs);
+        break;
+    }
+  }
+
+  _handleClick(interaction: ClickInteraction, viewRefs: ViewRefs) {
+    const {location} = interaction.payload;
+    if (rectContainsPoint(location, this.frame)) {
+      const currentScrollThumbY = this._scrollThumbRect.origin.y;
+      const y = location.y;
+
+      if (rectContainsPoint(location, this._scrollThumbRect)) {
+        // Ignore clicks on the track thumb directly.
+        return;
+      }
+
+      // Scroll up or down about one viewport worth of content:
+      // TODO This calculation is broken
+      const deltaY = this.frame.size.height * 0.8;
+
+      this.setScrollThumbY(
+        y < currentScrollThumbY
+          ? currentScrollThumbY - deltaY
+          : currentScrollThumbY + deltaY,
+      );
+    }
+  }
+
+  _handleMouseDown(interaction: MouseDownInteraction, viewRefs: ViewRefs) {
+    const {location} = interaction.payload;
+    if (!rectContainsPoint(location, this._scrollThumbRect)) {
+      return;
+    }
+    viewRefs.activeView = this;
+
+    this.currentCursor = 'default';
+
+    this._isScrolling = true;
+    this.setNeedsDisplay();
+  }
+
+  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
+    const {event, location} = interaction.payload;
+    if (rectContainsPoint(location, this.frame)) {
+      if (viewRefs.hoveredView !== this) {
+        viewRefs.hoveredView = this;
+      }
+
+      this.currentCursor = 'default';
+    }
+
+    if (viewRefs.activeView === this) {
+      this.currentCursor = 'default';
+
+      this.setScrollThumbY(this._scrollThumbRect.origin.y + event.movementY);
+    }
+  }
+
+  _handleMouseUp(interaction: MouseUpInteraction, viewRefs: ViewRefs) {
+    if (viewRefs.activeView === this) {
+      viewRefs.activeView = null;
+    }
+
+    if (this._isScrolling) {
+      this._isScrolling = false;
+      this.setNeedsDisplay();
+    }
+  }
+}
