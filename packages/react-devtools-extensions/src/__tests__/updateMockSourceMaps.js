@@ -14,7 +14,10 @@ const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
 const jsx = require('acorn-jsx');
 const rollupResolve = require('rollup-plugin-node-resolve');
+const {SourceMapConsumer} = require('source-map');
 const {encode, decode} = require('sourcemap-codec');
+const {generateEncodedHookMap} = require('../generateHookMap');
+const {parse} = require('@babel/parser');
 
 const sourceDir = resolve(__dirname, '__source__');
 const buildRoot = resolve(sourceDir, '__compiled__');
@@ -22,6 +25,7 @@ const externalDir = resolve(buildRoot, 'external');
 const inlineDir = resolve(buildRoot, 'inline');
 const bundleDir = resolve(buildRoot, 'bundle');
 const noColumnsDir = resolve(buildRoot, 'no-columns');
+const extendedSourceMapDir = resolve(buildRoot, 'extended-source-map');
 
 // Remove previous builds
 emptyDirSync(buildRoot);
@@ -29,6 +33,7 @@ mkdirSync(externalDir);
 mkdirSync(inlineDir);
 mkdirSync(bundleDir);
 mkdirSync(noColumnsDir);
+mkdirSync(extendedSourceMapDir);
 
 function compile(fileName) {
   const code = readFileSync(resolve(sourceDir, fileName), 'utf8');
@@ -63,6 +68,15 @@ function compile(fileName) {
     'utf8',
   );
 
+  // Generate compiled output with external inline base64 source maps
+  writeFileSync(
+    resolve(inlineDir, fileName),
+    transformed.code +
+      '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
+      btoa(JSON.stringify(sourceMap)),
+    'utf8',
+  );
+
   // Strip column numbers from source map to mimic Webpack 'cheap-module-source-map'
   // The mappings field represents a list of integer arrays.
   // Each array defines a pair of corresponding file locations, one in the generated code and one in the original.
@@ -82,15 +96,6 @@ function compile(fileName) {
   );
   const encodedMappings = encode(decodedMappings);
 
-  // Generate compiled output with external inline base64 source maps
-  writeFileSync(
-    resolve(inlineDir, fileName),
-    transformed.code +
-      '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
-      btoa(JSON.stringify(sourceMap)),
-    'utf8',
-  );
-
   // Generate compiled output with external inline base64 source maps without column numbers
   writeFileSync(
     resolve(noColumnsDir, fileName),
@@ -100,6 +105,26 @@ function compile(fileName) {
         JSON.stringify({
           ...sourceMap,
           mappings: encodedMappings,
+        }),
+      ),
+    'utf8',
+  );
+
+  // Generate compiled output with extended an extended sourcemap that
+  // includes a map of hook names.
+  const parsed = parse(code, {
+    sourceType: 'module',
+    plugins: ['jsx', 'flow'],
+  });
+  const encodedHookMap = generateEncodedHookMap(parsed);
+  writeFileSync(
+    resolve(extendedSourceMapDir, fileName),
+    transformed.code +
+      '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
+      btoa(
+        JSON.stringify({
+          ...sourceMap,
+          x_react_hook_map: [encodedHookMap],
         }),
       ),
     'utf8',
