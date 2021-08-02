@@ -31,6 +31,7 @@ import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
 import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
+import ThemeProvider from './ThemeProvider';
 
 import styles from './DevTools.css';
 
@@ -220,38 +221,40 @@ export default function DevTools({
                   <TreeContextController>
                     <ProfilerContextController>
                       <SchedulingProfilerContextController>
-                        <div className={styles.DevTools} ref={devToolsRef}>
-                          {showTabBar && (
-                            <div className={styles.TabBar}>
-                              <ReactLogo />
-                              <span className={styles.DevToolsVersion}>
-                                {process.env.DEVTOOLS_VERSION}
-                              </span>
-                              <div className={styles.Spacer} />
-                              <TabBar
-                                currentTab={tab}
-                                id="DevTools"
-                                selectTab={setTab}
-                                tabs={tabs}
-                                type="navigation"
+                        <ThemeProvider>
+                          <div className={styles.DevTools} ref={devToolsRef}>
+                            {showTabBar && (
+                              <div className={styles.TabBar}>
+                                <ReactLogo />
+                                <span className={styles.DevToolsVersion}>
+                                  {process.env.DEVTOOLS_VERSION}
+                                </span>
+                                <div className={styles.Spacer} />
+                                <TabBar
+                                  currentTab={tab}
+                                  id="DevTools"
+                                  selectTab={setTab}
+                                  tabs={tabs}
+                                  type="navigation"
+                                />
+                              </div>
+                            )}
+                            <div
+                              className={styles.TabContent}
+                              hidden={tab !== 'components'}>
+                              <Components
+                                portalContainer={componentsPortalContainer}
                               />
                             </div>
-                          )}
-                          <div
-                            className={styles.TabContent}
-                            hidden={tab !== 'components'}>
-                            <Components
-                              portalContainer={componentsPortalContainer}
-                            />
+                            <div
+                              className={styles.TabContent}
+                              hidden={tab !== 'profiler'}>
+                              <Profiler
+                                portalContainer={profilerPortalContainer}
+                              />
+                            </div>
                           </div>
-                          <div
-                            className={styles.TabContent}
-                            hidden={tab !== 'profiler'}>
-                            <Profiler
-                              portalContainer={profilerPortalContainer}
-                            />
-                          </div>
-                        </div>
+                        </ThemeProvider>
                       </SchedulingProfilerContextController>
                     </ProfilerContextController>
                   </TreeContextController>

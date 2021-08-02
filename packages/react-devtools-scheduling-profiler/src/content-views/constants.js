@@ -82,8 +82,8 @@ export let COLORS = {
   WARNING_TEXT_INVERED: '',
 };
 
-export function updateColorsToMatchTheme(): boolean {
-  const computedStyle = getComputedStyle((document.body: any));
+export function updateColorsToMatchTheme(element: Element): boolean {
+  const computedStyle = getComputedStyle(element);
 
   // Check to see if styles have been initialized...
   if (computedStyle.getPropertyValue('--color-background') == null) {
