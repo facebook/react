@@ -44,6 +44,7 @@ import {
   enableSchedulingProfiler,
   enableLazyContextPropagation,
   enableUpdaterTracking,
+  enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -321,7 +322,7 @@ function throwException(
           // all lifecycle effect tags.
           sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
 
-          if (supportsPersistence) {
+          if (supportsPersistence && enablePersistentOffscreenHostContainer) {
             // Another legacy Suspense quirk. In persistent mode, if this is the
             // initial mount, override the props of the host container to hide
             // its contents.

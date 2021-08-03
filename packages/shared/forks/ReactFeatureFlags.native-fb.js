@@ -60,6 +60,8 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
+// TODO: Import this from internal ReactNativeFeatureFlags instead
+export const enablePersistentOffscreenHostContainer = __EXPERIMENTAL__;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
