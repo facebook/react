@@ -71,12 +71,12 @@ export class ComponentMeasuresView extends View {
   _drawSingleReactComponentMeasure(
     context: CanvasRenderingContext2D,
     rect: Rect,
-    event: ReactComponentMeasure,
+    componentMeasure: ReactComponentMeasure,
     scaleFactor: number,
     showHoverHighlight: boolean,
   ): boolean {
     const {frame} = this;
-    const {componentName, duration, timestamp, warning} = event;
+    const {componentName, duration, timestamp, warning} = componentMeasure;
 
     const xStart = timestampToPosition(timestamp, scaleFactor, frame);
     const xStop = timestampToPosition(timestamp + duration, scaleFactor, frame);
@@ -146,14 +146,13 @@ export class ComponentMeasuresView extends View {
     let didDrawMeasure = false;
     componentMeasures.forEach(componentMeasure => {
       didDrawMeasure =
-        didDrawMeasure ||
         this._drawSingleReactComponentMeasure(
           context,
           visibleArea,
           componentMeasure,
           scaleFactor,
           componentMeasure === _hoveredComponentMeasure,
-        );
+        ) || didDrawMeasure;
     });
 
     if (!didDrawMeasure) {
