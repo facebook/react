@@ -44,6 +44,7 @@ import {
   zeroPoint,
 } from './view-base';
 import {
+  ComponentMeasuresView,
   FlamechartView,
   NativeEventsView,
   ReactMeasuresView,
@@ -132,6 +133,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   const nativeEventsViewRef = useRef(null);
   const schedulingEventsViewRef = useRef(null);
   const suspenseEventsViewRef = useRef(null);
+  const componentMeasuresViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
   const syncedHorizontalPanAndZoomViewsRef = useRef<HorizontalPanAndZoomView[]>(
@@ -259,6 +261,17 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       true,
     );
 
+    let componentMeasuresViewWrapper = null;
+    if (data.componentMeasures.length > 0) {
+      const componentMeasuresView = new ComponentMeasuresView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      componentMeasuresViewRef.current = componentMeasuresView;
+      componentMeasuresViewWrapper = createViewHelper(componentMeasuresView);
+    }
+
     const flamechartView = new FlamechartView(
       surface,
       defaultFrame,
@@ -293,6 +306,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       rootView.addSubview(suspenseEventsViewWrapper);
     }
     rootView.addSubview(reactMeasuresViewWrapper);
+    if (componentMeasuresViewWrapper !== null) {
+      rootView.addSubview(componentMeasuresViewWrapper);
+    }
     rootView.addSubview(flamechartViewWrapper);
 
     // If subviews are less than the available height, fill remaining height with a solid color.
@@ -323,6 +339,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           if (prevHoverEvent === null) {
             return prevHoverEvent;
           } else if (
+            prevHoverEvent.componentMeasure !== null ||
             prevHoverEvent.flamechartStackFrame !== null ||
             prevHoverEvent.measure !== null ||
             prevHoverEvent.nativeEvent !== null ||
@@ -331,6 +348,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
             prevHoverEvent.userTimingMark !== null
           ) {
             return {
+              componentMeasure: null,
               data: prevHoverEvent.data,
               flamechartStackFrame: null,
               measure: null,
@@ -378,6 +396,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       userTimingMarksView.onHover = userTimingMark => {
         if (!hoveredEvent || hoveredEvent.userTimingMark !== userTimingMark) {
           setHoveredEvent({
+            componentMeasure: null,
             data,
             flamechartStackFrame: null,
             measure: null,
@@ -395,6 +414,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       nativeEventsView.onHover = nativeEvent => {
         if (!hoveredEvent || hoveredEvent.nativeEvent !== nativeEvent) {
           setHoveredEvent({
+            componentMeasure: null,
             data,
             flamechartStackFrame: null,
             measure: null,
@@ -412,6 +432,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       schedulingEventsView.onHover = schedulingEvent => {
         if (!hoveredEvent || hoveredEvent.schedulingEvent !== schedulingEvent) {
           setHoveredEvent({
+            componentMeasure: null,
             data,
             flamechartStackFrame: null,
             measure: null,
@@ -429,6 +450,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       suspenseEventsView.onHover = suspenseEvent => {
         if (!hoveredEvent || hoveredEvent.suspenseEvent !== suspenseEvent) {
           setHoveredEvent({
+            componentMeasure: null,
             data,
             flamechartStackFrame: null,
             measure: null,
@@ -446,9 +468,31 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       reactMeasuresView.onHover = measure => {
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
+            componentMeasure: null,
             data,
             flamechartStackFrame: null,
             measure,
+            nativeEvent: null,
+            schedulingEvent: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: componentMeasuresView} = componentMeasuresViewRef;
+    if (componentMeasuresView) {
+      componentMeasuresView.onHover = componentMeasure => {
+        if (
+          !hoveredEvent ||
+          hoveredEvent.componentMeasure !== componentMeasure
+        ) {
+          setHoveredEvent({
+            componentMeasure,
+            data,
+            flamechartStackFrame: null,
+            measure: null,
             nativeEvent: null,
             schedulingEvent: null,
             suspenseEvent: null,
@@ -466,6 +510,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           hoveredEvent.flamechartStackFrame !== flamechartStackFrame
         ) {
           setHoveredEvent({
+            componentMeasure: null,
             data,
             flamechartStackFrame,
             measure: null,
@@ -540,6 +585,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
             return null;
           }
           const {
+            componentMeasure,
             flamechartStackFrame,
             measure,
             schedulingEvent,
@@ -547,6 +593,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           } = contextData.hoveredEvent;
           return (
             <Fragment>
+              {componentMeasure !== null && (
+                <ContextMenuItem
+                  onClick={() => copy(componentMeasure.componentName)}
+                  title="Copy component name">
+                  Copy component name
+                </ContextMenuItem>
+              )}
               {schedulingEvent !== null && (
                 <ContextMenuItem
                   onClick={() => copy(schedulingEvent.componentName)}

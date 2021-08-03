@@ -91,6 +91,13 @@ export type ReactMeasure = {|
   +depth: number,
 |};
 
+export type ReactComponentMeasure = {|
+  +componentName: string,
+  duration: Milliseconds,
+  +timestamp: Milliseconds,
+  warning: string | null,
+|};
+
 /**
  * A flamechart stack frame belonging to a stack trace.
  */
@@ -117,6 +124,7 @@ export type FlamechartStackLayer = FlamechartStackFrame[];
 export type Flamechart = FlamechartStackLayer[];
 
 export type ReactProfilerData = {|
+  componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
   measures: ReactMeasure[],
@@ -128,6 +136,7 @@ export type ReactProfilerData = {|
 |};
 
 export type ReactHoverContextInfo = {|
+  componentMeasure: ReactComponentMeasure | null,
   data: $ReadOnly<ReactProfilerData> | null,
   flamechartStackFrame: FlamechartStackFrame | null,
   measure: ReactMeasure | null,

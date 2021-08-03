@@ -18,6 +18,7 @@ import type {
   Flamechart,
   NativeEvent,
   ReactLane,
+  ReactComponentMeasure,
   ReactMeasureType,
   ReactProfilerData,
   SuspenseEvent,
@@ -36,6 +37,7 @@ type MeasureStackElement = {|
 
 type ProcessorState = {|
   batchUID: BatchUID,
+  currentReactComponentMeasure: ReactComponentMeasure | null,
   measureStack: MeasureStackElement[],
   nativeEventStack: NativeEvent[],
   nextRenderShouldGenerateNewBatchID: boolean,
@@ -240,8 +242,32 @@ function processTimelineEvent(
     case 'blink.user_timing':
       const startTime = (ts - currentProfilerData.startTime) / 1000;
 
-      // React Events - schedule
-      if (name.startsWith('--schedule-render-')) {
+      if (name.startsWith('--component-render-start-')) {
+        const [componentName] = name.substr(25).split('-');
+
+        if (state.currentReactComponentMeasure !== null) {
+          console.error(
+            'Render started while another render in progress:',
+            state.currentReactComponentMeasure,
+          );
+        }
+
+        state.currentReactComponentMeasure = {
+          componentName,
+          timestamp: startTime,
+          duration: 0,
+          warning: null,
+        };
+      } else if (name === '--component-render-stop') {
+        if (state.currentReactComponentMeasure !== null) {
+          const componentMeasure = state.currentReactComponentMeasure;
+          componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+          state.currentReactComponentMeasure = null;
+
+          currentProfilerData.componentMeasures.push(componentMeasure);
+        }
+      } else if (name.startsWith('--schedule-render-')) {
         const [laneBitmaskString, laneLabels] = name.substr(18).split('-');
         currentProfilerData.schedulingEvents.push({
           type: 'schedule-render',
@@ -581,6 +607,7 @@ export default function preprocessData(
   const flamechart = preprocessFlamechart(timeline);
 
   const profilerData: ReactProfilerData = {
+    componentMeasures: [],
     duration: 0,
     flamechart,
     measures: [],
@@ -619,6 +646,7 @@ export default function preprocessData(
 
   const state: ProcessorState = {
     batchUID: 0,
+    currentReactComponentMeasure: null,
     measureStack: [],
     nativeEventStack: [],
     nextRenderShouldGenerateNewBatchID: true,

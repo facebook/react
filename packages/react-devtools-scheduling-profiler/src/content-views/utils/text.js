@@ -41,11 +41,10 @@ export function drawText(
   context: CanvasRenderingContext2D,
   fullRect: Rect,
   drawableRect: Rect,
-  availableWidth: number,
   textAlign: 'left' | 'center' = 'left',
   fillStyle: string = COLORS.TEXT_COLOR,
 ): void {
-  if (availableWidth > TEXT_PADDING * 2) {
+  if (fullRect.size.width > TEXT_PADDING * 2) {
     context.textAlign = textAlign;
     context.textBaseline = 'middle';
     context.font = `${FONT_SIZE}px sans-serif`;
@@ -55,7 +54,7 @@ export function drawText(
     const trimmedName = trimText(
       context,
       text,
-      availableWidth - TEXT_PADDING * 2 + (x < 0 ? x : 0),
+      fullRect.size.width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
     );
 
     if (trimmedName !== null) {
@@ -81,7 +80,7 @@ export function drawText(
 
       let textX;
       if (textAlign === 'center') {
-        textX = x + availableWidth / 2 + TEXT_PADDING - (x < 0 ? x : 0);
+        textX = x + fullRect.size.width / 2 + TEXT_PADDING - (x < 0 ? x : 0);
       } else {
         textX = x + TEXT_PADDING - (x < 0 ? x : 0);
       }

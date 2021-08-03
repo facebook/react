@@ -110,7 +110,6 @@ class ResizeBar extends View {
         context,
         labelRect,
         drawableRect,
-        visibleArea.size.width,
         'center',
         COLORS.REACT_RESIZE_BAR_DOT,
       );

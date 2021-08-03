@@ -31,7 +31,10 @@ import type {
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import checkPropTypes from 'shared/checkPropTypes';
-
+import {
+  markComponentRenderStarted,
+  markComponentRenderStopped,
+} from './SchedulingProfiler';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -85,6 +88,7 @@ import {
   enableCache,
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
+  enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
@@ -357,6 +361,9 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderLanes);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
@@ -396,6 +403,9 @@ function updateForwardRef(
       ref,
       renderLanes,
     );
+  }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
   }
 
   if (current !== null && !didReceiveUpdate) {
@@ -958,6 +968,9 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderLanes);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
@@ -997,6 +1010,9 @@ function updateFunctionComponent(
       context,
       renderLanes,
     );
+  }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
   }
 
   if (current !== null && !didReceiveUpdate) {
@@ -1177,6 +1193,9 @@ function finishClassComponent(
       stopProfilerTimerIfRunning(workInProgress);
     }
   } else {
+    if (enableSchedulingProfiler) {
+      markComponentRenderStarted(workInProgress);
+    }
     if (__DEV__) {
       setIsRendering(true);
       nextChildren = instance.render();
@@ -1194,6 +1213,9 @@ function finishClassComponent(
       setIsRendering(false);
     } else {
       nextChildren = instance.render();
+    }
+    if (enableSchedulingProfiler) {
+      markComponentRenderStopped();
     }
   }
 
@@ -1567,6 +1589,9 @@ function mountIndeterminateComponent(
   prepareToReadContext(workInProgress, renderLanes);
   let value;
 
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   if (__DEV__) {
     if (
       Component.prototype &&
@@ -1610,6 +1635,10 @@ function mountIndeterminateComponent(
       renderLanes,
     );
   }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
+  }
+
   // React DevTools reads this flag.
   workInProgress.flags |= PerformedWork;
 
@@ -3195,6 +3224,9 @@ function updateContextConsumer(
 
   prepareToReadContext(workInProgress, renderLanes);
   const newValue = readContext(context);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
@@ -3203,6 +3235,9 @@ function updateContextConsumer(
     setIsRendering(false);
   } else {
     newChildren = render(newValue);
+  }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
   }
 
   // React DevTools reads this flag.

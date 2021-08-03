@@ -50,6 +50,8 @@ export let COLORS = {
   PRIORITY_LABEL: '',
   USER_TIMING: '',
   USER_TIMING_HOVER: '',
+  REACT_COMPONENT_MEASURE: '',
+  REACT_COMPONENT_MEASURE_HOVER: '',
   REACT_IDLE: '',
   REACT_IDLE_HOVER: '',
   REACT_RENDER: '',
@@ -75,6 +77,7 @@ export let COLORS = {
   REACT_WORK_BORDER: '',
   SCROLL_CARET: '',
   TEXT_COLOR: '',
+  TEXT_DIM_COLOR: '',
   TIME_MARKER_LABEL: '',
   WARNING_BACKGROUND: '',
   WARNING_BACKGROUND_HOVER: '',
@@ -110,6 +113,12 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     USER_TIMING_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-user-timing-hover',
+    ),
+    REACT_COMPONENT_MEASURE: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-render',
+    ),
+    REACT_COMPONENT_MEASURE_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-render-hover',
     ),
     REACT_IDLE: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-idle',
@@ -181,6 +190,9 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     SCROLL_CARET: computedStyle.getPropertyValue('--color-scroll-caret'),
     TEXT_COLOR: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-text-color',
+    ),
+    TEXT_DIM_COLOR: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-text-dim-color',
     ),
     TIME_MARKER_LABEL: computedStyle.getPropertyValue('--color-text'),
     WARNING_BACKGROUND: computedStyle.getPropertyValue(

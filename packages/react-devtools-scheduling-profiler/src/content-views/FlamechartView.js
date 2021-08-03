@@ -128,7 +128,7 @@ class FlamechartStackLayerView extends View {
       visibleArea,
     } = this;
 
-    context.fillStyle = COLORS.BACKGROUND;
+    context.fillStyle = COLORS.PRIORITY_BACKGROUND;
     context.fillRect(
       visibleArea.origin.x,
       visibleArea.origin.y,
@@ -172,7 +172,29 @@ class FlamechartStackLayerView extends View {
         drawableRect.size.height,
       );
 
-      drawText(name, context, nodeRect, drawableRect, width);
+      drawText(name, context, nodeRect, drawableRect);
+    }
+
+    // Render bottom border.
+    const borderFrame: Rect = {
+      origin: {
+        x: frame.origin.x,
+        y: frame.origin.y + FLAMECHART_FRAME_HEIGHT - BORDER_SIZE,
+      },
+      size: {
+        width: frame.size.width,
+        height: BORDER_SIZE,
+      },
+    };
+    if (rectIntersectsRect(borderFrame, visibleArea)) {
+      const borderDrawableRect = intersectionOfRects(borderFrame, visibleArea);
+      context.fillStyle = COLORS.PRIORITY_BORDER;
+      context.fillRect(
+        borderDrawableRect.origin.x,
+        borderDrawableRect.origin.y,
+        borderDrawableRect.size.width,
+        borderDrawableRect.size.height,
+      );
     }
   }
 
