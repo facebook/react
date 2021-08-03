@@ -41,7 +41,7 @@ export function drawText(
   context: CanvasRenderingContext2D,
   fullRect: Rect,
   drawableRect: Rect,
-  availableWidth: number,
+  availableWidth: number, // TODO Do we need this?
   textAlign: 'left' | 'center' = 'left',
   fillStyle: string = COLORS.TEXT_COLOR,
 ): void {

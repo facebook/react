@@ -187,10 +187,7 @@ class FlamechartStackLayerView extends View {
       },
     };
     if (rectIntersectsRect(borderFrame, visibleArea)) {
-      const borderDrawableRect = intersectionOfRects(
-        borderFrame,
-        visibleArea,
-      );
+      const borderDrawableRect = intersectionOfRects(borderFrame, visibleArea);
       context.fillStyle = COLORS.PRIORITY_BORDER;
       context.fillRect(
         borderDrawableRect.origin.x,

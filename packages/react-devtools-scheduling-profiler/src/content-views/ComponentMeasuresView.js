@@ -74,7 +74,7 @@ export class ComponentMeasuresView extends View {
     event: ReactComponentMeasure,
     scaleFactor: number,
     showHoverHighlight: boolean,
-  ) {
+  ): boolean {
     const {frame} = this;
     const {componentName, duration, timestamp, warning} = event;
 
@@ -88,12 +88,12 @@ export class ComponentMeasuresView extends View {
       size: {width: xStop - xStart, height: NATIVE_EVENT_HEIGHT},
     };
     if (!rectIntersectsRect(componentMeasureRect, rect)) {
-      return; // Not in view
+      return false; // Not in view
     }
 
     const width = durationToWidth(duration, scaleFactor);
     if (width < 1) {
-      return; // Too small to render at this zoom level
+      return false; // Too small to render at this zoom level
     }
 
     const drawableRect = intersectionOfRects(componentMeasureRect, rect);
@@ -117,6 +117,8 @@ export class ComponentMeasuresView extends View {
     const label = `${componentName} rendered - ${formatDuration(duration)}`;
 
     drawText(label, context, componentMeasureRect, drawableRect, width);
+
+    return true;
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -141,15 +143,30 @@ export class ComponentMeasuresView extends View {
       frame,
     );
 
+    let didDrawMeasure = false;
     componentMeasures.forEach(componentMeasure => {
-      this._drawSingleReactComponentMeasure(
+      didDrawMeasure =
+        didDrawMeasure ||
+        this._drawSingleReactComponentMeasure(
+          context,
+          visibleArea,
+          componentMeasure,
+          scaleFactor,
+          componentMeasure === _hoveredComponentMeasure,
+        );
+    });
+
+    if (!didDrawMeasure) {
+      drawText(
+        '(zoom or pan to see React components)',
         context,
         visibleArea,
-        componentMeasure,
-        scaleFactor,
-        componentMeasure === _hoveredComponentMeasure,
+        visibleArea,
+        visibleArea.size.width,
+        'center',
+        COLORS.TEXT_DIM_COLOR,
       );
-    });
+    }
 
     context.fillStyle = COLORS.PRIORITY_BORDER;
     context.fillRect(

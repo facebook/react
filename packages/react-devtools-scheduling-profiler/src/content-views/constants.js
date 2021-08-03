@@ -77,6 +77,7 @@ export let COLORS = {
   REACT_WORK_BORDER: '',
   SCROLL_CARET: '',
   TEXT_COLOR: '',
+  TEXT_DIM_COLOR: '',
   TIME_MARKER_LABEL: '',
   WARNING_BACKGROUND: '',
   WARNING_BACKGROUND_HOVER: '',
@@ -189,6 +190,9 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     SCROLL_CARET: computedStyle.getPropertyValue('--color-scroll-caret'),
     TEXT_COLOR: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-text-color',
+    ),
+    TEXT_DIM_COLOR: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-text-dim-color',
     ),
     TIME_MARKER_LABEL: computedStyle.getPropertyValue('--color-text'),
     WARNING_BACKGROUND: computedStyle.getPropertyValue(
