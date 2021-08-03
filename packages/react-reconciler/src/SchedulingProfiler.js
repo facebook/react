@@ -97,6 +97,23 @@ export function markCommitStopped(): void {
   }
 }
 
+export function markComponentRenderStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      markAndClear(`--component-render-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentRenderStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-render-stop');
+    }
+  }
+}
+
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
 // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
