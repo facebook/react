@@ -245,6 +245,13 @@ function processTimelineEvent(
       if (name.startsWith('--component-render-start-')) {
         const [componentName] = name.substr(25).split('-');
 
+        if (state.currentReactComponentMeasure !== null) {
+          console.error(
+            'Render started while another render in progress:',
+            state.currentReactComponentMeasure,
+          );
+        }
+
         state.currentReactComponentMeasure = {
           componentName,
           timestamp: startTime,

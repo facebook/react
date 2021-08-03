@@ -203,6 +203,7 @@ describe(preprocessData, () => {
     });
 
     expect(preprocessData([cpuProfilerSample, randomSample])).toStrictEqual({
+      componentMeasures: [],
       duration: 0.002,
       flamechart: [],
       measures: [],
@@ -259,6 +260,7 @@ describe(preprocessData, () => {
         }),
       ]),
     ).toStrictEqual({
+      componentMeasures: [],
       duration: 0.008,
       flamechart: [],
       measures: [
@@ -323,6 +325,7 @@ describe(preprocessData, () => {
 
     const userTimingData = createUserTimingData(clearedMarks);
     expect(preprocessData(userTimingData)).toStrictEqual({
+      componentMeasures: [],
       duration: 0.011,
       flamechart: [],
       measures: [
@@ -405,13 +408,27 @@ describe(preprocessData, () => {
 
     const userTimingData = createUserTimingData(clearedMarks);
     expect(preprocessData(userTimingData)).toStrictEqual({
-      duration: 0.022,
+      componentMeasures: [
+        {
+          componentName: 'App',
+          duration: 0.001,
+          timestamp: 0.007,
+          warning: null,
+        },
+        {
+          componentName: 'App',
+          duration: 0.0010000000000000009,
+          timestamp: 0.018,
+          warning: null,
+        },
+      ],
+      duration: 0.026,
       flamechart: [],
       measures: [
         {
           batchUID: 0,
           depth: 0,
-          duration: 0.004999999999999999,
+          duration: 0.006999999999999999,
           laneLabels: ['Default'],
           lanes: [4],
           timestamp: 0.006,
@@ -420,7 +437,7 @@ describe(preprocessData, () => {
         {
           batchUID: 0,
           depth: 0,
-          duration: 0.001,
+          duration: 0.002999999999999999,
           laneLabels: ['Default'],
           lanes: [4],
           timestamp: 0.006,
@@ -432,7 +449,7 @@ describe(preprocessData, () => {
           duration: 0.002999999999999999,
           laneLabels: ['Default'],
           lanes: [4],
-          timestamp: 0.008,
+          timestamp: 0.01,
           type: 'commit',
         },
         {
@@ -441,7 +458,7 @@ describe(preprocessData, () => {
           duration: 0.0010000000000000009,
           laneLabels: ['Default'],
           lanes: [4],
-          timestamp: 0.009,
+          timestamp: 0.011,
           type: 'layout-effects',
         },
         {
@@ -450,26 +467,17 @@ describe(preprocessData, () => {
           duration: 0.002,
           laneLabels: ['Default'],
           lanes: [4],
-          timestamp: 0.012,
+          timestamp: 0.014,
           type: 'passive-effects',
         },
         {
           batchUID: 1,
           depth: 0,
-          duration: 0.005000000000000001,
+          duration: 0.006999999999999999,
           laneLabels: ['Default'],
           lanes: [4],
-          timestamp: 0.015,
+          timestamp: 0.017,
           type: 'render-idle',
-        },
-        {
-          batchUID: 1,
-          depth: 0,
-          duration: 0.0010000000000000009,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.015,
-          type: 'render',
         },
         {
           batchUID: 1,
@@ -478,6 +486,15 @@ describe(preprocessData, () => {
           laneLabels: ['Default'],
           lanes: [4],
           timestamp: 0.017,
+          type: 'render',
+        },
+        {
+          batchUID: 1,
+          depth: 0,
+          duration: 0.002999999999999999,
+          laneLabels: ['Default'],
+          lanes: [4],
+          timestamp: 0.021,
           type: 'commit',
         },
         {
@@ -486,7 +503,7 @@ describe(preprocessData, () => {
           duration: 0.0010000000000000009,
           laneLabels: ['Default'],
           lanes: [4],
-          timestamp: 0.018,
+          timestamp: 0.022,
           type: 'layout-effects',
         },
         {
@@ -495,7 +512,7 @@ describe(preprocessData, () => {
           duration: 0.0009999999999999974,
           laneLabels: ['Default'],
           lanes: [4],
-          timestamp: 0.021,
+          timestamp: 0.025,
           type: 'passive-effects',
         },
       ],
@@ -522,7 +539,7 @@ describe(preprocessData, () => {
           componentName: 'App',
           laneLabels: ['Default'],
           lanes: [4],
-          timestamp: 0.013,
+          timestamp: 0.015,
           type: 'schedule-state-update',
           warning: null,
         },

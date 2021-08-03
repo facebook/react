@@ -70,7 +70,10 @@ import {
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.new';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
-import {markComponentSuspended} from './SchedulingProfiler';
+import {
+  markComponentRenderStopped,
+  markComponentSuspended,
+} from './SchedulingProfiler';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {
   SyncLane,
@@ -244,6 +247,7 @@ function throwException(
     }
 
     if (enableSchedulingProfiler) {
+      markComponentRenderStopped();
       markComponentSuspended(sourceFiber, wakeable, rootRenderLanes);
     }
 
