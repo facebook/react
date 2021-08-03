@@ -231,7 +231,7 @@ export class SuspenseEventsView extends View {
         label += ` - ${formatDuration(duration)}`;
       }
 
-      drawText(label, context, eventRect, drawableRect, width);
+      drawText(label, context, eventRect, drawableRect);
     }
   }
 

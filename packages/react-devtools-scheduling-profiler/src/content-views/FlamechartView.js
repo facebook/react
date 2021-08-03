@@ -172,7 +172,7 @@ class FlamechartStackLayerView extends View {
         drawableRect.size.height,
       );
 
-      drawText(name, context, nodeRect, drawableRect, width);
+      drawText(name, context, nodeRect, drawableRect);
     }
 
     // Render bottom border.

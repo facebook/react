@@ -116,7 +116,7 @@ export class ComponentMeasuresView extends View {
 
     const label = `${componentName} rendered - ${formatDuration(duration)}`;
 
-    drawText(label, context, componentMeasureRect, drawableRect, width);
+    drawText(label, context, componentMeasureRect, drawableRect);
 
     return true;
   }
@@ -162,7 +162,6 @@ export class ComponentMeasuresView extends View {
         context,
         visibleArea,
         visibleArea,
-        visibleArea.size.width,
         'center',
         COLORS.TEXT_DIM_COLOR,
       );

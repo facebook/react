@@ -143,7 +143,7 @@ export class NativeEventsView extends View {
 
     const label = `${type} - ${formatDuration(duration)}`;
 
-    drawText(label, context, eventRect, drawableRect, width);
+    drawText(label, context, eventRect, drawableRect);
   }
 
   draw(context: CanvasRenderingContext2D) {
