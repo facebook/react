@@ -11,6 +11,7 @@ import type {Point} from './view-base';
 import type {
   FlamechartStackFrame,
   NativeEvent,
+  ReactComponentMeasure,
   ReactHoverContextInfo,
   ReactMeasure,
   ReactProfilerData,
@@ -81,6 +82,7 @@ export default function EventTooltip({
   }
 
   const {
+    componentMeasure,
     flamechartStackFrame,
     measure,
     nativeEvent,
@@ -89,7 +91,14 @@ export default function EventTooltip({
     userTimingMark,
   } = hoveredEvent;
 
-  if (nativeEvent !== null) {
+  if (componentMeasure !== null) {
+    return (
+      <TooltipReactComponentMeasure
+        componentMeasure={componentMeasure}
+        tooltipRef={tooltipRef}
+      />
+    );
+  } else if (nativeEvent !== null) {
     return (
       <TooltipNativeEvent nativeEvent={nativeEvent} tooltipRef={tooltipRef} />
     );
@@ -129,6 +138,38 @@ export default function EventTooltip({
   }
   return null;
 }
+
+const TooltipReactComponentMeasure = ({
+  componentMeasure,
+  tooltipRef,
+}: {
+  componentMeasure: ReactComponentMeasure,
+  tooltipRef: Return<typeof useRef>,
+}) => {
+  const {componentName, duration, timestamp, warning} = componentMeasure;
+
+  const label = `${componentName} rendered`;
+
+  return (
+    <div className={styles.Tooltip} ref={tooltipRef}>
+      <div className={styles.TooltipSection}>
+        {trimString(label, 768)}
+        <div className={styles.Divider} />
+        <div className={styles.DetailsGrid}>
+          <div className={styles.DetailsGridLabel}>Timestamp:</div>
+          <div>{formatTimestamp(timestamp)}</div>
+          <div className={styles.DetailsGridLabel}>Duration:</div>
+          <div>{formatDuration(duration)}</div>
+        </div>
+      </div>
+      {warning !== null && (
+        <div className={styles.TooltipWarningSection}>
+          <div className={styles.WarningText}>{warning}</div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TooltipFlamechartNode = ({
   stackFrame,

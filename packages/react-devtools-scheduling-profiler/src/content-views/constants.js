@@ -50,6 +50,8 @@ export let COLORS = {
   PRIORITY_LABEL: '',
   USER_TIMING: '',
   USER_TIMING_HOVER: '',
+  REACT_COMPONENT_MEASURE: '',
+  REACT_COMPONENT_MEASURE_HOVER: '',
   REACT_IDLE: '',
   REACT_IDLE_HOVER: '',
   REACT_RENDER: '',
@@ -110,6 +112,12 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     USER_TIMING_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-user-timing-hover',
+    ),
+    REACT_COMPONENT_MEASURE: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-render',
+    ),
+    REACT_COMPONENT_MEASURE_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-render-hover',
     ),
     REACT_IDLE: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-idle',
