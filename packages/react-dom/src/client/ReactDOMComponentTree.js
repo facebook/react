@@ -36,6 +36,7 @@ import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 // const randomKey = Math.random()
 //   .toString(36)
 //   .slice(2);
+// HACK: not so random anymore
 const randomKey = '';
 const internalInstanceKey = '__reactFiber$' + randomKey;
 const internalPropsKey = '__reactProps$' + randomKey;
