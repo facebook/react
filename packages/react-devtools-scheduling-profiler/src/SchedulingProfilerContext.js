@@ -14,6 +14,7 @@ import createDataResourceFromImportedFile from './createDataResourceFromImported
 import type {DataResource} from './createDataResourceFromImportedFile';
 
 export type Context = {|
+  clearSchedulingProfilerData: () => void,
   importSchedulingProfilerData: (file: File) => void,
   schedulingProfilerData: DataResource | null,
 |};
@@ -33,6 +34,10 @@ function SchedulingProfilerContextController({children}: Props) {
     setSchedulingProfilerData,
   ] = useState<DataResource | null>(null);
 
+  const clearSchedulingProfilerData = useCallback(() => {
+    setSchedulingProfilerData(null);
+  }, []);
+
   const importSchedulingProfilerData = useCallback((file: File) => {
     setSchedulingProfilerData(createDataResourceFromImportedFile(file));
   }, []);
@@ -41,11 +46,13 @@ function SchedulingProfilerContextController({children}: Props) {
 
   const value = useMemo(
     () => ({
+      clearSchedulingProfilerData,
       importSchedulingProfilerData,
       schedulingProfilerData,
       // TODO (scheduling profiler)
     }),
     [
+      clearSchedulingProfilerData,
       importSchedulingProfilerData,
       schedulingProfilerData,
       // TODO (scheduling profiler)
