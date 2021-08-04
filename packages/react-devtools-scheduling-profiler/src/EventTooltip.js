@@ -105,6 +105,7 @@ export default function EventTooltip({
   } else if (schedulingEvent !== null) {
     return (
       <TooltipSchedulingEvent
+        data={data}
         schedulingEvent={schedulingEvent}
         tooltipRef={tooltipRef}
       />
@@ -234,9 +235,11 @@ const TooltipNativeEvent = ({
 };
 
 const TooltipSchedulingEvent = ({
+  data,
   schedulingEvent,
   tooltipRef,
 }: {
+  data: ReactProfilerData,
   schedulingEvent: SchedulingEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
@@ -257,8 +260,10 @@ const TooltipSchedulingEvent = ({
     case 'schedule-render':
     case 'schedule-state-update':
     case 'schedule-force-update':
-      laneLabels = schedulingEvent.laneLabels;
       lanes = schedulingEvent.lanes;
+      laneLabels = lanes.map(
+        lane => ((data.laneToLabelMap.get(lane): any): string),
+      );
       break;
   }
 
@@ -366,8 +371,12 @@ const TooltipReactMeasure = ({
     return null;
   }
 
-  const {batchUID, duration, timestamp, lanes, laneLabels} = measure;
+  const {batchUID, duration, timestamp, lanes} = measure;
   const [startTime, stopTime] = getBatchRange(batchUID, data);
+
+  const laneLabels = lanes.map(
+    lane => ((data.laneToLabelMap.get(lane): any): string),
+  );
 
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>

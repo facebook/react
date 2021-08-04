@@ -38,7 +38,6 @@ type BaseReactEvent = {|
 type BaseReactScheduleEvent = {|
   ...BaseReactEvent,
   +lanes: ReactLane[],
-  +laneLabels: string[],
 |};
 export type ReactScheduleRenderEvent = {|
   ...BaseReactScheduleEvent,
@@ -84,7 +83,6 @@ export type BatchUID = number;
 export type ReactMeasure = {|
   +type: ReactMeasureType,
   +lanes: ReactLane[],
-  +laneLabels: string[],
   +timestamp: Milliseconds,
   +duration: Milliseconds,
   +batchUID: BatchUID,
@@ -131,6 +129,7 @@ export type ReactProfilerData = {|
   measures: ReactMeasure[],
   nativeEvents: NativeEvent[],
   otherUserTimingMarks: UserTimingMark[],
+  reactVersion: string | null,
   schedulingEvents: SchedulingEvent[],
   startTime: number,
   suspenseEvents: SuspenseEvent[],

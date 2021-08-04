@@ -45,6 +45,10 @@ type ProcessorState = {|
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
 |};
 
+// Increment this number any time a backwards breaking change is made to the profiler metadata.
+// It should be in sync with the version in react-reconciler/src/SchedulingProfiler
+const SUPPORTED_PROFILER_VERSION = 1;
+
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
 
 const WARNING_STRINGS = {
@@ -80,6 +84,23 @@ export function getLanesFromTransportDecimalBitmask(
   return lanes;
 }
 
+const laneToLabelMap: Map<number, string> = new Map();
+function updateLaneToLabelMap(laneLabelTuplesString: string): void {
+  // These marks appear multiple times in the data;
+  // We only need to extact them once.
+  if (laneToLabelMap.size === 0) {
+    const laneLabelTuples = laneLabelTuplesString.split(',');
+    for (let laneIndex = 0; laneIndex < laneLabelTuples.length; laneIndex++) {
+      // The numeric lane value (e.g. 64) isn't important.
+      // The profiler parses and stores the lane's position within the bitmap,
+      // (e.g. lane 1 is index 0, lane 16 is index 4).
+      laneToLabelMap.set(laneIndex, laneLabelTuples[laneIndex]);
+    }
+  }
+}
+
+let profilerVersion = null;
+
 function getLastType(stack: $PropertyType<ProcessorState, 'measureStack'>) {
   if (stack.length > 0) {
     const {type} = stack[stack.length - 1];
@@ -100,7 +121,6 @@ function markWorkStarted(
   type: ReactMeasureType,
   startTime: Milliseconds,
   lanes: ReactLane[],
-  laneLabels: Array<string>,
   currentProfilerData: ReactProfilerData,
   state: ProcessorState,
 ) {
@@ -115,7 +135,6 @@ function markWorkStarted(
     batchUID,
     depth,
     lanes,
-    laneLabels,
     timestamp: startTime,
     duration: 0,
   });
@@ -169,30 +188,6 @@ function throwIfIncomplete(
         `Unexpected type "${type}" started before "${last.type}" completed.`,
       );
     }
-  }
-}
-
-const laneToLabelMap: Map<number, string> = new Map();
-
-function updateLaneToLabelMap(
-  lanes: ReactLane[],
-  laneLabels: Array<string>,
-): void {
-  // The lanes and lane labels Arrays are not guaranteed to be in the same order,
-  // nor are they guaranteed to be the same length (there may be multiple lanes with the same labe, e.g. Retry)
-  // We can only match them up definitively when there's only one label.
-  // This is why we extract this information while parsing the overall profile.
-  // It's possible that we will not be able to unambiguously extract all lane-labels this way.
-  //
-  // TODO Maybe we should reconsider the logging format used by the scheduling profiler?
-  // Instead of logging lanes+labels for each event, just log lane numbers with individual events
-  // and periodically print a lane-to-label mapping for all `TotalLanes` lanes.
-  if (laneLabels.length === 1) {
-    let laneLabel = laneLabels[0];
-    laneLabel = laneLabel.replace('(s)', ''); // TODO Gross hack
-    lanes.forEach(lane => {
-      laneToLabelMap.set(lane, laneLabel);
-    });
   }
 }
 
@@ -266,7 +261,21 @@ function processTimelineEvent(
     case 'blink.user_timing':
       const startTime = (ts - currentProfilerData.startTime) / 1000;
 
-      if (name.startsWith('--component-render-start-')) {
+      if (name.startsWith('--react-version-')) {
+        const [reactVersion] = name.substr(16).split('-');
+        currentProfilerData.reactVersion = reactVersion;
+      } else if (name.startsWith('--profiler-version-')) {
+        const [versionString] = name.substr(19).split('-');
+        profilerVersion = parseInt(versionString, 10);
+        if (profilerVersion !== SUPPORTED_PROFILER_VERSION) {
+          throw new InvalidProfileError(
+            `This version of profiling data (${versionString}) is not supported by the current profiler.`,
+          );
+        }
+      } else if (name.startsWith('--react-lane-labels-')) {
+        const [laneLabelTuplesString] = name.substr(20).split('-');
+        updateLaneToLabelMap(laneLabelTuplesString);
+      } else if (name.startsWith('--component-render-start-')) {
         const [componentName] = name.substr(25).split('-');
 
         if (state.currentReactComponentMeasure !== null) {
@@ -292,28 +301,16 @@ function processTimelineEvent(
           currentProfilerData.componentMeasures.push(componentMeasure);
         }
       } else if (name.startsWith('--schedule-render-')) {
-        const [laneBitmaskString, laneLabelsString] = name
-          .substr(18)
-          .split('-');
-
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-        const laneLabels = laneLabelsString ? laneLabelsString.split(',') : [];
-
-        updateLaneToLabelMap(lanes, laneLabels);
+        const [laneBitmaskString] = name.substr(18).split('-');
 
         currentProfilerData.schedulingEvents.push({
           type: 'schedule-render',
-          lanes,
-          laneLabels,
+          lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           timestamp: startTime,
           warning: null,
         });
       } else if (name.startsWith('--schedule-forced-update-')) {
-        const [
-          laneBitmaskString,
-          laneLabelsString,
-          componentName,
-        ] = name.substr(25).split('-');
+        const [laneBitmaskString, componentName] = name.substr(25).split('-');
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
@@ -321,25 +318,15 @@ function processTimelineEvent(
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-        const laneLabels = laneLabelsString ? laneLabelsString.split(',') : [];
-
-        updateLaneToLabelMap(lanes, laneLabels);
-
         currentProfilerData.schedulingEvents.push({
           type: 'schedule-force-update',
-          lanes,
-          laneLabels,
+          lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           componentName,
           timestamp: startTime,
           warning,
         });
       } else if (name.startsWith('--schedule-state-update-')) {
-        const [
-          laneBitmaskString,
-          laneLabelsString,
-          componentName,
-        ] = name.substr(24).split('-');
+        const [laneBitmaskString, componentName] = name.substr(24).split('-');
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
@@ -347,15 +334,9 @@ function processTimelineEvent(
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-        const laneLabels = laneLabelsString ? laneLabelsString.split(',') : [];
-
-        updateLaneToLabelMap(lanes, laneLabels);
-
         currentProfilerData.schedulingEvents.push({
           type: 'schedule-state-update',
-          lanes,
-          laneLabels,
+          lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           componentName,
           timestamp: startTime,
           warning,
@@ -457,22 +438,14 @@ function processTimelineEvent(
           state.nextRenderShouldGenerateNewBatchID = false;
           state.batchUID = ((state.uidCounter++: any): BatchUID);
         }
-        const [laneBitmaskString, laneLabelsString] = name
-          .substr(15)
-          .split('-');
-
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-        const laneLabels = laneLabelsString ? laneLabelsString.split(',') : [];
-
-        updateLaneToLabelMap(lanes, laneLabels);
+        const [laneBitmaskString] = name.substr(15).split('-');
 
         throwIfIncomplete('render', state.measureStack);
         if (getLastType(state.measureStack) !== 'render-idle') {
           markWorkStarted(
             'render-idle',
             startTime,
-            lanes,
-            laneLabels,
+            getLanesFromTransportDecimalBitmask(laneBitmaskString),
             currentProfilerData,
             state,
           );
@@ -480,8 +453,7 @@ function processTimelineEvent(
         markWorkStarted(
           'render',
           startTime,
-          lanes,
-          laneLabels,
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -525,20 +497,12 @@ function processTimelineEvent(
       // React Measures - commits
       else if (name.startsWith('--commit-start-')) {
         state.nextRenderShouldGenerateNewBatchID = true;
-        const [laneBitmaskString, laneLabelsString] = name
-          .substr(15)
-          .split('-');
-
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-        const laneLabels = laneLabelsString ? laneLabelsString.split(',') : [];
-
-        updateLaneToLabelMap(lanes, laneLabels);
+        const [laneBitmaskString] = name.substr(15).split('-');
 
         markWorkStarted(
           'commit',
           startTime,
-          lanes,
-          laneLabels,
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -559,20 +523,12 @@ function processTimelineEvent(
 
       // React Measures - layout effects
       else if (name.startsWith('--layout-effects-start-')) {
-        const [laneBitmaskString, laneLabelsString] = name
-          .substr(23)
-          .split('-');
-
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-        const laneLabels = laneLabelsString ? laneLabelsString.split(',') : [];
-
-        updateLaneToLabelMap(lanes, laneLabels);
+        const [laneBitmaskString] = name.substr(23).split('-');
 
         markWorkStarted(
           'layout-effects',
           startTime,
-          lanes,
-          laneLabels,
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -587,20 +543,12 @@ function processTimelineEvent(
 
       // React Measures - passive effects
       else if (name.startsWith('--passive-effects-start-')) {
-        const [laneBitmaskString, laneLabelsString] = name
-          .substr(24)
-          .split('-');
-
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-        const laneLabels = laneLabelsString ? laneLabelsString.split(',') : [];
-
-        updateLaneToLabelMap(lanes, laneLabels);
+        const [laneBitmaskString] = name.substr(24).split('-');
 
         markWorkStarted(
           'passive-effects',
           startTime,
-          lanes,
-          laneLabels,
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -688,6 +636,7 @@ export default function preprocessData(
     measures: [],
     nativeEvents: [],
     otherUserTimingMarks: [],
+    reactVersion: null,
     schedulingEvents: [],
     startTime: 0,
     suspenseEvents: [],
@@ -730,6 +679,12 @@ export default function preprocessData(
   };
 
   timeline.forEach(event => processTimelineEvent(event, profilerData, state));
+
+  if (profilerVersion === null) {
+    throw new InvalidProfileError(
+      `This version of profiling data is not supported by the current profiler.`,
+    );
+  }
 
   // Validate that all events and measures are complete
   const {measureStack} = state;
