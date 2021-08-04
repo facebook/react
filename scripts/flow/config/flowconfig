@@ -34,6 +34,7 @@
 ./scripts/flow/react-devtools.js
 ./scripts/flow/react-native-host-hooks.js
 ./scripts/flow/react-relay-hooks.js
+./scripts/flow/xplat.js
 
 [lints]
 untyped-type-import=error

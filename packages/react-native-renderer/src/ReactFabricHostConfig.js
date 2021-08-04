@@ -460,6 +460,32 @@ export function getOffscreenContainerProps(
   }
 }
 
+export function cloneHiddenInstance(
+  instance: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): Instance {
+  const viewConfig = instance.canonical.viewConfig;
+  const node = instance.node;
+  const updatePayload = create(
+    {style: {display: 'none'}},
+    viewConfig.validAttributes,
+  );
+  return {
+    node: cloneNodeWithNewProps(node, updatePayload),
+    canonical: instance.canonical,
+  };
+}
+
+export function cloneHiddenTextInstance(
+  instance: Instance,
+  text: string,
+  internalInstanceHandle: Object,
+): TextInstance {
+  throw new Error('Not yet implemented.');
+}
+
 export function createContainerChildSet(container: Container): ChildSet {
   return createChildNodeSet(container);
 }

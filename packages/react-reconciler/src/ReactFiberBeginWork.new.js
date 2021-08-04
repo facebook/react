@@ -89,6 +89,7 @@ import {
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
   enableSchedulingProfiler,
+  enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
@@ -146,7 +147,6 @@ import {
   registerSuspenseInstanceRetry,
   supportsHydration,
   isPrimaryRenderer,
-  supportsMutation,
   supportsPersistence,
   getOffscreenContainerProps,
 } from './ReactFiberHostConfig';
@@ -744,7 +744,7 @@ function updateOffscreenComponent(
     workInProgress.updateQueue = spawnedCachePool;
   }
 
-  if (supportsPersistence) {
+  if (enablePersistentOffscreenHostContainer && supportsPersistence) {
     // In persistent mode, the offscreen children are wrapped in a host node.
     // TODO: Optimize this to use the OffscreenComponent fiber instead of
     // an extra HostComponent fiber. Need to make sure this doesn't break Fabric
@@ -760,12 +760,10 @@ function updateOffscreenComponent(
       renderLanes,
     );
     return offscreenContainer;
-  }
-  if (supportsMutation) {
+  } else {
     reconcileChildren(current, workInProgress, nextChildren, renderLanes);
     return workInProgress.child;
   }
-  return null;
 }
 
 function reconcileOffscreenHostContainer(
@@ -2383,7 +2381,7 @@ function updateSuspenseFallbackChildren(
         currentPrimaryChildFragment.treeBaseDuration;
     }
 
-    if (supportsPersistence) {
+    if (enablePersistentOffscreenHostContainer && supportsPersistence) {
       // In persistent mode, the offscreen children are wrapped in a host node.
       // We need to complete it now, because we're going to skip over its normal
       // complete phase and go straight to rendering the fallback.
@@ -2411,7 +2409,7 @@ function updateSuspenseFallbackChildren(
       primaryChildProps,
     );
 
-    if (supportsPersistence) {
+    if (enablePersistentOffscreenHostContainer && supportsPersistence) {
       // In persistent mode, the offscreen children are wrapped in a host node.
       // We need to complete it now, because we're going to skip over its normal
       // complete phase and go straight to rendering the fallback.
