@@ -127,6 +127,7 @@ export type ReactProfilerData = {|
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
+  laneToLabelMap: Map<ReactLane, string>,
   measures: ReactMeasure[],
   nativeEvents: NativeEvent[],
   otherUserTimingMarks: UserTimingMark[],

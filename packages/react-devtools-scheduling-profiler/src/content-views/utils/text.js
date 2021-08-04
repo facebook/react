@@ -36,18 +36,29 @@ export function trimText(
   return null;
 }
 
+type TextConfig = {|
+  fillStyle?: string,
+  fontSize?: number,
+  textAlign?: 'left' | 'center',
+|};
+
 export function drawText(
   text: string,
   context: CanvasRenderingContext2D,
   fullRect: Rect,
   drawableRect: Rect,
-  textAlign: 'left' | 'center' = 'left',
-  fillStyle: string = COLORS.TEXT_COLOR,
+  config?: TextConfig,
 ): void {
+  const {
+    fillStyle = COLORS.TEXT_COLOR,
+    fontSize = FONT_SIZE,
+    textAlign = 'left',
+  } = config || {};
+
   if (fullRect.size.width > TEXT_PADDING * 2) {
     context.textAlign = textAlign;
     context.textBaseline = 'middle';
-    context.font = `${FONT_SIZE}px sans-serif`;
+    context.font = `${fontSize}px sans-serif`;
 
     const {x, y} = fullRect.origin;
 

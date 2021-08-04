@@ -161,8 +161,7 @@ export class ComponentMeasuresView extends View {
         context,
         visibleArea,
         visibleArea,
-        'center',
-        COLORS.TEXT_DIM_COLOR,
+        {fillStyle: COLORS.TEXT_DIM_COLOR, textAlign: 'center'},
       );
     }
 

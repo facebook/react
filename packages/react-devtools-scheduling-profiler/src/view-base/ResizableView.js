@@ -105,14 +105,10 @@ class ResizeBar extends View {
 
       const drawableRect = intersectionOfRects(labelRect, this.visibleArea);
 
-      drawText(
-        this._label,
-        context,
-        labelRect,
-        drawableRect,
-        'center',
-        COLORS.REACT_RESIZE_BAR_DOT,
-      );
+      drawText(this._label, context, labelRect, drawableRect, {
+        fillStyle: COLORS.REACT_RESIZE_BAR_DOT,
+        textAlign: 'center',
+      });
     } else {
       // Otherwise draw horizontally centered resize bar dots
       context.beginPath();
