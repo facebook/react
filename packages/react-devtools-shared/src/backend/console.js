@@ -14,6 +14,7 @@ import {format} from './utils';
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
+// NOTE: KEEP IN SYNC with src/hook.js
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn', 'log'];
 const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
 const DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, .5)';
@@ -117,6 +118,7 @@ const consoleSettingsRef = {
 
 // Patches console methods to append component stack for the current fiber.
 // Call unpatch() to remove the injected behavior.
+// NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialRenderInExtension
 export function patch({
   appendComponentStack,
   breakOnConsoleErrors,
