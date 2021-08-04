@@ -453,6 +453,9 @@ export function getOffscreenContainerProps(
   } else {
     return {
       children,
+      style: {
+        flex: 1,
+      },
     };
   }
 }
