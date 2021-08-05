@@ -47,7 +47,7 @@ type ProcessorState = {|
 
 // Increment this number any time a backwards breaking change is made to the profiler metadata.
 // It should be in sync with the version in react-reconciler/src/SchedulingProfiler
-const SUPPORTED_PROFILER_VERSION = 1;
+export const SUPPORTED_PROFILER_VERSION = 1;
 
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
 

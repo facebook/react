@@ -71,9 +71,9 @@ if (enableSchedulingProfiler) {
   }
 }
 
-const laneLabels: Array<string | number> = [];
+const laneLabels: Array<string> = [];
 
-function markLaneToLabelMetadata() {
+export function getLaneLabels(): Array<string> {
   if (laneLabels.length === 0) {
     let lane = 1;
     for (let index = 0; index < TotalLanes; index++) {
@@ -82,6 +82,11 @@ function markLaneToLabelMetadata() {
       lane *= 2;
     }
   }
+  return laneLabels;
+}
+
+function markLaneToLabelMetadata() {
+  getLaneLabels();
 
   markAndClear(`--react-lane-labels-${laneLabels.join(',')}`);
 }

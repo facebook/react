@@ -10,17 +10,6 @@
 
 'use strict';
 
-// This test is *.internal so that it can import this shared file.
-import ReactVersion from 'shared/ReactVersion';
-
-// Hard-coding because importing will not work with bundle tests and to
-// avoid leaking exports for lanes that are only imported in this test.
-const ReactFiberLane = {
-  SyncLane: /*        */ 0b0000000000000000000000000000001,
-  DefaultLane: /*     */ 0b0000000000000000000000000010000,
-  TransitionLane1: /* */ 0b0000000000000000000000001000000,
-};
-
 describe('SchedulingProfiler', () => {
   let React;
   let ReactTestRenderer;
@@ -30,7 +19,6 @@ describe('SchedulingProfiler', () => {
 
   let clearedMarks;
   let featureDetectionMarkName = null;
-  let formatLanes;
   let marks;
 
   function createUserTimingPolyfill() {
@@ -63,16 +51,10 @@ describe('SchedulingProfiler', () => {
     clearedMarks.splice(0);
   }
 
-  function expectMarksToContain(expectedMarks) {
-    expect(clearedMarks).toContain(expectedMarks);
-  }
-
-  function expectMarksToEqual(expectedMarks) {
-    expect(
-      clearedMarks[0] === featureDetectionMarkName
-        ? clearedMarks.slice(1)
-        : clearedMarks,
-    ).toEqual(expectedMarks);
+  function getMarks() {
+    return clearedMarks[0] === featureDetectionMarkName
+      ? clearedMarks.slice(1)
+      : clearedMarks;
   }
 
   beforeEach(() => {
@@ -88,9 +70,6 @@ describe('SchedulingProfiler', () => {
 
     Scheduler = require('scheduler');
     act = require('jest-react').act;
-
-    const SchedulingProfiler = require('react-reconciler/src/SchedulingProfiler');
-    formatLanes = SchedulingProfiler.formatLanes;
   });
 
   afterEach(() => {
@@ -103,54 +82,62 @@ describe('SchedulingProfiler', () => {
   // @gate !enableSchedulingProfiler
   it('should not mark if enableSchedulingProfiler is false', () => {
     ReactTestRenderer.create(<div />);
-    expectMarksToEqual([]);
+    expect(getMarks()).toEqual([]);
   });
 
-  // @gate enableSchedulingProfiler
-  it('should log React version on initialization', () => {
-    expectMarksToEqual([`--react-init-${ReactVersion}`]);
-  });
-
-  // @gate enableSchedulingProfiler
   it('should mark sync render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />);
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
-      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-1",
+        "--render-start-1",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-1",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expectMarksToEqual([
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark render yields', async () => {
     function Bar() {
       Scheduler.unstable_yieldValue('Bar');
@@ -170,30 +157,31 @@ describe('SchedulingProfiler', () => {
       // Do one step of work.
       expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
-      expectMarksToEqual([
-        `--react-init-${ReactVersion}`,
-        `--schedule-render-${formatLanes(ReactFiberLane.TransitionLane1)}`,
-        `--render-start-${formatLanes(ReactFiberLane.TransitionLane1)}`,
-        '--component-render-start-Foo',
-        '--component-render-stop',
-        '--render-yield',
-      ]);
+      if (gate(flags => flags.enableSchedulingProfiler)) {
+        expect(getMarks()).toMatchInlineSnapshot(`
+        Array [
+          "--schedule-render-64",
+          "--render-start-64",
+          "--component-render-start-Foo",
+          "--component-render-stop",
+          "--render-yield",
+        ]
+      `);
+      }
     } else {
       ReactNoop.render(<Foo />);
 
       // Do one step of work.
       expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
-      expectMarksToEqual([
-        `--react-init-${ReactVersion}`,
-        `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-        `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-        '--render-yield',
-      ]);
+      if (gate(flags => flags.enableSchedulingProfiler)) {
+        expect(getMarks()).toMatchInlineSnapshot(`
+        Array []
+      `);
+      }
     }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark sync render with suspense that resolves', async () => {
     const fakeSuspensePromise = Promise.resolve(true);
     function Example() {
@@ -206,27 +194,38 @@ describe('SchedulingProfiler', () => {
       </React.Suspense>,
     );
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
-      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--suspense-suspend-0-Example-mount-1-Sync',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-1",
+        "--render-start-1",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--suspense-suspend-0-Example-mount-1",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-1",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     await fakeSuspensePromise;
-    expectMarksToEqual(['--suspense-resolved-0-Example']);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--suspense-resolved-0-Example",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark sync render with suspense that rejects', async () => {
     const fakeSuspensePromise = Promise.reject(new Error('error'));
     function Example() {
@@ -239,27 +238,38 @@ describe('SchedulingProfiler', () => {
       </React.Suspense>,
     );
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
-      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--suspense-suspend-0-Example-mount-1-Sync',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-1",
+        "--render-start-1",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--suspense-suspend-0-Example-mount-1",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-1",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     await expect(fakeSuspensePromise).rejects.toThrow();
-    expectMarksToEqual(['--suspense-rejected-0-Example']);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--suspense-rejected-0-Example",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark concurrent render with suspense that resolves', async () => {
     const fakeSuspensePromise = Promise.resolve(true);
     function Example() {
@@ -273,34 +283,49 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expectMarksToEqual([
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--suspense-suspend-0-Example-mount-16-Default',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--suspense-suspend-0-Example-mount-16",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     await fakeSuspensePromise;
-    expectMarksToEqual(['--suspense-resolved-0-Example']);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--suspense-resolved-0-Example",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark concurrent render with suspense that rejects', async () => {
     const fakeSuspensePromise = Promise.reject(new Error('error'));
     function Example() {
@@ -314,34 +339,49 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expectMarksToEqual([
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--suspense-suspend-0-Example-mount-16-Default',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--layout-effects-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--suspense-suspend-0-Example-mount-16",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     await expect(fakeSuspensePromise).rejects.toThrow();
-    expectMarksToEqual(['--suspense-rejected-0-Example']);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--suspense-rejected-0-Example",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark cascading class component state updates', () => {
     class Example extends React.Component {
       state = {didMount: false};
@@ -355,35 +395,47 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expectMarksToEqual([
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--schedule-state-update-${formatLanes(ReactFiberLane.SyncLane)}-Example`,
-      '--layout-effects-stop',
-      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--commit-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--schedule-state-update-1-Example",
+        "--layout-effects-stop",
+        "--render-start-1",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--commit-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark cascading class component force updates', () => {
     class Example extends React.Component {
       componentDidMount() {
@@ -396,37 +448,47 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expectMarksToEqual([
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--schedule-forced-update-${formatLanes(
-        ReactFiberLane.SyncLane,
-      )}-Example`,
-      '--layout-effects-stop',
-      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--commit-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--schedule-forced-update-1-Example",
+        "--layout-effects-stop",
+        "--render-start-1",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--commit-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark render phase state updates for class component', () => {
     class Example extends React.Component {
       state = {didRender: false};
@@ -440,10 +502,13 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
@@ -451,14 +516,26 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expectMarksToContain(
-      `--schedule-state-update-${formatLanes(
-        ReactFiberLane.DefaultLane,
-      )}-Example`,
-    );
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--schedule-state-update-16-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark render phase force updates for class component', () => {
     class Example extends React.Component {
       state = {didRender: false};
@@ -472,10 +549,13 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
@@ -483,14 +563,26 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expectMarksToContain(
-      `--schedule-forced-update-${formatLanes(
-        ReactFiberLane.DefaultLane,
-      )}-Example`,
-    );
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--schedule-forced-update-16-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark cascading layout updates', () => {
     function Example() {
       const [didMount, setDidMount] = React.useState(false);
@@ -502,37 +594,49 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+      ]
+    `);
+    }
 
     clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expectMarksToEqual([
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--schedule-state-update-${formatLanes(ReactFiberLane.SyncLane)}-Example`,
-      '--layout-effects-stop',
-      `--render-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.SyncLane)}`,
-      '--commit-stop',
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--schedule-state-update-1-Example",
+        "--layout-effects-stop",
+        "--render-start-1",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--commit-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
   // This test is coupled to lane implementation details, so I'm disabling it in
   // the new fork until it stabilizes so we don't have to repeatedly update it.
-  // @gate enableSchedulingProfiler
   it('should mark cascading passive updates', () => {
     function Example() {
       const [didMount, setDidMount] = React.useState(false);
@@ -546,32 +650,38 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--layout-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--layout-effects-stop',
-      '--commit-stop',
-      `--passive-effects-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--schedule-state-update-${formatLanes(
-        ReactFiberLane.DefaultLane,
-      )}-Example`,
-      '--passive-effects-stop',
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--component-render-start-Example',
-      '--component-render-stop',
-      '--render-stop',
-      `--commit-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--commit-stop',
-    ]);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--layout-effects-stop",
+        "--commit-stop",
+        "--passive-effects-start-16",
+        "--schedule-state-update-16-Example",
+        "--passive-effects-stop",
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should mark render phase updates', () => {
     function Example() {
       const [didRender, setDidRender] = React.useState(false);
@@ -585,10 +695,24 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    expectMarksToContain(
-      `--schedule-state-update-${formatLanes(
-        ReactFiberLane.DefaultLane,
-      )}-Example`,
-    );
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(getMarks()).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-render-16",
+        "--render-start-16",
+        "--component-render-start-Example",
+        "--schedule-state-update-16-Example",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-16",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-16",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 });
