@@ -38,7 +38,6 @@ type BaseReactEvent = {|
 type BaseReactScheduleEvent = {|
   ...BaseReactEvent,
   +lanes: ReactLane[],
-  +laneLabels: string[],
 |};
 export type ReactScheduleRenderEvent = {|
   ...BaseReactScheduleEvent,
@@ -53,12 +52,14 @@ export type ReactScheduleForceUpdateEvent = {|
   +type: 'schedule-force-update',
 |};
 
+export type Phase = 'mount' | 'update';
+
 export type SuspenseEvent = {|
   ...BaseReactEvent,
   depth: number,
   duration: number | null,
   +id: string,
-  +phase: 'mount' | 'update' | null,
+  +phase: Phase | null,
   resolution: 'rejected' | 'resolved' | 'unresolved',
   resuspendTimestamps: Array<number> | null,
   +type: 'suspense',
@@ -84,7 +85,6 @@ export type BatchUID = number;
 export type ReactMeasure = {|
   +type: ReactMeasureType,
   +lanes: ReactLane[],
-  +laneLabels: string[],
   +timestamp: Milliseconds,
   +duration: Milliseconds,
   +batchUID: BatchUID,
@@ -127,9 +127,11 @@ export type ReactProfilerData = {|
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
+  laneToLabelMap: Map<ReactLane, string>,
   measures: ReactMeasure[],
   nativeEvents: NativeEvent[],
   otherUserTimingMarks: UserTimingMark[],
+  reactVersion: string | null,
   schedulingEvents: SchedulingEvent[],
   startTime: number,
   suspenseEvents: SuspenseEvent[],

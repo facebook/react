@@ -25,7 +25,7 @@ import {
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 
-// Lane values below should be kept in sync with getLabelsForLanes(), used by react-devtools-scheduling-profiler.
+// Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-scheduling-profiler.
 // If those values are changed that package should be rebuilt and redeployed.
 
 export const TotalLanes = 31;
@@ -80,46 +80,44 @@ export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000
 
 // This function is used for the experimental scheduling profiler (react-devtools-scheduling-profiler)
 // It should be kept in sync with the Lanes values above.
-export function getLabelsForLanes(lanes: Lanes): Array<string> | void {
+export function getLabelForLane(lane: Lane): string | void {
   if (enableSchedulingProfiler) {
-    const labels = [];
-    if (lanes & SyncLane) {
-      labels.push('Sync');
+    if (lane & SyncLane) {
+      return 'Sync';
     }
-    if (lanes & InputContinuousHydrationLane) {
-      labels.push('InputContinuousHydration');
+    if (lane & InputContinuousHydrationLane) {
+      return 'InputContinuousHydration';
     }
-    if (lanes & InputContinuousLane) {
-      labels.push('InputContinuous');
+    if (lane & InputContinuousLane) {
+      return 'InputContinuous';
     }
-    if (lanes & DefaultHydrationLane) {
-      labels.push('DefaultHydration');
+    if (lane & DefaultHydrationLane) {
+      return 'DefaultHydration';
     }
-    if (lanes & DefaultLane) {
-      labels.push('Default');
+    if (lane & DefaultLane) {
+      return 'Default';
     }
-    if (lanes & TransitionHydrationLane) {
-      labels.push('TransitionHydration');
+    if (lane & TransitionHydrationLane) {
+      return 'TransitionHydration';
     }
-    if (lanes & TransitionLanes) {
-      labels.push('Transition(s)');
+    if (lane & TransitionLanes) {
+      return 'Transition';
     }
-    if (lanes & RetryLanes) {
-      labels.push('Retry(s)');
+    if (lane & RetryLanes) {
+      return 'Retry';
     }
-    if (lanes & SelectiveHydrationLane) {
-      labels.push('SelectiveHydration');
+    if (lane & SelectiveHydrationLane) {
+      return 'SelectiveHydration';
     }
-    if (lanes & IdleHydrationLane) {
-      labels.push('IdleHydration');
+    if (lane & IdleHydrationLane) {
+      return 'IdleHydration';
     }
-    if (lanes & IdleLane) {
-      labels.push('Idle');
+    if (lane & IdleLane) {
+      return 'Idle';
     }
-    if (lanes & OffscreenLane) {
-      labels.push('Offscreen');
+    if (lane & OffscreenLane) {
+      return 'Offscreen';
     }
-    return labels;
   }
 }
 

@@ -14,6 +14,19 @@ import {COLORS, FONT_SIZE, TEXT_PADDING} from '../constants';
 
 const cachedTextWidths = new Map();
 
+export function getTextWidth(
+  context: CanvasRenderingContext2D,
+  text: string,
+): number {
+  let measuredWidth = cachedTextWidths.get(text);
+  if (measuredWidth == null) {
+    measuredWidth = context.measureText(text).width;
+    cachedTextWidths.set(text, measuredWidth);
+  }
+
+  return ((measuredWidth: any): number);
+}
+
 export function trimText(
   context: CanvasRenderingContext2D,
   text: string,
@@ -21,14 +34,7 @@ export function trimText(
 ): string | null {
   for (let i = text.length - 1; i >= 0; i--) {
     const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
-
-    let measuredWidth = cachedTextWidths.get(trimmedText);
-    if (measuredWidth == null) {
-      measuredWidth = context.measureText(trimmedText).width;
-      cachedTextWidths.set(trimmedText, measuredWidth);
-    }
-
-    if (measuredWidth <= width) {
+    if (getTextWidth(context, trimmedText) <= width) {
       return trimmedText;
     }
   }
@@ -36,18 +42,29 @@ export function trimText(
   return null;
 }
 
+type TextConfig = {|
+  fillStyle?: string,
+  fontSize?: number,
+  textAlign?: 'left' | 'center',
+|};
+
 export function drawText(
   text: string,
   context: CanvasRenderingContext2D,
   fullRect: Rect,
   drawableRect: Rect,
-  textAlign: 'left' | 'center' = 'left',
-  fillStyle: string = COLORS.TEXT_COLOR,
+  config?: TextConfig,
 ): void {
+  const {
+    fillStyle = COLORS.TEXT_COLOR,
+    fontSize = FONT_SIZE,
+    textAlign = 'left',
+  } = config || {};
+
   if (fullRect.size.width > TEXT_PADDING * 2) {
     context.textAlign = textAlign;
     context.textBaseline = 'middle';
-    context.font = `${FONT_SIZE}px sans-serif`;
+    context.font = `${fontSize}px sans-serif`;
 
     const {x, y} = fullRect.origin;
 

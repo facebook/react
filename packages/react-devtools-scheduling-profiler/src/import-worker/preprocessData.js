@@ -17,6 +17,7 @@ import type {
   BatchUID,
   Flamechart,
   NativeEvent,
+  Phase,
   ReactLane,
   ReactComponentMeasure,
   ReactMeasureType,
@@ -24,7 +25,7 @@ import type {
   SuspenseEvent,
 } from '../types';
 
-import {REACT_TOTAL_NUM_LANES} from '../constants';
+import {REACT_TOTAL_NUM_LANES, SCHEDULING_PROFILER_VERSION} from '../constants';
 import InvalidProfileError from './InvalidProfileError';
 
 type MeasureStackElement = {|
@@ -52,7 +53,7 @@ const WARNING_STRINGS = {
     'An event handler scheduled a big update with React. Consider using the Transition API to defer some of this work.',
   NESTED_UPDATE:
     'A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint.',
-  SUSPENDD_DURING_UPATE:
+  SUSPEND_DURING_UPATE:
     'A component suspended during an update which caused a fallback to be shown. ' +
     "Consider using the Transition API to avoid hiding components after they've been mounted.",
 };
@@ -80,6 +81,23 @@ export function getLanesFromTransportDecimalBitmask(
   return lanes;
 }
 
+const laneToLabelMap: Map<number, string> = new Map();
+function updateLaneToLabelMap(laneLabelTuplesString: string): void {
+  // These marks appear multiple times in the data;
+  // We only need to extact them once.
+  if (laneToLabelMap.size === 0) {
+    const laneLabelTuples = laneLabelTuplesString.split(',');
+    for (let laneIndex = 0; laneIndex < laneLabelTuples.length; laneIndex++) {
+      // The numeric lane value (e.g. 64) isn't important.
+      // The profiler parses and stores the lane's position within the bitmap,
+      // (e.g. lane 1 is index 0, lane 16 is index 4).
+      laneToLabelMap.set(laneIndex, laneLabelTuples[laneIndex]);
+    }
+  }
+}
+
+let profilerVersion = null;
+
 function getLastType(stack: $PropertyType<ProcessorState, 'measureStack'>) {
   if (stack.length > 0) {
     const {type} = stack[stack.length - 1];
@@ -100,7 +118,6 @@ function markWorkStarted(
   type: ReactMeasureType,
   startTime: Milliseconds,
   lanes: ReactLane[],
-  laneLabels: Array<string>,
   currentProfilerData: ReactProfilerData,
   state: ProcessorState,
 ) {
@@ -115,7 +132,6 @@ function markWorkStarted(
     batchUID,
     depth,
     lanes,
-    laneLabels,
     timestamp: startTime,
     duration: 0,
   });
@@ -242,7 +258,21 @@ function processTimelineEvent(
     case 'blink.user_timing':
       const startTime = (ts - currentProfilerData.startTime) / 1000;
 
-      if (name.startsWith('--component-render-start-')) {
+      if (name.startsWith('--react-version-')) {
+        const [reactVersion] = name.substr(16).split('-');
+        currentProfilerData.reactVersion = reactVersion;
+      } else if (name.startsWith('--profiler-version-')) {
+        const [versionString] = name.substr(19).split('-');
+        profilerVersion = parseInt(versionString, 10);
+        if (profilerVersion !== SCHEDULING_PROFILER_VERSION) {
+          throw new InvalidProfileError(
+            `This version of profiling data (${versionString}) is not supported by the current profiler.`,
+          );
+        }
+      } else if (name.startsWith('--react-lane-labels-')) {
+        const [laneLabelTuplesString] = name.substr(20).split('-');
+        updateLaneToLabelMap(laneLabelTuplesString);
+      } else if (name.startsWith('--component-render-start-')) {
         const [componentName] = name.substr(25).split('-');
 
         if (state.currentReactComponentMeasure !== null) {
@@ -268,48 +298,44 @@ function processTimelineEvent(
           currentProfilerData.componentMeasures.push(componentMeasure);
         }
       } else if (name.startsWith('--schedule-render-')) {
-        const [laneBitmaskString, laneLabels] = name.substr(18).split('-');
+        const [laneBitmaskString] = name.substr(18).split('-');
+
         currentProfilerData.schedulingEvents.push({
           type: 'schedule-render',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
-          laneLabels: laneLabels ? laneLabels.split(',') : [],
           timestamp: startTime,
           warning: null,
         });
       } else if (name.startsWith('--schedule-forced-update-')) {
-        const [laneBitmaskString, laneLabels, componentName] = name
-          .substr(25)
-          .split('-');
+        const [laneBitmaskString, componentName] = name.substr(25).split('-');
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
           // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
+          // This might be easier to do if we separated warnings into a second pass.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
         currentProfilerData.schedulingEvents.push({
           type: 'schedule-force-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
-          laneLabels: laneLabels ? laneLabels.split(',') : [],
           componentName,
           timestamp: startTime,
           warning,
         });
       } else if (name.startsWith('--schedule-state-update-')) {
-        const [laneBitmaskString, laneLabels, componentName] = name
-          .substr(24)
-          .split('-');
+        const [laneBitmaskString, componentName] = name.substr(24).split('-');
 
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
           // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
+          // This might be easier to do if we separated warnings into a second pass.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
         currentProfilerData.schedulingEvents.push({
           type: 'schedule-state-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
-          laneLabels: laneLabels ? laneLabels.split(',') : [],
           componentName,
           timestamp: startTime,
           warning,
@@ -318,25 +344,18 @@ function processTimelineEvent(
 
       // React Events - suspense
       else if (name.startsWith('--suspense-suspend-')) {
-        const [id, componentName, ...rest] = name.substr(19).split('-');
+        const [id, componentName, phase, laneBitmaskString] = name
+          .substr(19)
+          .split('-');
+        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
-        // Older versions of the scheduling profiler data didn't contain phase or lane values.
-        let phase = null;
+        // TODO It's possible we don't have lane-to-label mapping yet (since it's logged during commit phase)
+        // We may need to do this sort of error checking in a separate pass.
         let warning = null;
-        if (rest.length === 3) {
-          switch (rest[0]) {
-            case 'mount':
-            case 'update':
-              phase = rest[0];
-              break;
-          }
-
-          if (phase === 'update') {
-            const laneLabels = rest[2];
-            // HACK This is a bit gross but the numeric lane value might change between render versions.
-            if (!laneLabels.includes('Transition')) {
-              warning = WARNING_STRINGS.SUSPENDD_DURING_UPATE;
-            }
+        if (phase === 'update') {
+          // HACK This is a bit gross but the numeric lane value might change between render versions.
+          if (lanes.some(lane => laneToLabelMap.get(lane) === 'Transition')) {
+            warning = WARNING_STRINGS.SUSPEND_DURING_UPATE;
           }
         }
 
@@ -365,7 +384,7 @@ function processTimelineEvent(
           depth,
           duration: null,
           id,
-          phase,
+          phase: ((phase: any): Phase),
           resolution: 'unresolved',
           resuspendTimestamps: null,
           timestamp: startTime,
@@ -411,15 +430,14 @@ function processTimelineEvent(
           state.nextRenderShouldGenerateNewBatchID = false;
           state.batchUID = ((state.uidCounter++: any): BatchUID);
         }
-        const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        const [laneBitmaskString] = name.substr(15).split('-');
+
         throwIfIncomplete('render', state.measureStack);
         if (getLastType(state.measureStack) !== 'render-idle') {
           markWorkStarted(
             'render-idle',
             startTime,
-            lanes,
-            laneLabels ? laneLabels.split(',') : [],
+            getLanesFromTransportDecimalBitmask(laneBitmaskString),
             currentProfilerData,
             state,
           );
@@ -427,8 +445,7 @@ function processTimelineEvent(
         markWorkStarted(
           'render',
           startTime,
-          lanes,
-          laneLabels ? laneLabels.split(',') : [],
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -472,13 +489,12 @@ function processTimelineEvent(
       // React Measures - commits
       else if (name.startsWith('--commit-start-')) {
         state.nextRenderShouldGenerateNewBatchID = true;
-        const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        const [laneBitmaskString] = name.substr(15).split('-');
+
         markWorkStarted(
           'commit',
           startTime,
-          lanes,
-          laneLabels ? laneLabels.split(',') : [],
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -499,13 +515,12 @@ function processTimelineEvent(
 
       // React Measures - layout effects
       else if (name.startsWith('--layout-effects-start-')) {
-        const [laneBitmaskString, laneLabels] = name.substr(23).split('-');
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        const [laneBitmaskString] = name.substr(23).split('-');
+
         markWorkStarted(
           'layout-effects',
           startTime,
-          lanes,
-          laneLabels ? laneLabels.split(',') : [],
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -520,13 +535,12 @@ function processTimelineEvent(
 
       // React Measures - passive effects
       else if (name.startsWith('--passive-effects-start-')) {
-        const [laneBitmaskString, laneLabels] = name.substr(24).split('-');
-        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+        const [laneBitmaskString] = name.substr(24).split('-');
+
         markWorkStarted(
           'passive-effects',
           startTime,
-          lanes,
-          laneLabels ? laneLabels.split(',') : [],
+          getLanesFromTransportDecimalBitmask(laneBitmaskString),
           currentProfilerData,
           state,
         );
@@ -610,9 +624,11 @@ export default function preprocessData(
     componentMeasures: [],
     duration: 0,
     flamechart,
+    laneToLabelMap,
     measures: [],
     nativeEvents: [],
     otherUserTimingMarks: [],
+    reactVersion: null,
     schedulingEvents: [],
     startTime: 0,
     suspenseEvents: [],
@@ -655,6 +671,12 @@ export default function preprocessData(
   };
 
   timeline.forEach(event => processTimelineEvent(event, profilerData, state));
+
+  if (profilerVersion === null) {
+    throw new InvalidProfileError(
+      `This version of profiling data is not supported by the current profiler.`,
+    );
+  }
 
   // Validate that all events and measures are complete
   const {measureStack} = state;

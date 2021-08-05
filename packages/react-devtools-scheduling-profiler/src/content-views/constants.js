@@ -19,7 +19,7 @@ export const SUSPENSE_EVENT_HEIGHT = 14;
 export const PENDING_SUSPENSE_EVENT_SIZE = 8;
 export const REACT_EVENT_DIAMETER = 6;
 export const USER_TIMING_MARK_SIZE = 8;
-export const REACT_MEASURE_HEIGHT = 9;
+export const REACT_MEASURE_HEIGHT = 14;
 export const BORDER_SIZE = 1;
 export const FLAMECHART_FRAME_HEIGHT = 14;
 export const TEXT_PADDING = 3;
@@ -56,12 +56,16 @@ export let COLORS = {
   REACT_IDLE_HOVER: '',
   REACT_RENDER: '',
   REACT_RENDER_HOVER: '',
+  REACT_RENDER_TEXT: '',
   REACT_COMMIT: '',
   REACT_COMMIT_HOVER: '',
+  REACT_COMMIT_TEXT: '',
   REACT_LAYOUT_EFFECTS: '',
   REACT_LAYOUT_EFFECTS_HOVER: '',
+  REACT_LAYOUT_EFFECTS_TEXT: '',
   REACT_PASSIVE_EFFECTS: '',
   REACT_PASSIVE_EFFECTS_HOVER: '',
+  REACT_PASSIVE_EFFECTS_TEXT: '',
   REACT_RESIZE_BAR: '',
   REACT_RESIZE_BAR_ACTIVE: '',
   REACT_RESIZE_BAR_BORDER: '',
@@ -132,11 +136,17 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     REACT_RENDER_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-render-hover',
     ),
+    REACT_RENDER_TEXT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-render-text',
+    ),
     REACT_COMMIT: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-commit',
     ),
     REACT_COMMIT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-commit-hover',
+    ),
+    REACT_COMMIT_TEXT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-commit-text',
     ),
     REACT_LAYOUT_EFFECTS: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-layout-effects',
@@ -144,11 +154,17 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     REACT_LAYOUT_EFFECTS_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-layout-effects-hover',
     ),
+    REACT_LAYOUT_EFFECTS_TEXT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-layout-effects-text',
+    ),
     REACT_PASSIVE_EFFECTS: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-passive-effects',
     ),
     REACT_PASSIVE_EFFECTS_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-passive-effects-hover',
+    ),
+    REACT_PASSIVE_EFFECTS_TEXT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-react-passive-effects-text',
     ),
     REACT_RESIZE_BAR: computedStyle.getPropertyValue('--color-resize-bar'),
     REACT_RESIZE_BAR_ACTIVE: computedStyle.getPropertyValue(

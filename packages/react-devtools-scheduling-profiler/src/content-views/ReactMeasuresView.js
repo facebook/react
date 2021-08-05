@@ -16,6 +16,8 @@ import type {
   ViewRefs,
 } from '../view-base';
 
+import {formatDuration} from '../utils/formatting';
+import {drawText} from './utils/text';
 import {
   durationToWidth,
   positioningScaleFactor,
@@ -102,17 +104,19 @@ export class ReactMeasuresView extends View {
     context: CanvasRenderingContext2D,
     rect: Rect,
     measure: ReactMeasure,
+    nextMeasure: ReactMeasure | null,
     baseY: number,
     scaleFactor: number,
     showGroupHighlight: boolean,
     showHoverHighlight: boolean,
   ) {
-    const {frame} = this;
+    const {frame, visibleArea} = this;
     const {timestamp, type, duration} = measure;
 
     let fillStyle = null;
     let hoveredFillStyle = null;
     let groupSelectedFillStyle = null;
+    let textFillStyle = null;
 
     // We could change the max to 0 and just skip over rendering anything that small,
     // but this has the effect of making the chart look very empty when zoomed out.
@@ -131,11 +135,29 @@ export class ReactMeasuresView extends View {
       return; // Not in view
     }
 
+    const drawableRect = intersectionOfRects(measureRect, rect);
+    let textRect = measureRect;
+
     switch (type) {
       case 'commit':
         fillStyle = COLORS.REACT_COMMIT;
         hoveredFillStyle = COLORS.REACT_COMMIT_HOVER;
         groupSelectedFillStyle = COLORS.REACT_COMMIT_HOVER;
+        textFillStyle = COLORS.REACT_COMMIT_TEXT;
+
+        // Commit phase rects are overlapped by layout and passive rects,
+        // and it looks bad if text flows underneath/behind these overlayed rects.
+        if (nextMeasure != null) {
+          textRect = {
+            ...measureRect,
+            size: {
+              width:
+                timestampToPosition(nextMeasure.timestamp, scaleFactor, frame) -
+                x,
+              height: REACT_MEASURE_HEIGHT,
+            },
+          };
+        }
         break;
       case 'render-idle':
         // We could render idle time as diagonal hashes.
@@ -149,22 +171,24 @@ export class ReactMeasuresView extends View {
         fillStyle = COLORS.REACT_RENDER;
         hoveredFillStyle = COLORS.REACT_RENDER_HOVER;
         groupSelectedFillStyle = COLORS.REACT_RENDER_HOVER;
+        textFillStyle = COLORS.REACT_RENDER_TEXT;
         break;
       case 'layout-effects':
         fillStyle = COLORS.REACT_LAYOUT_EFFECTS;
         hoveredFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
         groupSelectedFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
+        textFillStyle = COLORS.REACT_LAYOUT_EFFECTS_TEXT;
         break;
       case 'passive-effects':
         fillStyle = COLORS.REACT_PASSIVE_EFFECTS;
         hoveredFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
         groupSelectedFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
+        textFillStyle = COLORS.REACT_PASSIVE_EFFECTS_TEXT;
         break;
       default:
         throw new Error(`Unexpected measure type "${type}"`);
     }
 
-    const drawableRect = intersectionOfRects(measureRect, rect);
     context.fillStyle = showHoverHighlight
       ? hoveredFillStyle
       : showGroupHighlight
@@ -176,6 +200,12 @@ export class ReactMeasuresView extends View {
       drawableRect.size.width,
       drawableRect.size.height,
     );
+
+    if (textFillStyle !== null) {
+      drawText(formatDuration(duration), context, textRect, visibleArea, {
+        fillStyle: textFillStyle,
+      });
+    }
   }
 
   draw(context: CanvasRenderingContext2D) {
@@ -211,6 +241,27 @@ export class ReactMeasuresView extends View {
         );
       }
 
+      // Render lane labels
+      const label = this._profilerData.laneToLabelMap.get(lane);
+      if (label == null) {
+        console.warn(`Could not find label for lane ${lane}.`);
+      } else {
+        const labelRect = {
+          origin: {
+            x: visibleArea.origin.x,
+            y: baseY,
+          },
+          size: {
+            width: visibleArea.size.width,
+            height: REACT_LANE_HEIGHT,
+          },
+        };
+
+        drawText(label, context, labelRect, visibleArea, {
+          fillStyle: COLORS.TEXT_DIM_COLOR,
+        });
+      }
+
       // Draw measures
       for (let j = 0; j < measuresForLane.length; j++) {
         const measure = measuresForLane[j];
@@ -222,6 +273,7 @@ export class ReactMeasuresView extends View {
           context,
           visibleArea,
           measure,
+          measuresForLane[j + 1] || null,
           baseY,
           scaleFactor,
           showGroupHighlight,

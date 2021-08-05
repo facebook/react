@@ -7,10 +7,15 @@
 
 'use strict';
 
+import {getLaneLabels} from 'react-reconciler/src/SchedulingProfiler';
 import preprocessData, {
   getLanesFromTransportDecimalBitmask,
 } from '../preprocessData';
-import {REACT_TOTAL_NUM_LANES} from '../../constants';
+import {
+  REACT_TOTAL_NUM_LANES,
+  SCHEDULING_PROFILER_VERSION,
+} from '../../constants';
+import REACT_VERSION from 'shared/ReactVersion';
 
 describe(getLanesFromTransportDecimalBitmask, () => {
   it('should return array of lane numbers from bitmask string', () => {
@@ -109,6 +114,35 @@ describe(preprocessData, () => {
     };
   }
 
+  function createProfilerVersionEntry() {
+    return createUserTimingEntry({
+      cat: 'blink.user_timing',
+      name: '--profiler-version-' + SCHEDULING_PROFILER_VERSION,
+    });
+  }
+
+  function createReactVersionEntry() {
+    return createUserTimingEntry({
+      cat: 'blink.user_timing',
+      name: '--react-version-' + REACT_VERSION,
+    });
+  }
+
+  function createLaneLabelsEntry() {
+    return createUserTimingEntry({
+      cat: 'blink.user_timing',
+      name: '--react-lane-labels-' + getLaneLabels().join(','),
+    });
+  }
+
+  function createBoilerplateEntries() {
+    return [
+      createProfilerVersionEntry(),
+      createReactVersionEntry(),
+      createLaneLabelsEntry(),
+    ];
+  }
+
   function createUserTimingData(sampleMarks) {
     const cpuProfilerSample = createUserTimingEntry({
       args: {data: {startTime: ++startTime}},
@@ -192,7 +226,6 @@ describe(preprocessData, () => {
       name: 'Profile',
       ph: 'P',
     });
-
     const randomSample = createUserTimingEntry({
       dur: 100,
       tdur: 200,
@@ -202,20 +235,62 @@ describe(preprocessData, () => {
       args: {},
     });
 
-    expect(preprocessData([cpuProfilerSample, randomSample])).toStrictEqual({
-      componentMeasures: [],
-      duration: 0.002,
-      flamechart: [],
-      measures: [],
-      nativeEvents: [],
-      otherUserTimingMarks: [],
-      schedulingEvents: [],
-      startTime: 1,
-      suspenseEvents: [],
-    });
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      const data = preprocessData([
+        ...createBoilerplateEntries(),
+        cpuProfilerSample,
+        randomSample,
+      ]);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "componentMeasures": Array [],
+          "duration": 0.005,
+          "flamechart": Array [],
+          "laneToLabelMap": Map {
+            0 => "Sync",
+            1 => "InputContinuousHydration",
+            2 => "InputContinuous",
+            3 => "DefaultHydration",
+            4 => "Default",
+            5 => "TransitionHydration",
+            6 => "Transition",
+            7 => "Transition",
+            8 => "Transition",
+            9 => "Transition",
+            10 => "Transition",
+            11 => "Transition",
+            12 => "Transition",
+            13 => "Transition",
+            14 => "Transition",
+            15 => "Transition",
+            16 => "Transition",
+            17 => "Transition",
+            18 => "Transition",
+            19 => "Transition",
+            20 => "Transition",
+            21 => "Transition",
+            22 => "Retry",
+            23 => "Retry",
+            24 => "Retry",
+            25 => "Retry",
+            26 => "Retry",
+            27 => "SelectiveHydration",
+            28 => "IdleHydration",
+            29 => "Idle",
+            30 => "Offscreen",
+          },
+          "measures": Array [],
+          "nativeEvents": Array [],
+          "otherUserTimingMarks": Array [],
+          "reactVersion": "17.0.3",
+          "schedulingEvents": Array [],
+          "startTime": 1,
+          "suspenseEvents": Array [],
+        }
+      `);
+    }
   });
 
-  // NOTE This test doesn't have to be gated because it has hard-coded profiler samples.
   it('should process legacy data format (before lane labels were added)', () => {
     const cpuProfilerSample = createUserTimingEntry({
       args: {data: {startTime: ++startTime}},
@@ -225,10 +300,11 @@ describe(preprocessData, () => {
       ph: 'P',
     });
 
-    expect(
+    if (gate(flags => flags.enableSchedulingProfiler)) {
       // Data below is hard-coded based on an older profile sample.
       // Should be fine since this is explicitly a legacy-format test.
-      preprocessData([
+      const data = preprocessData([
+        ...createBoilerplateEntries(),
         cpuProfilerSample,
         createUserTimingEntry({
           cat: 'blink.user_timing',
@@ -258,140 +334,220 @@ describe(preprocessData, () => {
           cat: 'blink.user_timing',
           name: '--commit-stop',
         }),
-      ]),
-    ).toStrictEqual({
-      componentMeasures: [],
-      duration: 0.008,
-      flamechart: [],
-      measures: [
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.005,
-          laneLabels: [],
-          lanes: [9],
-          timestamp: 0.003,
-          type: 'render-idle',
+      ]);
+      expect(data).toMatchInlineSnapshot(`
+      Object {
+        "componentMeasures": Array [],
+        "duration": 0.011,
+        "flamechart": Array [],
+        "laneToLabelMap": Map {
+          0 => "Sync",
+          1 => "InputContinuousHydration",
+          2 => "InputContinuous",
+          3 => "DefaultHydration",
+          4 => "Default",
+          5 => "TransitionHydration",
+          6 => "Transition",
+          7 => "Transition",
+          8 => "Transition",
+          9 => "Transition",
+          10 => "Transition",
+          11 => "Transition",
+          12 => "Transition",
+          13 => "Transition",
+          14 => "Transition",
+          15 => "Transition",
+          16 => "Transition",
+          17 => "Transition",
+          18 => "Transition",
+          19 => "Transition",
+          20 => "Transition",
+          21 => "Transition",
+          22 => "Retry",
+          23 => "Retry",
+          24 => "Retry",
+          25 => "Retry",
+          26 => "Retry",
+          27 => "SelectiveHydration",
+          28 => "IdleHydration",
+          29 => "Idle",
+          30 => "Offscreen",
         },
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.001,
-          laneLabels: [],
-          lanes: [9],
-          timestamp: 0.003,
-          type: 'render',
-        },
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.003,
-          laneLabels: [],
-          lanes: [9],
-          timestamp: 0.005,
-          type: 'commit',
-        },
-        {
-          batchUID: 0,
-          depth: 1,
-          duration: 0.001,
-          laneLabels: [],
-          lanes: [9],
-          timestamp: 0.006,
-          type: 'layout-effects',
-        },
-      ],
-      nativeEvents: [],
-      otherUserTimingMarks: [],
-      schedulingEvents: [
-        {
-          laneLabels: [],
-          lanes: [9],
-          timestamp: 0.002,
-          type: 'schedule-render',
-          warning: null,
-        },
-      ],
-      startTime: 1,
-      suspenseEvents: [],
-    });
+        "measures": Array [
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.004999999999999999,
+            "lanes": Array [
+              9,
+            ],
+            "timestamp": 0.006,
+            "type": "render-idle",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.001,
+            "lanes": Array [
+              9,
+            ],
+            "timestamp": 0.006,
+            "type": "render",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.002999999999999999,
+            "lanes": Array [
+              9,
+            ],
+            "timestamp": 0.008,
+            "type": "commit",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 1,
+            "duration": 0.0010000000000000009,
+            "lanes": Array [
+              9,
+            ],
+            "timestamp": 0.009,
+            "type": "layout-effects",
+          },
+        ],
+        "nativeEvents": Array [],
+        "otherUserTimingMarks": Array [],
+        "reactVersion": "17.0.3",
+        "schedulingEvents": Array [
+          Object {
+            "lanes": Array [
+              9,
+            ],
+            "timestamp": 0.005,
+            "type": "schedule-render",
+            "warning": null,
+          },
+        ],
+        "startTime": 1,
+        "suspenseEvents": Array [],
+      }
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should process a sample legacy render sequence', () => {
     ReactDOM.render(<div />, document.createElement('div'));
 
-    const reactVersion = require('shared/ReactVersion').default;
-
-    const userTimingData = createUserTimingData(clearedMarks);
-    expect(preprocessData(userTimingData)).toStrictEqual({
-      componentMeasures: [],
-      duration: 0.011,
-      flamechart: [],
-      measures: [
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.004999999999999999,
-          laneLabels: ['Sync'],
-          lanes: [0],
-          timestamp: 0.006,
-          type: 'render-idle',
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      const data = preprocessData([
+        ...createBoilerplateEntries(),
+        ...createUserTimingData(clearedMarks),
+      ]);
+      expect(data).toMatchInlineSnapshot(`
+      Object {
+        "componentMeasures": Array [],
+        "duration": 0.013,
+        "flamechart": Array [],
+        "laneToLabelMap": Map {
+          0 => "Sync",
+          1 => "InputContinuousHydration",
+          2 => "InputContinuous",
+          3 => "DefaultHydration",
+          4 => "Default",
+          5 => "TransitionHydration",
+          6 => "Transition",
+          7 => "Transition",
+          8 => "Transition",
+          9 => "Transition",
+          10 => "Transition",
+          11 => "Transition",
+          12 => "Transition",
+          13 => "Transition",
+          14 => "Transition",
+          15 => "Transition",
+          16 => "Transition",
+          17 => "Transition",
+          18 => "Transition",
+          19 => "Transition",
+          20 => "Transition",
+          21 => "Transition",
+          22 => "Retry",
+          23 => "Retry",
+          24 => "Retry",
+          25 => "Retry",
+          26 => "Retry",
+          27 => "SelectiveHydration",
+          28 => "IdleHydration",
+          29 => "Idle",
+          30 => "Offscreen",
         },
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.001,
-          laneLabels: ['Sync'],
-          lanes: [0],
-          timestamp: 0.006,
-          type: 'render',
-        },
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.002999999999999999,
-          laneLabels: ['Sync'],
-          lanes: [0],
-          timestamp: 0.008,
-          type: 'commit',
-        },
-        {
-          batchUID: 0,
-          depth: 1,
-          duration: 0.0010000000000000009,
-          laneLabels: ['Sync'],
-          lanes: [0],
-          timestamp: 0.009,
-          type: 'layout-effects',
-        },
-      ],
-      nativeEvents: [],
-      otherUserTimingMarks: [
-        {
-          name: '__v3',
-          timestamp: 0.003,
-        },
-        {
-          name: `--react-init-${reactVersion}`,
-          timestamp: 0.004,
-        },
-      ],
-      schedulingEvents: [
-        {
-          laneLabels: ['Sync'],
-          lanes: [0],
-          timestamp: 0.005,
-          type: 'schedule-render',
-          warning: null,
-        },
-      ],
-      startTime: 1,
-      suspenseEvents: [],
-    });
+        "measures": Array [
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.008,
+            "lanes": Array [
+              0,
+            ],
+            "timestamp": 0.005,
+            "type": "render-idle",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.001,
+            "lanes": Array [
+              0,
+            ],
+            "timestamp": 0.005,
+            "type": "render",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.005999999999999999,
+            "lanes": Array [
+              0,
+            ],
+            "timestamp": 0.007,
+            "type": "commit",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 1,
+            "duration": 0.0010000000000000009,
+            "lanes": Array [
+              0,
+            ],
+            "timestamp": 0.011,
+            "type": "layout-effects",
+          },
+        ],
+        "nativeEvents": Array [],
+        "otherUserTimingMarks": Array [
+          Object {
+            "name": "__v3",
+            "timestamp": 0.003,
+          },
+        ],
+        "reactVersion": "17.0.3",
+        "schedulingEvents": Array [
+          Object {
+            "lanes": Array [
+              0,
+            ],
+            "timestamp": 0.004,
+            "type": "schedule-render",
+            "warning": null,
+          },
+        ],
+        "startTime": 4,
+        "suspenseEvents": Array [],
+      }
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('should process a sample createRoot render sequence', () => {
     function App() {
       const [didMount, setDidMount] = React.useState(false);
@@ -403,150 +559,199 @@ describe(preprocessData, () => {
       return true;
     }
 
-    const root = ReactDOM.createRoot(document.createElement('div'));
-    act(() => root.render(<App />));
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      const root = ReactDOM.createRoot(document.createElement('div'));
+      act(() => root.render(<App />));
 
-    const userTimingData = createUserTimingData(clearedMarks);
-    expect(preprocessData(userTimingData)).toStrictEqual({
-      componentMeasures: [
-        {
-          componentName: 'App',
-          duration: 0.001,
-          timestamp: 0.007,
-          warning: null,
+      const data = preprocessData([
+        ...createBoilerplateEntries(),
+        ...createUserTimingData(clearedMarks),
+      ]);
+      expect(data).toMatchInlineSnapshot(`
+      Object {
+        "componentMeasures": Array [
+          Object {
+            "componentName": "App",
+            "duration": 0.001,
+            "timestamp": 0.006,
+            "warning": null,
+          },
+          Object {
+            "componentName": "App",
+            "duration": 0.0010000000000000009,
+            "timestamp": 0.02,
+            "warning": null,
+          },
+        ],
+        "duration": 0.031,
+        "flamechart": Array [],
+        "laneToLabelMap": Map {
+          0 => "Sync",
+          1 => "InputContinuousHydration",
+          2 => "InputContinuous",
+          3 => "DefaultHydration",
+          4 => "Default",
+          5 => "TransitionHydration",
+          6 => "Transition",
+          7 => "Transition",
+          8 => "Transition",
+          9 => "Transition",
+          10 => "Transition",
+          11 => "Transition",
+          12 => "Transition",
+          13 => "Transition",
+          14 => "Transition",
+          15 => "Transition",
+          16 => "Transition",
+          17 => "Transition",
+          18 => "Transition",
+          19 => "Transition",
+          20 => "Transition",
+          21 => "Transition",
+          22 => "Retry",
+          23 => "Retry",
+          24 => "Retry",
+          25 => "Retry",
+          26 => "Retry",
+          27 => "SelectiveHydration",
+          28 => "IdleHydration",
+          29 => "Idle",
+          30 => "Offscreen",
         },
-        {
-          componentName: 'App',
-          duration: 0.0010000000000000009,
-          timestamp: 0.018,
-          warning: null,
-        },
-      ],
-      duration: 0.026,
-      flamechart: [],
-      measures: [
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.006999999999999999,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.006,
-          type: 'render-idle',
-        },
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.002999999999999999,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.006,
-          type: 'render',
-        },
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.002999999999999999,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.01,
-          type: 'commit',
-        },
-        {
-          batchUID: 0,
-          depth: 1,
-          duration: 0.0010000000000000009,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.011,
-          type: 'layout-effects',
-        },
-        {
-          batchUID: 0,
-          depth: 0,
-          duration: 0.002,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.014,
-          type: 'passive-effects',
-        },
-        {
-          batchUID: 1,
-          depth: 0,
-          duration: 0.006999999999999999,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.017,
-          type: 'render-idle',
-        },
-        {
-          batchUID: 1,
-          depth: 0,
-          duration: 0.002999999999999999,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.017,
-          type: 'render',
-        },
-        {
-          batchUID: 1,
-          depth: 0,
-          duration: 0.002999999999999999,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.021,
-          type: 'commit',
-        },
-        {
-          batchUID: 1,
-          depth: 1,
-          duration: 0.0010000000000000009,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.022,
-          type: 'layout-effects',
-        },
-        {
-          batchUID: 1,
-          depth: 0,
-          duration: 0.0009999999999999974,
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.025,
-          type: 'passive-effects',
-        },
-      ],
-      nativeEvents: [],
-      otherUserTimingMarks: [
-        {
-          name: '__v3',
-          timestamp: 0.003,
-        },
-        {
-          name: '--react-init-17.0.3',
-          timestamp: 0.004,
-        },
-      ],
-      schedulingEvents: [
-        {
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.005,
-          type: 'schedule-render',
-          warning: null,
-        },
-        {
-          componentName: 'App',
-          laneLabels: ['Default'],
-          lanes: [4],
-          timestamp: 0.015,
-          type: 'schedule-state-update',
-          warning: null,
-        },
-      ],
-      startTime: 1,
-      suspenseEvents: [],
-    });
+        "measures": Array [
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.009999999999999998,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.005,
+            "type": "render-idle",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.003,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.005,
+            "type": "render",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.006,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.009,
+            "type": "commit",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 1,
+            "duration": 0.0010000000000000009,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.013,
+            "type": "layout-effects",
+          },
+          Object {
+            "batchUID": 0,
+            "depth": 0,
+            "duration": 0.0019999999999999983,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.016,
+            "type": "passive-effects",
+          },
+          Object {
+            "batchUID": 1,
+            "depth": 0,
+            "duration": 0.010000000000000002,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.019,
+            "type": "render-idle",
+          },
+          Object {
+            "batchUID": 1,
+            "depth": 0,
+            "duration": 0.002999999999999999,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.019,
+            "type": "render",
+          },
+          Object {
+            "batchUID": 1,
+            "depth": 0,
+            "duration": 0.006000000000000002,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.023,
+            "type": "commit",
+          },
+          Object {
+            "batchUID": 1,
+            "depth": 1,
+            "duration": 0.0010000000000000009,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.027,
+            "type": "layout-effects",
+          },
+          Object {
+            "batchUID": 1,
+            "depth": 0,
+            "duration": 0.0010000000000000009,
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.03,
+            "type": "passive-effects",
+          },
+        ],
+        "nativeEvents": Array [],
+        "otherUserTimingMarks": Array [
+          Object {
+            "name": "__v3",
+            "timestamp": 0.003,
+          },
+        ],
+        "reactVersion": "17.0.3",
+        "schedulingEvents": Array [
+          Object {
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.004,
+            "type": "schedule-render",
+            "warning": null,
+          },
+          Object {
+            "componentName": "App",
+            "lanes": Array [
+              4,
+            ],
+            "timestamp": 0.017,
+            "type": "schedule-state-update",
+            "warning": null,
+          },
+        ],
+        "startTime": 4,
+        "suspenseEvents": Array [],
+      }
+    `);
+    }
   });
 
   // @gate enableSchedulingProfiler
@@ -560,7 +765,7 @@ describe(preprocessData, () => {
     const invalidUserTimingData = createUserTimingData(invalidMarks);
 
     const error = spyOnDevAndProd(console, 'error');
-    preprocessData(invalidUserTimingData);
+    preprocessData([...createBoilerplateEntries(), ...invalidUserTimingData]);
     expect(error).toHaveBeenCalled();
   });
 
@@ -575,7 +780,7 @@ describe(preprocessData, () => {
     const invalidUserTimingData = createUserTimingData(invalidMarks);
 
     const error = spyOnDevAndProd(console, 'error');
-    preprocessData(invalidUserTimingData);
+    preprocessData([...createBoilerplateEntries(), ...invalidUserTimingData]);
     expect(error).toHaveBeenCalled();
   });
 
@@ -606,20 +811,26 @@ describe(preprocessData, () => {
       }),
     );
 
-    expect(preprocessData(userTimingData).otherUserTimingMarks).toStrictEqual([
-      {
-        name: 'VCWithoutImage: root',
-        timestamp: 0.003,
-      },
-      {
-        name: '--a-mark-that-looks-like-one-of-ours',
-        timestamp: 0.004,
-      },
-      {
-        name: 'Some other mark',
-        timestamp: 0.005,
-      },
+    const data = preprocessData([
+      ...createBoilerplateEntries(),
+      ...userTimingData,
     ]);
+    expect(data.otherUserTimingMarks).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "name": "VCWithoutImage: root",
+          "timestamp": 0.003,
+        },
+        Object {
+          "name": "--a-mark-that-looks-like-one-of-ours",
+          "timestamp": 0.004,
+        },
+        Object {
+          "name": "Some other mark",
+          "timestamp": 0.005,
+        },
+      ]
+    `);
   });
 
   // TODO: Add test for flamechart parsing

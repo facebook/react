@@ -15,12 +15,10 @@
 describe('SchedulingProfiler labels', () => {
   let React;
   let ReactDOM;
-  let ReactFiberLane;
 
   let act;
   let clearedMarks;
   let featureDetectionMarkName = null;
-  let formatLanes;
   let marks;
 
   function polyfillJSDomUserTiming() {
@@ -75,14 +73,6 @@ describe('SchedulingProfiler labels', () => {
 
     const TestUtils = require('react-dom/test-utils');
     act = TestUtils.act;
-
-    const SchedulingProfiler = require('react-reconciler/src/SchedulingProfiler');
-    formatLanes = SchedulingProfiler.formatLanes;
-
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFiberLane = ReactFeatureFlags.enableNewReconciler
-      ? require('react-reconciler/src/ReactFiberLane.new')
-      : require('react-reconciler/src/ReactFiberLane.old');
   });
 
   afterEach(() => {
@@ -92,29 +82,45 @@ describe('SchedulingProfiler labels', () => {
     delete global.performance;
   });
 
-  // @gate enableSchedulingProfiler
   it('regression test SyncLane', () => {
     ReactDOM.render(<div />, document.createElement('div'));
-    expect(clearedMarks).toContain(
-      `--schedule-render-${formatLanes(ReactFiberLane.SyncLane)}`,
-    );
+
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      expect(clearedMarks).toMatchInlineSnapshot(`
+      Array [
+        "__v3",
+        "--schedule-render-1",
+        "--render-start-1",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-1",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('regression test DefaultLane', () => {
-    const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      act(() => {
+        const container = document.createElement('div');
+        const root = ReactDOM.createRoot(container);
 
-    act(() => {
-      root.render(<div />);
-      expect(clearedMarks).toContain(
-        `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      );
-    });
+        root.render(<div />);
+        expect(clearedMarks).toMatchInlineSnapshot(`
+        Array [
+          "__v3",
+          "--schedule-render-16",
+        ]
+      `);
+      });
+    }
   });
 
-  // @gate enableSchedulingProfiler
-  // @gate !enableLegacyFBSupport
   it('regression test InputDiscreteLane', () => {
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
@@ -128,24 +134,41 @@ describe('SchedulingProfiler labels', () => {
       return <button ref={targetRef} onClick={handleClick} />;
     }
 
-    act(() => {
-      root.render(<App />);
-    });
+    if (
+      gate(
+        flags => flags.enableSchedulingProfiler && !flags.enableLegacyFBSupport,
+      )
+    ) {
+      act(() => {
+        root.render(<App />);
+      });
 
-    clearedMarks.splice(0);
+      clearedMarks.splice(0);
 
-    act(() => {
-      targetRef.current.click();
-    });
-    expect(clearedMarks).toContain(
-      `--schedule-state-update-${formatLanes(ReactFiberLane.SyncLane)}-App`,
-    );
+      act(() => {
+        targetRef.current.click();
+      });
+
+      expect(clearedMarks).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-state-update-1-App",
+        "--render-start-1",
+        "--component-render-start-App",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-1",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-1",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 
-  // @gate enableSchedulingProfiler
   it('regression test InputContinuousLane', () => {
-    const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
     const targetRef = React.createRef(null);
 
     function App() {
@@ -154,21 +177,38 @@ describe('SchedulingProfiler labels', () => {
       return <div ref={targetRef} onMouseOver={handleMouseOver} />;
     }
 
-    act(() => {
-      root.render(<App />);
-    });
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
 
-    clearedMarks.splice(0);
+      act(() => {
+        root.render(<App />);
+      });
 
-    act(() => {
-      const event = document.createEvent('MouseEvents');
-      event.initEvent('mouseover', true, true);
-      dispatchAndSetCurrentEvent(targetRef.current, event);
-    });
-    expect(clearedMarks).toContain(
-      `--schedule-state-update-${formatLanes(
-        ReactFiberLane.InputContinuousLane,
-      )}-App`,
-    );
+      clearedMarks.splice(0);
+
+      act(() => {
+        const event = document.createEvent('MouseEvents');
+        event.initEvent('mouseover', true, true);
+        dispatchAndSetCurrentEvent(targetRef.current, event);
+      });
+
+      expect(clearedMarks).toMatchInlineSnapshot(`
+      Array [
+        "--schedule-state-update-4-App",
+        "--render-start-4",
+        "--component-render-start-App",
+        "--component-render-stop",
+        "--render-stop",
+        "--commit-start-4",
+        "--react-version-17.0.3",
+        "--profiler-version-1",
+        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+        "--layout-effects-start-4",
+        "--layout-effects-stop",
+        "--commit-stop",
+      ]
+    `);
+    }
   });
 });
