@@ -27,6 +27,12 @@ Object.defineProperty(exports, "ComponentWithMultipleHooksPerLine", {
     return _ComponentWithMultipleHooksPerLine.Component;
   }
 });
+Object.defineProperty(exports, "ComponentWithNestedHooks", {
+  enumerable: true,
+  get: function () {
+    return _ComponentWithNestedHooks.Component;
+  }
+});
 Object.defineProperty(exports, "ContainingStringSourceMappingURL", {
   enumerable: true,
   get: function () {
@@ -60,6 +66,8 @@ var _ComponentWithCustomHook = require("./ComponentWithCustomHook");
 var _ComponentWithExternalCustomHooks = require("./ComponentWithExternalCustomHooks");
 
 var _ComponentWithMultipleHooksPerLine = require("./ComponentWithMultipleHooksPerLine");
+
+var _ComponentWithNestedHooks = require("./ComponentWithNestedHooks");
 
 var _ContainingStringSourceMappingURL = require("./ContainingStringSourceMappingURL");
 

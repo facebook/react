@@ -36,7 +36,7 @@ function checkNodeLocation(
 ): boolean {
   const {start, end} = path.node.loc;
 
-  if (line < start.line || line > end.line) {
+  if (line !== start.line) {
     return false;
   }
 

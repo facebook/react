@@ -124,12 +124,24 @@ function Component$3() {
  * @flow
  */
 
-function Component$4() {
-  const [count, setCount] = React.useState(0);
-  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
-    onClick: () => setCount(count + 1)
-  }, "Click me"));
+const {
+  useMemo,
+  useState
+} = React__default;
+
+function Component$4(props) {
+  const InnerComponent = useMemo(() => () => {
+    const [state] = useState(0);
+    return state;
+  });
+  props.callback(InnerComponent);
+  return null;
 }
+
+var ComponentWithNestedHooks = {
+  Component: Component$4
+};
+var ComponentWithNestedHooks_1 = ComponentWithNestedHooks.Component;
 
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -139,6 +151,7 @@ function Component$4() {
  *
  * @flow
  */
+
 function Component$5() {
   const [count, setCount] = React.useState(0);
   return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
@@ -155,6 +168,21 @@ function Component$5() {
  * @flow
  */
 function Component$6() {
+  const [count, setCount] = React.useState(0);
+  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
+    onClick: () => setCount(count + 1)
+  }, "Click me"));
+}
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+function Component$7() {
   const [count] = require('react').useState(0);
 
   return count;
@@ -261,9 +289,10 @@ exports.ComponentUsingHooksIndirectly = Component;
 exports.ComponentWithCustomHook = Component$1;
 exports.ComponentWithExternalCustomHooks = Component$2;
 exports.ComponentWithMultipleHooksPerLine = Component$3;
-exports.ContainingStringSourceMappingURL = Component$4;
-exports.Example = Component$5;
-exports.InlineRequire = Component$6;
+exports.ComponentWithNestedHooks = ComponentWithNestedHooks_1;
+exports.ContainingStringSourceMappingURL = Component$5;
+exports.Example = Component$6;
+exports.InlineRequire = Component$7;
 exports.ToDoList = ToDoList;
 exports.useTheme = useTheme;
 //# sourceMappingURL=index.js.map
