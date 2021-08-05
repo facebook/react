@@ -2203,8 +2203,16 @@ const tests = {
             // Don't assume user meant `foo` because it's not used in the effect.
             "The 'foo' literal is not a valid dependency because it never changes. " +
             'You can safely remove it.',
-          // TODO: provide suggestion.
-          suggestions: undefined,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: []',
+              output: normalizeIndent`
+                function MyComponent() {
+                  useEffect(() => {}, []);
+                }
+              `,
+            },
+          ],
         },
       ],
     },
@@ -2277,17 +2285,50 @@ const tests = {
         {
           message:
             'The 42 literal is not a valid dependency because it never changes. You can safely remove it.',
-          suggestions: undefined,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [foo, bar, baz]',
+              output: normalizeIndent`
+                function MyComponent({ foo, bar, baz }) {
+                  useEffect(() => {
+                    console.log(foo, bar, baz);
+                  }, [foo, bar, baz]);
+                }
+              `,
+            },
+          ],
         },
         {
           message:
             'The false literal is not a valid dependency because it never changes. You can safely remove it.',
-          suggestions: undefined,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [foo, bar, baz]',
+              output: normalizeIndent`
+                function MyComponent({ foo, bar, baz }) {
+                  useEffect(() => {
+                    console.log(foo, bar, baz);
+                  }, [foo, bar, baz]);
+                }
+              `,
+            },
+          ],
         },
         {
           message:
             'The null literal is not a valid dependency because it never changes. You can safely remove it.',
-          suggestions: undefined,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [foo, bar, baz]',
+              output: normalizeIndent`
+                function MyComponent({ foo, bar, baz }) {
+                  useEffect(() => {
+                    console.log(foo, bar, baz);
+                  }, [foo, bar, baz]);
+                }
+              `,
+            },
+          ],
         },
       ],
     },

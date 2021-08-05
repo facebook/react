@@ -647,11 +647,26 @@ export default {
                       `Did you mean to include ${declaredDependencyNode.value} in the array instead?`,
                   });
                 } else {
+                  const suggestedDeps = Array.from(
+                    dependencies,
+                    ([k]) => k,
+                  ).join(', ');
                   reportProblem({
                     node: declaredDependencyNode,
                     message:
                       `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
                       'because it never changes. You can safely remove it.',
+                    suggest: [
+                      {
+                        desc: `Update the dependencies array to be: [${suggestedDeps}]`,
+                        fix(fixer) {
+                          return fixer.replaceText(
+                            declaredDependenciesNode,
+                            `[${suggestedDeps}]`,
+                          );
+                        },
+                      },
+                    ],
                   });
                 }
               } else {
