@@ -105,6 +105,9 @@ export {
   observeVisibleRects,
 } from './ReactTestSelectors';
 
+import * as Scheduler from './Scheduler';
+import {setSuppressWarning} from 'shared/consoleWithStackDev';
+
 type OpaqueRoot = FiberRoot;
 
 // 0 is PROD, 1 is DEV.
@@ -714,6 +717,13 @@ export function getIsStrictModeForDevtools() {
 }
 
 export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
+  // We're in a test because Scheduler.unstable_yieldValue only exists
+  // in SchedulerMock. To reduce the noise in strict mode tests,
+  // suppress warnings and disable scheduler yielding during the double render
+  if (typeof Scheduler.unstable_yieldValue === 'function') {
+    Scheduler.unstable_setDisableYieldValue(newIsStrictMode);
+    setSuppressWarning(newIsStrictMode);
+  }
   isStrictMode = newIsStrictMode;
 }
 

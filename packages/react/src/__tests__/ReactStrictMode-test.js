@@ -893,8 +893,8 @@ describe('context legacy', () => {
     ReactDOM.render(<Root />, container);
   });
 
-  describe('disableLogs', () => {
-    it('disables logs once for class double render', () => {
+  describe('logging', () => {
+    it('does not disable logs for class double render', () => {
       spyOnDevAndProd(console, 'log');
 
       let count = 0;
@@ -915,14 +915,14 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
+      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
       expect(console.log).toBeCalledWith('foo 1');
     });
 
-    it('disables logs once for class double ctor', () => {
+    it('does not disable logs for class double ctor', () => {
       spyOnDevAndProd(console, 'log');
 
       let count = 0;
@@ -946,14 +946,14 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
+      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
       expect(console.log).toBeCalledWith('foo 1');
     });
 
-    it('disables logs once for class double getDerivedStateFromProps', () => {
+    it('does not disable logs for class double getDerivedStateFromProps', () => {
       spyOnDevAndProd(console, 'log');
 
       let count = 0;
@@ -978,14 +978,14 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
+      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
       expect(console.log).toBeCalledWith('foo 1');
     });
 
-    it('disables logs once for class double shouldComponentUpdate', () => {
+    it('does not disable logs for class double shouldComponentUpdate', () => {
       spyOnDevAndProd(console, 'log');
 
       let count = 0;
@@ -1017,14 +1017,14 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
+      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
       expect(console.log).toBeCalledWith('foo 1');
     });
 
-    it('disables logs once for class state updaters', () => {
+    it('does not disable logs for class state updaters', () => {
       spyOnDevAndProd(console, 'log');
 
       let inst;
@@ -1051,14 +1051,14 @@ describe('context legacy', () => {
       });
 
       expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
+      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
       expect(console.log).toBeCalledWith('foo 1');
     });
 
-    it('disables logs once for function double render', () => {
+    it('does not disable logs for function double render', () => {
       spyOnDevAndProd(console, 'log');
 
       let count = 0;
@@ -1077,7 +1077,7 @@ describe('context legacy', () => {
       );
 
       expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
+      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
       // Note: we should display the first log because otherwise
       // there is a risk of suppressing warnings when they happen,
       // and on the next render they'd get deduplicated and ignored.
