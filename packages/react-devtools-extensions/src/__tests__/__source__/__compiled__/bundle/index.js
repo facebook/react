@@ -131,7 +131,7 @@ const {
 
 function Component$4(props) {
   const InnerComponent = useMemo(() => () => {
-    const [state, setState] = useState(0);
+    const [state] = useState(0);
     return state;
   });
   props.callback(InnerComponent);
