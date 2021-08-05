@@ -242,20 +242,21 @@ export class ReactMeasuresView extends View {
       }
 
       // Render lane labels
-      const labelRect = {
-        origin: {
-          x: visibleArea.origin.x,
-          y: baseY,
-        },
-        size: {
-          width: visibleArea.size.width,
-          height: REACT_LANE_HEIGHT,
-        },
-      };
       const label = this._profilerData.laneToLabelMap.get(lane);
       if (label == null) {
         console.warn(`Could not find label for lane ${lane}.`);
       } else {
+        const labelRect = {
+          origin: {
+            x: visibleArea.origin.x,
+            y: baseY,
+          },
+          size: {
+            width: visibleArea.size.width,
+            height: REACT_LANE_HEIGHT,
+          },
+        };
+
         drawText(label, context, labelRect, visibleArea, {
           fillStyle: COLORS.TEXT_DIM_COLOR,
         });
