@@ -40,6 +40,10 @@ function checkNodeLocation(
     return false;
   }
 
+  if (line !== start.line) {
+    return false;
+  }
+
   if (column !== null) {
     // Column numbers are represented differently between tools/engines.
     // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
@@ -52,10 +56,6 @@ function checkNodeLocation(
     // For more info see https://github.com/facebook/react/pull/21833#discussion_r666831276
     column -= 1;
 
-    if (line !== start.line) {
-      return false;
-    }
-
     if (
       (line === start.line && column < start.column) ||
       (line === end.line && column > end.column)
@@ -64,7 +64,7 @@ function checkNodeLocation(
     }
   }
 
-  return line === start.line;
+  return true;
 }
 
 // Checks whether hookNode is a member of targetHookNode
