@@ -52,12 +52,14 @@ export type ReactScheduleForceUpdateEvent = {|
   +type: 'schedule-force-update',
 |};
 
+export type Phase = 'mount' | 'update';
+
 export type SuspenseEvent = {|
   ...BaseReactEvent,
   depth: number,
   duration: number | null,
   +id: string,
-  +phase: 'mount' | 'update' | null,
+  +phase: Phase | null,
   resolution: 'rejected' | 'resolved' | 'unresolved',
   resuspendTimestamps: Array<number> | null,
   +type: 'suspense',

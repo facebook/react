@@ -17,6 +17,7 @@ import type {
   BatchUID,
   Flamechart,
   NativeEvent,
+  Phase,
   ReactLane,
   ReactComponentMeasure,
   ReactMeasureType,
@@ -315,6 +316,7 @@ function processTimelineEvent(
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
           // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
+          // This might be easier to do if we separated warnings into a second pass.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
@@ -331,6 +333,7 @@ function processTimelineEvent(
         let warning = null;
         if (state.measureStack.find(({type}) => type === 'commit')) {
           // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
+          // This might be easier to do if we separated warnings into a second pass.
           warning = WARNING_STRINGS.NESTED_UPDATE;
         }
 
@@ -345,25 +348,18 @@ function processTimelineEvent(
 
       // React Events - suspense
       else if (name.startsWith('--suspense-suspend-')) {
-        const [id, componentName, ...rest] = name.substr(19).split('-');
+        const [id, componentName, phase, laneBitmaskString] = name
+          .substr(19)
+          .split('-');
+        const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
-        // Older versions of the scheduling profiler data didn't contain phase or lane values.
-        let phase = null;
+        // TODO It's possible we don't have lane-to-label mapping yet (since it's logged during commit phase)
+        // We may need to do this sort of error checking in a separate pass.
         let warning = null;
-        if (rest.length === 3) {
-          switch (rest[0]) {
-            case 'mount':
-            case 'update':
-              phase = rest[0];
-              break;
-          }
-
-          if (phase === 'update') {
-            const laneLabels = rest[2];
-            // HACK This is a bit gross but the numeric lane value might change between render versions.
-            if (!laneLabels.includes('Transition')) {
-              warning = WARNING_STRINGS.SUSPENDD_DURING_UPATE;
-            }
+        if (phase === 'update') {
+          // HACK This is a bit gross but the numeric lane value might change between render versions.
+          if (lanes.some(lane => laneToLabelMap.get(lane) === 'Transition')) {
+            warning = WARNING_STRINGS.SUSPENDD_DURING_UPATE;
           }
         }
 
@@ -392,7 +388,7 @@ function processTimelineEvent(
           depth,
           duration: null,
           id,
-          phase,
+          phase: ((phase: any): Phase),
           resolution: 'unresolved',
           resuspendTimestamps: null,
           timestamp: startTime,
