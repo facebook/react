@@ -53,7 +53,7 @@ const WARNING_STRINGS = {
     'An event handler scheduled a big update with React. Consider using the Transition API to defer some of this work.',
   NESTED_UPDATE:
     'A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint.',
-  SUSPENDD_DURING_UPATE:
+  SUSPEND_DURING_UPATE:
     'A component suspended during an update which caused a fallback to be shown. ' +
     "Consider using the Transition API to avoid hiding components after they've been mounted.",
 };
@@ -355,7 +355,7 @@ function processTimelineEvent(
         if (phase === 'update') {
           // HACK This is a bit gross but the numeric lane value might change between render versions.
           if (lanes.some(lane => laneToLabelMap.get(lane) === 'Transition')) {
-            warning = WARNING_STRINGS.SUSPENDD_DURING_UPATE;
+            warning = WARNING_STRINGS.SUSPEND_DURING_UPATE;
           }
         }
 
