@@ -52,6 +52,10 @@ function checkNodeLocation(
     // For more info see https://github.com/facebook/react/pull/21833#discussion_r666831276
     column -= 1;
 
+    if (line !== start.line) {
+      return false;
+    }
+
     if (
       (line === start.line && column < start.column) ||
       (line === end.line && column > end.column)
@@ -60,7 +64,7 @@ function checkNodeLocation(
     }
   }
 
-  return true;
+  return line === start.line;
 }
 
 // Checks whether hookNode is a member of targetHookNode

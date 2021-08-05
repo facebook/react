@@ -152,6 +152,20 @@ describe('parseHookNames', () => {
     expectHookNamesToEqual(hookNames, ['count', 'darkMode', 'isDarkMode']);
   });
 
+  it('should parse names for code using nested hooks', async () => {
+    const Component = require('./__source__/__untransformed__/ComponentWithNestedHooks')
+      .Component;
+    let InnerComponent;
+    const hookNames = await getHookNamesForComponent(Component, {
+      callback: innerComponent => {
+        InnerComponent = innerComponent;
+      },
+    });
+    const innerHookNames = await getHookNamesForComponent(InnerComponent);
+    expectHookNamesToEqual(hookNames, ['InnerComponent']);
+    expectHookNamesToEqual(innerHookNames, ['state']);
+  });
+
   it('should return null for custom hooks without explicit names', async () => {
     const Component = require('./__source__/__untransformed__/ComponentWithUnnamedCustomHooks')
       .Component;
@@ -258,6 +272,35 @@ describe('parseHookNames', () => {
       ); // bundle source map
       await test(
         './__source__/__compiled__/no-columns/ComponentUsingHooksIndirectly',
+      ); // simulated Webpack 'cheap-module-source-map'
+    });
+
+    it('should work when code is using nested hooks', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        let InnerComponent;
+        const hookNames = await getHookNamesForComponent(Component, {
+          callback: innerComponent => {
+            InnerComponent = innerComponent;
+          },
+        });
+        const innerHookNames = await getHookNamesForComponent(InnerComponent);
+        expectHookNamesToEqual(hookNames, [
+          'InnerComponent', // useMemo()
+        ]);
+        expectHookNamesToEqual(innerHookNames, [
+          'state', // useState()
+        ]);
+      }
+
+      await test('./__source__/__compiled__/inline/ComponentWithNestedHooks'); // inline source map
+      await test('./__source__/__compiled__/external/ComponentWithNestedHooks'); // external source map
+      await test(
+        './__source__/__compiled__/bundle',
+        'ComponentWithNestedHooks',
+      ); // bundle source map
+      await test(
+        './__source__/__compiled__/no-columns/ComponentWithNestedHooks',
       ); // simulated Webpack 'cheap-module-source-map'
     });
 

@@ -1,0 +1,28 @@
+"use strict";
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+const {
+  useMemo,
+  useState
+} = require('react');
+
+function Component(props) {
+  const InnerComponent = useMemo(() => () => {
+    const [state, setState] = useState(0);
+    return state;
+  });
+  props.callback(InnerComponent);
+  return null;
+}
+
+module.exports = {
+  Component
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkNvbXBvbmVudFdpdGhOZXN0ZWRIb29rcy5qcyJdLCJuYW1lcyI6WyJ1c2VNZW1vIiwidXNlU3RhdGUiLCJyZXF1aXJlIiwiQ29tcG9uZW50IiwicHJvcHMiLCJJbm5lckNvbXBvbmVudCIsInN0YXRlIiwic2V0U3RhdGUiLCJjYWxsYmFjayIsIm1vZHVsZSIsImV4cG9ydHMiXSwibWFwcGluZ3MiOiI7O0FBQUE7Ozs7Ozs7O0FBUUEsTUFBTTtBQUFDQSxFQUFBQSxPQUFEO0FBQVVDLEVBQUFBO0FBQVYsSUFBc0JDLE9BQU8sQ0FBQyxPQUFELENBQW5DOztBQUVBLFNBQVNDLFNBQVQsQ0FBbUJDLEtBQW5CLEVBQTBCO0FBQ3hCLFFBQU1DLGNBQWMsR0FBR0wsT0FBTyxDQUFDLE1BQU0sTUFBTTtBQUN6QyxVQUFNLENBQUNNLEtBQUQsRUFBUUMsUUFBUixJQUFvQk4sUUFBUSxDQUFDLENBQUQsQ0FBbEM7QUFFQSxXQUFPSyxLQUFQO0FBQ0QsR0FKNkIsQ0FBOUI7QUFLQUYsRUFBQUEsS0FBSyxDQUFDSSxRQUFOLENBQWVILGNBQWY7QUFFQSxTQUFPLElBQVA7QUFDRDs7QUFFREksTUFBTSxDQUFDQyxPQUFQLEdBQWlCO0FBQUNQLEVBQUFBO0FBQUQsQ0FBakIiLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIENvcHlyaWdodCAoYykgRmFjZWJvb2ssIEluYy4gYW5kIGl0cyBhZmZpbGlhdGVzLlxuICpcbiAqIFRoaXMgc291cmNlIGNvZGUgaXMgbGljZW5zZWQgdW5kZXIgdGhlIE1JVCBsaWNlbnNlIGZvdW5kIGluIHRoZVxuICogTElDRU5TRSBmaWxlIGluIHRoZSByb290IGRpcmVjdG9yeSBvZiB0aGlzIHNvdXJjZSB0cmVlLlxuICpcbiAqIEBmbG93XG4gKi9cbmNvbnN0IHt1c2VNZW1vLCB1c2VTdGF0ZX0gPSByZXF1aXJlKCdyZWFjdCcpO1xuXG5mdW5jdGlvbiBDb21wb25lbnQocHJvcHMpIHtcbiAgY29uc3QgSW5uZXJDb21wb25lbnQgPSB1c2VNZW1vKCgpID0+ICgpID0+IHtcbiAgICBjb25zdCBbc3RhdGUsIHNldFN0YXRlXSA9IHVzZVN0YXRlKDApO1xuXG4gICAgcmV0dXJuIHN0YXRlO1xuICB9KTtcbiAgcHJvcHMuY2FsbGJhY2soSW5uZXJDb21wb25lbnQpO1xuXG4gIHJldHVybiBudWxsO1xufVxuXG5tb2R1bGUuZXhwb3J0cyA9IHtDb21wb25lbnR9O1xuIl19

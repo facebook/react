@@ -1,0 +1,28 @@
+"use strict";
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+const {
+  useMemo,
+  useState
+} = require('react');
+
+function Component(props) {
+  const InnerComponent = useMemo(() => () => {
+    const [state, setState] = useState(0);
+    return state;
+  });
+  props.callback(InnerComponent);
+  return null;
+}
+
+module.exports = {
+  Component
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkNvbXBvbmVudFdpdGhOZXN0ZWRIb29rcy5qcyJdLCJuYW1lcyI6WyJ1c2VNZW1vIiwidXNlU3RhdGUiLCJyZXF1aXJlIiwiQ29tcG9uZW50IiwicHJvcHMiLCJJbm5lckNvbXBvbmVudCIsInN0YXRlIiwic2V0U3RhdGUiLCJjYWxsYmFjayIsIm1vZHVsZSIsImV4cG9ydHMiXSwibWFwcGluZ3MiOiI7O0FBQUE7Ozs7Ozs7O0FBUUEsTUFBQTtBQUFBQSxFQUFBQSxPQUFBO0FBQUFDLEVBQUFBO0FBQUEsSUFBQUMsT0FBQSxDQUFBLE9BQUEsQ0FBQTs7QUFFQSxTQUFBQyxTQUFBLENBQUFDLEtBQUEsRUFBQTtBQUNBLFFBQUFDLGNBQUEsR0FBQUwsT0FBQSxDQUFBLE1BQUEsTUFBQTtBQUNBLFVBQUEsQ0FBQU0sS0FBQSxFQUFBQyxRQUFBLElBQUFOLFFBQUEsQ0FBQSxDQUFBLENBQUE7QUFFQSxXQUFBSyxLQUFBO0FBQ0EsR0FKQSxDQUFBO0FBS0FGLEVBQUFBLEtBQUEsQ0FBQUksUUFBQSxDQUFBSCxjQUFBO0FBRUEsU0FBQSxJQUFBO0FBQ0E7O0FBRUFJLE1BQUEsQ0FBQUMsT0FBQSxHQUFBO0FBQUFQLEVBQUFBO0FBQUEsQ0FBQSIsInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogQ29weXJpZ2h0IChjKSBGYWNlYm9vaywgSW5jLiBhbmQgaXRzIGFmZmlsaWF0ZXMuXG4gKlxuICogVGhpcyBzb3VyY2UgY29kZSBpcyBsaWNlbnNlZCB1bmRlciB0aGUgTUlUIGxpY2Vuc2UgZm91bmQgaW4gdGhlXG4gKiBMSUNFTlNFIGZpbGUgaW4gdGhlIHJvb3QgZGlyZWN0b3J5IG9mIHRoaXMgc291cmNlIHRyZWUuXG4gKlxuICogQGZsb3dcbiAqL1xuY29uc3Qge3VzZU1lbW8sIHVzZVN0YXRlfSA9IHJlcXVpcmUoJ3JlYWN0Jyk7XG5cbmZ1bmN0aW9uIENvbXBvbmVudChwcm9wcykge1xuICBjb25zdCBJbm5lckNvbXBvbmVudCA9IHVzZU1lbW8oKCkgPT4gKCkgPT4ge1xuICAgIGNvbnN0IFtzdGF0ZSwgc2V0U3RhdGVdID0gdXNlU3RhdGUoMCk7XG5cbiAgICByZXR1cm4gc3RhdGU7XG4gIH0pO1xuICBwcm9wcy5jYWxsYmFjayhJbm5lckNvbXBvbmVudCk7XG5cbiAgcmV0dXJuIG51bGw7XG59XG5cbm1vZHVsZS5leHBvcnRzID0ge0NvbXBvbmVudH07XG4iXX0=
