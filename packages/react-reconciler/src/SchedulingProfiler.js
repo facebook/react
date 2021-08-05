@@ -17,6 +17,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import {SCHEDULING_PROFILER_VERSION} from 'react-devtools-scheduling-profiler/src/constants';
 
 import {
   getLabelForLane as getLabelForLane_old,
@@ -32,10 +33,6 @@ const getLabelForLane = enableNewReconciler
   : getLabelForLane_old;
 
 const TotalLanes = enableNewReconciler ? TotalLanes_new : TotalLanes_old;
-
-// Increment this number any time a backwards breaking change is made to the profiler metadata.
-// It should be in sync with the version in react-devtoos-scheduling-profiler/src/import-worker/preprocessData
-const PROFILER_VERSION = 1;
 
 /**
  * If performance exists and supports the subset of the User Timing API that we
@@ -98,7 +95,7 @@ function markAndClear(name) {
 
 function markVersionMetadata() {
   markAndClear(`--react-version-${ReactVersion}`);
-  markAndClear(`--profiler-version-${PROFILER_VERSION}`);
+  markAndClear(`--profiler-version-${SCHEDULING_PROFILER_VERSION}`);
 }
 
 export function markCommitStarted(lanes: Lanes): void {

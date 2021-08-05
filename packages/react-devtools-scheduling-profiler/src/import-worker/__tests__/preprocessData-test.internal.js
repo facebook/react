@@ -9,10 +9,12 @@
 
 import {getLaneLabels} from 'react-reconciler/src/SchedulingProfiler';
 import preprocessData, {
-  SUPPORTED_PROFILER_VERSION,
   getLanesFromTransportDecimalBitmask,
 } from '../preprocessData';
-import {REACT_TOTAL_NUM_LANES} from '../../constants';
+import {
+  REACT_TOTAL_NUM_LANES,
+  SCHEDULING_PROFILER_VERSION,
+} from '../../constants';
 import REACT_VERSION from 'shared/ReactVersion';
 
 describe(getLanesFromTransportDecimalBitmask, () => {
@@ -115,7 +117,7 @@ describe(preprocessData, () => {
   function createProfilerVersionEntry() {
     return createUserTimingEntry({
       cat: 'blink.user_timing',
-      name: '--profiler-version-' + SUPPORTED_PROFILER_VERSION,
+      name: '--profiler-version-' + SCHEDULING_PROFILER_VERSION,
     });
   }
 

@@ -25,7 +25,7 @@ import type {
   SuspenseEvent,
 } from '../types';
 
-import {REACT_TOTAL_NUM_LANES} from '../constants';
+import {REACT_TOTAL_NUM_LANES, SCHEDULING_PROFILER_VERSION} from '../constants';
 import InvalidProfileError from './InvalidProfileError';
 
 type MeasureStackElement = {|
@@ -45,10 +45,6 @@ type ProcessorState = {|
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
 |};
-
-// Increment this number any time a backwards breaking change is made to the profiler metadata.
-// It should be in sync with the version in react-reconciler/src/SchedulingProfiler
-export const SUPPORTED_PROFILER_VERSION = 1;
 
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
 
@@ -268,7 +264,7 @@ function processTimelineEvent(
       } else if (name.startsWith('--profiler-version-')) {
         const [versionString] = name.substr(19).split('-');
         profilerVersion = parseInt(versionString, 10);
-        if (profilerVersion !== SUPPORTED_PROFILER_VERSION) {
+        if (profilerVersion !== SCHEDULING_PROFILER_VERSION) {
           throw new InvalidProfileError(
             `This version of profiling data (${versionString}) is not supported by the current profiler.`,
           );
