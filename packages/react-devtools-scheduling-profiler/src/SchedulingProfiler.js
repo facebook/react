@@ -86,7 +86,7 @@ const Welcome = ({onFileSelect}: {|onFileSelect: (file: File) => void|}) => (
         target="_blank">
         profiling build of ReactDOM
       </a>
-      .
+      (version 18 or newer).
     </li>
     <li className={styles.WelcomeInstructionsListItem}>
       Open the "Performance" tab in Chrome and record some performance data.
