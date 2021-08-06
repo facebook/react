@@ -23,6 +23,8 @@ function unmemoizedGetBatchRange(
 
   let i = 0;
 
+  // TODO (scheduling profiler) Use a binary search since the measures array is sorted.
+
   // Find the first measure in the current batch.
   for (i; i < measures.length; i++) {
     const measure = measures[i];

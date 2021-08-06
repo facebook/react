@@ -1182,6 +1182,122 @@ describe(preprocessData, () => {
         }
       });
     });
+
+    describe('suspend during an update', () => {
+      // This also tests an edge case where the a component suspends while profiling
+      // before the first commit is logged (so the lane-to-labels map will not yet exist).
+      it('should warn about suspending during an udpate', () => {
+        let promise = null;
+        let resolvedValue = null;
+        function readValue(value) {
+          if (resolvedValue !== null) {
+            return resolvedValue;
+          } else if (promise === null) {
+            promise = Promise.resolve(true).then(() => {
+              resolvedValue = value;
+            });
+          }
+          throw promise;
+        }
+
+        function Component({shouldSuspend}) {
+          Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+          if (shouldSuspend) {
+            readValue(123);
+          }
+          return null;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          // Mount and commit the app
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() =>
+            root.render(
+              <React.Suspense fallback="Loading...">
+                <Component shouldSuspend={false} />
+              </React.Suspense>,
+            ),
+          );
+
+          clearedMarks.splice(0);
+
+          const testMarks = [creactCpuProfilerSample()];
+
+          // Start profiling and suspend during a render.
+          act(() =>
+            root.render(
+              <React.Suspense fallback="Loading...">
+                <Component shouldSuspend={true} />
+              </React.Suspense>,
+            ),
+          );
+
+          testMarks.push(...createUserTimingData(clearedMarks));
+
+          const data = preprocessData(testMarks);
+          expect(data.suspenseEvents).toHaveLength(1);
+          expect(data.suspenseEvents[0].warning).toMatchInlineSnapshot(
+            `"A component suspended during an update which caused a fallback to be shown. Consider using the Transition API to avoid hiding components after they've been mounted."`,
+          );
+        }
+      });
+
+      it('should not warn about suspending during an transition', async () => {
+        let promise = null;
+        let resolvedValue = null;
+        function readValue(value) {
+          if (resolvedValue !== null) {
+            return resolvedValue;
+          } else if (promise === null) {
+            promise = Promise.resolve(true).then(() => {
+              resolvedValue = value;
+            });
+          }
+          throw promise;
+        }
+
+        function Component({shouldSuspend}) {
+          Scheduler.unstable_yieldValue(`Component ${shouldSuspend}`);
+          if (shouldSuspend) {
+            readValue(123);
+          }
+          return null;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          // Mount and commit the app
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() =>
+            root.render(
+              <React.Suspense fallback="Loading...">
+                <Component shouldSuspend={false} />
+              </React.Suspense>,
+            ),
+          );
+
+          clearedMarks.splice(0);
+
+          const testMarks = [creactCpuProfilerSample()];
+
+          // Start profiling and suspend during a render.
+          await act(async () =>
+            React.startTransition(() =>
+              root.render(
+                <React.Suspense fallback="Loading...">
+                  <Component shouldSuspend={true} />
+                </React.Suspense>,
+              ),
+            ),
+          );
+
+          testMarks.push(...createUserTimingData(clearedMarks));
+
+          const data = preprocessData(testMarks);
+          expect(data.suspenseEvents).toHaveLength(1);
+          expect(data.suspenseEvents[0].warning).toBe(null);
+        }
+      });
+    });
   });
 
   // TODO: Add test for flamechart parsing

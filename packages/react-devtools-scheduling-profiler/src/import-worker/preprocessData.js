@@ -47,6 +47,9 @@ type ProcessorState = {|
   potentialLongEvents: Array<[NativeEvent, BatchUID]>,
   potentialLongNestedUpdate: SchedulingEvent | null,
   potentialLongNestedUpdates: Array<[SchedulingEvent, BatchUID]>,
+  potentialSuspenseEventsOutsideOfTransition: Array<
+    [SuspenseEvent, ReactLane[]],
+  >,
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
 |};
@@ -358,16 +361,6 @@ function processTimelineEvent(
           .split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
-        // TODO (scheduling profiler) It's possible we don't have lane-to-label mapping yet (since it's logged during commit phase)
-        // We may need to do this sort of error checking in a separate pass.
-        let warning = null;
-        if (phase === 'update') {
-          // HACK This is a bit gross but the numeric lane value might change between render versions.
-          if (lanes.some(lane => laneToLabelMap.get(lane) === 'Transition')) {
-            warning = WARNING_STRINGS.SUSPEND_DURING_UPATE;
-          }
-        }
-
         const availableDepths = new Array(
           state.unresolvedSuspenseEvents.size + 1,
         ).fill(true);
@@ -398,8 +391,19 @@ function processTimelineEvent(
           resuspendTimestamps: null,
           timestamp: startTime,
           type: 'suspense',
-          warning,
+          warning: null,
         };
+
+        if (phase === 'update') {
+          // If a component suspended during an update, we should verify that it was during a transition.
+          // We need the lane metadata to verify this though.
+          // Since that data is only logged during commit, we may not have it yet.
+          // Store these events for post-processing then.
+          state.potentialSuspenseEventsOutsideOfTransition.push([
+            suspenseEvent,
+            lanes,
+          ]);
+        }
 
         currentProfilerData.suspenseEvents.push(suspenseEvent);
         state.unresolvedSuspenseEvents.set(id, suspenseEvent);
@@ -692,6 +696,7 @@ export default function preprocessData(
     potentialLongEvents: [],
     potentialLongNestedUpdate: null,
     potentialLongNestedUpdates: [],
+    potentialSuspenseEventsOutsideOfTransition: [],
     uidCounter: 0,
     unresolvedSuspenseEvents: new Map(),
   };
@@ -730,6 +735,14 @@ export default function preprocessData(
       schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
     }
   });
+  state.potentialSuspenseEventsOutsideOfTransition.forEach(
+    ([suspenseEvent, lanes]) => {
+      // HACK This is a bit gross but the numeric lane value might change between render versions.
+      if (!lanes.some(lane => laneToLabelMap.get(lane) === 'Transition')) {
+        suspenseEvent.warning = WARNING_STRINGS.SUSPEND_DURING_UPATE;
+      }
+    },
+  );
 
   return profilerData;
 }
