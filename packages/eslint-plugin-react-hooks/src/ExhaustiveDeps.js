@@ -267,6 +267,15 @@ export default {
               return true;
             }
           }
+        } else if (['useCallback', 'useMemo'].includes(name)) {
+          const deps = init.arguments[1];
+          if (
+            deps &&
+            deps.type === 'ArrayExpression' &&
+            deps.elements.length === 0
+          ) {
+            return true;
+          }
         }
         // By default assume it's dynamic.
         return false;

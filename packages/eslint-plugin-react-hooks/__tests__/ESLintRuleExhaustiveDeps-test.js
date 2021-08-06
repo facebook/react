@@ -625,6 +625,8 @@ const tests = {
             startTransition2();
             startTransition3();
             startTransition4();
+            mySetState();
+            myDispatch();
 
             // Dynamic
             console.log(state1);
@@ -635,8 +637,6 @@ const tests = {
             console.log(state6);
             console.log(isPending2);
             console.log(isPending4);
-            mySetState();
-            myDispatch();
 
             // Not sure; assume dynamic
             maybeSetState();
@@ -648,7 +648,6 @@ const tests = {
             isPending2, isPending4,
 
             // Not sure; assume dynamic
-            mySetState, myDispatch,
             maybeSetState, maybeDispatch
 
             // In this test, we don't specify static deps.
@@ -685,6 +684,8 @@ const tests = {
             setState2();
             dispatch1();
             dispatch2();
+            mySetState();
+            myDispatch();
 
             // Dynamic
             console.log(state1);
@@ -693,8 +694,6 @@ const tests = {
             console.log(state4);
             console.log(state5);
             console.log(state6);
-            mySetState();
-            myDispatch();
 
             // Not sure; assume dynamic
             maybeSetState();
@@ -705,12 +704,11 @@ const tests = {
             maybeRef1, maybeRef2,
 
             // Not sure; assume dynamic
-            mySetState, myDispatch,
             maybeSetState, maybeDispatch,
 
             // In this test, we specify static deps.
             // That should be okay too!
-            definitelyRef1, definitelyRef2, setState1, setState2, dispatch1, dispatch2
+            definitelyRef1, definitelyRef2, setState1, setState2, dispatch1, dispatch2, mySetState, myDispatch
           ]);
         }
       `,
