@@ -27,10 +27,7 @@ function unmemoizedGetBatchRange(
   for (i; i < measures.length; i++) {
     const measure = measures[i];
     if (measure.batchUID === batchUID) {
-      if (minStartTime == null) {
-        startTime = measure.timestamp;
-        break;
-      } else if (measure.timestamp >= minStartTime) {
+      if (minStartTime == null || measure.timestamp >= minStartTime) {
         startTime = measure.timestamp;
         break;
       }
