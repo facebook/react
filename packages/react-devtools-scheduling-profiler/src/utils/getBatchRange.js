@@ -14,23 +14,26 @@ import type {BatchUID, Milliseconds, ReactProfilerData} from '../types';
 function unmemoizedGetBatchRange(
   batchUID: BatchUID,
   data: ReactProfilerData,
-  minStartTime?: number = 0,
+  minStartTime?: ?number,
 ): [Milliseconds, Milliseconds] {
   const {measures} = data;
 
-  let startTime = minStartTime;
+  let startTime = 0;
   let stopTime = Infinity;
 
   let i = 0;
-
-  // TODO (scheduling profiler) Use a binary search since the measures array is sorted.
 
   // Find the first measure in the current batch.
   for (i; i < measures.length; i++) {
     const measure = measures[i];
     if (measure.batchUID === batchUID) {
-      startTime = Math.max(startTime, measure.timestamp);
-      break;
+      if (minStartTime == null) {
+        startTime = measure.timestamp;
+        break;
+      } else if (measure.timestamp >= minStartTime) {
+        startTime = measure.timestamp;
+        break;
+      }
     }
   }
 
