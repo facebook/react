@@ -373,12 +373,7 @@ export function getHookNamesMappingFromAST(
           if (!hookDeclaredVariableName) {
             return;
           }
-          const callExpressionNode = path.node.init;
-          if (callExpressionNode.type !== AST_NODE_TYPES.CALL_EXPRESSION) {
-            throw new Error(
-              'Expected a CallExpression node for a Hook declaration.',
-            );
-          }
+          const callExpressionNode = assertCallExpression(path.node.init);
 
           // Check if this variable declaration corresponds to a call to a
           // built-in Hook that returns a tuple (useState, useReducer,
@@ -481,12 +476,7 @@ export function getHookNamesMappingFromAST(
       },
       exit(path) {
         if (isConfirmedHookDeclaration(path)) {
-          const callExpressionNode = path.node.init;
-          if (callExpressionNode.type !== AST_NODE_TYPES.CALL_EXPRESSION) {
-            throw new Error(
-              'Expected a CallExpression node for a Hook declaration.',
-            );
-          }
+          const callExpressionNode = assertCallExpression(path.node.init);
           popFrame(callExpressionNode);
         }
       },
@@ -613,4 +603,11 @@ function nodeContainsHookVariableName(hookNode: NodePath): boolean {
     return true;
   }
   return false;
+}
+
+function assertCallExpression(node: Node): Node {
+  if (node.type !== AST_NODE_TYPES.CALL_EXPRESSION) {
+    throw new Error('Expected a CallExpression node for a Hook declaration.');
+  }
+  return node;
 }

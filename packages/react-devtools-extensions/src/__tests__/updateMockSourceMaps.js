@@ -68,7 +68,7 @@ function compile(fileName) {
     'utf8',
   );
 
-  // Generate compiled output with external inline base64 source maps
+  // Generate compiled output with inline base64 source maps
   writeFileSync(
     resolve(inlineDir, fileName),
     transformed.code +
@@ -96,7 +96,7 @@ function compile(fileName) {
   );
   const encodedMappings = encode(decodedMappings);
 
-  // Generate compiled output with external inline base64 source maps without column numbers
+  // Generate compiled output with inline base64 source maps without column numbers
   writeFileSync(
     resolve(noColumnsDir, fileName),
     transformed.code +

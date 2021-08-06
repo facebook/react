@@ -8,23 +8,29 @@
  */
 
 import traverse, {Node, NodePath} from '@babel/traverse';
-import {string} from 'yargs';
 import {getHookNamesMappingFromAST} from './astUtils';
 import {encode, decode} from 'sourcemap-codec';
-
-type SourceMapSegment = [number, number, number, number];
-type SourceMapLine = SourceMapSegment[];
-type SourceMapMappings = SourceMapLine[];
+import {File} from '@babel/types';
 
 export type HookMap = {|
   names: $ReadOnlyArray<string>,
-  mappings: SourceMapMappings,
+  mappings: HookMapMappings,
 |};
 
 export type EncodedHookMap = {|
   names: $ReadOnlyArray<string>,
   mappings: string,
 |};
+
+// See generateHookMap below for more details on formatting
+export type HookMapEntry = [
+  number, // 1-indexed line number
+  number, // 0-indexed column number
+  number, // 0-indexed index into names array
+  number, // TODO: filler number to support reusing encoding from `sourcemap-codec` (see TODO below)
+];
+export type HookMapGroupedEntries = HookMapEntry[];
+export type HookMapMappings = HookMapGroupedEntries[];
 
 /**
  * Given a parsed source code AST, returns a "Hook Map", which is a
@@ -52,12 +58,10 @@ export type EncodedHookMap = {|
  *     ],
  *   }
  */
-export function generateHookMap(sourceAST: Node): HookMap {
+export function generateHookMap(sourceAST: File): HookMap {
   const hookNamesMapping = getHookNamesMappingFromAST(sourceAST);
   const namesMap: Map<string, number> = new Map();
-  const sourceMapLinesMap: Map<number, SourceMapLine> = new Map();
   const names = [];
-  const sourceMapLines = [];
   const mappings = [];
 
   let currentLine = null;
@@ -69,24 +73,24 @@ export function generateHookMap(sourceAST: Node): HookMap {
       namesMap.set(name, nameIndex);
     }
 
-    // TODO: We add a -1 at the end of the segment so we can later
+    // TODO: We add a -1 at the end of the entry so we can later
     // encode/decode the mappings by reusing the encode/decode functions
     // from the `sourcemap-codec` library. This library expects segments
     // of specific sizes (i.e. of size 4) in order to encode them correctly.
     // In the future, when we implement our own encoding, we will not
     // need this restriction and can remove the -1 at the end.
-    const segment = [start.line, start.column, nameIndex, -1];
+    const entry = [start.line, start.column, nameIndex, -1];
 
     if (currentLine != start.line) {
       currentLine = start.line;
       if (mappings.length > 0) {
         const current = mappings[mappings.length - 1];
-        current.push(segment);
+        current.push(entry);
       } else {
-        mappings.push([segment]);
+        mappings.push([entry]);
       }
     } else {
-      mappings.push([segment]);
+      mappings.push([entry]);
     }
   }
 
@@ -107,7 +111,7 @@ export function generateHookMap(sourceAST: Node): HookMap {
  * In the future, when we implement our own encoding, we will not
  * need this restriction and can remove the -1 at the end.
  */
-export function generateEncodedHookMap(sourceAST: Node): EncodedHookMap {
+export function generateEncodedHookMap(sourceAST: File): EncodedHookMap {
   const hookMap = generateHookMap(sourceAST);
   const encoded = encode(hookMap.mappings);
   return {
