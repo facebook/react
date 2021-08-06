@@ -57,7 +57,9 @@ const WARNING_STRINGS = {
   LONG_EVENT_HANDLER:
     'An event handler scheduled a big update with React. Consider using the Transition API to defer some of this work.',
   NESTED_UPDATE:
-    'A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint.',
+    'A big nested update was scheduled during layout. ' +
+    'Nested updates require React to re-render synchronously before the browser can paint. ' +
+    'Consider delaying this update by moving it to a passive effect (useEffect).',
   SUSPEND_DURING_UPATE:
     'A component suspended during an update which caused a fallback to be shown. ' +
     "Consider using the Transition API to avoid hiding components after they've been mounted.",

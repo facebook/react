@@ -1116,7 +1116,7 @@ describe(preprocessData, () => {
             ({type}) => type === 'schedule-state-update',
           );
           expect(event.warning).toMatchInlineSnapshot(
-            `"A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint."`,
+            `"A big nested update was scheduled during layout. Nested updates require React to re-render synchronously before the browser can paint. Consider delaying this update by moving it to a passive effect (useEffect)."`,
           );
         }
       });
@@ -1177,7 +1177,7 @@ describe(preprocessData, () => {
             ({type}) => type === 'schedule-force-update',
           );
           expect(event.warning).toMatchInlineSnapshot(
-            `"A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint."`,
+            `"A big nested update was scheduled during layout. Nested updates require React to re-render synchronously before the browser can paint. Consider delaying this update by moving it to a passive effect (useEffect)."`,
           );
         }
       });
