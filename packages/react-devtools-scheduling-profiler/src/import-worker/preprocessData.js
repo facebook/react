@@ -22,6 +22,7 @@ import type {
   ReactComponentMeasure,
   ReactMeasureType,
   ReactProfilerData,
+  SchedulingEvent,
   SuspenseEvent,
 } from '../types';
 
@@ -44,6 +45,8 @@ type ProcessorState = {|
   nativeEventStack: NativeEvent[],
   nextRenderShouldGenerateNewBatchID: boolean,
   potentialLongEvents: Array<[NativeEvent, BatchUID]>,
+  potentialLongNestedUpdate: SchedulingEvent | null,
+  potentialLongNestedUpdates: Array<[SchedulingEvent, BatchUID]>,
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
 |};
@@ -311,37 +314,39 @@ function processTimelineEvent(
       } else if (name.startsWith('--schedule-forced-update-')) {
         const [laneBitmaskString, componentName] = name.substr(25).split('-');
 
-        let warning = null;
-        if (state.measureStack.find(({type}) => type === 'commit')) {
-          // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
-          // This might be easier to do if we separated warnings into a second pass.
-          warning = WARNING_STRINGS.NESTED_UPDATE;
-        }
-
-        currentProfilerData.schedulingEvents.push({
+        const forceUpdateEvent = {
           type: 'schedule-force-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           componentName,
           timestamp: startTime,
-          warning,
-        });
+          warning: null,
+        };
+
+        // If this is a nested update, make a note of it.
+        // Once we're done processing events, we'll check to see if it was a long update and warn about it.
+        if (state.measureStack.find(({type}) => type === 'commit')) {
+          state.potentialLongNestedUpdate = forceUpdateEvent;
+        }
+
+        currentProfilerData.schedulingEvents.push(forceUpdateEvent);
       } else if (name.startsWith('--schedule-state-update-')) {
         const [laneBitmaskString, componentName] = name.substr(24).split('-');
 
-        let warning = null;
-        if (state.measureStack.find(({type}) => type === 'commit')) {
-          // TODO (scheduling profiler) Only warn if the subsequent update is longer than some threshold.
-          // This might be easier to do if we separated warnings into a second pass.
-          warning = WARNING_STRINGS.NESTED_UPDATE;
-        }
-
-        currentProfilerData.schedulingEvents.push({
+        const stateUpdateEvent = {
           type: 'schedule-state-update',
           lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
           componentName,
           timestamp: startTime,
-          warning,
-        });
+          warning: null,
+        };
+
+        // If this is a nested update, make a note of it.
+        // Once we're done processing events, we'll check to see if it was a long update and warn about it.
+        if (state.measureStack.find(({type}) => type === 'commit')) {
+          state.potentialLongNestedUpdate = stateUpdateEvent;
+        }
+
+        currentProfilerData.schedulingEvents.push(stateUpdateEvent);
       } // eslint-disable-line brace-style
 
       // React Events - suspense
@@ -432,6 +437,17 @@ function processTimelineEvent(
           state.nextRenderShouldGenerateNewBatchID = false;
           state.batchUID = ((state.uidCounter++: any): BatchUID);
         }
+
+        // If this render is the result of a nested update, make a note of it.
+        // Once we're done processing events, we'll check to see if it was a long update and warn about it.
+        if (state.potentialLongNestedUpdate !== null) {
+          state.potentialLongNestedUpdates.push([
+            state.potentialLongNestedUpdate,
+            state.batchUID,
+          ]);
+          state.potentialLongNestedUpdate = null;
+        }
+
         const [laneBitmaskString] = name.substr(15).split('-');
 
         throwIfIncomplete('render', state.measureStack);
@@ -672,6 +688,8 @@ export default function preprocessData(
     nativeEventStack: [],
     nextRenderShouldGenerateNewBatchID: true,
     potentialLongEvents: [],
+    potentialLongNestedUpdate: null,
+    potentialLongNestedUpdates: [],
     uidCounter: 0,
     unresolvedSuspenseEvents: new Map(),
   };
@@ -701,6 +719,13 @@ export default function preprocessData(
     );
     if (stopTime - startTime > NATIVE_EVENT_DURATION_THRESHOLD) {
       nativeEvent.warning = WARNING_STRINGS.LONG_EVENT_HANDLER;
+    }
+  });
+  state.potentialLongNestedUpdates.forEach(([schedulingEvent, batchUID]) => {
+    // See how long the subsequent batch of React work was.
+    const [startTime, stopTime] = getBatchRange(batchUID, profilerData);
+    if (stopTime - startTime > NATIVE_EVENT_DURATION_THRESHOLD) {
+      schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
     }
   });
 

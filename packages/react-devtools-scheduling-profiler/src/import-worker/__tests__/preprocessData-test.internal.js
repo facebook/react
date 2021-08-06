@@ -986,6 +986,202 @@ describe(preprocessData, () => {
         }
       });
     });
+
+    describe('nested updates', () => {
+      it('should not warn about short nested (state) updates during layout effects', () => {
+        function Component() {
+          const [didMount, setDidMount] = React.useState(false);
+          Scheduler.unstable_yieldValue(
+            `Component ${didMount ? 'update' : 'mount'}`,
+          );
+          React.useLayoutEffect(() => {
+            setDidMount(true);
+          }, []);
+          return didMount;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component mount',
+            'Component update',
+          ]);
+
+          const data = preprocessData([
+            ...createBoilerplateEntries(),
+            ...createUserTimingData(clearedMarks),
+          ]);
+
+          const event = data.schedulingEvents.find(
+            ({type}) => type === 'schedule-state-update',
+          );
+          expect(event.warning).toBe(null);
+        }
+      });
+
+      it('should not warn about short (forced) updates during layout effects', () => {
+        class Component extends React.Component {
+          _didMount: boolean = false;
+          componentDidMount() {
+            this._didMount = true;
+            this.forceUpdate();
+          }
+          render() {
+            Scheduler.unstable_yieldValue(
+              `Component ${this._didMount ? 'update' : 'mount'}`,
+            );
+            return null;
+          }
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component mount',
+            'Component update',
+          ]);
+
+          const data = preprocessData([
+            ...createBoilerplateEntries(),
+            ...createUserTimingData(clearedMarks),
+          ]);
+
+          const event = data.schedulingEvents.find(
+            ({type}) => type === 'schedule-force-update',
+          );
+          expect(event.warning).toBe(null);
+        }
+      });
+
+      it('should warn about long nested (state) updates during layout effects', () => {
+        function Component() {
+          const [didMount, setDidMount] = React.useState(false);
+          Scheduler.unstable_yieldValue(
+            `Component ${didMount ? 'update' : 'mount'}`,
+          );
+          // Fake a long render
+          startTime += 20000;
+          React.useLayoutEffect(() => {
+            setDidMount(true);
+          }, []);
+          return didMount;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const cpuProfilerSample = creactCpuProfilerSample();
+
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component mount',
+            'Component update',
+          ]);
+
+          const testMarks = [];
+          clearedMarks.forEach(markName => {
+            if (markName === '--component-render-start-Component') {
+              // Fake a long running render
+              startTime += 20000;
+            }
+
+            testMarks.push({
+              pid: ++pid,
+              tid: ++tid,
+              ts: ++startTime,
+              args: {data: {}},
+              cat: 'blink.user_timing',
+              name: markName,
+              ph: 'R',
+            });
+          });
+
+          const data = preprocessData([
+            cpuProfilerSample,
+            ...createBoilerplateEntries(),
+            ...testMarks,
+          ]);
+
+          const event = data.schedulingEvents.find(
+            ({type}) => type === 'schedule-state-update',
+          );
+          expect(event.warning).toMatchInlineSnapshot(
+            `"A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint."`,
+          );
+        }
+      });
+
+      it('should warn about long nested (forced) updates during layout effects', () => {
+        class Component extends React.Component {
+          _didMount: boolean = false;
+          componentDidMount() {
+            this._didMount = true;
+            this.forceUpdate();
+          }
+          render() {
+            Scheduler.unstable_yieldValue(
+              `Component ${this._didMount ? 'update' : 'mount'}`,
+            );
+            return null;
+          }
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const cpuProfilerSample = creactCpuProfilerSample();
+
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component mount',
+            'Component update',
+          ]);
+
+          const testMarks = [];
+          clearedMarks.forEach(markName => {
+            if (markName === '--component-render-start-Component') {
+              // Fake a long running render
+              startTime += 20000;
+            }
+
+            testMarks.push({
+              pid: ++pid,
+              tid: ++tid,
+              ts: ++startTime,
+              args: {data: {}},
+              cat: 'blink.user_timing',
+              name: markName,
+              ph: 'R',
+            });
+          });
+
+          const data = preprocessData([
+            cpuProfilerSample,
+            ...createBoilerplateEntries(),
+            ...testMarks,
+          ]);
+
+          const event = data.schedulingEvents.find(
+            ({type}) => type === 'schedule-force-update',
+          );
+          expect(event.warning).toMatchInlineSnapshot(
+            `"A nested update was scheduled during layout. These updates require React to re-render synchronously before the browser can paint."`,
+          );
+        }
+      });
+    });
   });
 
   // TODO: Add test for flamechart parsing
