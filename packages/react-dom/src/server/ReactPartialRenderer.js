@@ -381,7 +381,11 @@ function createOpenTagMarkup(
         markup = createMarkupForCustomAttribute(propKey, propValue);
       }
     } else {
-      markup = createMarkupForProperty(propKey, propValue);
+      if (tagVerbatim === 'meta' && propKey === 'content') {
+        markup = 'content="' + propValue + '"';
+      } else {
+        markup = createMarkupForProperty(propKey, propValue);
+      }
     }
     if (markup) {
       ret += ' ' + markup;
