@@ -55,6 +55,7 @@ type ProcessorState = {|
 |};
 
 const NATIVE_EVENT_DURATION_THRESHOLD = 20;
+const NESTED_UPDATE_DURATION_THRESHOLD = 20;
 
 const WARNING_STRINGS = {
   LONG_EVENT_HANDLER:
@@ -731,7 +732,7 @@ export default function preprocessData(
   state.potentialLongNestedUpdates.forEach(([schedulingEvent, batchUID]) => {
     // See how long the subsequent batch of React work was.
     const [startTime, stopTime] = getBatchRange(batchUID, profilerData);
-    if (stopTime - startTime > NATIVE_EVENT_DURATION_THRESHOLD) {
+    if (stopTime - startTime > NESTED_UPDATE_DURATION_THRESHOLD) {
       schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
     }
   });
