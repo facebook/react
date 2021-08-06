@@ -14,26 +14,30 @@ import type {BatchUID, Milliseconds, ReactProfilerData} from '../types';
 function unmemoizedGetBatchRange(
   batchUID: BatchUID,
   data: ReactProfilerData,
+  minStartTime?: number = 0,
 ): [Milliseconds, Milliseconds] {
   const {measures} = data;
 
-  let startTime = 0;
+  let startTime = minStartTime;
   let stopTime = Infinity;
 
   let i = 0;
 
+  // Find the first measure in the current batch.
   for (i; i < measures.length; i++) {
     const measure = measures[i];
     if (measure.batchUID === batchUID) {
-      startTime = measure.timestamp;
+      startTime = Math.max(startTime, measure.timestamp);
       break;
     }
   }
 
+  // Find the last measure in the current batch.
   for (i; i < measures.length; i++) {
     const measure = measures[i];
-    stopTime = measure.timestamp;
-    if (measure.batchUID !== batchUID) {
+    if (measure.batchUID === batchUID) {
+      stopTime = measure.timestamp;
+    } else {
       break;
     }
   }

@@ -27,6 +27,7 @@ import type {
 
 import {REACT_TOTAL_NUM_LANES, SCHEDULING_PROFILER_VERSION} from '../constants';
 import InvalidProfileError from './InvalidProfileError';
+import {getBatchRange} from '../utils/getBatchRange';
 
 type MeasureStackElement = {|
   type: ReactMeasureType,
@@ -42,6 +43,7 @@ type ProcessorState = {|
   measureStack: MeasureStackElement[],
   nativeEventStack: NativeEvent[],
   nextRenderShouldGenerateNewBatchID: boolean,
+  potentialLongEvents: Array<[NativeEvent, BatchUID]>,
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
 |};
@@ -349,7 +351,7 @@ function processTimelineEvent(
           .split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
-        // TODO It's possible we don't have lane-to-label mapping yet (since it's logged during commit phase)
+        // TODO (scheduling profiler) It's possible we don't have lane-to-label mapping yet (since it's logged during commit phase)
         // We may need to do this sort of error checking in a separate pass.
         let warning = null;
         if (phase === 'update') {
@@ -453,11 +455,14 @@ function processTimelineEvent(
         for (let i = 0; i < state.nativeEventStack.length; i++) {
           const nativeEvent = state.nativeEventStack[i];
           const stopTime = nativeEvent.timestamp + nativeEvent.duration;
-          if (
-            stopTime > startTime &&
-            nativeEvent.duration > NATIVE_EVENT_DURATION_THRESHOLD
-          ) {
-            nativeEvent.warning = WARNING_STRINGS.LONG_EVENT_HANDLER;
+
+          // If React work was scheduled during an event handler, and the event had a long duration,
+          // it might be because the React render was long and stretched the event.
+          // It might also be that the React work was short and that something else stretched the event.
+          // Make a note of this event for now and we'll examine the batch of React render work later.
+          // (We can't know until we're done processing the React update anyway.)
+          if (stopTime > startTime) {
+            state.potentialLongEvents.push([nativeEvent, state.batchUID]);
           }
         }
       } else if (
@@ -666,6 +671,7 @@ export default function preprocessData(
     measureStack: [],
     nativeEventStack: [],
     nextRenderShouldGenerateNewBatchID: true,
+    potentialLongEvents: [],
     uidCounter: 0,
     unresolvedSuspenseEvents: new Map(),
   };
@@ -683,6 +689,20 @@ export default function preprocessData(
   if (measureStack.length > 0) {
     console.error('Incomplete events or measures', measureStack);
   }
+
+  // Check for warnings.
+  state.potentialLongEvents.forEach(([nativeEvent, batchUID]) => {
+    // See how long the subsequent batch of React work was.
+    // Ignore any work that was already started.
+    const [startTime, stopTime] = getBatchRange(
+      batchUID,
+      profilerData,
+      nativeEvent.timestamp,
+    );
+    if (stopTime - startTime > NATIVE_EVENT_DURATION_THRESHOLD) {
+      nativeEvent.warning = WARNING_STRINGS.LONG_EVENT_HANDLER;
+    }
+  });
 
   return profilerData;
 }
