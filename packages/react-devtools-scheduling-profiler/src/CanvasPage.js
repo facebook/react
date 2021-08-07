@@ -20,6 +20,7 @@ import type {
 import * as React from 'react';
 import {
   Fragment,
+  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -56,6 +57,7 @@ import {
 import {COLORS} from './content-views/constants';
 
 import EventTooltip from './EventTooltip';
+import {RegistryContext} from 'react-devtools-shared/src/devtools/ContextMenu/Contexts';
 import ContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenu';
 import ContextMenuItem from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenuItem';
 import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useContextMenu';
@@ -139,6 +141,8 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     [],
   );
 
+  const {hideMenu: hideContextMenu} = useContext(RegistryContext);
+
   useLayoutEffect(() => {
     const surface = surfaceRef.current;
     const defaultFrame = {origin: zeroPoint, size: {width, height}};
@@ -150,6 +154,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       newState,
       triggeringView?: HorizontalPanAndZoomView,
     ) => {
+      // Hide context menu when panning.
+      hideContextMenu();
+
       syncedHorizontalPanAndZoomViewsRef.current.forEach(
         syncedView =>
           triggeringView !== syncedView && syncedView.setScrollState(newState),

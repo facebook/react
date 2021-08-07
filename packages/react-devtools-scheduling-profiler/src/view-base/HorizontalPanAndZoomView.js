@@ -52,7 +52,7 @@ export class HorizontalPanAndZoomView extends View {
     frame: Rect,
     contentView: View,
     intrinsicContentWidth: number,
-    onStateChange?: HorizontalPanAndZoomViewOnChangeCallback,
+    onStateChange: HorizontalPanAndZoomViewOnChangeCallback,
   ) {
     super(surface, frame);
     this.addSubview(contentView);
@@ -61,7 +61,8 @@ export class HorizontalPanAndZoomView extends View {
       offset: 0,
       length: intrinsicContentWidth * DEFAULT_ZOOM_LEVEL,
     });
-    if (onStateChange) this._onStateChange = onStateChange;
+
+    this._onStateChange = onStateChange;
   }
 
   setFrame(newFrame: Rect) {
