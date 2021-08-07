@@ -98,7 +98,6 @@ const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
   );
 };
 
-// TODO (scheduling profiler) Why is the "zoom" feature so much slower than normal rendering?
 const zoomToBatch = (
   data: ReactProfilerData,
   measure: ReactMeasure,

@@ -124,11 +124,12 @@ export type FlamechartStackLayer = FlamechartStackFrame[];
 export type Flamechart = FlamechartStackLayer[];
 
 export type ReactProfilerData = {|
+  batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
   laneToLabelMap: Map<ReactLane, string>,
-  measures: ReactMeasure[],
+  laneToReactMeasureMap: Map<ReactLane, ReactMeasure[]>,
   nativeEvents: NativeEvent[],
   otherUserTimingMarks: UserTimingMark[],
   reactVersion: string | null,

@@ -13,13 +13,14 @@ import {
 } from '@elg/speedscope';
 import type {TimelineEvent} from '@elg/speedscope';
 import type {
-  Milliseconds,
   BatchUID,
   Flamechart,
+  Milliseconds,
   NativeEvent,
   Phase,
   ReactLane,
   ReactComponentMeasure,
+  ReactMeasure,
   ReactMeasureType,
   ReactProfilerData,
   SchedulingEvent,
@@ -33,7 +34,7 @@ import {getBatchRange} from '../utils/getBatchRange';
 type MeasureStackElement = {|
   type: ReactMeasureType,
   depth: number,
-  index: number,
+  measure: ReactMeasure,
   startTime: Milliseconds,
   stopTime?: Milliseconds,
 |};
@@ -92,17 +93,19 @@ export function getLanesFromTransportDecimalBitmask(
   return lanes;
 }
 
-const laneToLabelMap: Map<number, string> = new Map();
-function updateLaneToLabelMap(laneLabelTuplesString: string): void {
+function updateLaneToLabelMap(
+  profilerData: ReactProfilerData,
+  laneLabelTuplesString: string,
+): void {
   // These marks appear multiple times in the data;
   // We only need to extact them once.
-  if (laneToLabelMap.size === 0) {
+  if (profilerData.laneToLabelMap.size === 0) {
     const laneLabelTuples = laneLabelTuplesString.split(',');
     for (let laneIndex = 0; laneIndex < laneLabelTuples.length; laneIndex++) {
       // The numeric lane value (e.g. 64) isn't important.
       // The profiler parses and stores the lane's position within the bitmap,
       // (e.g. lane 1 is index 0, lane 16 is index 4).
-      laneToLabelMap.set(laneIndex, laneLabelTuples[laneIndex]);
+      profilerData.laneToLabelMap.set(laneIndex, laneLabelTuples[laneIndex]);
     }
   }
 }
@@ -133,18 +136,32 @@ function markWorkStarted(
   state: ProcessorState,
 ) {
   const {batchUID, measureStack} = state;
-  const index = currentProfilerData.measures.length;
   const depth = getDepth(measureStack);
 
-  state.measureStack.push({depth, index, startTime, type});
-
-  currentProfilerData.measures.push({
+  const measure: ReactMeasure = {
     type,
     batchUID,
     depth,
     lanes,
     timestamp: startTime,
     duration: 0,
+  };
+
+  state.measureStack.push({depth, measure, startTime, type});
+
+  // This array is pre-initialized when the batchUID is generated.
+  const measures = currentProfilerData.batchUIDToMeasuresMap.get(batchUID);
+  if (measures != null) {
+    measures.push(measure);
+  } else {
+    currentProfilerData.batchUIDToMeasuresMap.set(state.batchUID, [measure]);
+  }
+
+  // This array is pre-initialized before processing starts.
+  lanes.forEach(lane => {
+    ((currentProfilerData.laneToReactMeasureMap.get(
+      lane,
+    ): any): ReactMeasure[]).push(measure);
   });
 }
 
@@ -174,8 +191,7 @@ function markWorkCompleted(
     );
   }
 
-  const {index, startTime} = stack.pop();
-  const measure = currentProfilerData.measures[index];
+  const {measure, startTime} = stack.pop();
   if (!measure) {
     console.error('Could not find matching measure for type "%s".', type);
   }
@@ -282,7 +298,7 @@ function processTimelineEvent(
         }
       } else if (name.startsWith('--react-lane-labels-')) {
         const [laneLabelTuplesString] = name.substr(20).split('-');
-        updateLaneToLabelMap(laneLabelTuplesString);
+        updateLaneToLabelMap(currentProfilerData, laneLabelTuplesString);
       } else if (name.startsWith('--component-render-start-')) {
         const [componentName] = name.substr(25).split('-');
 
@@ -648,12 +664,18 @@ export default function preprocessData(
 ): ReactProfilerData {
   const flamechart = preprocessFlamechart(timeline);
 
+  const laneToReactMeasureMap = new Map();
+  for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
+    laneToReactMeasureMap.set(lane, []);
+  }
+
   const profilerData: ReactProfilerData = {
+    batchUIDToMeasuresMap: new Map(),
     componentMeasures: [],
     duration: 0,
     flamechart,
-    laneToLabelMap,
-    measures: [],
+    laneToLabelMap: new Map(),
+    laneToReactMeasureMap,
     nativeEvents: [],
     otherUserTimingMarks: [],
     reactVersion: null,
@@ -739,7 +761,11 @@ export default function preprocessData(
   state.potentialSuspenseEventsOutsideOfTransition.forEach(
     ([suspenseEvent, lanes]) => {
       // HACK This is a bit gross but the numeric lane value might change between render versions.
-      if (!lanes.some(lane => laneToLabelMap.get(lane) === 'Transition')) {
+      if (
+        !lanes.some(
+          lane => profilerData.laneToLabelMap.get(lane) === 'Transition',
+        )
+      ) {
         suspenseEvent.warning = WARNING_STRINGS.SUSPEND_DURING_UPATE;
       }
     },
