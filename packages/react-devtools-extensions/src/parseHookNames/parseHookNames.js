@@ -391,7 +391,7 @@ function findHookNames(
       const position = sourceConsumer.originalPositionFor({
         line: lineNumber,
 
-        // Column numbers are representated differently between tools/engines.
+        // Column numbers are represented differently between tools/engines.
         // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
         // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
         column: columnNumber - 1,
@@ -490,7 +490,7 @@ async function parseSourceAST(
       const {source} = sourceConsumer.originalPositionFor({
         line: lineNumber,
 
-        // Column numbers are representated differently between tools/engines.
+        // Column numbers are represented differently between tools/engines.
         // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
         // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
         column: columnNumber - 1,
