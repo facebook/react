@@ -341,6 +341,10 @@ export class ResizableView extends View {
   }
 
   _handleClick(interaction: ClickInteraction) {
+    if (!this._shouldRenderResizeBar()) {
+      return;
+    }
+
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
@@ -356,6 +360,10 @@ export class ResizableView extends View {
   }
 
   _handleDoubleClick(interaction: DoubleClickInteraction) {
+    if (!this._shouldRenderResizeBar()) {
+      return;
+    }
+
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
