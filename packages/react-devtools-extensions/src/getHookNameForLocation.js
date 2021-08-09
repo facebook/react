@@ -16,12 +16,30 @@ import type {
 import type {Position} from './astUtils';
 import {NO_HOOK_NAME} from './astUtils';
 
+/**
+ * Finds the Hook name assigned to a given location in the source code,
+ * and a HookMap extracted from an extended source map.
+ * The given location must correspond to the location in the *original*
+ * source code (i.e. *not* the generated one).
+ *
+ * Note that all locations in the source code are guaranteed to map
+ * to a name, including a sentinel value that represents a missing
+ * Hook name: '<no-hook>'.
+ *
+ * For more details on the format of the HookMap, see generateHookMap
+ * and the tests for that function and this function.
+ */
 export function getHookNameForLocation(
   location: Position,
   hookMap: HookMap,
 ): string | null {
   const {names, mappings} = hookMap;
 
+  // The HookMap mappings are grouped by lines, so first we look up
+  // which line of mappings covers the target location.
+  // Note that we expect to find a line since all the locations in the
+  // source code are guaranteed to map to a name, including a '<no-hook>'
+  // name.
   const foundLine = binSearch(location, mappings, compareLinePositions);
   if (foundLine == null) {
     throw new Error(
@@ -31,6 +49,10 @@ export function getHookNameForLocation(
 
   let foundEntry;
   const foundLineNumber = getLineNumberFromLine(foundLine);
+  // The line found in the mappings will never be larger than the target
+  // line, and vice-versa, so if the target line doesn't match the found
+  // line, we immediately know that it must correspond to the last mapping
+  // entry for that line.
   if (foundLineNumber != location.line) {
     foundEntry = foundLine[foundLine.length - 1];
   } else {
@@ -43,7 +65,7 @@ export function getHookNameForLocation(
     );
   }
 
-  const foundNameIndex = foundEntry[2];
+  const foundNameIndex = getHookNameIndexFromEntry(foundEntry);
   if (foundNameIndex == null) {
     throw new Error(
       `Expected to find a name index in the HookMap that covers the target location at line: ${location.line}, column: ${location.column}`,
@@ -102,6 +124,19 @@ function binSearch<T>(
   return firstElementIndex != null ? items[firstElementIndex] : null;
 }
 
+/**
+ * Compares the target line location to the current location
+ * given by the provided index.
+ *
+ * If the target line location matches the current location, returns
+ * the index of the matching line in the mappings. In order for a line
+ * to match, the target line must match the line exactly, or be within
+ * the line range of the current line entries and the adjacent line
+ * entries.
+ *
+ * If the line doesn't match, returns the search direction for the
+ * next step in the binary search.
+ */
 function compareLinePositions(
   location: Position,
   mappings: HookMapMappings,
@@ -124,25 +159,43 @@ function compareLinePositions(
     endLine = startLine;
   }
 
+  // When the line matches exactly, return the matching index
   if (startLine === location.line) {
     return {index: startIndex, direction: 0};
   }
-
   if (endLine === location.line) {
     return {index: endIndex, direction: 0};
   }
 
+  // If we're at the end of the mappings, and the target line is greater
+  // than the current line, then this final line must cover the
+  // target location, so we return it.
   if (location.line > endLine && end == null) {
     return {index: endIndex, direction: 0};
   }
 
+  // If the location is within the current line and the adjacent one,
+  // we know that the target location must be covered by the current line.
   if (startLine < location.line && location.line < endLine) {
     return {index: startIndex, direction: 0};
   }
 
+  // Otherwise, return the next direction in the search.
   return {index: null, direction: location.line - startLine};
 }
 
+/**
+ * Compares the target column location to the current location
+ * given by the provided index.
+ *
+ * If the target column location matches the current location, returns
+ * the index of the matching entry in the mappings. In order for a column
+ * to match, the target column must match the column exactly, or be within
+ * the column range of the current entry and the adjacent entry.
+ *
+ * If the column doesn't match, returns the search direction for the
+ * next step in the binary search.
+ */
 function compareColumnPositions(
   location: Position,
   line: HookMapLine,
@@ -167,22 +220,28 @@ function compareColumnPositions(
     endColumn = startColumn;
   }
 
+  // When the column matches exactly, return the matching index
   if (startColumn === location.column) {
     return {index: startIndex, direction: 0};
   }
-
   if (endColumn === location.column) {
     return {index: endIndex, direction: 0};
   }
 
+  // If we're at the end of the entries for this line, and the target
+  // column is greater than the current column, then this final entry
+  // must cover the target location, so we return it.
   if (location.column > endColumn && end == null) {
     return {index: endIndex, direction: 0};
   }
 
+  // If the location is within the current column and the adjacent one,
+  // we know that the target location must be covered by the current entry.
   if (startColumn < location.column && location.column < endColumn) {
     return {index: startIndex, direction: 0};
   }
 
+  // Otherwise, return the next direction in the search.
   return {index: null, direction: location.column - startColumn};
 }
 

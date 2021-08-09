@@ -25,7 +25,19 @@ const externalDir = resolve(buildRoot, 'external');
 const inlineDir = resolve(buildRoot, 'inline');
 const bundleDir = resolve(buildRoot, 'bundle');
 const noColumnsDir = resolve(buildRoot, 'no-columns');
-const extendedSourceMapDir = resolve(buildRoot, 'extended-source-map');
+const inlineFbSourcesExtendedDir = resolve(inlineDir, 'fb-sources-extended');
+const externalFbSourcesExtendedDir = resolve(
+  externalDir,
+  'fb-sources-extended',
+);
+const inlineReactSourcesExtendedDir = resolve(
+  inlineDir,
+  'react-sources-extended',
+);
+const externalReactSourcesExtendedDir = resolve(
+  externalDir,
+  'react-sources-extended',
+);
 
 // Remove previous builds
 emptyDirSync(buildRoot);
@@ -33,7 +45,10 @@ mkdirSync(externalDir);
 mkdirSync(inlineDir);
 mkdirSync(bundleDir);
 mkdirSync(noColumnsDir);
-mkdirSync(extendedSourceMapDir);
+mkdirSync(inlineFbSourcesExtendedDir);
+mkdirSync(externalFbSourcesExtendedDir);
+mkdirSync(inlineReactSourcesExtendedDir);
+mkdirSync(externalReactSourcesExtendedDir);
 
 function compile(fileName) {
   const code = readFileSync(resolve(sourceDir, fileName), 'utf8');
@@ -110,23 +125,57 @@ function compile(fileName) {
     'utf8',
   );
 
-  // Generate compiled output with extended an extended sourcemap that
+  // Generate compiled output with an extended sourcemap that
   // includes a map of hook names.
   const parsed = parse(code, {
     sourceType: 'module',
     plugins: ['jsx', 'flow'],
   });
   const encodedHookMap = generateEncodedHookMap(parsed);
+  const fbSourcesExtendedSourceMap = {
+    ...sourceMap,
+    x_fb_sources: [[null, encodedHookMap]],
+  };
+  const reactSourcesExtendedSourceMap = {
+    ...sourceMap,
+    x_react_sources: [[encodedHookMap]],
+  };
+
+  // Using the x_fb_sources field
   writeFileSync(
-    resolve(extendedSourceMapDir, fileName),
+    resolve(inlineFbSourcesExtendedDir, fileName),
     transformed.code +
       '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
-      btoa(
-        JSON.stringify({
-          ...sourceMap,
-          x_react_hook_map: [encodedHookMap],
-        }),
-      ),
+      btoa(JSON.stringify(fbSourcesExtendedSourceMap)),
+    'utf8',
+  );
+  writeFileSync(
+    resolve(externalFbSourcesExtendedDir, fileName),
+    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    'utf8',
+  );
+  writeFileSync(
+    resolve(externalFbSourcesExtendedDir, `${fileName}.map`),
+    JSON.stringify(fbSourcesExtendedSourceMap),
+    'utf8',
+  );
+
+  // Using the x_react_sources field
+  writeFileSync(
+    resolve(inlineReactSourcesExtendedDir, fileName),
+    transformed.code +
+      '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
+      btoa(JSON.stringify(reactSourcesExtendedSourceMap)),
+    'utf8',
+  );
+  writeFileSync(
+    resolve(externalReactSourcesExtendedDir, fileName),
+    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    'utf8',
+  );
+  writeFileSync(
+    resolve(externalReactSourcesExtendedDir, `${fileName}.map`),
+    JSON.stringify(reactSourcesExtendedSourceMap),
     'utf8',
   );
 }
