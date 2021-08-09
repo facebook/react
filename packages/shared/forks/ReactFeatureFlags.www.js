@@ -26,7 +26,6 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   createRootStrictEffectsByDefault,
-  enableSuspenseLayoutEffectSemantics,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
@@ -46,6 +45,8 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
+
+export const enableSuspenseLayoutEffectSemantics = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler =
