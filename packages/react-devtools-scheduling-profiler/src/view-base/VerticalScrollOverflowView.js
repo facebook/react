@@ -9,6 +9,7 @@
 
 import type {Interaction} from './useCanvasInteraction';
 import type {Rect} from './geometry';
+import type {Layouter} from './layouter';
 import type {Surface, ViewRefs} from './Surface';
 import type {
   ClickInteraction,
@@ -17,11 +18,7 @@ import type {
   MouseUpInteraction,
 } from './useCanvasInteraction';
 
-import {
-  intersectionOfRects,
-  rectContainsPoint,
-  rectIntersectsRect,
-} from './geometry';
+import {rectContainsPoint, rectEqualToRect} from './geometry';
 import {View} from './View';
 import {BORDER_SIZE, COLORS} from '../content-views/constants';
 
@@ -38,6 +35,49 @@ const HIDDEN_RECT = {
   },
 };
 
+/**
+ * Assumes {@param layout} will only contain 2 views.
+ */
+const withVerticalScrollbarLayout: Layouter = (layout, containerFrame) => {
+  const [contentLayoutInfo, scrollbarLayoutInfo] = layout;
+  const desiredContentSize = contentLayoutInfo.view.desiredSize();
+
+  const shouldShowScrollbar =
+    desiredContentSize.height > containerFrame.size.height;
+  const scrollbarWidth = shouldShowScrollbar
+    ? scrollbarLayoutInfo.view.desiredSize().width
+    : 0;
+
+  const laidOutContentLayoutInfo = {
+    ...contentLayoutInfo,
+    frame: {
+      origin: contentLayoutInfo.view.frame.origin,
+      size: {
+        width: containerFrame.size.width - scrollbarWidth,
+        height: contentLayoutInfo.view.frame.size.height,
+      },
+    },
+  };
+  return [
+    laidOutContentLayoutInfo,
+    {
+      ...scrollbarLayoutInfo,
+      frame: {
+        origin: {
+          x:
+            laidOutContentLayoutInfo.frame.origin.x +
+            laidOutContentLayoutInfo.frame.size.width,
+          y: containerFrame.origin.y,
+        },
+        size: {
+          width: scrollbarWidth,
+          height: containerFrame.size.height,
+        },
+      },
+    },
+  ];
+};
+
 // TODO How do we handle resizing
 export class VerticalScrollOverflowView extends View {
   _contentView: View;
@@ -46,7 +86,7 @@ export class VerticalScrollOverflowView extends View {
   _scrollBarView: VerticalScrollBarView;
 
   constructor(surface: Surface, frame: Rect, contentView: View) {
-    super(surface, frame);
+    super(surface, frame, withVerticalScrollbarLayout);
 
     this._contentView = contentView;
     this._scrollBarView = new VerticalScrollBarView(surface, frame, this);
@@ -57,84 +97,58 @@ export class VerticalScrollOverflowView extends View {
 
   setScrollOffset(value: number) {
     this._scrollOffset = value;
-
-    const proposedFrame = {
-      ...this._contentView.frame,
-      origin: {
-        ...this._contentView.frame.origin,
-        y: value,
-      }
-    };
-
-    // TODO How do we pass this down to the sub views?
-    // It doesn't currently seem to be working.
-    // this._contentView.setVisibleArea(visibleArea);
-
-    this._contentView.subviews.forEach((subview, subviewIndex) => {
-      if (rectIntersectsRect(proposedFrame, subview.frame)) {
-        subview.setFrame(intersectionOfRects(proposedFrame, subview.frame));
-      } else {
-        subview.setFrame(HIDDEN_RECT);
-      }
-    });
-
     this.setNeedsDisplay();
   }
 
   layoutSubviews() {
-    super.layoutSubviews();
+    this._contentView.setFrame({
+      origin: this._contentView.frame.origin,
+      // Reset this to our size. This allows _contentView's layouter to know the
+      // latest available height, which is useful because e.g.
+      // lastViewTakesUpRemainingSpaceLayout can recompute its last view's height.
+      size: this.frame.size,
+    });
 
-    const {frame} = this;
-    const {x, y} = frame.origin;
-    const {width, height} = frame.size;
+    const desiredContentSize = this._contentView.desiredSize();
 
-    const contentHeight = this._contentView.desiredSize().height;
-    const shouldScroll = contentHeight > height;
+    // Force view to take up at least all remaining vertical space.
+    const contentHeight = Math.max(
+      desiredContentSize.height,
+      this.frame.size.height,
+    );
+    // Clamp offset so that content will always be fully visible
+    this._scrollOffset = Math.max(
+      this._scrollOffset,
+      this.frame.size.height - contentHeight,
+    );
 
-    const scrollBarView = this._scrollBarView;
-
-    this._contentView.setVisibleArea({
+    this._contentView.setFrame({
       origin: {
-        x,
-        y: y + this._scrollOffset,
+        x: this.frame.origin.x,
+        // Offset content view. Our layouter will set the final position of both
+        // the content view and scrollbar.
+        y: this.frame.origin.y + this._scrollOffset,
       },
       size: {
-        width: shouldScroll ? width - SCROLL_BAR_SIZE : width,
-        height,
+        width: this.frame.size.width,
+        height: contentHeight,
       },
     });
 
-    if (shouldScroll) {
-      const scrollBarX = x + width - SCROLL_BAR_SIZE;
+    super.layoutSubviews();
 
-      const proposedScrollBarFrame = {
-        origin: {
-          x: scrollBarX,
-          y,
-        },
-        size: {
-          width: SCROLL_BAR_SIZE,
-          height,
-        },
-      };
-
-      scrollBarView.setFrame(proposedScrollBarFrame);
-      scrollBarView.setContentHeight(contentHeight);
-      scrollBarView.setShouldScroll(true);
-    } else {
-      scrollBarView.setShouldScroll(false);
-    }
-
-    this.setNeedsDisplay();
+    // This should be done after calling super.layoutSubviews() – calling it
+    // before somehow causes _contentView to need display on every mousemove
+    // event when the scroll bar is shown.
+    this._scrollBarView.setContentHeight(contentHeight);
   }
 }
 
-export class VerticalScrollBarView extends View {
+class VerticalScrollBarView extends View {
   _contentHeight: number = 0;
   _isScrolling: boolean = false;
   _scrollBarRect: Rect = HIDDEN_RECT;
   _scrollThumbRect: Rect = HIDDEN_RECT;
-  _shouldScroll: boolean = false;
   _verticalScrollOverflowView: VerticalScrollOverflowView;
 
   constructor(
@@ -147,35 +161,31 @@ export class VerticalScrollBarView extends View {
     this._verticalScrollOverflowView = verticalScrollOverflowView;
   }
 
-  get shouldScroll(): boolean {
-    return this._shouldScroll;
+  desiredSize() {
+    return {
+      width: SCROLL_BAR_SIZE,
+      height: 0, // No desired height
+    };
   }
 
   setContentHeight(contentHeight: number) {
-    if (this._contentHeight !== contentHeight) {
-      this._contentHeight = contentHeight;
+    this._contentHeight = contentHeight;
 
-      const {height, width} = this.frame.size;
+    const {height, width} = this.frame.size;
 
-      this._scrollThumbRect = {
-        origin: {
-          x: this.frame.origin.x,
-          y: this._scrollThumbRect.origin.y,
-        },
-        size: {
-          width,
-          height: height * (height / contentHeight),
-        },
-      };
+    const proposedScrollThumbRect = {
+      origin: {
+        x: this.frame.origin.x,
+        y: this._scrollThumbRect.origin.y,
+      },
+      size: {
+        width,
+        height: height * (height / contentHeight),
+      },
+    };
 
-      this.setNeedsDisplay();
-    }
-  }
-
-  setShouldScroll(shouldScroll: boolean) {
-    if (this._shouldScroll !== shouldScroll) {
-      this._shouldScroll = shouldScroll;
-
+    if (!rectEqualToRect(this._scrollThumbRect, proposedScrollThumbRect)) {
+      this._scrollThumbRect = proposedScrollThumbRect;
       this.setNeedsDisplay();
     }
   }
@@ -195,8 +205,6 @@ export class VerticalScrollBarView extends View {
       },
     };
 
-    this.setNeedsDisplay();
-
     const maxContentOffset = this._contentHeight - height;
     const contentScrollOffset =
       (newScrollThumbY / maxScrollThumbY) * maxContentOffset * -1;
@@ -205,35 +213,28 @@ export class VerticalScrollBarView extends View {
   }
 
   draw(context: CanvasRenderingContext2D, viewRefs: ViewRefs) {
-    if (this.shouldScroll) {
-      const {x, y} = this.frame.origin;
-      const {width, height} = this.frame.size;
+    const {x, y} = this.frame.origin;
+    const {width, height} = this.frame.size;
 
-      // TODO Use real color
-      context.fillStyle = COLORS.REACT_RESIZE_BAR;
-      context.fillRect(x, y, width, height);
+    // TODO Use real color
+    context.fillStyle = COLORS.REACT_RESIZE_BAR;
+    context.fillRect(x, y, width, height);
 
-      // TODO Use real color
-      context.fillStyle = COLORS.SCROLL_CARET;
-      context.fillRect(
-        this._scrollThumbRect.origin.x,
-        this._scrollThumbRect.origin.y,
-        this._scrollThumbRect.size.width,
-        this._scrollThumbRect.size.height,
-      );
+    // TODO Use real color
+    context.fillStyle = COLORS.SCROLL_CARET;
+    context.fillRect(
+      this._scrollThumbRect.origin.x,
+      this._scrollThumbRect.origin.y,
+      this._scrollThumbRect.size.width,
+      this._scrollThumbRect.size.height,
+    );
 
-      // TODO Use real color
-      context.fillStyle = COLORS.REACT_RESIZE_BAR_BORDER;
-      context.fillRect(x, y, BORDER_SIZE, height);
-    }
+    // TODO Use real color
+    context.fillStyle = COLORS.REACT_RESIZE_BAR_BORDER;
+    context.fillRect(x, y, BORDER_SIZE, height);
   }
 
   handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
-    if (!this.shouldScroll) {
-      // If content isn't scrollable, ignore.
-      return;
-    }
-
     switch (interaction.type) {
       case 'click':
         this._handleClick(interaction, viewRefs);
