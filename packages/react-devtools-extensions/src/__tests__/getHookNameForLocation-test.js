@@ -8,7 +8,7 @@
  */
 
 import {parse} from '@babel/parser';
-import {generateEncodedHookMap, generateHookMap} from '../generateHookMap';
+import {generateHookMap} from '../generateHookMap';
 import {getHookNameForLocation} from '../getHookNameForLocation';
 
 function expectHookMapToEqual(actual, expected) {

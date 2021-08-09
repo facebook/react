@@ -406,7 +406,8 @@ export function getHookNamesMappingFromAST(
           // Check each reference to the variable declared by the Hook call,
           // and for each, we do the following:
           let declaredVariableName = null;
-          for (const referencePath of referencePaths) {
+          for (let i = 0; i <= referencePaths.length; i++) {
+            const referencePath = referencePaths[i];
             if (declaredVariableName != null) {
               break;
             }

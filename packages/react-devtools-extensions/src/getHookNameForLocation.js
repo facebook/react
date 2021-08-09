@@ -53,7 +53,7 @@ export function getHookNameForLocation(
   // line, and vice-versa, so if the target line doesn't match the found
   // line, we immediately know that it must correspond to the last mapping
   // entry for that line.
-  if (foundLineNumber != location.line) {
+  if (foundLineNumber !== location.line) {
     foundEntry = foundLine[foundLine.length - 1];
   } else {
     foundEntry = binSearch(location, foundLine, compareColumnPositions);
@@ -71,7 +71,7 @@ export function getHookNameForLocation(
       `Expected to find a name index in the HookMap that covers the target location at line: ${location.line}, column: ${location.column}`,
     );
   }
-  const foundName = hookMap.names[foundNameIndex];
+  const foundName = names[foundNameIndex];
   if (foundName == null) {
     throw new Error(
       `Expected to find a name in the HookMap that covers the target location at line: ${location.line}, column: ${location.column}`,

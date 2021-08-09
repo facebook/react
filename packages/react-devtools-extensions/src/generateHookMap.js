@@ -7,7 +7,6 @@
  * @flow
  */
 
-import traverse, {Node, NodePath} from '@babel/traverse';
 import {getHookNamesMappingFromAST} from './astUtils';
 import {encode, decode} from 'sourcemap-codec';
 import {File} from '@babel/types';
@@ -65,7 +64,7 @@ export function generateHookMap(sourceAST: File): HookMap {
   const mappings = [];
 
   let currentLine = null;
-  for (const {name, start} of hookNamesMapping) {
+  hookNamesMapping.forEach(({name, start}) => {
     let nameIndex = namesMap.get(name);
     if (nameIndex == null) {
       names.push(name);
@@ -81,14 +80,14 @@ export function generateHookMap(sourceAST: File): HookMap {
     // need this restriction and can remove the -1 at the end.
     const entry = [start.line, start.column, nameIndex, -1];
 
-    if (currentLine != start.line) {
+    if (currentLine !== start.line) {
       currentLine = start.line;
       mappings.push([entry]);
     } else {
       const current = mappings[mappings.length - 1];
       current.push(entry);
     }
-  }
+  });
 
   return {names, mappings};
 }

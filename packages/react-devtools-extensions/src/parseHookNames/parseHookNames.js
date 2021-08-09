@@ -258,7 +258,7 @@ function extractAndLoadSourceMaps(
               source === 'Inline Babel script' ||
               runtimeSourceURL.endsWith(source),
           );
-          if (sourceIndex != -1) {
+          if (sourceIndex !== -1) {
             const hookMap = extractHookMapFromSourceMap(parsed, sourceIndex);
             if (hookMap != null) {
               hookSourceData.hookMap = hookMap;
@@ -306,7 +306,7 @@ function extractAndLoadSourceMaps(
                 const sourceIndex = parsed.sources.findIndex(source =>
                   runtimeSourceURL.endsWith(source),
                 );
-                if (sourceIndex != -1) {
+                if (sourceIndex !== -1) {
                   const hookMap = extractHookMapFromSourceMap(
                     parsed,
                     sourceIndex,
