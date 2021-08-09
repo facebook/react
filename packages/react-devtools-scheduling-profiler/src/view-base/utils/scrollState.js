@@ -18,10 +18,10 @@ import {clamp} from './clamp';
  *     |<-------------------length------------------->|
  * ```
  */
-export type ScrollState = $ReadOnly<{|
+export type ScrollState = {|
   offset: number,
   length: number,
-|}>;
+|};
 
 function clampOffset(state: ScrollState, containerLength: number): ScrollState {
   return {

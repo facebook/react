@@ -7,14 +7,12 @@
  * @flow
  */
 
-import type {
-  Point,
-  HorizontalPanAndZoomViewOnChangeCallback,
-} from './view-base';
+import type {Point} from './view-base';
 import type {
   ReactHoverContextInfo,
   ReactProfilerData,
   ReactMeasure,
+  ViewState,
 } from './types';
 
 import * as React from 'react';
@@ -55,13 +53,14 @@ import {
   UserTimingMarksView,
 } from './content-views';
 import {COLORS} from './content-views/constants';
-
+import {clampState, moveStateToRange} from './view-base/utils/scrollState';
 import EventTooltip from './EventTooltip';
 import {RegistryContext} from 'react-devtools-shared/src/devtools/ContextMenu/Contexts';
 import ContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenu';
 import ContextMenuItem from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenuItem';
 import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useContextMenu';
 import {getBatchRange} from './utils/getBatchRange';
+import {MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL} from './view-base/constants';
 
 import styles from './CanvasPage.css';
 
@@ -69,16 +68,22 @@ const CONTEXT_MENU_ID = 'canvas';
 
 type Props = {|
   profilerData: ReactProfilerData,
+  viewState: ViewState,
 |};
 
-function CanvasPage({profilerData}: Props) {
+function CanvasPage({profilerData, viewState}: Props) {
   return (
     <div
       className={styles.CanvasPage}
       style={{backgroundColor: COLORS.BACKGROUND}}>
       <AutoSizer>
         {({height, width}: {height: number, width: number}) => (
-          <AutoSizedCanvas data={profilerData} height={height} width={width} />
+          <AutoSizedCanvas
+            data={profilerData}
+            height={height}
+            viewState={viewState}
+            width={width}
+          />
         )}
       </AutoSizer>
     </div>
@@ -103,23 +108,40 @@ const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
 const zoomToBatch = (
   data: ReactProfilerData,
   measure: ReactMeasure,
-  syncedHorizontalPanAndZoomViews: HorizontalPanAndZoomView[],
+  viewState: ViewState,
+  width: number,
 ) => {
   const {batchUID} = measure;
-  const [startTime, stopTime] = getBatchRange(batchUID, data);
-  syncedHorizontalPanAndZoomViews.forEach(syncedView =>
-    // Using time as range works because the views' intrinsic content size is based on time.
-    syncedView.zoomToRange(startTime, stopTime),
-  );
+  const [rangeStart, rangeEnd] = getBatchRange(batchUID, data);
+
+  // Convert from time range to ScrollState
+  const scrollState = moveStateToRange({
+    state: viewState.horizontalScrollState,
+    rangeStart,
+    rangeEnd,
+    contentLength: data.duration,
+
+    minContentLength: data.duration * MIN_ZOOM_LEVEL,
+    maxContentLength: data.duration * MAX_ZOOM_LEVEL,
+    containerLength: width,
+  });
+
+  viewState.updateHorizontalScrollState(scrollState);
 };
 
 type AutoSizedCanvasProps = {|
   data: ReactProfilerData,
   height: number,
+  viewState: ViewState,
   width: number,
 |};
 
-function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
+function AutoSizedCanvas({
+  data,
+  height,
+  viewState,
+  width,
+}: AutoSizedCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [isContextMenuShown, setIsContextMenuShown] = useState<boolean>(false);
@@ -137,9 +159,6 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   const componentMeasuresViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
-  const syncedHorizontalPanAndZoomViewsRef = useRef<HorizontalPanAndZoomView[]>(
-    [],
-  );
 
   const {hideMenu: hideContextMenu} = useContext(RegistryContext);
 
@@ -147,25 +166,24 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     const surface = surfaceRef.current;
     const defaultFrame = {origin: zeroPoint, size: {width, height}};
 
-    // Clear synced views
-    syncedHorizontalPanAndZoomViewsRef.current = [];
-
-    const syncAllHorizontalPanAndZoomViewStates: HorizontalPanAndZoomViewOnChangeCallback = (
-      newState,
-      triggeringView?: HorizontalPanAndZoomView,
-    ) => {
-      // Hide context menu when panning.
+    // Auto hide context menu when panning.
+    viewState.onHorizontalScrollStateChange(scrollState => {
       hideContextMenu();
+    });
 
-      syncedHorizontalPanAndZoomViewsRef.current.forEach(
-        syncedView =>
-          triggeringView !== syncedView && syncedView.setScrollState(newState),
-      );
-    };
+    // Initialize horizontal view state
+    viewState.updateHorizontalScrollState(
+      clampState({
+        state: viewState.horizontalScrollState,
+        minContentLength: data.duration * MIN_ZOOM_LEVEL,
+        maxContentLength: data.duration * MAX_ZOOM_LEVEL,
+        containerLength: defaultFrame.size.width,
+      }),
+    );
 
     function createViewHelper(
       view: View,
-      resizeLabel: string = '',
+      label: string,
       shouldScrollVertically: boolean = false,
       shouldResizeVertically: boolean = false,
     ): View {
@@ -175,6 +193,8 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           surface,
           defaultFrame,
           view,
+          viewState,
+          label,
         );
       }
 
@@ -183,23 +203,22 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         defaultFrame,
         verticalScrollView !== null ? verticalScrollView : view,
         data.duration,
-        syncAllHorizontalPanAndZoomViewStates,
+        viewState,
       );
 
-      syncedHorizontalPanAndZoomViewsRef.current.push(horizontalPanAndZoomView);
-
-      let viewToReturn = horizontalPanAndZoomView;
+      let resizableView = null;
       if (shouldResizeVertically) {
-        viewToReturn = new ResizableView(
+        resizableView = new ResizableView(
           surface,
           defaultFrame,
           horizontalPanAndZoomView,
+          viewState,
           canvasRef,
-          resizeLabel,
+          label,
         );
       }
 
-      return viewToReturn;
+      return resizableView || horizontalPanAndZoomView;
     }
 
     const axisMarkersView = new TimeAxisMarkersView(
@@ -207,7 +226,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       defaultFrame,
       data.duration,
     );
-    const axisMarkersViewWrapper = createViewHelper(axisMarkersView);
+    const axisMarkersViewWrapper = createViewHelper(axisMarkersView, 'time');
 
     let userTimingMarksViewWrapper = null;
     if (data.otherUserTimingMarks.length > 0) {
@@ -218,7 +237,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         data.duration,
       );
       userTimingMarksViewRef.current = userTimingMarksView;
-      userTimingMarksViewWrapper = createViewHelper(userTimingMarksView);
+      userTimingMarksViewWrapper = createViewHelper(
+        userTimingMarksView,
+        'user timing api',
+      );
     }
 
     const nativeEventsView = new NativeEventsView(surface, defaultFrame, data);
@@ -236,7 +258,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data,
     );
     schedulingEventsViewRef.current = schedulingEventsView;
-    const schedulingEventsViewWrapper = createViewHelper(schedulingEventsView);
+    const schedulingEventsViewWrapper = createViewHelper(
+      schedulingEventsView,
+      'react updates',
+    );
 
     let suspenseEventsViewWrapper = null;
     if (data.suspenseEvents.length > 0) {
@@ -262,7 +287,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     reactMeasuresViewRef.current = reactMeasuresView;
     const reactMeasuresViewWrapper = createViewHelper(
       reactMeasuresView,
-      'react',
+      'react scheduling',
       true,
       true,
     );
@@ -275,7 +300,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         data,
       );
       componentMeasuresViewRef.current = componentMeasuresView;
-      componentMeasuresViewWrapper = createViewHelper(componentMeasuresView);
+      componentMeasuresViewWrapper = createViewHelper(
+        componentMeasuresView,
+        'react components',
+      );
     }
 
     const flamechartView = new FlamechartView(
@@ -335,7 +363,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       return;
     }
 
-    // Wheel events should always hide the current toolltip.
+    // Wheel events should always hide the current tooltip.
     switch (interaction.type) {
       case 'wheel-control':
       case 'wheel-meta':
@@ -623,11 +651,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
               {measure !== null && (
                 <ContextMenuItem
                   onClick={() =>
-                    zoomToBatch(
-                      contextData.data,
-                      measure,
-                      syncedHorizontalPanAndZoomViewsRef.current,
-                    )
+                    zoomToBatch(contextData.data, measure, viewState, width)
                   }
                   title="Zoom to batch">
                   Zoom to batch
