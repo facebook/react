@@ -25,6 +25,8 @@ export type SourceFileASTWithHookDetails = {
   source: string,
 };
 
+export const NO_HOOK_NAME = '<no-hook>';
+
 const AST_NODE_TYPES = Object.freeze({
   PROGRAM: 'Program',
   CALL_EXPRESSION: 'CallExpression',
@@ -358,7 +360,7 @@ export function getHookNamesMappingFromAST(
   traverse(sourceAST, {
     [AST_NODE_TYPES.PROGRAM]: {
       enter(path) {
-        pushFrame('<no-hook>', path.node);
+        pushFrame(NO_HOOK_NAME, path.node);
       },
       exit(path) {
         popFrame(path.node);
