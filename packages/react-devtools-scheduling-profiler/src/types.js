@@ -7,7 +7,7 @@
  * @flow
  */
 
-// Type utilities
+import type {ScrollState} from './view-base/utils/scrollState';
 
 // Source: https://github.com/facebook/flow/issues/4002#issuecomment-323612798
 // eslint-disable-next-line no-unused-vars
@@ -123,12 +123,29 @@ export type FlamechartStackLayer = FlamechartStackFrame[];
 
 export type Flamechart = FlamechartStackLayer[];
 
+export type HorizontalScrollStateChangeCallback = (
+  scrollState: ScrollState,
+) => void;
+
+// Imperative view state that corresponds to profiler data.
+// This state lives outside of React's lifecycle
+// and should be erased/reset whenever new profiler data is loaded.
+export type ViewState = {|
+  horizontalScrollState: ScrollState,
+  onHorizontalScrollStateChange: (
+    callback: HorizontalScrollStateChangeCallback,
+  ) => void,
+  updateHorizontalScrollState: (scrollState: ScrollState) => void,
+  viewToMutableViewStateMap: Map<string, mixed>,
+|};
+
 export type ReactProfilerData = {|
+  batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
   laneToLabelMap: Map<ReactLane, string>,
-  measures: ReactMeasure[],
+  laneToReactMeasureMap: Map<ReactLane, ReactMeasure[]>,
   nativeEvents: NativeEvent[],
   otherUserTimingMarks: UserTimingMark[],
   reactVersion: string | null,
