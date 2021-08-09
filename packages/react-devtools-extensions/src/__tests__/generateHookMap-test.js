@@ -71,7 +71,7 @@ export function Component() {
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
     Object {
-      "mappings": "CAAD,IYCA;KgBDA,CREA;MWFA,GnBGA;SaHA;SMIA;SaJA,EpBKA;WiCLA,C7CMA;YYNA",
+      "mappings": "CAAD;KYCA,AgBDA;MREA,AWFA;SnBGA,AaHA,AMIA,AaJA;WpBKA,AiCLA;Y7CMA,AYNA",
       "names": Array [
         "<no-hook>",
         "a",
@@ -116,7 +116,7 @@ export function Component() {
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
     Object {
-      "mappings": "CAAD,KgBCA;MUDA,CFEA;OUFA",
+      "mappings": "CAAD;MgBCA,AUDA;OFEA,AUFA",
       "names": Array [
         "<no-hook>",
         "theme",
@@ -159,7 +159,7 @@ export function Component() {
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
     Object {
-      "mappings": "CAAD,IyBCA,CKCA;MWDA,GrCDA",
+      "mappings": "CAAD;KyBCA;MKCA,AWDA;SrCDA",
       "names": Array [
         "<no-hook>",
         "InnerComponent",
@@ -201,7 +201,7 @@ export function Component() {
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
     Object {
-      "mappings": "CAAD,KwBCA;MWDA",
+      "mappings": "CAAD;MwBCA,AWDA",
       "names": Array [
         "<no-hook>",
         "val",

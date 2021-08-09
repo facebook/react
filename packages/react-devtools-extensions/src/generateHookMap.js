@@ -29,8 +29,8 @@ export type HookMapEntry = [
   number, // 0-indexed index into names array
   number, // TODO: filler number to support reusing encoding from `sourcemap-codec` (see TODO below)
 ];
-export type HookMapGroupedEntries = HookMapEntry[];
-export type HookMapMappings = HookMapGroupedEntries[];
+export type HookMapLine = HookMapEntry[];
+export type HookMapMappings = HookMapLine[];
 
 /**
  * Given a parsed source code AST, returns a "Hook Map", which is a
@@ -83,14 +83,10 @@ export function generateHookMap(sourceAST: File): HookMap {
 
     if (currentLine != start.line) {
       currentLine = start.line;
-      if (mappings.length > 0) {
-        const current = mappings[mappings.length - 1];
-        current.push(entry);
-      } else {
-        mappings.push([entry]);
-      }
-    } else {
       mappings.push([entry]);
+    } else {
+      const current = mappings[mappings.length - 1];
+      current.push(entry);
     }
   }
 
