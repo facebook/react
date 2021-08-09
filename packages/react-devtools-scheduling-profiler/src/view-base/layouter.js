@@ -229,6 +229,7 @@ export const lastViewTakesUpRemainingSpaceLayout: Layouter = (
     layoutInfoToPassThrough[layoutInfoToPassThrough.length - 1];
 
   const remainingHeight =
+    containerFrame.origin.y +
     containerFrame.size.height -
     secondLastLayoutInfo.frame.origin.y -
     secondLastLayoutInfo.frame.size.height;
