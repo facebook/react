@@ -389,15 +389,24 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  it('throws if tree suspends and none of the Suspense ancestors have a boundary', () => {
-    ReactTestRenderer.create(<AsyncText text="Hi" ms={1000} />, {
+  it('logs an error if tree suspends and none of the Suspense ancestors have a boundary', async () => {
+    const root = ReactTestRenderer.create(<AsyncText text="Hi" ms={1000} />, {
       unstable_isConcurrent: true,
     });
 
-    expect(Scheduler).toFlushAndThrow(
-      'AsyncText suspended while rendering, but no fallback UI was specified.',
+    expect(() => {
+      expect(Scheduler).toFlushAndYield(['Suspend! [Hi]']);
+      expect(root).toMatchRenderedOutput(null);
+    }).toErrorDev(
+      'Warning: AsyncText suspended while rendering, but no suspense boundary was specified. Add a Suspense component to specify a fallback.',
+      {withoutStack: true},
     );
-    expect(Scheduler).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
+
+    jest.advanceTimersByTime(5000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
+
+    expect(Scheduler).toFlushAndYield(['Hi']);
+    expect(root).toMatchRenderedOutput('Hi');
   });
 
   it('updates memoized child of suspense component when context updates (simple memo)', () => {

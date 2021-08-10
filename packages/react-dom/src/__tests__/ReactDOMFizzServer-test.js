@@ -454,6 +454,24 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should asynchronously load the root when there is no boundary', async () => {
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <div>
+          <AsyncText text="Hello World" />
+        </div>,
+        writable,
+      );
+      startWriting();
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
+    await act(async () => {
+      resolveText('Hello World');
+    });
+    expect(getVisibleChildren(container)).toEqual(<div>Hello World</div>);
+  });
+
+  // @gate experimental
   it('waits for pending content to come in from the server and then hydrates it', async () => {
     const ref = React.createRef();
 
@@ -487,6 +505,70 @@ describe('ReactDOMFizzServer', () => {
 
     // We're still loading because we're waiting for the server to stream more content.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // The server now updates the content in place in the fallback.
+    await act(async () => {
+      resolveText('Hello');
+    });
+
+    // The final HTML is now in place.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <h1>Hello</h1>
+      </div>,
+    );
+    const h1 = container.getElementsByTagName('h1')[0];
+
+    // But it is not yet hydrated.
+    expect(ref.current).toBe(null);
+
+    Scheduler.unstable_flushAll();
+
+    // Now it's hydrated.
+    expect(ref.current).toBe(h1);
+  });
+
+  // @gate experimental
+  it('waits for pending root to come in from the server and then hydrates it', async () => {
+    const ref = React.createRef();
+
+    function App() {
+      return (
+        <div>
+          <h1 ref={ref}>
+            <AsyncText text="Hello" />
+          </h1>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App />,
+        writable,
+      );
+      startWriting();
+    });
+
+    // We're still showing a fallback.
+    expect(getVisibleChildren(container)).toEqual(undefined);
+
+    // Attempt to hydrate the content.
+
+    expect(() => {
+      const root = ReactDOM.createRoot(container, {hydrate: true});
+      root.render(<App />);
+      Scheduler.unstable_flushAll();
+    }).toErrorDev(
+      [
+        'Expected server HTML to contain a matching <div> in <div>',
+        'AsyncText suspended while rendering, but no suspense boundary was specified',
+      ],
+      {withoutStack: 1},
+    );
+
+    // We're still loading because we're waiting for the server to stream more content.
+    expect(getVisibleChildren(container)).toEqual(undefined);
 
     // The server now updates the content in place in the fallback.
     await act(async () => {
@@ -718,6 +800,64 @@ describe('ReactDOMFizzServer', () => {
     // We still can't render it on the client.
     Scheduler.unstable_flushAll();
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // We now resolve it on the client.
+    resolveText('Hello');
+
+    Scheduler.unstable_flushAll();
+
+    // The client rendered HTML is now in place.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <h1>Hello</h1>
+      </div>,
+    );
+  });
+
+  // @gate experimental
+  it('client renders a root if it does not resolve before aborting', async () => {
+    function App() {
+      return (
+        <div>
+          <h1>
+            <AsyncText text="Hello" />
+          </h1>
+        </div>
+      );
+    }
+
+    let controls;
+    await act(async () => {
+      controls = ReactDOMFizzServer.pipeToNodeWritable(<App />, writable);
+      controls.startWriting();
+    });
+
+    // We're still showing a fallback.
+
+    // Attempt to hydrate the content.
+    expect(() => {
+      const root = ReactDOM.createRoot(container, {hydrate: true});
+      root.render(<App />);
+      Scheduler.unstable_flushAll();
+    }).toErrorDev(
+      [
+        'Expected server HTML to contain a matching <div> in <div>',
+        'AsyncText suspended while rendering, but no suspense boundary was specified',
+      ],
+      {withoutStack: 1},
+    );
+
+    // We're still loading because we're waiting for the server to stream more content.
+    expect(getVisibleChildren(container)).toEqual(undefined);
+
+    // We abort the server response.
+    await act(async () => {
+      controls.abort();
+    });
+
+    // We still can't render it on the client.
+    Scheduler.unstable_flushAll();
+    expect(getVisibleChildren(container)).toEqual(undefined);
 
     // We now resolve it on the client.
     resolveText('Hello');

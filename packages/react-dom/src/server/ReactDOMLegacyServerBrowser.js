@@ -53,10 +53,7 @@ function renderToStringImpl(
     },
   };
 
-  let readyToStream = false;
-  function onReadyToStream() {
-    readyToStream = true;
-  }
+  function onReadyToStream() {}
   const request = createRequest(
     children,
     destination,
@@ -78,13 +75,6 @@ function renderToStringImpl(
   if (didFatal) {
     throw fatalError;
   }
-  invariant(
-    readyToStream,
-    'A React component suspended while rendering, but no fallback UI was specified.\n' +
-      '\n' +
-      'Add a <Suspense fallback=...> component higher in the tree to ' +
-      'provide a loading indicator or placeholder to display.',
-  );
   return result;
 }
 

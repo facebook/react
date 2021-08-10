@@ -252,13 +252,14 @@ const RenderContext = /*                */ 0b0010;
 const CommitContext = /*                */ 0b0100;
 export const RetryAfterError = /*       */ 0b1000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const RootIncomplete = 0;
 const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
-const RootCompleted = 5;
+const RootSuspendedUncaptured = 5;
+const RootCompleted = 6;
 
 // Describes where we are in the React execution stack
 let executionContext: ExecutionContext = NoContext;
@@ -892,6 +893,14 @@ function finishConcurrentRender(root, exitStatus, lanes) {
       commitRoot(root);
       break;
     }
+    case RootSuspendedUncaptured: {
+      markRootSuspended(root, lanes);
+
+      // The root suspended without capturing, so we should exit without
+      // committing a placeholder and without scheduling a timeout.
+      // Delay indefinitely until we receive more data.
+      break;
+    }
     case RootSuspendedWithDelay: {
       markRootSuspended(root, lanes);
 
@@ -1320,6 +1329,33 @@ export function markSkippedUpdateLanes(lane: Lane | Lanes): void {
 export function renderDidSuspend(): void {
   if (workInProgressRootExitStatus === RootIncomplete) {
     workInProgressRootExitStatus = RootSuspended;
+  }
+}
+
+export function renderDidSuspendUncaptured(): void {
+  if (
+    workInProgressRootExitStatus === RootIncomplete ||
+    workInProgressRootExitStatus === RootSuspended ||
+    workInProgressRootExitStatus === RootSuspendedWithDelay
+  ) {
+    workInProgressRootExitStatus = RootSuspendedUncaptured;
+  }
+
+  // Check if there are updates that we skipped tree that might have unblocked
+  // this render.
+  if (
+    workInProgressRoot !== null &&
+    (includesNonIdleWork(workInProgressRootSkippedLanes) ||
+      includesNonIdleWork(workInProgressRootUpdatedLanes))
+  ) {
+    // Mark the current render as suspended so that we switch to working on
+    // the updates that were skipped. Usually we only suspend at the end of
+    // the render phase.
+    // TODO: We should probably always mark the root as suspended immediately
+    // (inside this function), since by suspending at the end of the render
+    // phase introduces a potential mistake where we suspend lanes that were
+    // pinged or updated while we were rendering.
+    markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes);
   }
 }
 
@@ -2238,9 +2274,10 @@ export function pingSuspendedRoot(
     // TODO: If we're rendering sync either due to Sync, Batched or expired,
     // we should probably never restart.
 
-    // If we're suspended with delay, or if it's a retry, we'll always suspend
-    // so we can always restart.
+    // If we're suspended with delay, or suspended without a boundary,
+    // or if it's a retry, we'll always suspend, so we can always restart.
     if (
+      workInProgressRootExitStatus === RootSuspendedUncaptured ||
       workInProgressRootExitStatus === RootSuspendedWithDelay ||
       (workInProgressRootExitStatus === RootSuspended &&
         includesOnlyRetries(workInProgressRootRenderLanes) &&

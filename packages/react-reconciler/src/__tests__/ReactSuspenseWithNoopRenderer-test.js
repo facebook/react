@@ -1003,11 +1003,20 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableCache
-  it('throws a helpful error when an update is suspends without a placeholder', () => {
+  it('logs an error when an update suspends without a boundary', async () => {
     ReactNoop.render(<AsyncText text="Async" />);
-    expect(Scheduler).toFlushAndThrow(
-      'AsyncText suspended while rendering, but no fallback UI was specified.',
+    expect(() => {
+      expect(Scheduler).toFlushAndYield(['Suspend! [Async]']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+    }).toErrorDev(
+      'Warning: AsyncText suspended while rendering, but no suspense boundary was specified. Add a Suspense component to specify a fallback.',
+      {withoutStack: true},
     );
+
+    await resolveText('Async');
+
+    expect(Scheduler).toFlushAndYield(['Async']);
+    expect(ReactNoop.getChildren()).toEqual([span('Async')]);
   });
 
   // @gate enableCache

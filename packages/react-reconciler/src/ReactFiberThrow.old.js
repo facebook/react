@@ -67,6 +67,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
   restorePendingUpdaters,
+  renderDidSuspendUncaptured,
 } from './ReactFiberWorkLoop.old';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
@@ -422,15 +423,16 @@ function throwException(
       // boundary.
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
-    // No boundary was found. Fallthrough to error mode.
-    // TODO: Use invariant so the message is stripped in prod?
-    value = new Error(
-      (getComponentNameFromFiber(sourceFiber) || 'A React component') +
-        ' suspended while rendering, but no fallback UI was specified.\n' +
-        '\n' +
-        'Add a <Suspense fallback=...> component higher in the tree to ' +
-        'provide a loading indicator or placeholder to display.',
-    );
+    // No boundary was found. Log an error, and mark root suspended.
+    if (__DEV__) {
+      console.error(
+        '%s suspended while rendering, but no suspense boundary was specified. Add a Suspense component to specify a fallback.',
+        getComponentNameFromFiber(sourceFiber) || 'A React component',
+      );
+    }
+    attachPingListener(root, wakeable, rootRenderLanes);
+    renderDidSuspendUncaptured();
+    return;
   }
 
   // We didn't find a boundary that could handle this type of exception. Start

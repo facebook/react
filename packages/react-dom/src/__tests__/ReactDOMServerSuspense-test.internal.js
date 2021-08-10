@@ -35,11 +35,9 @@ function initModules() {
   };
 }
 
-const {
-  itThrowsWhenRendering,
-  resetModules,
-  serverRender,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
+  initModules,
+);
 
 describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
@@ -169,36 +167,14 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB).toBe(divB2);
   });
 
-  // TODO: Remove this in favor of @gate pragma
-  if (__EXPERIMENTAL__) {
-    itThrowsWhenRendering(
-      'a suspending component outside a Suspense node',
-      async render => {
-        await render(
-          <div>
-            <React.Suspense />
-            <AsyncText text="Children" />
-            <React.Suspense />
-          </div>,
-          1,
-        );
-      },
-      'Add a <Suspense fallback=...> component higher in the tree',
+  it('should render null when a promise is thrown with no boundary', async () => {
+    const c = await serverRender(
+      <div>
+        <AsyncText text="Children" />
+      </div>,
     );
-
-    itThrowsWhenRendering(
-      'a suspending component without a Suspense above',
-      async render => {
-        await render(
-          <div>
-            <AsyncText text="Children" />
-          </div>,
-          1,
-        );
-      },
-      'Add a <Suspense fallback=...> component higher in the tree',
-    );
-  }
+    expect(c).toEqual(null);
+  });
 
   it('does not get confused by throwing null', () => {
     function Bad() {
