@@ -274,22 +274,23 @@ class VerticalScrollBarView extends View {
   _handleClick(interaction: ClickInteraction, viewRefs: ViewRefs) {
     const {location} = interaction.payload;
     if (rectContainsPoint(location, this.frame)) {
-      const currentScrollThumbY = this._scrollThumbRect.origin.y;
-      const y = location.y;
-
       if (rectContainsPoint(location, this._scrollThumbRect)) {
         // Ignore clicks on the track thumb directly.
         return;
       }
 
+      const currentScrollThumbY = this._scrollThumbRect.origin.y;
+      const y = location.y;
+
+      const {height} = this.frame.size;
+
       // Scroll up or down about one viewport worth of content:
-      // TODO This calculation is broken
-      const deltaY = this.frame.size.height * 0.8;
+      const deltaY = (height / this._contentHeight) * height * 0.8;
 
       this.setScrollThumbY(
-        y < currentScrollThumbY
-          ? currentScrollThumbY - deltaY
-          : currentScrollThumbY + deltaY,
+        y > currentScrollThumbY
+          ? this._scrollThumbRect.origin.y + deltaY
+          : this._scrollThumbRect.origin.y - deltaY,
       );
     }
   }
