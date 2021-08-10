@@ -34,7 +34,7 @@ module.exports = {
   entry: {
     background: './src/background.js',
     contentScript: './src/contentScript.js',
-    hook: '../react-devtools-shared/src/hook.js',
+    extensionHook: './src/extensionHook.js',
     injectGlobalHook: './src/injectGlobalHook.js',
     main: './src/main.js',
     panel: './src/panel.js',

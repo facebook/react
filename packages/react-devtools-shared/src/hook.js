@@ -339,22 +339,5 @@ export function installHook(target: any): DevToolsHook | null {
     }: Object),
   );
 
-  target.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function(evt) {
-    target.postMessage(
-      {
-        source: 'react-devtools-detector',
-        reactBuildType: evt.reactBuildType,
-      },
-      '*',
-    );
-  });
-
-  target.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeObjectCreate = Object.create;
-  target.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeMap = Map;
-  target.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeWeakMap = WeakMap;
-  target.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeSet = Set;
-
   return hook;
 }
-
-installHook(window);

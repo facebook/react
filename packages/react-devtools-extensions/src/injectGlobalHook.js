@@ -74,7 +74,7 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
 if ('text/html' === document.contentType) {
   const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('build/hook.js');
+  script.src = chrome.runtime.getURL('build/extensionHook.js');
   document.documentElement.appendChild(script);
   script.parentNode.removeChild(script);
 }
