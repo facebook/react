@@ -185,7 +185,13 @@ export class VerticalScrollView extends View {
 
   _handleMouseDown(interaction: MouseDownInteraction) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
-      this._isPanning = true;
+      const frameHeight = this.frame.size.height;
+      const contentHeight = this._contentView.desiredSize().height;
+      // Don't claim drag operations if the content is not tall enough to be scrollable.
+      // This would block any outer scroll views from working.
+      if (frameHeight < contentHeight) {
+        this._isPanning = true;
+      }
     }
   }
 
