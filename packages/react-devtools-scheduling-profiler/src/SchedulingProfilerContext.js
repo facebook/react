@@ -11,12 +11,14 @@ import * as React from 'react';
 import {createContext, useCallback, useMemo, useState} from 'react';
 import createDataResourceFromImportedFile from './createDataResourceFromImportedFile';
 
+import type {HorizontalScrollStateChangeCallback, ViewState} from './types';
 import type {DataResource} from './createDataResourceFromImportedFile';
 
 export type Context = {|
   clearSchedulingProfilerData: () => void,
   importSchedulingProfilerData: (file: File) => void,
   schedulingProfilerData: DataResource | null,
+  viewState: ViewState,
 |};
 
 const SchedulingProfilerContext = createContext<Context>(
@@ -42,20 +44,51 @@ function SchedulingProfilerContextController({children}: Props) {
     setSchedulingProfilerData(createDataResourceFromImportedFile(file));
   }, []);
 
-  // TODO (scheduling profiler) Start/stop time ref here?
+  // Recreate view state any time new profiling data is imported.
+  const viewState = useMemo<ViewState>(() => {
+    const horizontalScrollStateChangeCallbacks: Set<HorizontalScrollStateChangeCallback> = new Set();
+
+    const horizontalScrollState = {
+      offset: 0,
+      length: 0,
+    };
+
+    return {
+      horizontalScrollState,
+      onHorizontalScrollStateChange: callback => {
+        horizontalScrollStateChangeCallbacks.add(callback);
+      },
+      updateHorizontalScrollState: scrollState => {
+        if (
+          horizontalScrollState.offset === scrollState.offset &&
+          horizontalScrollState.length === scrollState.length
+        ) {
+          return;
+        }
+
+        horizontalScrollState.offset = scrollState.offset;
+        horizontalScrollState.length = scrollState.length;
+
+        horizontalScrollStateChangeCallbacks.forEach(callback => {
+          callback(scrollState);
+        });
+      },
+      viewToMutableViewStateMap: new Map(),
+    };
+  }, [schedulingProfilerData]);
 
   const value = useMemo(
     () => ({
       clearSchedulingProfilerData,
       importSchedulingProfilerData,
       schedulingProfilerData,
-      // TODO (scheduling profiler)
+      viewState,
     }),
     [
       clearSchedulingProfilerData,
       importSchedulingProfilerData,
       schedulingProfilerData,
-      // TODO (scheduling profiler)
+      viewState,
     ],
   );
 
