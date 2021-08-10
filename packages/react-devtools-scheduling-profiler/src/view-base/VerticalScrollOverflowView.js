@@ -80,7 +80,6 @@ const withVerticalScrollbarLayout: Layouter = (layout, containerFrame) => {
   return [laidOutContentLayoutInfo, laidOutScrollbarLayoutInfo];
 };
 
-// TODO How do we handle resizing
 export class VerticalScrollOverflowView extends View {
   _contentView: View;
   _isProcessingOnChange: boolean = false;

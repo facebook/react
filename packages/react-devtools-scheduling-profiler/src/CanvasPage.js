@@ -402,6 +402,12 @@ function AutoSizedCanvas({
     const surface = surfaceRef.current;
     surface.handleInteraction(interaction);
 
+    // Flush any display work that got queued up as part of the previous interaction.
+    // Typically there should be no work, but certain interactions may need a second pass.
+    // For example, the ResizableView may collapse/expand its contents,
+    // which requires a second layout pass for an ancestor VerticalScrollOverflowView.
+    surface.displayIfNeeded();
+
     canvas.style.cursor = surface.getCurrentCursor() || 'default';
 
     // Defer drawing to canvas until React's commit phase, to avoid drawing
