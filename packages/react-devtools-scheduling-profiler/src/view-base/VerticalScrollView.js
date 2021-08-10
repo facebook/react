@@ -199,6 +199,7 @@ export class VerticalScrollView extends View {
       containerLength: this.frame.size.height,
     });
     this._setScrollState(newState);
+    return true;
   }
 
   _handleMouseUp(interaction: MouseUpInteraction) {
