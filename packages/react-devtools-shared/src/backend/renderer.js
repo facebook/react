@@ -1279,7 +1279,7 @@ export function attach(
       case ElementTypeFunction:
         const dependencies = fiber.dependencies;
         if (dependencies && dependencies.firstContext) {
-          modernContext = dependencies.firstContext.memoizedValue;
+          modernContext = dependencies.firstContext;
         }
 
         return [legacyContext, modernContext];
@@ -1327,7 +1327,19 @@ export function attach(
           break;
         case ElementTypeFunction:
           if (nextModernContext !== NO_CONTEXT) {
-            return !is(prevModernContext, nextModernContext);
+            let prevContext = prevModernContext;
+            let nextContext = nextModernContext;
+
+            while (prevContext && nextContext) {
+              if (!is(prevContext.memoizedValue, nextContext.memoizedValue)) {
+                return true;
+              }
+
+              prevContext = prevContext.next;
+              nextContext = nextContext.next;
+            }
+
+            return false;
           }
           break;
         default:
