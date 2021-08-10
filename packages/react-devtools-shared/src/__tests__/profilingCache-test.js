@@ -311,6 +311,7 @@ describe('ProfilingCache', () => {
 
   it('should properly detect changed hooks', () => {
     const Context = React.createContext(0);
+    const Context2 = React.createContext(0);
 
     function reducer(state, action) {
       switch (action.type) {
@@ -332,6 +333,7 @@ describe('ProfilingCache', () => {
       // This hook's return value may change between renders,
       // but the hook itself isn't stateful.
       React.useContext(Context);
+      React.useContext(Context2);
 
       // These hooks and their dependencies may not change between renders.
       // We're using them to ensure that they don't trigger false positives.
@@ -351,7 +353,9 @@ describe('ProfilingCache', () => {
     utils.act(() =>
       legacyRender(
         <Context.Provider value={true}>
-          <Component count={1} />
+          <Context2.Provider value={true}>
+            <Component count={1} />
+          </Context2.Provider>
         </Context.Provider>,
         container,
       ),
@@ -361,7 +365,9 @@ describe('ProfilingCache', () => {
     utils.act(() =>
       legacyRender(
         <Context.Provider value={true}>
-          <Component count={2} />
+          <Context2.Provider value={true}>
+            <Component count={2} />
+          </Context2.Provider>
         </Context.Provider>,
         container,
       ),
@@ -373,17 +379,29 @@ describe('ProfilingCache', () => {
     // Fourth render has a changed state hook
     utils.act(() => setState('def'));
 
-    // Fifth render has a changed context value, but no changed hook.
-    // Technically, DevTools will miss this "context" change since it only tracks legacy context.
+    // Fifth render has a changed context value for context 1, but no changed hook.
     utils.act(() =>
       legacyRender(
         <Context.Provider value={false}>
-          <Component count={2} />
+          <Context2.Provider value={true}>
+            <Component count={2} />
+          </Context2.Provider>
         </Context.Provider>,
         container,
       ),
     );
 
+    // Sixth render has another changed context value for context 2, but no changed hook.
+    utils.act(() =>
+      legacyRender(
+        <Context.Provider value={false}>
+          <Context2.Provider value={false}>
+            <Component count={2} />
+          </Context2.Provider>
+        </Context.Provider>,
+        container,
+      ),
+    );
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
@@ -403,7 +421,7 @@ describe('ProfilingCache', () => {
 
     const rootID = store.roots[0];
 
-    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
+    for (let commitIndex = 0; commitIndex < 6; commitIndex++) {
       utils.act(() => {
         TestRenderer.create(
           <Validator
@@ -415,12 +433,12 @@ describe('ProfilingCache', () => {
       });
     }
 
-    expect(allCommitData).toHaveLength(5);
+    expect(allCommitData).toHaveLength(6);
 
     // Export and re-import profile data and make sure it is retained.
     utils.exportImportHelper(bridge, store);
 
-    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
+    for (let commitIndex = 0; commitIndex < 6; commitIndex++) {
       utils.act(() => {
         TestRenderer.create(
           <Validator
