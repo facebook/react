@@ -297,7 +297,11 @@ export class View {
 
     // Pass the interaction to subviews first,
     // so they have the opportunity to claim it before it bubbles.
-    for (let i = 0; i < subviews.length; i++) {
+    //
+    // Views are painted first to last,
+    // so they should process interactions last to first,
+    // so views in front (on top) can claim the interaction first.
+    for (let i = subviews.length - 1; i >= 0; i--) {
       const subview = subviews[i];
       if (rectIntersectsRect(visibleArea, subview.visibleArea)) {
         const didSubviewHandle =
