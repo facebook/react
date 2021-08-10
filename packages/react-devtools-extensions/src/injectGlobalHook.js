@@ -1,7 +1,6 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
-import {installHook} from 'react-devtools-shared/src/hook';
 import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
@@ -52,21 +51,6 @@ window.addEventListener('pageshow', function(evt) {
   chrome.runtime.sendMessage(lastDetectionResult);
 });
 
-const detectReact = `
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function(evt) {
-  window.postMessage({
-    source: 'react-devtools-detector',
-    reactBuildType: evt.reactBuildType,
-  }, '*');
-});
-`;
-const saveNativeValues = `
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeObjectCreate = Object.create;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeMap = Map;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeWeakMap = WeakMap;
-window.__REACT_DEVTOOLS_GLOBAL_HOOK__.nativeSet = Set;
-`;
-
 // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
 if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   const rendererURL = chrome.runtime.getURL('build/renderer.js');
@@ -89,13 +73,10 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
 if ('text/html' === document.contentType) {
-  injectCode(
-    ';(' +
-      installHook.toString() +
-      '(window))' +
-      saveNativeValues +
-      detectReact,
-  );
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL('build/hook.js');
+  document.documentElement.appendChild(script);
+  script.parentNode.removeChild(script);
 }
 
 if (typeof exportFunction === 'function') {
