@@ -30,15 +30,12 @@ import {copy} from 'clipboard-js';
 import prettyMilliseconds from 'pretty-ms';
 
 import {
-  BackgroundColorView,
   HorizontalPanAndZoomView,
   ResizableView,
   VerticalScrollOverflowView,
   Surface,
   VerticalScrollView,
   View,
-  createComposedLayout,
-  lastViewTakesUpRemainingSpaceLayout,
   useCanvasInteraction,
   verticallyStackedLayout,
   zeroPoint,
@@ -326,10 +323,9 @@ function AutoSizedCanvas({
     const rootView = new View(
       surface,
       defaultFrame,
-      createComposedLayout(
-        verticallyStackedLayout,
-        lastViewTakesUpRemainingSpaceLayout,
-      ),
+      verticallyStackedLayout,
+      defaultFrame,
+      COLORS.BACKGROUND,
     );
     rootView.addSubview(axisMarkersViewWrapper);
     if (userTimingMarksViewWrapper !== null) {
@@ -346,16 +342,14 @@ function AutoSizedCanvas({
     }
     rootView.addSubview(flamechartViewWrapper);
 
-    // If subviews are less than the available height, fill remaining height with a solid color.
-    rootView.addSubview(new BackgroundColorView(surface, defaultFrame));
-
-    const rootViewWithVerticalScroll = new VerticalScrollOverflowView(
+    const verticalScrollOverflowView = new VerticalScrollOverflowView(
       surface,
       defaultFrame,
       rootView,
+      viewState,
     );
 
-    surfaceRef.current.rootView = rootViewWithVerticalScroll;
+    surfaceRef.current.rootView = verticalScrollOverflowView;
   }, [data]);
 
   useLayoutEffect(() => {

@@ -10,6 +10,7 @@
 import type {Interaction} from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {Layouter} from './layouter';
+import type {ScrollState} from './utils/scrollState';
 import type {Surface, ViewRefs} from './Surface';
 import type {
   ClickInteraction,
@@ -17,9 +18,11 @@ import type {
   MouseMoveInteraction,
   MouseUpInteraction,
 } from './useCanvasInteraction';
+import type {ViewState} from '../types';
 
 import {rectContainsPoint, rectEqualToRect} from './geometry';
 import {View} from './View';
+import {VerticalScrollView} from './VerticalScrollView';
 import {BORDER_SIZE, COLORS} from '../content-views/constants';
 
 const SCROLL_BAR_SIZE = 14;
@@ -40,8 +43,8 @@ const HIDDEN_RECT = {
  */
 const withVerticalScrollbarLayout: Layouter = (layout, containerFrame) => {
   const [contentLayoutInfo, scrollbarLayoutInfo] = layout;
-  const desiredContentSize = contentLayoutInfo.view.desiredSize();
 
+  const desiredContentSize = contentLayoutInfo.view.desiredSize();
   const shouldShowScrollbar =
     desiredContentSize.height > containerFrame.size.height;
   const scrollbarWidth = shouldShowScrollbar
@@ -54,94 +57,101 @@ const withVerticalScrollbarLayout: Layouter = (layout, containerFrame) => {
       origin: contentLayoutInfo.view.frame.origin,
       size: {
         width: containerFrame.size.width - scrollbarWidth,
-        height: contentLayoutInfo.view.frame.size.height,
+        height: containerFrame.size.height,
       },
     },
   };
-  return [
-    laidOutContentLayoutInfo,
-    {
-      ...scrollbarLayoutInfo,
-      frame: {
-        origin: {
-          x:
-            laidOutContentLayoutInfo.frame.origin.x +
-            laidOutContentLayoutInfo.frame.size.width,
-          y: containerFrame.origin.y,
-        },
-        size: {
-          width: scrollbarWidth,
-          height: containerFrame.size.height,
-        },
+  const laidOutScrollbarLayoutInfo = {
+    ...scrollbarLayoutInfo,
+    frame: {
+      origin: {
+        x:
+          laidOutContentLayoutInfo.frame.origin.x +
+          laidOutContentLayoutInfo.frame.size.width,
+        y: containerFrame.origin.y,
+      },
+      size: {
+        width: scrollbarWidth,
+        height: containerFrame.size.height,
       },
     },
-  ];
+  };
+
+  return [laidOutContentLayoutInfo, laidOutScrollbarLayoutInfo];
 };
 
 // TODO How do we handle resizing
 export class VerticalScrollOverflowView extends View {
   _contentView: View;
+  _isProcessingOnChange: boolean = false;
   _isScrolling: boolean = false;
   _scrollOffset: number = 0;
   _scrollBarView: VerticalScrollBarView;
+  _verticalScrollView: VerticalScrollView;
 
-  constructor(surface: Surface, frame: Rect, contentView: View) {
+  constructor(
+    surface: Surface,
+    frame: Rect,
+    contentView: View,
+    viewState: ViewState,
+  ) {
     super(surface, frame, withVerticalScrollbarLayout);
 
     this._contentView = contentView;
+    this._verticalScrollView = new VerticalScrollView(
+      surface,
+      frame,
+      contentView,
+      viewState,
+      'VerticalScrollOverflowView',
+    );
+    this._verticalScrollView.onChange(this._onVerticalScrollViewChange);
+
     this._scrollBarView = new VerticalScrollBarView(surface, frame, this);
 
-    this.addSubview(contentView);
+    this.addSubview(this._verticalScrollView);
     this.addSubview(this._scrollBarView);
   }
 
-  setScrollOffset(value: number) {
-    this._scrollOffset = value;
-    this.setNeedsDisplay();
-  }
-
   layoutSubviews() {
-    this._contentView.setFrame({
-      origin: this._contentView.frame.origin,
-      // Reset this to our size. This allows _contentView's layouter to know the
-      // latest available height, which is useful because e.g.
-      // lastViewTakesUpRemainingSpaceLayout can recompute its last view's height.
-      size: this.frame.size,
-    });
-
-    const desiredContentSize = this._contentView.desiredSize();
-
-    // Force view to take up at least all remaining vertical space.
-    const contentHeight = Math.max(
-      desiredContentSize.height,
-      this.frame.size.height,
-    );
-    // Clamp offset so that content will always be fully visible
-    this._scrollOffset = Math.max(
-      this._scrollOffset,
-      this.frame.size.height - contentHeight,
-    );
-
-    this._contentView.setFrame({
-      origin: {
-        x: this.frame.origin.x,
-        // Offset content view. Our layouter will set the final position of both
-        // the content view and scrollbar.
-        y: this.frame.origin.y + this._scrollOffset,
-      },
-      size: {
-        width: this.frame.size.width,
-        height: contentHeight,
-      },
-    });
-
     super.layoutSubviews();
+
+    const contentSize = this._contentView.desiredSize();
 
     // This should be done after calling super.layoutSubviews() – calling it
     // before somehow causes _contentView to need display on every mousemove
     // event when the scroll bar is shown.
-    this._scrollBarView.setContentHeight(contentHeight);
+    this._scrollBarView.setContentHeight(contentSize.height);
   }
+
+  setScrollOffset(newScrollOffset: number, maxScrollOffset: number) {
+    const deltaY = newScrollOffset - this._scrollOffset;
+
+    if (!this._isProcessingOnChange) {
+      this._verticalScrollView.scrollBy(-deltaY);
+    }
+
+    this._scrollOffset = newScrollOffset;
+
+    this.setNeedsDisplay();
+  }
+
+  _onVerticalScrollViewChange = (
+    scrollState: ScrollState,
+    containerLength: number,
+  ) => {
+    const maxOffset = scrollState.length - containerLength;
+    if (maxOffset === 0) {
+      return;
+    }
+
+    const percentage = Math.abs(scrollState.offset) / maxOffset;
+    const maxScrollThumbY = this._scrollBarView.getMaxScrollThumbY();
+
+    this._isProcessingOnChange = true;
+    this._scrollBarView.setScrollThumbY(percentage * maxScrollThumbY);
+    this._isProcessingOnChange = false;
+  };
 }
 
 class VerticalScrollBarView extends View {
@@ -168,6 +178,14 @@ class VerticalScrollBarView extends View {
     };
   }
 
+  getMaxScrollThumbY(): number {
+    const {height} = this.frame.size;
+
+    const maxScrollThumbY = height - this._scrollThumbRect.size.height;
+
+    return maxScrollThumbY;
+  }
+
   setContentHeight(contentHeight: number) {
     this._contentHeight = contentHeight;
 
@@ -192,13 +210,12 @@ class VerticalScrollBarView extends View {
 
   setScrollThumbY(value: number) {
     const {height} = this.frame.size;
-    const scrollThumbRect = this._scrollThumbRect;
 
-    const maxScrollThumbY = height - scrollThumbRect.size.height;
+    const maxScrollThumbY = this.getMaxScrollThumbY();
     const newScrollThumbY = Math.max(0, Math.min(maxScrollThumbY, value));
 
     this._scrollThumbRect = {
-      ...scrollThumbRect,
+      ...this._scrollThumbRect,
       origin: {
         x: this.frame.origin.x,
         y: newScrollThumbY,
@@ -209,7 +226,10 @@ class VerticalScrollBarView extends View {
     const contentScrollOffset =
       (newScrollThumbY / maxScrollThumbY) * maxContentOffset * -1;
 
-    this._verticalScrollOverflowView.setScrollOffset(contentScrollOffset);
+    this._verticalScrollOverflowView.setScrollOffset(
+      contentScrollOffset,
+      maxScrollThumbY,
+    );
   }
 
   draw(context: CanvasRenderingContext2D, viewRefs: ViewRefs) {

@@ -23,7 +23,7 @@ import {BORDER_SIZE, COLORS} from '../content-views/constants';
 import {drawText} from '../content-views/utils/text';
 import {Surface} from './Surface';
 import {View} from './View';
-import {intersectionOfRects, rectContainsPoint} from './geometry';
+import {rectContainsPoint} from './geometry';
 import {noopLayout} from './layouter';
 import {clamp} from './utils/clamp';
 
@@ -70,9 +70,9 @@ class ResizeBar extends View {
   }
 
   draw(context: CanvasRenderingContext2D, viewRefs: ViewRefs) {
-    const {visibleArea} = this;
-    const {x, y} = visibleArea.origin;
-    const {width, height} = visibleArea.size;
+    const {frame} = this;
+    const {x, y} = frame.origin;
+    const {width, height} = frame.size;
 
     const isActive =
       this._interactionState === 'dragging' ||
@@ -99,14 +99,12 @@ class ResizeBar extends View {
           y: y + height - RESIZE_BAR_WITH_LABEL_HEIGHT,
         },
         size: {
-          width: visibleArea.size.width,
-          height: visibleArea.size.height,
+          width: frame.size.width,
+          height: RESIZE_BAR_WITH_LABEL_HEIGHT,
         },
       };
 
-      const drawableRect = intersectionOfRects(labelRect, this.visibleArea);
-
-      drawText(this._label, context, labelRect, drawableRect, {
+      drawText(this._label, context, labelRect, frame, {
         fillStyle: COLORS.REACT_RESIZE_BAR_DOT,
         textAlign: 'center',
       });
@@ -204,13 +202,13 @@ class ResizeBar extends View {
     switch (interaction.type) {
       case 'mousedown':
         this._handleMouseDown(interaction, viewRefs);
-        return;
+        break;
       case 'mousemove':
         this._handleMouseMove(interaction, viewRefs);
-        return;
+        break;
       case 'mouseup':
         this._handleMouseUp(interaction, viewRefs);
-        return;
+        break;
     }
   }
 }
@@ -379,6 +377,8 @@ export class ResizableView extends View {
         const subviewDesiredSize = this._subview.desiredSize();
         this._updateLayoutStateAndResizeBar(subviewDesiredSize.height);
         this.setNeedsDisplay();
+
+        return true;
       }
     }
   }
@@ -397,6 +397,8 @@ export class ResizableView extends View {
         // Double clicking on the expanded view should collapse.
         this._updateLayoutStateAndResizeBar(0);
         this.setNeedsDisplay();
+
+        return true;
       }
     }
   }
@@ -410,6 +412,8 @@ export class ResizableView extends View {
         cursorOffsetInBarFrame: mouseY - resizeBarFrame.origin.y,
         mouseY,
       };
+
+      return true;
     }
   }
 
@@ -421,6 +425,8 @@ export class ResizableView extends View {
         mouseY: interaction.payload.location.y,
       };
       this.setNeedsDisplay();
+
+      return true;
     }
   }
 
@@ -443,20 +449,15 @@ export class ResizableView extends View {
   handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'click':
-        this._handleClick(interaction);
-        return;
+        return this._handleClick(interaction);
       case 'double-click':
-        this._handleDoubleClick(interaction);
-        return;
+        return this._handleDoubleClick(interaction);
       case 'mousedown':
-        this._handleMouseDown(interaction);
-        return;
+        return this._handleMouseDown(interaction);
       case 'mousemove':
-        this._handleMouseMove(interaction);
-        return;
+        return this._handleMouseMove(interaction);
       case 'mouseup':
-        this._handleMouseUp(interaction);
-        return;
+        return this._handleMouseUp(interaction);
     }
   }
 }
