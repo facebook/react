@@ -38,21 +38,12 @@ import {REACT_TOTAL_NUM_LANES} from '../constants';
 const REACT_LANE_HEIGHT = REACT_MEASURE_HEIGHT + BORDER_SIZE;
 const MAX_ROWS_TO_SHOW_INITIALLY = 5;
 
-function getMeasuresForLane(
-  allMeasures: ReactMeasure[],
-  lane: ReactLane,
-): ReactMeasure[] {
-  return allMeasures.filter(measure => measure.lanes.includes(lane));
-}
-
 export class ReactMeasuresView extends View {
-  _profilerData: ReactProfilerData;
   _intrinsicSize: IntrinsicSize;
-
   _lanesToRender: ReactLane[];
-  _laneToMeasures: Map<ReactLane, ReactMeasure[]>;
-
+  _profilerData: ReactProfilerData;
   _hoveredMeasure: ReactMeasure | null = null;
+
   onHover: ((measure: ReactMeasure | null) => void) | null = null;
 
   constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
@@ -63,17 +54,14 @@ export class ReactMeasuresView extends View {
 
   _performPreflightComputations() {
     this._lanesToRender = [];
-    this._laneToMeasures = new Map();
 
     for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
-      const measuresForLane = getMeasuresForLane(
-        this._profilerData.measures,
+      const measuresForLane = this._profilerData.laneToReactMeasureMap.get(
         lane,
       );
       // Only show lanes with measures
-      if (measuresForLane.length) {
+      if (measuresForLane != null && measuresForLane.length > 0) {
         this._lanesToRender.push(lane);
-        this._laneToMeasures.set(lane, measuresForLane);
       }
     }
 
@@ -213,7 +201,7 @@ export class ReactMeasuresView extends View {
       frame,
       _hoveredMeasure,
       _lanesToRender,
-      _laneToMeasures,
+      _profilerData,
       visibleArea,
     } = this;
 
@@ -233,7 +221,7 @@ export class ReactMeasuresView extends View {
     for (let i = 0; i < _lanesToRender.length; i++) {
       const lane = _lanesToRender[i];
       const baseY = frame.origin.y + i * REACT_LANE_HEIGHT;
-      const measuresForLane = _laneToMeasures.get(lane);
+      const measuresForLane = _profilerData.laneToReactMeasureMap.get(lane);
 
       if (!measuresForLane) {
         throw new Error(
@@ -242,7 +230,7 @@ export class ReactMeasuresView extends View {
       }
 
       // Render lane labels
-      const label = this._profilerData.laneToLabelMap.get(lane);
+      const label = _profilerData.laneToLabelMap.get(lane);
       if (label == null) {
         console.warn(`Could not find label for lane ${lane}.`);
       } else {
@@ -316,8 +304,8 @@ export class ReactMeasuresView extends View {
       frame,
       _intrinsicSize,
       _lanesToRender,
-      _laneToMeasures,
       onHover,
+      _profilerData,
       visibleArea,
     } = this;
     if (!onHover) {
@@ -347,7 +335,7 @@ export class ReactMeasuresView extends View {
     // This will always be the one on "top" (the one the user is hovering over).
     const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
-    const measures = _laneToMeasures.get(lane);
+    const measures = _profilerData.laneToReactMeasureMap.get(lane);
     if (!measures) {
       onHover(null);
       return;

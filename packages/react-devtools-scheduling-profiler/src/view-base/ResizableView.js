@@ -17,6 +17,7 @@ import type {
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {ViewRefs} from './Surface';
+import type {ViewState} from '../types';
 
 import {BORDER_SIZE, COLORS} from '../content-views/constants';
 import {drawText} from '../content-views/utils/text';
@@ -35,10 +36,10 @@ type ResizingState = $ReadOnly<{|
   mouseY: number,
 |}>;
 
-type LayoutState = $ReadOnly<{|
+type LayoutState = {|
   /** Resize bar's vertical position relative to resize view's frame.origin.y */
   barOffsetY: number,
-|}>;
+|};
 
 const RESIZE_BAR_DOT_RADIUS = 1;
 const RESIZE_BAR_DOT_SPACING = 4;
@@ -217,36 +218,33 @@ class ResizeBar extends View {
 export class ResizableView extends View {
   _canvasRef: {current: HTMLCanvasElement | null};
   _layoutState: LayoutState;
+  _mutableViewStateKey: string;
   _resizeBar: ResizeBar;
   _resizingState: ResizingState | null = null;
   _subview: View;
+  _viewState: ViewState;
 
   constructor(
     surface: Surface,
     frame: Rect,
     subview: View,
+    viewState: ViewState,
     canvasRef: {current: HTMLCanvasElement | null},
     label: string,
   ) {
     super(surface, frame, noopLayout);
 
     this._canvasRef = canvasRef;
-
+    this._layoutState = {barOffsetY: 0};
+    this._mutableViewStateKey = label + ':ResizableView';
     this._subview = subview;
     this._resizeBar = new ResizeBar(surface, frame, label);
+    this._viewState = viewState;
 
     this.addSubview(this._subview);
     this.addSubview(this._resizeBar);
 
-    const subviewDesiredSize = subview.desiredSize();
-    this._updateLayoutStateAndResizeBar(
-      subviewDesiredSize.maxInitialHeight != null
-        ? Math.min(
-            subviewDesiredSize.maxInitialHeight,
-            subviewDesiredSize.height,
-          )
-        : subviewDesiredSize.height,
-    );
+    this._restoreMutableViewState();
   }
 
   desiredSize() {
@@ -274,6 +272,35 @@ export class ResizableView extends View {
     super.layoutSubviews();
   }
 
+  _restoreMutableViewState() {
+    if (
+      this._viewState.viewToMutableViewStateMap.has(this._mutableViewStateKey)
+    ) {
+      this._layoutState = ((this._viewState.viewToMutableViewStateMap.get(
+        this._mutableViewStateKey,
+      ): any): LayoutState);
+
+      this._updateLayoutStateAndResizeBar(this._layoutState.barOffsetY);
+    } else {
+      this._viewState.viewToMutableViewStateMap.set(
+        this._mutableViewStateKey,
+        this._layoutState,
+      );
+
+      const subviewDesiredSize = this._subview.desiredSize();
+      this._updateLayoutStateAndResizeBar(
+        subviewDesiredSize.maxInitialHeight != null
+          ? Math.min(
+              subviewDesiredSize.maxInitialHeight,
+              subviewDesiredSize.height,
+            )
+          : subviewDesiredSize.height,
+      );
+    }
+
+    this.setNeedsDisplay();
+  }
+
   _shouldRenderResizeBar() {
     const subviewDesiredSize = this._subview.desiredSize();
     return subviewDesiredSize.hideScrollBarIfLessThanHeight != null
@@ -287,10 +314,7 @@ export class ResizableView extends View {
       barOffsetY = 0;
     }
 
-    this._layoutState = {
-      ...this._layoutState,
-      barOffsetY,
-    };
+    this._layoutState.barOffsetY = barOffsetY;
 
     this._resizeBar.showLabel = barOffsetY === 0;
   }
@@ -341,6 +365,10 @@ export class ResizableView extends View {
   }
 
   _handleClick(interaction: ClickInteraction) {
+    if (!this._shouldRenderResizeBar()) {
+      return;
+    }
+
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
@@ -356,6 +384,10 @@ export class ResizableView extends View {
   }
 
   _handleDoubleClick(interaction: DoubleClickInteraction) {
+    if (!this._shouldRenderResizeBar()) {
+      return;
+    }
+
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
