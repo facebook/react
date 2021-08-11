@@ -9,6 +9,28 @@
   <!-- Upcoming changes go here -->
 </details>
 
+
+## 4.15.0 (August 11, 2021)
+
+#### Features
+* Added new scheduling profiler tool (@bvaughn in https://github.com/facebook/react/pull/22006, https://github.com/facebook/react/pull/21990, https://github.com/facebook/react/pull/22013, https://github.com/facebook/react/pull/21897, https://github.com/facebook/react/pull/22029, https://github.com/facebook/react/pull/22038, https://github.com/facebook/react/pull/22043, https://github.com/facebook/react/pull/21947, https://github.com/facebook/react/pull/21966, https://github.com/facebook/react/pull/21970, https://github.com/facebook/react/pull/21971, https://github.com/facebook/react/pull/21975).
+* Parsing source code for extracting names for hooks now happens in a worker (@tsirlucas in https://github.com/facebook/react/pull/21902).
+* Format hyperlink text as a clickable link (@kkragoth in https://github.com/facebook/react/pull/21964).
+* Named hooks can now be extracted from extended source maps (@jstejada https://github.com/facebook/react/pull/22010, https://github.com/facebook/react/pull/22073).
+* Hook indices now show up as a reason why a component rendered in the profiler (@mrkev in https://github.com/facebook/react/pull/22073).
+* Optimize images in DevTools (@ilhamsyahids in https://github.com/facebook/react/pull/21968).
+
+#### Bugfix
+* Named hooks cache is correctly cleared after Fast Refresh (@bvaughn in https://github.com/facebook/react/pull/21891).
+* Hook names are correctly extracted when parsing nested hook calls (@jstejada in https://github.com/facebook/react/pull/22037, https://github.com/facebook/react/pull/21996).
+* Highlight updates with memoized components (@Selnapenek in https://github.com/facebook/react/pull/22008).
+* Set app icon on MacOS (@christian-schulze in https://github.com/facebook/react/pull/21908).
+* Updated @reach packages to fix unmount bug (@bvaughn in https://github.com/facebook/react/pull/22075).
+
+#### Misc
+* Refactor imperative theme code (@houssemchebeb in https://github.com/facebook/react/pull/21950).
+* Change some remaining instances of master -> main (@shubham9411 in https://github.com/facebook/react/pull/21982).
+
 ## 4.14.0 (July 17, 2021)
 #### Features
 * Display hook names for inspected components ([saphal1998](https://github.com/saphal1998), [VibhorCodecianGupta](https://github.com/VibhorCodecianGupta), [bvaughn](https://github.com/bvaughn), and [motiz88](https://github.com/motiz88) in [#21641](https://github.com/facebook/react/pull/21641), [#21790](https://github.com/facebook/react/pull/21790), [#21814](https://github.com/facebook/react/pull/21814), [#21815](https://github.com/facebook/react/pull/21815), [#21831](https://github.com/facebook/react/pull/21831), [#21833](https://github.com/facebook/react/pull/21833), [#21835](https://github.com/facebook/react/pull/21835), [#21865](https://github.com/facebook/react/pull/21865), [#21871](https://github.com/facebook/react/pull/21871), [#21874](https://github.com/facebook/react/pull/21874), [#21891](https://github.com/facebook/react/pull/21891))
