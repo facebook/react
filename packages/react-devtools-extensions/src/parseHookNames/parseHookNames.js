@@ -17,6 +17,7 @@ import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache
 import {decodeHookMap} from '../generateHookMap';
 import {getHookNameForLocation} from '../getHookNameForLocation';
 
+import type {MixedSourceMap} from '../SourceMapTypes';
 import type {HookMap} from '../generateHookMap';
 import type {
   HooksNode,
@@ -30,7 +31,7 @@ import type {SourceConsumer} from '../astUtils';
 const SOURCE_MAP_REGEX = / ?sourceMappingURL=([^\s'"]+)/gm;
 const MAX_SOURCE_LENGTH = 100_000_000;
 const REACT_SOURCES_EXTENSION_KEY = 'x_react_sources';
-const FB_SOURCES_EXTENSION_KEY = 'x_fb_sources';
+const FB_SOURCES_EXTENSION_KEY = 'x_facebook_sources';
 
 type AST = mixed;
 
@@ -662,22 +663,34 @@ function updateLruCache(
 }
 
 function extractHookMapFromSourceMap(
-  sourcemap,
+  sourcemap: MixedSourceMap,
   sourceIndex: number,
 ): HookMap | null {
-  let hookMap;
-  if (sourcemap.hasOwnProperty(REACT_SOURCES_EXTENSION_KEY)) {
+  let reactMetadataForSource;
+  if (
+    sourcemap.hasOwnProperty(REACT_SOURCES_EXTENSION_KEY) &&
+    sourcemap[REACT_SOURCES_EXTENSION_KEY] != null
+  ) {
     // When using the x_react_sources extension field, the first item
     // for a given source is reserved for the Hook Map, which is why
     // we look up the index at position 0.
-    hookMap = sourcemap[REACT_SOURCES_EXTENSION_KEY][sourceIndex][0];
-  } else if (sourcemap.hasOwnProperty(FB_SOURCES_EXTENSION_KEY)) {
-    // When using the x_fb_sources extension field, the first item
+    reactMetadataForSource =
+      sourcemap[REACT_SOURCES_EXTENSION_KEY][sourceIndex];
+  } else if (
+    sourcemap.hasOwnProperty(FB_SOURCES_EXTENSION_KEY) &&
+    sourcemap[FB_SOURCES_EXTENSION_KEY] != null
+  ) {
+    // When using the x_facebook_sources extension field, the first item
     // for a given source is reserved for the Function Map, and the
-    // Hook Map is added as the second item, which is why we look up
-    // the index at position 1.
-    hookMap = sourcemap[FB_SOURCES_EXTENSION_KEY][sourceIndex][1];
+    // React sources metadata (which includes the Hook Map) is added as
+    // the second item, which is why we look up the index at position 1.
+    const fbMetadataForSource =
+      sourcemap[FB_SOURCES_EXTENSION_KEY][sourceIndex];
+    reactMetadataForSource =
+      fbMetadataForSource != null ? fbMetadataForSource[1] : null;
   }
+  const hookMap =
+    reactMetadataForSource != null ? reactMetadataForSource[0] : null;
   if (hookMap != null) {
     return decodeHookMap(hookMap);
   }
