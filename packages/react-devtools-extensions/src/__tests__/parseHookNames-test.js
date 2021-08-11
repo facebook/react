@@ -421,6 +421,298 @@ describe('parseHookNames', () => {
       ); // simulated Webpack 'cheap-module-source-map'
     });
   });
+
+  describe('extended source maps', () => {
+    let parseMock;
+
+    beforeEach(() => {
+      parseMock = jest.fn();
+      jest.mock('@babel/parser', () => {
+        const actual = jest.requireActual('@babel/parser');
+        const parse = (...args) => {
+          parseMock();
+          return actual.parse(...args);
+        };
+        return {
+          parse,
+          ...actual,
+        };
+      });
+    });
+
+    it('should work for simple components', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      await test('./__source__/Example'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/Example',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/Example',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/Example',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/Example',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    it('should work with more complex files and components', async () => {
+      async function test(path, name = undefined) {
+        const components = name != null ? require(path)[name] : require(path);
+
+        let hookNames = await getHookNamesForComponent(components.List);
+        expectHookNamesToEqual(hookNames, [
+          'newItemText', // useState
+          'items', // useState
+          'uid', // useState
+          'handleClick', // useCallback
+          'handleKeyPress', // useCallback
+          'handleChange', // useCallback
+          'removeItem', // useCallback
+          'toggleItem', // useCallback
+        ]);
+
+        hookNames = await getHookNamesForComponent(components.ListItem, {
+          item: {},
+        });
+        expectHookNamesToEqual(hookNames, [
+          'handleDelete', // useCallback
+          'handleToggle', // useCallback
+        ]);
+
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      await test('./__source__/ToDoList'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/ToDoList',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/ToDoList',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/ToDoList',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/ToDoList',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    it('should work for custom hook', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+          'isDarkMode', // useIsDarkMode()
+          'isDarkMode', // useIsDarkMode -> useState()
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/ComponentWithCustomHook',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/ComponentWithCustomHook',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/ComponentWithCustomHook',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/ComponentWithCustomHook',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    it('should work when code is using hooks indirectly', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+          'darkMode', // useDarkMode()
+          'isDarkMode', // useState()
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/ComponentUsingHooksIndirectly',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/ComponentUsingHooksIndirectly',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/ComponentUsingHooksIndirectly',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/ComponentUsingHooksIndirectly',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    it('should work when code is using nested hooks', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        let InnerComponent;
+        const hookNames = await getHookNamesForComponent(Component, {
+          callback: innerComponent => {
+            InnerComponent = innerComponent;
+          },
+        });
+        const innerHookNames = await getHookNamesForComponent(InnerComponent);
+        expectHookNamesToEqual(hookNames, [
+          'InnerComponent', // useMemo()
+        ]);
+        expectHookNamesToEqual(innerHookNames, [
+          'state', // useState()
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/ComponentWithNestedHooks',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/ComponentWithNestedHooks',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/ComponentWithNestedHooks',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/ComponentWithNestedHooks',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    it('should work for external hooks', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'theme', // useTheme()
+          'theme', // useContext()
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      // We can't test the uncompiled source here, because it either needs to get transformed,
+      // which would break the source mapping, or the import statements will fail.
+
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/ComponentWithExternalCustomHooks',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/ComponentWithExternalCustomHooks',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/ComponentWithExternalCustomHooks',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/ComponentWithExternalCustomHooks',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    it('should work when multiple hooks are on a line', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'a', // useContext()
+          'b', // useContext()
+          'c', // useContext()
+          'd', // useContext()
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/ComponentWithMultipleHooksPerLine',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/ComponentWithMultipleHooksPerLine',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/ComponentWithMultipleHooksPerLine',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/ComponentWithMultipleHooksPerLine',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    // TODO Inline require (e.g. require("react").useState()) isn't supported yet.
+    // Maybe this isn't an important use case to support,
+    // since inline requires are most likely to exist in compiled source (if at all).
+    xit('should work for inline requires', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      await test('./__source__/InlineRequire'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/InlineRequire',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/InlineRequire',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/InlineRequire',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/InlineRequire',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+
+    it('should support sources that contain the string "sourceMappingURL="', async () => {
+      async function test(path, name = 'Component') {
+        const Component = require(path)[name];
+        const hookNames = await getHookNamesForComponent(Component);
+        expectHookNamesToEqual(hookNames, [
+          'count', // useState()
+        ]);
+        expect(parseMock).toHaveBeenCalledTimes(0);
+      }
+
+      // We expect the inline sourceMappingURL to be invalid in this case; mute the warning.
+      console.warn = () => {};
+
+      await test('./__source__/ContainingStringSourceMappingURL'); // original source (uncompiled)
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/ContainingStringSourceMappingURL',
+      ); // x_fb_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/ContainingStringSourceMappingURL',
+      ); // x_fb_sources extended external source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/ContainingStringSourceMappingURL',
+      ); // x_react_sources extended inline source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/ContainingStringSourceMappingURL',
+      ); // x_react_sources extended external source map
+      // TODO test no-columns and bundle cases with extended source maps
+    });
+  });
 });
 
 describe('parseHookNames worker', () => {
