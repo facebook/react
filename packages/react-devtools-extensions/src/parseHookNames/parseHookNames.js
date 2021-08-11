@@ -683,8 +683,8 @@ function extractHookMapFromSourceMap(
   ) {
     // When using the x_facebook_sources extension field, the first item
     // for a given source is reserved for the Function Map, and the
-    // Hook Map is added as the second item, which is why we look up
-    // the index at position 1.
+    // React sources metadata (which includes the Hook Map) is added as
+    // the second item, which is why we look up the index at position 1.
     const fbMetadataForSource =
       sourcemap[FB_SOURCES_EXTENSION_KEY][sourceIndex];
     const reactMetadataForSource =
