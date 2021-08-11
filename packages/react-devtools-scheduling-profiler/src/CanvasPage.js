@@ -30,14 +30,12 @@ import {copy} from 'clipboard-js';
 import prettyMilliseconds from 'pretty-ms';
 
 import {
-  BackgroundColorView,
   HorizontalPanAndZoomView,
   ResizableView,
+  VerticalScrollOverflowView,
   Surface,
   VerticalScrollView,
   View,
-  createComposedLayout,
-  lastViewTakesUpRemainingSpaceLayout,
   useCanvasInteraction,
   verticallyStackedLayout,
   zeroPoint,
@@ -325,10 +323,9 @@ function AutoSizedCanvas({
     const rootView = new View(
       surface,
       defaultFrame,
-      createComposedLayout(
-        verticallyStackedLayout,
-        lastViewTakesUpRemainingSpaceLayout,
-      ),
+      verticallyStackedLayout,
+      defaultFrame,
+      COLORS.BACKGROUND,
     );
     rootView.addSubview(axisMarkersViewWrapper);
     if (userTimingMarksViewWrapper !== null) {
@@ -345,10 +342,14 @@ function AutoSizedCanvas({
     }
     rootView.addSubview(flamechartViewWrapper);
 
-    // If subviews are less than the available height, fill remaining height with a solid color.
-    rootView.addSubview(new BackgroundColorView(surface, defaultFrame));
+    const verticalScrollOverflowView = new VerticalScrollOverflowView(
+      surface,
+      defaultFrame,
+      rootView,
+      viewState,
+    );
 
-    surfaceRef.current.rootView = rootView;
+    surfaceRef.current.rootView = verticalScrollOverflowView;
   }, [data]);
 
   useLayoutEffect(() => {
@@ -400,6 +401,16 @@ function AutoSizedCanvas({
 
     const surface = surfaceRef.current;
     surface.handleInteraction(interaction);
+
+    // Flush any display work that got queued up as part of the previous interaction.
+    // Typically there should be no work, but certain interactions may need a second pass.
+    // For example, the ResizableView may collapse/expand its contents,
+    // which requires a second layout pass for an ancestor VerticalScrollOverflowView.
+    //
+    // TODO It would be nice to remove this call for performance reasons.
+    // To do that, we'll need to address the UX bug with VerticalScrollOverflowView.
+    // For more info see: https://github.com/facebook/react/pull/22005#issuecomment-896953399
+    surface.displayIfNeeded();
 
     canvas.style.cursor = surface.getCurrentCursor() || 'default';
 

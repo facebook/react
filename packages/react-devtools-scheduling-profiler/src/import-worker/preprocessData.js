@@ -241,9 +241,11 @@ function processTimelineEvent(
 
         // Reduce noise from events like DOMActivate, load/unload, etc. which are usually not relevant
         if (
-          type.startsWith('blur') ||
-          type.startsWith('click') ||
+          type === 'blur' ||
+          type === 'click' ||
+          type === 'input' ||
           type.startsWith('focus') ||
+          type.startsWith('key') ||
           type.startsWith('mouse') ||
           type.startsWith('pointer')
         ) {

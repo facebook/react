@@ -29,6 +29,8 @@ import {noopLayout, viewsToLayout, collapseLayoutIntoViews} from './layouter';
  * subclasses.
  */
 export class View {
+  _backgroundColor: string | null;
+
   currentCursor: string | null = null;
 
   surface: Surface;
@@ -70,7 +72,9 @@ export class View {
     frame: Rect,
     layouter: Layouter = noopLayout,
     visibleArea: Rect = frame,
+    backgroundColor?: string | null = null,
   ) {
+    this._backgroundColor = backgroundColor || null;
     this.surface = surface;
     this.frame = frame;
     this._layouter = layouter;
@@ -246,6 +250,20 @@ export class View {
         subview.displayIfNeeded(context, viewRefs);
       }
     });
+
+    const backgroundColor = this._backgroundColor;
+    if (backgroundColor !== null) {
+      const desiredSize = this.desiredSize();
+      if (visibleArea.size.height > desiredSize.height) {
+        context.fillStyle = backgroundColor;
+        context.fillRect(
+          visibleArea.origin.x,
+          visibleArea.origin.y + desiredSize.height,
+          visibleArea.size.width,
+          visibleArea.size.height - desiredSize.height,
+        );
+      }
+    }
   }
 
   /**
@@ -255,7 +273,7 @@ export class View {
    *
    * NOTE: Do not call directly! Use `handleInteractionAndPropagateToSubviews`
    */
-  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {}
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs): ?boolean {}
 
   /**
    * Handle an `interaction` and propagates it to all of this view's
@@ -270,19 +288,39 @@ export class View {
   handleInteractionAndPropagateToSubviews(
     interaction: Interaction,
     viewRefs: ViewRefs,
-  ) {
+  ): boolean {
     const {subviews, visibleArea} = this;
 
     if (visibleArea.size.height === 0) {
-      return;
+      return false;
     }
 
-    this.handleInteraction(interaction, viewRefs);
-
-    subviews.forEach(subview => {
+    // Pass the interaction to subviews first,
+    // so they have the opportunity to claim it before it bubbles.
+    //
+    // Views are painted first to last,
+    // so they should process interactions last to first,
+    // so views in front (on top) can claim the interaction first.
+    for (let i = subviews.length - 1; i >= 0; i--) {
+      const subview = subviews[i];
       if (rectIntersectsRect(visibleArea, subview.visibleArea)) {
-        subview.handleInteractionAndPropagateToSubviews(interaction, viewRefs);
+        const didSubviewHandle =
+          subview.handleInteractionAndPropagateToSubviews(
+            interaction,
+            viewRefs,
+          ) === true;
+        if (didSubviewHandle) {
+          return true;
+        }
       }
-    });
+    }
+
+    const didSelfHandle =
+      this.handleInteraction(interaction, viewRefs) === true;
+    if (didSelfHandle) {
+      return true;
+    }
+
+    return false;
   }
 }
