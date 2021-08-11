@@ -9,11 +9,11 @@
 
 import type {EncodedHookMap} from './generateHookMap';
 
-export type ReactSourcesMetadata = [?EncodedHookMap];
-export type ReactSourcesArray = $ReadOnlyArray<?ReactSourcesMetadata>;
+export type ReactSourceMetadata = [?EncodedHookMap];
+export type ReactSourcesArray = $ReadOnlyArray<?ReactSourceMetadata>;
 
-export type FBSourcesMetadata = [?{...}, ?ReactSourcesMetadata];
-export type FBSourcesArray = $ReadOnlyArray<?FBSourcesMetadata>;
+export type FBSourceMetadata = [?{...}, ?ReactSourceMetadata];
+export type FBSourcesArray = $ReadOnlyArray<?FBSourceMetadata>;
 
 export type BasicSourceMap = {|
   +file?: string,
