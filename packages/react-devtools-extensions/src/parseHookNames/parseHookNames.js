@@ -666,7 +666,7 @@ function extractHookMapFromSourceMap(
   sourcemap: MixedSourceMap,
   sourceIndex: number,
 ): HookMap | null {
-  let hookMap;
+  let reactMetadataForSource;
   if (
     sourcemap.hasOwnProperty(REACT_SOURCES_EXTENSION_KEY) &&
     sourcemap[REACT_SOURCES_EXTENSION_KEY] != null
@@ -674,9 +674,8 @@ function extractHookMapFromSourceMap(
     // When using the x_react_sources extension field, the first item
     // for a given source is reserved for the Hook Map, which is why
     // we look up the index at position 0.
-    const reactMetadataForSource =
+    reactMetadataForSource =
       sourcemap[REACT_SOURCES_EXTENSION_KEY][sourceIndex];
-    hookMap = reactMetadataForSource != null ? reactMetadataForSource[0] : null;
   } else if (
     sourcemap.hasOwnProperty(FB_SOURCES_EXTENSION_KEY) &&
     sourcemap[FB_SOURCES_EXTENSION_KEY] != null
@@ -687,10 +686,11 @@ function extractHookMapFromSourceMap(
     // the second item, which is why we look up the index at position 1.
     const fbMetadataForSource =
       sourcemap[FB_SOURCES_EXTENSION_KEY][sourceIndex];
-    const reactMetadataForSource =
+    reactMetadataForSource =
       fbMetadataForSource != null ? fbMetadataForSource[1] : null;
-    hookMap = reactMetadataForSource != null ? reactMetadataForSource[0] : null;
   }
+  const hookMap =
+    reactMetadataForSource != null ? reactMetadataForSource[0] : null;
   if (hookMap != null) {
     return decodeHookMap(hookMap);
   }
