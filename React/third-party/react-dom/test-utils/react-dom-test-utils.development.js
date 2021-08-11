@@ -6,7 +6,6 @@
 * This source code is licensed under the MIT license found in the
 * LICENSE file in the root directory of this source tree.
 */
-if (typeof window === 'undefined') {var module = {require: requirejs};}
 define('react-dom/test-utils', ['exports', 'react', 'react-dom'], function (exports, React, ReactDOM) { 'use strict';
 
   /**
