@@ -136,7 +136,7 @@ function compile(fileName) {
     // When using the x_fb_sources extension field, the first item
     // for a given source is reserved for the Function Map, and the
     // Hook Map is added as the second item.
-    x_fb_sources: [[null, encodedHookMap]],
+    x_fb_sources: [[null, [encodedHookMap]]],
   };
   const reactSourcesExtendedSourceMap = {
     ...sourceMap,
