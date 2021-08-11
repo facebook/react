@@ -406,6 +406,10 @@ function AutoSizedCanvas({
     // Typically there should be no work, but certain interactions may need a second pass.
     // For example, the ResizableView may collapse/expand its contents,
     // which requires a second layout pass for an ancestor VerticalScrollOverflowView.
+    //
+    // TODO It would be nice to remove this call for performance reasons.
+    // To do that, we'll need to address the UX bug with VerticalScrollOverflowView.
+    // For more info see: https://github.com/facebook/react/pull/22005#issuecomment-896953399
     surface.displayIfNeeded();
 
     canvas.style.cursor = surface.getCurrentCursor() || 'default';
