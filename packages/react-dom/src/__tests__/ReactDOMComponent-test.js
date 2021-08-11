@@ -1221,7 +1221,6 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should warn for uppercased selfclosing tags', () => {
     it('video muted prop should show as an attribute', () => {
       const container = document.createElement('div');
       ReactDOM.render(
