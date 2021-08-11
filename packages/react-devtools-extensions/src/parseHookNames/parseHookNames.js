@@ -667,8 +667,15 @@ function extractHookMapFromSourceMap(
 ): HookMap | null {
   let hookMap;
   if (sourcemap.hasOwnProperty(REACT_SOURCES_EXTENSION_KEY)) {
+    // When using the x_react_sources extension field, the first item
+    // for a given source is reserved for the Hook Map, which is why
+    // we look up the index at position 0.
     hookMap = sourcemap[REACT_SOURCES_EXTENSION_KEY][sourceIndex][0];
   } else if (sourcemap.hasOwnProperty(FB_SOURCES_EXTENSION_KEY)) {
+    // When using the x_fb_sources extension field, the first item
+    // for a given source is reserved for the Function Map, and the
+    // Hook Map is added as the second item, which is why we look up
+    // the index at position 1.
     hookMap = sourcemap[FB_SOURCES_EXTENSION_KEY][sourceIndex][1];
   }
   if (hookMap != null) {

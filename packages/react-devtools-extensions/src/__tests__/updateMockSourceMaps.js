@@ -133,10 +133,15 @@ function compile(fileName) {
   const encodedHookMap = generateEncodedHookMap(parsed);
   const fbSourcesExtendedSourceMap = {
     ...sourceMap,
+    // When using the x_fb_sources extension field, the first item
+    // for a given source is reserved for the Function Map, and the
+    // Hook Map is added as the second item.
     x_fb_sources: [[null, encodedHookMap]],
   };
   const reactSourcesExtendedSourceMap = {
     ...sourceMap,
+    // When using the x_react_sources extension field, the first item
+    // for a given source is reserved for the Hook Map.
     x_react_sources: [[encodedHookMap]],
   };
 
