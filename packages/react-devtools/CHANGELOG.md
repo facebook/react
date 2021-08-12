@@ -31,6 +31,67 @@
 * Refactor imperative theme code ([houssemchebeb](https://github.com/houssemchebeb) in [#21950](https://github.com/facebook/react/pull/21950)).
 * Change some remaining instances of master -> main ([shubham9411](https://github.com/shubham9411) in [#21982](https://github.com/facebook/react/pull/21982)).
 
+##### Scheduling profiler
+
+###### What is React working on?
+
+React’s previous Profiler primarily reports how fast (or slow) components are when rendering. It didn’t provide an overview of *what React is doing* (the actual cooperative scheduling bits). The new profiler does. It shows when components schedule state updates and when React works on them. It also shows how React categorizes and prioritizing what it works on.
+
+Here’s a profile for a simple app that uses only the legacy (synchronous) `ReactDOM.render` API. The profiler shows that all of the work scheduled and rendered by this app is done at *synchronous* priority:
+
+https://user-images.githubusercontent.com/29597/129042321-56985f5a-264e-4f3a-a8b7-9371d75c690f.mp4
+
+Here’s a more interesting profile for an app that’s rendered at _default_ priority using the new [`createRoot` API](https://github.com/reactwg/react-18/discussions/5), then updates _synchronously_ in response to an “input” event to manage a ["controlled component"](https://reactjs.org/docs/forms.html#controlled-components):
+
+https://user-images.githubusercontent.com/29597/129074959-50912a63-0215-4be5-b51b-1e0004fcd2a1.mp4
+
+Here’s part of a profile showing an idle app (no JavaScript running). In this case, React does some pre-rendering work for components that are “offscreen” (not currently displayed).
+
+https://user-images.githubusercontent.com/29597/128971757-612f232f-c64f-4447-a766-66a0516e8f49.mp4
+
+Note that “offscreen” refers to a new API and set of features that we haven’t talked about much yet except for [some passing references](https://github.com/reactwg/react-18/discussions/18#discussioncomment-795661). We’ll talk more about it in future posts.
+
+####### What are “transitions” and how do they work?
+We recently shared an update about the new [`startTransition` API](https://github.com/reactwg/react-18/discussions/41). This API helps apps feel responsive even when there are large updates by splitting the work into (1) a quick update to show that the app has received some input and (2) a slower update (the “transition”) that actually does any heavy lifting needed as a result of the input.
+
+Here is an example profile that uses the transition API. First React renders a small update that shows the user some visual feedback (like updating a controlled component or showing an inline loading indicator). Then it renders a larger update that, in this case, computes some expensive value.
+
+https://user-images.githubusercontent.com/29597/129079176-0995c8c0-e95a-4f44-8d55-891a7efa35c0.mp4
+
+####### How does Suspense impact rendering performance?
+
+You may have heard mention of “suspense” in past talks or seen it referenced [in our docs](https://reactjs.org/docs/react-api.html#suspense). Although full support for data fetching via Suspense is [expected to be released sometime after React 18.0](https://github.com/reactwg/react-18/discussions/47#discussioncomment-847004), you can use Suspense today for things like lazy-loading React components. The new profiler shows when components suspend during render and how that impacts overall rendering performance.
+
+Here’s an example profile that suspends during the initial render to lazy-load a component using [`React.lazy`](https://reactjs.org/docs/code-splitting.html#reactlazy). While this component is loading, React shows a “fallback“ (placeholder UI). Once the component finishes loading, React retries the render and commits the final UI.
+
+https://user-images.githubusercontent.com/29597/129054366-2700e7e8-0172-4f61-9453-475acd740456.mp4
+
+We plan to expand support for Suspense in the coming weeks to more explicitly show when suspense fallbacks are rendered and which subsequent renders are related to an initial update that suspended.
+
+####### What else might cause a render to get delayed?
+
+Suspense can cause a render to get delayed as React waits for data to load, but React can also get stuck waiting on a lot of JavaScript to run.
+
+React profiling tools have previously focused on only reporting what React (or React components) are doing, but any JavaScript the browser runs affects performance. The new profiler shows non-React JavaScript as well, making it easy to see when it delays React from rendering.
+
+https://user-images.githubusercontent.com/29597/128971952-7c4e7e11-f4fb-497e-b643-4d9b3994b590.mp4
+
+####### What can you do to improve performance?
+
+Until now, DevTools (and the Profiler) has provided information without commentary. The new profiler takes a more active approach– highlighting where we think performance can be improved and providing suggestions.
+
+For example, suspending during an update is generally a bad user experience because it causes previously shown components to be unmounted (hidden) so the fallback can be shown while data loads. This can be avoided using the new [Transition API](https://github.com/reactwg/react-18/discussions/41). If you forget to add a transition to an update that suspends, the new profiler will warn you about this:
+
+https://user-images.githubusercontent.com/29597/128972228-3b23f01a-8017-43ad-b371-975ffed26c06.mp4
+
+The new profiler also warns about scheduling a long, synchronous React update inside of event handler.
+
+https://user-images.githubusercontent.com/29597/128972000-d7477ba3-b779-46f2-b141-aaa712e9d6d2.mp4
+
+Another thing the new profiler will warn about is long-running renders scheduled from layout effects (`useLayoutEffect` or `componentDidMount`/`componentDidUpdate`). These updates (called “nested updates”) are sometimes necessary to adjust layout before the browser paints, but they should be *fast*. Slow nested updates make the browser feel unresponsive.
+
+https://user-images.githubusercontent.com/29597/128972017-3ed0e682-751c-46fb-a6c5-271f255c8087.mp4
+
 ## 4.14.0 (July 17, 2021)
 #### Features
 * Display hook names for inspected components ([saphal1998](https://github.com/saphal1998), [VibhorCodecianGupta](https://github.com/VibhorCodecianGupta), [bvaughn](https://github.com/bvaughn), and [motiz88](https://github.com/motiz88) in [#21641](https://github.com/facebook/react/pull/21641), [#21790](https://github.com/facebook/react/pull/21790), [#21814](https://github.com/facebook/react/pull/21814), [#21815](https://github.com/facebook/react/pull/21815), [#21831](https://github.com/facebook/react/pull/21831), [#21833](https://github.com/facebook/react/pull/21833), [#21835](https://github.com/facebook/react/pull/21835), [#21865](https://github.com/facebook/react/pull/21865), [#21871](https://github.com/facebook/react/pull/21871), [#21874](https://github.com/facebook/react/pull/21874), [#21891](https://github.com/facebook/react/pull/21891))
