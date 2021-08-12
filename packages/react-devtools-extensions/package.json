@@ -17,10 +17,12 @@
     "test:firefox": "node ./firefox/test",
     "test:edge": "node ./edge/test",
     "improve-images": "node ./improveImages.mjs",
-    "update-mock-source-maps": "node ./src/__tests__/updateMockSourceMaps.js"
+    "update-mock-source-maps": "babel-node --presets=@babel/preset-env,@babel/preset-flow ./src/__tests__/updateMockSourceMaps.js"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
+    "@babel/node": "^7.14.7",
+    "@babel/parser": "^7.14.8",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-transform-flow-strip-types": "^7.10.4",
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",

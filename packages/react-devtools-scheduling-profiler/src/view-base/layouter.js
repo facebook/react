@@ -207,50 +207,6 @@ export const atLeastContainerHeightLayout: Layouter = (
 };
 
 /**
- * Forces last view to take up the space below the second-last view.
- * Intended to be used with a vertical stack layout.
- */
-export const lastViewTakesUpRemainingSpaceLayout: Layouter = (
-  layout,
-  containerFrame,
-) => {
-  if (layout.length === 0) {
-    // Nothing to do
-    return layout;
-  }
-
-  if (layout.length === 1) {
-    // No second-last view; the view should just take up the container height
-    return containerHeightLayout(layout, containerFrame);
-  }
-
-  const layoutInfoToPassThrough = layout.slice(0, layout.length - 1);
-  const secondLastLayoutInfo =
-    layoutInfoToPassThrough[layoutInfoToPassThrough.length - 1];
-
-  const remainingHeight =
-    containerFrame.size.height -
-    secondLastLayoutInfo.frame.origin.y -
-    secondLastLayoutInfo.frame.size.height;
-  const height = Math.max(remainingHeight, 0); // Prevent negative heights
-
-  const lastLayoutInfo = layout[layout.length - 1];
-  return [
-    ...layoutInfoToPassThrough,
-    {
-      ...lastLayoutInfo,
-      frame: {
-        origin: lastLayoutInfo.frame.origin,
-        size: {
-          width: lastLayoutInfo.frame.size.width,
-          height,
-        },
-      },
-    },
-  ];
-};
-
-/**
  * Create a layouter that applies each layouter in `layouters` in sequence.
  */
 export function createComposedLayout(...layouters: Layouter[]): Layouter {

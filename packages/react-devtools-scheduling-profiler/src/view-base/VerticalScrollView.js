@@ -34,10 +34,16 @@ const CARET_MARGIN = 3;
 const CARET_WIDTH = 5;
 const CARET_HEIGHT = 3;
 
+type OnChangeCallback = (
+  scrollState: ScrollState,
+  containerLength: number,
+) => void;
+
 export class VerticalScrollView extends View {
   _contentView: View;
   _isPanning: boolean;
   _mutableViewStateKey: string;
+  _onChangeCallback: OnChangeCallback | null;
   _scrollState: ScrollState;
   _viewState: ViewState;
 
@@ -53,6 +59,7 @@ export class VerticalScrollView extends View {
     this._contentView = contentView;
     this._isPanning = false;
     this._mutableViewStateKey = label + ':VerticalScrollView';
+    this._onChangeCallback = null;
     this._scrollState = {
       offset: 0,
       length: 0,
@@ -146,26 +153,45 @@ export class VerticalScrollView extends View {
     super.layoutSubviews();
   }
 
-  handleInteraction(interaction: Interaction) {
+  handleInteraction(interaction: Interaction): ?boolean {
     switch (interaction.type) {
       case 'mousedown':
-        this._handleMouseDown(interaction);
-        break;
+        return this._handleMouseDown(interaction);
       case 'mousemove':
-        this._handleMouseMove(interaction);
-        break;
+        return this._handleMouseMove(interaction);
       case 'mouseup':
-        this._handleMouseUp(interaction);
-        break;
+        return this._handleMouseUp(interaction);
       case 'wheel-shift':
-        this._handleWheelShift(interaction);
-        break;
+        return this._handleWheelShift(interaction);
     }
+  }
+
+  onChange(callback: OnChangeCallback) {
+    this._onChangeCallback = callback;
+  }
+
+  scrollBy(deltaY: number): boolean {
+    const newState = translateState({
+      state: this._scrollState,
+      delta: -deltaY,
+      containerLength: this.frame.size.height,
+    });
+
+    // If the state is updated by this wheel scroll,
+    // return true to prevent the interaction from bubbling.
+    // For instance, this prevents the outermost container from also scrolling.
+    return this._setScrollState(newState);
   }
 
   _handleMouseDown(interaction: MouseDownInteraction) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
-      this._isPanning = true;
+      const frameHeight = this.frame.size.height;
+      const contentHeight = this._contentView.desiredSize().height;
+      // Don't claim drag operations if the content is not tall enough to be scrollable.
+      // This would block any outer scroll views from working.
+      if (frameHeight < contentHeight) {
+        this._isPanning = true;
+      }
     }
   }
 
@@ -179,6 +205,7 @@ export class VerticalScrollView extends View {
       containerLength: this.frame.size.height,
     });
     this._setScrollState(newState);
+    return true;
   }
 
   _handleMouseUp(interaction: MouseUpInteraction) {
@@ -187,31 +214,27 @@ export class VerticalScrollView extends View {
     }
   }
 
-  _handleWheelShift(interaction: WheelWithShiftInteraction) {
+  _handleWheelShift(interaction: WheelWithShiftInteraction): boolean {
     const {
       location,
       delta: {deltaX, deltaY},
     } = interaction.payload;
+
     if (!rectContainsPoint(location, this.frame)) {
-      return; // Not scrolling on view
+      return false; // Not scrolling on view
     }
 
     const absDeltaX = Math.abs(deltaX);
     const absDeltaY = Math.abs(deltaY);
     if (absDeltaX > absDeltaY) {
-      return; // Scrolling horizontally
+      return false; // Scrolling horizontally
     }
 
     if (absDeltaY < MOVE_WHEEL_DELTA_THRESHOLD) {
-      return;
+      return false; // Movement was too small and should be ignored.
     }
 
-    const newState = translateState({
-      state: this._scrollState,
-      delta: -deltaY,
-      containerLength: this.frame.size.height,
-    });
-    this._setScrollState(newState);
+    return this.scrollBy(deltaY);
   }
 
   _restoreMutableViewState() {
@@ -231,10 +254,7 @@ export class VerticalScrollView extends View {
     this.setNeedsDisplay();
   }
 
-  /**
-   * @private
-   */
-  _setScrollState(proposedState: ScrollState) {
+  _setScrollState(proposedState: ScrollState): boolean {
     const height = this._contentView.frame.size.height;
     const clampedState = clampState({
       state: proposedState,
@@ -247,6 +267,14 @@ export class VerticalScrollView extends View {
       this._scrollState.length = clampedState.length;
 
       this.setNeedsDisplay();
+
+      if (this._onChangeCallback !== null) {
+        this._onChangeCallback(clampedState, this.frame.size.height);
+      }
+
+      return true;
     }
+
+    return false;
   }
 }
