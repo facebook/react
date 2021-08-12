@@ -51,14 +51,14 @@ https://user-images.githubusercontent.com/29597/128971757-612f232f-c64f-4447-a76
 
 Note that “offscreen” refers to a new API and set of features that we haven’t talked about much yet except for [some passing references](https://github.com/reactwg/react-18/discussions/18#discussioncomment-795661). We’ll talk more about it in future posts.
 
-####### What are “transitions” and how do they work?
+###### What are “transitions” and how do they work?
 We recently shared an update about the new [`startTransition` API](https://github.com/reactwg/react-18/discussions/41). This API helps apps feel responsive even when there are large updates by splitting the work into (1) a quick update to show that the app has received some input and (2) a slower update (the “transition”) that actually does any heavy lifting needed as a result of the input.
 
 Here is an example profile that uses the transition API. First React renders a small update that shows the user some visual feedback (like updating a controlled component or showing an inline loading indicator). Then it renders a larger update that, in this case, computes some expensive value.
 
 https://user-images.githubusercontent.com/29597/129079176-0995c8c0-e95a-4f44-8d55-891a7efa35c0.mp4
 
-####### How does Suspense impact rendering performance?
+###### How does Suspense impact rendering performance?
 
 You may have heard mention of “suspense” in past talks or seen it referenced [in our docs](https://reactjs.org/docs/react-api.html#suspense). Although full support for data fetching via Suspense is [expected to be released sometime after React 18.0](https://github.com/reactwg/react-18/discussions/47#discussioncomment-847004), you can use Suspense today for things like lazy-loading React components. The new profiler shows when components suspend during render and how that impacts overall rendering performance.
 
@@ -68,7 +68,7 @@ https://user-images.githubusercontent.com/29597/129054366-2700e7e8-0172-4f61-945
 
 We plan to expand support for Suspense in the coming weeks to more explicitly show when suspense fallbacks are rendered and which subsequent renders are related to an initial update that suspended.
 
-####### What else might cause a render to get delayed?
+###### What else might cause a render to get delayed?
 
 Suspense can cause a render to get delayed as React waits for data to load, but React can also get stuck waiting on a lot of JavaScript to run.
 
@@ -76,7 +76,7 @@ React profiling tools have previously focused on only reporting what React (or R
 
 https://user-images.githubusercontent.com/29597/128971952-7c4e7e11-f4fb-497e-b643-4d9b3994b590.mp4
 
-####### What can you do to improve performance?
+###### What can you do to improve performance?
 
 Until now, DevTools (and the Profiler) has provided information without commentary. The new profiler takes a more active approach– highlighting where we think performance can be improved and providing suggestions.
 
