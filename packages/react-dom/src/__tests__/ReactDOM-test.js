@@ -60,8 +60,9 @@ describe('ReactDOM', () => {
   });
 
   it('allows a DOM element to be used with a string', () => {
-    const element = React.createElement('div', {className: 'foo'});
-    const node = ReactTestUtils.renderIntoDocument(element);
+    const node = ReactTestUtils.renderIntoDocument(
+      React.createElement('div', {className: 'foo'}),
+    );
     expect(node.tagName).toBe('DIV');
   });
 
