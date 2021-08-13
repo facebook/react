@@ -23,7 +23,7 @@ export const REACT_MEASURE_HEIGHT = 14;
 export const BORDER_SIZE = 1;
 export const FLAMECHART_FRAME_HEIGHT = 14;
 export const TEXT_PADDING = 3;
-export const SNAPSHOT_HEIGHT = 50;
+export const SNAPSHOT_HEIGHT = 35;
 
 export const INTERVAL_TIMES = [
   1,
