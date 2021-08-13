@@ -115,6 +115,14 @@ export type UserTimingMark = {|
   timestamp: Milliseconds,
 |};
 
+export type Snapshot = {|
+  height: number,
+  image: Image | null,
+  +imageSource: string,
+  +timestamp: Milliseconds,
+  width: number,
+|};
+
 /**
  * A "layer" of stack frames in the profiler UI, i.e. all stack frames of the
  * same depth across all stack traces. Displayed as a flamechart row in the UI.
@@ -150,6 +158,7 @@ export type ReactProfilerData = {|
   otherUserTimingMarks: UserTimingMark[],
   reactVersion: string | null,
   schedulingEvents: SchedulingEvent[],
+  snapshots: Snapshot[],
   startTime: number,
   suspenseEvents: SuspenseEvent[],
 |};
@@ -162,5 +171,6 @@ export type ReactHoverContextInfo = {|
   nativeEvent: NativeEvent | null,
   schedulingEvent: SchedulingEvent | null,
   suspenseEvent: SuspenseEvent | null,
+  snapshot: Snapshot | null,
   userTimingMark: UserTimingMark | null,
 |};

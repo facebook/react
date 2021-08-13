@@ -17,7 +17,7 @@ import {
 } from '../../constants';
 import REACT_VERSION from 'shared/ReactVersion';
 
-describe(getLanesFromTransportDecimalBitmask, () => {
+describe('getLanesFromTransportDecimalBitmask', () => {
   it('should return array of lane numbers from bitmask string', () => {
     expect(getLanesFromTransportDecimalBitmask('1')).toEqual([0]);
     expect(getLanesFromTransportDecimalBitmask('512')).toEqual([9]);
@@ -57,7 +57,7 @@ describe(getLanesFromTransportDecimalBitmask, () => {
   });
 });
 
-describe(preprocessData, () => {
+describe('preprocessData', () => {
   let React;
   let ReactDOM;
   let Scheduler;
@@ -217,11 +217,11 @@ describe(preprocessData, () => {
     delete global.performance;
   });
 
-  it('should throw given an empty timeline', () => {
-    expect(() => preprocessData([])).toThrow();
+  it('should throw given an empty timeline', async () => {
+    await expect(async () => preprocessData([])).rejects.toThrow();
   });
 
-  it('should throw given a timeline with no Profile event', () => {
+  it('should throw given a timeline with no Profile event', async () => {
     const randomSample = createUserTimingEntry({
       dur: 100,
       tdur: 200,
@@ -231,10 +231,10 @@ describe(preprocessData, () => {
       args: {},
     });
 
-    expect(() => preprocessData([randomSample])).toThrow();
+    await expect(async () => preprocessData([randomSample])).rejects.toThrow();
   });
 
-  it('should return empty data given a timeline with no React scheduling profiling marks', () => {
+  it('should return empty data given a timeline with no React scheduling profiling marks', async () => {
     const cpuProfilerSample = creactCpuProfilerSample();
     const randomSample = createUserTimingEntry({
       dur: 100,
@@ -246,7 +246,7 @@ describe(preprocessData, () => {
     });
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
-      const data = preprocessData([
+      const data = await preprocessData([
         ...createBoilerplateEntries(),
         cpuProfilerSample,
         randomSample,
@@ -327,6 +327,7 @@ describe(preprocessData, () => {
           "otherUserTimingMarks": Array [],
           "reactVersion": "17.0.3",
           "schedulingEvents": Array [],
+          "snapshots": Array [],
           "startTime": 1,
           "suspenseEvents": Array [],
         }
@@ -334,13 +335,13 @@ describe(preprocessData, () => {
     }
   });
 
-  it('should process legacy data format (before lane labels were added)', () => {
+  it('should process legacy data format (before lane labels were added)', async () => {
     const cpuProfilerSample = creactCpuProfilerSample();
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
       // Data below is hard-coded based on an older profile sample.
       // Should be fine since this is explicitly a legacy-format test.
-      const data = preprocessData([
+      const data = await preprocessData([
         ...createBoilerplateEntries(),
         cpuProfilerSample,
         createUserTimingEntry({
@@ -541,6 +542,7 @@ describe(preprocessData, () => {
               "warning": null,
             },
           ],
+          "snapshots": Array [],
           "startTime": 1,
           "suspenseEvents": Array [],
         }
@@ -548,11 +550,11 @@ describe(preprocessData, () => {
     }
   });
 
-  it('should process a sample legacy render sequence', () => {
+  it('should process a sample legacy render sequence', async () => {
     ReactDOM.render(<div />, document.createElement('div'));
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
-      const data = preprocessData([
+      const data = await preprocessData([
         ...createBoilerplateEntries(),
         ...createUserTimingData(clearedMarks),
       ]);
@@ -730,6 +732,7 @@ describe(preprocessData, () => {
               "warning": null,
             },
           ],
+          "snapshots": Array [],
           "startTime": 4,
           "suspenseEvents": Array [],
         }
@@ -737,7 +740,7 @@ describe(preprocessData, () => {
     }
   });
 
-  it('should process a sample createRoot render sequence', () => {
+  it('should process a sample createRoot render sequence', async () => {
     function App() {
       const [didMount, setDidMount] = React.useState(false);
       React.useEffect(() => {
@@ -752,7 +755,7 @@ describe(preprocessData, () => {
       const root = ReactDOM.createRoot(document.createElement('div'));
       act(() => root.render(<App />));
 
-      const data = preprocessData([
+      const data = await preprocessData([
         ...createBoilerplateEntries(),
         ...createUserTimingData(clearedMarks),
       ]);
@@ -1074,6 +1077,7 @@ describe(preprocessData, () => {
               "warning": null,
             },
           ],
+          "snapshots": Array [],
           "startTime": 4,
           "suspenseEvents": Array [],
         }
@@ -1082,7 +1086,7 @@ describe(preprocessData, () => {
   });
 
   // @gate enableSchedulingProfiler
-  it('should error if events and measures are incomplete', () => {
+  it('should error if events and measures are incomplete', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<div />, container);
 
@@ -1097,7 +1101,7 @@ describe(preprocessData, () => {
   });
 
   // @gate enableSchedulingProfiler
-  it('should error if work is completed without being started', () => {
+  it('should error if work is completed without being started', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<div />, container);
 
@@ -1111,7 +1115,7 @@ describe(preprocessData, () => {
     expect(error).toHaveBeenCalled();
   });
 
-  it('should populate other user timing marks', () => {
+  it('should populate other user timing marks', async () => {
     const userTimingData = createUserTimingData([]);
     userTimingData.push(
       createUserTimingEntry({
@@ -1138,7 +1142,7 @@ describe(preprocessData, () => {
       }),
     );
 
-    const data = preprocessData([
+    const data = await preprocessData([
       ...createBoilerplateEntries(),
       ...userTimingData,
     ]);
@@ -1162,7 +1166,7 @@ describe(preprocessData, () => {
 
   describe('warnings', () => {
     describe('long event handlers', () => {
-      it('should not warn when React scedules a (sync) update inside of a short event handler', () => {
+      it('should not warn when React scedules a (sync) update inside of a short event handler', async () => {
         function App() {
           return null;
         }
@@ -1180,13 +1184,13 @@ describe(preprocessData, () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = preprocessData(testMarks);
+          const data = await preprocessData(testMarks);
           const event = data.nativeEvents.find(({type}) => type === 'click');
           expect(event.warning).toBe(null);
         }
       });
 
-      it('should not warn about long events if the cause was non-React JavaScript', () => {
+      it('should not warn about long events if the cause was non-React JavaScript', async () => {
         function App() {
           return null;
         }
@@ -1206,13 +1210,13 @@ describe(preprocessData, () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = preprocessData(testMarks);
+          const data = await preprocessData(testMarks);
           const event = data.nativeEvents.find(({type}) => type === 'click');
           expect(event.warning).toBe(null);
         }
       });
 
-      it('should warn when React scedules a long (sync) update inside of an event', () => {
+      it('should warn when React scedules a long (sync) update inside of an event', async () => {
         function App() {
           return null;
         }
@@ -1245,7 +1249,7 @@ describe(preprocessData, () => {
             });
           });
 
-          const data = preprocessData(testMarks);
+          const data = await preprocessData(testMarks);
           const event = data.nativeEvents.find(({type}) => type === 'click');
           expect(event.warning).toMatchInlineSnapshot(
             `"An event handler scheduled a big update with React. Consider using the Transition API to defer some of this work."`,
@@ -1253,7 +1257,7 @@ describe(preprocessData, () => {
         }
       });
 
-      it('should not warn when React finishes a previously long (async) update with a short (sync) update inside of an event', () => {
+      it('should not warn when React finishes a previously long (async) update with a short (sync) update inside of an event', async () => {
         function Yield({id, value}) {
           Scheduler.unstable_yieldValue(`${id}:${value}`);
           return null;
@@ -1303,7 +1307,7 @@ describe(preprocessData, () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = preprocessData(testMarks);
+          const data = await preprocessData(testMarks);
           const event = data.nativeEvents.find(({type}) => type === 'click');
           expect(event.warning).toBe(null);
         }
@@ -1311,7 +1315,7 @@ describe(preprocessData, () => {
     });
 
     describe('nested updates', () => {
-      it('should not warn about short nested (state) updates during layout effects', () => {
+      it('should not warn about short nested (state) updates during layout effects', async () => {
         function Component() {
           const [didMount, setDidMount] = React.useState(false);
           Scheduler.unstable_yieldValue(
@@ -1334,7 +1338,7 @@ describe(preprocessData, () => {
             'Component update',
           ]);
 
-          const data = preprocessData([
+          const data = await preprocessData([
             ...createBoilerplateEntries(),
             ...createUserTimingData(clearedMarks),
           ]);
@@ -1346,7 +1350,7 @@ describe(preprocessData, () => {
         }
       });
 
-      it('should not warn about short (forced) updates during layout effects', () => {
+      it('should not warn about short (forced) updates during layout effects', async () => {
         class Component extends React.Component {
           _didMount: boolean = false;
           componentDidMount() {
@@ -1372,7 +1376,7 @@ describe(preprocessData, () => {
             'Component update',
           ]);
 
-          const data = preprocessData([
+          const data = await preprocessData([
             ...createBoilerplateEntries(),
             ...createUserTimingData(clearedMarks),
           ]);
@@ -1384,7 +1388,7 @@ describe(preprocessData, () => {
         }
       });
 
-      it('should warn about long nested (state) updates during layout effects', () => {
+      it('should warn about long nested (state) updates during layout effects', async () => {
         function Component() {
           const [didMount, setDidMount] = React.useState(false);
           Scheduler.unstable_yieldValue(
@@ -1429,7 +1433,7 @@ describe(preprocessData, () => {
             });
           });
 
-          const data = preprocessData([
+          const data = await preprocessData([
             cpuProfilerSample,
             ...createBoilerplateEntries(),
             ...testMarks,
@@ -1444,7 +1448,7 @@ describe(preprocessData, () => {
         }
       });
 
-      it('should warn about long nested (forced) updates during layout effects', () => {
+      it('should warn about long nested (forced) updates during layout effects', async () => {
         class Component extends React.Component {
           _didMount: boolean = false;
           componentDidMount() {
@@ -1490,7 +1494,7 @@ describe(preprocessData, () => {
             });
           });
 
-          const data = preprocessData([
+          const data = await preprocessData([
             cpuProfilerSample,
             ...createBoilerplateEntries(),
             ...testMarks,
@@ -1509,7 +1513,7 @@ describe(preprocessData, () => {
     describe('suspend during an update', () => {
       // This also tests an edge case where the a component suspends while profiling
       // before the first commit is logged (so the lane-to-labels map will not yet exist).
-      it('should warn about suspending during an udpate', () => {
+      it('should warn about suspending during an udpate', async () => {
         let promise = null;
         let resolvedValue = null;
         function readValue(value) {
@@ -1557,7 +1561,7 @@ describe(preprocessData, () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = preprocessData(testMarks);
+          const data = await preprocessData(testMarks);
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toMatchInlineSnapshot(
             `"A component suspended during an update which caused a fallback to be shown. Consider using the Transition API to avoid hiding components after they've been mounted."`,
@@ -1615,13 +1619,15 @@ describe(preprocessData, () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = preprocessData(testMarks);
+          const data = await preprocessData(testMarks);
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toBe(null);
         }
       });
     });
   });
+
+  // TODO: Add test for snapshot base64 parsing
 
   // TODO: Add test for flamechart parsing
 });
