@@ -11,7 +11,6 @@
   user-select: none;
   pointer-events: none;
   background-color: var(--color-tooltip-background);
-  border: 1px solid var(border);
   box-shadow: 1px 1px 2px var(--color-shadow);
   color: var(--color-tooltip-text);
   font-size: 11px;
@@ -72,4 +71,8 @@
 .InfoText,
 .WarningText {
   color: var(--color-warning-text-color);
+}
+
+.Image {
+  border: 1px solid var(--color-border);
 }

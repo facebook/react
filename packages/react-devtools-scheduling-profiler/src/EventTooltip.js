@@ -315,6 +315,7 @@ const TooltipSnapshot = ({
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
       <img
+        className={styles.Image}
         src={snapshot.imageSource}
         style={{width: snapshot.width / 2, height: snapshot.height / 2}}
       />

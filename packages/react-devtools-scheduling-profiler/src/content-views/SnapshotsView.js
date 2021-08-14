@@ -10,7 +10,7 @@
 import type {Snapshot, ReactProfilerData} from '../types';
 import type {
   Interaction,
-  MouseMoveInteraction,
+  Point,
   Rect,
   Size,
   Surface,
@@ -67,6 +67,10 @@ export class SnapshotsView extends View {
     // draw them at fixed intervals and just show the nearest one.
     while (x < visibleArea.origin.x + visibleArea.size.width) {
       const snapshot = this._findClosestSnapshot(x);
+      if (snapshot === null) {
+        // This shold never happen.
+        break;
+      }
 
       const scaledHeight = SNAPSHOT_HEIGHT;
       const scaledWidth = (snapshot.width * SNAPSHOT_HEIGHT) / snapshot.height;
@@ -97,7 +101,11 @@ export class SnapshotsView extends View {
   handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
     switch (interaction.type) {
       case 'mousemove':
-        this._handleMouseMove(interaction, viewRefs);
+      case 'wheel-control':
+      case 'wheel-meta':
+      case 'wheel-plain':
+      case 'wheel-shift':
+        this._updateHover(interaction.payload.location, viewRefs);
         break;
     }
   }
@@ -125,6 +133,14 @@ export class SnapshotsView extends View {
       context.clip();
     }
 
+    context.fillStyle = COLORS.REACT_RESIZE_BAR_BORDER;
+    context.fillRect(
+      imageRect.origin.x,
+      imageRect.origin.y,
+      imageRect.size.width,
+      imageRect.size.height,
+    );
+
     // $FlowFixMe Flow doesn't know about the 9 argument variant of drawImage()
     context.drawImage(
       snapshot.image,
@@ -138,12 +154,12 @@ export class SnapshotsView extends View {
       snapshot.height,
 
       // Canvas coordinates
-      imageRect.origin.x,
-      imageRect.origin.y,
+      imageRect.origin.x + BORDER_SIZE,
+      imageRect.origin.y + BORDER_SIZE,
 
       // Scaled image size
-      imageRect.size.width,
-      imageRect.size.height,
+      imageRect.size.width - BORDER_SIZE * 2,
+      imageRect.size.height - BORDER_SIZE * 2,
     );
 
     if (shouldClip) {
@@ -151,7 +167,7 @@ export class SnapshotsView extends View {
     }
   }
 
-  _findClosestSnapshot(x: number): Snapshot {
+  _findClosestSnapshot(x: number): Snapshot | null {
     const frame = this.frame;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
@@ -178,28 +194,25 @@ export class SnapshotsView extends View {
       }
     }
 
-    return snapshots[stopIndex];
+    return snapshots[stopIndex] || null;
   }
 
   /**
    * @private
    */
-  _handleMouseMove(interaction: MouseMoveInteraction, viewRefs: ViewRefs) {
+  _updateHover(location: Point, viewRefs: ViewRefs) {
     const {onHover, visibleArea} = this;
     if (!onHover) {
       return;
     }
 
-    const {location} = interaction.payload;
     if (!rectContainsPoint(location, visibleArea)) {
       onHover(null);
       return;
     }
 
     const snapshot = this._findClosestSnapshot(location.x);
-    if (snapshot) {
-      this.currentCursor = 'context-menu';
-      viewRefs.hoveredView = this;
+    if (snapshot !== null) {
       onHover(snapshot);
     } else {
       onHover(null);
