@@ -17,6 +17,7 @@ import type {
   ReactProfilerData,
   Return,
   SchedulingEvent,
+  Snapshot,
   SuspenseEvent,
   UserTimingMark,
 } from './types';
@@ -87,6 +88,7 @@ export default function EventTooltip({
     measure,
     nativeEvent,
     schedulingEvent,
+    snapshot,
     suspenseEvent,
     userTimingMark,
   } = hoveredEvent;
@@ -110,6 +112,8 @@ export default function EventTooltip({
         tooltipRef={tooltipRef}
       />
     );
+  } else if (snapshot !== null) {
+    return <TooltipSnapshot snapshot={snapshot} tooltipRef={tooltipRef} />;
   } else if (suspenseEvent !== null) {
     return (
       <TooltipSuspenseEvent
@@ -297,6 +301,23 @@ const TooltipSchedulingEvent = ({
           <div className={styles.WarningText}>{warning}</div>
         </div>
       )}
+    </div>
+  );
+};
+
+const TooltipSnapshot = ({
+  snapshot,
+  tooltipRef,
+}: {
+  snapshot: Snapshot,
+  tooltipRef: Return<typeof useRef>,
+}) => {
+  return (
+    <div className={styles.Tooltip} ref={tooltipRef}>
+      <img
+        src={snapshot.imageSource}
+        style={{width: snapshot.width / 2, height: snapshot.height / 2}}
+      />
     </div>
   );
 };

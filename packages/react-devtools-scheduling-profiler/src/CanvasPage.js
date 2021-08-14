@@ -46,6 +46,7 @@ import {
   NativeEventsView,
   ReactMeasuresView,
   SchedulingEventsView,
+  SnapshotsView,
   SuspenseEventsView,
   TimeAxisMarkersView,
   UserTimingMarksView,
@@ -157,6 +158,7 @@ function AutoSizedCanvas({
   const componentMeasuresViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
+  const snapshotsViewRef = useRef(null);
 
   const {hideMenu: hideContextMenu} = useContext(RegistryContext);
 
@@ -304,6 +306,18 @@ function AutoSizedCanvas({
       );
     }
 
+    let snapshotsViewWrapper = null;
+    if (data.snapshots.length > 0) {
+      const snapshotsView = new SnapshotsView(surface, defaultFrame, data);
+      snapshotsViewRef.current = snapshotsView;
+      snapshotsViewWrapper = createViewHelper(
+        snapshotsView,
+        'snapshots',
+        true,
+        true,
+      );
+    }
+
     const flamechartView = new FlamechartView(
       surface,
       defaultFrame,
@@ -339,6 +353,9 @@ function AutoSizedCanvas({
     rootView.addSubview(reactMeasuresViewWrapper);
     if (componentMeasuresViewWrapper !== null) {
       rootView.addSubview(componentMeasuresViewWrapper);
+    }
+    if (snapshotsViewWrapper !== null) {
+      rootView.addSubview(snapshotsViewWrapper);
     }
     rootView.addSubview(flamechartViewWrapper);
 
@@ -389,6 +406,7 @@ function AutoSizedCanvas({
               measure: null,
               nativeEvent: null,
               schedulingEvent: null,
+              snapshot: null,
               suspenseEvent: null,
               userTimingMark: null,
             };
@@ -447,6 +465,7 @@ function AutoSizedCanvas({
             measure: null,
             nativeEvent: null,
             schedulingEvent: null,
+            snapshot: null,
             suspenseEvent: null,
             userTimingMark,
           });
@@ -465,6 +484,7 @@ function AutoSizedCanvas({
             measure: null,
             nativeEvent,
             schedulingEvent: null,
+            snapshot: null,
             suspenseEvent: null,
             userTimingMark: null,
           });
@@ -483,6 +503,7 @@ function AutoSizedCanvas({
             measure: null,
             nativeEvent: null,
             schedulingEvent,
+            snapshot: null,
             suspenseEvent: null,
             userTimingMark: null,
           });
@@ -501,6 +522,7 @@ function AutoSizedCanvas({
             measure: null,
             nativeEvent: null,
             schedulingEvent: null,
+            snapshot: null,
             suspenseEvent,
             userTimingMark: null,
           });
@@ -519,6 +541,7 @@ function AutoSizedCanvas({
             measure,
             nativeEvent: null,
             schedulingEvent: null,
+            snapshot: null,
             suspenseEvent: null,
             userTimingMark: null,
           });
@@ -540,6 +563,26 @@ function AutoSizedCanvas({
             measure: null,
             nativeEvent: null,
             schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: snapshotsView} = snapshotsViewRef;
+    if (snapshotsView) {
+      snapshotsView.onHover = snapshot => {
+        if (!hoveredEvent || hoveredEvent.snapshot !== snapshot) {
+          setHoveredEvent({
+            componentMeasure: null,
+            data,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            schedulingEvent: null,
+            snapshot,
             suspenseEvent: null,
             userTimingMark: null,
           });
@@ -561,6 +604,7 @@ function AutoSizedCanvas({
             measure: null,
             nativeEvent: null,
             schedulingEvent: null,
+            snapshot: null,
             suspenseEvent: null,
             userTimingMark: null,
           });

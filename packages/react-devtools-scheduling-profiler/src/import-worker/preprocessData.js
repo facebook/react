@@ -26,7 +26,6 @@ import type {
   SchedulingEvent,
   SuspenseEvent,
 } from '../types';
-
 import {REACT_TOTAL_NUM_LANES, SCHEDULING_PROFILER_VERSION} from '../constants';
 import InvalidProfileError from './InvalidProfileError';
 import {getBatchRange} from '../utils/getBatchRange';
@@ -40,6 +39,7 @@ type MeasureStackElement = {|
 |};
 
 type ProcessorState = {|
+  asyncProcessingPromises: Promise<any>[],
   batchUID: BatchUID,
   currentReactComponentMeasure: ReactComponentMeasure | null,
   measureStack: MeasureStackElement[],
@@ -224,6 +224,41 @@ function processTimelineEvent(
 ) {
   const {args, cat, name, ts, ph} = event;
   switch (cat) {
+    case 'disabled-by-default-devtools.screenshot':
+      const encodedSnapshot = args.snapshot; // Base 64 encoded
+
+      const snapshot = {
+        height: 0,
+        image: null,
+        imageSource: `data:image/png;base64,${encodedSnapshot}`,
+        timestamp: (ts - currentProfilerData.startTime) / 1000,
+        width: 0,
+      };
+
+      // Delay processing until we've extracted snapshot dimensions.
+      let resolveFn = ((null: any): Function);
+      state.asyncProcessingPromises.push(
+        new Promise(resolve => {
+          resolveFn = resolve;
+        }),
+      );
+
+      // Parse the Base64 image data to determine native size.
+      // This will be used later to scale for display within the thumbnail strip.
+      fetch(snapshot.imageSource)
+        .then(response => response.blob())
+        .then(blob => {
+          // $FlowFixMe createImageBitmap
+          createImageBitmap(blob).then(bitmap => {
+            snapshot.height = bitmap.height;
+            snapshot.width = bitmap.width;
+
+            resolveFn();
+          });
+        });
+
+      currentProfilerData.snapshots.push(snapshot);
+      break;
     case 'devtools.timeline':
       if (name === 'EventDispatch') {
         const type = args.data.type;
@@ -661,9 +696,9 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   return flamechart;
 }
 
-export default function preprocessData(
+export default async function preprocessData(
   timeline: TimelineEvent[],
-): ReactProfilerData {
+): Promise<ReactProfilerData> {
   const flamechart = preprocessFlamechart(timeline);
 
   const laneToReactMeasureMap = new Map();
@@ -682,6 +717,7 @@ export default function preprocessData(
     otherUserTimingMarks: [],
     reactVersion: null,
     schedulingEvents: [],
+    snapshots: [],
     startTime: 0,
     suspenseEvents: [],
   };
@@ -713,6 +749,7 @@ export default function preprocessData(
     (timeline[timeline.length - 1].ts - profilerData.startTime) / 1000;
 
   const state: ProcessorState = {
+    asyncProcessingPromises: [],
     batchUID: 0,
     currentReactComponentMeasure: null,
     measureStack: [],
@@ -772,6 +809,10 @@ export default function preprocessData(
       }
     },
   );
+
+  // Wait for any async processing to complete before returning.
+  // Since processing is done in a worker, async work must complete before data is serialized and returned.
+  await Promise.all(state.asyncProcessingPromises);
 
   return profilerData;
 }

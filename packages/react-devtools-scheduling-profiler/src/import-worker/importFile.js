@@ -26,9 +26,11 @@ export async function importFile(file: File): Promise<ImportWorkerOutputData> {
       throw new InvalidProfileError('No profiling data found in file.');
     }
 
+    const processedData = await preprocessData(events);
+
     return {
       status: 'SUCCESS',
-      processedData: preprocessData(events),
+      processedData,
     };
   } catch (error) {
     if (error instanceof InvalidProfileError) {
