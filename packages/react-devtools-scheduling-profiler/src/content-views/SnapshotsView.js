@@ -63,7 +63,7 @@ export class SnapshotsView extends View {
 
     let x = visibleArea.origin.x;
 
-    // Rather than drawing each snapshot where it occured,
+    // Rather than drawing each snapshot where it occurred,
     // draw them at fixed intervals and just show the nearest one.
     while (x < visibleArea.origin.x + visibleArea.size.width) {
       const snapshot = this._findClosestSnapshot(x);
