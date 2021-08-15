@@ -423,21 +423,11 @@ describe('parseHookNames', () => {
   });
 
   describe('extended source maps', () => {
-    let parseMock;
-
     beforeEach(() => {
-      parseMock = jest.fn();
-      jest.mock('@babel/parser', () => {
-        const actual = jest.requireActual('@babel/parser');
-        const parse = (...args) => {
-          parseMock();
-          return actual.parse(...args);
-        };
-        return {
-          parse,
-          ...actual,
-        };
-      });
+      const babelParser = require('@babel/parser');
+      const generateHookMapModule = require('../generateHookMap');
+      jest.spyOn(babelParser, 'parse');
+      jest.spyOn(generateHookMapModule, 'decodeHookMap');
     });
 
     it('should work for simple components', async () => {
@@ -447,16 +437,16 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(hookNames, [
           'count', // useState
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/Example'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/Example',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/Example',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/Example',
       ); // x_react_sources extended inline source map
@@ -490,16 +480,16 @@ describe('parseHookNames', () => {
           'handleToggle', // useCallback
         ]);
 
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/ToDoList'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ToDoList',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ToDoList',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ToDoList',
       ); // x_react_sources extended inline source map
@@ -518,16 +508,16 @@ describe('parseHookNames', () => {
           'isDarkMode', // useIsDarkMode()
           'isDarkMode', // useIsDarkMode -> useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithCustomHook',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithCustomHook',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithCustomHook',
       ); // x_react_sources extended inline source map
@@ -546,15 +536,16 @@ describe('parseHookNames', () => {
           'darkMode', // useDarkMode()
           'isDarkMode', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentUsingHooksIndirectly',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentUsingHooksIndirectly',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended inline source map
@@ -580,15 +571,16 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(innerHookNames, [
           'state', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithNestedHooks',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithNestedHooks',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithNestedHooks',
       ); // x_react_sources extended inline source map
@@ -606,7 +598,8 @@ describe('parseHookNames', () => {
           'theme', // useTheme()
           'theme', // useContext()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       // We can't test the uncompiled source here, because it either needs to get transformed,
@@ -614,10 +607,10 @@ describe('parseHookNames', () => {
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithExternalCustomHooks',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithExternalCustomHooks',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended inline source map
@@ -637,15 +630,16 @@ describe('parseHookNames', () => {
           'c', // useContext()
           'd', // useContext()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithMultipleHooksPerLine',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithMultipleHooksPerLine',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended inline source map
@@ -665,16 +659,16 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/InlineRequire'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/InlineRequire',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/InlineRequire',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/InlineRequire',
       ); // x_react_sources extended inline source map
@@ -691,19 +685,19 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       // We expect the inline sourceMappingURL to be invalid in this case; mute the warning.
       console.warn = () => {};
 
-      await test('./__source__/ContainingStringSourceMappingURL'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ContainingStringSourceMappingURL',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ContainingStringSourceMappingURL',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ContainingStringSourceMappingURL',
       ); // x_react_sources extended inline source map
