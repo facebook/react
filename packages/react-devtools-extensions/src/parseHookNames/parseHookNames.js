@@ -25,7 +25,6 @@ import type {
 import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
 import type {Thenable} from 'shared/ReactTypes';
 import type {SourceConsumer} from '../astUtils';
-import type {MixedSourceMap} from '../SourceMapTypes';
 
 const SOURCE_MAP_REGEX = / ?sourceMappingURL=([^\s'"]+)/gm;
 const MAX_SOURCE_LENGTH = 100_000_000;
