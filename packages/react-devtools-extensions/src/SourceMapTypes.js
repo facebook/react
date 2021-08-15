@@ -27,8 +27,8 @@ export type BasicSourceMap = {|
   +x_react_sources?: ReactSourcesArray,
 |};
 
-export type IndexMapSection = {
-  map: IndexMap | BasicSourceMap,
+export type IndexSourceMapSection = {
+  map: IndexSourceMap | BasicSourceMap,
   offset: {
     line: number,
     column: number,
@@ -37,14 +37,14 @@ export type IndexMapSection = {
   ...
 };
 
-export type IndexMap = {|
+export type IndexSourceMap = {|
   +file?: string,
   +mappings?: void, // avoids SourceMap being a disjoint union
   +sourcesContent?: void,
-  +sections: Array<IndexMapSection>,
+  +sections: Array<IndexSourceMapSection>,
   +version: number,
   +x_facebook_sources?: FBSourcesArray,
   +x_react_sources?: ReactSourcesArray,
 |};
 
-export type MixedSourceMap = IndexMap | BasicSourceMap;
+export type MixedSourceMap = IndexSourceMap | BasicSourceMap;
