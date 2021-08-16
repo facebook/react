@@ -98,6 +98,8 @@ const isInputPending =
     ? navigator.scheduling.isInputPending.bind(navigator.scheduling)
     : null;
 
+const continuousOptions = {includeContinuous: true};
+
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
   let timer = peek(timerQueue);
@@ -464,7 +466,7 @@ function shouldYieldToHost() {
     } else if (timeElapsed < maxInterval) {
       // Yield if there's either a pending discrete or continuous input.
       if (isInputPending !== null) {
-        return isInputPending({includeContinuous: true});
+        return isInputPending(continuousOptions);
       }
     } else {
       // We've blocked the thread for a long time. Even if there's no pending
@@ -511,9 +513,8 @@ function forceFrameRate(fps) {
 const performWorkUntilDeadline = () => {
   if (scheduledHostCallback !== null) {
     const currentTime = getCurrentTime();
-    // Yield after `yieldInterval` ms, regardless of where we are in the vsync
-    // cycle. This means there's always time remaining at the beginning of
-    // the message event.
+    // Keep track of the start time so we can measure how long the main thread
+    // has been blocked.
     startTime = currentTime;
     const hasTimeRemaining = true;
 
