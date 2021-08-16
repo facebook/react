@@ -12,17 +12,13 @@
 // This file uses workerize to load ./parseHookNames.worker as a webworker and instanciates it,
 // exposing flow typed functions that can be used on other files.
 
-import * as parseHookNamesModule from './parseHookNames';
 import WorkerizedParseHookNames from './parseHookNames.worker';
-
-type ParseHookNamesModule = typeof parseHookNamesModule;
+import typeof * as ParseHookNamesModule from './parseHookNames';
 
 // $FlowFixMe
 const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
 
-const workerizedParseHookNames: ParseHookNamesModule = window.Worker
-  ? WorkerizedParseHookNames()
-  : parseHookNamesModule;
+const workerizedParseHookNames: ParseHookNamesModule = WorkerizedParseHookNames();
 
 type ParseHookNames = $PropertyType<ParseHookNamesModule, 'parseHookNames'>;
 

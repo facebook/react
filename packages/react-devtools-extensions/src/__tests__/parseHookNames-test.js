@@ -62,7 +62,7 @@ describe('parseHookNames', () => {
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
-    parseHookNames = require('../parseHookNames').parseHookNames;
+    parseHookNames = require('../parseHookNames/parseHookNames').parseHookNames;
 
     // Jest (jest-runner?) configures Errors to automatically account for source maps.
     // This changes behavior between our tests and the browser.
@@ -718,21 +718,12 @@ describe('parseHookNames', () => {
 describe('parseHookNames worker', () => {
   let inspectHooks;
   let parseHookNames;
-  let originalParseHookNamesMock;
   let workerizedParseHookNamesMock;
 
   beforeEach(() => {
     window.Worker = undefined;
 
-    originalParseHookNamesMock = jest.fn();
     workerizedParseHookNamesMock = jest.fn();
-
-    jest.mock('../parseHookNames/parseHookNames.js', () => {
-      return {
-        __esModule: true,
-        parseHookNames: originalParseHookNamesMock,
-      };
-    });
 
     jest.mock('../parseHookNames/parseHookNames.worker.js', () => {
       return {
@@ -757,7 +748,7 @@ describe('parseHookNames worker', () => {
     return hookNames;
   }
 
-  it('should use worker when available', async () => {
+  it('should use worker', async () => {
     const Component = require('./__source__/__untransformed__/ComponentWithUseState')
       .Component;
 
@@ -768,14 +759,5 @@ describe('parseHookNames worker', () => {
 
     await getHookNamesForComponent(Component);
     expect(workerizedParseHookNamesMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('should use main thread when worker is not available', async () => {
-    const Component = require('./__source__/__untransformed__/ComponentWithUseState')
-      .Component;
-
-    await getHookNamesForComponent(Component);
-    expect(workerizedParseHookNamesMock).toHaveBeenCalledTimes(0);
-    expect(originalParseHookNamesMock).toHaveBeenCalledTimes(1);
   });
 });

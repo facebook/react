@@ -12,7 +12,6 @@ import {
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
 } from 'react-devtools-shared/src/utils';
-import {parseHookNames, purgeCachedMetadata} from './parseHookNames';
 import {
   localStorageGetItem,
   localStorageRemoveItem,
@@ -210,23 +209,26 @@ function createPanelIfReactLoaded() {
 
         render = (overrideTab = mostRecentOverrideTab) => {
           mostRecentOverrideTab = overrideTab;
-
-          root.render(
-            createElement(DevTools, {
-              bridge,
-              browserTheme: getBrowserTheme(),
-              componentsPortalContainer,
-              enabledInspectedElementContextMenu: true,
-              loadHookNames: parseHookNames,
-              overrideTab,
-              profilerPortalContainer,
-              purgeCachedHookNamesMetadata: purgeCachedMetadata,
-              showTabBar: false,
-              store,
-              warnIfUnsupportedVersionDetected: true,
-              viewAttributeSourceFunction,
-              viewElementSourceFunction,
-            }),
+          import('./parseHookNames').then(
+            ({parseHookNames, purgeCachedMetadata}) => {
+              root.render(
+                createElement(DevTools, {
+                  bridge,
+                  browserTheme: getBrowserTheme(),
+                  componentsPortalContainer,
+                  enabledInspectedElementContextMenu: true,
+                  loadHookNames: parseHookNames,
+                  overrideTab,
+                  profilerPortalContainer,
+                  purgeCachedHookNamesMetadata: purgeCachedMetadata,
+                  showTabBar: false,
+                  store,
+                  warnIfUnsupportedVersionDetected: true,
+                  viewAttributeSourceFunction,
+                  viewElementSourceFunction,
+                }),
+              );
+            },
           );
         };
 
