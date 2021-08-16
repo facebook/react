@@ -9,6 +9,13 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.16.0 (August 16, 2021)
+#### Features
+* Scheduling Profiler: Inline snapshots ([bvaughn](https://github.com/bvaughn) in [#22091](https://github.com/facebook/react/pull/22091) and[bvaughn](https://github.com/bvaughn) in [#22088](https://github.com/facebook/react/pull/22088))
+#### Bugfix
+* split parsing code to unblock Firefox release ([lunaruan](https://github.com/lunaruan) in [#22102](https://github.com/facebook/react/pull/22102))
+* Scheduling profiler: Canvas views clip by default ([bvaughn](https://github.com/bvaughn) in [#22100](https://github.com/facebook/react/pull/22100))
+* Fixed Components tree indentation bug for Chrome extension ([bvaughn](https://github.com/bvaughn) in [#22083](https://github.com/facebook/react/pull/22083))
 
 ## 4.15.0 (August 11, 2021)
 
