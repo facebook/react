@@ -199,7 +199,24 @@ export class View {
       this.layoutSubviews();
       if (this._needsDisplay) this._needsDisplay = false;
       if (this._subviewsNeedDisplay) this._subviewsNeedDisplay = false;
+
+      // Clip anything drawn by the view to prevent it from overflowing its visible area.
+      const visibleArea = this.visibleArea;
+      const region = new Path2D();
+      region.rect(
+        visibleArea.origin.x,
+        visibleArea.origin.y,
+        visibleArea.size.width,
+        visibleArea.size.height,
+      );
+      context.save();
+      context.clip(region);
+      context.beginPath();
+
       this.draw(context, viewRefs);
+
+      // Stop clipping
+      context.restore();
     }
   }
 

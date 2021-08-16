@@ -168,18 +168,6 @@ export class SuspenseEventsView extends View {
         return; // Not in view
       }
 
-      const drawableRect = intersectionOfRects(suspenseRect, rect);
-
-      // Clip diamonds so they don't overflow if the view has been resized (smaller).
-      const region = new Path2D();
-      region.rect(
-        drawableRect.origin.x,
-        drawableRect.origin.y,
-        drawableRect.size.width,
-        drawableRect.size.height,
-      );
-      context.save();
-      context.clip(region);
       context.beginPath();
       context.fillStyle = fillStyle;
       context.moveTo(xStart, y - halfSize);
@@ -187,7 +175,6 @@ export class SuspenseEventsView extends View {
       context.lineTo(xStart, y + halfSize);
       context.lineTo(xStart - halfSize, y);
       context.fill();
-      context.restore();
     } else {
       const xStop = timestampToPosition(
         timestamp + duration,
