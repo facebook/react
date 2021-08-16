@@ -118,6 +118,7 @@ export class SnapshotsView extends View {
     const visibleArea = this.visibleArea;
 
     // Prevent snapshot from visibly overflowing its container when clipped.
+    // View clips by default, but since this view may draw async (on Image load) we re-clip.
     const shouldClip = !rectEqualToRect(imageRect, visibleArea);
     if (shouldClip) {
       const clippedRect = intersectionOfRects(imageRect, visibleArea);
