@@ -419,7 +419,7 @@ let taskTimeoutID = -1;
 // It does not attempt to align with frame boundaries, since most tasks don't
 // need to be frame aligned; for those that do, use requestAnimationFrame.
 let yieldInterval = 5;
-let deadline = 0;
+let startTime = -1;
 
 // TODO: Make this configurable
 // TODO: Adjust this based on priority?
@@ -427,6 +427,7 @@ const maxYieldInterval = 300;
 let needsPaint = false;
 
 function shouldYieldToHost() {
+  const timeElapsed = getCurrentTime() - startTime;
   if (
     enableIsInputPending &&
     navigator !== undefined &&
@@ -434,8 +435,7 @@ function shouldYieldToHost() {
     navigator.scheduling.isInputPending !== undefined
   ) {
     const scheduling = navigator.scheduling;
-    const currentTime = getCurrentTime();
-    if (currentTime >= deadline) {
+    if (timeElapsed >= yieldInterval) {
       // There's no time left. We may want to yield control of the main
       // thread, so the browser can perform high priority tasks. The main ones
       // are painting and user input. If there's a pending paint or a pending
@@ -450,7 +450,6 @@ function shouldYieldToHost() {
       }
       // There's no pending input. Only yield if we've reached the max
       // yield interval.
-      const timeElapsed = currentTime - (deadline - yieldInterval);
       return timeElapsed >= maxYieldInterval;
     } else {
       // There's still time left in the frame.
@@ -459,7 +458,7 @@ function shouldYieldToHost() {
   } else {
     // `isInputPending` is not available. Since we have no way of knowing if
     // there's pending input, always yield at the end of the frame.
-    return getCurrentTime() >= deadline;
+    return timeElapsed >= yieldInterval;
   }
 }
 
@@ -499,7 +498,7 @@ const performWorkUntilDeadline = () => {
     // Yield after `yieldInterval` ms, regardless of where we are in the vsync
     // cycle. This means there's always time remaining at the beginning of
     // the message event.
-    deadline = currentTime + yieldInterval;
+    startTime = currentTime;
     const hasTimeRemaining = true;
 
     // If a scheduler task throws, exit the current browser task so the
