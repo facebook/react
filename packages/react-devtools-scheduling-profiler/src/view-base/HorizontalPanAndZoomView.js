@@ -156,7 +156,7 @@ export class HorizontalPanAndZoomView extends View {
       interaction.payload.location,
       this.frame,
     );
-    if (isHovered) {
+    if (isHovered && viewRefs.hoveredView === null) {
       viewRefs.hoveredView = this;
     }
 
@@ -169,9 +169,16 @@ export class HorizontalPanAndZoomView extends View {
     if (!this._isPanning) {
       return;
     }
+
+    // Don't prevent mouse-move events from bubbling if they are vertical drags.
+    const {movementX, movementY} = interaction.payload.event;
+    if (Math.abs(movementX) < Math.abs(movementY)) {
+      return;
+    }
+
     const newState = translateState({
       state: this._viewState.horizontalScrollState,
-      delta: interaction.payload.event.movementX,
+      delta: movementX,
       containerLength: this.frame.size.width,
     });
     this._viewState.updateHorizontalScrollState(newState);
