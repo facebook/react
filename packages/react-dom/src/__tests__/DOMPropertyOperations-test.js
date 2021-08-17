@@ -155,6 +155,101 @@ describe('DOMPropertyOperations', () => {
       // Regression test for https://github.com/facebook/react/issues/6119
       expect(container.firstChild.hasAttribute('value')).toBe(false);
     });
+
+    it('custom element custom events lowercase', () => {
+      const oncustomevent = jest.fn();
+      function Test() {
+        return <my-custom-element oncustomevent={oncustomevent} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container.querySelector('my-custom-element').dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
+
+    it('custom element custom events uppercase', () => {
+      const oncustomevent = jest.fn();
+      function Test() {
+        return <my-custom-element onCustomevent={oncustomevent} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container.querySelector('my-custom-element').dispatchEvent(new Event('Customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
+
+    it('custom element custom event with dash in name', () => {
+      const oncustomevent = jest.fn();
+      function Test() {
+        return <my-custom-element oncustom-event={oncustomevent} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container.querySelector('my-custom-element').dispatchEvent(new Event('custom-event'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
+
+    it('custom element remove event handler', () => {
+      const oncustomevent = jest.fn();
+      function Test(props) {
+        return <my-custom-element oncustomevent={props.handler} />;
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Test handler={oncustomevent} />, container);
+      const customElement = container.querySelector('my-custom-element');
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<Test handler={false} />, container);
+      // Make sure that the second render didn't create a new element. We want
+      // to make sure removeEventListener actually gets called on the same element.
+      expect(customElement).toBe(customElement);
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
+
+    it('custom elements shouldnt have non-functions for on* attributes treated as event listeners', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-custom-element
+        onstring={'hello'}
+        onobj={{hello: 'world'}}
+        onarray={['one', 'two']}
+        ontrue={true}
+        onfalse={false} />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('onstring')).toBe('hello');
+      expect(customElement.getAttribute('onobj')).toBe('[object Object]');
+      expect(customElement.getAttribute('onarray')).toBe('one,two');
+      expect(customElement.getAttribute('ontrue')).toBe('true');
+      expect(customElement.getAttribute('onfalse')).toBe('false');
+    });
+
+    it('custom elements should still have onClick treated like regular elements', () => {
+      const eventhandler = jest.fn();
+      function Test() {
+        return <span onClick={eventhandler} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container.querySelector('span').click();
+      // TODO why doesn't this test pass!? As far as I can tell from outside
+      // testing, this actually does work... maybe I'm missing some test setup
+      // included in DOMPluginEventSystem-test.internal.js?
+      expect(eventhandler).toHaveBeenCalledTimes(1);
+    });
+
+    it('custom elements should allow custom events with capture event listeners', () => {
+      const oncustomevent = jest.fn();
+      function Test() {
+        return <my-custom-element oncustomeventCapture={oncustomevent} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container.querySelector('my-custom-element')
+        .dispatchEvent(new Event('customevent', {bubbles: false}));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('deleteValueForProperty', () => {

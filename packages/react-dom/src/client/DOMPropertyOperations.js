@@ -143,25 +143,38 @@ export function setValueForProperty(
   if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
     return;
   }
-  if (isCustomComponentTag && name[0] === 'o' && name[1] === 'n') {
-    const useCapture = name !== (name = name.replace(/Capture$/, ''));
-    const nameLower = name.toLowerCase();
-    if (nameLower in node) name = nameLower;
-    name = name.slice(2);
 
-    if (!(node: any)._listeners)
-      (node: any)._listeners = {};
-    const listenersObjName = name + (useCapture ? 'true' : 'false');
-    const alreadyHadListener = (node: any)._listeners[listenersObjName];
-    (node: any)._listeners[listenersObjName] = value;
-    const proxy = useCapture ? eventProxyCapture : eventProxy;
-    if (value) {
-      if (!alreadyHadListener) node.addEventListener(name, proxy, useCapture);
-    } else {
-      node.removeEventListener(name, proxy, useCapture);
+  if (isCustomComponentTag && name[0] === 'o' && name[1] === 'n') {
+    let eventName = name.replace(/Capture$/, '');
+    const useCapture = name !== eventName;
+    // TODO make sure that onClick still works like normal, then delet this
+    const nameLower = eventName.toLowerCase();
+    if (nameLower in node) {
+      eventName = nameLower;
     }
-    return;
+    eventName = eventName.slice(2);
+
+    const listenersObjName = eventName + (useCapture ? 'true' : 'false');
+    const alreadyHadListener = (node: any)._listeners && (node: any)._listeners[listenersObjName];
+
+    if (typeof value === 'function' || alreadyHadListener) {
+      if (!(node: any)._listeners) {
+        (node: any)._listeners = {};
+      }
+
+      (node: any)._listeners[listenersObjName] = value;
+      const proxy = useCapture ? eventProxyCapture : eventProxy;
+      if (value) {
+        if (!alreadyHadListener) {
+          node.addEventListener(eventName, proxy, useCapture);
+        }
+      } else {
+        node.removeEventListener(eventName, proxy, useCapture);
+      }
+      return;
+    }
   }
+
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
