@@ -193,6 +193,8 @@ describe('parseHookNames', () => {
       await test('./__source__/Example'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/Example'); // inline source map
       await test('./__source__/__compiled__/external/Example'); // external source map
+      await test('./__source__/__compiled__/inline/index-map/Example'); // inline index map source map
+      await test('./__source__/__compiled__/external/index-map/Example'); // external index map source map
       await test('./__source__/__compiled__/bundle/index', 'Example'); // bundle source map
       await test('./__source__/__compiled__/no-columns/Example'); // simulated Webpack 'cheap-module-source-map'
     });
@@ -225,6 +227,8 @@ describe('parseHookNames', () => {
       await test('./__source__/ToDoList'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ToDoList'); // inline source map
       await test('./__source__/__compiled__/external/ToDoList'); // external source map
+      await test('./__source__/__compiled__/inline/index-map/ToDoList'); // inline index map source map
+      await test('./__source__/__compiled__/external/index-map/ToDoList'); // external index map source map
       await test('./__source__/__compiled__/bundle', 'ToDoList'); // bundle source map
       await test('./__source__/__compiled__/no-columns/ToDoList'); // simulated Webpack 'cheap-module-source-map'
     });
@@ -243,6 +247,12 @@ describe('parseHookNames', () => {
       await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
       await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
+      await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithCustomHook',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithCustomHook',
+      ); // external index map source map
       await test('./__source__/__compiled__/bundle', 'ComponentWithCustomHook'); // bundle source map
       await test(
         './__source__/__compiled__/no-columns/ComponentWithCustomHook',
@@ -266,6 +276,12 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/ComponentUsingHooksIndirectly',
       ); // external source map
+      await test(
+        './__source__/__compiled__/inline/index-map/ComponentUsingHooksIndirectly',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentUsingHooksIndirectly',
+      ); // external index map source map
       await test(
         './__source__/__compiled__/bundle',
         'ComponentUsingHooksIndirectly',
@@ -296,6 +312,12 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/inline/ComponentWithNestedHooks'); // inline source map
       await test('./__source__/__compiled__/external/ComponentWithNestedHooks'); // external source map
       await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithNestedHooks',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithNestedHooks',
+      ); // external index map source map
+      await test(
         './__source__/__compiled__/bundle',
         'ComponentWithNestedHooks',
       ); // bundle source map
@@ -324,6 +346,12 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/external/ComponentWithExternalCustomHooks',
       ); // external source map
       await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithExternalCustomHooks',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithExternalCustomHooks',
+      ); // external index map source map
+      await test(
         './__source__/__compiled__/bundle',
         'ComponentWithExternalCustomHooks',
       ); // bundle source map
@@ -350,6 +378,12 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/ComponentWithMultipleHooksPerLine',
       ); // external source map
+      await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithMultipleHooksPerLine',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithMultipleHooksPerLine',
+      ); // external index map source map
       await test(
         './__source__/__compiled__/bundle',
         'ComponentWithMultipleHooksPerLine',
@@ -389,6 +423,8 @@ describe('parseHookNames', () => {
       await test('./__source__/InlineRequire'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
       await test('./__source__/__compiled__/external/InlineRequire'); // external source map
+      await test('./__source__/__compiled__/inline/index-map/InlineRequire'); // inline index map source map
+      await test('./__source__/__compiled__/external/index-map/InlineRequire'); // external index map source map
       await test('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
       await test('./__source__/__compiled__/no-columns/InlineRequire'); // simulated Webpack 'cheap-module-source-map'
     });

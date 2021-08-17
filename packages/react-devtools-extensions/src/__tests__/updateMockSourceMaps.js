@@ -24,6 +24,8 @@ const externalDir = resolve(buildRoot, 'external');
 const inlineDir = resolve(buildRoot, 'inline');
 const bundleDir = resolve(buildRoot, 'bundle');
 const noColumnsDir = resolve(buildRoot, 'no-columns');
+const inlineIndexMapDir = resolve(inlineDir, 'index-map');
+const externalIndexMapDir = resolve(externalDir, 'index-map');
 const inlineFbSourcesExtendedDir = resolve(inlineDir, 'fb-sources-extended');
 const externalFbSourcesExtendedDir = resolve(
   externalDir,
@@ -44,6 +46,8 @@ mkdirSync(externalDir);
 mkdirSync(inlineDir);
 mkdirSync(bundleDir);
 mkdirSync(noColumnsDir);
+mkdirSync(inlineIndexMapDir);
+mkdirSync(externalIndexMapDir);
 mkdirSync(inlineFbSourcesExtendedDir);
 mkdirSync(externalFbSourcesExtendedDir);
 mkdirSync(inlineReactSourcesExtendedDir);
@@ -124,8 +128,44 @@ function compile(fileName) {
     'utf8',
   );
 
-  // Generate compiled output with an extended sourcemap that
-  // includes a map of hook names.
+  // Artificially construct a source map that uses the index map format
+  // (https://sourcemaps.info/spec.html#h.535es3xeprgt)
+  const indexMap = {
+    version: sourceMap.version,
+    file: sourceMap.file,
+    sections: [
+      {
+        offset: {
+          line: 0,
+          column: 0,
+        },
+        map: {...sourceMap},
+      },
+    ],
+  };
+
+  // Generate compiled output using external source maps using index map format
+  writeFileSync(
+    resolve(externalIndexMapDir, fileName),
+    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    'utf8',
+  );
+  writeFileSync(
+    resolve(externalIndexMapDir, `${fileName}.map`),
+    JSON.stringify(indexMap),
+    'utf8',
+  );
+
+  // Generate compiled output with inline base64 source maps using index map format
+  writeFileSync(
+    resolve(inlineIndexMapDir, fileName),
+    transformed.code +
+      '\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,' +
+      btoa(JSON.stringify(indexMap)),
+    'utf8',
+  );
+
+  // Generate compiled output with an extended sourcemap that includes a map of hook names.
   const parsed = parse(code, {
     sourceType: 'module',
     plugins: ['jsx', 'flow'],
