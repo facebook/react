@@ -46,6 +46,10 @@ export let COLORS = {
   BACKGROUND: '',
   NATIVE_EVENT: '',
   NATIVE_EVENT_HOVER: '',
+  NETWORK_PRIMARY: '',
+  NETWORK_PRIMARY_HOVER: '',
+  NETWORK_SECONDARY: '',
+  NETWORK_SECONDARY_HOVER: '',
   PRIORITY_BACKGROUND: '',
   PRIORITY_BORDER: '',
   PRIORITY_LABEL: '',
@@ -105,6 +109,18 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     NATIVE_EVENT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-native-event-hover',
+    ),
+    NETWORK_PRIMARY: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-primary',
+    ),
+    NETWORK_PRIMARY_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-primary-hover',
+    ),
+    NETWORK_SECONDARY: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-secondary',
+    ),
+    NETWORK_SECONDARY_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-secondary-hover',
     ),
     PRIORITY_BACKGROUND: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-priority-background',

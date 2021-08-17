@@ -10,6 +10,7 @@
 export * from './ComponentMeasuresView';
 export * from './FlamechartView';
 export * from './NativeEventsView';
+export * from './NetworkMeasuresView';
 export * from './ReactMeasuresView';
 export * from './SchedulingEventsView';
 export * from './SnapshotsView';

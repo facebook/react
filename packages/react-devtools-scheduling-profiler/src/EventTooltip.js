@@ -11,6 +11,7 @@ import type {Point} from './view-base';
 import type {
   FlamechartStackFrame,
   NativeEvent,
+  NetworkMeasure,
   ReactComponentMeasure,
   ReactHoverContextInfo,
   ReactMeasure,
@@ -28,6 +29,8 @@ import {formatDuration, formatTimestamp, trimString} from './utils/formatting';
 import {getBatchRange} from './utils/getBatchRange';
 import useSmartTooltip from './utils/useSmartTooltip';
 import styles from './EventTooltip.css';
+
+const MAX_TOOLTIP_TEXT_LENGTH = 60;
 
 type Props = {|
   canvasRef: {|current: HTMLCanvasElement | null|},
@@ -87,6 +90,7 @@ export default function EventTooltip({
     flamechartStackFrame,
     measure,
     nativeEvent,
+    networkMeasure,
     schedulingEvent,
     snapshot,
     suspenseEvent,
@@ -103,6 +107,13 @@ export default function EventTooltip({
   } else if (nativeEvent !== null) {
     return (
       <TooltipNativeEvent nativeEvent={nativeEvent} tooltipRef={tooltipRef} />
+    );
+  } else if (networkMeasure !== null) {
+    return (
+      <TooltipNetworkMeasure
+        networkMeasure={networkMeasure}
+        tooltipRef={tooltipRef}
+      />
     );
   } else if (schedulingEvent !== null) {
     return (
@@ -234,6 +245,44 @@ const TooltipNativeEvent = ({
           <div className={styles.WarningText}>{warning}</div>
         </div>
       )}
+    </div>
+  );
+};
+
+const TooltipNetworkMeasure = ({
+  networkMeasure,
+  tooltipRef,
+}: {
+  networkMeasure: NetworkMeasure,
+  tooltipRef: Return<typeof useRef>,
+}) => {
+  const {
+    finishTimestamp,
+    lastReceivedDataTimestamp,
+    priority,
+    sendRequestTimestamp,
+    url,
+  } = networkMeasure;
+
+  let urlToDisplay = url;
+  if (urlToDisplay.length > MAX_TOOLTIP_TEXT_LENGTH) {
+    const half = Math.floor(MAX_TOOLTIP_TEXT_LENGTH / 2);
+    urlToDisplay = url.substr(0, half) + '…' + url.substr(url.length - half);
+  }
+
+  const timestampBegin = sendRequestTimestamp;
+  const timestampEnd = finishTimestamp || lastReceivedDataTimestamp;
+  const duration =
+    timestampEnd > 0
+      ? formatDuration(finishTimestamp - timestampBegin)
+      : '(incomplete)';
+
+  return (
+    <div className={styles.Tooltip} ref={tooltipRef}>
+      <div className={styles.SingleLineTextSection}>
+        {duration} <span className={styles.DimText}>{priority}</span>{' '}
+        {urlToDisplay}
+      </div>
     </div>
   );
 };

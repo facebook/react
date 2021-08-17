@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactHoverContextInfo} from '../types';
 import type {Interaction} from './useCanvasInteraction';
 import type {Size} from './geometry';
 
@@ -47,6 +48,10 @@ const getCanvasContext = memoize(
   },
 );
 
+type ResetHoveredEventFn = (
+  partialState: $Shape<ReactHoverContextInfo>,
+) => void;
+
 /**
  * Represents the canvas surface and a view heirarchy. A surface is also the
  * place where all interactions enter the view heirarchy.
@@ -57,10 +62,16 @@ export class Surface {
   _context: ?CanvasRenderingContext2D;
   _canvasSize: ?Size;
 
+  _resetHoveredEvent: ResetHoveredEventFn;
+
   _viewRefs: ViewRefs = {
     activeView: null,
     hoveredView: null,
   };
+
+  constructor(resetHoveredEvent: ResetHoveredEventFn) {
+    this._resetHoveredEvent = resetHoveredEvent;
+  }
 
   hasActiveView(): boolean {
     return this._viewRefs.activeView !== null;
@@ -107,12 +118,32 @@ export class Surface {
   }
 
   handleInteraction(interaction: Interaction) {
-    if (!this.rootView) {
-      return;
+    const rootView = this.rootView;
+    if (rootView != null) {
+      const viewRefs = this._viewRefs;
+      switch (interaction.type) {
+        case 'mousemove':
+          // Clean out the hovered view before processing a new mouse move interaction.
+          const hoveredView = viewRefs.hoveredView;
+          viewRefs.hoveredView = null;
+
+          rootView.handleInteractionAndPropagateToSubviews(
+            interaction,
+            viewRefs,
+          );
+
+          // If a previously hovered view is no longer hovered, update the outer state.
+          if (hoveredView !== null && viewRefs.hoveredView === null) {
+            this._resetHoveredEvent({});
+          }
+          break;
+        default:
+          rootView.handleInteractionAndPropagateToSubviews(
+            interaction,
+            viewRefs,
+          );
+          break;
+      }
     }
-    this.rootView.handleInteractionAndPropagateToSubviews(
-      interaction,
-      this._viewRefs,
-    );
   }
 }
