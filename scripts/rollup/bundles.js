@@ -79,7 +79,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react',
     global: 'React',
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['ReactNativeFeatureFlags'],
   },
 
   /******* Isomorphic Shared Subset *******/
@@ -105,7 +105,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react/jsx-runtime',
     global: 'JSXRuntime',
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react', 'ReactNativeFeatureFlags'],
   },
 
   /******* React JSX DEV Runtime *******/
@@ -124,7 +124,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react/jsx-dev-runtime',
     global: 'JSXDEVRuntime',
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react', 'ReactNativeFeatureFlags'],
   },
 
   /******* React Fetch Browser (experimental, new) *******/
@@ -372,7 +372,7 @@ const bundles = [
       'react',
       'ReactFlightNativeRelayServerIntegration',
       'JSResourceReferenceImpl',
-      'ReactNativeInternalFeatureFlags',
+      'ReactNativeFeatureFlags',
     ],
   },
 
@@ -386,7 +386,7 @@ const bundles = [
       'react',
       'ReactFlightNativeRelayClientIntegration',
       'JSResourceReferenceImpl',
-      'ReactNativeInternalFeatureFlags',
+      'ReactNativeFeatureFlags',
     ],
   },
 
@@ -434,7 +434,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
-    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react-native', 'ReactNativeFeatureFlags'],
     babel: opts =>
       Object.assign({}, opts, {
         plugins: opts.plugins.concat([
@@ -464,7 +464,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
-    externals: ['react-native', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react-native', 'ReactNativeFeatureFlags'],
     babel: opts =>
       Object.assign({}, opts, {
         plugins: opts.plugins.concat([
@@ -505,7 +505,7 @@ const bundles = [
       'react',
       'scheduler',
       'scheduler/unstable_mock',
-      'ReactNativeInternalFeatureFlags',
+      'ReactNativeFeatureFlags',
     ],
     babel: opts =>
       Object.assign({}, opts, {
@@ -699,7 +699,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'scheduler',
     global: 'Scheduler',
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['ReactNativeFeatureFlags'],
   },
 
   /******* React Scheduler Mock (experimental) *******/
@@ -717,7 +717,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'scheduler/unstable_mock',
     global: 'SchedulerMock',
-    externals: ['ReactNativeInternalFeatureFlags'],
+    externals: ['ReactNativeFeatureFlags'],
   },
 
   /******* React Scheduler Post Task (experimental) *******/

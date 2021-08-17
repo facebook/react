@@ -7,6 +7,9 @@
  * @flow
  */
 
-declare module 'ReactNativeInternalFeatureFlags' {
-  declare export var enablePersistentOffscreenHostContainer: boolean;
+declare module 'ReactNativeFeatureFlags' {
+  declare export function getAllFlags(): {
+    enablePersistentOffscreenHostContainer: boolean,
+    ...
+  };
 }
