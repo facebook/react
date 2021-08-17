@@ -147,11 +147,11 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  if (__DEV__) {
-    if (!hostContext.isInAParentText) {
-      console.error('Text strings must be rendered within a <Text> component.');
-    }
-  }
+  invariant(
+    hostContext.isInAParentText,
+    'Text strings must be rendered within a <Text> component.',
+  );
+
   const tag = allocateTag();
 
   UIManager.createView(
