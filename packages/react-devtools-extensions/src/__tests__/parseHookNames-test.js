@@ -449,6 +449,12 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/external/ContainingStringSourceMappingURL',
       ); // external source map
       await test(
+        './__source__/__compiled__/inline/index-map/ContainingStringSourceMappingURL',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ContainingStringSourceMappingURL',
+      ); // external index map source map
+      await test(
         './__source__/__compiled__/bundle',
         'ContainingStringSourceMappingURL',
       ); // bundle source map
@@ -489,6 +495,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/Example',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/Example',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/Example',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/Example',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/Example',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -532,6 +553,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/ToDoList',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ToDoList',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ToDoList',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ToDoList',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ToDoList',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -560,6 +596,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithCustomHook',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -588,6 +639,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -623,6 +689,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithNestedHooks',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -653,6 +734,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -682,6 +778,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -711,6 +822,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/InlineRequire',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/InlineRequire',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/InlineRequire',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/InlineRequire',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/InlineRequire',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -740,6 +866,21 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/react-sources-extended/ContainingStringSourceMappingURL',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
   });
