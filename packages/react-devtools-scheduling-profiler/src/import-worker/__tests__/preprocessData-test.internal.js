@@ -324,6 +324,7 @@ describe('preprocessData', () => {
             30 => Array [],
           },
           "nativeEvents": Array [],
+          "networkMeasures": Array [],
           "otherUserTimingMarks": Array [],
           "reactVersion": "17.0.3",
           "schedulingEvents": Array [],
@@ -530,6 +531,7 @@ describe('preprocessData', () => {
             30 => Array [],
           },
           "nativeEvents": Array [],
+          "networkMeasures": Array [],
           "otherUserTimingMarks": Array [],
           "reactVersion": "17.0.3",
           "schedulingEvents": Array [
@@ -715,6 +717,7 @@ describe('preprocessData', () => {
             30 => Array [],
           },
           "nativeEvents": Array [],
+          "networkMeasures": Array [],
           "otherUserTimingMarks": Array [
             Object {
               "name": "__v3",
@@ -1051,6 +1054,7 @@ describe('preprocessData', () => {
             30 => Array [],
           },
           "nativeEvents": Array [],
+          "networkMeasures": Array [],
           "otherUserTimingMarks": Array [
             Object {
               "name": "__v3",
