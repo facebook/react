@@ -473,7 +473,7 @@ describe('ReactNative', () => {
     );
   });
 
-  it('should console error for text not inside of a <Text> ancestor', () => {
+  it('should throw for text not inside of a <Text> ancestor', () => {
     const ScrollView = createReactNativeComponentClass('RCTScrollView', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTScrollView',
@@ -487,9 +487,9 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    expect(() =>
-      ReactNative.render(<View>this should warn</View>, 11),
-    ).toErrorDev(['Text strings must be rendered within a <Text> component.']);
+    expect(() => ReactNative.render(<View>this should warn</View>, 11)).toThrow(
+      'Text strings must be rendered within a <Text> component.',
+    );
 
     expect(() =>
       ReactNative.render(
@@ -498,7 +498,7 @@ describe('ReactNative', () => {
         </Text>,
         11,
       ),
-    ).toErrorDev(['Text strings must be rendered within a <Text> component.']);
+    ).toThrow('Text strings must be rendered within a <Text> component.');
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {
