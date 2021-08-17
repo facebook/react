@@ -15,6 +15,7 @@ import memoize from 'memoize-one';
 
 import {View} from './View';
 import {zeroPoint} from './geometry';
+import {DPR} from '../content-views/constants';
 
 export type ViewRefs = {|
   activeView: View | null,
@@ -23,12 +24,10 @@ export type ViewRefs = {|
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {
-  const dpr: number = window.devicePixelRatio || 1;
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
+  canvas.width = width * DPR;
+  canvas.height = height * DPR;
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
-  return dpr;
 }
 
 const getCanvasContext = memoize(
@@ -40,9 +39,10 @@ const getCanvasContext = memoize(
   ): CanvasRenderingContext2D => {
     const context = canvas.getContext('2d', {alpha: false});
     if (scaleCanvas) {
-      const dpr = configureRetinaCanvas(canvas, height, width);
+      configureRetinaCanvas(canvas, height, width);
+
       // Scale all drawing operations by the dpr, so you don't have to worry about the difference.
-      context.scale(dpr, dpr);
+      context.scale(DPR, DPR);
     }
     return context;
   },

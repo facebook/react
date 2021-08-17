@@ -7,6 +7,7 @@
  * @flow
  */
 
+export const DPR: number = window.devicePixelRatio || 1;
 export const LABEL_SIZE = 80;
 export const MARKER_HEIGHT = 20;
 export const MARKER_TICK_HEIGHT = 8;
@@ -20,7 +21,7 @@ export const PENDING_SUSPENSE_EVENT_SIZE = 8;
 export const REACT_EVENT_DIAMETER = 6;
 export const USER_TIMING_MARK_SIZE = 8;
 export const REACT_MEASURE_HEIGHT = 14;
-export const BORDER_SIZE = 1;
+export const BORDER_SIZE = 1 / DPR;
 export const FLAMECHART_FRAME_HEIGHT = 14;
 export const TEXT_PADDING = 3;
 export const SNAPSHOT_HEIGHT = 35;
