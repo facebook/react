@@ -357,13 +357,10 @@ describe('ReactCompositeComponent', () => {
     expect(renders).toBe(1);
 
     instance.setState({value: 1});
-
     expect(renders).toBe(2);
 
     ReactDOM.render(<div />, container);
-
     instance.setState({value: 2});
-
     expect(renders).toBe(2);
   });
 
