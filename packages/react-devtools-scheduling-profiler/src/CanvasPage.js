@@ -44,6 +44,7 @@ import {
   ComponentMeasuresView,
   FlamechartView,
   NativeEventsView,
+  NetworkMeasuresView,
   ReactMeasuresView,
   SchedulingEventsView,
   SnapshotsView,
@@ -128,6 +129,18 @@ const zoomToBatch = (
   viewState.updateHorizontalScrollState(scrollState);
 };
 
+const EMPTY_CONTEXT_INFO: ReactHoverContextInfo = {
+  componentMeasure: null,
+  flamechartStackFrame: null,
+  measure: null,
+  nativeEvent: null,
+  networkMeasure: null,
+  schedulingEvent: null,
+  snapshot: null,
+  suspenseEvent: null,
+  userTimingMark: null,
+};
+
 type AutoSizedCanvasProps = {|
   data: ReactProfilerData,
   height: number,
@@ -150,7 +163,12 @@ function AutoSizedCanvas({
     setHoveredEvent,
   ] = useState<ReactHoverContextInfo | null>(null);
 
-  const surfaceRef = useRef(new Surface());
+  const resetHoveredEvent = useCallback(
+    () => setHoveredEvent(EMPTY_CONTEXT_INFO),
+    [],
+  );
+
+  const surfaceRef = useRef(new Surface(resetHoveredEvent));
   const userTimingMarksViewRef = useRef(null);
   const nativeEventsViewRef = useRef(null);
   const schedulingEventsViewRef = useRef(null);
@@ -158,6 +176,7 @@ function AutoSizedCanvas({
   const componentMeasuresViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
+  const networkMeasuresViewRef = useRef(null);
   const snapshotsViewRef = useRef(null);
 
   const {hideMenu: hideContextMenu} = useContext(RegistryContext);
@@ -318,6 +337,22 @@ function AutoSizedCanvas({
       );
     }
 
+    let networkMeasuresViewWrapper = null;
+    if (data.snapshots.length > 0) {
+      const networkMeasuresView = new NetworkMeasuresView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      networkMeasuresViewRef.current = networkMeasuresView;
+      networkMeasuresViewWrapper = createViewHelper(
+        networkMeasuresView,
+        'network',
+        true,
+        true,
+      );
+    }
+
     const flamechartView = new FlamechartView(
       surface,
       defaultFrame,
@@ -357,6 +392,9 @@ function AutoSizedCanvas({
     if (snapshotsViewWrapper !== null) {
       rootView.addSubview(snapshotsViewWrapper);
     }
+    if (networkMeasuresViewWrapper !== null) {
+      rootView.addSubview(networkMeasuresViewWrapper);
+    }
     rootView.addSubview(flamechartViewWrapper);
 
     const verticalScrollOverflowView = new VerticalScrollOverflowView(
@@ -395,16 +433,18 @@ function AutoSizedCanvas({
             prevHoverEvent.flamechartStackFrame !== null ||
             prevHoverEvent.measure !== null ||
             prevHoverEvent.nativeEvent !== null ||
+            prevHoverEvent.networkMeasure !== null ||
             prevHoverEvent.schedulingEvent !== null ||
+            prevHoverEvent.snapshot !== null ||
             prevHoverEvent.suspenseEvent !== null ||
             prevHoverEvent.userTimingMark !== null
           ) {
             return {
               componentMeasure: null,
-              data: prevHoverEvent.data,
               flamechartStackFrame: null,
               measure: null,
               nativeEvent: null,
+              networkMeasure: null,
               schedulingEvent: null,
               snapshot: null,
               suspenseEvent: null,
@@ -460,10 +500,10 @@ function AutoSizedCanvas({
         if (!hoveredEvent || hoveredEvent.userTimingMark !== userTimingMark) {
           setHoveredEvent({
             componentMeasure: null,
-            data,
             flamechartStackFrame: null,
             measure: null,
             nativeEvent: null,
+            networkMeasure: null,
             schedulingEvent: null,
             snapshot: null,
             suspenseEvent: null,
@@ -479,10 +519,10 @@ function AutoSizedCanvas({
         if (!hoveredEvent || hoveredEvent.nativeEvent !== nativeEvent) {
           setHoveredEvent({
             componentMeasure: null,
-            data,
             flamechartStackFrame: null,
             measure: null,
             nativeEvent,
+            networkMeasure: null,
             schedulingEvent: null,
             snapshot: null,
             suspenseEvent: null,
@@ -498,10 +538,10 @@ function AutoSizedCanvas({
         if (!hoveredEvent || hoveredEvent.schedulingEvent !== schedulingEvent) {
           setHoveredEvent({
             componentMeasure: null,
-            data,
             flamechartStackFrame: null,
             measure: null,
             nativeEvent: null,
+            networkMeasure: null,
             schedulingEvent,
             snapshot: null,
             suspenseEvent: null,
@@ -517,10 +557,10 @@ function AutoSizedCanvas({
         if (!hoveredEvent || hoveredEvent.suspenseEvent !== suspenseEvent) {
           setHoveredEvent({
             componentMeasure: null,
-            data,
             flamechartStackFrame: null,
             measure: null,
             nativeEvent: null,
+            networkMeasure: null,
             schedulingEvent: null,
             snapshot: null,
             suspenseEvent,
@@ -536,10 +576,10 @@ function AutoSizedCanvas({
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
             componentMeasure: null,
-            data,
             flamechartStackFrame: null,
             measure,
             nativeEvent: null,
+            networkMeasure: null,
             schedulingEvent: null,
             snapshot: null,
             suspenseEvent: null,
@@ -558,10 +598,10 @@ function AutoSizedCanvas({
         ) {
           setHoveredEvent({
             componentMeasure,
-            data,
             flamechartStackFrame: null,
             measure: null,
             nativeEvent: null,
+            networkMeasure: null,
             schedulingEvent: null,
             snapshot: null,
             suspenseEvent: null,
@@ -577,10 +617,10 @@ function AutoSizedCanvas({
         if (!hoveredEvent || hoveredEvent.snapshot !== snapshot) {
           setHoveredEvent({
             componentMeasure: null,
-            data,
             flamechartStackFrame: null,
             measure: null,
             nativeEvent: null,
+            networkMeasure: null,
             schedulingEvent: null,
             snapshot,
             suspenseEvent: null,
@@ -599,10 +639,10 @@ function AutoSizedCanvas({
         ) {
           setHoveredEvent({
             componentMeasure: null,
-            data,
             flamechartStackFrame,
             measure: null,
             nativeEvent: null,
+            networkMeasure: null,
             schedulingEvent: null,
             snapshot: null,
             suspenseEvent: null,
@@ -611,51 +651,77 @@ function AutoSizedCanvas({
         }
       });
     }
+
+    const {current: networkMeasuresView} = networkMeasuresViewRef;
+    if (networkMeasuresView) {
+      networkMeasuresView.onHover = networkMeasure => {
+        if (!hoveredEvent || hoveredEvent.networkMeasure !== networkMeasure) {
+          setHoveredEvent({
+            componentMeasure: null,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            networkMeasure,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
   }, [
     hoveredEvent,
     data, // Attach onHover callbacks when views are re-created on data change
   ]);
 
   useLayoutEffect(() => {
-    const {current: userTimingMarksView} = userTimingMarksViewRef;
+    const userTimingMarksView = userTimingMarksViewRef.current;
     if (userTimingMarksView) {
       userTimingMarksView.setHoveredMark(
         hoveredEvent ? hoveredEvent.userTimingMark : null,
       );
     }
 
-    const {current: nativeEventsView} = nativeEventsViewRef;
+    const nativeEventsView = nativeEventsViewRef.current;
     if (nativeEventsView) {
       nativeEventsView.setHoveredEvent(
         hoveredEvent ? hoveredEvent.nativeEvent : null,
       );
     }
 
-    const {current: schedulingEventsView} = schedulingEventsViewRef;
+    const schedulingEventsView = schedulingEventsViewRef.current;
     if (schedulingEventsView) {
       schedulingEventsView.setHoveredEvent(
         hoveredEvent ? hoveredEvent.schedulingEvent : null,
       );
     }
 
-    const {current: suspenseEventsView} = suspenseEventsViewRef;
+    const suspenseEventsView = suspenseEventsViewRef.current;
     if (suspenseEventsView) {
       suspenseEventsView.setHoveredEvent(
         hoveredEvent ? hoveredEvent.suspenseEvent : null,
       );
     }
 
-    const {current: reactMeasuresView} = reactMeasuresViewRef;
+    const reactMeasuresView = reactMeasuresViewRef.current;
     if (reactMeasuresView) {
       reactMeasuresView.setHoveredMeasure(
         hoveredEvent ? hoveredEvent.measure : null,
       );
     }
 
-    const {current: flamechartView} = flamechartViewRef;
+    const flamechartView = flamechartViewRef.current;
     if (flamechartView) {
       flamechartView.setHoveredFlamechartStackFrame(
         hoveredEvent ? hoveredEvent.flamechartStackFrame : null,
+      );
+    }
+
+    const networkMeasuresView = networkMeasuresViewRef.current;
+    if (networkMeasuresView) {
+      networkMeasuresView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.networkMeasure : null,
       );
     }
   }, [hoveredEvent]);
@@ -677,6 +743,7 @@ function AutoSizedCanvas({
             componentMeasure,
             flamechartStackFrame,
             measure,
+            networkMeasure,
             schedulingEvent,
             suspenseEvent,
           } = contextData.hoveredEvent;
@@ -687,6 +754,13 @@ function AutoSizedCanvas({
                   onClick={() => copy(componentMeasure.componentName)}
                   title="Copy component name">
                   Copy component name
+                </ContextMenuItem>
+              )}
+              {networkMeasure !== null && (
+                <ContextMenuItem
+                  onClick={() => copy(networkMeasure.url)}
+                  title="Copy URL">
+                  Copy URL
                 </ContextMenuItem>
               )}
               {schedulingEvent !== null && (

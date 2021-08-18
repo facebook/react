@@ -17,6 +17,7 @@ import type {
   Flamechart,
   Milliseconds,
   NativeEvent,
+  NetworkMeasure,
   Phase,
   ReactLane,
   ReactComponentMeasure,
@@ -51,6 +52,7 @@ type ProcessorState = {|
   potentialSuspenseEventsOutsideOfTransition: Array<
     [SuspenseEvent, ReactLane[]],
   >,
+  requestIdToNetworkMeasureMap: Map<string, NetworkMeasure>,
   uidCounter: BatchUID,
   unresolvedSuspenseEvents: Map<string, SuspenseEvent>,
 |};
@@ -215,6 +217,205 @@ function throwIfIncomplete(
   }
 }
 
+function processEventDispatch(
+  event: TimelineEvent,
+  timestamp: Milliseconds,
+  profilerData: ReactProfilerData,
+  state: ProcessorState,
+) {
+  const data = event.args.data;
+  const type = data.type;
+
+  if (type.startsWith('react-')) {
+    const stackTrace = data.stackTrace;
+    if (stackTrace) {
+      const topFrame = stackTrace[stackTrace.length - 1];
+      if (topFrame.url.includes('/react-dom.')) {
+        // Filter out fake React events dispatched by invokeGuardedCallbackDev.
+        return;
+      }
+    }
+  }
+
+  // Reduce noise from events like DOMActivate, load/unload, etc. which are usually not relevant
+  if (
+    type === 'blur' ||
+    type === 'click' ||
+    type === 'input' ||
+    type.startsWith('focus') ||
+    type.startsWith('key') ||
+    type.startsWith('mouse') ||
+    type.startsWith('pointer')
+  ) {
+    const duration = event.dur / 1000;
+
+    let depth = 0;
+
+    while (state.nativeEventStack.length > 0) {
+      const prevNativeEvent =
+        state.nativeEventStack[state.nativeEventStack.length - 1];
+      const prevStopTime = prevNativeEvent.timestamp + prevNativeEvent.duration;
+
+      if (timestamp < prevStopTime) {
+        depth = prevNativeEvent.depth + 1;
+        break;
+      } else {
+        state.nativeEventStack.pop();
+      }
+    }
+
+    const nativeEvent = {
+      depth,
+      duration,
+      timestamp,
+      type,
+      warning: null,
+    };
+
+    profilerData.nativeEvents.push(nativeEvent);
+
+    // Keep track of curent event in case future ones overlap.
+    // We separate them into different vertical lanes in this case.
+    state.nativeEventStack.push(nativeEvent);
+  }
+}
+
+function processResourceFinish(
+  event: TimelineEvent,
+  timestamp: Milliseconds,
+  profilerData: ReactProfilerData,
+  state: ProcessorState,
+) {
+  const requestId = event.args.data.requestId;
+  const networkMeasure = state.requestIdToNetworkMeasureMap.get(requestId);
+  if (networkMeasure != null) {
+    networkMeasure.finishTimestamp = timestamp;
+    if (networkMeasure.firstReceivedDataTimestamp === 0) {
+      networkMeasure.firstReceivedDataTimestamp = timestamp;
+    }
+    if (networkMeasure.lastReceivedDataTimestamp === 0) {
+      networkMeasure.lastReceivedDataTimestamp = timestamp;
+    }
+
+    // Clean up now that the resource is done.
+    state.requestIdToNetworkMeasureMap.delete(event.args.data.requestId);
+  }
+}
+
+function processResourceReceivedData(
+  event: TimelineEvent,
+  timestamp: Milliseconds,
+  profilerData: ReactProfilerData,
+  state: ProcessorState,
+) {
+  const requestId = event.args.data.requestId;
+  const networkMeasure = state.requestIdToNetworkMeasureMap.get(requestId);
+  if (networkMeasure != null) {
+    if (networkMeasure.firstReceivedDataTimestamp === 0) {
+      networkMeasure.firstReceivedDataTimestamp = timestamp;
+    }
+    networkMeasure.lastReceivedDataTimestamp = timestamp;
+    networkMeasure.finishTimestamp = timestamp;
+  }
+}
+
+function processResourceReceiveResponse(
+  event: TimelineEvent,
+  timestamp: Milliseconds,
+  profilerData: ReactProfilerData,
+  state: ProcessorState,
+) {
+  const requestId = event.args.data.requestId;
+  const networkMeasure = state.requestIdToNetworkMeasureMap.get(requestId);
+  if (networkMeasure != null) {
+    networkMeasure.receiveResponseTimestamp = timestamp;
+  }
+}
+
+function processScreenshot(
+  event: TimelineEvent,
+  timestamp: Milliseconds,
+  profilerData: ReactProfilerData,
+  state: ProcessorState,
+) {
+  const encodedSnapshot = event.args.snapshot; // Base 64 encoded
+
+  const snapshot = {
+    height: 0,
+    image: null,
+    imageSource: `data:image/png;base64,${encodedSnapshot}`,
+    timestamp,
+    width: 0,
+  };
+
+  // Delay processing until we've extracted snapshot dimensions.
+  let resolveFn = ((null: any): Function);
+  state.asyncProcessingPromises.push(
+    new Promise(resolve => {
+      resolveFn = resolve;
+    }),
+  );
+
+  // Parse the Base64 image data to determine native size.
+  // This will be used later to scale for display within the thumbnail strip.
+  fetch(snapshot.imageSource)
+    .then(response => response.blob())
+    .then(blob => {
+      // $FlowFixMe createImageBitmap
+      createImageBitmap(blob).then(bitmap => {
+        snapshot.height = bitmap.height;
+        snapshot.width = bitmap.width;
+
+        resolveFn();
+      });
+    });
+
+  profilerData.snapshots.push(snapshot);
+}
+
+function processResourceSendRequest(
+  event: TimelineEvent,
+  timestamp: Milliseconds,
+  profilerData: ReactProfilerData,
+  state: ProcessorState,
+) {
+  const data = event.args.data;
+  const requestId = data.requestId;
+
+  const availableDepths = new Array(
+    state.requestIdToNetworkMeasureMap.size + 1,
+  ).fill(true);
+  state.requestIdToNetworkMeasureMap.forEach(({depth}) => {
+    availableDepths[depth] = false;
+  });
+
+  let depth = 0;
+  for (let i = 0; i < availableDepths.length; i++) {
+    if (availableDepths[i]) {
+      depth = i;
+      break;
+    }
+  }
+
+  const networkMeasure: NetworkMeasure = {
+    depth,
+    finishTimestamp: 0,
+    firstReceivedDataTimestamp: 0,
+    lastReceivedDataTimestamp: 0,
+    requestId,
+    requestMethod: data.requestMethod,
+    priority: data.priority,
+    sendRequestTimestamp: timestamp,
+    receiveResponseTimestamp: 0,
+    url: data.url,
+  };
+
+  state.requestIdToNetworkMeasureMap.set(requestId, networkMeasure);
+
+  profilerData.networkMeasures.push(networkMeasure);
+  networkMeasure.sendRequestTimestamp = timestamp;
+}
+
 function processTimelineEvent(
   event: TimelineEvent,
   /** Finalized profiler data up to `event`. May be mutated. */
@@ -222,106 +423,49 @@ function processTimelineEvent(
   /** Intermediate processor state. May be mutated. */
   state: ProcessorState,
 ) {
-  const {args, cat, name, ts, ph} = event;
+  const {cat, name, ts, ph} = event;
+
+  const startTime = (ts - currentProfilerData.startTime) / 1000;
+
   switch (cat) {
     case 'disabled-by-default-devtools.screenshot':
-      const encodedSnapshot = args.snapshot; // Base 64 encoded
-
-      const snapshot = {
-        height: 0,
-        image: null,
-        imageSource: `data:image/png;base64,${encodedSnapshot}`,
-        timestamp: (ts - currentProfilerData.startTime) / 1000,
-        width: 0,
-      };
-
-      // Delay processing until we've extracted snapshot dimensions.
-      let resolveFn = ((null: any): Function);
-      state.asyncProcessingPromises.push(
-        new Promise(resolve => {
-          resolveFn = resolve;
-        }),
-      );
-
-      // Parse the Base64 image data to determine native size.
-      // This will be used later to scale for display within the thumbnail strip.
-      fetch(snapshot.imageSource)
-        .then(response => response.blob())
-        .then(blob => {
-          // $FlowFixMe createImageBitmap
-          createImageBitmap(blob).then(bitmap => {
-            snapshot.height = bitmap.height;
-            snapshot.width = bitmap.width;
-
-            resolveFn();
-          });
-        });
-
-      currentProfilerData.snapshots.push(snapshot);
+      processScreenshot(event, startTime, currentProfilerData, state);
       break;
     case 'devtools.timeline':
-      if (name === 'EventDispatch') {
-        const type = args.data.type;
-
-        if (type.startsWith('react-')) {
-          const stackTrace = args.data.stackTrace;
-          if (stackTrace) {
-            const topFrame = stackTrace[stackTrace.length - 1];
-            if (topFrame.url.includes('/react-dom.')) {
-              // Filter out fake React events dispatched by invokeGuardedCallbackDev.
-              return;
-            }
-          }
-        }
-
-        // Reduce noise from events like DOMActivate, load/unload, etc. which are usually not relevant
-        if (
-          type === 'blur' ||
-          type === 'click' ||
-          type === 'input' ||
-          type.startsWith('focus') ||
-          type.startsWith('key') ||
-          type.startsWith('mouse') ||
-          type.startsWith('pointer')
-        ) {
-          const timestamp = (ts - currentProfilerData.startTime) / 1000;
-          const duration = event.dur / 1000;
-
-          let depth = 0;
-
-          while (state.nativeEventStack.length > 0) {
-            const prevNativeEvent =
-              state.nativeEventStack[state.nativeEventStack.length - 1];
-            const prevStopTime =
-              prevNativeEvent.timestamp + prevNativeEvent.duration;
-
-            if (timestamp < prevStopTime) {
-              depth = prevNativeEvent.depth + 1;
-              break;
-            } else {
-              state.nativeEventStack.pop();
-            }
-          }
-
-          const nativeEvent = {
-            depth,
-            duration,
-            timestamp,
-            type,
-            warning: null,
-          };
-
-          currentProfilerData.nativeEvents.push(nativeEvent);
-
-          // Keep track of curent event in case future ones overlap.
-          // We separate them into different vertical lanes in this case.
-          state.nativeEventStack.push(nativeEvent);
-        }
+      switch (name) {
+        case 'EventDispatch':
+          processEventDispatch(event, startTime, currentProfilerData, state);
+          break;
+        case 'ResourceFinish':
+          processResourceFinish(event, startTime, currentProfilerData, state);
+          break;
+        case 'ResourceReceivedData':
+          processResourceReceivedData(
+            event,
+            startTime,
+            currentProfilerData,
+            state,
+          );
+          break;
+        case 'ResourceReceiveResponse':
+          processResourceReceiveResponse(
+            event,
+            startTime,
+            currentProfilerData,
+            state,
+          );
+          break;
+        case 'ResourceSendRequest':
+          processResourceSendRequest(
+            event,
+            startTime,
+            currentProfilerData,
+            state,
+          );
+          break;
       }
       break;
     case 'blink.user_timing':
-      const startTime = (ts - currentProfilerData.startTime) / 1000;
-
       if (name.startsWith('--react-version-')) {
         const [reactVersion] = name.substr(16).split('-');
         currentProfilerData.reactVersion = reactVersion;
@@ -714,6 +858,7 @@ export default async function preprocessData(
     laneToLabelMap: new Map(),
     laneToReactMeasureMap,
     nativeEvents: [],
+    networkMeasures: [],
     otherUserTimingMarks: [],
     reactVersion: null,
     schedulingEvents: [],
@@ -759,6 +904,7 @@ export default async function preprocessData(
     potentialLongNestedUpdate: null,
     potentialLongNestedUpdates: [],
     potentialSuspenseEventsOutsideOfTransition: [],
+    requestIdToNetworkMeasureMap: new Map(),
     uidCounter: 0,
     unresolvedSuspenseEvents: new Map(),
   };

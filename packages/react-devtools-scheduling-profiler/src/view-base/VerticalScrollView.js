@@ -199,12 +199,20 @@ export class VerticalScrollView extends View {
     if (!this._isPanning) {
       return;
     }
+
+    // Don't prevent mouse-move events from bubbling if they are horizontal drags.
+    const {movementX, movementY} = interaction.payload.event;
+    if (Math.abs(movementX) > Math.abs(movementY)) {
+      return;
+    }
+
     const newState = translateState({
       state: this._scrollState,
       delta: interaction.payload.event.movementY,
       containerLength: this.frame.size.height,
     });
     this._setScrollState(newState);
+
     return true;
   }
 
@@ -255,12 +263,14 @@ export class VerticalScrollView extends View {
   }
 
   _setScrollState(proposedState: ScrollState): boolean {
-    const height = this._contentView.frame.size.height;
+    const contentHeight = this._contentView.frame.size.height;
+    const containerHeight = this.frame.size.height;
+
     const clampedState = clampState({
       state: proposedState,
-      minContentLength: height,
-      maxContentLength: height,
-      containerLength: this.frame.size.height,
+      minContentLength: contentHeight,
+      maxContentLength: contentHeight,
+      containerLength: containerHeight,
     });
     if (!areScrollStatesEqual(clampedState, this._scrollState)) {
       this._scrollState.offset = clampedState.offset;
@@ -275,6 +285,13 @@ export class VerticalScrollView extends View {
       return true;
     }
 
-    return false;
+    // Don't allow wheel events to bubble past this view even if we've scrolled to the edge.
+    // It just feels bad to have the scrolling jump unexpectedly from in a container to the outer page.
+    // The only exception is when the container fitst the contnet (no scrolling).
+    if (contentHeight === containerHeight) {
+      return false;
+    }
+
+    return true;
   }
 }

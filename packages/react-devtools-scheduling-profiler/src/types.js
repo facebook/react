@@ -91,6 +91,19 @@ export type ReactMeasure = {|
   +depth: number,
 |};
 
+export type NetworkMeasure = {|
+  +depth: number,
+  finishTimestamp: Milliseconds,
+  firstReceivedDataTimestamp: Milliseconds,
+  lastReceivedDataTimestamp: Milliseconds,
+  priority: string,
+  receiveResponseTimestamp: Milliseconds,
+  +requestId: string,
+  requestMethod: string,
+  sendRequestTimestamp: Milliseconds,
+  url: string,
+|};
+
 export type ReactComponentMeasure = {|
   +componentName: string,
   duration: Milliseconds,
@@ -155,6 +168,7 @@ export type ReactProfilerData = {|
   laneToLabelMap: Map<ReactLane, string>,
   laneToReactMeasureMap: Map<ReactLane, ReactMeasure[]>,
   nativeEvents: NativeEvent[],
+  networkMeasures: NetworkMeasure[],
   otherUserTimingMarks: UserTimingMark[],
   reactVersion: string | null,
   schedulingEvents: SchedulingEvent[],
@@ -165,10 +179,10 @@ export type ReactProfilerData = {|
 
 export type ReactHoverContextInfo = {|
   componentMeasure: ReactComponentMeasure | null,
-  data: $ReadOnly<ReactProfilerData> | null,
   flamechartStackFrame: FlamechartStackFrame | null,
   measure: ReactMeasure | null,
   nativeEvent: NativeEvent | null,
+  networkMeasure: NetworkMeasure | null,
   schedulingEvent: SchedulingEvent | null,
   suspenseEvent: SuspenseEvent | null,
   snapshot: Snapshot | null,

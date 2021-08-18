@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactHoverContextInfo} from '../types';
 import type {Interaction} from './useCanvasInteraction';
 import type {Size} from './geometry';
 
@@ -14,6 +15,7 @@ import memoize from 'memoize-one';
 
 import {View} from './View';
 import {zeroPoint} from './geometry';
+import {DPR} from '../content-views/constants';
 
 export type ViewRefs = {|
   activeView: View | null,
@@ -22,12 +24,10 @@ export type ViewRefs = {|
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {
-  const dpr: number = window.devicePixelRatio || 1;
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
+  canvas.width = width * DPR;
+  canvas.height = height * DPR;
   canvas.style.width = `${width}px`;
   canvas.style.height = `${height}px`;
-  return dpr;
 }
 
 const getCanvasContext = memoize(
@@ -39,13 +39,18 @@ const getCanvasContext = memoize(
   ): CanvasRenderingContext2D => {
     const context = canvas.getContext('2d', {alpha: false});
     if (scaleCanvas) {
-      const dpr = configureRetinaCanvas(canvas, height, width);
+      configureRetinaCanvas(canvas, height, width);
+
       // Scale all drawing operations by the dpr, so you don't have to worry about the difference.
-      context.scale(dpr, dpr);
+      context.scale(DPR, DPR);
     }
     return context;
   },
 );
+
+type ResetHoveredEventFn = (
+  partialState: $Shape<ReactHoverContextInfo>,
+) => void;
 
 /**
  * Represents the canvas surface and a view heirarchy. A surface is also the
@@ -57,10 +62,16 @@ export class Surface {
   _context: ?CanvasRenderingContext2D;
   _canvasSize: ?Size;
 
+  _resetHoveredEvent: ResetHoveredEventFn;
+
   _viewRefs: ViewRefs = {
     activeView: null,
     hoveredView: null,
   };
+
+  constructor(resetHoveredEvent: ResetHoveredEventFn) {
+    this._resetHoveredEvent = resetHoveredEvent;
+  }
 
   hasActiveView(): boolean {
     return this._viewRefs.activeView !== null;
@@ -107,12 +118,32 @@ export class Surface {
   }
 
   handleInteraction(interaction: Interaction) {
-    if (!this.rootView) {
-      return;
+    const rootView = this.rootView;
+    if (rootView != null) {
+      const viewRefs = this._viewRefs;
+      switch (interaction.type) {
+        case 'mousemove':
+          // Clean out the hovered view before processing a new mouse move interaction.
+          const hoveredView = viewRefs.hoveredView;
+          viewRefs.hoveredView = null;
+
+          rootView.handleInteractionAndPropagateToSubviews(
+            interaction,
+            viewRefs,
+          );
+
+          // If a previously hovered view is no longer hovered, update the outer state.
+          if (hoveredView !== null && viewRefs.hoveredView === null) {
+            this._resetHoveredEvent({});
+          }
+          break;
+        default:
+          rootView.handleInteractionAndPropagateToSubviews(
+            interaction,
+            viewRefs,
+          );
+          break;
+      }
     }
-    this.rootView.handleInteractionAndPropagateToSubviews(
-      interaction,
-      this._viewRefs,
-    );
   }
 }

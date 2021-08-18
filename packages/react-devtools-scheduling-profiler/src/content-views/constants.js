@@ -7,6 +7,7 @@
  * @flow
  */
 
+export const DPR: number = window.devicePixelRatio || 1;
 export const LABEL_SIZE = 80;
 export const MARKER_HEIGHT = 20;
 export const MARKER_TICK_HEIGHT = 8;
@@ -20,7 +21,7 @@ export const PENDING_SUSPENSE_EVENT_SIZE = 8;
 export const REACT_EVENT_DIAMETER = 6;
 export const USER_TIMING_MARK_SIZE = 8;
 export const REACT_MEASURE_HEIGHT = 14;
-export const BORDER_SIZE = 1;
+export const BORDER_SIZE = 1 / DPR;
 export const FLAMECHART_FRAME_HEIGHT = 14;
 export const TEXT_PADDING = 3;
 export const SNAPSHOT_HEIGHT = 35;
@@ -46,6 +47,10 @@ export let COLORS = {
   BACKGROUND: '',
   NATIVE_EVENT: '',
   NATIVE_EVENT_HOVER: '',
+  NETWORK_PRIMARY: '',
+  NETWORK_PRIMARY_HOVER: '',
+  NETWORK_SECONDARY: '',
+  NETWORK_SECONDARY_HOVER: '',
   PRIORITY_BACKGROUND: '',
   PRIORITY_BORDER: '',
   PRIORITY_LABEL: '',
@@ -105,6 +110,18 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     NATIVE_EVENT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-native-event-hover',
+    ),
+    NETWORK_PRIMARY: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-primary',
+    ),
+    NETWORK_PRIMARY_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-primary-hover',
+    ),
+    NETWORK_SECONDARY: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-secondary',
+    ),
+    NETWORK_SECONDARY_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-network-secondary-hover',
     ),
     PRIORITY_BACKGROUND: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-priority-background',

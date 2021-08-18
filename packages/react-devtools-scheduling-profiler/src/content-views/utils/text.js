@@ -32,14 +32,34 @@ export function trimText(
   text: string,
   width: number,
 ): string | null {
-  for (let i = text.length - 1; i >= 0; i--) {
-    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
+  const maxIndex = text.length - 1;
+
+  let startIndex = 0;
+  let stopIndex = maxIndex;
+
+  let longestValidIndex = 0;
+  let longestValidText = null;
+
+  // Trimming long text could be really slow if we decrease only 1 character at a time.
+  // Trimming with more of a binary search approach is faster in the worst cases.
+  while (startIndex <= stopIndex) {
+    const currentIndex = Math.floor((startIndex + stopIndex) / 2);
+    const trimmedText =
+      currentIndex === maxIndex ? text : text.substr(0, currentIndex) + '…';
+
     if (getTextWidth(context, trimmedText) <= width) {
-      return trimmedText;
+      if (longestValidIndex < currentIndex) {
+        longestValidIndex = currentIndex;
+        longestValidText = trimmedText;
+      }
+
+      startIndex = currentIndex + 1;
+    } else {
+      stopIndex = currentIndex - 1;
     }
   }
 
-  return null;
+  return longestValidText;
 }
 
 type TextConfig = {|
