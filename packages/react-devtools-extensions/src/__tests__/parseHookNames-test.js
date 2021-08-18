@@ -95,7 +95,7 @@ describe('parseHookNames', () => {
     const Component = require('./__source__/__untransformed__/ComponentWithUseState')
       .Component;
     const hookNames = await getHookNamesForComponent(Component);
-    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz']);
+    expectHookNamesToEqual(hookNames, ['foo', 'bar', 'baz', null]);
   });
 
   it('should parse names for useReducer()', async () => {
