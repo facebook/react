@@ -78,9 +78,10 @@ function filterMemberNodesOfTargetHook(
 ): boolean {
   const targetHookName = targetHookNode.node.id.name;
   return (
-    targetHookName ===
+    targetHookName != null &&
+    (targetHookName ===
       (hookNode.node.init.object && hookNode.node.init.object.name) ||
-    targetHookName === hookNode.node.init.name
+      targetHookName === hookNode.node.init.name)
   );
 }
 
@@ -276,7 +277,7 @@ function getHookVariableName(
       return hook.node.id.name;
 
     default:
-      throw new Error(`Invalid node type: ${nodeType}`);
+      return null;
   }
 }
 

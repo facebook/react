@@ -89,9 +89,9 @@ export class SourceMapMetadataConsumer {
     return getHookNameForLocation({line, column}, hookMap);
   }
 
-  hasHookMap(source: ?string) {
+  hasHookMap(source: ?string): boolean {
     if (source == null) {
-      return null;
+      return false;
     }
     return this._getHookMapForSource(source) != null;
   }

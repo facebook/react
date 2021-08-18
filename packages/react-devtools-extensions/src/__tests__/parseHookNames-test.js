@@ -173,6 +173,7 @@ describe('parseHookNames', () => {
     expectHookNamesToEqual(hookNames, [
       null, // Custom hooks can have names, but this one does not even return a value.
       null, // Custom hooks can have names, but not when using destructuring.
+      null, // Custom hooks can have names, but not when using destructuring.
     ]);
   });
 
@@ -241,6 +242,7 @@ describe('parseHookNames', () => {
           'count', // useState()
           'isDarkMode', // useIsDarkMode()
           'isDarkMode', // useIsDarkMode -> useState()
+          null, // useFoo()
         ]);
       }
 
@@ -579,6 +581,7 @@ describe('parseHookNames', () => {
           'count', // useState()
           'isDarkMode', // useIsDarkMode()
           'isDarkMode', // useIsDarkMode -> useState()
+          null, // isFoo()
         ]);
         expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
         expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();

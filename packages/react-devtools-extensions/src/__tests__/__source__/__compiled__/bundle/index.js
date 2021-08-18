@@ -50,12 +50,15 @@ function useIsDarkMode() {
 function Component$1() {
   const [count, setCount] = React.useState(0);
   const isDarkMode = useIsDarkMode$1();
+  const {
+    foo
+  } = useFoo();
   React.useEffect(() => {// ...
   }, []);
 
   const handleClick = () => setCount(count + 1);
 
-  return /*#__PURE__*/React__default.createElement(React__default.Fragment, null, /*#__PURE__*/React__default.createElement("div", null, "Dark mode? ", isDarkMode), /*#__PURE__*/React__default.createElement("div", null, "Count: ", count), /*#__PURE__*/React__default.createElement("button", {
+  return /*#__PURE__*/React__default.createElement(React__default.Fragment, null, /*#__PURE__*/React__default.createElement("div", null, "Dark mode? ", isDarkMode), /*#__PURE__*/React__default.createElement("div", null, "Count: ", count), /*#__PURE__*/React__default.createElement("div", null, "Foo: ", foo), /*#__PURE__*/React__default.createElement("button", {
     onClick: handleClick
   }, "Update count"));
 }
@@ -65,6 +68,13 @@ function useIsDarkMode$1() {
   React.useEffect(function useEffectCreate() {// Here is where we may listen to a "theme" event...
   }, []);
   return isDarkMode;
+}
+
+function useFoo() {
+  React.useDebugValue('foo');
+  return {
+    foo: true
+  };
 }
 
 /**
