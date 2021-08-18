@@ -62,7 +62,7 @@
     "rollup-plugin-babel": "^4.0.1",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-node-resolve": "^2.1.1",
-    "source-map": "^0.8.0-beta.0",
+    "source-map-js": "^0.6.2",
     "sourcemap-codec": "^1.4.8",
     "style-loader": "^0.23.1",
     "webpack": "^4.43.0",

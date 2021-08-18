@@ -1,5 +1,3 @@
-/* global chrome */
-
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -15,14 +13,11 @@
 import WorkerizedParseHookNames from './parseHookNames.worker';
 import typeof * as ParseHookNamesModule from './parseHookNames';
 
-// $FlowFixMe
-const wasmMappingsURL = chrome.extension.getURL('mappings.wasm');
-
 const workerizedParseHookNames: ParseHookNamesModule = WorkerizedParseHookNames();
 
 type ParseHookNames = $PropertyType<ParseHookNamesModule, 'parseHookNames'>;
 
 export const parseHookNames: ParseHookNames = hooksTree =>
-  workerizedParseHookNames.parseHookNames(hooksTree, wasmMappingsURL);
+  workerizedParseHookNames.parseHookNames(hooksTree);
 
 export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;

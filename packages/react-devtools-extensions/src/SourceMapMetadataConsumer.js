@@ -15,7 +15,7 @@ import type {
   MixedSourceMap,
 } from './SourceMapTypes';
 import type {HookMap} from './generateHookMap';
-import * as util from 'source-map/lib/util';
+import * as util from 'source-map-js/lib/util';
 import {decodeHookMap} from './generateHookMap';
 import {getHookNameForLocation} from './getHookNameForLocation';
 
