@@ -22,12 +22,15 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function Component() {
   const [count, setCount] = (0, _react.useState)(0);
   const isDarkMode = useIsDarkMode();
+  const {
+    foo
+  } = useFoo();
   (0, _react.useEffect)(() => {// ...
   }, []);
 
   const handleClick = () => setCount(count + 1);
 
-  return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement("div", null, "Dark mode? ", isDarkMode), /*#__PURE__*/_react.default.createElement("div", null, "Count: ", count), /*#__PURE__*/_react.default.createElement("button", {
+  return /*#__PURE__*/_react.default.createElement(_react.default.Fragment, null, /*#__PURE__*/_react.default.createElement("div", null, "Dark mode? ", isDarkMode), /*#__PURE__*/_react.default.createElement("div", null, "Count: ", count), /*#__PURE__*/_react.default.createElement("div", null, "Foo: ", foo), /*#__PURE__*/_react.default.createElement("button", {
     onClick: handleClick
   }, "Update count"));
 }
@@ -37,5 +40,12 @@ function useIsDarkMode() {
   (0, _react.useEffect)(function useEffectCreate() {// Here is where we may listen to a "theme" event...
   }, []);
   return isDarkMode;
+}
+
+function useFoo() {
+  (0, _react.useDebugValue)('foo');
+  return {
+    foo: true
+  };
 }
 //# sourceMappingURL=ComponentWithCustomHook.js.map
