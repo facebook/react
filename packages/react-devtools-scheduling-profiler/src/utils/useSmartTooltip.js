@@ -75,7 +75,7 @@ export default function useSmartTooltip({
         element.style.left = `${mouseX + TOOLTIP_OFFSET_BOTTOM}px`;
       }
     }
-  }, [mouseX, mouseY, ref]);
+  });
 
   return ref;
 }

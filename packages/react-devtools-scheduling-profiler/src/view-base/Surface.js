@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {ReactHoverContextInfo} from '../types';
 import type {Interaction} from './useCanvasInteraction';
 import type {Size} from './geometry';
 
@@ -48,9 +47,7 @@ const getCanvasContext = memoize(
   },
 );
 
-type ResetHoveredEventFn = (
-  partialState: $Shape<ReactHoverContextInfo>,
-) => void;
+type ResetHoveredEventFn = () => void;
 
 /**
  * Represents the canvas surface and a view heirarchy. A surface is also the
@@ -123,7 +120,11 @@ export class Surface {
       const viewRefs = this._viewRefs;
       switch (interaction.type) {
         case 'mousemove':
-          // Clean out the hovered view before processing a new mouse move interaction.
+        case 'wheel-control':
+        case 'wheel-meta':
+        case 'wheel-plain':
+        case 'wheel-shift':
+          // Clean out the hovered view before processing this type of interaction.
           const hoveredView = viewRefs.hoveredView;
           viewRefs.hoveredView = null;
 
@@ -134,7 +135,7 @@ export class Surface {
 
           // If a previously hovered view is no longer hovered, update the outer state.
           if (hoveredView !== null && viewRefs.hoveredView === null) {
-            this._resetHoveredEvent({});
+            this._resetHoveredEvent();
           }
           break;
         default:
