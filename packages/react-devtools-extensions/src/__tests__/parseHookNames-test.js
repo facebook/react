@@ -193,6 +193,8 @@ describe('parseHookNames', () => {
       await test('./__source__/Example'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/Example'); // inline source map
       await test('./__source__/__compiled__/external/Example'); // external source map
+      await test('./__source__/__compiled__/inline/index-map/Example'); // inline index map source map
+      await test('./__source__/__compiled__/external/index-map/Example'); // external index map source map
       await test('./__source__/__compiled__/bundle/index', 'Example'); // bundle source map
       await test('./__source__/__compiled__/no-columns/Example'); // simulated Webpack 'cheap-module-source-map'
     });
@@ -225,6 +227,8 @@ describe('parseHookNames', () => {
       await test('./__source__/ToDoList'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ToDoList'); // inline source map
       await test('./__source__/__compiled__/external/ToDoList'); // external source map
+      await test('./__source__/__compiled__/inline/index-map/ToDoList'); // inline index map source map
+      await test('./__source__/__compiled__/external/index-map/ToDoList'); // external index map source map
       await test('./__source__/__compiled__/bundle', 'ToDoList'); // bundle source map
       await test('./__source__/__compiled__/no-columns/ToDoList'); // simulated Webpack 'cheap-module-source-map'
     });
@@ -243,6 +247,12 @@ describe('parseHookNames', () => {
       await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/ComponentWithCustomHook'); // inline source map
       await test('./__source__/__compiled__/external/ComponentWithCustomHook'); // external source map
+      await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithCustomHook',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithCustomHook',
+      ); // external index map source map
       await test('./__source__/__compiled__/bundle', 'ComponentWithCustomHook'); // bundle source map
       await test(
         './__source__/__compiled__/no-columns/ComponentWithCustomHook',
@@ -266,6 +276,12 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/ComponentUsingHooksIndirectly',
       ); // external source map
+      await test(
+        './__source__/__compiled__/inline/index-map/ComponentUsingHooksIndirectly',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentUsingHooksIndirectly',
+      ); // external index map source map
       await test(
         './__source__/__compiled__/bundle',
         'ComponentUsingHooksIndirectly',
@@ -296,6 +312,12 @@ describe('parseHookNames', () => {
       await test('./__source__/__compiled__/inline/ComponentWithNestedHooks'); // inline source map
       await test('./__source__/__compiled__/external/ComponentWithNestedHooks'); // external source map
       await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithNestedHooks',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithNestedHooks',
+      ); // external index map source map
+      await test(
         './__source__/__compiled__/bundle',
         'ComponentWithNestedHooks',
       ); // bundle source map
@@ -324,6 +346,12 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/external/ComponentWithExternalCustomHooks',
       ); // external source map
       await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithExternalCustomHooks',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithExternalCustomHooks',
+      ); // external index map source map
+      await test(
         './__source__/__compiled__/bundle',
         'ComponentWithExternalCustomHooks',
       ); // bundle source map
@@ -350,6 +378,12 @@ describe('parseHookNames', () => {
       await test(
         './__source__/__compiled__/external/ComponentWithMultipleHooksPerLine',
       ); // external source map
+      await test(
+        './__source__/__compiled__/inline/index-map/ComponentWithMultipleHooksPerLine',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ComponentWithMultipleHooksPerLine',
+      ); // external index map source map
       await test(
         './__source__/__compiled__/bundle',
         'ComponentWithMultipleHooksPerLine',
@@ -389,6 +423,8 @@ describe('parseHookNames', () => {
       await test('./__source__/InlineRequire'); // original source (uncompiled)
       await test('./__source__/__compiled__/inline/InlineRequire'); // inline source map
       await test('./__source__/__compiled__/external/InlineRequire'); // external source map
+      await test('./__source__/__compiled__/inline/index-map/InlineRequire'); // inline index map source map
+      await test('./__source__/__compiled__/external/index-map/InlineRequire'); // external index map source map
       await test('./__source__/__compiled__/bundle', 'InlineRequire'); // bundle source map
       await test('./__source__/__compiled__/no-columns/InlineRequire'); // simulated Webpack 'cheap-module-source-map'
     });
@@ -413,6 +449,12 @@ describe('parseHookNames', () => {
         './__source__/__compiled__/external/ContainingStringSourceMappingURL',
       ); // external source map
       await test(
+        './__source__/__compiled__/inline/index-map/ContainingStringSourceMappingURL',
+      ); // inline index map source map
+      await test(
+        './__source__/__compiled__/external/index-map/ContainingStringSourceMappingURL',
+      ); // external index map source map
+      await test(
         './__source__/__compiled__/bundle',
         'ContainingStringSourceMappingURL',
       ); // bundle source map
@@ -423,21 +465,11 @@ describe('parseHookNames', () => {
   });
 
   describe('extended source maps', () => {
-    let parseMock;
-
     beforeEach(() => {
-      parseMock = jest.fn();
-      jest.mock('@babel/parser', () => {
-        const actual = jest.requireActual('@babel/parser');
-        const parse = (...args) => {
-          parseMock();
-          return actual.parse(...args);
-        };
-        return {
-          parse,
-          ...actual,
-        };
-      });
+      const babelParser = require('@babel/parser');
+      const generateHookMapModule = require('../generateHookMap');
+      jest.spyOn(babelParser, 'parse');
+      jest.spyOn(generateHookMapModule, 'decodeHookMap');
     });
 
     it('should work for simple components', async () => {
@@ -447,22 +479,37 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(hookNames, [
           'count', // useState
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/Example'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/Example',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/Example',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/Example',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/Example',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/Example',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/Example',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/Example',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/Example',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -490,22 +537,37 @@ describe('parseHookNames', () => {
           'handleToggle', // useCallback
         ]);
 
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/ToDoList'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ToDoList',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ToDoList',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ToDoList',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/ToDoList',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ToDoList',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ToDoList',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ToDoList',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ToDoList',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -518,22 +580,37 @@ describe('parseHookNames', () => {
           'isDarkMode', // useIsDarkMode()
           'isDarkMode', // useIsDarkMode -> useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/ComponentWithCustomHook'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithCustomHook',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithCustomHook',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithCustomHook',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithCustomHook',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithCustomHook',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -546,21 +623,37 @@ describe('parseHookNames', () => {
           'darkMode', // useDarkMode()
           'isDarkMode', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentUsingHooksIndirectly',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentUsingHooksIndirectly',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentUsingHooksIndirectly',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentUsingHooksIndirectly',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -580,21 +673,37 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(innerHookNames, [
           'state', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithNestedHooks',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithNestedHooks',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithNestedHooks',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithNestedHooks',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithNestedHooks',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -606,7 +715,8 @@ describe('parseHookNames', () => {
           'theme', // useTheme()
           'theme', // useContext()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       // We can't test the uncompiled source here, because it either needs to get transformed,
@@ -614,16 +724,31 @@ describe('parseHookNames', () => {
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithExternalCustomHooks',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithExternalCustomHooks',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithExternalCustomHooks',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithExternalCustomHooks',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -637,21 +762,37 @@ describe('parseHookNames', () => {
           'c', // useContext()
           'd', // useContext()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ComponentWithMultipleHooksPerLine',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ComponentWithMultipleHooksPerLine',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/ComponentWithMultipleHooksPerLine',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ComponentWithMultipleHooksPerLine',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -665,22 +806,37 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
-      await test('./__source__/InlineRequire'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/InlineRequire',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/InlineRequire',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/InlineRequire',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/InlineRequire',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/InlineRequire',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/InlineRequire',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/InlineRequire',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/InlineRequire',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
 
@@ -691,25 +847,40 @@ describe('parseHookNames', () => {
         expectHookNamesToEqual(hookNames, [
           'count', // useState()
         ]);
-        expect(parseMock).toHaveBeenCalledTimes(0);
+        expect(require('@babel/parser').parse).toHaveBeenCalledTimes(0);
+        expect(require('../generateHookMap').decodeHookMap).toHaveBeenCalled();
       }
 
       // We expect the inline sourceMappingURL to be invalid in this case; mute the warning.
       console.warn = () => {};
 
-      await test('./__source__/ContainingStringSourceMappingURL'); // original source (uncompiled)
       await test(
         './__source__/__compiled__/inline/fb-sources-extended/ContainingStringSourceMappingURL',
-      ); // x_fb_sources extended inline source map
+      ); // x_facebook_sources extended inline source map
       await test(
         './__source__/__compiled__/external/fb-sources-extended/ContainingStringSourceMappingURL',
-      ); // x_fb_sources extended external source map
+      ); // x_facebook_sources extended external source map
       await test(
         './__source__/__compiled__/inline/react-sources-extended/ContainingStringSourceMappingURL',
       ); // x_react_sources extended inline source map
       await test(
         './__source__/__compiled__/external/react-sources-extended/ContainingStringSourceMappingURL',
       ); // x_react_sources extended external source map
+
+      // Using index map format for source maps
+      await test(
+        './__source__/__compiled__/inline/fb-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_facebook_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/fb-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_facebook_sources extended external index map source map
+      await test(
+        './__source__/__compiled__/inline/react-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_react_sources extended inline index map source map
+      await test(
+        './__source__/__compiled__/external/react-sources-extended/index-map/ContainingStringSourceMappingURL',
+      ); // x_react_sources extended external index map source map
+
       // TODO test no-columns and bundle cases with extended source maps
     });
   });
