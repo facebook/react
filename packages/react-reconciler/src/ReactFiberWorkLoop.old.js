@@ -12,7 +12,6 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {StackCursor} from './ReactFiberStack.old';
-import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Flags} from './ReactFiberFlags';
 
 import {
@@ -53,10 +52,6 @@ import {
   scheduleSyncCallback,
   scheduleLegacySyncCallback,
 } from './ReactFiberSyncTaskQueue.old';
-import {
-  NoFlags as NoHookEffect,
-  Passive as HookPassive,
-} from './ReactHookEffectTags';
 import {
   logCommitStarted,
   logCommitStopped,
@@ -119,7 +114,6 @@ import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
   Placement,
-  PassiveStatic,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -344,10 +338,6 @@ let nestedPassiveUpdateCount: number = 0;
 let currentEventTime: number = NoTimestamp;
 let currentEventTransitionLane: Lanes = NoLanes;
 
-// Dev only flag that tracks if passive effects are currently being flushed.
-// We warn about state updates for unmounted components differently in this case.
-let isFlushingPassiveEffects = false;
-
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
@@ -454,7 +444,6 @@ export function scheduleUpdateOnFiber(
 
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
-    warnAboutUpdateOnUnmountedFiberInDEV(fiber);
     return null;
   }
 
@@ -2048,10 +2037,6 @@ function flushPassiveEffectsImpl() {
     markPassiveEffectsStarted(lanes);
   }
 
-  if (__DEV__) {
-    isFlushingPassiveEffects = true;
-  }
-
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
 
@@ -2066,10 +2051,6 @@ function flushPassiveEffectsImpl() {
       const fiber = ((profilerEffects[i]: any): Fiber);
       commitPassiveEffectDurations(root, fiber);
     }
-  }
-
-  if (__DEV__) {
-    isFlushingPassiveEffects = false;
   }
 
   if (__DEV__) {
@@ -2498,90 +2479,6 @@ function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
         setCurrentDebugFiberInDEV(fiber);
       } else {
         resetCurrentDebugFiberInDEV();
-      }
-    }
-  }
-}
-
-let didWarnStateUpdateForUnmountedComponent: Set<string> | null = null;
-function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
-  if (__DEV__) {
-    const tag = fiber.tag;
-    if (
-      tag !== HostRoot &&
-      tag !== ClassComponent &&
-      tag !== FunctionComponent &&
-      tag !== ForwardRef &&
-      tag !== MemoComponent &&
-      tag !== SimpleMemoComponent
-    ) {
-      // Only warn for user-defined components, not internal ones like Suspense.
-      return;
-    }
-
-    if ((fiber.flags & PassiveStatic) !== NoFlags) {
-      const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
-      if (updateQueue !== null) {
-        const lastEffect = updateQueue.lastEffect;
-        if (lastEffect !== null) {
-          const firstEffect = lastEffect.next;
-
-          let effect = firstEffect;
-          do {
-            if (effect.destroy !== undefined) {
-              if ((effect.tag & HookPassive) !== NoHookEffect) {
-                return;
-              }
-            }
-            effect = effect.next;
-          } while (effect !== firstEffect);
-        }
-      }
-    }
-    // We show the whole stack but dedupe on the top component's name because
-    // the problematic code almost always lies inside that component.
-    const componentName = getComponentNameFromFiber(fiber) || 'ReactComponent';
-    if (didWarnStateUpdateForUnmountedComponent !== null) {
-      if (didWarnStateUpdateForUnmountedComponent.has(componentName)) {
-        return;
-      }
-      didWarnStateUpdateForUnmountedComponent.add(componentName);
-    } else {
-      didWarnStateUpdateForUnmountedComponent = new Set([componentName]);
-    }
-
-    if (isFlushingPassiveEffects) {
-      // Do not warn if we are currently flushing passive effects!
-      //
-      // React can't directly detect a memory leak, but there are some clues that warn about one.
-      // One of these clues is when an unmounted React component tries to update its state.
-      // For example, if a component forgets to remove an event listener when unmounting,
-      // that listener may be called later and try to update state,
-      // at which point React would warn about the potential leak.
-      //
-      // Warning signals are the most useful when they're strong.
-      // (So we should avoid false positive warnings.)
-      // Updating state from within an effect cleanup function is sometimes a necessary pattern, e.g.:
-      // 1. Updating an ancestor that a component had registered itself with on mount.
-      // 2. Resetting state when a component is hidden after going offscreen.
-    } else {
-      const previousFiber = ReactCurrentFiberCurrent;
-      try {
-        setCurrentDebugFiberInDEV(fiber);
-        console.error(
-          "Can't perform a React state update on an unmounted component. This " +
-            'is a no-op, but it indicates a memory leak in your application. To ' +
-            'fix, cancel all subscriptions and asynchronous tasks in %s.',
-          tag === ClassComponent
-            ? 'the componentWillUnmount method'
-            : 'a useEffect cleanup function',
-        );
-      } finally {
-        if (previousFiber) {
-          setCurrentDebugFiberInDEV(fiber);
-        } else {
-          resetCurrentDebugFiberInDEV();
-        }
       }
     }
   }
