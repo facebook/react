@@ -419,44 +419,6 @@ function AutoSizedCanvas({
       return;
     }
 
-    // Wheel events should always hide the current tooltip.
-    switch (interaction.type) {
-      case 'wheel-control':
-      case 'wheel-meta':
-      case 'wheel-plain':
-      case 'wheel-shift':
-        setHoveredEvent(prevHoverEvent => {
-          if (prevHoverEvent === null) {
-            return prevHoverEvent;
-          } else if (
-            prevHoverEvent.componentMeasure !== null ||
-            prevHoverEvent.flamechartStackFrame !== null ||
-            prevHoverEvent.measure !== null ||
-            prevHoverEvent.nativeEvent !== null ||
-            prevHoverEvent.networkMeasure !== null ||
-            prevHoverEvent.schedulingEvent !== null ||
-            prevHoverEvent.snapshot !== null ||
-            prevHoverEvent.suspenseEvent !== null ||
-            prevHoverEvent.userTimingMark !== null
-          ) {
-            return {
-              componentMeasure: null,
-              flamechartStackFrame: null,
-              measure: null,
-              nativeEvent: null,
-              networkMeasure: null,
-              schedulingEvent: null,
-              snapshot: null,
-              suspenseEvent: null,
-              userTimingMark: null,
-            };
-          } else {
-            return prevHoverEvent;
-          }
-        });
-        break;
-    }
-
     const surface = surfaceRef.current;
     surface.handleInteraction(interaction);
 
