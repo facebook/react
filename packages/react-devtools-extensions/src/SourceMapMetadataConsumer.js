@@ -26,7 +26,12 @@ const REACT_METADATA_INDEX_IN_FB_METADATA = 1;
 const REACT_SOURCES_EXTENSION_KEY = 'x_react_sources';
 const FB_SOURCES_EXTENSION_KEY = 'x_facebook_sources';
 
-// Extracted from source-map@0.5.6's SourceMapConsumer
+/**
+ * Extracted from the logic in source-map@0.8.0-beta.0's SourceMapConsumer.
+ * By default, source names are normalized using the same logic that the
+ * `source-map@0.8.0-beta.0` package uses internally. This is crucial for keeping the
+ * sources list in sync with a `SourceMapConsumer` instance.
+ */
 function normalizeSourcePath(
   sourceInput: string,
   map: {+sourceRoot?: ?string, ...},
@@ -36,30 +41,13 @@ function normalizeSourcePath(
 
   // eslint-disable-next-line react-internal/no-primitive-constructors
   source = String(source);
-  // Some source maps produce relative source paths like "./foo.js" instead of
-  // "foo.js".  Normalize these first so that future comparisons will succeed.
-  // See bugzil.la/1090768.
-  source = util.normalize(source);
-  // Always ensure that absolute sources are internally stored relative to
-  // the source root, if the source root is absolute. Not doing this would
-  // be particularly problematic when the source root is a prefix of the
-  // source (valid, but why??). See github issue #199 and bugzil.la/1188982.
-  source =
-    sourceRoot != null && util.isAbsolute(sourceRoot) && util.isAbsolute(source)
-      ? util.relative(sourceRoot, source)
-      : source;
-
-  return source;
+  return util.computeSourceURL(sourceRoot, source);
 }
 
 /**
  * Consumes the `x_react_sources` or  `x_facebook_sources` metadata field from a
  * source map and exposes ways to query the React DevTools specific metadata
  * included in those fields.
- *
- * By default, source names are normalized using the same logic that the
- * `source-map@0.5.6` package uses internally. This is crucial for keeping the
- * sources list in sync with a `SourceMapConsumer` instance.
  */
 export class SourceMapMetadataConsumer {
   _sourceMap: MixedSourceMap;
