@@ -464,7 +464,6 @@ export default function Tree(props: Props) {
 // Then we take the smallest of these indentation sizes...
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
-  cachedChildWidths: WeakMap<HTMLElement, number>,
   indentationSizeRef: {|current: number|},
   prevListWidthRef: {|current: number|},
 ): void {
@@ -477,7 +476,10 @@ function updateIndentationSizeVar(
   }
 
   // Reset the max indentation size if the width of the tree has increased.
-  if (listWidth > prevListWidthRef.current) {
+  if (
+    listWidth > prevListWidthRef.current ||
+    Number.isNaN(indentationSizeRef.current)
+  ) {
     indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
   }
   prevListWidthRef.current = listWidth;
@@ -490,22 +492,19 @@ function updateIndentationSizeVar(
 
     let childWidth: number = 0;
 
-    const cachedChildWidth = cachedChildWidths.get(child);
-    if (cachedChildWidth != null) {
-      childWidth = cachedChildWidth;
-    } else {
-      const {firstElementChild} = child;
+    const {firstElementChild} = child;
 
-      // Skip over e.g. the guideline element
-      if (firstElementChild != null) {
-        childWidth = firstElementChild.clientWidth;
-        cachedChildWidths.set(child, childWidth);
-      }
+    // Skip over e.g. the guideline element
+    if (firstElementChild != null) {
+      childWidth = firstElementChild.clientWidth;
     }
 
     const remainingWidth = Math.max(0, listWidth - childWidth);
 
-    maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
+    maxIndentationSize = Math.min(
+      maxIndentationSize,
+      remainingWidth > 0 ? remainingWidth / depth : 0,
+    );
   }
 
   indentationSizeRef.current = maxIndentationSize;
@@ -515,11 +514,6 @@ function updateIndentationSizeVar(
 
 function InnerElementType({children, style, ...rest}) {
   const {ownerID} = useContext(TreeStateContext);
-
-  const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
-    () => new WeakMap(),
-    [],
-  );
 
   // This ref tracks the current indentation size.
   // We decrease indentation to fit wider/deeper trees.
@@ -549,7 +543,6 @@ function InnerElementType({children, style, ...rest}) {
     if (divRef.current !== null) {
       updateIndentationSizeVar(
         divRef.current,
-        cachedChildWidths,
         indentationSizeRef,
         prevListWidthRef,
       );

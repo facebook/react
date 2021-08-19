@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import ResizeObserver from 'resize-observer-polyfill';
 
 type SizeState = {|
@@ -39,59 +39,111 @@ export default function useResizeObserver(): {|
 
   const [element, setRef] = useState<HTMLElement | null>(null);
 
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const elementRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
-    if (element != null) {
-      const rect = element.getBoundingClientRect();
-      safeStateUpdater(setSizeState, rect.width, rect.height);
+    elementRef.current = element;
 
-      const resizeObserver = new ResizeObserver(entries => {
-        if (!Array.isArray(entries) || entries.length === 0) {
-          return;
-        }
-
-        if (__DEV__) {
-          if (entries.length > 1) {
-            console.warn(
-              'useResizeObserver() expects only one observed entry.',
-            );
+    let resizeObserver = ((resizeObserverRef.current: any): ResizeObserver);
+    if (resizeObserver === null) {
+      resizeObserver = resizeObserverRef.current = new ResizeObserver(
+        entries => {
+          if (!Array.isArray(entries) || entries.length === 0) {
+            return;
           }
-        }
 
-        // Flow doesn't know about new contentBoxSize property
-        const entry = (entries[0]: any);
-        if (entry.contentBoxSize) {
-          // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
-          const contentBoxSize = Array.isArray(entry.contentBoxSize)
-            ? entry.contentBoxSize[0]
-            : entry.contentBoxSize;
+          if (__DEV__) {
+            if (entries.length > 1) {
+              console.warn(
+                'useResizeObserver() expects only one observed entry.',
+              );
+            }
+          }
 
-          // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/contentBoxSize#value
-          const writingMode = getComputedStyle(element)['writing-mode'];
-          if (writingMode.startsWith('horizontal')) {
-            safeStateUpdater(
-              setSizeState,
-              contentBoxSize.inlineSize,
-              contentBoxSize.blockSize,
-            );
+          const mostRecentElement = elementRef.current;
+          if (mostRecentElement === null) {
+            return;
+          }
+
+          // Flow doesn't know about new contentBoxSize property
+          const entry = (entries[0]: any);
+          if (entry.contentBoxSize) {
+            // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver
+            const contentBoxSize = Array.isArray(entry.contentBoxSize)
+              ? entry.contentBoxSize[0]
+              : entry.contentBoxSize;
+
+            // https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserverEntry/contentBoxSize#value
+            const writingMode = getComputedStyle(mostRecentElement)[
+              'writing-mode'
+            ];
+            if (writingMode.startsWith('horizontal')) {
+              safeStateUpdater(
+                setSizeState,
+                contentBoxSize.inlineSize,
+                contentBoxSize.blockSize,
+              );
+            } else {
+              safeStateUpdater(
+                setSizeState,
+                contentBoxSize.blockSize,
+                contentBoxSize.inlineSize,
+              );
+            }
           } else {
+            const contentRect = entry.contentRect;
             safeStateUpdater(
               setSizeState,
-              contentBoxSize.blockSize,
-              contentBoxSize.inlineSize,
+              contentRect.width,
+              contentRect.height,
             );
           }
-        } else {
-          const contentRect = entry.contentRect;
-          safeStateUpdater(setSizeState, contentRect.width, contentRect.height);
-        }
-      });
+        },
+      );
+    }
+
+    if (element != null) {
+      const onMountRect = element.getBoundingClientRect();
+      safeStateUpdater(setSizeState, onMountRect.width, onMountRect.height);
+
+      let timeoutID = null;
+      if (onMountRect.height === 0) {
+        setTimeout(() => {
+          timeoutID = null;
+
+          const onTimeoutRect = element.getBoundingClientRect();
+          safeStateUpdater(
+            setSizeState,
+            onTimeoutRect.width,
+            onTimeoutRect.height,
+          );
+        });
+      }
+
+      // ResizeObserver doesn't fire in a Firefox extension when the DevTools panel is resized,
+      // so we listen to the window for "resize" events as a backup.
+      const onResize = event => {
+        const onResizeRect = element.getBoundingClientRect();
+        safeStateUpdater(setSizeState, onResizeRect.width, onResizeRect.height);
+      };
+
+      const targetWindow = element.ownerDocument.defaultView;
+      targetWindow.addEventListener('resize', onResize);
 
       resizeObserver.observe(element);
+
       return () => {
         resizeObserver.unobserve(element);
+
+        targetWindow.removeEventListener('resize', onResize);
+
+        if (timeoutID !== null) {
+          clearTimeout(timeoutID);
+        }
       };
     }
-  }, [element]);
+  });
 
   return {ref: setRef, height: sizeState.height, width: sizeState.width};
 }
