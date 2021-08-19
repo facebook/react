@@ -6,10 +6,13 @@
  *
  */
 
+const dynamicFeatureFlags = require('SchedulerFeatureFlags');
+
+// Re-export dynamic flags from the www version.
 export const {
   enableIsInputPending,
   enableSchedulerDebugging,
   enableProfiling: enableProfilingFeatureFlag,
-} = require('SchedulerFeatureFlags');
+} = dynamicFeatureFlags;
 
 export const enableProfiling = __PROFILE__ && enableProfilingFeatureFlag;
