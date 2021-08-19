@@ -11,7 +11,7 @@ import type {CommitDataFrontend} from './types';
 
 import * as React from 'react';
 import {useEffect, useMemo, useRef, useState} from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer from 'react-devtools-shared/src/devtools/views/AutoSizer';
 import {FixedSizeList} from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
 import {minBarWidth} from './constants';

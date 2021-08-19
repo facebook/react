@@ -18,7 +18,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import useResizeObserver from 'react-devtools-shared/src/devtools/views/useResizeObserver';
 import {FixedSizeList} from 'react-window';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import Icon from '../Icon';
@@ -75,6 +75,20 @@ export default function Tree(props: Props) {
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
   const {lineHeight, showInlineWarningsAndErrors} = useContext(SettingsContext);
+
+  const {
+    ref: treeRefSetterFunction,
+    height: treeHeight,
+    width: treeWidth,
+  } = useResizeObserver();
+
+  const treeWrapperRef = useCallback(
+    element => {
+      treeRefSetterFunction(element);
+      focusTargetRef.current = element;
+    },
+    [treeRefSetterFunction],
+  );
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -388,25 +402,20 @@ export default function Tree(props: Props) {
           onKeyPress={handleKeyPress}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          ref={focusTargetRef}
+          ref={treeWrapperRef}
           tabIndex={0}>
-          <AutoSizer>
-            {({height, width}) => (
-              // $FlowFixMe https://github.com/facebook/flow/issues/7341
-              <FixedSizeList
-                className={styles.List}
-                height={height}
-                innerElementType={InnerElementType}
-                itemCount={numElements}
-                itemData={itemData}
-                itemKey={itemKey}
-                itemSize={lineHeight}
-                ref={listCallbackRef}
-                width={width}>
-                {Element}
-              </FixedSizeList>
-            )}
-          </AutoSizer>
+          <FixedSizeList
+            className={styles.List}
+            height={treeHeight}
+            innerElementType={InnerElementType}
+            itemCount={numElements}
+            itemData={itemData}
+            itemKey={itemKey}
+            itemSize={lineHeight}
+            ref={listCallbackRef}
+            width={treeWidth}>
+            {Element}
+          </FixedSizeList>
         </div>
       </div>
     </TreeFocusedContext.Provider>
@@ -555,7 +564,10 @@ function InnerElementType({children, style, ...rest}) {
     <div
       className={styles.InnerElementType}
       ref={divRef}
-      style={style}
+      style={{
+        ...style,
+        pointerEvents: 'auto',
+      }}
       {...rest}>
       <SelectedTreeHighlight />
       {children}

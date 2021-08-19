@@ -25,7 +25,7 @@ import {
   useState,
   useCallback,
 } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer from 'react-devtools-shared/src/devtools/views/AutoSizer';
 import {copy} from 'clipboard-js';
 import prettyMilliseconds from 'pretty-ms';
 

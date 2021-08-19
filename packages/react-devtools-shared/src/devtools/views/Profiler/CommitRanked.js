@@ -9,7 +9,7 @@
 
 import * as React from 'react';
 import {useCallback, useContext, useMemo, useState} from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import AutoSizer from 'react-devtools-shared/src/devtools/views/AutoSizer';
 import {FixedSizeList} from 'react-window';
 import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
