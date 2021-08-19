@@ -9,7 +9,7 @@
 
 import {parse} from '@babel/parser';
 import LRU from 'lru-cache';
-import {SourceMapConsumer} from 'source-map';
+import {SourceMapConsumer} from 'source-map-js';
 import {getHookName} from '../astUtils';
 import {areSourceMapsAppliedToErrors} from '../ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
@@ -107,7 +107,6 @@ const originalURLToMetadataCache: LRUCache<
 
 export async function parseHookNames(
   hooksTree: HooksTree,
-  wasmMappingsURL: string,
 ): Thenable<HookNames | null> {
   const hooksList: Array<HooksNode> = [];
   flattenHooksList(hooksTree, hooksList);
@@ -167,9 +166,7 @@ export async function parseHookNames(
   }
 
   return loadSourceFiles(locationKeyToHookSourceData)
-    .then(() =>
-      extractAndLoadSourceMaps(locationKeyToHookSourceData, wasmMappingsURL),
-    )
+    .then(() => extractAndLoadSourceMaps(locationKeyToHookSourceData))
     .then(() => parseSourceAST(locationKeyToHookSourceData))
     .then(() => updateLruCache(locationKeyToHookSourceData))
     .then(() => findHookNames(hooksList, locationKeyToHookSourceData));
@@ -191,7 +188,6 @@ function decodeBase64String(encoded: string): Object {
 
 function extractAndLoadSourceMaps(
   locationKeyToHookSourceData: Map<string, HookSourceData>,
-  wasmMappingsURL: string,
 ): Promise<*> {
   // SourceMapConsumer.initialize() does nothing when running in Node (aka Jest)
   // because the wasm file is automatically read from the file system
@@ -202,8 +198,6 @@ function extractAndLoadSourceMaps(
         'extractAndLoadSourceMaps() Initializing source-map library ...',
       );
     }
-
-    SourceMapConsumer.initialize({'lib/mappings.wasm': wasmMappingsURL});
   }
 
   // Deduplicate fetches, since there can be multiple location keys per source map.
@@ -259,11 +253,7 @@ function extractAndLoadSourceMaps(
             hookSourceData.metadataConsumer = new SourceMapMetadataConsumer(
               parsed,
             );
-            setPromises.push(
-              new SourceMapConsumer(parsed).then(sourceConsumer => {
-                hookSourceData.sourceConsumer = sourceConsumer;
-              }),
-            );
+            hookSourceData.sourceConsumer = new SourceMapConsumer(parsed);
             break;
           }
         } else {
@@ -299,10 +289,10 @@ function extractAndLoadSourceMaps(
             fetchFile(url).then(
               sourceMapContents => {
                 const parsed = JSON.parse(sourceMapContents);
-                return new SourceMapConsumer(parsed).then(sourceConsumer => ({
-                  sourceConsumer,
+                return {
+                  sourceConsumer: new SourceMapConsumer(parsed),
                   metadataConsumer: new SourceMapMetadataConsumer(parsed),
-                }));
+                };
               },
               // In this case, we fall back to the assumption that the source has no source map.
               // This might indicate an (unlikely) edge case that had no source map,

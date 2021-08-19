@@ -25,23 +25,6 @@ function requireText(path, encoding) {
   }
 }
 
-const chromeGlobal = {
-  extension: {
-    getURL: jest.fn((...args) => {
-      const {join} = require('path');
-      return join(
-        __dirname,
-        '..',
-        '..',
-        'node_modules',
-        'source-map',
-        'lib',
-        'mappings.wasm',
-      );
-    }),
-  },
-};
-
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
@@ -56,9 +39,6 @@ describe('parseHookNames', () => {
 
     fetchMock = require('jest-fetch-mock');
     fetchMock.enableMocks();
-
-    // Mock out portion of browser API used by parseHookNames to initialize "source-map".
-    global.chrome = chromeGlobal;
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
@@ -907,9 +887,6 @@ describe('parseHookNames worker', () => {
         }),
       };
     });
-
-    // Mock out portion of browser API used by parseHookNames to initialize "source-map".
-    global.chrome = chromeGlobal;
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;

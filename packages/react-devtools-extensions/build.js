@@ -93,12 +93,6 @@ const build = async (tempPath, manifestPath) => {
     STATIC_FILES.map(file => copy(join(__dirname, file), join(zipPath, file))),
   );
 
-  // The "source-map" library requires this chunk of WASM to be bundled at runtime.
-  await copy(
-    join(__dirname, 'node_modules', 'source-map', 'lib', 'mappings.wasm'),
-    join(zipPath, 'mappings.wasm'),
-  );
-
   const commit = getGitCommit();
   const dateString = new Date().toLocaleDateString();
   const manifest = JSON.parse(readFileSync(copiedManifestPath).toString());
