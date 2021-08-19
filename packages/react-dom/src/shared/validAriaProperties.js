@@ -14,6 +14,7 @@ const ariaProperties = {
   'aria-keyshortcuts': 0,
   'aria-label': 0,
   'aria-roledescription': 0,
+  'aria-description': 0,
   // Widget Attributes
   'aria-autocomplete': 0,
   'aria-checked': 0,
