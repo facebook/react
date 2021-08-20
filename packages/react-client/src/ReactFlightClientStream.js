@@ -65,6 +65,10 @@ function processFullRow(response: Response, row: string): void {
         );
       }
     }
+  } else {
+    throw new Error(
+      "Error parsing the data. It's probably an error code or network corruption.",
+    );
   }
 }
 
