@@ -1187,6 +1187,18 @@ export default class Store extends EventEmitter<{|
       console.groupEnd();
     }
 
+    const indicesOfCachedErrorsOrWarningsAreStale =
+      !haveErrorsOrWarningsChanged &&
+      (addedElementIDs.length > 0 || removedElementIDs.size > 0);
+    if (indicesOfCachedErrorsOrWarningsAreStale) {
+      this._cachedErrorAndWarningTuples.forEach(entry => {
+        const index = this.getIndexOfElementID(entry.id);
+        if (index !== null) {
+          entry.index = index;
+        }
+      });
+    }
+
     this.emit('mutated', [addedElementIDs, removedElementIDs]);
   };
 

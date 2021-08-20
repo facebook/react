@@ -2119,6 +2119,64 @@ describe('TreeListContext', () => {
       `);
     });
 
+    it('should update correctly when elements are added/removed', () => {
+      const container = document.createElement('div');
+      let errored = false;
+      function ErrorOnce() {
+        if (!errored) {
+          errored = true;
+          console.error('test-only:one-time-error');
+        }
+        return null;
+      }
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          legacyRender(
+            <React.Fragment>
+              <ErrorOnce key="error" />
+            </React.Fragment>,
+            container,
+          ),
+        ),
+      );
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+             <ErrorOnce key="error"> ✕
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          legacyRender(
+            <React.Fragment>
+              <Child />
+              <ErrorOnce key="error" />
+            </React.Fragment>,
+            container,
+          ),
+        ),
+      );
+
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+             <Child>
+             <ErrorOnce key="error"> ✕
+      `);
+
+      selectNextErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+             <Child>
+        →    <ErrorOnce key="error"> ✕
+      `);
+    });
+
     it('should update select and auto-expand parts components within hidden parts of the tree', () => {
       const Wrapper = ({children}) => children;
 
