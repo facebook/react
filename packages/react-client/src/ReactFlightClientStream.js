@@ -38,30 +38,32 @@ function processFullRow(response: Response, row: string): void {
   // switch (tag) {
   // }
   const colon = row.indexOf(':', 1);
-  const id = parseInt(row.substring(1, colon), 16);
-  const text = row.substring(colon + 1);
-  switch (tag) {
-    case 'J': {
-      resolveModel(response, id, text);
-      return;
-    }
-    case 'M': {
-      resolveModule(response, id, text);
-      return;
-    }
-    case 'S': {
-      resolveSymbol(response, id, JSON.parse(text));
-      return;
-    }
-    case 'E': {
-      const errorInfo = JSON.parse(text);
-      resolveError(response, id, errorInfo.message, errorInfo.stack);
-      return;
-    }
-    default: {
-      throw new Error(
-        "Error parsing the data. It's probably an error code or network corruption.",
-      );
+  if(colon !== -1) { //To Avoid Segmentation Error if indexOf returns -1
+    const id = parseInt(row.substring(1, colon), 16);
+    const text = row.substring(colon + 1);
+    switch (tag) {
+      case 'J': {
+        resolveModel(response, id, text);
+        return;
+      }
+      case 'M': {
+        resolveModule(response, id, text);
+        return;
+      }
+      case 'S': {
+        resolveSymbol(response, id, JSON.parse(text));
+        return;
+      }
+      case 'E': {
+        const errorInfo = JSON.parse(text);
+        resolveError(response, id, errorInfo.message, errorInfo.stack);
+        return;
+      }
+      default: {
+        throw new Error(
+          "Error parsing the data. It's probably an error code or network corruption.",
+        );
+      }
     }
   }
 }
