@@ -2172,8 +2172,8 @@ describe('TreeListContext', () => {
       expect(state).toMatchInlineSnapshot(`
         ✕ 1, ⚠ 0
         [root]
-        →    <Child>
-             <ErrorOnce key="error"> ✕
+             <Child>
+        →    <ErrorOnce key="error"> ✕
       `);
     });
 
