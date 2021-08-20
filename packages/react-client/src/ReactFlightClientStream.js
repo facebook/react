@@ -38,7 +38,8 @@ function processFullRow(response: Response, row: string): void {
   // switch (tag) {
   // }
   const colon = row.indexOf(':', 1);
-  if(colon !== -1) { //To Avoid Segmentation Error if indexOf returns -1
+  if (colon !== -1) {
+    //To Avoid Segmentation Error if indexOf returns -1
     const id = parseInt(row.substring(1, colon), 16);
     const text = row.substring(colon + 1);
     switch (tag) {
