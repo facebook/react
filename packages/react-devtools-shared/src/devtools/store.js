@@ -57,6 +57,8 @@ const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
 const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
+type ErrorAndWarningTuples = Array<{|id: number, index: number|}>;
+
 type Config = {|
   checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
@@ -94,7 +96,7 @@ export default class Store extends EventEmitter<{|
   // Computed whenever _errorsAndWarnings Map changes.
   _cachedErrorCount: number = 0;
   _cachedWarningCount: number = 0;
-  _cachedErrorAndWarningTuples: Array<{|id: number, index: number|}> = [];
+  _cachedErrorAndWarningTuples: ErrorAndWarningTuples | null = null;
 
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
@@ -510,7 +512,34 @@ export default class Store extends EventEmitter<{|
 
   // Returns a tuple of [id, index]
   getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
-    return this._cachedErrorAndWarningTuples;
+    if (this._cachedErrorAndWarningTuples !== null) {
+      return this._cachedErrorAndWarningTuples;
+    } else {
+      const errorAndWarningTuples: ErrorAndWarningTuples = [];
+
+      this._errorsAndWarnings.forEach((_, id) => {
+        const index = this.getIndexOfElementID(id);
+        if (index !== null) {
+          let low = 0;
+          let high = errorAndWarningTuples.length;
+          while (low < high) {
+            const mid = (low + high) >> 1;
+            if (errorAndWarningTuples[mid].index > index) {
+              high = mid;
+            } else {
+              low = mid + 1;
+            }
+          }
+
+          errorAndWarningTuples.splice(low, 0, {id, index});
+        }
+      });
+
+      // Cache for later (at least until the tree changes again).
+      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
+
+      return errorAndWarningTuples;
+    }
   }
 
   getErrorAndWarningCountForElementID(
@@ -1124,6 +1153,9 @@ export default class Store extends EventEmitter<{|
 
     this._revision++;
 
+    // Any time the tree changes (e.g. elements added, removed, or reordered) cached inidices may be invalid.
+    this._cachedErrorAndWarningTuples = null;
+
     if (haveErrorsOrWarningsChanged) {
       let errorCount = 0;
       let warningCount = 0;
@@ -1135,28 +1167,6 @@ export default class Store extends EventEmitter<{|
 
       this._cachedErrorCount = errorCount;
       this._cachedWarningCount = warningCount;
-
-      const errorAndWarningTuples: Array<{|id: number, index: number|}> = [];
-
-      this._errorsAndWarnings.forEach((_, id) => {
-        const index = this.getIndexOfElementID(id);
-        if (index !== null) {
-          let low = 0;
-          let high = errorAndWarningTuples.length;
-          while (low < high) {
-            const mid = (low + high) >> 1;
-            if (errorAndWarningTuples[mid].index > index) {
-              high = mid;
-            } else {
-              low = mid + 1;
-            }
-          }
-
-          errorAndWarningTuples.splice(low, 0, {id, index});
-        }
-      });
-
-      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
     }
 
     if (haveRootsChanged) {
@@ -1185,18 +1195,6 @@ export default class Store extends EventEmitter<{|
     if (__DEBUG__) {
       console.log(printStore(this, true));
       console.groupEnd();
-    }
-
-    const indicesOfCachedErrorsOrWarningsAreStale =
-      !haveErrorsOrWarningsChanged &&
-      (addedElementIDs.length > 0 || removedElementIDs.size > 0);
-    if (indicesOfCachedErrorsOrWarningsAreStale) {
-      this._cachedErrorAndWarningTuples.forEach(entry => {
-        const index = this.getIndexOfElementID(entry.id);
-        if (index !== null) {
-          entry.index = index;
-        }
-      });
     }
 
     this.emit('mutated', [addedElementIDs, removedElementIDs]);
