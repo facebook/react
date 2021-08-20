@@ -1189,10 +1189,13 @@ export default class Store extends EventEmitter<{|
 
     const indicesOfCachedErrorsOrWarningsAreStale =
       !haveErrorsOrWarningsChanged &&
-      (addedElementIDs.length > 0 || removedElementIDs.length > 0);
+      (addedElementIDs.length > 0 || removedElementIDs.size > 0);
     if (indicesOfCachedErrorsOrWarningsAreStale) {
       this._cachedErrorAndWarningTuples.forEach(entry => {
-        entry.index = this.getIndexOfElementID(entry.id);
+        const index = this.getIndexOfElementID(entry.id);
+        if (index !== null) {
+          entry.index = index;
+        }
       });
     }
 
