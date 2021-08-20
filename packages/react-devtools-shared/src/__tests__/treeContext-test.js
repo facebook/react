@@ -2177,6 +2177,111 @@ describe('TreeListContext', () => {
       `);
     });
 
+    it('should update correctly when elements are re-ordered', () => {
+      const container = document.createElement('div');
+      function ErrorOnce() {
+        const didErroRef = React.useRef(false);
+        if (!didErroRef.current) {
+          didErroRef.current = true;
+          console.error('test-only:one-time-error');
+        }
+        return null;
+      }
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          legacyRender(
+            <React.Fragment>
+              <Child key="A" />
+              <ErrorOnce key="B" />
+              <Child key="C" />
+              <ErrorOnce key="D" />
+            </React.Fragment>,
+            container,
+          ),
+        ),
+      );
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 0
+        [root]
+             <Child key="A">
+             <ErrorOnce key="B"> ✕
+             <Child key="C">
+             <ErrorOnce key="D"> ✕
+      `);
+
+      // Select a child
+      selectNextErrorOrWarning();
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 0
+        [root]
+             <Child key="A">
+        →    <ErrorOnce key="B"> ✕
+             <Child key="C">
+             <ErrorOnce key="D"> ✕
+      `);
+
+      // Re-order the tree and ensure indices are updated.
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          legacyRender(
+            <React.Fragment>
+              <ErrorOnce key="B" />
+              <Child key="A" />
+              <ErrorOnce key="D" />
+              <Child key="C" />
+            </React.Fragment>,
+            container,
+          ),
+        ),
+      );
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 0
+        [root]
+        →    <ErrorOnce key="B"> ✕
+             <Child key="A">
+             <ErrorOnce key="D"> ✕
+             <Child key="C">
+      `);
+
+      // Select the next child and ensure the index doesn't break.
+      selectNextErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 0
+        [root]
+             <ErrorOnce key="B"> ✕
+             <Child key="A">
+        →    <ErrorOnce key="D"> ✕
+             <Child key="C">
+      `);
+
+      // Re-order the tree and ensure indices are updated.
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          legacyRender(
+            <React.Fragment>
+              <ErrorOnce key="D" />
+              <ErrorOnce key="B" />
+              <Child key="A" />
+              <Child key="C" />
+            </React.Fragment>,
+            container,
+          ),
+        ),
+      );
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 0
+        [root]
+        →    <ErrorOnce key="D"> ✕
+             <ErrorOnce key="B"> ✕
+             <Child key="A">
+             <Child key="C">
+      `);
+    });
+
     it('should update select and auto-expand parts components within hidden parts of the tree', () => {
       const Wrapper = ({children}) => children;
 
