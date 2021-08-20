@@ -26,7 +26,6 @@ import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
 import type {Thenable} from 'shared/ReactTypes';
 import type {SourceConsumer} from '../astUtils';
 
-const SOURCE_MAP_REGEX = / ?sourceMappingURL=([^\s'"]+)/gm;
 const MAX_SOURCE_LENGTH = 100_000_000;
 
 type AST = mixed;
@@ -213,18 +212,20 @@ function extractAndLoadSourceMaps(
       return;
     }
 
+    const sourceMapRegex = / ?sourceMappingURL=([^\s'"]+)/gm;
     const runtimeSourceCode = ((hookSourceData.runtimeSourceCode: any): string);
-    const sourceMappingURLs = runtimeSourceCode.match(SOURCE_MAP_REGEX);
-    if (sourceMappingURLs == null) {
+    let sourceMappingURLMatch = sourceMapRegex.exec(runtimeSourceCode);
+    if (sourceMappingURLMatch == null) {
       // Maybe file has not been transformed; we'll try to parse it as-is in parseSourceAST().
 
       if (__DEBUG__) {
         console.log('extractAndLoadSourceMaps() No source map found');
       }
     } else {
-      for (let i = 0; i < sourceMappingURLs.length; i++) {
+      const externalSourceMapURLs = [];
+      while (sourceMappingURLMatch != null) {
         const {runtimeSourceURL} = hookSourceData;
-        const sourceMappingURL = sourceMappingURLs[i];
+        const sourceMappingURL = sourceMappingURLMatch[1];
         const hasInlineSourceMap = sourceMappingURL.indexOf('base64,') >= 0;
         if (hasInlineSourceMap) {
           // TODO (named hooks) deduplicate parsing in this branch (similar to fetching in the other branch)
@@ -257,19 +258,30 @@ function extractAndLoadSourceMaps(
             break;
           }
         } else {
-          let url = sourceMappingURLs[i].split('=')[1];
+          externalSourceMapURLs.push(sourceMappingURL);
+        }
 
-          if (i !== sourceMappingURLs.length - 1) {
+        sourceMappingURLMatch = sourceMapRegex.exec(runtimeSourceCode);
+      }
+
+      const foundInlineSourceMap =
+        hookSourceData.sourceConsumer != null &&
+        hookSourceData.metadataConsumer != null;
+      if (!foundInlineSourceMap) {
+        externalSourceMapURLs.forEach((sourceMappingURL, index) => {
+          if (index !== externalSourceMapURLs.length - 1) {
             // Files with external source maps should only have a single source map.
             // More than one result might indicate an edge case,
             // like a string in the source code that matched our "sourceMappingURL" regex.
             // We should just skip over cases like this.
             console.warn(
-              `More than one external source map detected in the source file; skipping "${url}"`,
+              `More than one external source map detected in the source file; skipping "${sourceMappingURL}"`,
             );
-            continue;
+            return;
           }
 
+          const {runtimeSourceURL} = hookSourceData;
+          let url = sourceMappingURL;
           if (!url.startsWith('http') && !url.startsWith('/')) {
             // Resolve paths relative to the location of the file name
             const lastSlashIdx = runtimeSourceURL.lastIndexOf('/');
@@ -316,8 +328,7 @@ function extractAndLoadSourceMaps(
               hookSourceData.sourceConsumer = result?.sourceConsumer ?? null;
             }),
           );
-          break;
-        }
+        });
       }
     }
   });

@@ -25,4 +25,4 @@ function Component() {
     onClick: () => setCount(count + 1)
   }, "Click me"));
 }
-//# sourceMappingURL=Example.js.map
+//# sourceMappingURL=Example.js.map?foo=bar&param=some_value

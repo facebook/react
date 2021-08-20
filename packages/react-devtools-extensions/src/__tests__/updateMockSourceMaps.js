@@ -97,7 +97,8 @@ function compile(fileName) {
   // Generate compiled output with external source maps
   writeFileSync(
     resolve(externalDir, fileName),
-    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code +
+      `\n//# sourceMappingURL=${fileName}.map?foo=bar&param=some_value`,
     'utf8',
   );
   writeFileSync(
@@ -167,7 +168,8 @@ function compile(fileName) {
   // Generate compiled output using external source maps using index map format
   writeFileSync(
     resolve(externalIndexMapDir, fileName),
-    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code +
+      `\n//# sourceMappingURL=${fileName}.map?foo=bar&param=some_value`,
     'utf8',
   );
   writeFileSync(
@@ -242,7 +244,8 @@ function compile(fileName) {
   );
   writeFileSync(
     resolve(externalFbSourcesExtendedDir, fileName),
-    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code +
+      `\n//# sourceMappingURL=${fileName}.map?foo=bar&param=some_value`,
     'utf8',
   );
   writeFileSync(
@@ -260,7 +263,8 @@ function compile(fileName) {
   );
   writeFileSync(
     resolve(externalFbSourcesIndexMapExtendedDir, fileName),
-    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code +
+      `\n//# sourceMappingURL=${fileName}.map?foo=bar&param=some_value`,
     'utf8',
   );
   writeFileSync(
@@ -279,7 +283,8 @@ function compile(fileName) {
   );
   writeFileSync(
     resolve(externalReactSourcesExtendedDir, fileName),
-    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code +
+      `\n//# sourceMappingURL=${fileName}.map?foo=bar&param=some_value`,
     'utf8',
   );
   writeFileSync(
@@ -297,7 +302,8 @@ function compile(fileName) {
   );
   writeFileSync(
     resolve(externalReactSourcesIndexMapExtendedDir, fileName),
-    transformed.code + `\n//# sourceMappingURL=${fileName}.map`,
+    transformed.code +
+      `\n//# sourceMappingURL=${fileName}.map?foo=bar&param=some_value`,
     'utf8',
   );
   writeFileSync(

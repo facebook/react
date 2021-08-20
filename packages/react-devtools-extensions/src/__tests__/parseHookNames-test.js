@@ -57,7 +57,15 @@ describe('parseHookNames', () => {
     };
 
     fetchMock.mockIf(/.+$/, request => {
-      return requireText(request.url, 'utf8');
+      const url = request.url;
+      const isLoadingExternalSourceMap = /external\/.*\.map/.test(url);
+      if (isLoadingExternalSourceMap) {
+        // Assert that url contains correct query params
+        expect(url.includes('?foo=bar&param=some_value')).toBe(true);
+        const fileSystemPath = url.split('?')[0];
+        return requireText(fileSystemPath, 'utf8');
+      }
+      return requireText(url, 'utf8');
     });
   });
 

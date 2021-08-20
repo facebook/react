@@ -42,4 +42,4 @@ function useIsDarkMode() {
   }, []);
   return [isDarkMode, () => {}];
 }
-//# sourceMappingURL=ComponentUsingHooksIndirectly.js.map
+//# sourceMappingURL=ComponentUsingHooksIndirectly.js.map?foo=bar&param=some_value

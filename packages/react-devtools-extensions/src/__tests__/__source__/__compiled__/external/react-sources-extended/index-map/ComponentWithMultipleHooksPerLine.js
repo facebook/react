@@ -27,4 +27,4 @@ function Component() {
 
   return a + b + c + d;
 }
-//# sourceMappingURL=ComponentWithMultipleHooksPerLine.js.map
+//# sourceMappingURL=ComponentWithMultipleHooksPerLine.js.map?foo=bar&param=some_value

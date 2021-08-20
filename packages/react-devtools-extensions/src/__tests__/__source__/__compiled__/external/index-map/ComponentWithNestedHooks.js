@@ -25,4 +25,4 @@ function Component(props) {
 module.exports = {
   Component
 };
-//# sourceMappingURL=ComponentWithNestedHooks.js.map
+//# sourceMappingURL=ComponentWithNestedHooks.js.map?foo=bar&param=some_value

@@ -48,4 +48,4 @@ function useFoo() {
     foo: true
   };
 }
-//# sourceMappingURL=ComponentWithCustomHook.js.map
+//# sourceMappingURL=ComponentWithCustomHook.js.map?foo=bar&param=some_value
