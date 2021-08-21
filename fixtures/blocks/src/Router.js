@@ -8,24 +8,18 @@
 import React, {
   useReducer,
   useEffect,
-  unstable_useTransition as useTransition,
+  useTransition,
   useCallback,
   useMemo,
   Suspense,
+  unstable_useCacheRefresh as useCacheRefresh,
+  unstable_Cache as Cache,
 } from 'react';
-import {createCache, CacheProvider} from 'react/unstable-cache';
 import {RouterProvider} from './client/RouterContext';
 // TODO: can't really import a server component on the client.
 import App from './server/App';
 
 const initialUrl = window.location.pathname;
-const initialState = {
-  // TODO: use this for invalidation.
-  cache: createCache(),
-  url: initialUrl,
-  pendingUrl: initialUrl,
-  root: <App route={initialUrl} />,
-};
 
 function reducer(state, action) {
   switch (action.type) {
@@ -48,10 +42,14 @@ function reducer(state, action) {
 }
 
 function Router() {
+  const initialState = {
+    url: initialUrl,
+    pendingUrl: initialUrl,
+    root: <App route={initialUrl} />,
+  };
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [startTransition, isPending] = useTransition({
-    timeoutMs: 1500,
-  });
+  const [isPending, startTransition] = useTransition();
+  const refresh = useCacheRefresh();
 
   useEffect(() => {
     document.body.style.cursor = isPending ? 'wait' : '';
@@ -62,6 +60,7 @@ function Router() {
       startTransition(() => {
         // TODO: Here, There, and Everywhere.
         // TODO: Instant Transitions, somehow.
+        refresh();
         dispatch({
           type: 'completeNavigation',
           root: <App route={url} />,
@@ -73,7 +72,7 @@ function Router() {
         url,
       });
     },
-    [startTransition]
+    [startTransition, refresh]
   );
 
   useEffect(() => {
@@ -95,9 +94,9 @@ function Router() {
 
   return (
     <Suspense fallback={<h2>Loading...</h2>}>
-      <CacheProvider value={state.cache}>
+      <Cache>
         <RouterProvider value={routeContext}>{state.root}</RouterProvider>
-      </CacheProvider>
+      </Cache>
     </Suspense>
   );
 }
