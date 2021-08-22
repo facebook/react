@@ -381,7 +381,7 @@ function markRetryLaneImpl(fiber: Fiber, retryLane: Lane) {
   }
 }
 
-// Increases the priority of thennables when they resolve within this boundary.
+// Increases the priority of thenables when they resolve within this boundary.
 function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   markRetryLaneImpl(fiber, retryLane);
   const alternate = fiber.alternate;

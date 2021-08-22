@@ -1231,7 +1231,7 @@ function completeWork(
 
                 // If this is a newly suspended tree, it might not get committed as
                 // part of the second pass. In that case nothing will subscribe to
-                // its thennables. Instead, we'll transfer its thennables to the
+                // its thenables. Instead, we'll transfer its thenables to the
                 // SuspenseList so that it can retry if they resolve.
                 // There might be multiple of these in the list but since we're
                 // going to wait for all of them anyway, it doesn't really matter
@@ -1241,9 +1241,9 @@ function completeWork(
                 // We might bail out of the loop before finding any but that
                 // doesn't matter since that means that the other boundaries that
                 // we did find already has their listeners attached.
-                const newThennables = suspended.updateQueue;
-                if (newThennables !== null) {
-                  workInProgress.updateQueue = newThennables;
+                const newThenables = suspended.updateQueue;
+                if (newThenables !== null) {
+                  workInProgress.updateQueue = newThenables;
                   workInProgress.flags |= Update;
                 }
 
@@ -1303,9 +1303,9 @@ function completeWork(
 
             // Ensure we transfer the update queue to the parent so that it doesn't
             // get lost if this row ends up dropped during a second pass.
-            const newThennables = suspended.updateQueue;
-            if (newThennables !== null) {
-              workInProgress.updateQueue = newThennables;
+            const newThenables = suspended.updateQueue;
+            if (newThenables !== null) {
+              workInProgress.updateQueue = newThenables;
               workInProgress.flags |= Update;
             }
 

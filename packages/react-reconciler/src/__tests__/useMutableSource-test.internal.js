@@ -179,7 +179,7 @@ describe('useMutableSource', () => {
       source.value = 'two';
       expect(Scheduler).toFlushAndYieldThrough(['a:two', 'b:two']);
 
-      // Umounting a component should remove its subscription.
+      // Unmounting a component should remove its subscription.
       ReactNoop.renderToRootWithID(
         <>
           <Component
@@ -196,7 +196,7 @@ describe('useMutableSource', () => {
       ReactNoop.flushPassiveEffects();
       expect(source.listenerCount).toBe(1);
 
-      // Umounting a root should remove the remaining event listeners
+      // Unmounting a root should remove the remaining event listeners
       ReactNoop.unmountRootWithID('root');
       expect(Scheduler).toFlushAndYield([]);
       ReactNoop.flushPassiveEffects();
@@ -1789,7 +1789,7 @@ describe('useMutableSource', () => {
 
   if (__DEV__) {
     // See https://github.com/facebook/react/issues/19948
-    describe('side effecte detection', () => {
+    describe('side effects detection', () => {
       it('should throw if a mutable source is mutated during render', () => {
         const source = createSource(0);
         const mutableSource = createMutableSource(
@@ -1805,7 +1805,7 @@ describe('useMutableSource', () => {
             defaultSubscribe,
           );
           Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
-          // Note that mutating an exeternal value during render is a side effect and is not supported.
+          // Note that mutating an external value during render is a side effect and is not supported.
           source.value = mutatedValueInRender++;
           return null;
         }
@@ -1848,7 +1848,7 @@ describe('useMutableSource', () => {
             defaultSubscribe,
           );
           Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
-          // Note that mutating an exeternal value during render is a side effect and is not supported.
+          // Note that mutating an external value during render is a side effect and is not supported.
           if (value === 'initial') {
             source.value = 'updated';
           }

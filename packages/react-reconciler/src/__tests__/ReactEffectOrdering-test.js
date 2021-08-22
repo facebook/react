@@ -32,7 +32,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useLayoutEffect = React.useLayoutEffect;
   });
 
-  test('layout unmmouts on deletion are fired in parent -> child order', async () => {
+  test('layout unmounts on deletion are fired in parent -> child order', async () => {
     const root = ReactNoop.createRoot();
 
     function Parent() {
@@ -59,7 +59,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Unmount parent', 'Unmount child']);
   });
 
-  test('passive unmmouts on deletion are fired in parent -> child order', async () => {
+  test('passive unmounts on deletion are fired in parent -> child order', async () => {
     const root = ReactNoop.createRoot();
 
     function Parent() {

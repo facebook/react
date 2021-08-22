@@ -1517,7 +1517,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    it('does not show a warning when a component updates a childs state from within passive unmount function', () => {
+    it('does not show a warning when a component updates a child state from within passive unmount function', () => {
       function Parent() {
         Scheduler.unstable_yieldValue('Parent');
         const updaterRef = useRef(null);
