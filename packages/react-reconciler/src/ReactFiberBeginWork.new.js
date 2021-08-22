@@ -1901,7 +1901,7 @@ function shouldRemainOnFallback(
   if (current !== null) {
     const suspenseState: SuspenseState = current.memoizedState;
     if (suspenseState === null) {
-      // Currently showing content. Don't hide it, even if ForceSuspenseFallack
+      // Currently showing content. Don't hide it, even if ForceSuspenseFallback
       // is true. More precise name might be "ForceRemainSuspenseFallback".
       // Note: This is a factoring smell. Can't remain on a fallback if there's
       // no fallback to remain on.
@@ -1973,7 +1973,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   pushSuspenseContext(workInProgress, suspenseContext);
 
   // OK, the next part is confusing. We're about to reconcile the Suspense
-  // boundary's children. This involves some custom reconcilation logic. Two
+  // boundary's children. This involves some custom reconciliation logic. Two
   // main reasons this is so complicated.
   //
   // First, Legacy Mode has different semantics for backwards compatibility. The

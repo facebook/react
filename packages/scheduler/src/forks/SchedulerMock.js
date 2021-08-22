@@ -62,7 +62,7 @@ var isSchedulerPaused = false;
 var currentTask = null;
 var currentPriorityLevel = NormalPriority;
 
-// This is set while performing work, to prevent re-entrancy.
+// This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
 
 var isHostCallbackScheduled = false;

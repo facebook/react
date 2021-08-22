@@ -2095,7 +2095,7 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
   // TODO: The factoring of this phase could probably be improved. Consider
   // switching on the type of work before checking the flags. That's what
   // we do in all the other phases. I think this one is only different
-  // because of the shared reconcilation logic below.
+  // because of the shared reconciliation logic below.
   const flags = finishedWork.flags;
 
   if (flags & ContentReset) {
