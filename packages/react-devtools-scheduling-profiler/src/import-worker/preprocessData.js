@@ -67,7 +67,7 @@ const WARNING_STRINGS = {
     'A big nested update was scheduled during layout. ' +
     'Nested updates require React to re-render synchronously before the browser can paint. ' +
     'Consider delaying this update by moving it to a passive effect (useEffect).',
-  SUSPEND_DURING_UPATE:
+  SUSPEND_DURING_UPDATE:
     'A component suspended during an update which caused a fallback to be shown. ' +
     "Consider using the Transition API to avoid hiding components after they've been mounted.",
 };
@@ -951,7 +951,7 @@ export default async function preprocessData(
           lane => profilerData.laneToLabelMap.get(lane) === 'Transition',
         )
       ) {
-        suspenseEvent.warning = WARNING_STRINGS.SUSPEND_DURING_UPATE;
+        suspenseEvent.warning = WARNING_STRINGS.SUSPEND_DURING_UPDATE;
       }
     },
   );
