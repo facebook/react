@@ -7,6 +7,7 @@
  * @flow
  */
 
+import LRU from 'lru-cache';
 import {
   convertInspectedElementBackendToFrontend,
   hydrateHelper,
@@ -14,6 +15,7 @@ import {
 } from 'react-devtools-shared/src/backendAPI';
 import {fillInPath} from 'react-devtools-shared/src/hydration';
 
+import type {LRUCache} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InspectElementFullData,
@@ -25,15 +27,21 @@ import type {
   InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 
-// Map an Element in the Store to the most recent copy of its inspected data.
-// As updates comes from the backend, inspected data is updated.
-// Both this map and the inspected objects in it are mutable.
-// They should never be read from directly during render;
-// Use a Suspense cache to ensure that transitions work correctly and there is no tearing.
-const inspectedElementMap: WeakMap<
-  Element,
+// Maps element ID to inspected data.
+// We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
+// When the frontend polls the backend for an update on the element that's currently inspected,
+// the backend will send a "no-change" message if the element hasn't updated (rendered) since the last time it was asked.
+// In thid case, the frontend cache should reuse the previous (cached) value.
+// Using a WeakMap keyed on Element generally works well for this, since Elements are mutable and stable in the Store.
+// This doens't work properly though when component filters are changed,
+// because this will cause the Store to dump all roots and re-initialize the tree (recreating the Element objects).
+// So instead we key on Element ID (which is stable in this case) and use an LRU for eviction.
+const inspectedElementCache: LRUCache<
+  number,
   InspectedElementFrontend,
-> = new WeakMap();
+> = new LRU({
+  max: 25,
+});
 
 type Path = Array<string | number>;
 
@@ -66,16 +74,18 @@ export function inspectElement({
     switch (type) {
       case 'no-change':
         // This is a no-op for the purposes of our cache.
-        inspectedElement = inspectedElementMap.get(element);
+        inspectedElement = inspectedElementCache.get(element.id);
         if (inspectedElement != null) {
           return [inspectedElement, type];
         }
-        break;
+
+        // We should only encounter this case in the event of a bug.
+        throw Error(`Cached data for element "${id}" not found`);
 
       case 'not-found':
         // This is effectively a no-op.
         // If the Element is still in the Store, we can eagerly remove it from the Map.
-        inspectedElementMap.delete(element);
+        inspectedElementCache.remove(element.id);
 
         throw Error(`Element "${id}" not found`);
 
@@ -88,7 +98,7 @@ export function inspectElement({
           fullData.value,
         );
 
-        inspectedElementMap.set(element, inspectedElement);
+        inspectedElementCache.set(element.id, inspectedElement);
 
         return [inspectedElement, type];
 
@@ -98,7 +108,7 @@ export function inspectElement({
 
         // A path has been hydrated.
         // Merge it with the latest copy we have locally and resolve with the merged value.
-        inspectedElement = inspectedElementMap.get(element) || null;
+        inspectedElement = inspectedElementCache.get(element.id) || null;
         if (inspectedElement !== null) {
           // Clone element
           inspectedElement = {...inspectedElement};
@@ -111,7 +121,7 @@ export function inspectElement({
             hydrateHelper(value, ((path: any): Path)),
           );
 
-          inspectedElementMap.set(element, inspectedElement);
+          inspectedElementCache.set(element.id, inspectedElement);
 
           return [inspectedElement, type];
         }
