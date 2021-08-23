@@ -46,6 +46,9 @@ function syncSavedPreferences() {
     )};
     window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = ${JSON.stringify(
       getHideConsoleLogsInStrictMode(),
+    )};
+    window.__REACT_DEVTOOLS_BROWSER_THEME__ = ${JSON.stringify(
+      getBrowserTheme(),
     )};`,
   );
 }

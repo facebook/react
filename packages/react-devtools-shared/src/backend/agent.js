@@ -40,6 +40,7 @@ import type {
 } from './types';
 import type {ComponentFilter} from '../types';
 import {isSynchronousXHRSupported} from './utils';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -636,11 +637,13 @@ export default class Agent extends EventEmitter<{|
     breakOnConsoleErrors,
     showInlineWarningsAndErrors,
     hideConsoleLogsInStrictMode,
+    browserTheme,
   }: {|
     appendComponentStack: boolean,
     breakOnConsoleErrors: boolean,
     showInlineWarningsAndErrors: boolean,
     hideConsoleLogsInStrictMode: boolean,
+    browserTheme: BrowserTheme,
   |}) => {
     // If the frontend preference has change,
     // or in the case of React Native- if the backend is just finding out the preference-
@@ -651,6 +654,7 @@ export default class Agent extends EventEmitter<{|
       breakOnConsoleErrors,
       showInlineWarningsAndErrors,
       hideConsoleLogsInStrictMode,
+      browserTheme,
     });
   };
 

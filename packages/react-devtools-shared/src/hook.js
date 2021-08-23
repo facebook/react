@@ -10,6 +10,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactRenderer} from './backend/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 import {
   patch as patchConsole,
@@ -224,7 +225,10 @@ export function installHook(target: any): DevToolsHook | null {
   // NOTE: KEEP IN SYNC with src/backend/console.js:patch
   function patchConsoleForInitialRenderInExtension(
     renderer: ReactRenderer,
-    {hideConsoleLogsInStrictMode}: {hideConsoleLogsInStrictMode: boolean},
+    {
+      hideConsoleLogsInStrictMode,
+      browserTheme,
+    }: {hideConsoleLogsInStrictMode: boolean, browserTheme: BrowserTheme},
   ): void {
     const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
 
@@ -346,6 +350,7 @@ export function installHook(target: any): DevToolsHook | null {
           window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
         const hideConsoleLogsInStrictMode =
           window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
+        const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
 
         // The installHook() function is injected by being stringified in the browser,
         // so imports outside of this function do not get included.
@@ -361,10 +366,12 @@ export function installHook(target: any): DevToolsHook | null {
             breakOnConsoleErrors,
             showInlineWarningsAndErrors,
             hideConsoleLogsInStrictMode,
+            browserTheme,
           });
         } else {
           patchConsoleForInitialRenderInExtension(renderer, {
             hideConsoleLogsInStrictMode,
+            browserTheme,
           });
         }
       } catch (error) {}

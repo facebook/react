@@ -742,12 +742,14 @@ export function attach(
       window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
     const hideConsoleLogsInStrictMode =
       window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
+    const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
 
     patchConsole({
       appendComponentStack,
       breakOnConsoleErrors,
       showInlineWarningsAndErrors,
       hideConsoleLogsInStrictMode,
+      browserTheme,
     });
   }
 

@@ -9,6 +9,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 import {format} from './utils';
 
 import {getInternalReactConstants} from './renderer';
@@ -17,9 +18,12 @@ import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 // NOTE: KEEP IN SYNC with src/hook.js
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn', 'log'];
 const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
-const DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, .5)';
-const DIMMED_ERROR_COLOR = 'rgba(250, 123, 130, .5)';
-const DIMMED_LOG_COLOR = 'rgba(125, 125, 125, 0.5)';
+const DARK_MODE_DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, 0.5)';
+const DARK_MODE_DIMMED_ERROR_COLOR = 'rgba(250, 123, 130, 0.5)';
+const DARK_MODE_DIMMED_LOG_COLOR = 'rgba(125, 125, 125, 0.5)';
+const LIGHT_MODE_DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, 0.75)';
+const LIGHT_MODE_DIMMED_ERROR_COLOR = 'rgba(250, 123, 130, 0.75)';
+const LIGHT_MODE_DIMMED_LOG_COLOR = 'rgba(125, 125, 125, 0.75)';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -124,11 +128,13 @@ export function patch({
   breakOnConsoleErrors,
   showInlineWarningsAndErrors,
   hideConsoleLogsInStrictMode,
+  browserTheme,
 }: {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
   hideConsoleLogsInStrictMode: boolean,
+  browserTheme: BrowserTheme,
 }): void {
   // Settings may change after we've patched the console.
   // Using a shared ref allows the patch function to read the latest values.
@@ -248,14 +254,23 @@ export function patch({
               let color;
               switch (method) {
                 case 'warn':
-                  color = DIMMED_WARNING_COLOR;
+                  color =
+                    browserTheme === 'light'
+                      ? LIGHT_MODE_DIMMED_WARNING_COLOR
+                      : DARK_MODE_DIMMED_WARNING_COLOR;
                   break;
                 case 'error':
-                  color = DIMMED_ERROR_COLOR;
+                  color =
+                    browserTheme === 'light'
+                      ? LIGHT_MODE_DIMMED_ERROR_COLOR
+                      : DARK_MODE_DIMMED_ERROR_COLOR;
                   break;
                 case 'log':
                 default:
-                  color = DIMMED_LOG_COLOR;
+                  color =
+                    browserTheme === 'light'
+                      ? LIGHT_MODE_DIMMED_LOG_COLOR
+                      : DARK_MODE_DIMMED_LOG_COLOR;
                   break;
               }
 
