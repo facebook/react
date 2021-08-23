@@ -9,8 +9,7 @@ module.exports = {
   trailingComma: 'es5',
   printWidth: 80,
   parser: 'babel',
-
-  overrides: [
+ overrides: [
     {
       files: esNextPaths,
       options: {
