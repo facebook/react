@@ -916,6 +916,10 @@ export default async function preprocessData(
       profilerData.schedulingEvents.length === 0 &&
       profilerData.batchUIDToMeasuresMap.size === 0
     ) {
+      // No profiler version could indicate data was logged using an older build of React,
+      // before an explicitly profiler version was included in the logging data.
+      // But it could also indicate that the website was either not using React, or using a production build.
+      // The easiest way to check for this case is to see if the data contains any scheduled updates or render work.
       throw new InvalidProfileError(
         'No React marks were found in the provided profile.' +
           ' Please provide profiling data from an React application running in development or profiling mode.',
