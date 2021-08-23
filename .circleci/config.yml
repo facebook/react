@@ -461,7 +461,7 @@ workflows:
           paramters:
             args:
                 - "--project=devtools -r=experimental"
-              react-version:
+            react-version:
                 - '15.0.0'
                 - '15.0.1'
                 - '15.0.2'
