@@ -912,6 +912,16 @@ export default async function preprocessData(
   timeline.forEach(event => processTimelineEvent(event, profilerData, state));
 
   if (profilerVersion === null) {
+    if (
+      profilerData.schedulingEvents.length === 0 &&
+      profilerData.batchUIDToMeasuresMap.size === 0
+    ) {
+      throw new InvalidProfileError(
+        'No React marks were found in the provided profile.' +
+          ' Please provide profiling data from an React application running in development or profiling mode.',
+      );
+    }
+
     throw new InvalidProfileError(
       `This version of profiling data is not supported by the current profiler.`,
     );
