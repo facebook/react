@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+'use strict';
+
 const {execSync} = require('child_process');
 const readline = require('readline');
 
@@ -21,7 +23,7 @@ lines.forEach((line, index) => {
   const [hash, message, date] = line.split(':::');
   hashes.push(hash);
   console.log(
-    `\x1b[1m(${index + 1})\x1b[0m ${message} \x1b[2m(${date})\x1b[0m`,
+    `\x1b[1m(${index + 1})\x1b[0m ${message} \x1b[2m(${date})\x1b[0m`
   );
 });
 
@@ -62,5 +64,5 @@ prompt.question(
     console.log(formattedLog);
 
     prompt.close();
-  },
+  }
 );
