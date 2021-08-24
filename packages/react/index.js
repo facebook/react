@@ -73,6 +73,7 @@ export {
   useReducer,
   useRef,
   useState,
+  useStateRef,
   useTransition,
   version,
 } from './src/React';

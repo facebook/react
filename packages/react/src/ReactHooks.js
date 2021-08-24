@@ -78,6 +78,16 @@ export function useState<S>(
   return dispatcher.useState(initialState);
 }
 
+export function useStateRef<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>, () => S] {
+  const [state, setState] = useState(initialState);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const getState = useCallback(() => stateRef.current, []);
+  return [state, setState, getState];
+}
+
 export function useReducer<S, I, A>(
   reducer: (S, A) => S,
   initialArg: I,
