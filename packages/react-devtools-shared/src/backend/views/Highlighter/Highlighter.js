@@ -8,6 +8,10 @@
  */
 
 import Canvas from './Canvas';
+import type {NativeType} from '../../types';
+import {Data} from './index';
+import type {Rect} from '../utils';
+import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
 
 const SHOW_DURATION = 2000;
 
@@ -45,9 +49,37 @@ export function showOverlay(
     highlightCanvas = new Canvas();
   }
 
-  highlightCanvas.inspect(elements, componentName);
+  const nodeToData: Map<NativeType, Data> = new Map();
+  const nodes = elements.filter(
+    elements => elements.nodeType === Node.ELEMENT_NODE,
+  );
+  nodes.forEach(node => {
+    const rect = measureNode(node);
+    const box = getNestedBoundingClientRect(node, window);
+    const dims = getElementDimensions(node);
+    nodeToData.set(node, {
+      count: 1,
+      rect,
+      box,
+      dims,
+      type: 'DOMHighlighter',
+      nodeName: elements[0],
+    });
+  });
+
+  highlightCanvas.draw(nodeToData, componentName);
 
   if (hideAfterTimeout) {
     timeoutID = setTimeout(hideOverlay, SHOW_DURATION);
   }
+}
+
+function measureNode(node: Object): Rect | null {
+  if (!node || typeof node.getBoundingClientRect !== 'function') {
+    return null;
+  }
+
+  const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
+
+  return getNestedBoundingClientRect(node, currentWindow);
 }

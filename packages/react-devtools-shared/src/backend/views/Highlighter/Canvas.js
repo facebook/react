@@ -36,6 +36,7 @@ const highlightStyles = {
   margin: 'rgba(255, 155, 0, 0.3)',
   border: 'rgba(255, 200, 50, 0.3)',
 };
+let canvas: HTMLCanvasElement | null = null;
 
 type Box = {|top: number, left: number, width: number, height: number|};
 
@@ -106,7 +107,7 @@ export default class Canvas {
   tipBoundsWindow: window;
   container: HTMLElement;
   tip: OverlayTip;
-  canvas: HTMLCanvasElement | null = null;
+  // canvas: HTMLCanvasElement | null = null;
 
   constructor() {
     // Find the root window, because overlays are positioned relative to it.
@@ -127,8 +128,10 @@ export default class Canvas {
   }
 
   initialize(): void {
-    this.canvas = window.document.createElement('canvas');
-    this.canvas.style.cssText = `
+    // this.canvas = window.document.createElement('canvas');
+    // this.canvas.style.cssText = `
+    canvas = window.document.createElement('canvas');
+    canvas.style.cssText = `
     xx-background-color: red;
     xx-opacity: 0.5;
     bottom: 0;
@@ -141,23 +144,21 @@ export default class Canvas {
   `;
 
     const root = window.document.documentElement;
-    root.insertBefore(this.canvas, root.firstChild);
+    // root.insertBefore(this.canvas, root.firstChild);
+    root.insertBefore(canvas, root.firstChild);
   }
 
-  inspect(nodes: Array<HTMLElement>, name?: ?string): void {
-    if (this.canvas === null) {
+  // inspect(nodes: Array<HTMLElement>, name?: ?string): void {
+  draw(nodes: Map<NativeType, Data>, name?: ?string): void {
+    if (canvas === null) {
       this.initialize();
     }
-
-    const canvasFlow: HTMLCanvasElement = ((this
-      .canvas: any): HTMLCanvasElement);
+    const canvasFlow: HTMLCanvasElement = ((canvas: any): HTMLCanvasElement);
     canvasFlow.width = window.innerWidth;
     canvasFlow.height = window.innerHeight;
 
     const context = canvasFlow.getContext('2d');
     context.clearRect(0, 0, canvasFlow.width, canvasFlow.height);
-
-    const elements = nodes.filter(node => node.nodeType === Node.ELEMENT_NODE);
 
     const outerBox = {
       top: Number.POSITIVE_INFINITY,
@@ -165,31 +166,38 @@ export default class Canvas {
       bottom: Number.NEGATIVE_INFINITY,
       left: Number.POSITIVE_INFINITY,
     };
-    elements.forEach((element, index) => {
-      const box = getNestedBoundingClientRect(element, this.window);
-      const dims = getElementDimensions(element);
-      // dims has dimensions calculated from window
-      outerBox.top = Math.min(outerBox.top, box.top - dims.marginTop);
-      outerBox.right = Math.max(
-        outerBox.right,
-        box.left + box.width + dims.marginRight,
-      );
-      outerBox.bottom = Math.max(
-        outerBox.bottom,
-        box.top + box.height + dims.marginBottom,
-      );
-      outerBox.left = Math.min(outerBox.left, box.left - dims.marginLeft);
-
-      const rectNode = this.measureNode(element);
-
-      if (rectNode !== null) {
-        this.fillCanvas(context, rectNode, dims);
+    // elements.forEach((element, index) => {
+    nodes.forEach(({count, rect, box, dims, type, nodeName}) => {
+      if (type === 'DOMHighlighter') {
+        outerBox.top = Math.min(outerBox.top, box.top - dims.marginTop);
+        outerBox.right = Math.max(
+          outerBox.right,
+          box.left + box.width + dims.marginRight,
+        );
+        outerBox.bottom = Math.max(
+          outerBox.bottom,
+          box.top + box.height + dims.marginBottom,
+        );
+        outerBox.left = Math.min(outerBox.left, box.left - dims.marginLeft);
       }
 
-      if (!name) {
-        name = elements[0].nodeName.toLowerCase();
+      if (type === 'DOMHighlighter') {
+        if (rect !== null) {
+          this.fillCanvas(context, rect, dims);
+        }
+      } else {
+        if (rect !== null) {
+          const colorIndex = Math.min(COLORS.length - 1, count - 1);
+          const color = COLORS[colorIndex];
 
-        const node = elements[0];
+          this.drawBorder(context, rect, color);
+        }
+      }
+
+      if (!name && type === 'DOMHighlighter') {
+        name = nodeName.nodeName.toLowerCase();
+
+        const node = nodeName;
         const hook: DevToolsHook =
           node.ownerDocument.defaultView.__REACT_DEVTOOLS_GLOBAL_HOOK__;
         if (hook != null && hook.rendererInterfaces != null) {
@@ -209,41 +217,33 @@ export default class Canvas {
         }
       }
 
-      this.tip.updateText(
-        name,
-        outerBox.right - outerBox.left,
-        outerBox.bottom - outerBox.top,
-      );
-      const tipBounds = getNestedBoundingClientRect(
-        this.tipBoundsWindow.document.documentElement,
-        this.window,
-      );
+      if (type === 'DOMHighlighter') {
+        this.tip.updateText(
+          name,
+          outerBox.right - outerBox.left,
+          outerBox.bottom - outerBox.top,
+        );
+        const tipBounds = getNestedBoundingClientRect(
+          this.tipBoundsWindow.document.documentElement,
+          this.window,
+        );
 
-      this.tip.updatePosition(
-        {
-          top: outerBox.top,
-          left: outerBox.left,
-          height: outerBox.bottom - outerBox.top,
-          width: outerBox.right - outerBox.left,
-        },
-        {
-          top: tipBounds.top + this.tipBoundsWindow.scrollY,
-          left: tipBounds.left + this.tipBoundsWindow.scrollX,
-          height: this.tipBoundsWindow.innerHeight,
-          width: this.tipBoundsWindow.innerWidth,
-        },
-      );
+        this.tip.updatePosition(
+          {
+            top: outerBox.top,
+            left: outerBox.left,
+            height: outerBox.bottom - outerBox.top,
+            width: outerBox.right - outerBox.left,
+          },
+          {
+            top: tipBounds.top + this.tipBoundsWindow.scrollY,
+            left: tipBounds.left + this.tipBoundsWindow.scrollX,
+            height: this.tipBoundsWindow.innerHeight,
+            width: this.tipBoundsWindow.innerWidth,
+          },
+        );
+      }
     });
-  }
-
-  measureNode(node: Object): Rect | null {
-    if (!node || typeof node.getBoundingClientRect !== 'function') {
-      return null;
-    }
-
-    const currentWindow = window.__REACT_DEVTOOLS_TARGET_WINDOW__ || window;
-
-    return getNestedBoundingClientRect(node, currentWindow);
   }
 
   fillCanvas(context: CanvasRenderingContext2D, rect: Rect, dims: any): void {
@@ -295,31 +295,6 @@ export default class Canvas {
     this.destroy();
   }
 
-  //trace updates functions
-
-  draw(nodeToData: Map<NativeType, Data>): void {
-    if (this.canvas === null) {
-      this.initialize();
-    }
-    // const canvasFlow: HTMLCanvasElement = ((traceUpdatesCanvas: any): HTMLCanvasElement);
-    const canvasFlow: HTMLCanvasElement = ((this
-      .canvas: any): HTMLCanvasElement);
-    canvasFlow.width = window.innerWidth;
-    canvasFlow.height = window.innerHeight;
-
-    const context = canvasFlow.getContext('2d');
-    context.clearRect(0, 0, canvasFlow.width, canvasFlow.height);
-
-    nodeToData.forEach(({count, rect}) => {
-      if (rect !== null) {
-        const colorIndex = Math.min(COLORS.length - 1, count - 1);
-        const color = COLORS[colorIndex];
-
-        this.drawBorder(context, rect, color);
-      }
-    });
-  }
-
   drawBorder(
     context: CanvasRenderingContext2D,
     rect: Rect,
@@ -349,11 +324,11 @@ export default class Canvas {
   }
 
   destroy(): void {
-    if (this.canvas !== null) {
-      if (this.canvas.parentNode != null) {
-        this.canvas.parentNode.removeChild(this.canvas);
+    if (canvas !== null) {
+      if (canvas.parentNode != null) {
+        canvas.parentNode.removeChild(canvas);
       }
-      this.canvas = null;
+      canvas = null;
     }
   }
 }
