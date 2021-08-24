@@ -10,6 +10,9 @@
 // Flip this flag to true to enable verbose console debug logging.
 export const __DEBUG__ = false;
 
+// Flip this flag to true to enable performance logging to console.
+export const __PROFILE__ = true;
+
 export const TREE_OPERATION_ADD = 1;
 export const TREE_OPERATION_REMOVE = 2;
 export const TREE_OPERATION_REORDER_CHILDREN = 3;
