@@ -16,6 +16,7 @@ export const {
   enableIsInputPendingContinuous,
   frameYieldMs,
   continuousYieldMs,
+  maxYieldMs,
 } = dynamicFeatureFlags;
 
 export const enableProfiling = __PROFILE__ && enableProfilingFeatureFlag;
