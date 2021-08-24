@@ -2,6 +2,7 @@
 
 'use strict';
 
+const chalk = require('chalk');
 const {exec} = require('child-process-promise');
 const {readFileSync, writeFileSync} = require('fs');
 const {readJsonSync, writeJsonSync} = require('fs-extra');
@@ -30,6 +31,8 @@ const RELEASE_SCRIPT_TOKEN = '<!-- RELEASE_SCRIPT_TOKEN -->';
 
 const ROOT_PATH = join(__dirname, '..', '..');
 
+const DRY_RUN = process.argv.includes('--dry');
+
 async function main() {
   const releaseType = await getReleaseType();
 
@@ -53,19 +56,32 @@ async function main() {
 
   updateChangelog(nextVersion, commitLog);
 
-  console.log(
-    '\nDevTools changelog has been updated with commits since the previous release. ' +
-      'Please review the new entries and add GitHub usernames. ' +
-      'Once this is done, commit all pending changes using:' +
-      `\n\n  \x1b[1\x1b[32mgit commit -am "React DevTools ${previousVersion} -> ${nextVersion}"\x1b[0m\n`
-  );
+  await reviewChangelogPrompt();
+
+  await commitPendingChanges(previousVersion, nextVersion);
 }
 
-const execRead = async (command, options) => {
+async function commitPendingChanges(previousVersion, nextVersion) {
+  console.log(
+    chalk.dim(
+      '  git add . \n' +
+        `  git commit -m "React DevTools ${previousVersion} -> ${nextVersion}"`
+    )
+  );
+
+  if (!DRY_RUN) {
+    await exec(`
+      git add .
+      git commit -m "React DevTools ${previousVersion} -> ${nextVersion}"
+    `);
+  }
+}
+
+async function execRead(command, options) {
   const {stdout} = await exec(command, options);
 
   return stdout.trim();
-};
+}
 
 async function getCommitLog(sha) {
   let formattedLog = '';
@@ -139,6 +155,25 @@ async function getReleaseType() {
   return releaseType;
 }
 
+async function reviewChangelogPrompt() {
+  console.log(
+    '\nThe changelog has been updated with commits since the previous release:' +
+      `\n  \x1b[1m${CHANGELOG_PATH}\x1b[0m` +
+      '\n\nPlease review the new entries and fill in missing GitHub usernames:' +
+      '\n'
+  );
+
+  const {confirm} = await inquirer.prompt({
+    name: 'confirm',
+    type: 'confirm',
+    message: 'Continue the release?',
+  });
+
+  if (!confirm) {
+    process.exit(0);
+  }
+}
+
 function updateChangelog(nextVersion, commitLog) {
   const path = join(ROOT_PATH, CHANGELOG_PATH);
   const oldChangelog = readFileSync(path, 'utf8');
@@ -154,7 +189,11 @@ function updateChangelog(nextVersion, commitLog) {
 
   const newChangelog = `${beginning}${RELEASE_SCRIPT_TOKEN}\n\n${header}\n${commitLog}${end}`;
 
-  writeFileSync(path, newChangelog);
+  console.log(chalk.dim('  Updating changelog: ' + CHANGELOG_PATH));
+
+  if (!DRY_RUN) {
+    writeFileSync(path, newChangelog);
+  }
 }
 
 function updateManifestVersions(previousVersion, nextVersion) {
@@ -167,7 +206,11 @@ function updateManifestVersions(previousVersion, nextVersion) {
       json.version_name = nextVersion;
     }
 
-    writeJsonSync(path, json, {spaces: 2});
+    console.log(chalk.dim('  Updating manifest JSON: ' + partialPath));
+
+    if (!DRY_RUN) {
+      writeJsonSync(path, json, {spaces: 2});
+    }
   });
 }
 
@@ -185,7 +228,11 @@ function updatePackageVersions(previousVersion, nextVersion) {
       }
     }
 
-    writeJsonSync(path, json, {spaces: 2});
+    console.log(chalk.dim('  Updating package JSON: ' + partialPath));
+
+    if (!DRY_RUN) {
+      writeJsonSync(path, json, {spaces: 2});
+    }
   });
 }
 
