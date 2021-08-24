@@ -1,13 +1,6 @@
 # React DevTools changelog
 
-<details>
-  <summary>
-    Changes that have landed in main but are not yet released.
-    Click to see more.
-  </summary>
-
-  <!-- Upcoming changes go here -->
-</details>
+<!-- RELEASE_SCRIPT_TOKEN -->
 
 ## 4.16.0 (August 16, 2021)
 #### Features
