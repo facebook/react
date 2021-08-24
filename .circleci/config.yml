@@ -456,7 +456,7 @@ workflows:
                 # - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
-      - yarn_test_build_devtools:
+      - yarn_test_devtools:
         requires:
         - yarn_test_build_devtools
         matrix:
