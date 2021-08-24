@@ -15,15 +15,8 @@ import {format} from './utils';
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
-// NOTE: KEEP IN SYNC with src/hook.js
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn', 'log'];
 const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
-const DARK_MODE_DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, 0.5)';
-const DARK_MODE_DIMMED_ERROR_COLOR = 'rgba(250, 123, 130, 0.5)';
-const DARK_MODE_DIMMED_LOG_COLOR = 'rgba(125, 125, 125, 0.5)';
-const LIGHT_MODE_DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, 0.75)';
-const LIGHT_MODE_DIMMED_ERROR_COLOR = 'rgba(250, 123, 130, 0.75)';
-const LIGHT_MODE_DIMMED_LOG_COLOR = 'rgba(125, 125, 125, 0.75)';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -256,25 +249,29 @@ export function patch({
                 case 'warn':
                   color =
                     browserTheme === 'light'
-                      ? LIGHT_MODE_DIMMED_WARNING_COLOR
-                      : DARK_MODE_DIMMED_WARNING_COLOR;
+                      ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
+                      : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
                   break;
                 case 'error':
                   color =
                     browserTheme === 'light'
-                      ? LIGHT_MODE_DIMMED_ERROR_COLOR
-                      : DARK_MODE_DIMMED_ERROR_COLOR;
+                      ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
+                      : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
                   break;
                 case 'log':
                 default:
                   color =
                     browserTheme === 'light'
-                      ? LIGHT_MODE_DIMMED_LOG_COLOR
-                      : DARK_MODE_DIMMED_LOG_COLOR;
+                      ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
+                      : process.env.DARK_MODE_DIMMED_LOG_COLOR;
                   break;
               }
 
-              originalMethod(`%c${format(...args)}`, `color: ${color}`);
+              if (color) {
+                originalMethod(`%c${format(...args)}`, `color: ${color}`);
+              } else {
+                throw Error('Console color is not defined');
+              }
             }
           }
         } else {
