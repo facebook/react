@@ -149,7 +149,7 @@ async function buildAndTestStandalonePackage() {
     buildCorePromise,
     `Building ${chalk.bold('react-devtools-core')} package.`,
     {
-      estimate: 20000,
+      estimate: 25000,
     }
   );
 
@@ -289,6 +289,8 @@ async function downloadLatestReactBuild() {
   await logger(installPromise, 'Installing release script dependencies.', {
     estimate: 5000,
   });
+
+  console.log('');
 
   const {commit} = await inquirer.prompt([
     {
@@ -473,17 +475,15 @@ async function reviewChangelogPrompt() {
   );
   console.log(`  ${chalk.bold(CHANGELOG_PATH)}`);
   console.log('');
-  console.log('Please review the new entries and modify the text to:');
+  console.log('Please review the new changelog text for the following:');
   console.log('  1. Organize the list into Features vs Bugfixes');
+  console.log('  1. Filter out any non-user-visible changes (e.g. typo fixes)');
+  console.log('  1. Combine related PRs into a single bullet list.');
   console.log(
-    '  1. Filter out any non-user-visible changes (e.g. typo fixes or changes to build/release scripts)'
+    '  1. Replacing the "USERNAME" placeholder text with the GitHub username(s)'
   );
-  console.log(
-    '  1. Combine related PRs into a single bullet list (e.g. this scheduling profiler bullet)'
-  );
-  console.log(
-    '  1. Replacing the "USERNAME" placeholder text with the GitHub username(s) for people who worked on each PR.'
-  );
+  console.log('');
+  console.log(`  ${chalk.bold.green(`open ${CHANGELOG_PATH}`)}`);
 
   await confirmContinue();
 }
