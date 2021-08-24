@@ -15,6 +15,7 @@ import {
   enableIsInputPendingContinuous,
   frameYieldMs,
   continuousYieldMs,
+  maxYieldMs,
 } from '../SchedulerFeatureFlags';
 
 import {push, pop, peek} from '../SchedulerMinHeap';
@@ -431,7 +432,7 @@ let taskTimeoutID = -1;
 // need to be frame aligned; for those that do, use requestAnimationFrame.
 let frameInterval = frameYieldMs;
 const continuousInputInterval = continuousYieldMs;
-const maxInterval = 300;
+const maxInterval = maxYieldMs;
 let startTime = -1;
 
 let needsPaint = false;
