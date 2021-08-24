@@ -2,6 +2,20 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.17.0 (August 24, 2021)
+
+#### Features
+* Scheduling Profiler: Add network measures ([bvaughn](https://github.com/bvaughn) in [#22112](https://github.com/facebook/react/pull/22112))
+* Add options for disabling some features ([hbenl](https://github.com/hbenl) in [#22136](https://github.com/facebook/react/pull/22136))
+
+#### Bugfix
+* Fixed broken scroll-to error or warning feature ([bvaughn](https://github.com/bvaughn) and [eps1lon](https://github.com/eps1lon) in [#22147](https://github.com/facebook/react/pull/22147) and [#22144](https://github.com/facebook/react/pull/22144))
+* Replaced WeakMap with LRU for inspected element cache ([bvaughn](https://github.com/bvaughn) in [#22160](https://github.com/facebook/react/pull/22160))
+* Add more detailed error handling if profiling data does not have any React marks ([byronluk](https://github.com/byronluk) in [#22157](https://github.com/facebook/react/pull/22157))
+* Various named hooks bug fixes ([jstejada](https://github.com/jstejada) in [#22129](https://github.com/facebook/react/pull/22129), [#22128](https://github.com/facebook/react/pull/22128), [#22096](https://github.com/facebook/react/pull/22096), and [#22148](https://github.com/facebook/react/pull/22148))
+* Fix tooltip wheel event regression ([bvaughn](https://github.com/bvaughn) in [#22130](https://github.com/facebook/react/pull/22130))
+* Replace `source-map` library with `source-map-js` for named hooks source map parsing ([bvaughn](https://github.com/bvaughn) in [#22126](https://github.com/facebook/react/pull/22126))
+
 ## 4.16.0 (August 16, 2021)
 #### Features
 * Scheduling Profiler: Inline snapshots ([bvaughn](https://github.com/bvaughn) in [#22091](https://github.com/facebook/react/pull/22091) and[bvaughn](https://github.com/bvaughn) in [#22088](https://github.com/facebook/react/pull/22088))
