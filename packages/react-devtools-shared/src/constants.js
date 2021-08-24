@@ -11,7 +11,7 @@
 export const __DEBUG__ = false;
 
 // Flip this flag to true to enable performance logging to console.
-export const __PROFILE__ = true;
+export const __PROFILE__ = false;
 
 export const TREE_OPERATION_ADD = 1;
 export const TREE_OPERATION_REMOVE = 2;
