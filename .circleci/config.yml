@@ -378,8 +378,8 @@ workflows:
       # NOTE: This job is only enabled when we want the forks to be in sync.
       # When the forks intentionally diverge, comment out the job to disable it.
       # - sync_reconciler_forks:
-          requires:
-            - setup
+          # requires:
+          #   - setup
       - yarn_test:
           requires:
             - setup
