@@ -10,6 +10,14 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
 
+// Re-export dynamic flags from the internal module. Intentionally using *
+// because this import is compiled to a `require` call.
+import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
+
+// We destructure each value before re-exporting to avoid a dynamic look-up on
+// the exports object every time a flag is read.
+export const {enablePersistentOffscreenHostContainer} = dynamicFlags;
+
 // The rest of the flags are static for better dead code elimination.
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;

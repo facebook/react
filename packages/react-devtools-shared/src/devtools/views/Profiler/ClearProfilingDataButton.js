@@ -8,22 +8,41 @@
  */
 
 import * as React from 'react';
-import {useCallback, useContext} from 'react';
+import {useContext} from 'react';
 import {ProfilerContext} from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
+import {SchedulingProfilerContext} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
 
 export default function ClearProfilingDataButton() {
   const store = useContext(StoreContext);
-  const {didRecordCommits, isProfiling} = useContext(ProfilerContext);
+  const {didRecordCommits, isProfiling, selectedTabID} = useContext(
+    ProfilerContext,
+  );
+  const {clearSchedulingProfilerData, schedulingProfilerData} = useContext(
+    SchedulingProfilerContext,
+  );
   const {profilerStore} = store;
 
-  const clear = useCallback(() => profilerStore.clear(), [profilerStore]);
+  let doesHaveData = false;
+  if (selectedTabID === 'scheduling-profiler') {
+    doesHaveData = schedulingProfilerData !== null;
+  } else {
+    doesHaveData = didRecordCommits;
+  }
+
+  const clear = () => {
+    if (selectedTabID === 'scheduling-profiler') {
+      clearSchedulingProfilerData();
+    } else {
+      profilerStore.clear();
+    }
+  };
 
   return (
     <Button
-      disabled={isProfiling || !didRecordCommits}
+      disabled={isProfiling || !doesHaveData}
       onClick={clear}
       title="Clear profiling data">
       <ButtonIcon type="clear" />

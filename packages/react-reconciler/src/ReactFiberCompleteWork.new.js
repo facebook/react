@@ -84,6 +84,8 @@ import {
   supportsMutation,
   supportsPersistence,
   cloneInstance,
+  cloneHiddenInstance,
+  cloneHiddenTextInstance,
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
@@ -128,6 +130,7 @@ import {
   enableProfilerTimer,
   enableCache,
   enableSuspenseLayoutEffectSemantics,
+  enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
 import {
   renderDidSuspend,
@@ -198,7 +201,12 @@ let updateHostText;
 if (supportsMutation) {
   // Mutation mode
 
-  appendAllChildren = function(parent: Instance, workInProgress: Fiber) {
+  appendAllChildren = function(
+    parent: Instance,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
+  ) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
@@ -286,22 +294,53 @@ if (supportsMutation) {
 } else if (supportsPersistence) {
   // Persistent host tree mode
 
-  appendAllChildren = function(parent: Instance, workInProgress: Fiber) {
+  appendAllChildren = function(
+    parent: Instance,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
+  ) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
     while (node !== null) {
       // eslint-disable-next-line no-labels
       branches: if (node.tag === HostComponent) {
-        const instance = node.stateNode;
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
+        }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostText) {
-        const instance = node.stateNode;
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const text = node.memoizedProps;
+          instance = cloneHiddenTextInstance(instance, text, node);
+        }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
+      } else if (
+        node.tag === OffscreenComponent &&
+        node.memoizedState !== null
+      ) {
+        // The children in this boundary are hidden. Toggle their visibility
+        // before appending.
+        const child = node.child;
+        if (child !== null) {
+          child.return = node;
+        }
+        if (enablePersistentOffscreenHostContainer) {
+          appendAllChildren(parent, node, false, false);
+        } else {
+          appendAllChildren(parent, node, true, true);
+        }
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -327,6 +366,8 @@ if (supportsMutation) {
   const appendAllChildrenToContainer = function(
     containerChildSet: ChildSet,
     workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
   ) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
@@ -334,15 +375,41 @@ if (supportsMutation) {
     while (node !== null) {
       // eslint-disable-next-line no-labels
       branches: if (node.tag === HostComponent) {
-        const instance = node.stateNode;
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
+        }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostText) {
-        const instance = node.stateNode;
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const text = node.memoizedProps;
+          instance = cloneHiddenTextInstance(instance, text, node);
+        }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
+      } else if (
+        node.tag === OffscreenComponent &&
+        node.memoizedState !== null
+      ) {
+        // The children in this boundary are hidden. Toggle their visibility
+        // before appending.
+        const child = node.child;
+        if (child !== null) {
+          child.return = node;
+        }
+        if (enablePersistentOffscreenHostContainer) {
+          appendAllChildrenToContainer(containerChildSet, node, false, false);
+        } else {
+          appendAllChildrenToContainer(containerChildSet, node, true, true);
+        }
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -376,7 +443,7 @@ if (supportsMutation) {
       const container = portalOrRoot.containerInfo;
       const newChildSet = createContainerChildSet(container);
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(newChildSet, workInProgress);
+      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
@@ -449,7 +516,7 @@ if (supportsMutation) {
       markUpdate(workInProgress);
     } else {
       // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress);
+      appendAllChildren(newInstance, workInProgress, false, false);
     }
   };
   updateHostText = function(
@@ -722,7 +789,7 @@ export function completeSuspendedOffscreenHostContainer(
       workInProgress,
     );
 
-    appendAllChildren(instance, workInProgress);
+    appendAllChildren(instance, workInProgress, false, false);
 
     workInProgress.stateNode = instance;
 
@@ -869,7 +936,7 @@ function completeWork(
             workInProgress,
           );
 
-          appendAllChildren(instance, workInProgress);
+          appendAllChildren(instance, workInProgress, false, false);
 
           workInProgress.stateNode = instance;
 
@@ -1164,7 +1231,7 @@ function completeWork(
 
                 // If this is a newly suspended tree, it might not get committed as
                 // part of the second pass. In that case nothing will subscribe to
-                // its thennables. Instead, we'll transfer its thennables to the
+                // its thenables. Instead, we'll transfer its thenables to the
                 // SuspenseList so that it can retry if they resolve.
                 // There might be multiple of these in the list but since we're
                 // going to wait for all of them anyway, it doesn't really matter
@@ -1174,9 +1241,9 @@ function completeWork(
                 // We might bail out of the loop before finding any but that
                 // doesn't matter since that means that the other boundaries that
                 // we did find already has their listeners attached.
-                const newThennables = suspended.updateQueue;
-                if (newThennables !== null) {
-                  workInProgress.updateQueue = newThennables;
+                const newThenables = suspended.updateQueue;
+                if (newThenables !== null) {
+                  workInProgress.updateQueue = newThenables;
                   workInProgress.flags |= Update;
                 }
 
@@ -1236,9 +1303,9 @@ function completeWork(
 
             // Ensure we transfer the update queue to the parent so that it doesn't
             // get lost if this row ends up dropped during a second pass.
-            const newThennables = suspended.updateQueue;
-            if (newThennables !== null) {
-              workInProgress.updateQueue = newThennables;
+            const newThenables = suspended.updateQueue;
+            if (newThenables !== null) {
+              workInProgress.updateQueue = newThenables;
               workInProgress.flags |= Update;
             }
 

@@ -209,7 +209,7 @@ export class UserTimingMarksView extends View {
       frame,
     );
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
-    const markTimestampAllowance = widthToDuration(
+    const timestampAllowance = widthToDuration(
       USER_TIMING_MARK_SIZE / 2,
       scaleFactor,
     );
@@ -221,10 +221,9 @@ export class UserTimingMarksView extends View {
       const {timestamp} = mark;
 
       if (
-        timestamp - markTimestampAllowance <= hoverTimestamp &&
-        hoverTimestamp <= timestamp + markTimestampAllowance
+        timestamp - timestampAllowance <= hoverTimestamp &&
+        hoverTimestamp <= timestamp + timestampAllowance
       ) {
-        this.currentCursor = 'pointer';
         viewRefs.hoveredView = this;
         onHover(mark);
         return;

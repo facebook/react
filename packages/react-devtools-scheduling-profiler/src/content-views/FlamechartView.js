@@ -21,12 +21,11 @@ import type {
 } from '../view-base';
 
 import {
-  ColorView,
+  BackgroundColorView,
   Surface,
   View,
   layeredLayout,
   rectContainsPoint,
-  rectEqualToRect,
   intersectionOfRects,
   rectIntersectsRect,
   verticallyStackedLayout,
@@ -36,11 +35,10 @@ import {
   positioningScaleFactor,
   timestampToPosition,
 } from './utils/positioning';
+import {drawText} from './utils/text';
 import {
   COLORS,
-  FONT_SIZE,
   FLAMECHART_FRAME_HEIGHT,
-  TEXT_PADDING,
   COLOR_HOVER_DIM_DELTA,
   BORDER_SIZE,
 } from './constants';
@@ -70,29 +68,6 @@ function hoverColorForStackFrame(stackFrame: FlamechartStackFrame): string {
   );
   return hslaColorToString(color);
 }
-
-const cachedFlamechartTextWidths = new Map();
-const trimFlamechartText = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  width: number,
-) => {
-  for (let i = text.length - 1; i >= 0; i--) {
-    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
-
-    let measuredWidth = cachedFlamechartTextWidths.get(trimmedText);
-    if (measuredWidth == null) {
-      measuredWidth = context.measureText(trimmedText).width;
-      cachedFlamechartTextWidths.set(trimmedText, measuredWidth);
-    }
-
-    if (measuredWidth <= width) {
-      return trimmedText;
-    }
-  }
-
-  return null;
-};
 
 class FlamechartStackLayerView extends View {
   /** Layer to display */
@@ -153,17 +128,13 @@ class FlamechartStackLayerView extends View {
       visibleArea,
     } = this;
 
-    context.fillStyle = COLORS.BACKGROUND;
+    context.fillStyle = COLORS.PRIORITY_BACKGROUND;
     context.fillRect(
       visibleArea.origin.x,
       visibleArea.origin.y,
       visibleArea.size.width,
       visibleArea.size.height,
     );
-
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font = `${FONT_SIZE}px sans-serif`;
 
     const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
 
@@ -201,45 +172,29 @@ class FlamechartStackLayerView extends View {
         drawableRect.size.height,
       );
 
-      if (width > TEXT_PADDING * 2) {
-        const trimmedName = trimFlamechartText(
-          context,
-          name,
-          width - TEXT_PADDING * 2 + (x < 0 ? x : 0),
-        );
+      drawText(name, context, nodeRect, drawableRect);
+    }
 
-        if (trimmedName !== null) {
-          context.fillStyle = COLORS.TEXT_COLOR;
-
-          // Prevent text from being drawn outside `viewableArea`
-          const textOverflowsViewableArea = !rectEqualToRect(
-            drawableRect,
-            nodeRect,
-          );
-          if (textOverflowsViewableArea) {
-            context.save();
-            context.beginPath();
-            context.rect(
-              drawableRect.origin.x,
-              drawableRect.origin.y,
-              drawableRect.size.width,
-              drawableRect.size.height,
-            );
-            context.closePath();
-            context.clip();
-          }
-
-          context.fillText(
-            trimmedName,
-            nodeRect.origin.x + TEXT_PADDING - (x < 0 ? x : 0),
-            nodeRect.origin.y + FLAMECHART_FRAME_HEIGHT / 2,
-          );
-
-          if (textOverflowsViewableArea) {
-            context.restore();
-          }
-        }
-      }
+    // Render bottom border.
+    const borderFrame: Rect = {
+      origin: {
+        x: frame.origin.x,
+        y: frame.origin.y + FLAMECHART_FRAME_HEIGHT - BORDER_SIZE,
+      },
+      size: {
+        width: frame.size.width,
+        height: BORDER_SIZE,
+      },
+    };
+    if (rectIntersectsRect(borderFrame, visibleArea)) {
+      const borderDrawableRect = intersectionOfRects(borderFrame, visibleArea);
+      context.fillStyle = COLORS.PRIORITY_BORDER;
+      context.fillRect(
+        borderDrawableRect.origin.x,
+        borderDrawableRect.origin.y,
+        borderDrawableRect.size.width,
+        borderDrawableRect.size.height,
+      );
     }
   }
 
@@ -262,13 +217,17 @@ class FlamechartStackLayerView extends View {
       const flamechartStackFrame = _stackLayer[currentIndex];
       const {timestamp, duration} = flamechartStackFrame;
 
-      const width = durationToWidth(duration, scaleFactor);
       const x = Math.floor(timestampToPosition(timestamp, scaleFactor, frame));
-      if (x <= location.x && x + width >= location.x) {
-        this.currentCursor = 'pointer';
-        viewRefs.hoveredView = this;
-        _onHover(flamechartStackFrame);
-        return;
+      const width = durationToWidth(duration, scaleFactor);
+
+      // Don't show tooltips for nodes that are too small to render at this zoom level.
+      if (Math.floor(width - BORDER_SIZE) >= 1) {
+        if (x <= location.x && x + width >= location.x) {
+          this.currentCursor = 'context-menu';
+          viewRefs.hoveredView = this;
+          _onHover(flamechartStackFrame);
+          return;
+        }
       }
 
       if (x > location.x) {
@@ -336,10 +295,8 @@ export class FlamechartView extends View {
       return rowView;
     });
 
-    // Add a plain background view to prevent gaps from appearing between
-    // flamechartRowViews.
-    const colorView = new ColorView(surface, frame, COLORS.BACKGROUND);
-    this.addSubview(colorView);
+    // Add a plain background view to prevent gaps from appearing between flamechartRowViews.
+    this.addSubview(new BackgroundColorView(surface, frame));
     this.addSubview(this._verticalStackView);
   }
 
@@ -359,7 +316,12 @@ export class FlamechartView extends View {
 
   desiredSize() {
     // Ignore the wishes of the background color view
-    return this._verticalStackView.desiredSize();
+    const intrinsicSize = this._verticalStackView.desiredSize();
+    return {
+      ...intrinsicSize,
+      // Collapsed by default
+      maxInitialHeight: 0,
+    };
   }
 
   /**

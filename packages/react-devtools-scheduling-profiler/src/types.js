@@ -7,7 +7,7 @@
  * @flow
  */
 
-// Type utilities
+import type {ScrollState} from './view-base/utils/scrollState';
 
 // Source: https://github.com/facebook/flow/issues/4002#issuecomment-323612798
 // eslint-disable-next-line no-unused-vars
@@ -26,60 +26,50 @@ export type NativeEvent = {|
   +duration: Milliseconds,
   +timestamp: Milliseconds,
   +type: string,
-  warnings: Set<string> | null,
+  warning: string | null,
 |};
 
 type BaseReactEvent = {|
   +componentName?: string,
-  +componentStack?: string,
   +timestamp: Milliseconds,
+  warning: string | null,
 |};
 
 type BaseReactScheduleEvent = {|
   ...BaseReactEvent,
   +lanes: ReactLane[],
-  +laneLabels: string[],
 |};
 export type ReactScheduleRenderEvent = {|
   ...BaseReactScheduleEvent,
-  type: 'schedule-render',
+  +type: 'schedule-render',
 |};
 export type ReactScheduleStateUpdateEvent = {|
   ...BaseReactScheduleEvent,
-  type: 'schedule-state-update',
-  isCascading: boolean,
+  +type: 'schedule-state-update',
 |};
 export type ReactScheduleForceUpdateEvent = {|
   ...BaseReactScheduleEvent,
-  type: 'schedule-force-update',
-  isCascading: boolean,
+  +type: 'schedule-force-update',
 |};
 
-type BaseReactSuspenseEvent = {|
+export type Phase = 'mount' | 'update';
+
+export type SuspenseEvent = {|
   ...BaseReactEvent,
-  id: string,
-|};
-export type ReactSuspenseSuspendEvent = {|
-  ...BaseReactSuspenseEvent,
-  type: 'suspense-suspend',
-|};
-export type ReactSuspenseResolvedEvent = {|
-  ...BaseReactSuspenseEvent,
-  type: 'suspense-resolved',
-|};
-export type ReactSuspenseRejectedEvent = {|
-  ...BaseReactSuspenseEvent,
-  type: 'suspense-rejected',
+  depth: number,
+  duration: number | null,
+  +id: string,
+  +phase: Phase | null,
+  resolution: 'rejected' | 'resolved' | 'unresolved',
+  resuspendTimestamps: Array<number> | null,
+  +type: 'suspense',
 |};
 
-export type ReactEvent =
+export type SchedulingEvent =
   | ReactScheduleRenderEvent
   | ReactScheduleStateUpdateEvent
-  | ReactScheduleForceUpdateEvent
-  | ReactSuspenseSuspendEvent
-  | ReactSuspenseResolvedEvent
-  | ReactSuspenseRejectedEvent;
-export type ReactEventType = $PropertyType<ReactEvent, 'type'>;
+  | ReactScheduleForceUpdateEvent;
+export type SchedulingEventType = $PropertyType<SchedulingEvent, 'type'>;
 
 export type ReactMeasureType =
   | 'commit'
@@ -95,11 +85,30 @@ export type BatchUID = number;
 export type ReactMeasure = {|
   +type: ReactMeasureType,
   +lanes: ReactLane[],
-  +laneLabels: string[],
   +timestamp: Milliseconds,
   +duration: Milliseconds,
   +batchUID: BatchUID,
   +depth: number,
+|};
+
+export type NetworkMeasure = {|
+  +depth: number,
+  finishTimestamp: Milliseconds,
+  firstReceivedDataTimestamp: Milliseconds,
+  lastReceivedDataTimestamp: Milliseconds,
+  priority: string,
+  receiveResponseTimestamp: Milliseconds,
+  +requestId: string,
+  requestMethod: string,
+  sendRequestTimestamp: Milliseconds,
+  url: string,
+|};
+
+export type ReactComponentMeasure = {|
+  +componentName: string,
+  duration: Milliseconds,
+  +timestamp: Milliseconds,
+  warning: string | null,
 |};
 
 /**
@@ -119,6 +128,14 @@ export type UserTimingMark = {|
   timestamp: Milliseconds,
 |};
 
+export type Snapshot = {|
+  height: number,
+  image: Image | null,
+  +imageSource: string,
+  +timestamp: Milliseconds,
+  width: number,
+|};
+
 /**
  * A "layer" of stack frames in the profiler UI, i.e. all stack frames of the
  * same depth across all stack traces. Displayed as a flamechart row in the UI.
@@ -127,21 +144,47 @@ export type FlamechartStackLayer = FlamechartStackFrame[];
 
 export type Flamechart = FlamechartStackLayer[];
 
+export type HorizontalScrollStateChangeCallback = (
+  scrollState: ScrollState,
+) => void;
+
+// Imperative view state that corresponds to profiler data.
+// This state lives outside of React's lifecycle
+// and should be erased/reset whenever new profiler data is loaded.
+export type ViewState = {|
+  horizontalScrollState: ScrollState,
+  onHorizontalScrollStateChange: (
+    callback: HorizontalScrollStateChangeCallback,
+  ) => void,
+  updateHorizontalScrollState: (scrollState: ScrollState) => void,
+  viewToMutableViewStateMap: Map<string, mixed>,
+|};
+
 export type ReactProfilerData = {|
-  startTime: number,
+  batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
+  componentMeasures: ReactComponentMeasure[],
   duration: number,
-  nativeEvents: NativeEvent[],
-  reactEvents: ReactEvent[],
-  measures: ReactMeasure[],
   flamechart: Flamechart,
+  laneToLabelMap: Map<ReactLane, string>,
+  laneToReactMeasureMap: Map<ReactLane, ReactMeasure[]>,
+  nativeEvents: NativeEvent[],
+  networkMeasures: NetworkMeasure[],
   otherUserTimingMarks: UserTimingMark[],
+  reactVersion: string | null,
+  schedulingEvents: SchedulingEvent[],
+  snapshots: Snapshot[],
+  startTime: number,
+  suspenseEvents: SuspenseEvent[],
 |};
 
 export type ReactHoverContextInfo = {|
-  nativeEvent: NativeEvent | null,
-  reactEvent: ReactEvent | null,
-  measure: ReactMeasure | null,
-  data: $ReadOnly<ReactProfilerData> | null,
+  componentMeasure: ReactComponentMeasure | null,
   flamechartStackFrame: FlamechartStackFrame | null,
+  measure: ReactMeasure | null,
+  nativeEvent: NativeEvent | null,
+  networkMeasure: NetworkMeasure | null,
+  schedulingEvent: SchedulingEvent | null,
+  suspenseEvent: SuspenseEvent | null,
+  snapshot: Snapshot | null,
   userTimingMark: UserTimingMark | null,
 |};

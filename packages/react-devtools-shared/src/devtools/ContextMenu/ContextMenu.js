@@ -68,11 +68,15 @@ export default function ContextMenu({children, id}: Props) {
     const element = bodyAccessorRef.current;
     if (element !== null) {
       const ownerDocument = element.ownerDocument;
-      containerRef.current = ownerDocument.createElement('div');
-      ownerDocument.body.appendChild(containerRef.current);
-      return () => {
-        ownerDocument.body.removeChild(containerRef.current);
-      };
+      containerRef.current = ownerDocument.querySelector(
+        '[data-react-devtools-portal-root]',
+      );
+
+      if (containerRef.current == null) {
+        console.warn(
+          'DevTools tooltip root node not found; context menus will be disabled.',
+        );
+      }
     }
   }, []);
 

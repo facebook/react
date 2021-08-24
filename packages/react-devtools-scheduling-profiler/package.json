@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-devtools-scheduling-profiler",
-  "version": "4.14.0",
+  "version": "4.17.0",
   "license": "MIT",
   "dependencies": {
     "@elg/speedscope": "1.9.0-a6f84db",
@@ -9,13 +9,13 @@
     "memoize-one": "^5.1.1",
     "nullthrows": "^1.1.1",
     "pretty-ms": "^7.0.0",
-    "react-virtualized-auto-sizer": "^1.0.2",
+    "react-virtualized-auto-sizer": "^1.0.6",
     "regenerator-runtime": "^0.13.7"
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.1",
-    "@reach/menu-button": "^0.11.2",
-    "@reach/tooltip": "^0.11.2",
+    "@reach/menu-button": "^0.16.1",
+    "@reach/tooltip": "^0.16.0",
     "babel-loader": "^8.1.0",
     "css-loader": "^4.2.1",
     "file-loader": "^6.0.0",

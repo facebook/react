@@ -307,7 +307,7 @@ describe('ReactCompositeComponent', () => {
     ReactDOM.render(<MyComponent />, container2);
   });
 
-  it('should warn about `forceUpdate` on unmounted components', () => {
+  it('should not warn about `forceUpdate` on unmounted components', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -325,19 +325,11 @@ describe('ReactCompositeComponent', () => {
 
     ReactDOM.unmountComponentAtNode(container);
 
-    expect(() => instance.forceUpdate()).toErrorDev(
-      "Warning: Can't perform a React state update on an unmounted " +
-        'component. This is a no-op, but it indicates a memory leak in your ' +
-        'application. To fix, cancel all subscriptions and asynchronous ' +
-        'tasks in the componentWillUnmount method.\n' +
-        '    in Component (at **)',
-    );
-
-    // No additional warning should be recorded
+    instance.forceUpdate();
     instance.forceUpdate();
   });
 
-  it('should warn about `setState` on unmounted components', () => {
+  it('should not warn about `setState` on unmounted components', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -365,22 +357,10 @@ describe('ReactCompositeComponent', () => {
     expect(renders).toBe(1);
 
     instance.setState({value: 1});
-
     expect(renders).toBe(2);
 
     ReactDOM.render(<div />, container);
-
-    expect(() => {
-      instance.setState({value: 2});
-    }).toErrorDev(
-      "Warning: Can't perform a React state update on an unmounted " +
-        'component. This is a no-op, but it indicates a memory leak in your ' +
-        'application. To fix, cancel all subscriptions and asynchronous ' +
-        'tasks in the componentWillUnmount method.\n' +
-        '    in Component (at **)\n' +
-        '    in span',
-    );
-
+    instance.setState({value: 2});
     expect(renders).toBe(2);
   });
 

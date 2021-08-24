@@ -9,6 +9,16 @@
 
 export type Point = $ReadOnly<{|x: number, y: number|}>;
 export type Size = $ReadOnly<{|width: number, height: number|}>;
+export type IntrinsicSize = {|
+  ...Size,
+
+  // If content is this height or less, hide the scrollbar entirely,
+  // so that it doesn't take up vertical space unnecessarily (e.g. for a single row of content).
+  hideScrollBarIfLessThanHeight?: number,
+
+  // The initial height should be the height of the content, or this, whichever is less.
+  maxInitialHeight?: number,
+|};
 export type Rect = $ReadOnly<{|origin: Point, size: Size|}>;
 
 /**
@@ -70,6 +80,15 @@ function boxToRect(box: Box): Rect {
 }
 
 export function rectIntersectsRect(rect1: Rect, rect2: Rect): boolean {
+  if (
+    rect1.size.width === 0 ||
+    rect1.size.height === 0 ||
+    rect2.size.width === 0 ||
+    rect2.size.height === 0
+  ) {
+    return false;
+  }
+
   const [top1, right1, bottom1, left1] = rectToBox(rect1);
   const [top2, right2, bottom2, left2] = rectToBox(rect2);
   return !(

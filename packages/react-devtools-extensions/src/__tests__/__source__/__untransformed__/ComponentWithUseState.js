@@ -14,6 +14,7 @@ function Component(props) {
   const [foo] = useState(true);
   const bar = useState(true);
   const [baz] = React.useState(true);
+  const [, forceUpdate] = useState();
   return `${foo}-${bar}-${baz}`;
 }
 

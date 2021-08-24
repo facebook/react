@@ -192,7 +192,7 @@ function propagateContextChange_eager<T>(
   context: ReactContext<T>,
   renderLanes: Lanes,
 ): void {
-  // Only used by eager implemenation
+  // Only used by eager implementation
   if (enableLazyContextPropagation) {
     return;
   }
@@ -322,7 +322,7 @@ function propagateContextChanges<T>(
   renderLanes: Lanes,
   forcePropagateEntireTree: boolean,
 ): void {
-  // Only used by lazy implemenation
+  // Only used by lazy implementation
   if (!enableLazyContextPropagation) {
     return;
   }
@@ -351,7 +351,7 @@ function propagateContextChanges<T>(
           if (dependency.context === context) {
             // Match! Schedule an update on this fiber.
 
-            // In the lazy implemenation, don't mark a dirty flag on the
+            // In the lazy implementation, don't mark a dirty flag on the
             // dependency itself. Not all changes are propagated, so we can't
             // rely on the propagation function alone to determine whether
             // something has changed; the consumer will check. In the future, we

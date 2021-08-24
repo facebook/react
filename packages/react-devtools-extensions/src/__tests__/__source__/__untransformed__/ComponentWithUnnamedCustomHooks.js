@@ -12,18 +12,24 @@ const {useDebugValue} = require('react');
 function Component(props) {
   useCustomHookOne();
   const [bar] = useCustomHookTwo();
-  return bar;
+  const {foo} = useCustomHookThree();
+  return `${bar}-${foo}`;
 }
 
 function useCustomHookOne() {
   // DebugValue hook should not appear in log.
-  useDebugValue('example');
+  useDebugValue('example1');
 }
 
 function useCustomHookTwo() {
   // DebugValue hook should not appear in log.
-  useDebugValue('example');
+  useDebugValue('example2');
   return [true];
+}
+
+function useCustomHookThree() {
+  useDebugValue('example3');
+  return {foo: true};
 }
 
 module.exports = {Component};

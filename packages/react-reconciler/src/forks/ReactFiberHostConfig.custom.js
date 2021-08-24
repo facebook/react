@@ -131,6 +131,8 @@ export const getOffscreenContainerType =
   $$$hostConfig.getOffscreenContainerType;
 export const getOffscreenContainerProps =
   $$$hostConfig.getOffscreenContainerProps;
+export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
+export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 
 // -------------------
 //     Hydration

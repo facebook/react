@@ -203,7 +203,7 @@ let isFlushing = false;
 function flushActQueue(queue) {
   if (__DEV__) {
     if (!isFlushing) {
-      // Prevent re-entrancy.
+      // Prevent re-entrance.
       isFlushing = true;
       let i = 0;
       try {

@@ -230,7 +230,7 @@ export function enqueueUpdate<State>(
       // This is the first update. Create a circular list.
       update.next = update;
       // At the end of the current render, this queue's interleaved updates will
-      // be transfered to the pending queue.
+      // be transferred to the pending queue.
       pushInterleavedQueue(sharedQueue);
     } else {
       update.next = interleaved.next;

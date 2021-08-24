@@ -16,8 +16,11 @@ var React__default = _interopDefault(React);
  * @flow
  */
 function Component() {
-  const [count, setCount] = React.useState(0);
-  const isDarkMode = useIsDarkMode();
+  const countState = React.useState(0);
+  const count = countState[0];
+  const setCount = countState[1];
+  const darkMode = useIsDarkMode();
+  const [isDarkMode] = darkMode;
   React.useEffect(() => {// ...
   }, []);
 
@@ -29,10 +32,49 @@ function Component() {
 }
 
 function useIsDarkMode() {
+  const darkModeState = React.useState(false);
+  const [isDarkMode] = darkModeState;
+  React.useEffect(function useEffectCreate() {// Here is where we may listen to a "theme" event...
+  }, []);
+  return [isDarkMode, () => {}];
+}
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+function Component$1() {
+  const [count, setCount] = React.useState(0);
+  const isDarkMode = useIsDarkMode$1();
+  const {
+    foo
+  } = useFoo();
+  React.useEffect(() => {// ...
+  }, []);
+
+  const handleClick = () => setCount(count + 1);
+
+  return /*#__PURE__*/React__default.createElement(React__default.Fragment, null, /*#__PURE__*/React__default.createElement("div", null, "Dark mode? ", isDarkMode), /*#__PURE__*/React__default.createElement("div", null, "Count: ", count), /*#__PURE__*/React__default.createElement("div", null, "Foo: ", foo), /*#__PURE__*/React__default.createElement("button", {
+    onClick: handleClick
+  }, "Update count"));
+}
+
+function useIsDarkMode$1() {
   const [isDarkMode] = React.useState(false);
   React.useEffect(function useEffectCreate() {// Here is where we may listen to a "theme" event...
   }, []);
   return isDarkMode;
+}
+
+function useFoo() {
+  React.useDebugValue('foo');
+  return {
+    foo: true
+  };
 }
 
 /**
@@ -58,7 +100,7 @@ function useTheme() {
  *
  * @flow
  */
-function Component$1() {
+function Component$2() {
   const theme = useTheme();
   return /*#__PURE__*/React__default.createElement("div", null, "theme: ", theme);
 }
@@ -73,7 +115,7 @@ function Component$1() {
  */
 const A = /*#__PURE__*/React.createContext(1);
 const B = /*#__PURE__*/React.createContext(2);
-function Component$2() {
+function Component$3() {
   const a = React.useContext(A);
   const b = React.useContext(B); // prettier-ignore
 
@@ -92,12 +134,24 @@ function Component$2() {
  * @flow
  */
 
-function Component$3() {
-  const [count, setCount] = React.useState(0);
-  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
-    onClick: () => setCount(count + 1)
-  }, "Click me"));
+const {
+  useMemo,
+  useState
+} = React__default;
+
+function Component$4(props) {
+  const InnerComponent = useMemo(() => () => {
+    const [state] = useState(0);
+    return state;
+  });
+  props.callback(InnerComponent);
+  return null;
 }
+
+var ComponentWithNestedHooks = {
+  Component: Component$4
+};
+var ComponentWithNestedHooks_1 = ComponentWithNestedHooks.Component;
 
 /**
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -107,22 +161,38 @@ function Component$3() {
  *
  * @flow
  */
-function Component$4() {
-  const [count, setCount] = React.useState(0);
-  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
-    onClick: () => setCount(count + 1)
-  }, "Click me"));
-}
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
 function Component$5() {
+  const [count, setCount] = React.useState(0);
+  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
+    onClick: () => setCount(count + 1)
+  }, "Click me"));
+}
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+function Component$6() {
+  const [count, setCount] = React.useState(0);
+  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
+    onClick: () => setCount(count + 1)
+  }, "Click me"));
+}
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+function Component$7() {
   const [count] = require('react').useState(0);
 
   return count;
@@ -225,12 +295,14 @@ var ToDoList = /*#__PURE__*/Object.freeze({
   List: List
 });
 
-exports.ComponentWithCustomHook = Component;
-exports.ComponentWithExternalCustomHooks = Component$1;
-exports.ComponentWithMultipleHooksPerLine = Component$2;
-exports.ContainingStringSourceMappingURL = Component$3;
-exports.Example = Component$4;
-exports.InlineRequire = Component$5;
+exports.ComponentUsingHooksIndirectly = Component;
+exports.ComponentWithCustomHook = Component$1;
+exports.ComponentWithExternalCustomHooks = Component$2;
+exports.ComponentWithMultipleHooksPerLine = Component$3;
+exports.ComponentWithNestedHooks = ComponentWithNestedHooks_1;
+exports.ContainingStringSourceMappingURL = Component$5;
+exports.Example = Component$6;
+exports.InlineRequire = Component$7;
 exports.ToDoList = ToDoList;
 exports.useTheme = useTheme;
 //# sourceMappingURL=index.js.map

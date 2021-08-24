@@ -48,6 +48,7 @@ type Props = {
 type Instance = {|
   type: string,
   id: number,
+  parent: number,
   children: Array<Instance | TextInstance>,
   text: string | null,
   prop: any,
@@ -57,6 +58,7 @@ type Instance = {|
 type TextInstance = {|
   text: string,
   id: number,
+  parent: number,
   hidden: boolean,
   context: HostContext,
 |};
@@ -80,6 +82,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance: Container | Instance,
     child: Instance | TextInstance,
   ): void {
+    const prevParent = child.parent;
+    if (prevParent !== -1 && prevParent !== parentInstance.id) {
+      throw new Error('Reparenting is not allowed');
+    }
+    child.parent = parentInstance.id;
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -211,6 +218,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     const clone = {
       id: instance.id,
       type: type,
+      parent: instance.parent,
       children: keepChildren ? instance.children : [],
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
@@ -221,6 +229,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     };
     Object.defineProperty(clone, 'id', {
       value: clone.id,
+      enumerable: false,
+    });
+    Object.defineProperty(clone, 'parent', {
+      value: clone.parent,
       enumerable: false,
     });
     Object.defineProperty(clone, 'text', {
@@ -285,6 +297,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         id: instanceCounter++,
         type: type,
         children: [],
+        parent: -1,
         text: shouldSetTextContent(type, props)
           ? computeText((props.children: any) + '', hostContext)
           : null,
@@ -294,6 +307,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+      Object.defineProperty(inst, 'parent', {
+        value: inst.parent,
+        enumerable: false,
+      });
       Object.defineProperty(inst, 'text', {
         value: inst.text,
         enumerable: false,
@@ -313,6 +330,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       parentInstance: Instance,
       child: Instance | TextInstance,
     ): void {
+      const prevParent = child.parent;
+      if (prevParent !== -1 && prevParent !== parentInstance.id) {
+        throw new Error('Reparenting is not allowed');
+      }
+      child.parent = parentInstance.id;
       parentInstance.children.push(child);
     },
 
@@ -357,11 +379,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const inst = {
         text: text,
         id: instanceCounter++,
+        parent: -1,
         hidden: false,
         context: hostContext,
       };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+      Object.defineProperty(inst, 'parent', {
+        value: inst.parent,
+        enumerable: false,
+      });
       Object.defineProperty(inst, 'context', {
         value: inst.context,
         enumerable: false,
@@ -555,6 +582,54 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             children,
           };
         },
+
+        cloneHiddenInstance(
+          instance: Instance,
+          type: string,
+          props: Props,
+          internalInstanceHandle: Object,
+        ): Instance {
+          const clone = cloneInstance(
+            instance,
+            null,
+            type,
+            props,
+            props,
+            internalInstanceHandle,
+            true,
+            null,
+          );
+          clone.hidden = true;
+          return clone;
+        },
+
+        cloneHiddenTextInstance(
+          instance: TextInstance,
+          text: string,
+          internalInstanceHandle: Object,
+        ): TextInstance {
+          const clone = {
+            text: instance.text,
+            id: instance.id,
+            parent: instance.parent,
+            hidden: true,
+            context: instance.context,
+          };
+          // Hide from unit tests
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'parent', {
+            value: clone.parent,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'context', {
+            value: clone.context,
+            enumerable: false,
+          });
+          return clone;
+        },
       };
 
   const NoopRenderer = reconciler(hostConfig);
@@ -682,12 +757,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             const offscreenTextInstance: TextInstance = {
               text: instance.text,
               id: instanceCounter++,
+              parent: instance.parent,
               hidden: hideNearestNode || instance.hidden,
               context: instance.context,
             };
             // Hide from unit tests
             Object.defineProperty(offscreenTextInstance, 'id', {
               value: offscreenTextInstance.id,
+              enumerable: false,
+            });
+            Object.defineProperty(offscreenTextInstance, 'parent', {
+              value: offscreenTextInstance.parent,
               enumerable: false,
             });
             Object.defineProperty(offscreenTextInstance, 'context', {
@@ -725,6 +805,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             const clone: Instance = {
               id: instance.id,
               type: instance.type,
+              parent: instance.parent,
               children: clonedChildren,
               text: instance.text,
               prop: instance.prop,
@@ -733,6 +814,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             };
             Object.defineProperty(clone, 'id', {
               value: clone.id,
+              enumerable: false,
+            });
+            Object.defineProperty(clone, 'parent', {
+              value: clone.parent,
               enumerable: false,
             });
             Object.defineProperty(clone, 'text', {
@@ -754,11 +839,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           const clone = {
             text: textInstance.text,
             id: textInstance.id,
+            parent: textInstance.parent,
             hidden: textInstance.hidden || hideNearestNode,
             context: textInstance.context,
           };
           Object.defineProperty(clone, 'id', {
             value: clone.id,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'parent', {
+            value: clone.parent,
             enumerable: false,
           });
           Object.defineProperty(clone, 'context', {
