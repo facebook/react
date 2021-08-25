@@ -222,6 +222,9 @@ export function patch({
               }
             } catch (error) {
               // Don't let a DevTools or React internal error interfere with logging.
+              setTimeout(() => {
+                throw error;
+              }, 0);
             } finally {
               break;
             }
