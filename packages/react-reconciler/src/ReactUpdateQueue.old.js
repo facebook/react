@@ -110,10 +110,9 @@ import {
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
+import {setIsStrictModeForDevtools} from './ReactFiberReconciler';
 
 import invariant from 'shared/invariant';
-
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of
@@ -394,11 +393,11 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();
@@ -427,11 +426,11 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();

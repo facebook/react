@@ -113,6 +113,7 @@ import {
   entangleTransitions,
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
+import {getIsStrictModeForDevtools} from './ReactFiberReconciler.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1021,9 +1022,9 @@ function readFromUnsubscribedMutableSource<Source, Snapshot>(
     // dev, we can present a more accurate error message.
     if (__DEV__) {
       // eslint-disable-next-line react-internal/no-production-logging
-      if (console.log.__reactDisabledLog) {
-        // If the logs are disabled, this is the dev-only double render. This is
-        // only reachable if there was a mutation during render. Show a helpful
+      if (getIsStrictModeForDevtools()) {
+        // If getIsStrictModeForDevtools is true, this is the dev-only double render
+        // This is only reachable if there was a mutation during render. Show a helpful
         // error message.
         //
         // Something interesting to note: because we only double render in

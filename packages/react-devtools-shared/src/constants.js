@@ -47,6 +47,9 @@ export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =
 export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
 
+export const LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE =
+  'React::DevTools::hideConsoleLogsInStrictMode';
+
 export const PROFILER_EXPORT_VERSION = 5;
 
 export const CHANGE_LOG_URL =

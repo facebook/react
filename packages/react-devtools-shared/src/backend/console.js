@@ -9,11 +9,14 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import {format} from './utils';
 
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
-const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
+const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn', 'log'];
+const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
 
 // React's custom built component stack strings match "\s{4}in"
 // Chrome's prefix matches "\s{4}at"
@@ -39,6 +42,7 @@ const injectedRenderers: Map<
     getCurrentFiber: () => Fiber | null,
     onErrorOrWarning: ?OnErrorOrWarning,
     workTagMap: WorkTagMap,
+    getIsStrictMode: ?() => boolean,
   |},
 > = new Map();
 
@@ -49,6 +53,11 @@ for (const method in console) {
 }
 
 let unpatchFn: null | (() => void) = null;
+
+let isNode = false;
+try {
+  isNode = this === global;
+} catch (error) {}
 
 // Enables e.g. Jest tests to inject a mock console object.
 export function dangerous_setTargetConsoleForTesting(
@@ -72,6 +81,7 @@ export function registerRenderer(
   const {
     currentDispatcherRef,
     getCurrentFiber,
+    getIsStrictMode,
     findFiberByHostInstance,
     version,
   } = renderer;
@@ -89,6 +99,7 @@ export function registerRenderer(
     injectedRenderers.set(renderer, {
       currentDispatcherRef,
       getCurrentFiber,
+      getIsStrictMode,
       workTagMap: ReactTypeOfWork,
       onErrorOrWarning,
     });
@@ -99,24 +110,31 @@ const consoleSettingsRef = {
   appendComponentStack: false,
   breakOnConsoleErrors: false,
   showInlineWarningsAndErrors: false,
+  hideConsoleLogsInStrictMode: false,
 };
 
 // Patches console methods to append component stack for the current fiber.
 // Call unpatch() to remove the injected behavior.
+// NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialRenderInExtension
 export function patch({
   appendComponentStack,
   breakOnConsoleErrors,
   showInlineWarningsAndErrors,
+  hideConsoleLogsInStrictMode,
+  browserTheme,
 }: {
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+  browserTheme: BrowserTheme,
 }): void {
   // Settings may change after we've patched the console.
   // Using a shared ref allows the patch function to read the latest values.
   consoleSettingsRef.appendComponentStack = appendComponentStack;
   consoleSettingsRef.breakOnConsoleErrors = breakOnConsoleErrors;
   consoleSettingsRef.showInlineWarningsAndErrors = showInlineWarningsAndErrors;
+  consoleSettingsRef.hideConsoleLogsInStrictMode = hideConsoleLogsInStrictMode;
 
   if (unpatchFn !== null) {
     // Don't patch twice.
@@ -134,68 +152,78 @@ export function patch({
     }
   };
 
-  APPEND_STACK_TO_METHODS.forEach(method => {
+  OVERRIDE_CONSOLE_METHODS.forEach(method => {
     try {
-      const originalMethod = (originalConsoleMethods[method] =
-        targetConsole[method]);
+      const originalMethod = (originalConsoleMethods[method] = targetConsole[
+        method
+      ].__REACT_DEVTOOLS_ORIGINAL_METHOD__
+        ? targetConsole[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__
+        : targetConsole[method]);
 
       const overrideMethod = (...args) => {
         let shouldAppendWarningStack = false;
-        if (consoleSettingsRef.appendComponentStack) {
-          const lastArg = args.length > 0 ? args[args.length - 1] : null;
-          const alreadyHasComponentStack =
-            typeof lastArg === 'string' && isStringComponentStack(lastArg);
+        if (method !== 'log') {
+          if (consoleSettingsRef.appendComponentStack) {
+            const lastArg = args.length > 0 ? args[args.length - 1] : null;
+            const alreadyHasComponentStack =
+              typeof lastArg === 'string' && isStringComponentStack(lastArg);
 
-          // If we are ever called with a string that already has a component stack,
-          // e.g. a React error/warning, don't append a second stack.
-          shouldAppendWarningStack = !alreadyHasComponentStack;
+            // If we are ever called with a string that already has a component stack,
+            // e.g. a React error/warning, don't append a second stack.
+            shouldAppendWarningStack = !alreadyHasComponentStack;
+          }
         }
 
         const shouldShowInlineWarningsAndErrors =
           consoleSettingsRef.showInlineWarningsAndErrors &&
           (method === 'error' || method === 'warn');
 
-        if (shouldAppendWarningStack || shouldShowInlineWarningsAndErrors) {
-          // Search for the first renderer that has a current Fiber.
-          // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
-          // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-          for (const {
-            currentDispatcherRef,
-            getCurrentFiber,
-            onErrorOrWarning,
-            workTagMap,
-          } of injectedRenderers.values()) {
-            const current: ?Fiber = getCurrentFiber();
-            if (current != null) {
-              try {
-                if (shouldShowInlineWarningsAndErrors) {
-                  // patch() is called by two places: (1) the hook and (2) the renderer backend.
-                  // The backend is what implements a message queue, so it's the only one that injects onErrorOrWarning.
-                  if (typeof onErrorOrWarning === 'function') {
-                    onErrorOrWarning(
-                      current,
-                      ((method: any): 'error' | 'warn'),
-                      // Copy args before we mutate them (e.g. adding the component stack)
-                      args.slice(),
-                    );
-                  }
-                }
+        let isInStrictMode = false;
 
-                if (shouldAppendWarningStack) {
-                  const componentStack = getStackByFiberInDevAndProd(
-                    workTagMap,
-                    current,
-                    currentDispatcherRef,
-                  );
-                  if (componentStack !== '') {
-                    args.push(componentStack);
-                  }
-                }
-              } catch (error) {
-                // Don't let a DevTools or React internal error interfere with logging.
-              } finally {
-                break;
+        // Search for the first renderer that has a current Fiber.
+        // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const {
+          currentDispatcherRef,
+          getCurrentFiber,
+          onErrorOrWarning,
+          workTagMap,
+          getIsStrictMode,
+        } of injectedRenderers.values()) {
+          const current: ?Fiber = getCurrentFiber();
+          if (current != null) {
+            try {
+              if (typeof getIsStrictMode === 'function' && getIsStrictMode()) {
+                isInStrictMode = true;
               }
+
+              if (shouldShowInlineWarningsAndErrors) {
+                // patch() is called by two places: (1) the hook and (2) the renderer backend.
+                // The backend is what implements a message queue, so it's the only one that injects onErrorOrWarning.
+                if (typeof onErrorOrWarning === 'function') {
+                  onErrorOrWarning(
+                    current,
+                    ((method: any): 'error' | 'warn'),
+                    // Copy args before we mutate them (e.g. adding the component stack)
+                    args.slice(),
+                  );
+                }
+              }
+
+              if (shouldAppendWarningStack) {
+                const componentStack = getStackByFiberInDevAndProd(
+                  workTagMap,
+                  current,
+                  currentDispatcherRef,
+                );
+                if (componentStack !== '') {
+                  args.push(componentStack);
+                }
+              }
+            } catch (error) {
+              // Don't let a DevTools or React internal error interfere with logging.
+            } finally {
+              break;
             }
           }
         }
@@ -209,7 +237,46 @@ export function patch({
           debugger;
         }
 
-        originalMethod(...args);
+        if (isInStrictMode) {
+          if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
+            // Dim the text color of the double logs if we're not
+            // hiding them.
+            if (isNode) {
+              originalMethod(DIMMED_NODE_CONSOLE_COLOR, format(...args));
+            } else {
+              let color;
+              switch (method) {
+                case 'warn':
+                  color =
+                    browserTheme === 'light'
+                      ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
+                      : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
+                  break;
+                case 'error':
+                  color =
+                    browserTheme === 'light'
+                      ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
+                      : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
+                  break;
+                case 'log':
+                default:
+                  color =
+                    browserTheme === 'light'
+                      ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
+                      : process.env.DARK_MODE_DIMMED_LOG_COLOR;
+                  break;
+              }
+
+              if (color) {
+                originalMethod(`%c${format(...args)}`, `color: ${color}`);
+              } else {
+                throw Error('Console color is not defined');
+              }
+            }
+          }
+        } else {
+          originalMethod(...args);
+        }
       };
 
       overrideMethod.__REACT_DEVTOOLS_ORIGINAL_METHOD__ = originalMethod;

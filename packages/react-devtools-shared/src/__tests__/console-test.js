@@ -9,6 +9,7 @@
 
 describe('console', () => {
   let React;
+  let ReactDOM;
   let act;
   let fakeConsole;
   let legacyRender;
@@ -48,6 +49,7 @@ describe('console', () => {
       appendComponentStack: true,
       breakOnWarn: false,
       showInlineWarningsAndErrors: false,
+      hideDoubleLogsInStrictLegacy: false,
     });
 
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
@@ -58,6 +60,7 @@ describe('console', () => {
     };
 
     React = require('react');
+    ReactDOM = require('react-dom');
 
     const utils = require('./utils');
     act = utils.act;
@@ -73,10 +76,10 @@ describe('console', () => {
     );
   }
 
-  it('should not patch console methods that do not receive component stacks', () => {
+  it('should not patch console methods that are not explicitly overriden', () => {
     expect(fakeConsole.error).not.toBe(mockError);
     expect(fakeConsole.info).toBe(mockInfo);
-    expect(fakeConsole.log).toBe(mockLog);
+    expect(fakeConsole.log).not.toBe(mockLog);
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
@@ -464,5 +467,89 @@ describe('console', () => {
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0][0]).toBe('Symbol:');
+  });
+
+  it('should double log if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideConsoleLogsInStrictMode: false,
+    });
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+    expect(mockLog.mock.calls[1]).toHaveLength(2);
+    expect(mockLog.mock.calls[1][0]).toBe('%clog');
+
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
+    expect(mockWarn.mock.calls[1][0]).toBe('%cwarn');
+
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(mockError.mock.calls[1]).toHaveLength(2);
+    expect(mockError.mock.calls[1][0]).toBe('%cerror');
+  });
+
+  it('should not double log if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideConsoleLogsInStrictMode: true,
+    });
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
   });
 });

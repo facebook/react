@@ -1,5 +1,7 @@
 /* global chrome */
 
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+
 const IS_CHROME = navigator.userAgent.indexOf('Firefox') < 0;
 
 export type BrowserName = 'Chrome' | 'Firefox';
@@ -7,8 +9,6 @@ export type BrowserName = 'Chrome' | 'Firefox';
 export function getBrowserName(): BrowserName {
   return IS_CHROME ? 'Chrome' : 'Firefox';
 }
-
-export type BrowserTheme = 'dark' | 'light';
 
 export function getBrowserTheme(): BrowserTheme {
   if (IS_CHROME) {

@@ -159,6 +159,7 @@ export function serializeToString(data: any): string {
 // based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
 // based on https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
 // Implements s, d, i and f placeholders
+// NOTE: KEEP IN SYNC with src/hook.js
 export function format(
   maybeMessage: any,
   ...inputArgs: $ReadOnlyArray<any>

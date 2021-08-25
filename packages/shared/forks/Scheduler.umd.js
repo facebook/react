@@ -31,8 +31,11 @@ const {
   unstable_forceFrameRate,
 
   // this doesn't actually exist on the scheduler, but it *does*
-  // on scheduler/unstable_mock, which we'll need inside act().
+  // on scheduler/unstable_mock, which we'll need inside act()
+  // and for internal testing
   unstable_flushAllWithoutAsserting,
+  unstable_yieldValue,
+  unstable_setDisableYieldValue,
 } = ReactInternals.Scheduler;
 
 export {
@@ -54,4 +57,6 @@ export {
   unstable_IdlePriority,
   unstable_forceFrameRate,
   unstable_flushAllWithoutAsserting,
+  unstable_yieldValue,
+  unstable_setDisableYieldValue,
 };
