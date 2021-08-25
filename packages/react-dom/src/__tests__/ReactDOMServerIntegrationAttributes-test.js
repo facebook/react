@@ -659,15 +659,9 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('className for custom elements', async render => {
       const e = await render(<div is="custom-element" className="test" />,
-        render === clientRenderOnServerString ? 2 : 0);
-      //expect(e.getAttribute('className')).toBe('test');
-      if (render === clientCleanRender) {
-        expect(e.getAttribute('className')).toBe(null);
-        expect(e.getAttribute('class')).toBe('test');
-      } else {
-        expect(e.getAttribute('className')).toBe('test');
-        expect(e.getAttribute('class')).toBe(null);
-      }
+        render === clientRenderOnServerString ? 1 : 0);
+      expect(e.getAttribute('className')).toBe(null);
+      expect(e.getAttribute('class')).toBe('test');
     });
 
     itRenders('htmlFor attribute on custom elements', async render => {

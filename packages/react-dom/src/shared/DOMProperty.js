@@ -207,7 +207,11 @@ export function getPropertyInfo(
   node?: Element,
   isCustomComponentTag?: boolean,
 ): PropertyInfo | null {
-  if (!isCustomComponentTag && properties.hasOwnProperty(name)) {
+  // Custom elements shouldn't get the htmlFor->for translation because they
+  // never used to and they currently don't in Preact.
+  // TODO consider what to do about the rest of the PropertyInfos.
+  const ignorePropertyInfo = isCustomComponentTag && name === 'htmlFor';
+  if (!ignorePropertyInfo && properties.hasOwnProperty(name)) {
     return properties[name];
   }
   if (isCustomComponentTag && node && name in (node: any)) {

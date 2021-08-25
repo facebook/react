@@ -1148,6 +1148,17 @@ function pushStartCustomElement(
         case 'suppressHydrationWarning':
           // Ignored. These are built-in to React on the client.
           break;
+        case 'className':
+          // className gets rendered as class on the client, so it should be
+          // rendered as class on the server.
+          target.push(
+            attributeSeparator,
+            stringToChunk('class'),
+            attributeAssign,
+            escapeTextForBrowser(propValue),
+            attributeEnd,
+          );
+          break;
         default:
           if (
             isAttributeNameSafe(propKey) &&
