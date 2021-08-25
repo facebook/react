@@ -207,7 +207,7 @@ export function getPropertyInfo(
   node?: Element,
   isCustomComponentTag?: boolean,
 ): PropertyInfo | null {
-  if (properties.hasOwnProperty(name)) {
+  if (!isCustomComponentTag && properties.hasOwnProperty(name)) {
     return properties[name];
   }
   if (isCustomComponentTag && node && name in (node: any)) {

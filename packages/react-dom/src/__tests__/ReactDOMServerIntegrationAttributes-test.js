@@ -36,6 +36,7 @@ const {
   resetModules,
   itRenders,
   clientCleanRender,
+  clientRenderOnServerString,
 } = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
@@ -657,7 +658,9 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('className for custom elements', async render => {
-      const e = await render(<div is="custom-element" className="test" />, 0);
+      const e = await render(<div is="custom-element" className="test" />,
+        render === clientRenderOnServerString ? 2 : 0);
+      //expect(e.getAttribute('className')).toBe('test');
       if (render === clientCleanRender) {
         expect(e.getAttribute('className')).toBe(null);
         expect(e.getAttribute('class')).toBe('test');
@@ -669,17 +672,13 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('htmlFor attribute on custom elements', async render => {
       const e = await render(<div is="custom-element" htmlFor="test" />);
-      if (render === clientCleanRender) {
-        expect(e.getAttribute('htmlFor')).toBe(null);
-        expect(e.getAttribute('for')).toBe('test');
-      } else {
-        expect(e.getAttribute('htmlFor')).toBe('test');
-        expect(e.getAttribute('for')).toBe(null);
-      }
+      expect(e.getAttribute('htmlFor')).toBe('test');
+      expect(e.getAttribute('for')).toBe(null);
     });
 
     itRenders('for attribute on custom elements', async render => {
       const e = await render(<div is="custom-element" for="test" />);
+      expect(e.getAttribute('htmlFor')).toBe(null);
       expect(e.getAttribute('for')).toBe('test');
     });
 
@@ -690,13 +689,7 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('unknown `on*` attributes for custom elements', async render => {
       const e = await render(<custom-element onunknown="bar" />);
-      if (render === clientCleanRender) {
-        // TODO add actual tests for custom event listener behavior
-        expect(e.getAttribute('onunknown')).toBe(null);
-      } else {
-        // TODO we probably shouldn't server render on* attributes
-        expect(e.getAttribute('onunknown')).toBe('bar');
-      }
+      expect(e.getAttribute('onunknown')).toBe('bar');
     });
 
     itRenders('unknown boolean `true` attributes as strings', async render => {
