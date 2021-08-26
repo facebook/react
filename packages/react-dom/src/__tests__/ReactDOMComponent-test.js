@@ -2659,13 +2659,13 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
       ReactDOM.render(<some-custom-element onx="bar" />, container);
       const node = container.firstChild;
-      expect(node.getAttribute('onx')).toBe(null);
+      expect(node.getAttribute('onx')).toBe('bar');
       ReactDOM.render(<some-custom-element onx="buzz" />, container);
-      expect(node.getAttribute('onx')).toBe(null);
+      expect(node.getAttribute('onx')).toBe('buzz');
       ReactDOM.render(<some-custom-element />, container);
       expect(node.hasAttribute('onx')).toBe(false);
       ReactDOM.render(<some-custom-element onx="bar" />, container);
-      expect(node.getAttribute('onx')).toBe(null);
+      expect(node.getAttribute('onx')).toBe('bar');
     });
   });
 
