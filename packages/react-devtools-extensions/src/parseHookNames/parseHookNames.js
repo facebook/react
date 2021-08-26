@@ -303,7 +303,10 @@ function extractAndLoadSourceMaps(
           externalSourceMapURLs.push(sourceMappingURL);
         }
 
-        sourceMappingURLMatch = sourceMapRegex.exec(runtimeSourceCode);
+        sourceMappingURLMatch = withSyncPerformanceMark(
+          'sourceMapRegex.exec(runtimeSourceCode)',
+          () => sourceMapRegex.exec(runtimeSourceCode),
+        );
       }
 
       const foundInlineSourceMap =
