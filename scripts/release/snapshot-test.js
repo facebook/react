@@ -85,9 +85,9 @@ const run = async () => {
         beforeContents,
         afterContents
       );
-      console.log();
+       
       console.error(theme.error('Snapshot test failed!'));
-      console.log();
+       
       console.log(
         'If this failure was expected, please update the contents of the snapshot file:'
       );

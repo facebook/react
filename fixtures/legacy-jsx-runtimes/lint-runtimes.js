@@ -45,7 +45,7 @@ async function lint(folder) {
     console.log(`Failed`);
     const formatter = await eslint.loadFormatter('stylish');
     const resultText = formatter.format(results);
-    console.log(resultText);
+    console.log({resultText});
   }
 }
 

@@ -117,7 +117,7 @@
   }
 
   function handleError(error) {
-    console.log(error);
+    console.log({error:error.message});
     failed = true;
     setStatus('Javascript Error');
     output.innerHTML = error;
