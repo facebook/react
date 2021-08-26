@@ -451,6 +451,10 @@ function extractAndLoadSourceMaps(
 }
 
 function fetchFile(url: string): Promise<string> {
+  if (__PERFORMANCE_PROFILE__) {
+    mark('fetchFile("' + url + '")');
+  }
+
   return new Promise((resolve, reject) => {
     fetch(url).then(
       response => {
@@ -458,11 +462,17 @@ function fetchFile(url: string): Promise<string> {
           response
             .text()
             .then(text => {
+              if (__PERFORMANCE_PROFILE__) {
+                measure('fetchFile("' + url + '")');
+              }
               resolve(text);
             })
             .catch(error => {
               if (__DEBUG__) {
                 console.log(`fetchFile() Could not read text for url "${url}"`);
+              }
+              if (__PERFORMANCE_PROFILE__) {
+                measure('fetchFile("' + url + '")');
               }
               reject(null);
             });
@@ -470,12 +480,18 @@ function fetchFile(url: string): Promise<string> {
           if (__DEBUG__) {
             console.log(`fetchFile() Got bad response for url "${url}"`);
           }
+          if (__PERFORMANCE_PROFILE__) {
+            measure('fetchFile("' + url + '")');
+          }
           reject(null);
         }
       },
       error => {
         if (__DEBUG__) {
           console.log(`fetchFile() Could not fetch file: ${error.message}`);
+        }
+        if (__PERFORMANCE_PROFILE__) {
+          measure('fetchFile("' + url + '")');
         }
         reject(null);
       },
