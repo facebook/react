@@ -8,7 +8,7 @@
  */
 
 import assign from 'object-assign';
-import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
+import {getNestedBoundingClientRect} from '../utils';
 
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 import type {Rect} from '../utils';
@@ -107,7 +107,6 @@ export default class Canvas {
   tipBoundsWindow: window;
   container: HTMLElement;
   tip: OverlayTip;
-  // canvas: HTMLCanvasElement | null = null;
 
   constructor() {
     // Find the root window, because overlays are positioned relative to it.
@@ -128,8 +127,6 @@ export default class Canvas {
   }
 
   initialize(): void {
-    // this.canvas = window.document.createElement('canvas');
-    // this.canvas.style.cssText = `
     canvas = window.document.createElement('canvas');
     canvas.style.cssText = `
     xx-background-color: red;
@@ -144,11 +141,9 @@ export default class Canvas {
   `;
 
     const root = window.document.documentElement;
-    // root.insertBefore(this.canvas, root.firstChild);
     root.insertBefore(canvas, root.firstChild);
   }
 
-  // inspect(nodes: Array<HTMLElement>, name?: ?string): void {
   draw(nodes: Map<NativeType, Data>, name?: ?string): void {
     if (canvas === null) {
       this.initialize();
@@ -166,9 +161,8 @@ export default class Canvas {
       bottom: Number.NEGATIVE_INFINITY,
       left: Number.POSITIVE_INFINITY,
     };
-    // elements.forEach((element, index) => {
     nodes.forEach(({count, rect, box, dims, type, nodeName}) => {
-      if (type === 'DOMHighlighter') {
+      if (type === 'DOMHighlighter' && box) {
         outerBox.top = Math.min(outerBox.top, box.top - dims.marginTop);
         outerBox.right = Math.max(
           outerBox.right,
@@ -193,31 +187,36 @@ export default class Canvas {
           this.drawBorder(context, rect, color);
         }
       }
+      if (type === 'DOMHighlighter') {
+        if (!name) {
+          if (!nodeName) {
+            return;
+          }
+          name = nodeName.nodeName.toLowerCase();
 
-      if (!name && type === 'DOMHighlighter') {
-        name = nodeName.nodeName.toLowerCase();
+          const node = nodeName;
+          const hook: DevToolsHook =
+            node.ownerDocument.defaultView.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+          if (hook != null && hook.rendererInterfaces != null) {
+            let ownerName = null;
+            // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+            for (const rendererInterface of hook.rendererInterfaces.values()) {
+              const id = rendererInterface.getFiberIDForNative(node, true);
+              if (id !== null) {
+                ownerName = rendererInterface.getDisplayNameForFiberID(
+                  id,
+                  true,
+                );
+                break;
+              }
+            }
 
-        const node = nodeName;
-        const hook: DevToolsHook =
-          node.ownerDocument.defaultView.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-        if (hook != null && hook.rendererInterfaces != null) {
-          let ownerName = null;
-          // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-          for (const rendererInterface of hook.rendererInterfaces.values()) {
-            const id = rendererInterface.getFiberIDForNative(node, true);
-            if (id !== null) {
-              ownerName = rendererInterface.getDisplayNameForFiberID(id, true);
-              break;
+            if (ownerName) {
+              name += ' (in ' + ownerName + ')';
             }
           }
-
-          if (ownerName) {
-            name += ' (in ' + ownerName + ')';
-          }
         }
-      }
 
-      if (type === 'DOMHighlighter') {
         this.tip.updateText(
           name,
           outerBox.right - outerBox.left,

@@ -9,7 +9,7 @@
 
 import Canvas from './Canvas';
 import type {NativeType} from '../../types';
-import {Data} from './index';
+import type {Data} from './index';
 import type {Rect} from '../utils';
 import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
 
@@ -51,19 +51,21 @@ export function showOverlay(
 
   const nodeToData: Map<NativeType, Data> = new Map();
   const nodes = elements.filter(
-    elements => elements.nodeType === Node.ELEMENT_NODE,
+    element => element.nodeType === Node.ELEMENT_NODE,
   );
   nodes.forEach(node => {
     const rect = measureNode(node);
     const box = getNestedBoundingClientRect(node, window);
     const dims = getElementDimensions(node);
     nodeToData.set(node, {
+      expirationTime: 0,
+      lastMeasuredAt: 0,
       count: 1,
       rect,
       box,
       dims,
       type: 'DOMHighlighter',
-      nodeName: elements[0],
+      nodeName: nodes[0],
     });
   });
 

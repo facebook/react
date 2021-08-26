@@ -51,6 +51,10 @@ export type Data = {|
   expirationTime: number,
   lastMeasuredAt: number,
   rect: Rect | null,
+  box: Rect | null,
+  dims: Object,
+  type: string,
+  nodeName: HTMLElement | null,
 |};
 
 const nodeToData: Map<NativeType, Data> = new Map();
@@ -113,7 +117,11 @@ function traceUpdates(nodes: Set<NativeType>): void {
             )
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
+      type: 'TraceUpdates',
       rect,
+      box: null,
+      dims: null,
+      nodeName: null,
     });
   });
 
