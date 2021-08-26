@@ -19,6 +19,7 @@ import sanitizeURL from '../shared/sanitizeURL';
 import {
   disableJavaScriptURLs,
   enableTrustedTypesIntegration,
+  enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 import {isOpaqueHydratingObject} from './ReactDOMHostConfig';
 
@@ -144,7 +145,7 @@ export function setValueForProperty(
     return;
   }
 
-  if (isCustomComponentTag && name[0] === 'o' && name[1] === 'n') {
+  if (enableCustomElementPropertySupport && isCustomComponentTag && name[0] === 'o' && name[1] === 'n') {
     let eventName = name.replace(/Capture$/, '');
     const useCapture = name !== eventName;
     // TODO make sure that onClick still works like normal, then delet this
@@ -179,7 +180,7 @@ export function setValueForProperty(
     value = null;
   }
   // If the prop isn't in the special list, treat it as a simple attribute.
-  if (propertyInfo === null) {
+  if (propertyInfo === null || (isCustomComponentTag && !enableCustomElementPropertySupport)) {
     if (isAttributeNameSafe(name)) {
       const attributeName = name;
       if (value === null) {

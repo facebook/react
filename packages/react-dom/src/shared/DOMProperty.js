@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
+import {enableFilterEmptyStringAttributesDOM, enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -207,6 +207,11 @@ export function getPropertyInfo(
   node?: Element,
   isCustomComponentTag?: boolean,
 ): PropertyInfo | null {
+  if (!enableCustomElementPropertySupport) {
+    if (properties.hasOwnProperty(name)) {
+      return null;
+    }
+  }
   // Custom elements shouldn't get the htmlFor->for translation because they
   // never used to and they currently don't in Preact.
   // TODO consider what to do about the rest of the PropertyInfos.

@@ -626,19 +626,33 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<some-custom-element arabicForm="foo" />, container);
       const node = container.firstChild;
       // Should not get transformed to arabic-form as SVG would be.
-      expect(node.getAttribute('arabicForm')).toBe(null);
-      expect(node.getAttribute('arabic-form')).toBe('foo');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(node.getAttribute('arabicForm')).toBe(null);
+        expect(node.getAttribute('arabic-form')).toBe('foo');
+      } else {
+        expect(node.getAttribute('arabicForm')).toBe('foo');
+        expect(node.hasAttribute('arabic-form')).toBe(false);
+      }
       // Test attribute update.
       ReactDOM.render(<some-custom-element arabicForm="boo" />, container);
-      expect(node.getAttribute('arabicForm')).toBe(null);
-      expect(node.getAttribute('arabic-form')).toBe('boo');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(node.getAttribute('arabicForm')).toBe(null);
+        expect(node.getAttribute('arabic-form')).toBe('boo');
+      } else {
+        expect(node.getAttribute('arabicForm')).toBe('boo');
+      }
       // Test attribute removal and addition.
       ReactDOM.render(<some-custom-element acceptCharset="buzz" />, container);
       // Verify the previous attribute was removed.
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Should not get transformed to accept-charset as HTML would be.
-      expect(node.getAttribute('acceptCharset')).toBe(null);
-      expect(node.getAttribute('accept-charset')).toBe('buzz');
+      if (ReactFeatureFlags.enableCustomElementPropertySupport) {
+        expect(node.getAttribute('acceptCharset')).toBe(null);
+        expect(node.getAttribute('accept-charset')).toBe('buzz');
+      } else {
+        expect(node.getAttribute('acceptCharset')).toBe('buzz');
+        expect(node.hasAttribute('accept-charset')).toBe(false);
+      }
     });
 
     it('should clear a single style prop when changing `style`', () => {

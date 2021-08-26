@@ -24,6 +24,7 @@ import {
   disableModulePatternComponents,
   enableSuspenseServerRenderer,
   enableScopeAPI,
+  enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -50,6 +51,7 @@ import {
 } from './ReactPartialRendererContext';
 import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
 import {
+  createMarkupForCustomAttribute,
   createMarkupForProperty,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
@@ -344,6 +346,12 @@ function flattenOptionChildren(children: mixed): ?string {
 }
 
 const STYLE = 'style';
+const RESERVED_PROPS = {
+  children: null,
+  dangerouslySetInnerHTML: null,
+  suppressContentEditableWarning: null,
+  suppressHydrationWarning: null,
+};
 
 function createOpenTagMarkup(
   tagVerbatim: string,
@@ -368,7 +376,18 @@ function createOpenTagMarkup(
     if (propKey === STYLE) {
       propValue = createMarkupForStyles(propValue);
     }
-    const markup = createMarkupForProperty(propKey, propValue, isCustomComponent);
+    let markup = null;
+    if (enableCustomElementPropertySupport) {
+      markup = createMarkupForProperty(propKey, propValue, isCustomComponent);
+    } else {
+      if (isCustomComponent) {
+        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          markup = createMarkupForCustomAttribute(propKey, propValue);
+        }
+      } else {
+        markup = createMarkupForProperty(propKey, propValue, false);
+      }
+    }
     if (markup) {
       ret += ' ' + markup;
     }

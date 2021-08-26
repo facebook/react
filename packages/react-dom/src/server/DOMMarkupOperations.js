@@ -54,3 +54,25 @@ export function createMarkupForProperty(name: string, value: mixed, isCustomComp
   }
   return '';
 }
+
+/**
+ * Creates markup for a custom property.
+ *
+ * @param {string} name
+ * @param {*} value
+ * @return {string} Markup string, or empty string if the property was invalid.
+ */
+export function createMarkupForCustomAttribute(
+  name: string,
+  value: mixed,
+): string {
+  if (
+    !isAttributeNameSafe(name) ||
+    value == null ||
+    typeof value === 'function' ||
+    typeof value === 'symbol'
+  ) {
+    return '';
+  }
+  return name + '=' + quoteAttributeValueForBrowser(value);
+}

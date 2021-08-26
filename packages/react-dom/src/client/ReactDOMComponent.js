@@ -69,7 +69,7 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
-import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+import {enableTrustedTypesIntegration, enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
@@ -1036,6 +1036,14 @@ export function diffHydratedProperties(
           if (expectedStyle !== serverValue) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
+        }
+      } else if (isCustomComponentTag && !enableCustomElementPropertySupport) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey.toLowerCase());
+        serverValue = getValueForAttribute(domElement, propKey, nextProp);
+
+        if (nextProp !== serverValue) {
+          warnForPropDifference(propKey, serverValue, nextProp);
         }
       } else if (
         !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
