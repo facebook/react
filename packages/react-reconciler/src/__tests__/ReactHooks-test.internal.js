@@ -1591,8 +1591,7 @@ describe('ReactHooks', () => {
         }
       });
 
-      it(`warns when more hooks (${(hookNameA,
-      hookNameB)}) are used during update than mount`, () => {
+      it(`warns when more hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1646,8 +1645,7 @@ describe('ReactHooks', () => {
         .replace('use', '')
         .replace('Helper', '');
 
-      it(`warns when fewer hooks (${(hookNameA,
-      hookNameB)}) are used during update than mount`, () => {
+      it(`warns when fewer hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
