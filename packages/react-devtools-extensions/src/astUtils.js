@@ -28,15 +28,6 @@ export type SourceFileASTWithHookDetails = {
 
 export const NO_HOOK_NAME = '<no-hook>';
 
-function mark(markName: string): void {
-  performance.mark(markName + '-start');
-}
-
-function measure(markName: string): void {
-  performance.mark(markName + '-end');
-  performance.measure(markName, markName + '-start', markName + '-end');
-}
-
 const AST_NODE_TYPES = Object.freeze({
   PROGRAM: 'Program',
   CALL_EXPRESSION: 'CallExpression',
