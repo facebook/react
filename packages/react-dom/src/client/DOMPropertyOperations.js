@@ -148,7 +148,6 @@ export function setValueForProperty(
   if (enableCustomElementPropertySupport && isCustomComponentTag && name[0] === 'o' && name[1] === 'n') {
     let eventName = name.replace(/Capture$/, '');
     const useCapture = name !== eventName;
-    // TODO make sure that onClick still works like normal, then delet this
     const nameLower = eventName.toLowerCase();
     if (nameLower in node) {
       eventName = nameLower;

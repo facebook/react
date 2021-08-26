@@ -11,7 +11,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {Children} from 'react';
 
-import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
+import {enableFilterEmptyStringAttributesDOM, enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -1128,11 +1128,16 @@ function pushStartCustomElement(
 
   let children = null;
   let innerHTML = null;
-  for (const propKey in props) {
+  for (let propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
       if (propValue == null) {
         continue;
+      }
+      if (enableCustomElementPropertySupport && propKey === 'className') {
+        // className gets rendered as class on the client, so it should be
+        // rendered as class on the server.
+        propKey = 'class';
       }
       switch (propKey) {
         case 'children':
@@ -1147,17 +1152,6 @@ function pushStartCustomElement(
         case 'suppressContentEditableWarning':
         case 'suppressHydrationWarning':
           // Ignored. These are built-in to React on the client.
-          break;
-        case 'className':
-          // className gets rendered as class on the client, so it should be
-          // rendered as class on the server.
-          target.push(
-            attributeSeparator,
-            stringToChunk('class'),
-            attributeAssign,
-            escapeTextForBrowser(propValue),
-            attributeEnd,
-          );
           break;
         default:
           if (

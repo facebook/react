@@ -209,8 +209,9 @@ export function getPropertyInfo(
 ): PropertyInfo | null {
   if (!enableCustomElementPropertySupport) {
     if (properties.hasOwnProperty(name)) {
-      return null;
+      return properties[name];
     }
+    return null;
   }
   // Custom elements shouldn't get the htmlFor->for translation because they
   // never used to and they currently don't in Preact.
