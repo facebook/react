@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableFilterEmptyStringAttributesDOM, enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
+import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -202,25 +202,14 @@ export function shouldRemoveAttribute(
   return false;
 }
 
-export function getPropertyInfo(
+export function getPropertyInfo(name: string): PropertyInfo | null {
+  return properties.hasOwnProperty(name) ? properties[name] : null;
+}
+
+export function getCustomElementPropertyInfo(
   name: string,
-  node?: Element,
-  isCustomComponentTag?: boolean,
-): PropertyInfo | null {
-  if (!enableCustomElementPropertySupport) {
-    if (properties.hasOwnProperty(name)) {
-      return properties[name];
-    }
-    return null;
-  }
-  // Custom elements shouldn't get the htmlFor->for translation because they
-  // never used to and they currently don't in Preact.
-  // TODO consider what to do about the rest of the PropertyInfos.
-  const ignorePropertyInfo = isCustomComponentTag && name === 'htmlFor';
-  if (!ignorePropertyInfo && properties.hasOwnProperty(name)) {
-    return properties[name];
-  }
-  if (isCustomComponentTag && node && name in (node: any)) {
+  node: Element) {
+  if (name in (node: any)) {
     const acceptsBooleans = (typeof (node: any)[name]) === 'boolean';
     return {
       acceptsBooleans,

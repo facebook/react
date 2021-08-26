@@ -17,6 +17,7 @@ import {
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
+import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 
 /**
  * Operations for dealing with DOM properties.
@@ -30,11 +31,13 @@ import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name: string, value: mixed, isCustomComponent: boolean): string {
-  const propertyInfo = getPropertyInfo(name, undefined, isCustomComponent);
-  if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, isCustomComponent)) {
+  const propertyInfo = enableCustomElementPropertySupport && isCustomComponent
+    ? null
+    : getPropertyInfo(name);
+  if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, isCustomComponent && enableCustomElementPropertySupport)) {
     return '';
   }
-  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponent)) {
+  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponent && enableCustomElementPropertySupport)) {
     return '';
   }
   if (propertyInfo !== null) {
