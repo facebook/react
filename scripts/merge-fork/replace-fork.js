@@ -28,7 +28,7 @@ async function main() {
   if (spawn.stderr.toString() !== '') {
     spawnSync('git', ['checkout', '.']);
 
-    console.log(Error(spawn.stderr));
+    //console.log(Error(spawn.stderr));
     process.exitCode = 1;
   }
 }
