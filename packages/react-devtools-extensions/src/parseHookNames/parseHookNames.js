@@ -16,6 +16,11 @@ import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 import {sourceMapIncludesSource} from '../SourceMapUtils';
 import {SourceMapMetadataConsumer} from '../SourceMapMetadataConsumer';
+import {
+  withAsyncPerformanceMark,
+  withCallbackPerformanceMark,
+  withSyncPerformanceMark,
+} from 'react-devtools-shared/src/PerformanceMarks';
 
 import type {
   HooksNode,
@@ -23,7 +28,6 @@ import type {
   HooksTree,
 } from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
-import type {Thenable} from 'shared/ReactTypes';
 import type {SourceConsumer} from '../astUtils';
 
 const MAX_SOURCE_LENGTH = 100_000_000;
@@ -106,10 +110,20 @@ const originalURLToMetadataCache: LRUCache<
 
 export async function parseHookNames(
   hooksTree: HooksTree,
-): Thenable<HookNames | null> {
+): Promise<HookNames | null> {
   const hooksList: Array<HooksNode> = [];
-  flattenHooksList(hooksTree, hooksList);
+  withSyncPerformanceMark('flattenHooksList()', () => {
+    flattenHooksList(hooksTree, hooksList);
+  });
 
+  return withAsyncPerformanceMark('parseHookNames()', () =>
+    parseHookNamesImpl(hooksList),
+  );
+}
+
+async function parseHookNamesImpl(
+  hooksList: HooksNode[],
+): Promise<HookNames | null> {
   if (__DEBUG__) {
     console.log('parseHookNames() hooksList:', hooksList);
   }
@@ -164,11 +178,25 @@ export async function parseHookNames(
     }
   }
 
-  return loadSourceFiles(locationKeyToHookSourceData)
-    .then(() => extractAndLoadSourceMaps(locationKeyToHookSourceData))
-    .then(() => parseSourceAST(locationKeyToHookSourceData))
-    .then(() => updateLruCache(locationKeyToHookSourceData))
-    .then(() => findHookNames(hooksList, locationKeyToHookSourceData));
+  await withAsyncPerformanceMark('loadSourceFiles()', () =>
+    loadSourceFiles(locationKeyToHookSourceData),
+  );
+
+  await withAsyncPerformanceMark('extractAndLoadSourceMaps()', () =>
+    extractAndLoadSourceMaps(locationKeyToHookSourceData),
+  );
+
+  withSyncPerformanceMark('parseSourceAST()', () =>
+    parseSourceAST(locationKeyToHookSourceData),
+  );
+
+  withSyncPerformanceMark('updateLruCache()', () =>
+    updateLruCache(locationKeyToHookSourceData),
+  );
+
+  return withSyncPerformanceMark('findHookNames()', () =>
+    findHookNames(hooksList, locationKeyToHookSourceData),
+  );
 }
 
 function decodeBase64String(encoded: string): Object {
@@ -214,7 +242,12 @@ function extractAndLoadSourceMaps(
 
     const sourceMapRegex = / ?sourceMappingURL=([^\s'"]+)/gm;
     const runtimeSourceCode = ((hookSourceData.runtimeSourceCode: any): string);
-    let sourceMappingURLMatch = sourceMapRegex.exec(runtimeSourceCode);
+
+    let sourceMappingURLMatch = withSyncPerformanceMark(
+      'sourceMapRegex.exec(runtimeSourceCode)',
+      () => sourceMapRegex.exec(runtimeSourceCode),
+    );
+
     if (sourceMappingURLMatch == null) {
       // Maybe file has not been transformed; we'll try to parse it as-is in parseSourceAST().
 
@@ -237,8 +270,13 @@ function extractAndLoadSourceMaps(
           const trimmed = ((sourceMappingURL.match(
             /base64,([a-zA-Z0-9+\/=]+)/,
           ): any): Array<string>)[1];
-          const decoded = decodeBase64String(trimmed);
-          const parsed = JSON.parse(decoded);
+          const decoded = withSyncPerformanceMark('decodeBase64String()', () =>
+            decodeBase64String(trimmed),
+          );
+
+          const parsed = withSyncPerformanceMark('JSON.parse(decoded)', () =>
+            JSON.parse(decoded),
+          );
 
           if (__DEBUG__) {
             console.groupCollapsed(
@@ -251,17 +289,24 @@ function extractAndLoadSourceMaps(
           // Hook source might be a URL like "https://4syus.csb.app/src/App.js"
           // Parsed source map might be a partial path like "src/App.js"
           if (sourceMapIncludesSource(parsed, runtimeSourceURL)) {
-            hookSourceData.metadataConsumer = new SourceMapMetadataConsumer(
-              parsed,
+            hookSourceData.metadataConsumer = withSyncPerformanceMark(
+              'new SourceMapMetadataConsumer(parsed)',
+              () => new SourceMapMetadataConsumer(parsed),
             );
-            hookSourceData.sourceConsumer = new SourceMapConsumer(parsed);
+            hookSourceData.sourceConsumer = withSyncPerformanceMark(
+              'new SourceMapConsumer(parsed)',
+              () => new SourceMapConsumer(parsed),
+            );
             break;
           }
         } else {
           externalSourceMapURLs.push(sourceMappingURL);
         }
 
-        sourceMappingURLMatch = sourceMapRegex.exec(runtimeSourceCode);
+        sourceMappingURLMatch = withSyncPerformanceMark(
+          'sourceMapRegex.exec(runtimeSourceCode)',
+          () => sourceMapRegex.exec(runtimeSourceCode),
+        );
       }
 
       const foundInlineSourceMap =
@@ -300,11 +345,22 @@ function extractAndLoadSourceMaps(
             fetchPromises.get(url) ||
             fetchFile(url).then(
               sourceMapContents => {
-                const parsed = JSON.parse(sourceMapContents);
-                return {
-                  sourceConsumer: new SourceMapConsumer(parsed),
-                  metadataConsumer: new SourceMapMetadataConsumer(parsed),
-                };
+                const parsed = withSyncPerformanceMark(
+                  'JSON.parse(sourceMapContents)',
+                  () => JSON.parse(sourceMapContents),
+                );
+
+                const sourceConsumer = withSyncPerformanceMark(
+                  'new SourceMapConsumer(parsed)',
+                  () => new SourceMapConsumer(parsed),
+                );
+
+                const metadataConsumer = withSyncPerformanceMark(
+                  'new SourceMapMetadataConsumer(parsed)',
+                  () => new SourceMapMetadataConsumer(parsed),
+                );
+
+                return {sourceConsumer, metadataConsumer};
               },
               // In this case, we fall back to the assumption that the source has no source map.
               // This might indicate an (unlikely) edge case that had no source map,
@@ -336,35 +392,43 @@ function extractAndLoadSourceMaps(
 }
 
 function fetchFile(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fetch(url).then(
-      response => {
-        if (response.ok) {
-          response
-            .text()
-            .then(text => {
-              resolve(text);
-            })
-            .catch(error => {
-              if (__DEBUG__) {
-                console.log(`fetchFile() Could not read text for url "${url}"`);
-              }
-              reject(null);
-            });
-        } else {
-          if (__DEBUG__) {
-            console.log(`fetchFile() Got bad response for url "${url}"`);
+  return withCallbackPerformanceMark('fetchFile("' + url + '")', done => {
+    return new Promise((resolve, reject) => {
+      fetch(url).then(
+        response => {
+          if (response.ok) {
+            response
+              .text()
+              .then(text => {
+                done();
+                resolve(text);
+              })
+              .catch(error => {
+                if (__DEBUG__) {
+                  console.log(
+                    `fetchFile() Could not read text for url "${url}"`,
+                  );
+                }
+                done();
+                reject(null);
+              });
+          } else {
+            if (__DEBUG__) {
+              console.log(`fetchFile() Got bad response for url "${url}"`);
+            }
+            done();
+            reject(null);
           }
+        },
+        error => {
+          if (__DEBUG__) {
+            console.log(`fetchFile() Could not fetch file: ${error.message}`);
+          }
+          done();
           reject(null);
-        }
-      },
-      error => {
-        if (__DEBUG__) {
-          console.log(`fetchFile() Could not fetch file: ${error.message}`);
-        }
-        reject(null);
-      },
-    );
+        },
+      );
+    });
   });
 }
 
@@ -404,14 +468,18 @@ function findHookNames(
       originalSourceColumnNumber = columnNumber;
       originalSourceLineNumber = lineNumber;
     } else {
-      const position = sourceConsumer.originalPositionFor({
-        line: lineNumber,
+      const position = withSyncPerformanceMark(
+        'sourceConsumer.originalPositionFor()',
+        () =>
+          sourceConsumer.originalPositionFor({
+            line: lineNumber,
 
-        // Column numbers are represented differently between tools/engines.
-        // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
-        // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
-        column: columnNumber - 1,
-      });
+            // Column numbers are represented differently between tools/engines.
+            // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
+            // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
+            column: columnNumber - 1,
+          }),
+      );
 
       originalSourceColumnNumber = position.column;
       originalSourceLineNumber = position.line;
@@ -434,20 +502,24 @@ function findHookNames(
     let name;
     const {metadataConsumer} = hookSourceData;
     if (metadataConsumer != null) {
-      name = metadataConsumer.hookNameFor({
-        line: originalSourceLineNumber,
-        column: originalSourceColumnNumber,
-        source: originalSourceURL,
-      });
+      name = withSyncPerformanceMark('metadataConsumer.hookNameFor()', () =>
+        metadataConsumer.hookNameFor({
+          line: originalSourceLineNumber,
+          column: originalSourceColumnNumber,
+          source: originalSourceURL,
+        }),
+      );
     }
 
     if (name == null) {
-      name = getHookName(
-        hook,
-        hookSourceData.originalSourceAST,
-        ((hookSourceData.originalSourceCode: any): string),
-        ((originalSourceLineNumber: any): number),
-        originalSourceColumnNumber,
+      name = withSyncPerformanceMark('getHookName()', () =>
+        getHookName(
+          hook,
+          hookSourceData.originalSourceAST,
+          ((hookSourceData.originalSourceCode: any): string),
+          ((originalSourceLineNumber: any): number),
+          originalSourceColumnNumber,
+        ),
       );
     }
 
@@ -496,9 +568,9 @@ function loadSourceFiles(
   return Promise.all(setPromises);
 }
 
-async function parseSourceAST(
+function parseSourceAST(
   locationKeyToHookSourceData: Map<string, HookSourceData>,
-): Promise<*> {
+): void {
   locationKeyToHookSourceData.forEach(hookSourceData => {
     if (hookSourceData.originalSourceAST !== null) {
       // Use cached metadata.
@@ -518,14 +590,18 @@ async function parseSourceAST(
       }
       // Now that the source map has been loaded,
       // extract the original source for later.
-      const {source} = sourceConsumer.originalPositionFor({
-        line: lineNumber,
+      const {source} = withSyncPerformanceMark(
+        'sourceConsumer.originalPositionFor()',
+        () =>
+          sourceConsumer.originalPositionFor({
+            line: lineNumber,
 
-        // Column numbers are represented differently between tools/engines.
-        // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
-        // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
-        column: columnNumber - 1,
-      });
+            // Column numbers are represented differently between tools/engines.
+            // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
+            // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
+            column: columnNumber - 1,
+          }),
+      );
 
       if (source == null) {
         // TODO (named hooks) maybe fall back to the runtime source instead of throwing?
@@ -538,10 +614,10 @@ async function parseSourceAST(
       // It can be relative if the source map specifies it that way,
       // but we use it as a cache key across different source maps and there can be collisions.
       originalSourceURL = (source: string);
-      originalSourceCode = (sourceConsumer.sourceContentFor(
-        source,
-        true,
-      ): string);
+      originalSourceCode = withSyncPerformanceMark(
+        'sourceConsumer.sourceContentFor()',
+        () => (sourceConsumer.sourceContentFor(source, true): string),
+      );
 
       if (__DEBUG__) {
         console.groupCollapsed(
@@ -595,10 +671,14 @@ async function parseSourceAST(
         originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
 
       // TODO (named hooks) Parsing should ideally be done off of the main thread.
-      const originalSourceAST = parse(originalSourceCode, {
-        sourceType: 'unambiguous',
-        plugins: ['jsx', plugin],
-      });
+      const originalSourceAST = withSyncPerformanceMark(
+        '[@babel/parser] parse(originalSourceCode)',
+        () =>
+          parse(originalSourceCode, {
+            sourceType: 'unambiguous',
+            plugins: ['jsx', plugin],
+          }),
+      );
       hookSourceData.originalSourceAST = originalSourceAST;
       if (__DEBUG__) {
         console.log(
@@ -611,7 +691,6 @@ async function parseSourceAST(
       });
     }
   });
-  return Promise.resolve();
 }
 
 function flattenHooksList(
@@ -645,7 +724,7 @@ function isUnnamedBuiltInHook(hook: HooksNode) {
 
 function updateLruCache(
   locationKeyToHookSourceData: Map<string, HookSourceData>,
-): Promise<*> {
+): void {
   locationKeyToHookSourceData.forEach(
     ({metadataConsumer, sourceConsumer, runtimeSourceURL}) => {
       // Only set once to avoid triggering eviction/cleanup code.
@@ -663,7 +742,6 @@ function updateLruCache(
       }
     },
   );
-  return Promise.resolve();
 }
 
 export function purgeCachedMetadata(): void {

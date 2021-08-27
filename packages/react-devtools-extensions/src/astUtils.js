@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {withSyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
 import traverse, {NodePath, Node} from '@babel/traverse';
 import {File} from '@babel/types';
 
@@ -131,7 +132,10 @@ export function getHookName(
   originalSourceLineNumber: number,
   originalSourceColumnNumber: number,
 ): string | null {
-  const hooksFromAST = getPotentialHookDeclarationsFromAST(originalSourceAST);
+  const hooksFromAST = withSyncPerformanceMark(
+    'getPotentialHookDeclarationsFromAST(originalSourceAST)',
+    () => getPotentialHookDeclarationsFromAST(originalSourceAST),
+  );
 
   let potentialReactHookASTNode = null;
   if (originalSourceColumnNumber === 0) {
@@ -144,6 +148,7 @@ export function getHookName(
         node,
         originalSourceLineNumber,
       );
+
       const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
       return nodeLocationCheck && hookDeclaractionCheck;
     });
@@ -158,6 +163,7 @@ export function getHookName(
         originalSourceLineNumber,
         originalSourceColumnNumber,
       );
+
       const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
       return nodeLocationCheck && hookDeclaractionCheck;
     });
@@ -170,17 +176,25 @@ export function getHookName(
   // nodesAssociatedWithReactHookASTNode could directly be used to obtain the hook variable name
   // depending on the type of potentialReactHookASTNode
   try {
-    const nodesAssociatedWithReactHookASTNode = getFilteredHookASTNodes(
-      potentialReactHookASTNode,
-      hooksFromAST,
-      originalSourceCode,
+    const nodesAssociatedWithReactHookASTNode = withSyncPerformanceMark(
+      'getFilteredHookASTNodes()',
+      () =>
+        getFilteredHookASTNodes(
+          potentialReactHookASTNode,
+          hooksFromAST,
+          originalSourceCode,
+        ),
     );
 
-    return getHookNameFromNode(
-      hook,
-      nodesAssociatedWithReactHookASTNode,
-      potentialReactHookASTNode,
+    const name = withSyncPerformanceMark('getHookNameFromNode()', () =>
+      getHookNameFromNode(
+        hook,
+        nodesAssociatedWithReactHookASTNode,
+        potentialReactHookASTNode,
+      ),
     );
+
+    return name;
   } catch (error) {
     console.error(error);
     return null;
@@ -283,13 +297,15 @@ function getHookVariableName(
 
 function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
   const potentialHooksFound: NodePath[] = [];
-  traverse(sourceAST, {
-    enter(path) {
-      if (path.isVariableDeclarator() && isPotentialHookDeclaration(path)) {
-        potentialHooksFound.push(path);
-      }
-    },
-  });
+  withSyncPerformanceMark('traverse(sourceAST)', () =>
+    traverse(sourceAST, {
+      enter(path) {
+        if (path.isVariableDeclarator() && isPotentialHookDeclaration(path)) {
+          potentialHooksFound.push(path);
+        }
+      },
+    }),
+  );
   return potentialHooksFound;
 }
 

@@ -19,7 +19,7 @@ import ToDoList from './ToDoList';
 import Toggle from './Toggle';
 import ErrorBoundaries from './ErrorBoundaries';
 import SuspenseTree from './SuspenseTree';
-import {ignoreErrors, ignoreWarnings} from './console';
+import {ignoreErrors, ignoreLogs, ignoreWarnings} from './console';
 
 import './styles.css';
 
@@ -32,6 +32,7 @@ ignoreErrors([
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
 ]);
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
+ignoreLogs([]);
 
 const roots = [];
 

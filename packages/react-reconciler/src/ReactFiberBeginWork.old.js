@@ -151,7 +151,11 @@ import {
   getOffscreenContainerProps,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {shouldError, shouldSuspend} from './ReactFiberReconciler';
+import {
+  shouldError,
+  shouldSuspend,
+  setIsStrictModeForDevtools,
+} from './ReactFiberReconciler';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.old';
 import {
   suspenseStackCursor,
@@ -234,8 +238,6 @@ import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.old';
 import is from 'shared/objectIs';
-
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -379,7 +381,7 @@ function updateForwardRef(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
         nextChildren = renderWithHooks(
           current,
@@ -390,7 +392,7 @@ function updateForwardRef(
           renderLanes,
         );
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
     setIsRendering(false);
@@ -984,7 +986,7 @@ function updateFunctionComponent(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
         nextChildren = renderWithHooks(
           current,
@@ -995,7 +997,7 @@ function updateFunctionComponent(
           renderLanes,
         );
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
     setIsRendering(false);
@@ -1201,11 +1203,11 @@ function finishClassComponent(
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
-        disableLogs();
+        setIsStrictModeForDevtools(true);
         try {
           instance.render();
         } finally {
-          reenableLogs();
+          setIsStrictModeForDevtools(false);
         }
       }
       setIsRendering(false);
@@ -1741,7 +1743,7 @@ function mountIndeterminateComponent(
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
-        disableLogs();
+        setIsStrictModeForDevtools(true);
         try {
           value = renderWithHooks(
             null,
@@ -1752,7 +1754,7 @@ function mountIndeterminateComponent(
             renderLanes,
           );
         } finally {
-          reenableLogs();
+          setIsStrictModeForDevtools(false);
         }
       }
     }
