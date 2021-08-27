@@ -83,13 +83,14 @@ const { contentWindow } = iframe;
 // This must be called before React is loaded into that frame.
 initializeBackend(contentWindow);
 
+// Initialize DevTools UI to listen to the hook we just installed.
+// This returns a React component we can render anywhere in the parent window.
+// This also must be called before React is loaded into the iframe
+const DevTools = initializeFrontend(contentWindow);
+
 // React application can be injected into <iframe> at any time now...
 // Note that this would need to be done via <script> tag injection,
 // as setting the src of the <iframe> would load a new page (without the injected backend).
-
-// Initialize DevTools UI to listen to the hook we just installed.
-// This returns a React component we can render anywhere in the parent window.
-const DevTools = initializeFrontend(contentWindow);
 
 // <DevTools /> interface can be rendered in the parent window at any time now...
 // Be sure to use either ReactDOM.createRoot()

@@ -13,6 +13,10 @@ export const {
   enableIsInputPending,
   enableSchedulerDebugging,
   enableProfiling: enableProfilingFeatureFlag,
+  enableIsInputPendingContinuous,
+  frameYieldMs,
+  continuousYieldMs,
+  maxYieldMs,
 } = dynamicFeatureFlags;
 
 export const enableProfiling = __PROFILE__ && enableProfilingFeatureFlag;

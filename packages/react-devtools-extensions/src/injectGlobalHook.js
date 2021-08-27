@@ -88,6 +88,9 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 
 // Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
 // Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
+// We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
+// to the webpage's window, so in order to access front end settings
+// and communicate with React, we must inject this code into the webpage
 if ('text/html' === document.contentType) {
   injectCode(
     ';(' +
