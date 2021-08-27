@@ -61,7 +61,7 @@ const run = async () => {
         } catch (error) {
           failed = true;
           console.error(error.message);
-          console.log();
+           ;
           console.log(
             theme.error`Publish failed. Will attempt to publish remaining packages.`
           );
@@ -81,7 +81,7 @@ const run = async () => {
           i++;
         } catch (error) {
           console.error(error.message);
-          console.log();
+           ;
           console.log(
             theme.error`Publish failed. Enter a fresh otp code to retry.`
           );

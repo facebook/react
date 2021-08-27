@@ -50,12 +50,12 @@ const run = async ({cwd, packages, tags}) => {
         )
       );
 
-      console.log();
+       ;
       console.log(
         theme.header`Please review and commit all local, staged changes.`
       );
 
-      console.log();
+       ;
       console.log('Version numbers have been updated in the following files:');
       for (let i = 0; i < packages.length; i++) {
         const packageName = packages[i];
@@ -69,14 +69,14 @@ const run = async ({cwd, packages, tags}) => {
         console.log(theme.path`• packages/shared/ReactVersion.js`);
       }
 
-      console.log();
+       ;
       console.log(
         theme`{header Don't forget to also update and commit the }{path CHANGELOG}`
       );
 
       // Prompt the release engineer to tag the commit and update the CHANGELOG.
       // (The script could automatically do this, but this seems safer.)
-      console.log();
+       ;
       console.log(
         theme.header`Tag the source for this release in Git with the following command:`
       );
@@ -88,7 +88,7 @@ const run = async ({cwd, packages, tags}) => {
       );
       console.log(theme.command`  git push origin --tags`);
 
-      console.log();
+       ;
       console.log(theme.header`Lastly, please fill in the release on GitHub.`);
       console.log(
         theme.link`https://github.com/facebook/react/releases/tag/v%s`,
@@ -113,7 +113,7 @@ const run = async ({cwd, packages, tags}) => {
       }
 
       // Update reactjs.org so the React version shown in the header is up to date.
-      console.log();
+       ;
       console.log(
         theme.header`Once you've pushed changes, update the docs site.`
       );
@@ -121,7 +121,7 @@ const run = async ({cwd, packages, tags}) => {
         'This will ensure that any newly-added error codes can be decoded.'
       );
 
-      console.log();
+       ;
     }
   }
 };
