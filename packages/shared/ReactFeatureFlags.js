@@ -136,7 +136,7 @@ export const enableSuspenseLayoutEffectSemantics = true;
 // and client rendering, mostly to allow JSX attributes to apply to the custom
 // element's object properties instead of only HTML attributes.
 // https://github.com/facebook/react/issues/11347
-export const enableCustomElementPropertySupport = false;
+export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // --------------------------
 // Future APIs to be deprecated
