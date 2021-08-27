@@ -17,6 +17,7 @@ import type {
   RendererID,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const BATCH_DURATION = 100;
 
@@ -164,6 +165,8 @@ type UpdateConsolePatchSettingsParams = {|
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+  browserTheme: BrowserTheme,
 |};
 
 export type BackendEvents = {|

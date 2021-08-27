@@ -113,6 +113,7 @@ import {
   entangleTransitions,
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
+import {getIsStrictModeForDevtools} from './ReactFiberReconciler.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -449,7 +450,7 @@ export function renderWithHooks<Props, SecondArg>(
   }
 
   // We can assume the previous dispatcher is always this one, since we set it
-  // at the beginning of the render phase and there's no re-entrancy.
+  // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   if (__DEV__) {
@@ -553,7 +554,7 @@ export function bailoutHooks(
 
 export function resetHooksAfterThrow(): void {
   // We can assume the previous dispatcher is always this one, since we set it
-  // at the beginning of the render phase and there's no re-entrancy.
+  // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
 
   if (didScheduleRenderPhaseUpdate) {
@@ -934,7 +935,7 @@ type MutableSourceMemoizedState<Source, Snapshot> = {|
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 |};
 
-function readFromUnsubcribedMutableSource<Source, Snapshot>(
+function readFromUnsubscribedMutableSource<Source, Snapshot>(
   root: FiberRoot,
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
@@ -1021,9 +1022,9 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     // dev, we can present a more accurate error message.
     if (__DEV__) {
       // eslint-disable-next-line react-internal/no-production-logging
-      if (console.log.__reactDisabledLog) {
-        // If the logs are disabled, this is the dev-only double render. This is
-        // only reachable if there was a mutation during render. Show a helpful
+      if (getIsStrictModeForDevtools()) {
+        // If getIsStrictModeForDevtools is true, this is the dev-only double render
+        // This is only reachable if there was a mutation during render. Show a helpful
         // error message.
         //
         // Something interesting to note: because we only double render in
@@ -1074,7 +1075,7 @@ function useMutableSource<Source, Snapshot>(
 
   // eslint-disable-next-line prefer-const
   let [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
-    readFromUnsubcribedMutableSource(root, source, getSnapshot),
+    readFromUnsubscribedMutableSource(root, source, getSnapshot),
   );
   let snapshot = currentSnapshot;
 
@@ -1208,7 +1209,7 @@ function useMutableSource<Source, Snapshot>(
     ): any);
     stateHook.queue = newQueue;
     stateHook.baseQueue = null;
-    snapshot = readFromUnsubcribedMutableSource(root, source, getSnapshot);
+    snapshot = readFromUnsubscribedMutableSource(root, source, getSnapshot);
     stateHook.memoizedState = stateHook.baseState = snapshot;
   }
 
@@ -1949,7 +1950,7 @@ function dispatchAction<S, A>(
         // This is the first update. Create a circular list.
         update.next = update;
         // At the end of the current render, this queue's interleaved updates will
-        // be transfered to the pending queue.
+        // be transferred to the pending queue.
         pushInterleavedQueue(queue);
       } else {
         update.next = interleaved.next;

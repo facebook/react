@@ -43,8 +43,7 @@ export function collapseLayoutIntoViews(layout: Layout) {
 export const noopLayout: Layouter = layout => layout;
 
 /**
- * Layer views on top of each other. All views' frames will be set to
- * `containerFrame`.
+ * Layer views on top of each other. All views' frames will be set to `containerFrame`.
  *
  * Equivalent to composing:
  * - `alignToContainerXLayout`,
@@ -52,12 +51,13 @@ export const noopLayout: Layouter = layout => layout;
  * - `containerWidthLayout`, and
  * - `containerHeightLayout`.
  */
-export const layeredLayout: Layouter = (layout, containerFrame) =>
-  layout.map(layoutInfo => ({...layoutInfo, frame: containerFrame}));
+export const layeredLayout: Layouter = (layout, containerFrame) => {
+  return layout.map(layoutInfo => ({...layoutInfo, frame: containerFrame}));
+};
 
 /**
- * Stacks `views` vertically in `frame`. All views in `views` will have their
- * widths set to the frame's width.
+ * Stacks `views` vertically in `frame`.
+ * All views in `views` will have their widths set to the frame's width.
  */
 export const verticallyStackedLayout: Layouter = (layout, containerFrame) => {
   let currentY = containerFrame.origin.y;
@@ -204,50 +204,6 @@ export const atLeastContainerHeightLayout: Layouter = (
       },
     },
   }));
-};
-
-/**
- * Forces last view to take up the space below the second-last view.
- * Intended to be used with a vertical stack layout.
- */
-export const lastViewTakesUpRemainingSpaceLayout: Layouter = (
-  layout,
-  containerFrame,
-) => {
-  if (layout.length === 0) {
-    // Nothing to do
-    return layout;
-  }
-
-  if (layout.length === 1) {
-    // No second-last view; the view should just take up the container height
-    return containerHeightLayout(layout, containerFrame);
-  }
-
-  const layoutInfoToPassThrough = layout.slice(0, layout.length - 1);
-  const secondLastLayoutInfo =
-    layoutInfoToPassThrough[layoutInfoToPassThrough.length - 1];
-
-  const remainingHeight =
-    containerFrame.size.height -
-    secondLastLayoutInfo.frame.origin.y -
-    secondLastLayoutInfo.frame.size.height;
-  const height = Math.max(remainingHeight, 0); // Prevent negative heights
-
-  const lastLayoutInfo = layout[layout.length - 1];
-  return [
-    ...layoutInfoToPassThrough,
-    {
-      ...lastLayoutInfo,
-      frame: {
-        origin: lastLayoutInfo.frame.origin,
-        size: {
-          width: lastLayoutInfo.frame.size.width,
-          height,
-        },
-      },
-    },
-  ];
 };
 
 /**

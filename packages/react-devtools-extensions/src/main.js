@@ -11,8 +11,8 @@ import {
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
+  getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
-import {parseHookNames, purgeCachedMetadata} from './parseHookNames';
 import {
   localStorageGetItem,
   localStorageRemoveItem,
@@ -43,6 +43,12 @@ function syncSavedPreferences() {
     )};
     window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = ${JSON.stringify(
       getShowInlineWarningsAndErrors(),
+    )};
+    window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = ${JSON.stringify(
+      getHideConsoleLogsInStrictMode(),
+    )};
+    window.__REACT_DEVTOOLS_BROWSER_THEME__ = ${JSON.stringify(
+      getBrowserTheme(),
     )};`,
   );
 }
@@ -210,23 +216,26 @@ function createPanelIfReactLoaded() {
 
         render = (overrideTab = mostRecentOverrideTab) => {
           mostRecentOverrideTab = overrideTab;
-
-          root.render(
-            createElement(DevTools, {
-              bridge,
-              browserTheme: getBrowserTheme(),
-              componentsPortalContainer,
-              enabledInspectedElementContextMenu: true,
-              loadHookNames: parseHookNames,
-              overrideTab,
-              profilerPortalContainer,
-              purgeCachedHookNamesMetadata: purgeCachedMetadata,
-              showTabBar: false,
-              store,
-              warnIfUnsupportedVersionDetected: true,
-              viewAttributeSourceFunction,
-              viewElementSourceFunction,
-            }),
+          import('./parseHookNames').then(
+            ({parseHookNames, purgeCachedMetadata}) => {
+              root.render(
+                createElement(DevTools, {
+                  bridge,
+                  browserTheme: getBrowserTheme(),
+                  componentsPortalContainer,
+                  enabledInspectedElementContextMenu: true,
+                  loadHookNames: parseHookNames,
+                  overrideTab,
+                  profilerPortalContainer,
+                  purgeCachedHookNamesMetadata: purgeCachedMetadata,
+                  showTabBar: false,
+                  store,
+                  warnIfUnsupportedVersionDetected: true,
+                  viewAttributeSourceFunction,
+                  viewElementSourceFunction,
+                }),
+              );
+            },
           );
         };
 

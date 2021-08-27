@@ -8,6 +8,7 @@
 import assign from 'object-assign';
 import * as Scheduler from 'scheduler';
 import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
+import ReactCurrentActQueue from '../ReactCurrentActQueue';
 import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
 import ReactCurrentBatchConfig from '../ReactCurrentBatchConfig';
@@ -28,6 +29,7 @@ const ReactSharedInternals = {
 };
 
 if (__DEV__) {
+  ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
   ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
 }
 

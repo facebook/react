@@ -21,6 +21,7 @@ import {
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
+  getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
 import {Server} from 'ws';
 import {join} from 'path';
@@ -310,6 +311,9 @@ function startServer(
       )};
       window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = ${JSON.stringify(
         getShowInlineWarningsAndErrors(),
+      )};
+      window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = ${JSON.stringify(
+        getHideConsoleLogsInStrictMode(),
       )};`;
 
     response.end(

@@ -173,3 +173,5 @@ export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 
 export const allowConcurrentByDefault = false;
+
+export const enablePersistentOffscreenHostContainer = false;

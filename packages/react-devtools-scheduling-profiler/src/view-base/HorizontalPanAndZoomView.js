@@ -14,12 +14,11 @@ import type {
   MouseUpInteraction,
   WheelPlainInteraction,
   WheelWithShiftInteraction,
-  WheelWithControlInteraction,
-  WheelWithMetaInteraction,
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
 import type {ScrollState} from './utils/scrollState';
 import type {ViewRefs} from './Surface';
+import type {ViewState} from '../types';
 
 import {Surface} from './Surface';
 import {View} from './View';
@@ -32,96 +31,84 @@ import {
   zoomState,
 } from './utils/scrollState';
 import {
-  DEFAULT_ZOOM_LEVEL,
   MAX_ZOOM_LEVEL,
   MIN_ZOOM_LEVEL,
   MOVE_WHEEL_DELTA_THRESHOLD,
 } from './constants';
 
-export type HorizontalPanAndZoomViewOnChangeCallback = (
-  state: ScrollState,
-  view: HorizontalPanAndZoomView,
-) => void;
-
 export class HorizontalPanAndZoomView extends View {
+  _contentView: View;
   _intrinsicContentWidth: number;
   _isPanning = false;
-  _scrollState: ScrollState = {offset: 0, length: 0};
-  _onStateChange: HorizontalPanAndZoomViewOnChangeCallback = () => {};
+  _viewState: ViewState;
 
   constructor(
     surface: Surface,
     frame: Rect,
     contentView: View,
     intrinsicContentWidth: number,
-    onStateChange?: HorizontalPanAndZoomViewOnChangeCallback,
+    viewState: ViewState,
   ) {
     super(surface, frame);
-    this.addSubview(contentView);
+
+    this._contentView = contentView;
     this._intrinsicContentWidth = intrinsicContentWidth;
-    this._setScrollState({
-      offset: 0,
-      length: intrinsicContentWidth * DEFAULT_ZOOM_LEVEL,
+    this._viewState = viewState;
+
+    viewState.onHorizontalScrollStateChange(scrollState => {
+      this.zoomToRange(scrollState.offset, scrollState.length);
     });
-    if (onStateChange) this._onStateChange = onStateChange;
-  }
 
-  setFrame(newFrame: Rect) {
-    super.setFrame(newFrame);
-
-    // Revalidate scrollState
-    this._setStateAndInformCallbacksIfChanged(this._scrollState);
-  }
-
-  setScrollState(proposedState: ScrollState) {
-    this._setScrollState(proposedState);
+    this.addSubview(contentView);
   }
 
   /**
-   * Just sets scroll state. Use `_setStateAndInformCallbacksIfChanged` if this
-   * view's callbacks should also be called.
+   * Just sets scroll state.
+   * Use `_setStateAndInformCallbacksIfChanged` if this view's callbacks should also be called.
    *
    * @returns Whether state was changed
    * @private
    */
-  _setScrollState(proposedState: ScrollState): boolean {
+  setScrollState(proposedState: ScrollState) {
     const clampedState = clampState({
       state: proposedState,
       minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
       maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
       containerLength: this.frame.size.width,
     });
-    if (areScrollStatesEqual(clampedState, this._scrollState)) {
-      return false;
+    if (
+      !areScrollStatesEqual(clampedState, this._viewState.horizontalScrollState)
+    ) {
+      this.setNeedsDisplay();
     }
-    this._scrollState = clampedState;
-    this.setNeedsDisplay();
-    return true;
   }
 
   /**
-   * @private
+   * Zoom to a specific range of the content specified as a range of the
+   * content view's intrinsic content size.
+   *
+   * Does not inform callbacks of state change since this is a public API.
    */
-  _setStateAndInformCallbacksIfChanged(proposedState: ScrollState) {
-    if (this._setScrollState(proposedState)) {
-      this._onStateChange(this._scrollState, this);
-    }
+  zoomToRange(rangeStart: number, rangeEnd: number) {
+    const newState = moveStateToRange({
+      state: this._viewState.horizontalScrollState,
+      rangeStart,
+      rangeEnd,
+      contentLength: this._intrinsicContentWidth,
+
+      minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
+      maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
+      containerLength: this.frame.size.width,
+    });
+    this.setScrollState(newState);
   }
 
   desiredSize() {
     return this._contentView.desiredSize();
   }
 
-  /**
-   * Reference to the content view. This view is also the only view in
-   * `this.subviews`.
-   */
-  get _contentView() {
-    return this.subviews[0];
-  }
-
   layoutSubviews() {
-    const {offset, length} = this._scrollState;
+    const {offset, length} = this._viewState.horizontalScrollState;
     const proposedFrame = {
       origin: {
         x: this.frame.origin.x + offset,
@@ -136,24 +123,22 @@ export class HorizontalPanAndZoomView extends View {
     super.layoutSubviews();
   }
 
-  /**
-   * Zoom to a specific range of the content specified as a range of the
-   * content view's intrinsic content size.
-   *
-   * Does not inform callbacks of state change since this is a public API.
-   */
-  zoomToRange(rangeStart: number, rangeEnd: number) {
-    const newState = moveStateToRange({
-      state: this._scrollState,
-      rangeStart,
-      rangeEnd,
-      contentLength: this._intrinsicContentWidth,
-
-      minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
-      maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
-      containerLength: this.frame.size.width,
-    });
-    this._setScrollState(newState);
+  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
+    switch (interaction.type) {
+      case 'mousedown':
+        this._handleMouseDown(interaction, viewRefs);
+        break;
+      case 'mousemove':
+        this._handleMouseMove(interaction, viewRefs);
+        break;
+      case 'mouseup':
+        this._handleMouseUp(interaction, viewRefs);
+        break;
+      case 'wheel-plain':
+      case 'wheel-shift':
+        this._handleWheel(interaction);
+        break;
+    }
   }
 
   _handleMouseDown(interaction: MouseDownInteraction, viewRefs: ViewRefs) {
@@ -171,7 +156,7 @@ export class HorizontalPanAndZoomView extends View {
       interaction.payload.location,
       this.frame,
     );
-    if (isHovered) {
+    if (isHovered && viewRefs.hoveredView === null) {
       viewRefs.hoveredView = this;
     }
 
@@ -184,12 +169,19 @@ export class HorizontalPanAndZoomView extends View {
     if (!this._isPanning) {
       return;
     }
+
+    // Don't prevent mouse-move events from bubbling if they are vertical drags.
+    const {movementX, movementY} = interaction.payload.event;
+    if (Math.abs(movementX) < Math.abs(movementY)) {
+      return;
+    }
+
     const newState = translateState({
-      state: this._scrollState,
-      delta: interaction.payload.event.movementX,
+      state: this._viewState.horizontalScrollState,
+      delta: movementX,
       containerLength: this.frame.size.width,
     });
-    this._setStateAndInformCallbacksIfChanged(newState);
+    this._viewState.updateHorizontalScrollState(newState);
   }
 
   _handleMouseUp(interaction: MouseUpInteraction, viewRefs: ViewRefs) {
@@ -202,7 +194,7 @@ export class HorizontalPanAndZoomView extends View {
     }
   }
 
-  _handleWheelPlain(interaction: WheelPlainInteraction) {
+  _handleWheel(interaction: WheelPlainInteraction | WheelWithShiftInteraction) {
     const {
       location,
       delta: {deltaX, deltaY},
@@ -214,72 +206,40 @@ export class HorizontalPanAndZoomView extends View {
 
     const absDeltaX = Math.abs(deltaX);
     const absDeltaY = Math.abs(deltaY);
+
+    // Vertical scrolling zooms in and out (unless the SHIFT modifier is used).
+    // Horizontal scrolling pans.
     if (absDeltaY > absDeltaX) {
-      return; // Scrolling vertically
-    }
-    if (absDeltaX < MOVE_WHEEL_DELTA_THRESHOLD) {
-      return;
-    }
+      if (absDeltaY < MOVE_WHEEL_DELTA_THRESHOLD) {
+        return;
+      }
 
-    const newState = translateState({
-      state: this._scrollState,
-      delta: -deltaX,
-      containerLength: this.frame.size.width,
-    });
-    this._setStateAndInformCallbacksIfChanged(newState);
-  }
+      if (interaction.type === 'wheel-shift') {
+        // Shift modifier is for scrolling, not zooming.
+        return;
+      }
 
-  _handleWheelZoom(
-    interaction:
-      | WheelWithShiftInteraction
-      | WheelWithControlInteraction
-      | WheelWithMetaInteraction,
-  ) {
-    const {
-      location,
-      delta: {deltaY},
-    } = interaction.payload;
+      const newState = zoomState({
+        state: this._viewState.horizontalScrollState,
+        multiplier: 1 + 0.005 * -deltaY,
+        fixedPoint: location.x - this._viewState.horizontalScrollState.offset,
 
-    if (!rectContainsPoint(location, this.frame)) {
-      return; // Not scrolling on view
-    }
+        minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
+        maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
+        containerLength: this.frame.size.width,
+      });
+      this._viewState.updateHorizontalScrollState(newState);
+    } else {
+      if (absDeltaX < MOVE_WHEEL_DELTA_THRESHOLD) {
+        return;
+      }
 
-    const absDeltaY = Math.abs(deltaY);
-    if (absDeltaY < MOVE_WHEEL_DELTA_THRESHOLD) {
-      return;
-    }
-
-    const newState = zoomState({
-      state: this._scrollState,
-      multiplier: 1 + 0.005 * -deltaY,
-      fixedPoint: location.x - this._scrollState.offset,
-
-      minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
-      maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
-      containerLength: this.frame.size.width,
-    });
-    this._setStateAndInformCallbacksIfChanged(newState);
-  }
-
-  handleInteraction(interaction: Interaction, viewRefs: ViewRefs) {
-    switch (interaction.type) {
-      case 'mousedown':
-        this._handleMouseDown(interaction, viewRefs);
-        break;
-      case 'mousemove':
-        this._handleMouseMove(interaction, viewRefs);
-        break;
-      case 'mouseup':
-        this._handleMouseUp(interaction, viewRefs);
-        break;
-      case 'wheel-plain':
-        this._handleWheelPlain(interaction);
-        break;
-      case 'wheel-shift':
-      case 'wheel-control':
-      case 'wheel-meta':
-        this._handleWheelZoom(interaction);
-        break;
+      const newState = translateState({
+        state: this._viewState.horizontalScrollState,
+        delta: -deltaX,
+        containerLength: this.frame.size.width,
+      });
+      this._viewState.updateHorizontalScrollState(newState);
     }
   }
 }

@@ -31,7 +31,10 @@ import type {
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import checkPropTypes from 'shared/checkPropTypes';
-
+import {
+  markComponentRenderStarted,
+  markComponentRenderStopped,
+} from './SchedulingProfiler';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -85,6 +88,8 @@ import {
   enableCache,
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
+  enableSchedulingProfiler,
+  enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
@@ -142,12 +147,15 @@ import {
   registerSuspenseInstanceRetry,
   supportsHydration,
   isPrimaryRenderer,
-  supportsMutation,
   supportsPersistence,
   getOffscreenContainerProps,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {shouldError, shouldSuspend} from './ReactFiberReconciler';
+import {
+  shouldError,
+  shouldSuspend,
+  setIsStrictModeForDevtools,
+} from './ReactFiberReconciler';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.old';
 import {
   suspenseStackCursor,
@@ -230,8 +238,6 @@ import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.old';
 import is from 'shared/objectIs';
-
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -357,6 +363,9 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderLanes);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
@@ -372,7 +381,7 @@ function updateForwardRef(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
         nextChildren = renderWithHooks(
           current,
@@ -383,7 +392,7 @@ function updateForwardRef(
           renderLanes,
         );
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
     setIsRendering(false);
@@ -396,6 +405,9 @@ function updateForwardRef(
       ref,
       renderLanes,
     );
+  }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
   }
 
   if (current !== null && !didReceiveUpdate) {
@@ -734,7 +746,7 @@ function updateOffscreenComponent(
     workInProgress.updateQueue = spawnedCachePool;
   }
 
-  if (supportsPersistence) {
+  if (enablePersistentOffscreenHostContainer && supportsPersistence) {
     // In persistent mode, the offscreen children are wrapped in a host node.
     // TODO: Optimize this to use the OffscreenComponent fiber instead of
     // an extra HostComponent fiber. Need to make sure this doesn't break Fabric
@@ -750,12 +762,10 @@ function updateOffscreenComponent(
       renderLanes,
     );
     return offscreenContainer;
-  }
-  if (supportsMutation) {
+  } else {
     reconcileChildren(current, workInProgress, nextChildren, renderLanes);
     return workInProgress.child;
   }
-  return null;
 }
 
 function reconcileOffscreenHostContainer(
@@ -958,6 +968,9 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderLanes);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setIsRendering(true);
@@ -973,7 +986,7 @@ function updateFunctionComponent(
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
         nextChildren = renderWithHooks(
           current,
@@ -984,7 +997,7 @@ function updateFunctionComponent(
           renderLanes,
         );
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
     setIsRendering(false);
@@ -997,6 +1010,9 @@ function updateFunctionComponent(
       context,
       renderLanes,
     );
+  }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
   }
 
   if (current !== null && !didReceiveUpdate) {
@@ -1177,6 +1193,9 @@ function finishClassComponent(
       stopProfilerTimerIfRunning(workInProgress);
     }
   } else {
+    if (enableSchedulingProfiler) {
+      markComponentRenderStarted(workInProgress);
+    }
     if (__DEV__) {
       setIsRendering(true);
       nextChildren = instance.render();
@@ -1184,16 +1203,19 @@ function finishClassComponent(
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
-        disableLogs();
+        setIsStrictModeForDevtools(true);
         try {
           instance.render();
         } finally {
-          reenableLogs();
+          setIsStrictModeForDevtools(false);
         }
       }
       setIsRendering(false);
     } else {
       nextChildren = instance.render();
+    }
+    if (enableSchedulingProfiler) {
+      markComponentRenderStopped();
     }
   }
 
@@ -1567,6 +1589,9 @@ function mountIndeterminateComponent(
   prepareToReadContext(workInProgress, renderLanes);
   let value;
 
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   if (__DEV__) {
     if (
       Component.prototype &&
@@ -1610,6 +1635,10 @@ function mountIndeterminateComponent(
       renderLanes,
     );
   }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
+  }
+
   // React DevTools reads this flag.
   workInProgress.flags |= PerformedWork;
 
@@ -1714,7 +1743,7 @@ function mountIndeterminateComponent(
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
-        disableLogs();
+        setIsStrictModeForDevtools(true);
         try {
           value = renderWithHooks(
             null,
@@ -1725,7 +1754,7 @@ function mountIndeterminateComponent(
             renderLanes,
           );
         } finally {
-          reenableLogs();
+          setIsStrictModeForDevtools(false);
         }
       }
     }
@@ -1874,7 +1903,7 @@ function shouldRemainOnFallback(
   if (current !== null) {
     const suspenseState: SuspenseState = current.memoizedState;
     if (suspenseState === null) {
-      // Currently showing content. Don't hide it, even if ForceSuspenseFallack
+      // Currently showing content. Don't hide it, even if ForceSuspenseFallback
       // is true. More precise name might be "ForceRemainSuspenseFallback".
       // Note: This is a factoring smell. Can't remain on a fallback if there's
       // no fallback to remain on.
@@ -1946,7 +1975,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
   pushSuspenseContext(workInProgress, suspenseContext);
 
   // OK, the next part is confusing. We're about to reconcile the Suspense
-  // boundary's children. This involves some custom reconcilation logic. Two
+  // boundary's children. This involves some custom reconciliation logic. Two
   // main reasons this is so complicated.
   //
   // First, Legacy Mode has different semantics for backwards compatibility. The
@@ -2212,21 +2241,6 @@ function mountSuspenseFallbackChildren(
     primaryChildFragment.childLanes = NoLanes;
     primaryChildFragment.pendingProps = primaryChildProps;
 
-    if (
-      supportsPersistence &&
-      (workInProgress.mode & ConcurrentMode) === NoMode
-    ) {
-      const isHidden = true;
-      const offscreenContainer: Fiber = (primaryChildFragment.child: any);
-      const containerProps = {
-        hidden: isHidden,
-        primaryChildren,
-      };
-      offscreenContainer.pendingProps = containerProps;
-      offscreenContainer.memoizedProps = containerProps;
-      completeSuspendedOffscreenHostContainer(null, offscreenContainer);
-    }
-
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
       // final amounts. This seems counterintuitive, since we're intentionally
@@ -2369,17 +2383,16 @@ function updateSuspenseFallbackChildren(
         currentPrimaryChildFragment.treeBaseDuration;
     }
 
-    if (supportsPersistence) {
+    if (enablePersistentOffscreenHostContainer && supportsPersistence) {
       // In persistent mode, the offscreen children are wrapped in a host node.
       // We need to complete it now, because we're going to skip over its normal
       // complete phase and go straight to rendering the fallback.
-      const isHidden = true;
       const currentOffscreenContainer = currentPrimaryChildFragment.child;
       const offscreenContainer: Fiber = (primaryChildFragment.child: any);
-      const containerProps = {
-        hidden: isHidden,
+      const containerProps = getOffscreenContainerProps(
+        'hidden',
         primaryChildren,
-      };
+      );
       offscreenContainer.pendingProps = containerProps;
       offscreenContainer.memoizedProps = containerProps;
       completeSuspendedOffscreenHostContainer(
@@ -2398,7 +2411,7 @@ function updateSuspenseFallbackChildren(
       primaryChildProps,
     );
 
-    if (supportsPersistence) {
+    if (enablePersistentOffscreenHostContainer && supportsPersistence) {
       // In persistent mode, the offscreen children are wrapped in a host node.
       // We need to complete it now, because we're going to skip over its normal
       // complete phase and go straight to rendering the fallback.
@@ -3211,6 +3224,9 @@ function updateContextConsumer(
 
   prepareToReadContext(workInProgress, renderLanes);
   const newValue = readContext(context);
+  if (enableSchedulingProfiler) {
+    markComponentRenderStarted(workInProgress);
+  }
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
@@ -3219,6 +3235,9 @@ function updateContextConsumer(
     setIsRendering(false);
   } else {
     newChildren = render(newValue);
+  }
+  if (enableSchedulingProfiler) {
+    markComponentRenderStopped();
   }
 
   // React DevTools reads this flag.

@@ -22,8 +22,6 @@ import type {
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
-import invariant from 'shared/invariant';
-
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
 import {
@@ -264,10 +262,11 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  invariant(
-    hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
-  );
+  if (__DEV__) {
+    if (!hostContext.isInAParentText) {
+      console.error('Text strings must be rendered within a <Text> component.');
+    }
+  }
 
   const tag = nextReactTag;
   nextReactTag += 2;
@@ -453,8 +452,37 @@ export function getOffscreenContainerProps(
   } else {
     return {
       children,
+      style: {
+        flex: 1,
+      },
     };
   }
+}
+
+export function cloneHiddenInstance(
+  instance: Instance,
+  type: string,
+  props: Props,
+  internalInstanceHandle: Object,
+): Instance {
+  const viewConfig = instance.canonical.viewConfig;
+  const node = instance.node;
+  const updatePayload = create(
+    {style: {display: 'none'}},
+    viewConfig.validAttributes,
+  );
+  return {
+    node: cloneNodeWithNewProps(node, updatePayload),
+    canonical: instance.canonical,
+  };
+}
+
+export function cloneHiddenTextInstance(
+  instance: Instance,
+  text: string,
+  internalInstanceHandle: Object,
+): TextInstance {
+  throw new Error('Not yet implemented.');
 }
 
 export function createContainerChildSet(container: Container): ChildSet {

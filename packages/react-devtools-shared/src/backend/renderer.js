@@ -740,17 +740,17 @@ export function attach(
       window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
     const showInlineWarningsAndErrors =
       window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-    if (
-      appendComponentStack ||
-      breakOnConsoleErrors ||
-      showInlineWarningsAndErrors
-    ) {
-      patchConsole({
-        appendComponentStack,
-        breakOnConsoleErrors,
-        showInlineWarningsAndErrors,
-      });
-    }
+    const hideConsoleLogsInStrictMode =
+      window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
+    const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
+
+    patchConsole({
+      appendComponentStack,
+      breakOnConsoleErrors,
+      showInlineWarningsAndErrors,
+      hideConsoleLogsInStrictMode,
+      browserTheme,
+    });
   }
 
   const debug = (
@@ -960,6 +960,7 @@ export function attach(
 
     return false;
   }
+
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getElementTypeForFiber(fiber: Fiber): ElementType {
     const {type, tag} = fiber;
@@ -1236,6 +1237,7 @@ export function attach(
 
   function updateContextsForFiber(fiber: Fiber) {
     switch (getElementTypeForFiber(fiber)) {
+      case ElementTypeFunction:
       case ElementTypeClass:
         if (idToContextsMap !== null) {
           const id = getFiberIDThrows(fiber);
@@ -1254,11 +1256,12 @@ export function attach(
   const NO_CONTEXT = {};
 
   function getContextsForFiber(fiber: Fiber): [Object, any] | null {
+    let legacyContext = NO_CONTEXT;
+    let modernContext = NO_CONTEXT;
+
     switch (getElementTypeForFiber(fiber)) {
       case ElementTypeClass:
         const instance = fiber.stateNode;
-        let legacyContext = NO_CONTEXT;
-        let modernContext = NO_CONTEXT;
         if (instance != null) {
           if (
             instance.constructor &&
@@ -1272,6 +1275,13 @@ export function attach(
             }
           }
         }
+        return [legacyContext, modernContext];
+      case ElementTypeFunction:
+        const dependencies = fiber.dependencies;
+        if (dependencies && dependencies.firstContext) {
+          modernContext = dependencies.firstContext;
+        }
+
         return [legacyContext, modernContext];
       default:
         return null;
@@ -1291,31 +1301,50 @@ export function attach(
   }
 
   function getContextChangedKeys(fiber: Fiber): null | boolean | Array<string> {
-    switch (getElementTypeForFiber(fiber)) {
-      case ElementTypeClass:
-        if (idToContextsMap !== null) {
-          const id = getFiberIDThrows(fiber);
-          const prevContexts = idToContextsMap.has(id)
-            ? idToContextsMap.get(id)
-            : null;
-          const nextContexts = getContextsForFiber(fiber);
+    if (idToContextsMap !== null) {
+      const id = getFiberIDThrows(fiber);
+      const prevContexts = idToContextsMap.has(id)
+        ? idToContextsMap.get(id)
+        : null;
+      const nextContexts = getContextsForFiber(fiber);
 
-          if (prevContexts == null || nextContexts == null) {
-            return null;
+      if (prevContexts == null || nextContexts == null) {
+        return null;
+      }
+
+      const [prevLegacyContext, prevModernContext] = prevContexts;
+      const [nextLegacyContext, nextModernContext] = nextContexts;
+
+      switch (getElementTypeForFiber(fiber)) {
+        case ElementTypeClass:
+          if (prevContexts && nextContexts) {
+            if (nextLegacyContext !== NO_CONTEXT) {
+              return getChangedKeys(prevLegacyContext, nextLegacyContext);
+            } else if (nextModernContext !== NO_CONTEXT) {
+              return prevModernContext !== nextModernContext;
+            }
           }
+          break;
+        case ElementTypeFunction:
+          if (nextModernContext !== NO_CONTEXT) {
+            let prevContext = prevModernContext;
+            let nextContext = nextModernContext;
 
-          const [prevLegacyContext, prevModernContext] = prevContexts;
-          const [nextLegacyContext, nextModernContext] = nextContexts;
+            while (prevContext && nextContext) {
+              if (!is(prevContext.memoizedValue, nextContext.memoizedValue)) {
+                return true;
+              }
 
-          if (nextLegacyContext !== NO_CONTEXT) {
-            return getChangedKeys(prevLegacyContext, nextLegacyContext);
-          } else if (nextModernContext !== NO_CONTEXT) {
-            return prevModernContext !== nextModernContext;
+              prevContext = prevContext.next;
+              nextContext = nextContext.next;
+            }
+
+            return false;
           }
-        }
-        break;
-      default:
-        break;
+          break;
+        default:
+          break;
+      }
     }
     return null;
   }
@@ -2179,7 +2208,9 @@ export function attach(
         if (
           elementType === ElementTypeFunction ||
           elementType === ElementTypeClass ||
-          elementType === ElementTypeContext
+          elementType === ElementTypeContext ||
+          elementType === ElementTypeMemo ||
+          elementType === ElementTypeForwardRef
         ) {
           // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
           traceNearestHostComponentUpdate = didFiberRender(
@@ -2857,6 +2888,7 @@ export function attach(
     // Otherwise B has to be current branch.
     return alternate;
   }
+
   // END copied code
 
   function prepareViewAttributeSource(
@@ -3858,6 +3890,7 @@ export function attach(
   // Map of id and its force error status: true (error), false (toggled off),
   // null (do nothing)
   const forceErrorForFiberIDs = new Map();
+
   function shouldErrorFiberAccordingToMap(fiber) {
     if (typeof setErrorHandler !== 'function') {
       throw new Error(
@@ -3922,6 +3955,7 @@ export function attach(
   }
 
   const forceFallbackForSuspenseIDs = new Set();
+
   function shouldSuspendFiberAccordingToSet(fiber) {
     const maybeID = getFiberIDUnsafe(((fiber: any): Fiber));
     return maybeID !== null && forceFallbackForSuspenseIDs.has(maybeID);

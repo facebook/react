@@ -7,11 +7,12 @@
  * @flow
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {useDebugValue, useEffect, useState} from 'react';
 
 export function Component() {
   const [count, setCount] = useState(0);
   const isDarkMode = useIsDarkMode();
+  const {foo} = useFoo();
 
   useEffect(() => {
     // ...
@@ -23,6 +24,7 @@ export function Component() {
     <>
       <div>Dark mode? {isDarkMode}</div>
       <div>Count: {count}</div>
+      <div>Foo: {foo}</div>
       <button onClick={handleClick}>Update count</button>
     </>
   );
@@ -36,4 +38,9 @@ function useIsDarkMode() {
   }, []);
 
   return isDarkMode;
+}
+
+function useFoo() {
+  useDebugValue('foo');
+  return {foo: true};
 }

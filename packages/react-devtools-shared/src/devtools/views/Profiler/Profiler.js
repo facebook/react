@@ -45,20 +45,21 @@ function Profiler(_: {||}) {
 
   const {supportsSchedulingProfiler} = useContext(StoreContext);
 
-  let showRightColumn = true;
+  let isLegacyProfilerSelected = false;
 
   let view = null;
   if (didRecordCommits || selectedTabID === 'scheduling-profiler') {
     switch (selectedTabID) {
       case 'flame-chart':
+        isLegacyProfilerSelected = true;
         view = <CommitFlamegraph />;
         break;
       case 'ranked-chart':
+        isLegacyProfilerSelected = true;
         view = <CommitRanked />;
         break;
       case 'scheduling-profiler':
         view = <SchedulingProfiler />;
-        showRightColumn = false;
         break;
       default:
         break;
@@ -102,8 +103,16 @@ function Profiler(_: {||}) {
       <div className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
-            <RecordToggle disabled={!supportsProfiling} />
-            <ReloadAndProfileButton />
+            <RecordToggle
+              disabled={
+                !supportsProfiling || selectedTabID === 'scheduling-profiler'
+              }
+            />
+            <ReloadAndProfileButton
+              disabled={
+                selectedTabID === 'scheduling-profiler' || !supportsProfiling
+              }
+            />
             <ClearProfilingDataButton />
             <ProfilingImportExportButtons />
             <div className={styles.VRule} />
@@ -119,7 +128,7 @@ function Profiler(_: {||}) {
             <RootSelector />
             <div className={styles.Spacer} />
             <SettingsModalContextToggle />
-            {didRecordCommits && (
+            {isLegacyProfilerSelected && didRecordCommits && (
               <Fragment>
                 <div className={styles.VRule} />
                 <SnapshotSelector />
@@ -131,7 +140,9 @@ function Profiler(_: {||}) {
             <ModalDialog />
           </div>
         </div>
-        {showRightColumn && <div className={styles.RightColumn}>{sidebar}</div>}
+        {isLegacyProfilerSelected && (
+          <div className={styles.RightColumn}>{sidebar}</div>
+        )}
         <SettingsModal />
       </div>
     </SettingsModalContextController>

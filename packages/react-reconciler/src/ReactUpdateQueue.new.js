@@ -110,10 +110,9 @@ import {
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
+import {setIsStrictModeForDevtools} from './ReactFiberReconciler';
 
 import invariant from 'shared/invariant';
-
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of
@@ -230,7 +229,7 @@ export function enqueueUpdate<State>(
       // This is the first update. Create a circular list.
       update.next = update;
       // At the end of the current render, this queue's interleaved updates will
-      // be transfered to the pending queue.
+      // be transferred to the pending queue.
       pushInterleavedQueue(sharedQueue);
     } else {
       update.next = interleaved.next;
@@ -394,11 +393,11 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();
@@ -427,11 +426,11 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();

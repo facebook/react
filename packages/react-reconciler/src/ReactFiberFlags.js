@@ -62,7 +62,7 @@ export const MountPassiveDev = /*              */ 0b10000000000000000000000;
 // don't contain effects, by checking subtreeFlags.
 
 export const BeforeMutationMask =
-  // TODO: Remove Update flag from before mutation phase by re-landing Visiblity
+  // TODO: Remove Update flag from before mutation phase by re-landing Visibility
   // flag logic (see #20043)
   Update |
   Snapshot |
@@ -88,6 +88,6 @@ export const LayoutMask = Update | Callback | Ref | Visibility;
 export const PassiveMask = Passive | ChildDeletion;
 
 // Union of tags that don't get reset on clones.
-// This allows certain concepts to persist without recalculting them,
+// This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.
 export const StaticMask = LayoutStatic | PassiveStatic | RefStatic;

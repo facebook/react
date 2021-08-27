@@ -105,6 +105,9 @@ export {
   observeVisibleRects,
 } from './ReactTestSelectors';
 
+import * as Scheduler from './Scheduler';
+import {setSuppressWarning} from 'shared/consoleWithStackDev';
+
 type OpaqueRoot = FiberRoot;
 
 // 0 is PROD, 1 is DEV.
@@ -381,7 +384,7 @@ function markRetryLaneImpl(fiber: Fiber, retryLane: Lane) {
   }
 }
 
-// Increases the priority of thennables when they resolve within this boundary.
+// Increases the priority of thenables when they resolve within this boundary.
 function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   markRetryLaneImpl(fiber, retryLane);
   const alternate = fiber.alternate;
@@ -457,6 +460,8 @@ let shouldSuspendImpl = fiber => false;
 export function shouldSuspend(fiber: Fiber): boolean {
   return shouldSuspendImpl(fiber);
 }
+
+let isStrictMode = false;
 
 let overrideHookState = null;
 let overrideHookStateDeletePath = null;
@@ -707,6 +712,21 @@ function getCurrentFiberForDevTools() {
   return ReactCurrentFiberCurrent;
 }
 
+export function getIsStrictModeForDevtools() {
+  return isStrictMode;
+}
+
+export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
+  // We're in a test because Scheduler.unstable_yieldValue only exists
+  // in SchedulerMock. To reduce the noise in strict mode tests,
+  // suppress warnings and disable scheduler yielding during the double render
+  if (typeof Scheduler.unstable_yieldValue === 'function') {
+    Scheduler.unstable_setDisableYieldValue(newIsStrictMode);
+    setSuppressWarning(newIsStrictMode);
+  }
+  isStrictMode = newIsStrictMode;
+}
+
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
   const {ReactCurrentDispatcher} = ReactSharedInternals;
@@ -736,6 +756,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
     getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
+    getIsStrictMode: __DEV__ ? getIsStrictModeForDevtools : null,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,

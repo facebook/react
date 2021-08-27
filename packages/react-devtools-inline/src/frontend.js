@@ -10,6 +10,7 @@ import {
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
+  getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
@@ -20,11 +21,16 @@ import type {Wall} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-export function createStore(bridge: FrontendBridge): Store {
+type Config = {|
+  supportsNativeInspection?: boolean,
+|};
+
+export function createStore(bridge: FrontendBridge, config?: Config): Store {
   return new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
     supportsSchedulingProfiler: true,
+    supportsNativeInspection: config?.supportsNativeInspection !== false,
   });
 }
 
@@ -83,6 +89,7 @@ export function initialize(
             breakOnConsoleErrors: getBreakOnConsoleErrors(),
             componentFilters: getSavedComponentFilters(),
             showInlineWarningsAndErrors: getShowInlineWarningsAndErrors(),
+            hideConsoleLogsInStrictMode: getHideConsoleLogsInStrictMode(),
           },
           '*',
         );

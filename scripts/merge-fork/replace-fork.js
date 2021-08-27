@@ -22,7 +22,15 @@ async function main() {
   await Promise.all(oldFilenames.map(unforkFile));
 
   // Use ESLint to autofix imports
-  spawnSync('yarn', ['linc', '--fix']);
+  const spawn = spawnSync('yarn', ['linc', '--fix'], {
+    stdio: ['inherit', 'inherit', 'pipe'],
+  });
+  if (spawn.stderr.toString() !== '') {
+    spawnSync('git', ['checkout', '.']);
+
+    console.log(Error(spawn.stderr));
+    process.exitCode = 1;
+  }
 }
 
 async function unforkFile(oldFilename) {

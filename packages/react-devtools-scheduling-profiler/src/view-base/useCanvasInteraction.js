@@ -10,9 +10,23 @@
 import type {NormalizedWheelDelta} from './utils/normalizeWheel';
 import type {Point} from './geometry';
 
-import {useEffect} from 'react';
+import {useEffect, useRef} from 'react';
 import {normalizeWheel} from './utils/normalizeWheel';
 
+export type ClickInteraction = {|
+  type: 'click',
+  payload: {|
+    event: MouseEvent,
+    location: Point,
+  |},
+|};
+export type DoubleClickInteraction = {|
+  type: 'double-click',
+  payload: {|
+    event: MouseEvent,
+    location: Point,
+  |},
+|};
 export type MouseDownInteraction = {|
   type: 'mousedown',
   payload: {|
@@ -68,6 +82,8 @@ export type WheelWithMetaInteraction = {|
 |};
 
 export type Interaction =
+  | ClickInteraction
+  | DoubleClickInteraction
   | MouseDownInteraction
   | MouseMoveInteraction
   | MouseUpInteraction
@@ -99,6 +115,9 @@ export function useCanvasInteraction(
   canvasRef: {|current: HTMLCanvasElement | null|},
   interactor: (interaction: Interaction) => void,
 ) {
+  const isMouseDownRef = useRef<boolean>(false);
+  const didMouseMoveWhileDownRef = useRef<boolean>(false);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -113,7 +132,38 @@ export function useCanvasInteraction(
       };
     }
 
+    const onCanvasClick: MouseEventHandler = event => {
+      if (didMouseMoveWhileDownRef.current) {
+        return;
+      }
+
+      interactor({
+        type: 'click',
+        payload: {
+          event,
+          location: localToCanvasCoordinates({x: event.x, y: event.y}),
+        },
+      });
+    };
+
+    const onCanvasDoubleClick: MouseEventHandler = event => {
+      if (didMouseMoveWhileDownRef.current) {
+        return;
+      }
+
+      interactor({
+        type: 'double-click',
+        payload: {
+          event,
+          location: localToCanvasCoordinates({x: event.x, y: event.y}),
+        },
+      });
+    };
+
     const onCanvasMouseDown: MouseEventHandler = event => {
+      didMouseMoveWhileDownRef.current = false;
+      isMouseDownRef.current = true;
+
       interactor({
         type: 'mousedown',
         payload: {
@@ -124,6 +174,10 @@ export function useCanvasInteraction(
     };
 
     const onDocumentMouseMove: MouseEventHandler = event => {
+      if (isMouseDownRef.current) {
+        didMouseMoveWhileDownRef.current = true;
+      }
+
       interactor({
         type: 'mousemove',
         payload: {
@@ -134,6 +188,8 @@ export function useCanvasInteraction(
     };
 
     const onDocumentMouseUp: MouseEventHandler = event => {
+      isMouseDownRef.current = false;
+
       interactor({
         type: 'mouseup',
         payload: {
@@ -179,6 +235,8 @@ export function useCanvasInteraction(
     ownerDocument.addEventListener('mousemove', onDocumentMouseMove);
     ownerDocument.addEventListener('mouseup', onDocumentMouseUp);
 
+    canvas.addEventListener('click', onCanvasClick);
+    canvas.addEventListener('dblclick', onCanvasDoubleClick);
     canvas.addEventListener('mousedown', onCanvasMouseDown);
     canvas.addEventListener('wheel', onCanvasWheel);
 
@@ -186,6 +244,8 @@ export function useCanvasInteraction(
       ownerDocument.removeEventListener('mousemove', onDocumentMouseMove);
       ownerDocument.removeEventListener('mouseup', onDocumentMouseUp);
 
+      canvas.removeEventListener('click', onCanvasClick);
+      canvas.removeEventListener('dblclick', onCanvasDoubleClick);
       canvas.removeEventListener('mousedown', onCanvasMouseDown);
       canvas.removeEventListener('wheel', onCanvasWheel);
     };

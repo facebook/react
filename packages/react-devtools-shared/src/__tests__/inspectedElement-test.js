@@ -1895,6 +1895,60 @@ describe('InspectedElement', () => {
     `);
   });
 
+  // Regression test for github.com/facebook/react/issues/22099
+  it('should not error when an unchanged component is re-inspected after component filters changed', async () => {
+    const Example = () => <div />;
+
+    const container = document.createElement('div');
+    await utils.actAsync(() => legacyRender(<Example />, container));
+
+    // Select/inspect element
+    let inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": null,
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": Object {},
+        "state": null,
+      }
+    `);
+
+    await utils.actAsync(async () => {
+      // Ignore transient warning this causes
+      utils.withErrorsOrWarningsIgnored(['No element found with id'], () => {
+        store.componentFilters = [];
+
+        // Flush events to the renderer.
+        jest.runOnlyPendingTimers();
+      });
+    }, false);
+
+    // HACK: Recreate TestRenderer instance because we rely on default state values
+    // from props like defaultSelectedElementID and it's easier to reset here than
+    // to read the TreeDispatcherContext and update the selected ID that way.
+    // We're testing the inspected values here, not the context wiring, so that's ok.
+    testRendererInstance = TestRenderer.create(null, {
+      unstable_isConcurrent: true,
+    });
+
+    // Select/inspect the same element again
+    inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": null,
+        "events": undefined,
+        "hooks": null,
+        "id": 2,
+        "owners": null,
+        "props": Object {},
+        "state": null,
+      }
+    `);
+  });
+
   describe('$r', () => {
     it('should support function components', async () => {
       const Example = () => {

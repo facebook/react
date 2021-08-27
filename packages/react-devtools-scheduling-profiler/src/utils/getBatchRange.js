@@ -9,31 +9,35 @@
 
 import memoize from 'memoize-one';
 
-import type {BatchUID, Milliseconds, ReactProfilerData} from '../types';
+import type {
+  BatchUID,
+  Milliseconds,
+  ReactMeasure,
+  ReactProfilerData,
+} from '../types';
 
 function unmemoizedGetBatchRange(
   batchUID: BatchUID,
   data: ReactProfilerData,
+  minStartTime?: number = 0,
 ): [Milliseconds, Milliseconds] {
-  const {measures} = data;
-
-  let startTime = 0;
-  let stopTime = Infinity;
-
-  let i = 0;
-
-  for (i; i < measures.length; i++) {
-    const measure = measures[i];
-    if (measure.batchUID === batchUID) {
-      startTime = measure.timestamp;
-      break;
-    }
+  const measures = data.batchUIDToMeasuresMap.get(batchUID);
+  if (measures == null || measures.length === 0) {
+    throw Error(`Could not find measures with batch UID "${batchUID}"`);
   }
 
-  for (i; i < measures.length; i++) {
-    const measure = measures[i];
-    stopTime = measure.timestamp;
-    if (measure.batchUID !== batchUID) {
+  const lastMeasure = ((measures[measures.length - 1]: any): ReactMeasure);
+  const stopTime = lastMeasure.timestamp + lastMeasure.duration;
+
+  if (stopTime < minStartTime) {
+    return [0, 0];
+  }
+
+  let startTime = minStartTime;
+  for (let index = 0; index < measures.length; index++) {
+    const measure = measures[index];
+    if (measure.timestamp >= minStartTime) {
+      startTime = measure.timestamp;
       break;
     }
   }

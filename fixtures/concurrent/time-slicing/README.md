@@ -10,7 +10,7 @@ It depends on a local build of React and enables us to easily test async "time s
 
 No. The APIs being tested here are unstable and some of them have still not been released to NPM. For now, this fixture is only a test harness.
 
-There are also known bugs and inefficiencies in master so **don't use this fixture for demonstration purposes either yet**. Until they are fixed, this fixture is **not** indicative of React async rendering performance.
+There are also known bugs and inefficiencies in main so **don't use this fixture for demonstration purposes either yet**. Until they are fixed, this fixture is **not** indicative of React async rendering performance.
 
 ## How do I run this fixture?
 
