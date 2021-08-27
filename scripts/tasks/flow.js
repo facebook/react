@@ -27,25 +27,25 @@ if (!primaryRenderer) {
       chalk.red('yarn flow') +
       ' command now requires you to pick a primary renderer:'
   );
-  console.log();
+   
   inlinedHostConfigs.forEach(rendererInfo => {
     if (rendererInfo.isFlowTyped) {
       console.log('  * ' + chalk.cyan('yarn flow ' + rendererInfo.shortName));
     }
   });
-  console.log();
+   
   console.log('If you are not sure, run ' + chalk.green('yarn flow dom') + '.');
   console.log(
     'This will still typecheck non-DOM packages, although less precisely.'
   );
-  console.log();
+   
   console.log('Note that checks for all renderers will run on CI.');
   console.log(
     'You can also do this locally with ' +
       chalk.cyan('yarn flow-ci') +
       ' but it will be slow.'
   );
-  console.log();
+   
   process.exit(1);
 }
 

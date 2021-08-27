@@ -80,7 +80,7 @@ const run = async () => {
           i++;
         } catch (error) {
           console.error(error.message);
-          console.log();
+           
           console.log(
             theme.error`Publish failed. Enter a fresh otp code to retry.`
           );

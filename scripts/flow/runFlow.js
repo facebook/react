@@ -72,7 +72,7 @@ async function runFlow(renderer, args) {
         console.error(
           'Flow failed for the ' + chalk.red(renderer) + ' renderer',
         );
-        console.log();
+         
         process.exit(code);
       } else {
         console.log(

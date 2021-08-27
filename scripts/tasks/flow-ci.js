@@ -28,7 +28,7 @@ async function checkAll() {
       const rendererInfo = inlinedHostConfigs[i];
       if (rendererInfo.isFlowTyped) {
         await runFlow(rendererInfo.shortName, ['check']);
-        console.log();
+         
       }
     }
   }
