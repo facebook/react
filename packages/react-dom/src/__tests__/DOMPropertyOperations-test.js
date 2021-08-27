@@ -213,7 +213,6 @@ describe('DOMPropertyOperations', () => {
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements shouldnt have non-functions for on* attributes treated as event listeners', () => {
       const container = document.createElement('div');
       ReactDOM.render(<my-custom-element
