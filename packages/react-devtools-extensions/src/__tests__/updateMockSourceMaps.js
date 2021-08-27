@@ -344,6 +344,6 @@ entries.forEach(entry => {
 });
 
 bundle().catch(e => {
-  console.error(e);
+  console.error('Caught an exception while writing result object',e);
   process.exit(1);
 });
