@@ -530,8 +530,8 @@ workflows:
             parameters:
               args:
                 - "--project=devtools -r=experimental"
-                - "--project=devtools -r=stable --env=development"
-                - "--project=devtools -r=stable --env=production"
+                - "--project=devtools -r=stable"
+                # - "--project=devtools -r=stable --env=production"
               react-version:
                 - '15.0.0'
                 - '15.0.1'
