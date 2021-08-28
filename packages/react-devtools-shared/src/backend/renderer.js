@@ -478,7 +478,7 @@ export function getInternalReactConstants(
             return `${resolvedContext.displayName || 'Context'}.Consumer`;
           case STRICT_MODE_NUMBER:
           case STRICT_MODE_SYMBOL_STRING:
-            return null;
+            return 'StrictMode';
           case PROFILER_NUMBER:
           case PROFILER_SYMBOL_STRING:
             return `Profiler(${fiber.memoizedProps.id})`;
@@ -923,8 +923,6 @@ export function attach(
           case CONCURRENT_MODE_NUMBER:
           case CONCURRENT_MODE_SYMBOL_STRING:
           case DEPRECATED_ASYNC_MODE_SYMBOL_STRING:
-          case STRICT_MODE_NUMBER:
-          case STRICT_MODE_SYMBOL_STRING:
             return true;
           default:
             break;

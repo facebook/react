@@ -978,7 +978,8 @@ describe('Store', () => {
     );
     expect(store).toMatchInlineSnapshot(`
       [root]
-          <Child>
+        ▾ <StrictMode>
+            <Child>
     `);
   });
 

@@ -150,8 +150,9 @@ describe('Store component filters', () => {
     );
     expect(store).toMatchInlineSnapshot(`
       [root]
-        ▾ <FunctionComponent>
-            <div>
+        ▾ <StrictMode>
+          ▾ <FunctionComponent>
+              <div>
     `);
 
     act(
