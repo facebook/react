@@ -200,6 +200,13 @@ function extractAndLoadSourceMapJSON(
           if (sourceMapIncludesSource(sourceMapJSON, runtimeSourceURL)) {
             hookSourceAndMetadata.sourceMapJSON = sourceMapJSON;
 
+            // OPTIMIZATION If we've located a source map for this source,
+            // we'll use it to retrieve the original source (to extract hook names).
+            // We only fall back to parsing the full source code is when there's no source map.
+            // The source is (potentially) very large,
+            // So we can avoid the overhead of serializing it unnecessarily.
+            hookSourceAndMetadata.runtimeSourceCode = null;
+
             break;
           }
         } else {
@@ -272,7 +279,16 @@ function extractAndLoadSourceMapJSON(
 
           setterPromises.push(
             fetchPromise.then(sourceMapJSON => {
-              hookSourceAndMetadata.sourceMapJSON = sourceMapJSON;
+              if (sourceMapJSON !== null) {
+                hookSourceAndMetadata.sourceMapJSON = sourceMapJSON;
+
+                // OPTIMIZATION If we've located a source map for this source,
+                // we'll use it to retrieve the original source (to extract hook names).
+                // We only fall back to parsing the full source code is when there's no source map.
+                // The source is (potentially) very large,
+                // So we can avoid the overhead of serializing it unnecessarily.
+                hookSourceAndMetadata.runtimeSourceCode = null;
+              }
             }),
           );
         });
