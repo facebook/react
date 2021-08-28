@@ -319,7 +319,7 @@ jobs:
     steps:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - echo $CIRCLE_BRANCH
+      - echo pipeline.git.branch
       - *restore_node_modules
       - working_directory: ~/reacts
       - run: git checkout v<<parameters.react-version>>
