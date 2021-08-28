@@ -317,11 +317,12 @@ jobs:
       react-version:
         type: string
     steps:
-      - checkout
+      - checkout:
+          path: ~/react
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: git checkout v<<parameters.react-version>>
-      - run: yarn test_build_devtools <<parameters.args>> --ci # yarn test-build-devtools
+      - run: yarn test-build-devtools <<parameters.args>> --ci # yarn test-build-devtools
 
   yarn_test_build:
     docker: *docker
