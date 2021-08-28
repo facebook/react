@@ -24,6 +24,9 @@ const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
 
+const featureFlagTarget =
+  process.env.FEATURE_FLAG_TARGET || 'core/standalone-oss';
+
 const babelOptions = {
   configFile: resolve(
     __dirname,
@@ -50,7 +53,7 @@ module.exports = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
-      'react-devtools-feature-flags': resolveFeatureFlags('core/standalone'),
+      'react-devtools-feature-flags': resolveFeatureFlags(featureFlagTarget),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),

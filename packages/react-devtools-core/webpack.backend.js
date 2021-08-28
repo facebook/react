@@ -24,6 +24,8 @@ const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
 
+const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'core/backend-oss';
+
 // This targets RN/Hermes.
 process.env.BABEL_CONFIG_ADDITIONAL_TARGETS = JSON.stringify({
   ie: '11',
@@ -47,7 +49,7 @@ module.exports = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
-      'react-devtools-feature-flags': resolveFeatureFlags('core/backend'),
+      'react-devtools-feature-flags': resolveFeatureFlags(featureFlagTarget),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),

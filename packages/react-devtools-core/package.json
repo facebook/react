@@ -18,7 +18,9 @@
   "scripts": {
     "build": "yarn build:backend && yarn build:standalone",
     "build:backend": "cross-env NODE_ENV=production webpack --config webpack.backend.js",
+    "build:backend:fb": "cross-env NODE_ENV=production FEATURE_FLAG_TARGET=core/backend-fb webpack --config webpack.backend.js",
     "build:standalone": "cross-env NODE_ENV=production webpack --config webpack.standalone.js",
+    "build:standalone:fb": "cross-env NODE_ENV=production FEATURE_FLAG_TARGET=core/standalone-fb webpack --config webpack.standalone.js",
     "prepublish": "yarn run build",
     "start:backend": "cross-env NODE_ENV=development webpack --config webpack.backend.js --watch",
     "start:standalone": "cross-env NODE_ENV=development webpack --config webpack.standalone.js --watch"
