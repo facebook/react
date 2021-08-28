@@ -18,7 +18,7 @@ aliases:
       keys:
         - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
 
-  - &TEST_PARALLELISM 20
+  - &TEST_PARALLELISM 4
 
   - &attach_workspace
     at: build
@@ -411,46 +411,46 @@ jobs:
 
 workflows:
   version: 2
-  stable:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - setup
-      - yarn_lint:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_build:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_lint_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
+  # stable:
+  #   unless: << pipeline.parameters.prerelease_commit_sha >>
+  #   jobs:
+  #     - setup
+  #     - yarn_lint:
+  #         requires:
+  #           - setup
+  #     - RELEASE_CHANNEL_stable_yarn_build:
+  #         requires:
+  #           - setup
+  #     - RELEASE_CHANNEL_stable_yarn_lint_build:
+  #         requires:
+  #           - RELEASE_CHANNEL_stable_yarn_build
+  #     - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+  #         requires:
+  #           - RELEASE_CHANNEL_stable_yarn_build
 
-  experimental:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - setup
-      - yarn_build:
-          requires:
-            - setup
-      - yarn_lint_build:
-          requires:
-            - yarn_build
-      - build_devtools_and_process_artifacts:
-          requires:
-            - yarn_build
-      - build_devtools_scheduling_profiler:
-          requires:
-            - yarn_build
-      - deploy_devtools_scheduling_profiler:
-          requires:
-            - build_devtools_scheduling_profiler
-          filters:
-            branches:
-              only:
-                - main
+  # experimental:
+  #   unless: << pipeline.parameters.prerelease_commit_sha >>
+  #   jobs:
+  #     - setup
+  #     - yarn_build:
+  #         requires:
+  #           - setup
+  #     - yarn_lint_build:
+  #         requires:
+  #           - yarn_build
+  #     - build_devtools_and_process_artifacts:
+  #         requires:
+  #           - yarn_build
+  #     - build_devtools_scheduling_profiler:
+  #         requires:
+  #           - yarn_build
+  #     - deploy_devtools_scheduling_profiler:
+  #         requires:
+  #           - build_devtools_scheduling_profiler
+  #         filters:
+  #           branches:
+  #             only:
+  #               - main
 
   # New workflow that will replace "stable" and "experimental"
   build_and_test:
