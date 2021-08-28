@@ -42,7 +42,24 @@ describe('parseHookNames', () => {
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
-    parseHookNames = require('../parseHookNames/parseHookNames').parseHookNames;
+
+    // Jest can't run the workerized version of this module.
+    const loadSourceAndMetadata = require('../parseHookNames/loadSourceAndMetadata')
+      .default;
+    const parseSourceAndMetadata = require('../parseHookNames/parseSourceAndMetadata')
+      .parseSourceAndMetadata;
+    parseHookNames = async hooksTree => {
+      const [
+        hooksList,
+        locationKeyToHookSourceAndMetadata,
+      ] = await loadSourceAndMetadata(hooksTree);
+
+      // Runs in a Worker because it's CPU intensive:
+      return parseSourceAndMetadata(
+        hooksList,
+        locationKeyToHookSourceAndMetadata,
+      );
+    };
 
     // Jest (jest-runner?) configures Errors to automatically account for source maps.
     // This changes behavior between our tests and the browser.
@@ -880,18 +897,21 @@ describe('parseHookNames', () => {
 describe('parseHookNames worker', () => {
   let inspectHooks;
   let parseHookNames;
-  let workerizedParseHookNamesMock;
+  let workerizedParseSourceAndMetadataMock;
 
   beforeEach(() => {
     window.Worker = undefined;
 
-    workerizedParseHookNamesMock = jest.fn();
+    workerizedParseSourceAndMetadataMock = jest.fn(() => {
+      console.log('mock fn');
+      return [];
+    });
 
-    jest.mock('../parseHookNames/parseHookNames.worker.js', () => {
+    jest.mock('../parseHookNames/parseSourceAndMetadata.worker.js', () => {
       return {
         __esModule: true,
         default: () => ({
-          parseHookNames: workerizedParseHookNamesMock,
+          parseSourceAndMetadata: workerizedParseSourceAndMetadataMock,
         }),
       };
     });
@@ -912,11 +932,12 @@ describe('parseHookNames worker', () => {
       .Component;
 
     window.Worker = true;
-    // resets module so mocked worker instance can be updated
+
+    // Reset module so mocked worker instance can be updated.
     jest.resetModules();
     parseHookNames = require('../parseHookNames').parseHookNames;
 
     await getHookNamesForComponent(Component);
-    expect(workerizedParseHookNamesMock).toHaveBeenCalledTimes(1);
+    expect(workerizedParseSourceAndMetadataMock).toHaveBeenCalledTimes(1);
   });
 });

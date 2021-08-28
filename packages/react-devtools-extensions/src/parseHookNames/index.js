@@ -7,17 +7,43 @@
  * @flow
  */
 
-// This file uses workerize to load ./parseHookNames.worker as a webworker and instanciates it,
-// exposing flow typed functions that can be used on other files.
+import type {HookSourceAndMetadata} from './loadSourceAndMetadata';
+import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {HookNames} from 'react-devtools-shared/src/types';
 
-import WorkerizedParseHookNames from './parseHookNames.worker';
-import typeof * as ParseHookNamesModule from './parseHookNames';
+import {withAsyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
+import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
+import typeof * as ParseSourceAndMetadataModule from './parseSourceAndMetadata';
+import loadSourceAndMetadata from './loadSourceAndMetadata';
 
-const workerizedParseHookNames: ParseHookNamesModule = WorkerizedParseHookNames();
+const workerizedParseHookNames: ParseSourceAndMetadataModule = WorkerizedParseSourceAndMetadata();
 
-type ParseHookNames = $PropertyType<ParseHookNamesModule, 'parseHookNames'>;
-
-export const parseHookNames: ParseHookNames = hooksTree =>
-  workerizedParseHookNames.parseHookNames(hooksTree);
+export function parseSourceAndMetadata(
+  hooksList: Array<HooksNode>,
+  locationKeyToHookSourceAndMetadata: Map<string, HookSourceAndMetadata>,
+): Promise<HookNames | null> {
+  return workerizedParseHookNames.parseSourceAndMetadata(
+    hooksList,
+    locationKeyToHookSourceAndMetadata,
+  );
+}
 
 export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;
+
+export async function parseHookNames(
+  hooksTree: HooksTree,
+): Promise<HookNames | null> {
+  return withAsyncPerformanceMark('parseHookNames', async () => {
+    // Runs on the main/UI thread so it can reuse Network cache:
+    const [
+      hooksList,
+      locationKeyToHookSourceAndMetadata,
+    ] = await loadSourceAndMetadata(hooksTree);
+
+    // Runs in a Worker because it's CPU intensive:
+    return parseSourceAndMetadata(
+      hooksList,
+      locationKeyToHookSourceAndMetadata,
+    );
+  });
+}
