@@ -319,9 +319,8 @@ jobs:
     steps:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - echo <<pipeline.git.branch>>
       - *restore_node_modules
-      - working_directory: ~/reacts
+      - working_directory: ~/react
       - run: git checkout v<<parameters.react-version>>
       - run: yarn test-build-devtools <<parameters.args>> --ci # yarn test-build-devtools
 
