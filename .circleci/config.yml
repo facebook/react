@@ -18,7 +18,7 @@ aliases:
       keys:
         - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
 
-  - &TEST_PARALLELISM 4
+  - &TEST_PARALLELISM 4 #20
 
   - &attach_workspace
     at: build
@@ -83,7 +83,7 @@ jobs:
   yarn_flow:
     docker: *docker
     environment: *environment
-    parallelism: 5
+    parallelism: 4 #5
 
     steps:
       - checkout
@@ -122,7 +122,7 @@ jobs:
   yarn_build:
     docker: *docker
     environment: *environment
-    parallelism: 20
+    parallelism: 4 #20
     steps:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
@@ -150,7 +150,7 @@ jobs:
   yarn_build_combined:
     docker: *docker
     environment: *environment
-    parallelism: 40
+    parallelism: 4 #40
     steps:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
