@@ -16,6 +16,7 @@ import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
+import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
 
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
@@ -162,56 +163,60 @@ export function installHook(target: any): DevToolsHook | null {
     maybeMessage: any,
     ...inputArgs: $ReadOnlyArray<any>
   ): string {
-    const args = inputArgs.slice();
+    if (consoleManagedByDevToolsDuringStrictMode) {
+      const args = inputArgs.slice();
 
-    // Symbols cannot be concatenated with Strings.
-    let formatted: string =
-      typeof maybeMessage === 'symbol'
-        ? maybeMessage.toString()
-        : '' + maybeMessage;
+      // Symbols cannot be concatenated with Strings.
+      let formatted: string =
+        typeof maybeMessage === 'symbol'
+          ? maybeMessage.toString()
+          : '' + maybeMessage;
 
-    // If the first argument is a string, check for substitutions.
-    if (typeof maybeMessage === 'string') {
+      // If the first argument is a string, check for substitutions.
+      if (typeof maybeMessage === 'string') {
+        if (args.length) {
+          const REGEXP = /(%?)(%([jds]))/g;
+
+          formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
+            let arg = args.shift();
+            switch (flag) {
+              case 's':
+                arg += '';
+                break;
+              case 'd':
+              case 'i':
+                arg = parseInt(arg, 10).toString();
+                break;
+              case 'f':
+                arg = parseFloat(arg).toString();
+                break;
+            }
+            if (!escaped) {
+              return arg;
+            }
+            args.unshift(arg);
+            return match;
+          });
+        }
+      }
+
+      // Arguments that remain after formatting.
       if (args.length) {
-        const REGEXP = /(%?)(%([jds]))/g;
+        for (let i = 0; i < args.length; i++) {
+          const arg = args[i];
 
-        formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
-          let arg = args.shift();
-          switch (flag) {
-            case 's':
-              arg += '';
-              break;
-            case 'd':
-            case 'i':
-              arg = parseInt(arg, 10).toString();
-              break;
-            case 'f':
-              arg = parseFloat(arg).toString();
-              break;
-          }
-          if (!escaped) {
-            return arg;
-          }
-          args.unshift(arg);
-          return match;
-        });
+          // Symbols cannot be concatenated with Strings.
+          formatted += ' ' + (typeof arg === 'symbol' ? arg.toString() : arg);
+        }
       }
+
+      // Update escaped %% values.
+      formatted = formatted.replace(/%{2,2}/g, '%');
+
+      return '' + formatted;
     }
 
-    // Arguments that remain after formatting.
-    if (args.length) {
-      for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
-
-        // Symbols cannot be concatenated with Strings.
-        formatted += ' ' + (typeof arg === 'symbol' ? arg.toString() : arg);
-      }
-    }
-
-    // Update escaped %% values.
-    formatted = formatted.replace(/%{2,2}/g, '%');
-
-    return '' + formatted;
+    return '';
   }
 
   // NOTE: KEEP IN SYNC with src/backend/console.js:patch
@@ -222,90 +227,92 @@ export function installHook(target: any): DevToolsHook | null {
       browserTheme,
     }: {hideConsoleLogsInStrictMode: boolean, browserTheme: BrowserTheme},
   ): void {
-    const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
+    if (consoleManagedByDevToolsDuringStrictMode) {
+      const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
 
-    if (__EXTENSION__) {
-      const targetConsole = console;
+      if (__EXTENSION__) {
+        const targetConsole = console;
 
-      const originalConsoleMethods = {};
+        const originalConsoleMethods = {};
 
-      overrideConsoleMethods.forEach(method => {
-        try {
-          const originalMethod = (originalConsoleMethods[
-            method
-          ] = targetConsole[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__
-            ? targetConsole[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__
-            : targetConsole[method]);
+        overrideConsoleMethods.forEach(method => {
+          try {
+            const originalMethod = (originalConsoleMethods[
+              method
+            ] = targetConsole[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__
+              ? targetConsole[method].__REACT_DEVTOOLS_ORIGINAL_METHOD__
+              : targetConsole[method]);
 
-          const overrideMethod = (...args) => {
-            let isInStrictMode = false;
+            const overrideMethod = (...args) => {
+              let isInStrictMode = false;
 
-            // Search for the first renderer that has a current Fiber.
-            // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
-            const {getCurrentFiber, getIsStrictMode} = renderer;
-            if (typeof getCurrentFiber !== 'function') {
-              return;
-            }
-
-            const current: ?Fiber = getCurrentFiber();
-            if (current != null) {
-              try {
-                if (
-                  typeof getIsStrictMode === 'function' &&
-                  getIsStrictMode()
-                ) {
-                  isInStrictMode = true;
-                }
-              } catch (error) {
-                // Don't let a DevTools or React internal error interfere with logging.
+              // Search for the first renderer that has a current Fiber.
+              // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
+              const {getCurrentFiber, getIsStrictMode} = renderer;
+              if (typeof getCurrentFiber !== 'function') {
+                return;
               }
-            }
 
-            if (isInStrictMode) {
-              if (!hideConsoleLogsInStrictMode) {
-                // Dim the text color of the double logs if we're not
-                // hiding them.
-                let color;
-                switch (method) {
-                  case 'warn':
-                    color =
-                      browserTheme === 'light'
-                        ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
-                        : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
-                    break;
-                  case 'error':
-                    color =
-                      browserTheme === 'light'
-                        ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
-                        : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
-                    break;
-                  case 'log':
-                  default:
-                    color =
-                      browserTheme === 'light'
-                        ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
-                        : process.env.DARK_MODE_DIMMED_LOG_COLOR;
-                    break;
-                }
-
-                if (color) {
-                  originalMethod(`%c${format(...args)}`, `color: ${color}`);
-                } else {
-                  throw Error('Console color is not defined');
+              const current: ?Fiber = getCurrentFiber();
+              if (current != null) {
+                try {
+                  if (
+                    typeof getIsStrictMode === 'function' &&
+                    getIsStrictMode()
+                  ) {
+                    isInStrictMode = true;
+                  }
+                } catch (error) {
+                  // Don't let a DevTools or React internal error interfere with logging.
                 }
               }
-            } else {
-              originalMethod(...args);
-            }
-          };
 
-          overrideMethod.__REACT_DEVTOOLS_ORIGINAL_METHOD__ = originalMethod;
-          originalMethod.__REACT_DEVTOOLS_OVERRIDE_METHOD__ = overrideMethod;
+              if (isInStrictMode) {
+                if (!hideConsoleLogsInStrictMode) {
+                  // Dim the text color of the double logs if we're not
+                  // hiding them.
+                  let color;
+                  switch (method) {
+                    case 'warn':
+                      color =
+                        browserTheme === 'light'
+                          ? process.env.LIGHT_MODE_DIMMED_WARNING_COLOR
+                          : process.env.DARK_MODE_DIMMED_WARNING_COLOR;
+                      break;
+                    case 'error':
+                      color =
+                        browserTheme === 'light'
+                          ? process.env.LIGHT_MODE_DIMMED_ERROR_COLOR
+                          : process.env.DARK_MODE_DIMMED_ERROR_COLOR;
+                      break;
+                    case 'log':
+                    default:
+                      color =
+                        browserTheme === 'light'
+                          ? process.env.LIGHT_MODE_DIMMED_LOG_COLOR
+                          : process.env.DARK_MODE_DIMMED_LOG_COLOR;
+                      break;
+                  }
 
-          // $FlowFixMe property error|warn is not writable.
-          targetConsole[method] = overrideMethod;
-        } catch (error) {}
-      });
+                  if (color) {
+                    originalMethod(`%c${format(...args)}`, `color: ${color}`);
+                  } else {
+                    throw Error('Console color is not defined');
+                  }
+                }
+              } else {
+                originalMethod(...args);
+              }
+            };
+
+            overrideMethod.__REACT_DEVTOOLS_ORIGINAL_METHOD__ = originalMethod;
+            originalMethod.__REACT_DEVTOOLS_OVERRIDE_METHOD__ = overrideMethod;
+
+            // $FlowFixMe property error|warn is not writable.
+            targetConsole[method] = overrideMethod;
+          } catch (error) {}
+        });
+      }
     }
   }
 
@@ -365,10 +372,12 @@ export function installHook(target: any): DevToolsHook | null {
             browserTheme,
           });
         } else {
-          patchConsoleForInitialRenderInExtension(renderer, {
-            hideConsoleLogsInStrictMode,
-            browserTheme,
-          });
+          if (consoleManagedByDevToolsDuringStrictMode) {
+            patchConsoleForInitialRenderInExtension(renderer, {
+              hideConsoleLogsInStrictMode,
+              browserTheme,
+            });
+          }
         }
       } catch (error) {}
     }
