@@ -222,7 +222,7 @@ function HookView({
 
   let name = hook.name;
   if (enableProfilerChangedHookIndices) {
-    if (!isCustomHook) {
+    if (hookID !== null) {
       name = (
         <>
           <span className={styles.PrimitiveHookNumber}>{hookID + 1}</span>
