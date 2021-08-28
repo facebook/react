@@ -962,6 +962,26 @@ describe('Store', () => {
     `);
   });
 
+  it('shows "other" component types', () => {
+    const container = document.createElement('div');
+    const Child = () => null;
+
+    act(() =>
+      legacyRender(
+        <React.StrictMode>
+          <React.Fragment>
+            <Child />
+          </React.Fragment>
+        </React.StrictMode>,
+        container,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Child>
+    `);
+  });
+
   describe('Lazy', () => {
     async function fakeImport(result) {
       return {default: result};

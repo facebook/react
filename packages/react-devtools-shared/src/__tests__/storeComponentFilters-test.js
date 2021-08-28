@@ -135,6 +135,38 @@ describe('Store component filters', () => {
     `);
   });
 
+  it('should support filtering "other" element types', () => {
+    const FunctionComponent = () => <div>Hi</div>;
+
+    act(() =>
+      legacyRender(
+        <React.StrictMode>
+          <React.Fragment>
+            <FunctionComponent />
+          </React.Fragment>
+        </React.StrictMode>,
+        document.createElement('div'),
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <FunctionComponent>
+            <div>
+    `);
+
+    act(
+      () =>
+        (store.componentFilters = [
+          utils.createElementTypeFilter(Types.ElementTypeOtherOrUnknown),
+        ]),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <FunctionComponent>
+            <div>
+    `);
+  });
+
   it('should ignore invalid ElementTypeRoot filter', () => {
     const Component = () => <div>Hi</div>;
 
