@@ -684,6 +684,15 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* Shim for useSyncExternalState *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-sync-external-store',
+    global: 'useSyncExternalStore',
+    externals: ['react'],
+  },
+
   /******* React Scheduler (experimental) *******/
   {
     bundleTypes: [
