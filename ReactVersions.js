@@ -47,6 +47,7 @@ const experimentalPackages = [
   'react-fs',
   'react-pg',
   'react-server-dom-webpack',
+  'use-sync-external-store',
 ];
 
 module.exports = {
