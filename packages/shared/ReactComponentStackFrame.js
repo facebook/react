@@ -170,9 +170,7 @@ export function describeNativeComponentFrame(
                 // V8 adds a "new" prefix for native classes. Let's remove it to make it prettier.
                 const frame = '\n' + sampleLines[s].replace(' at new ', ' at ');
                 if (__DEV__) {
-                  if (typeof fn === 'function') {
-                    componentFrameCache.set(fn, frame);
-                  }
+                  componentFrameCache.set(fn, frame);
                 }
                 // Return the line we found.
                 return frame;
@@ -195,9 +193,7 @@ export function describeNativeComponentFrame(
   const name = fn ? fn.displayName || fn.name : '';
   const syntheticFrame = name ? describeBuiltInComponentFrame(name) : '';
   if (__DEV__) {
-    if (typeof fn === 'function') {
-      componentFrameCache.set(fn, syntheticFrame);
-    }
+    componentFrameCache.set(fn, syntheticFrame);
   }
   return syntheticFrame;
 }
