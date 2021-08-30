@@ -176,4 +176,4 @@ export const allowConcurrentByDefault = false;
 
 export const enablePersistentOffscreenHostContainer = false;
 
-export const enableConsoleLogsInDoubleRender = false;
+export const consoleManagedByDevToolsDuringStrictMode = false;

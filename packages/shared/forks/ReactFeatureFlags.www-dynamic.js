@@ -60,4 +60,4 @@ export const enableSyncDefaultUpdates = __VARIANT__;
 export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
 
-export const enableConsoleLogsInDoubleRender = true;
+export const consoleManagedByDevToolsDuringStrictMode = true;

@@ -37,7 +37,7 @@ import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {
   enableSchedulingProfiler,
-  enableConsoleLogsInDoubleRender,
+  consoleManagedByDevToolsDuringStrictMode,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
@@ -723,7 +723,7 @@ export function getIsStrictModeForDevtools() {
 export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
   isStrictMode = newIsStrictMode;
 
-  if (enableConsoleLogsInDoubleRender) {
+  if (consoleManagedByDevToolsDuringStrictMode) {
     // We're in a test because Scheduler.unstable_yieldValue only exists
     // in SchedulerMock. To reduce the noise in strict mode tests,
     // suppress warnings and disable scheduler yielding during the double render

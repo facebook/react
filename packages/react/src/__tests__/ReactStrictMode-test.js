@@ -12,9 +12,10 @@
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactFeatureFlags;
 let Scheduler;
 let PropTypes;
+
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactStrictMode', () => {
   beforeEach(() => {
@@ -894,407 +895,393 @@ describe('context legacy', () => {
     ReactDOM.render(<Root />, container);
   });
 
-  describe('enable console logs logging', () => {
+  describe('console logs logging', () => {
     beforeEach(() => {
       jest.resetModules();
-
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       React = require('react');
       ReactDOM = require('react-dom');
-
-      ReactFeatureFlags.enableConsoleLogsInDoubleRender = true;
     });
 
-    it('does not disable logs for class double render', () => {
-      spyOnDevAndProd(console, 'log');
+    if (ReactFeatureFlags.consoleManagedByDevToolsDuringStrictMode) {
+      it('does not disable logs for class double render', () => {
+        spyOnDevAndProd(console, 'log');
 
-      let count = 0;
-      class Foo extends React.Component {
-        render() {
-          count++;
-          console.log('foo ' + count);
-          return null;
+        let count = 0;
+        class Foo extends React.Component {
+          render() {
+            count++;
+            console.log('foo ' + count);
+            return null;
+          }
         }
-      }
 
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
 
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('does not disable logs for class double ctor', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      class Foo extends React.Component {
-        constructor(props) {
-          super(props);
-          count++;
-          console.log('foo ' + count);
-        }
-        render() {
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('does not disable logs for class double getDerivedStateFromProps', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      class Foo extends React.Component {
-        state = {};
-        static getDerivedStateFromProps() {
-          count++;
-          console.log('foo ' + count);
-          return {};
-        }
-        render() {
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('does not disable logs for class double shouldComponentUpdate', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      class Foo extends React.Component {
-        state = {};
-        shouldComponentUpdate() {
-          count++;
-          console.log('foo ' + count);
-          return {};
-        }
-        render() {
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-      // Trigger sCU:
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('does not disable logs for class state updaters', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let inst;
-      let count = 0;
-      class Foo extends React.Component {
-        state = {};
-        render() {
-          inst = this;
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-      inst.setState(() => {
-        count++;
-        console.log('foo ' + count);
-        return {};
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
       });
 
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
+      it('does not disable logs for class double ctor', () => {
+        spyOnDevAndProd(console, 'log');
 
-    it('does not disable logs for function double render', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      function Foo() {
-        count++;
-        console.log('foo ' + count);
-        return null;
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-  });
-
-  describe('disable console logs logging', () => {
-    beforeEach(() => {
-      jest.resetModules();
-
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      React = require('react');
-      ReactDOM = require('react-dom');
-
-      ReactFeatureFlags.enableConsoleLogsInDoubleRender = false;
-    });
-
-    it('disable logs for class double render', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      class Foo extends React.Component {
-        render() {
-          count++;
-          console.log('foo ' + count);
-          return null;
+        let count = 0;
+        class Foo extends React.Component {
+          constructor(props) {
+            super(props);
+            count++;
+            console.log('foo ' + count);
+          }
+          render() {
+            return null;
+          }
         }
-      }
 
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
 
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('disables logs for class double ctor', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      class Foo extends React.Component {
-        constructor(props) {
-          super(props);
-          count++;
-          console.log('foo ' + count);
-        }
-        render() {
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('disable logs for class double getDerivedStateFromProps', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      class Foo extends React.Component {
-        state = {};
-        static getDerivedStateFromProps() {
-          count++;
-          console.log('foo ' + count);
-          return {};
-        }
-        render() {
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('disable logs for class double shouldComponentUpdate', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let count = 0;
-      class Foo extends React.Component {
-        state = {};
-        shouldComponentUpdate() {
-          count++;
-          console.log('foo ' + count);
-          return {};
-        }
-        render() {
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-      // Trigger sCU:
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
-
-    it('disable logs for class state updaters', () => {
-      spyOnDevAndProd(console, 'log');
-
-      let inst;
-      let count = 0;
-      class Foo extends React.Component {
-        state = {};
-        render() {
-          inst = this;
-          return null;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
-      inst.setState(() => {
-        count++;
-        console.log('foo ' + count);
-        return {};
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
       });
 
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
+      it('does not disable logs for class double getDerivedStateFromProps', () => {
+        spyOnDevAndProd(console, 'log');
 
-    it('disable logs for function double render', () => {
-      spyOnDevAndProd(console, 'log');
+        let count = 0;
+        class Foo extends React.Component {
+          state = {};
+          static getDerivedStateFromProps() {
+            count++;
+            console.log('foo ' + count);
+            return {};
+          }
+          render() {
+            return null;
+          }
+        }
 
-      let count = 0;
-      function Foo() {
-        count++;
-        console.log('foo ' + count);
-        return null;
-      }
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
 
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <Foo />
-        </React.StrictMode>,
-        container,
-      );
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
 
-      expect(count).toBe(__DEV__ ? 2 : 1);
-      expect(console.log).toBeCalledTimes(1);
-      // Note: we should display the first log because otherwise
-      // there is a risk of suppressing warnings when they happen,
-      // and on the next render they'd get deduplicated and ignored.
-      expect(console.log).toBeCalledWith('foo 1');
-    });
+      it('does not disable logs for class double shouldComponentUpdate', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let count = 0;
+        class Foo extends React.Component {
+          state = {};
+          shouldComponentUpdate() {
+            count++;
+            console.log('foo ' + count);
+            return {};
+          }
+          render() {
+            return null;
+          }
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+        // Trigger sCU:
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+
+      it('does not disable logs for class state updaters', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let inst;
+        let count = 0;
+        class Foo extends React.Component {
+          state = {};
+          render() {
+            inst = this;
+            return null;
+          }
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+        inst.setState(() => {
+          count++;
+          console.log('foo ' + count);
+          return {};
+        });
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+
+      it('does not disable logs for function double render', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let count = 0;
+        function Foo() {
+          count++;
+          console.log('foo ' + count);
+          return null;
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(__DEV__ ? 2 : 1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+    } else {
+      it('disable logs for class double render', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let count = 0;
+        class Foo extends React.Component {
+          render() {
+            count++;
+            console.log('foo ' + count);
+            return null;
+          }
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+
+      it('disables logs for class double ctor', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let count = 0;
+        class Foo extends React.Component {
+          constructor(props) {
+            super(props);
+            count++;
+            console.log('foo ' + count);
+          }
+          render() {
+            return null;
+          }
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+
+      it('disable logs for class double getDerivedStateFromProps', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let count = 0;
+        class Foo extends React.Component {
+          state = {};
+          static getDerivedStateFromProps() {
+            count++;
+            console.log('foo ' + count);
+            return {};
+          }
+          render() {
+            return null;
+          }
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+
+      it('disable logs for class double shouldComponentUpdate', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let count = 0;
+        class Foo extends React.Component {
+          state = {};
+          shouldComponentUpdate() {
+            count++;
+            console.log('foo ' + count);
+            return {};
+          }
+          render() {
+            return null;
+          }
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+        // Trigger sCU:
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+
+      it('disable logs for class state updaters', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let inst;
+        let count = 0;
+        class Foo extends React.Component {
+          state = {};
+          render() {
+            inst = this;
+            return null;
+          }
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+        inst.setState(() => {
+          count++;
+          console.log('foo ' + count);
+          return {};
+        });
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+
+      it('disable logs for function double render', () => {
+        spyOnDevAndProd(console, 'log');
+
+        let count = 0;
+        function Foo() {
+          count++;
+          console.log('foo ' + count);
+          return null;
+        }
+
+        const container = document.createElement('div');
+        ReactDOM.render(
+          <React.StrictMode>
+            <Foo />
+          </React.StrictMode>,
+          container,
+        );
+
+        expect(count).toBe(__DEV__ ? 2 : 1);
+        expect(console.log).toBeCalledTimes(1);
+        // Note: we should display the first log because otherwise
+        // there is a risk of suppressing warnings when they happen,
+        // and on the next render they'd get deduplicated and ignored.
+        expect(console.log).toBeCalledWith('foo 1');
+      });
+    }
   });
 });
