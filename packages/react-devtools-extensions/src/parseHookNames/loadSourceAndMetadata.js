@@ -91,20 +91,11 @@ export type LocationKeyToHookSourceAndMetadata = Map<
 >;
 export type HooksList = Array<HooksNode>;
 
-export default async function loadSourceAndMetadata(
-  hooksTree: HooksTree,
+export async function loadSourceAndMetadata(
+  hooksList: HooksList,
   fetchFileWithCaching: FetchFileWithCaching | null,
-): Promise<[HooksList, LocationKeyToHookSourceAndMetadata]> {
+): Promise<LocationKeyToHookSourceAndMetadata> {
   return withAsyncPerformanceMark('loadSourceAndMetadata()', async () => {
-    const hooksList: HooksList = [];
-    withSyncPerformanceMark('flattenHooksList()', () => {
-      flattenHooksList(hooksTree, hooksList);
-    });
-
-    if (__DEBUG__) {
-      console.log('loadSourceAndMetadata() hooksList:', hooksList);
-    }
-
     const locationKeyToHookSourceAndMetadata = withSyncPerformanceMark(
       'initializeHookSourceAndMetadata',
       () => initializeHookSourceAndMetadata(hooksList),
@@ -120,7 +111,7 @@ export default async function loadSourceAndMetadata(
 
     // At this point, we've loaded JS source (text) and source map (JSON).
     // The remaining works (parsing these) is CPU intensive and should be done in a worker.
-    return [hooksList, locationKeyToHookSourceAndMetadata];
+    return locationKeyToHookSourceAndMetadata;
   });
 }
 
@@ -344,7 +335,20 @@ function fetchFile(url: string): Promise<string> {
   });
 }
 
-function flattenHooksList(
+export function flattenHooksList(hooksTree: HooksTree): HooksList {
+  const hooksList: HooksList = [];
+  withSyncPerformanceMark('flattenHooksList()', () => {
+    flattenHooksListImpl(hooksTree, hooksList);
+  });
+
+  if (__DEBUG__) {
+    console.log('flattenHooksList() hooksList:', hooksList);
+  }
+
+  return hooksList;
+}
+
+function flattenHooksListImpl(
   hooksTree: HooksTree,
   hooksList: Array<HooksNode>,
 ): void {
@@ -354,14 +358,16 @@ function flattenHooksList(
     if (isUnnamedBuiltInHook(hook)) {
       // No need to load source code or do any parsing for unnamed hooks.
       if (__DEBUG__) {
-        console.log('flattenHooksList() Skipping unnamed hook', hook);
+        console.log('flattenHooksListImpl() Skipping unnamed hook', hook);
       }
+
       continue;
     }
 
     hooksList.push(hook);
+
     if (hook.subHooks.length > 0) {
-      flattenHooksList(hook.subHooks, hooksList);
+      flattenHooksListImpl(hook.subHooks, hooksList);
     }
   }
 }

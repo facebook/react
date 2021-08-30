@@ -44,15 +44,19 @@ describe('parseHookNames', () => {
       .inspectHooks;
 
     // Jest can't run the workerized version of this module.
-    const loadSourceAndMetadata = require('../parseHookNames/loadSourceAndMetadata')
-      .default;
+    const {
+      flattenHooksList,
+      loadSourceAndMetadata,
+    } = require('../parseHookNames/loadSourceAndMetadata');
     const parseSourceAndMetadata = require('../parseHookNames/parseSourceAndMetadata')
       .parseSourceAndMetadata;
     parseHookNames = async hooksTree => {
-      const [
+      const hooksList = flattenHooksList(hooksTree);
+
+      // Runs in the UI thread so it can share Network cache:
+      const locationKeyToHookSourceAndMetadata = await loadSourceAndMetadata(
         hooksList,
-        locationKeyToHookSourceAndMetadata,
-      ] = await loadSourceAndMetadata(hooksTree);
+      );
 
       // Runs in a Worker because it's CPU intensive:
       return parseSourceAndMetadata(

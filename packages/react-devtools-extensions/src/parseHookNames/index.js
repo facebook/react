@@ -15,7 +15,7 @@ import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/view
 import {withAsyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
 import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
 import typeof * as ParseSourceAndMetadataModule from './parseSourceAndMetadata';
-import loadSourceAndMetadata from './loadSourceAndMetadata';
+import {flattenHooksList, loadSourceAndMetadata} from './loadSourceAndMetadata';
 
 const workerizedParseHookNames: ParseSourceAndMetadataModule = WorkerizedParseSourceAndMetadata();
 
@@ -31,16 +31,24 @@ export function parseSourceAndMetadata(
 
 export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;
 
+const EMPTY_MAP = new Map();
+
 export async function parseHookNames(
   hooksTree: HooksTree,
   fetchFileWithCaching: FetchFileWithCaching | null,
 ): Promise<HookNames | null> {
   return withAsyncPerformanceMark('parseHookNames', async () => {
+    const hooksList = flattenHooksList(hooksTree);
+    if (hooksList.length === 0) {
+      // This component tree contains no named hooks.
+      return EMPTY_MAP;
+    }
+
     // Runs on the main/UI thread so it can reuse Network cache:
-    const [
+    const locationKeyToHookSourceAndMetadata = await loadSourceAndMetadata(
       hooksList,
-      locationKeyToHookSourceAndMetadata,
-    ] = await loadSourceAndMetadata(hooksTree, fetchFileWithCaching);
+      fetchFileWithCaching,
+    );
 
     // Runs in a Worker because it's CPU intensive:
     return parseSourceAndMetadata(
