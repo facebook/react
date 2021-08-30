@@ -54,16 +54,16 @@ var Rectangle = createReactClass({
   render: function render() {
     var width = this.props.width;
     var height = this.props.height;
-    var radius = this.props.radius ? this.props.radius : 0;
+    var radius = this.props.radius || 0;
 
     // if unspecified, radius(Top|Bottom)(Left|Right) defaults to the radius
     // property
-    var tl = this.props.radiusTopLeft ? this.props.radiusTopLeft : radius;
-    var tr = this.props.radiusTopRight ? this.props.radiusTopRight : radius;
+    var tl = this.props.radiusTopLeft || radius;
+    var tr = this.props.radiusTopRight || radius;
     var br = this.props.radiusBottomRight
       ? this.props.radiusBottomRight
       : radius;
-    var bl = this.props.radiusBottomLeft ? this.props.radiusBottomLeft : radius;
+    var bl = this.props.radiusBottomLeft || radius;
 
     var path = Path();
 
