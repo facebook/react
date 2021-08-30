@@ -14,6 +14,7 @@ import {format} from './utils';
 
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
+import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn', 'log'];
 const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
@@ -240,7 +241,7 @@ export function patch({
           debugger;
         }
 
-        if (isInStrictMode) {
+        if (consoleManagedByDevToolsDuringStrictMode && isInStrictMode) {
           if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
             // Dim the text color of the double logs if we're not
             // hiding them.

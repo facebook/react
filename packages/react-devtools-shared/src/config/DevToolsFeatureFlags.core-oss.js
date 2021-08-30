@@ -16,6 +16,8 @@
 export const enableProfilerChangedHookIndices = false;
 export const isInternalFacebookBuild = false;
 
+export const consoleManagedByDevToolsDuringStrictMode = false;
+
 /************************************************************************
  * Do not edit the code below.
  * It ensures this fork exports the same types as the default flags file.
