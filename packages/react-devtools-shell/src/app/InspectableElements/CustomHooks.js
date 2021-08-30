@@ -9,10 +9,12 @@
 
 import * as React from 'react';
 import {
+  createContext,
   forwardRef,
   Fragment,
   memo,
   useCallback,
+  useContext,
   useDebugValue,
   useEffect,
   useState,
@@ -64,8 +66,13 @@ function useDeepHookF() {
   useDebugValue('useDeepHookF');
 }
 
+const ContextA = createContext('A');
+const ContextB = createContext('B');
+
 function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   const [count, updateCount] = useState(0);
+  // eslint-disable-next-line no-unused-vars
+  const contextValueA = useContext(ContextA);
 
   // eslint-disable-next-line no-unused-vars
   const [_, __] = useState(object);
@@ -84,6 +91,9 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
 
   // Tests nested custom hooks
   useNestedOuterHook();
+
+  // eslint-disable-next-line no-unused-vars
+  const contextValueB = useContext(ContextB);
 
   // Verify deep nesting doesn't break
   useDeepHookA();
