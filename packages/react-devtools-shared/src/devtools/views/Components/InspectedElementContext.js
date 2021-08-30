@@ -64,6 +64,7 @@ export type Props = {|
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
   const {
+    fetchFileWithCaching,
     loadHookNames: loadHookNamesFunction,
     purgeCachedMetadata,
   } = useContext(HookNamesContext);
@@ -126,6 +127,7 @@ export function InspectedElementContextController({children}: Props) {
           element,
           inspectedElement.hooks,
           loadHookNamesFunction,
+          fetchFileWithCaching,
         );
       }
     }

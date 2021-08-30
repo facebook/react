@@ -212,6 +212,41 @@ function createPanelIfReactLoaded() {
           }
         };
 
+        // Fetching files from the extension won't make use of the network cache
+        // for resources that have already been loaded by the page.
+        // This helper function allows the extension to request files to be fetched
+        // by the content script (running in the page) to increase the likelihood of a cache hit.
+        const fetchFileWithCaching = url => {
+          return new Promise((resolve, reject) => {
+            function onPortMessage({payload, source}) {
+              if (source === 'react-devtools-content-script') {
+                switch (payload?.type) {
+                  case 'fetch-file-with-cache-complete':
+                    chrome.runtime.onMessage.removeListener(onPortMessage);
+                    resolve(payload.value);
+                    break;
+                  case 'fetch-file-with-cache-error':
+                    chrome.runtime.onMessage.removeListener(onPortMessage);
+                    reject(payload.value);
+                    break;
+                }
+              }
+            }
+
+            chrome.runtime.onMessage.addListener(onPortMessage);
+
+            chrome.devtools.inspectedWindow.eval(`
+              window.postMessage({
+                source: 'react-devtools-extension',
+                payload: {
+                  type: 'fetch-file-with-cache',
+                  url: "${url}",
+                },
+              });
+            `);
+          });
+        };
+
         root = createRoot(document.createElement('div'));
 
         render = (overrideTab = mostRecentOverrideTab) => {
@@ -224,6 +259,7 @@ function createPanelIfReactLoaded() {
                   browserTheme: getBrowserTheme(),
                   componentsPortalContainer,
                   enabledInspectedElementContextMenu: true,
+                  fetchFileWithCaching,
                   loadHookNames: parseHookNames,
                   overrideTab,
                   profilerPortalContainer,

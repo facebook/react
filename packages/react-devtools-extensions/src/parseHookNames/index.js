@@ -10,6 +10,7 @@
 import type {HookSourceAndMetadata} from './loadSourceAndMetadata';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames} from 'react-devtools-shared/src/types';
+import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 import {withAsyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
 import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
@@ -32,13 +33,14 @@ export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;
 
 export async function parseHookNames(
   hooksTree: HooksTree,
+  fetchFileWithCaching: FetchFileWithCaching | null,
 ): Promise<HookNames | null> {
   return withAsyncPerformanceMark('parseHookNames', async () => {
     // Runs on the main/UI thread so it can reuse Network cache:
     const [
       hooksList,
       locationKeyToHookSourceAndMetadata,
-    ] = await loadSourceAndMetadata(hooksTree);
+    ] = await loadSourceAndMetadata(hooksTree, fetchFileWithCaching);
 
     // Runs in a Worker because it's CPU intensive:
     return parseSourceAndMetadata(

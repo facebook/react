@@ -11,10 +11,12 @@
 // because parsing is CPU intensive and should not block the UI thread.
 //
 // Fetching source and source map files is intentionally done on the UI thread
-// so that loaded source files can always reuse the browser's Network cache.
-// Requests made from within a Worker might not reuse this cache (at least in Chrome 92).
+// so that loaded source files can reuse the browser's Network cache.
+// Requests made from within an extension do not share the page's Network cache,
+// but messages can be sent from the UI thread to the content script
+// which can make a request from the page's context (with caching).
 //
-// Some overhead may be incurred sharing the source data with the Worker,
+// Some overhead may be incurred sharing (serializing) the loaded data between contexts,
 // but less than fetching the file to begin with,
 // and in some cases we can avoid serializing the source code at all
 // (e.g. when we are in an environment that supports our custom metadata format).
@@ -55,6 +57,7 @@ import type {
   HooksTree,
 } from 'react-debug-tools/src/ReactDebugHooks';
 import type {MixedSourceMap} from 'react-devtools-extensions/src/SourceMapTypes';
+import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 // Prefer a cached albeit stale response to reduce download time.
 // We wouldn't want to load/parse a newer version of the source (even if one existed).
@@ -90,6 +93,7 @@ export type HooksList = Array<HooksNode>;
 
 export default async function loadSourceAndMetadata(
   hooksTree: HooksTree,
+  fetchFileWithCaching: FetchFileWithCaching | null,
 ): Promise<[HooksList, LocationKeyToHookSourceAndMetadata]> {
   return withAsyncPerformanceMark('loadSourceAndMetadata()', async () => {
     const hooksList: HooksList = [];
@@ -107,7 +111,7 @@ export default async function loadSourceAndMetadata(
     );
 
     await withAsyncPerformanceMark('loadSourceFiles()', () =>
-      loadSourceFiles(locationKeyToHookSourceAndMetadata),
+      loadSourceFiles(locationKeyToHookSourceAndMetadata, fetchFileWithCaching),
     );
 
     await withAsyncPerformanceMark('extractAndLoadSourceMapJSON()', () =>
@@ -409,6 +413,7 @@ function isUnnamedBuiltInHook(hook: HooksNode) {
 
 function loadSourceFiles(
   locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
+  fetchFileWithCaching: FetchFileWithCaching | null,
 ): Promise<*> {
   // Deduplicate fetches, since there can be multiple location keys per file.
   const dedupedFetchPromises = new Map();
@@ -416,9 +421,24 @@ function loadSourceFiles(
   const setterPromises = [];
   locationKeyToHookSourceAndMetadata.forEach(hookSourceAndMetadata => {
     const {runtimeSourceURL} = hookSourceAndMetadata;
+
+    let fetchFileFunction = fetchFile;
+    if (fetchFileWithCaching != null) {
+      // If a helper function has been injected to fetch with caching,
+      // use it to fetch the (already loaded) source file.
+      fetchFileFunction = url => {
+        return withAsyncPerformanceMark(
+          `fetchFileWithCaching("${url}")`,
+          () => {
+            return ((fetchFileWithCaching: any): FetchFileWithCaching)(url);
+          },
+        );
+      };
+    }
+
     const fetchPromise =
       dedupedFetchPromises.get(runtimeSourceURL) ||
-      fetchFile(runtimeSourceURL).then(runtimeSourceCode => {
+      fetchFileFunction(runtimeSourceURL).then(runtimeSourceCode => {
         // TODO (named hooks) Re-think this; the main case where it matters is when there's no source-maps,
         // because then we need to parse the full source file as an AST.
         if (runtimeSourceCode.length > MAX_SOURCE_LENGTH) {
