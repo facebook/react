@@ -25,6 +25,23 @@ function requireText(path, encoding) {
   }
 }
 
+function initFetchMock() {
+  const fetchMock = require('jest-fetch-mock');
+  fetchMock.enableMocks();
+  fetchMock.mockIf(/.+$/, request => {
+    const url = request.url;
+    const isLoadingExternalSourceMap = /external\/.*\.map/.test(url);
+    if (isLoadingExternalSourceMap) {
+      // Assert that url contains correct query params
+      expect(url.includes('?foo=bar&param=some_value')).toBe(true);
+      const fileSystemPath = url.split('?')[0];
+      return requireText(fileSystemPath, 'utf8');
+    }
+    return requireText(url, 'utf8');
+  });
+  return fetchMock;
+}
+
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
@@ -37,8 +54,7 @@ describe('parseHookNames', () => {
       console.trace('source-map-support');
     });
 
-    fetchMock = require('jest-fetch-mock');
-    fetchMock.enableMocks();
+    fetchMock = initFetchMock();
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
@@ -76,18 +92,6 @@ describe('parseHookNames', () => {
     Error.prepareStackTrace = (error, trace) => {
       return error.stack;
     };
-
-    fetchMock.mockIf(/.+$/, request => {
-      const url = request.url;
-      const isLoadingExternalSourceMap = /external\/.*\.map/.test(url);
-      if (isLoadingExternalSourceMap) {
-        // Assert that url contains correct query params
-        expect(url.includes('?foo=bar&param=some_value')).toBe(true);
-        const fileSystemPath = url.split('?')[0];
-        return requireText(fileSystemPath, 'utf8');
-      }
-      return requireText(url, 'utf8');
-    });
   });
 
   afterEach(() => {
@@ -906,10 +910,9 @@ describe('parseHookNames worker', () => {
   beforeEach(() => {
     window.Worker = undefined;
 
-    workerizedParseSourceAndMetadataMock = jest.fn(() => {
-      console.log('mock fn');
-      return [];
-    });
+    workerizedParseSourceAndMetadataMock = jest.fn();
+
+    initFetchMock();
 
     jest.mock('../parseHookNames/parseSourceAndMetadata.worker.js', () => {
       return {
