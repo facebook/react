@@ -78,11 +78,13 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   // There are very few ways to actually do this.
   // This seems to be the best approach.
 
-  
+
   const script = document.createElement('script');
   script.src = chrome.runtime.getURL('build/extensionHook.js');
   document.documentElement.appendChild(script);
   script.parentNode.removeChild(script);
+
+  
 
   const request = new XMLHttpRequest();
   request.addEventListener('load', function() {
