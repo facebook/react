@@ -97,7 +97,7 @@ export const deletedTreeCleanUpLevel = 3;
 
 export const enablePersistentOffscreenHostContainer = false;
 
-export const enableCustomElementPropertySupport = false;
+export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

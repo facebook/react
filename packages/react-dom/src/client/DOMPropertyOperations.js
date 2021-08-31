@@ -164,7 +164,7 @@ export function setValueForProperty(
       }
 
       (node: any)._listeners[listenersObjName] = value;
-      const proxy = useCapture ? eventProxyCapture : eventProxy;
+      const proxy = useCapture ? fireEventProxyCapture : fireEventProxy;
       if (value) {
         if (!alreadyHadListener) {
           node.addEventListener(eventName, proxy, useCapture);
@@ -241,10 +241,10 @@ export function setValueForProperty(
   }
 }
 
-function eventProxy(e: Event) {
+function fireEventProxy(e: Event) {
   this._listeners[e.type + 'false'](e);
 }
 
-function eventProxyCapture(e: Event) {
+function fireEventProxyCapture(e: Event) {
   this._listeners[e.type + 'true'](e);
 }
