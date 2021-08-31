@@ -16,6 +16,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {TreeStateContext} from './TreeContext';
@@ -66,6 +67,7 @@ export function InspectedElementContextController({children}: Props) {
   const {
     fetchFileWithCaching,
     loadHookNames: loadHookNamesFunction,
+    prefetchSourceFiles,
     purgeCachedMetadata,
   } = useContext(HookNamesContext);
   const bridge = useContext(BridgeContext);
@@ -152,6 +154,21 @@ export function InspectedElementContextController({children}: Props) {
     },
     [setState, state],
   );
+
+  const inspectedElementRef = useRef(null);
+  useEffect(() => {
+    if (
+      inspectedElement !== null &&
+      inspectedElement.hooks !== null &&
+      inspectedElementRef.current !== inspectedElement
+    ) {
+      inspectedElementRef.current = inspectedElement;
+
+      if (typeof prefetchSourceFiles === 'function') {
+        prefetchSourceFiles(inspectedElement.hooks, fetchFileWithCaching);
+      }
+    }
+  }, [inspectedElement, prefetchSourceFiles]);
 
   useEffect(() => {
     if (typeof purgeCachedMetadata === 'function') {

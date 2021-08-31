@@ -252,7 +252,7 @@ function createPanelIfReactLoaded() {
         render = (overrideTab = mostRecentOverrideTab) => {
           mostRecentOverrideTab = overrideTab;
           import('./parseHookNames').then(
-            ({parseHookNames, purgeCachedMetadata}) => {
+            ({parseHookNames, prefetchSourceFiles, purgeCachedMetadata}) => {
               root.render(
                 createElement(DevTools, {
                   bridge,
@@ -262,6 +262,7 @@ function createPanelIfReactLoaded() {
                   fetchFileWithCaching,
                   loadHookNames: parseHookNames,
                   overrideTab,
+                  prefetchSourceFiles,
                   profilerPortalContainer,
                   purgeCachedHookNamesMetadata: purgeCachedMetadata,
                   showTabBar: false,

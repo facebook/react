@@ -52,6 +52,10 @@ export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
 
 export type FetchFileWithCaching = (url: string) => Promise<string>;
+export type PrefetchSourceFiles = (
+  hooksTree: HooksTree,
+  fetchFileWithCaching: FetchFileWithCaching | null,
+) => void;
 export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement,
@@ -104,6 +108,7 @@ export type Props = {|
   // Not every DevTools build can load source maps, so this property is optional.
   fetchFileWithCaching?: ?FetchFileWithCaching,
   loadHookNames?: ?LoadHookNamesFunction,
+  prefetchSourceFiles?: ?PrefetchSourceFiles,
   purgeCachedHookNamesMetadata?: ?PurgeCachedHookNamesMetadata,
 |};
 
@@ -133,6 +138,7 @@ export default function DevTools({
   loadHookNames,
   overrideTab,
   profilerPortalContainer,
+  prefetchSourceFiles,
   purgeCachedHookNamesMetadata,
   showTabBar = false,
   store,
@@ -197,9 +203,15 @@ export default function DevTools({
     () => ({
       fetchFileWithCaching: fetchFileWithCaching || null,
       loadHookNames: loadHookNames || null,
+      prefetchSourceFiles: prefetchSourceFiles || null,
       purgeCachedMetadata: purgeCachedHookNamesMetadata || null,
     }),
-    [fetchFileWithCaching, loadHookNames, purgeCachedHookNamesMetadata],
+    [
+      fetchFileWithCaching,
+      loadHookNames,
+      prefetchSourceFiles,
+      purgeCachedHookNamesMetadata,
+    ],
   );
 
   const devToolsRef = useRef<HTMLElement | null>(null);
