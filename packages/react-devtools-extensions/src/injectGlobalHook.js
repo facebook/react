@@ -77,6 +77,7 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   // and synchronously inject it into the page.
   // There are very few ways to actually do this.
   // This seems to be the best approach.
+
   
   const script = document.createElement('script');
   script.src = chrome.runtime.getURL('build/extensionHook.js');
