@@ -229,19 +229,26 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('onfalse')).toBe('false');
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements should still have onClick treated like regular elements', () => {
-      const eventhandler = jest.fn();
+      let syntheticClickEvent = null;
+      const syntheticEventHandler = jest.fn(event => syntheticClickEvent = event);
+      let nativeClickEvent = null;
+      const nativeEventHandler = jest.fn(event => nativeClickEvent = event);
       function Test() {
-        return <span onClick={eventhandler} />;
+        return <span onClick={syntheticEventHandler} />;
       }
+
       const container = document.createElement('div');
+      document.body.appendChild(container);
       ReactDOM.render(<Test />, container);
+
+      const span = container.querySelector('span');
+      span.onclick = nativeEventHandler;
       container.querySelector('span').click();
-      // TODO why doesn't this test pass!? As far as I can tell from outside
-      // testing, this actually does work... maybe I'm missing some test setup
-      // included in DOMPluginEventSystem-test.internal.js?
-      expect(eventhandler).toHaveBeenCalledTimes(1);
+
+      expect(nativeEventHandler).toHaveBeenCalledTimes(1);
+      expect(syntheticEventHandler).toHaveBeenCalledTimes(1);
+      expect(syntheticClickEvent.nativeEvent).toBe(nativeClickEvent);
     });
 
     // @gate enableCustomElementPropertySupport
