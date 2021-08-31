@@ -82,6 +82,10 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
     rendererCode = this.responseText;
   });
   request.open('GET', rendererURL, false);
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL('build/extensionHook.js');
+  document.documentElement.appendChild(script);
+  script.parentNode.removeChild(script);
   request.send();
   injectCode(rendererCode);
 }
