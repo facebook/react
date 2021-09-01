@@ -2,6 +2,18 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.18.0 (September 1, 2021)
+
+#### Features
+* DevTools: Improve named hooks network caching ([bvaughn](https://github.com/bvaughn) in [#22198](https://github.com/facebook/react/pull/22198))
+* Console Logging for StrictMode Double Rendering ([lunaruan](https://github.com/lunaruan) in [#22030](https://github.com/facebook/react/pull/22030))
+
+### Bugfix
+* Fix react-devtools-inline size issues ([lunaruan](https://github.com/lunaruan) in [#22232](https://github.com/facebook/react/pull/22232))
+* devtools: Don't display hook index of useContext ([eps1lon](https://github.com/eps1lon) in [#22200](https://github.com/facebook/react/pull/22200))
+* Throw error in console without interfering with logs ([lunaruan](https://github.com/lunaruan) in [#22175](https://github.com/facebook/react/pull/22175))
+
+
 ## 4.17.0 (August 24, 2021)
 
 #### Features
