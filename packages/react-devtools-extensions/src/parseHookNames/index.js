@@ -7,17 +7,59 @@
  * @flow
  */
 
-// This file uses workerize to load ./parseHookNames.worker as a webworker and instanciates it,
-// exposing flow typed functions that can be used on other files.
+import type {HookSourceAndMetadata} from './loadSourceAndMetadata';
+import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {HookNames} from 'react-devtools-shared/src/types';
+import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-import WorkerizedParseHookNames from './parseHookNames.worker';
-import typeof * as ParseHookNamesModule from './parseHookNames';
+import {withAsyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
+import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
+import typeof * as ParseSourceAndMetadataModule from './parseSourceAndMetadata';
+import {
+  flattenHooksList,
+  loadSourceAndMetadata,
+  prefetchSourceFiles,
+} from './loadSourceAndMetadata';
 
-const workerizedParseHookNames: ParseHookNamesModule = WorkerizedParseHookNames();
+const workerizedParseHookNames: ParseSourceAndMetadataModule = WorkerizedParseSourceAndMetadata();
 
-type ParseHookNames = $PropertyType<ParseHookNamesModule, 'parseHookNames'>;
+export {prefetchSourceFiles};
 
-export const parseHookNames: ParseHookNames = hooksTree =>
-  workerizedParseHookNames.parseHookNames(hooksTree);
+export function parseSourceAndMetadata(
+  hooksList: Array<HooksNode>,
+  locationKeyToHookSourceAndMetadata: Map<string, HookSourceAndMetadata>,
+): Promise<HookNames | null> {
+  return workerizedParseHookNames.parseSourceAndMetadata(
+    hooksList,
+    locationKeyToHookSourceAndMetadata,
+  );
+}
 
 export const purgeCachedMetadata = workerizedParseHookNames.purgeCachedMetadata;
+
+const EMPTY_MAP = new Map();
+
+export async function parseHookNames(
+  hooksTree: HooksTree,
+  fetchFileWithCaching: FetchFileWithCaching | null,
+): Promise<HookNames | null> {
+  return withAsyncPerformanceMark('parseHookNames', async () => {
+    const hooksList = flattenHooksList(hooksTree);
+    if (hooksList.length === 0) {
+      // This component tree contains no named hooks.
+      return EMPTY_MAP;
+    }
+
+    // Runs on the main/UI thread so it can reuse Network cache:
+    const locationKeyToHookSourceAndMetadata = await loadSourceAndMetadata(
+      hooksList,
+      fetchFileWithCaching,
+    );
+
+    // Runs in a Worker because it's CPU intensive:
+    return parseSourceAndMetadata(
+      hooksList,
+      locationKeyToHookSourceAndMetadata,
+    );
+  });
+}

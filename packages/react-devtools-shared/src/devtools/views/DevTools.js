@@ -51,6 +51,11 @@ import type {Thenable} from '../cache';
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
 
+export type FetchFileWithCaching = (url: string) => Promise<string>;
+export type PrefetchSourceFiles = (
+  hooksTree: HooksTree,
+  fetchFileWithCaching: FetchFileWithCaching | null,
+) => void;
 export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement,
@@ -101,7 +106,9 @@ export type Props = {|
   // Loads and parses source maps for function components
   // and extracts hook "names" based on the variables the hook return values get assigned to.
   // Not every DevTools build can load source maps, so this property is optional.
+  fetchFileWithCaching?: ?FetchFileWithCaching,
   loadHookNames?: ?LoadHookNamesFunction,
+  prefetchSourceFiles?: ?PrefetchSourceFiles,
   purgeCachedHookNamesMetadata?: ?PurgeCachedHookNamesMetadata,
 |};
 
@@ -127,9 +134,11 @@ export default function DevTools({
   componentsPortalContainer,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
+  fetchFileWithCaching,
   loadHookNames,
   overrideTab,
   profilerPortalContainer,
+  prefetchSourceFiles,
   purgeCachedHookNamesMetadata,
   showTabBar = false,
   store,
@@ -192,10 +201,17 @@ export default function DevTools({
 
   const hookNamesContext = useMemo(
     () => ({
+      fetchFileWithCaching: fetchFileWithCaching || null,
       loadHookNames: loadHookNames || null,
+      prefetchSourceFiles: prefetchSourceFiles || null,
       purgeCachedMetadata: purgeCachedHookNamesMetadata || null,
     }),
-    [loadHookNames, purgeCachedHookNamesMetadata],
+    [
+      fetchFileWithCaching,
+      loadHookNames,
+      prefetchSourceFiles,
+      purgeCachedHookNamesMetadata,
+    ],
   );
 
   const devToolsRef = useRef<HTMLElement | null>(null);
