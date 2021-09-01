@@ -25,12 +25,7 @@
 // 1. Find the Set of source files defining the hooks and load them all.
 //    Then for each source file, do the following:
 //
-//    a. Search loaded source file to see if a custom React metadata file is available.
-//       If so, load that file and pass it to a Worker for parsing and extracting.
-//       This is the fastest option since our custom metadata file is much smaller than a full source map,
-//       and there is no need to convert runtime code to the original source.
-//
-//    b. If no React metadata, search loaded source file to see if a source map is available.
+//    a. Search loaded source file to see if a source map is available.
 //       If so, load that file and pass it to a Worker for parsing.
 //       The source map is used to retrieve the original source,
 //       which is then also parsed in the Worker to infer hook names.
@@ -38,9 +33,17 @@
 //       since we need to evaluate the mappings in order to map the runtime code to the original source,
 //       but at least the eventual source that we parse to an AST is small/fast.
 //
-//    c. If no source map, pass the full source to a Worker for parsing.
+//    b. If no source map, pass the full source to a Worker for parsing.
 //       Use the source to infer hook names.
 //       This is the least optimal route as parsing the full source is very CPU intensive.
+//
+// In the future, we may add an additional optimization the above sequence.
+// This check would come before the source map check:
+//
+//    a. Search loaded source file to see if a custom React metadata file is available.
+//       If so, load that file and pass it to a Worker for parsing and extracting.
+//       This is the fastest option since our custom metadata file is much smaller than a full source map,
+//       and there is no need to convert runtime code to the original source.
 
 import LRU from 'lru-cache';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
