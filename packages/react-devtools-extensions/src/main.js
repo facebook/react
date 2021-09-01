@@ -29,7 +29,7 @@ const cachedNetworkEvents = new Map();
 
 // Cache JavaScript resources as the page loads them.
 // This helps avoid unnecessary duplicate requests when hook names are parsed.
-// Responses with a Vary: 'Origin' migt not match future requests.
+// Responses with a Vary: 'Origin' might not match future requests.
 // This lets us avoid a possible (expensive) cache miss.
 // For more info see: github.com/facebook/react/pull/22198
 chrome.devtools.network.onRequestFinished.addListener(
@@ -231,54 +231,59 @@ function createPanelIfReactLoaded() {
           }
         };
 
-        // Fetching files from the extension won't make use of the network cache
-        // for resources that have already been loaded by the page.
-        // This helper function allows the extension to request files to be fetched
-        // by the content script (running in the page) to increase the likelihood of a cache hit.
-        const fetchFileWithCaching = url => {
-          const event = cachedNetworkEvents.get(url);
-          if (event != null) {
-            // If this resource has already been cached locally,
-            // skip the network queue (which might not be a cache hit anyway)
-            // and just use the cached response.
-            return new Promise(resolve => {
-              event.getContent(content => resolve(content));
-            });
-          }
-
-          // If DevTools was opened after the page started loading,
-          // we may have missed some requests.
-          // So fall back to a fetch() and hope we get a cached response.
-
-          return new Promise((resolve, reject) => {
-            function onPortMessage({payload, source}) {
-              if (source === 'react-devtools-content-script') {
-                switch (payload?.type) {
-                  case 'fetch-file-with-cache-complete':
-                    chrome.runtime.onMessage.removeListener(onPortMessage);
-                    resolve(payload.value);
-                    break;
-                  case 'fetch-file-with-cache-error':
-                    chrome.runtime.onMessage.removeListener(onPortMessage);
-                    reject(payload.value);
-                    break;
-                }
-              }
+        // For some reason in Firefox, chrome.runtime.sendMessage() from a content script
+        // never reaches the chrome.runtime.onMessage event listener.
+        let fetchFileWithCaching = null;
+        if (isChrome) {
+          // Fetching files from the extension won't make use of the network cache
+          // for resources that have already been loaded by the page.
+          // This helper function allows the extension to request files to be fetched
+          // by the content script (running in the page) to increase the likelihood of a cache hit.
+          fetchFileWithCaching = url => {
+            const event = cachedNetworkEvents.get(url);
+            if (event != null) {
+              // If this resource has already been cached locally,
+              // skip the network queue (which might not be a cache hit anyway)
+              // and just use the cached response.
+              return new Promise(resolve => {
+                event.getContent(content => resolve(content));
+              });
             }
 
-            chrome.runtime.onMessage.addListener(onPortMessage);
+            // If DevTools was opened after the page started loading,
+            // we may have missed some requests.
+            // So fall back to a fetch() and hope we get a cached response.
 
-            chrome.devtools.inspectedWindow.eval(`
-              window.postMessage({
-                source: 'react-devtools-extension',
-                payload: {
-                  type: 'fetch-file-with-cache',
-                  url: "${url}",
-                },
-              });
-            `);
-          });
-        };
+            return new Promise((resolve, reject) => {
+              function onPortMessage({payload, source}) {
+                if (source === 'react-devtools-content-script') {
+                  switch (payload?.type) {
+                    case 'fetch-file-with-cache-complete':
+                      chrome.runtime.onMessage.removeListener(onPortMessage);
+                      resolve(payload.value);
+                      break;
+                    case 'fetch-file-with-cache-error':
+                      chrome.runtime.onMessage.removeListener(onPortMessage);
+                      reject(payload.value);
+                      break;
+                  }
+                }
+              }
+
+              chrome.runtime.onMessage.addListener(onPortMessage);
+
+              chrome.devtools.inspectedWindow.eval(`
+                window.postMessage({
+                  source: 'react-devtools-extension',
+                  payload: {
+                    type: 'fetch-file-with-cache',
+                    url: "${url}",
+                  },
+                });
+              `);
+            });
+          };
+        }
 
         root = createRoot(document.createElement('div'));
 
