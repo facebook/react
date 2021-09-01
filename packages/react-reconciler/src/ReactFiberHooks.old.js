@@ -136,9 +136,13 @@ export type UpdateQueue<S, A> = {|
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnAboutUseOpaqueIdentifier;
+let didWarnAboutUseTransitionWithoutConcurrentMode;
+let didWarnAboutUseDeferredValueWithoutConcurrentMode;
 if (__DEV__) {
   didWarnAboutUseOpaqueIdentifier = {};
   didWarnAboutMismatchedHooksForComponent = new Set();
+  didWarnAboutUseTransitionWithoutConcurrentMode = new Set();
+  didWarnAboutUseDeferredValueWithoutConcurrentMode = new Set();
 }
 
 export type Hook = {|
@@ -1669,6 +1673,18 @@ function updateMemo<T>(
 }
 
 function mountDeferredValue<T>(value: T): T {
+  if (__DEV__ && ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode)) {
+    const name = getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
+    if (!didWarnAboutUseDeferredValueWithoutConcurrentMode.has(name)) {
+      if (__DEV__) {
+console.error(
+        'useDeferredValue can only be used inside concurrent mode. '+
+        'Use React.createRoot instead of ReactDOM.render'
+      )
+}
+      didWarnAboutUseDeferredValueWithoutConcurrentMode.add(name)
+    }
+  }
   const [prevValue, setValue] = mountState(value);
   mountEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1730,6 +1746,18 @@ function startTransition(setPending, callback) {
 }
 
 function mountTransition(): [boolean, (() => void) => void] {
+  if (__DEV__ && ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode)) {
+    const name = getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
+    if (!didWarnAboutUseTransitionWithoutConcurrentMode.has(name)) {
+      if (__DEV__) {
+console.error(
+        'useTransition can only be used inside concurrent mode. '+
+        'Use React.createRoot instead of ReactDOM.render'
+      )
+}
+      didWarnAboutUseTransitionWithoutConcurrentMode.add(name)
+    }
+  }
   const [isPending, setPending] = mountState(false);
   // The `start` method never changes.
   const start = startTransition.bind(null, setPending);

@@ -190,7 +190,6 @@ import {
   resetHooksAfterThrow,
   ContextOnlyDispatcher,
   getIsUpdatingOpaqueValueInRenderPhaseInDEV,
-  warnOnConcurrentHookOutsideConcurrentModeInDEV,
 } from './ReactFiberHooks.new';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -373,10 +372,12 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     if (__DEV__ && requestCurrentTransition() !== NoTransition) {
       const name = getComponentNameFromFiber(fiber) || 'Unknown';
       if (!didWarnAboutStartTransitionWithoutConcurrentMode.has(name)) {
-        console.error(
+        if (__DEV__) {
+console.error(
           'startTransition can only be used inside concurrent mode. '+
           'Use React.createRoot instead of ReactDOM.render'
-        );
+        )
+};
         didWarnAboutStartTransitionWithoutConcurrentMode.add(name);
       }
     }

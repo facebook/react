@@ -361,10 +361,26 @@ export function getCurrentTime() {
   return now();
 }
 
+let didWarnAboutStartTransitionWithoutConcurrentMode
+if (__DEV__) {
+  didWarnAboutStartTransitionWithoutConcurrentMode = new Set()
+}
 export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
+    if (__DEV__ && requestCurrentTransition() !== NoTransition) {
+      const name = getComponentNameFromFiber(fiber) || 'Unknown';
+      if (!didWarnAboutStartTransitionWithoutConcurrentMode.has(name)) {
+        if (__DEV__) {
+console.error(
+          'startTransition can only be used inside concurrent mode. '+
+          'Use React.createRoot instead of ReactDOM.render'
+        )
+};
+        didWarnAboutStartTransitionWithoutConcurrentMode.add(name);
+      }
+    }
     return (SyncLane: Lane);
   } else if (
     !deferRenderPhaseUpdateToNextBatch &&

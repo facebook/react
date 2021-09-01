@@ -1999,7 +1999,7 @@ describe('ReactHooks', () => {
       React.useTransition({
         timeoutMs: 3000
       });
-      return <div/>
+      return <div />
     }
     const renderer = ReactTestRenderer.create(null, {unstable_isConcurrent: false});
     expect(() => {
@@ -2013,14 +2013,17 @@ describe('ReactHooks', () => {
     ])
 
     function Parent2() {
-      const [state, setState] = React.useState(5)
-      return <div onClick={() => { React.startTransition(() => {
+      /* eslint-disable no-unused-vars */
+      const [_, setState] = React.useState(5)
+      return (<div onClick={() => {
+ React.startTransition(() => {
         setState(6);
-      }); }}></div>
+      }); 
+}} />)
     }
     expect(() => {
       act(() => {
-        renderer.update(<Parent2/>)
+        renderer.update(<Parent2 />)
         renderer.root.findByType('div').props.onClick()
       })
     }).toErrorDev([
@@ -2028,7 +2031,7 @@ describe('ReactHooks', () => {
     ], {withoutStack: true})
 
     act(() => {
-      ReactTestRenderer.create(<Parent/>, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(<Parent />, {unstable_isConcurrent: true});
     })
   })
 });

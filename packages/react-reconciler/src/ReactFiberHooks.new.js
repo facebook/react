@@ -1676,10 +1676,12 @@ function mountDeferredValue<T>(value: T): T {
   if (__DEV__ && ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode)) {
     const name = getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
     if (!didWarnAboutUseDeferredValueWithoutConcurrentMode.has(name)) {
-      console.error(
+      if (__DEV__) {
+console.error(
         'useDeferredValue can only be used inside concurrent mode. '+
         'Use React.createRoot instead of ReactDOM.render'
       )
+}
       didWarnAboutUseDeferredValueWithoutConcurrentMode.add(name)
     }
   }
@@ -1747,10 +1749,12 @@ function mountTransition(): [boolean, (() => void) => void] {
   if (__DEV__ && ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode)) {
     const name = getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
     if (!didWarnAboutUseTransitionWithoutConcurrentMode.has(name)) {
-      console.error(
+      if (__DEV__) {
+console.error(
         'useTransition can only be used inside concurrent mode. '+
         'Use React.createRoot instead of ReactDOM.render'
       )
+}
       didWarnAboutUseTransitionWithoutConcurrentMode.add(name)
     }
   }
