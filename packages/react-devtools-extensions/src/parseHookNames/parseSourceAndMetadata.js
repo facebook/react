@@ -47,6 +47,12 @@ type HookParsedMetadata = {|
   // Original source URL if there is a source map, or the same as runtimeSourceURL.
   originalSourceURL: string | null,
 
+  // Line number in original source code.
+  originalSourceLineNumber: number | null,
+
+  // Column number in original source code.
+  originalSourceColumnNumber: number | null,
+
   // APIs from source-map for parsing source maps (if detected).
   sourceConsumer: SourceConsumer | null,
 |};
@@ -151,47 +157,18 @@ function findHookNames(
       return null; // Should not be reachable.
     }
 
-    const {originalSourceURL, sourceConsumer} = hookParsedMetadata;
-
-    let originalSourceColumnNumber;
-    let originalSourceLineNumber;
-    if (areSourceMapsAppliedToErrors() || !sourceConsumer) {
-      // Either the current environment automatically applies source maps to errors,
-      // or the current code had no source map to begin with.
-      // Either way, we don't need to convert the Error stack frame locations.
-      originalSourceColumnNumber = columnNumber;
-      originalSourceLineNumber = lineNumber;
-    } else {
-      // TODO (named hooks) Refactor this read, github.com/facebook/react/pull/22181
-      const position = withSyncPerformanceMark(
-        'sourceConsumer.originalPositionFor()',
-        () =>
-          sourceConsumer.originalPositionFor({
-            line: lineNumber,
-
-            // Column numbers are represented differently between tools/engines.
-            // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
-            // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
-            column: columnNumber - 1,
-          }),
-      );
-
-      originalSourceColumnNumber = position.column;
-      originalSourceLineNumber = position.line;
-    }
-
-    if (__DEBUG__) {
-      console.log(
-        `findHookNames() mapped line ${lineNumber}->${originalSourceLineNumber} and column ${columnNumber}->${originalSourceColumnNumber}`,
-      );
-    }
+    const {
+      originalSourceURL,
+      originalSourceColumnNumber,
+      originalSourceLineNumber,
+    } = hookParsedMetadata;
 
     if (
       originalSourceLineNumber == null ||
       originalSourceColumnNumber == null ||
       originalSourceURL == null
     ) {
-      return null;
+      return null; // Should not be reachable.
     }
 
     let name;
@@ -241,6 +218,8 @@ function initializeHookParsedMetadata(
         originalSourceAST: null,
         originalSourceCode: null,
         originalSourceURL: null,
+        originalSourceLineNumber: null,
+        originalSourceColumnNumber: null,
         sourceConsumer: null,
       };
 
@@ -286,21 +265,45 @@ function parseSourceAST(
         return;
       }
 
+      if (
+        hookParsedMetadata.originalSourceURL != null &&
+        hookParsedMetadata.originalSourceCode != null &&
+        hookParsedMetadata.originalSourceColumnNumber != null &&
+        hookParsedMetadata.originalSourceLineNumber != null
+      ) {
+        // Use cached metadata.
+        return;
+      }
+
+      const {lineNumber, columnNumber} = hookSourceAndMetadata.hookSource;
+      if (lineNumber == null || columnNumber == null) {
+        throw Error('Hook source code location not found.');
+      }
+
       const {metadataConsumer, sourceConsumer} = hookParsedMetadata;
       const runtimeSourceCode = ((hookSourceAndMetadata.runtimeSourceCode: any): string);
       let hasHookMap = false;
       let originalSourceURL;
       let originalSourceCode;
-      if (sourceConsumer !== null) {
+      let originalSourceColumnNumber;
+      let originalSourceLineNumber;
+      if (areSourceMapsAppliedToErrors() || sourceConsumer == null) {
+        // Either the current environment automatically applies source maps to errors,
+        // or the current code had no source map to begin with.
+        // Either way, we don't need to convert the Error stack frame locations.
+        originalSourceColumnNumber = columnNumber;
+        originalSourceLineNumber = lineNumber;
+        // There's no source map to parse here so we can just parse the original source itself.
+        originalSourceCode = runtimeSourceCode;
+        // TODO (named hooks) This mixes runtimeSourceURLs with source mapped URLs in the same cache key space.
+        // Namespace them?
+        originalSourceURL = hookSourceAndMetadata.runtimeSourceURL;
+      } else {
         // Parse and extract the AST from the source map.
-        const {lineNumber, columnNumber} = hookSourceAndMetadata.hookSource;
-        if (lineNumber == null || columnNumber == null) {
-          throw Error('Hook source code location not found.');
-        }
         // Now that the source map has been loaded,
         // extract the original source for later.
         // TODO (named hooks) Refactor this read, github.com/facebook/react/pull/22181
-        const {source} = withSyncPerformanceMark(
+        const {column, line, source} = withSyncPerformanceMark(
           'sourceConsumer.originalPositionFor()',
           () =>
             sourceConsumer.originalPositionFor({
@@ -320,6 +323,8 @@ function parseSourceAST(
           );
         }
 
+        originalSourceColumnNumber = column;
+        originalSourceLineNumber = line;
         // TODO (named hooks) maybe canonicalize this URL somehow?
         // It can be relative if the source map specifies it that way,
         // but we use it as a cache key across different source maps and there can be collisions.
@@ -331,7 +336,7 @@ function parseSourceAST(
 
         if (__DEBUG__) {
           console.groupCollapsed(
-            'parseSourceAST() Extracted source code from source map',
+            `parseSourceAST() Extracted source code from source map for "${originalSourceURL}"`,
           );
           console.log(originalSourceCode);
           console.groupEnd();
@@ -343,22 +348,35 @@ function parseSourceAST(
         ) {
           hasHookMap = true;
         }
-      } else {
-        // There's no source map to parse here so we can just parse the original source itself.
-        originalSourceCode = runtimeSourceCode;
-        // TODO (named hooks) This mixes runtimeSourceURLs with source mapped URLs in the same cache key space.
-        // Namespace them?
-        originalSourceURL = hookSourceAndMetadata.runtimeSourceURL;
+      }
+
+      if (__DEBUG__) {
+        console.log(
+          `parseSourceAST() mapped line ${lineNumber}->${originalSourceLineNumber} and column ${columnNumber}->${originalSourceColumnNumber}`,
+        );
       }
 
       hookParsedMetadata.originalSourceCode = originalSourceCode;
       hookParsedMetadata.originalSourceURL = originalSourceURL;
+      hookParsedMetadata.originalSourceLineNumber = originalSourceLineNumber;
+      hookParsedMetadata.originalSourceColumnNumber = originalSourceColumnNumber;
 
       if (hasHookMap) {
+        if (__DEBUG__) {
+          console.log(
+            `parseSourceAST() Found hookMap and skipping parsing for "${originalSourceURL}"`,
+          );
+        }
         // If there's a hook map present from an extended sourcemap then
         // we don't need to parse the source files and instead can use the
         // hook map to extract hook names.
         return;
+      }
+
+      if (__DEBUG__) {
+        console.log(
+          `parseSourceAST() Did not find hook map for "${originalSourceURL}"`,
+        );
       }
 
       // The cache also serves to deduplicate parsing by URL in our loop over location keys.
