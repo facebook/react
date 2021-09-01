@@ -34,11 +34,13 @@ const cachedNetworkEvents = new Map();
 // For more info see: github.com/facebook/react/pull/22198
 chrome.devtools.network.onRequestFinished.addListener(
   function onRequestFinished(event) {
-    const {method, url} = event.request;
-    if (method === 'GET' && url.indexOf('.js') > 0) {
-      const {mimeType} = event.response.content;
-      if (mimeType === 'application/x-javascript') {
-        cachedNetworkEvents.set(url, event);
+    if (event.request.method === 'GET') {
+      switch (event.response.content.mimeType) {
+        case 'application/javascript':
+        case 'application/x-javascript':
+        case 'text/javascript':
+          cachedNetworkEvents.set(event.request.url, event);
+          break;
       }
     }
   },
