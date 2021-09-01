@@ -361,9 +361,9 @@ export function getCurrentTime() {
   return now();
 }
 
-let didWarnAboutStartTransitionWithoutConcurrentMode
+let didWarnAboutStartTransitionWithoutConcurrentMode;
 if (__DEV__) {
-  didWarnAboutStartTransitionWithoutConcurrentMode = new Set()
+  didWarnAboutStartTransitionWithoutConcurrentMode = new Set();
 }
 export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
@@ -373,11 +373,11 @@ export function requestUpdateLane(fiber: Fiber): Lane {
       const name = getComponentNameFromFiber(fiber) || 'Unknown';
       if (!didWarnAboutStartTransitionWithoutConcurrentMode.has(name)) {
         if (__DEV__) {
-console.error(
-          'startTransition can only be used inside concurrent mode. '+
-          'Use React.createRoot instead of ReactDOM.render'
-        )
-};
+          console.error(
+            'startTransition can only be used inside concurrent mode. ' +
+              'Use React.createRoot instead of ReactDOM.render',
+          );
+        }
         didWarnAboutStartTransitionWithoutConcurrentMode.add(name);
       }
     }

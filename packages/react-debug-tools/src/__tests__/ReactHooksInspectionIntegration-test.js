@@ -372,10 +372,12 @@ describe('ReactHooksInspectionIntegration', () => {
       const memoizedValue = React.useMemo(() => 'hello', []);
       return <div>{memoizedValue}</div>;
     }
-    let renderer
+    let renderer;
     act(() => {
-      renderer = ReactTestRenderer.create(<Foo />, { unstable_isConcurrent: true});
-    })
+      renderer = ReactTestRenderer.create(<Foo />, {
+        unstable_isConcurrent: true,
+      });
+    });
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([
@@ -406,8 +408,10 @@ describe('ReactHooksInspectionIntegration', () => {
     }
     let renderer;
     act(() => {
-      renderer = ReactTestRenderer.create(<Foo />, { unstable_isConcurrent: true});
-    })
+      renderer = ReactTestRenderer.create(<Foo />, {
+        unstable_isConcurrent: true,
+      });
+    });
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
     expect(tree).toEqual([

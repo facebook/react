@@ -725,9 +725,12 @@ function runActTests(label, render, unmount, rerender) {
                 rerender(<App suspend={true} />);
               });
             });
-          }).toErrorDev([
-            'startTransition can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
-          ], {withoutStack: true})
+          }).toErrorDev(
+            [
+              'startTransition can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
+            ],
+            {withoutStack: true},
+          );
 
           if (label === 'concurrent mode') {
             // In Concurrent Mode, refresh transitions delay indefinitely.

@@ -1556,7 +1556,9 @@ describe('ReactHooks', () => {
         }
         let root;
         act(() => {
-          root = ReactTestRenderer.create(<App update={false} />, { unstable_isConcurrent: true});
+          root = ReactTestRenderer.create(<App update={false} />, {
+            unstable_isConcurrent: true,
+          });
         });
         expect(() => {
           try {
@@ -1605,7 +1607,9 @@ describe('ReactHooks', () => {
         }
         let root;
         act(() => {
-          root = ReactTestRenderer.create(<App update={false} />, { unstable_isConcurrent: true});
+          root = ReactTestRenderer.create(<App update={false} />, {
+            unstable_isConcurrent: true,
+          });
         });
 
         expect(() => {
@@ -1659,7 +1663,9 @@ describe('ReactHooks', () => {
         }
         let root;
         act(() => {
-          root = ReactTestRenderer.create(<App update={false} />, { unstable_isConcurrent: true});
+          root = ReactTestRenderer.create(<App update={false} />, {
+            unstable_isConcurrent: true,
+          });
         });
 
         expect(() => {
@@ -1994,44 +2000,53 @@ describe('ReactHooks', () => {
   it('Warns when using useTransition, startTransition or useDeferredValue in legacy mode', () => {
     function Parent() {
       React.useDeferredValue(5, {
-        timeoutMs: 5000
+        timeoutMs: 5000,
       });
       React.useTransition({
-        timeoutMs: 3000
+        timeoutMs: 3000,
       });
-      return <div />
+      return <div />;
     }
-    const renderer = ReactTestRenderer.create(null, {unstable_isConcurrent: false});
+    const renderer = ReactTestRenderer.create(null, {
+      unstable_isConcurrent: false,
+    });
     expect(() => {
       act(() => {
-        renderer.update(<Parent />)
-      })
+        renderer.update(<Parent />);
+      });
     }).toErrorDev([
       'useDeferredValue can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
       'useTransition can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
       'startTransition can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
-    ])
+    ]);
 
     function Parent2() {
       /* eslint-disable no-unused-vars */
-      const [_, setState] = React.useState(5)
-      return (<div onClick={() => {
- React.startTransition(() => {
-        setState(6);
-      }); 
-}} />)
+      const [_, setState] = React.useState(5);
+      return (
+        <div
+          onClick={() => {
+            React.startTransition(() => {
+              setState(6);
+            });
+          }}
+        />
+      );
     }
     expect(() => {
       act(() => {
-        renderer.update(<Parent2 />)
-        renderer.root.findByType('div').props.onClick()
-      })
-    }).toErrorDev([
-      'startTransition can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
-    ], {withoutStack: true})
+        renderer.update(<Parent2 />);
+        renderer.root.findByType('div').props.onClick();
+      });
+    }).toErrorDev(
+      [
+        'startTransition can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
+      ],
+      {withoutStack: true},
+    );
 
     act(() => {
       ReactTestRenderer.create(<Parent />, {unstable_isConcurrent: true});
-    })
-  })
+    });
+  });
 });

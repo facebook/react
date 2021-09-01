@@ -1673,16 +1673,17 @@ function updateMemo<T>(
 }
 
 function mountDeferredValue<T>(value: T): T {
-  if (__DEV__ && ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode)) {
-    const name = getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
+  if (__DEV__ && (currentlyRenderingFiber.mode & ConcurrentMode) === NoMode) {
+    const name =
+      getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
     if (!didWarnAboutUseDeferredValueWithoutConcurrentMode.has(name)) {
       if (__DEV__) {
-console.error(
-        'useDeferredValue can only be used inside concurrent mode. '+
-        'Use React.createRoot instead of ReactDOM.render'
-      )
-}
-      didWarnAboutUseDeferredValueWithoutConcurrentMode.add(name)
+        console.error(
+          'useDeferredValue can only be used inside concurrent mode. ' +
+            'Use React.createRoot instead of ReactDOM.render',
+        );
+      }
+      didWarnAboutUseDeferredValueWithoutConcurrentMode.add(name);
     }
   }
   const [prevValue, setValue] = mountState(value);
@@ -1746,16 +1747,17 @@ function startTransition(setPending, callback) {
 }
 
 function mountTransition(): [boolean, (() => void) => void] {
-  if (__DEV__ && ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode)) {
-    const name = getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
+  if (__DEV__ && (currentlyRenderingFiber.mode & ConcurrentMode) === NoMode) {
+    const name =
+      getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown';
     if (!didWarnAboutUseTransitionWithoutConcurrentMode.has(name)) {
       if (__DEV__) {
-console.error(
-        'useTransition can only be used inside concurrent mode. '+
-        'Use React.createRoot instead of ReactDOM.render'
-      )
-}
-      didWarnAboutUseTransitionWithoutConcurrentMode.add(name)
+        console.error(
+          'useTransition can only be used inside concurrent mode. ' +
+            'Use React.createRoot instead of ReactDOM.render',
+        );
+      }
+      didWarnAboutUseTransitionWithoutConcurrentMode.add(name);
     }
   }
   const [isPending, setPending] = mountState(false);
