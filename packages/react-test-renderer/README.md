@@ -19,7 +19,7 @@ const renderer = ReactTestRenderer.create(
 
 console.log(renderer.toJSON());
 // { type: 'a',
-//   props: { href: 'https://www.facebook.com/' },
+//   props: { page: 'https://www.facebook.com/' },
 //   children: [ 'Facebook' ] }
 ```
 
