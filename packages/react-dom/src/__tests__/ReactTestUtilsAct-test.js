@@ -718,12 +718,16 @@ function runActTests(label, render, unmount, rerender) {
           });
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
-          // trigger a suspendy update with a delay
-          React.startTransition(() => {
-            act(() => {
-              rerender(<App suspend={true} />);
+          expect(() => {
+            // trigger a suspendy update with a delay
+            React.startTransition(() => {
+              act(() => {
+                rerender(<App suspend={true} />);
+              });
             });
-          });
+          }).toErrorDev([
+            'startTransition can only be used inside concurrent mode. Use React.createRoot instead of ReactDOM.render',
+          ], {withoutStack: true})
 
           if (label === 'concurrent mode') {
             // In Concurrent Mode, refresh transitions delay indefinitely.
