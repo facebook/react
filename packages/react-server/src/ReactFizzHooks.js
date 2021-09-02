@@ -461,6 +461,13 @@ function useMutableSource<Source, Snapshot>(
   return getSnapshot(source._source);
 }
 
+function useSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+): T {
+  throw new Error('Not yet implemented');
+}
+
 function useDeferredValue<T>(value: T): T {
   resolveCurrentlyRenderingComponent();
   return value;
@@ -509,6 +516,7 @@ export const Dispatcher: DispatcherType = {
   useOpaqueIdentifier,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
+  useSyncExternalStore,
 };
 
 if (enableCache) {

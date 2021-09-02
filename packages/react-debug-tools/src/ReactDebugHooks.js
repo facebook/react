@@ -265,6 +265,13 @@ function useMutableSource<Source, Snapshot>(
   return value;
 }
 
+function useSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+): T {
+  throw new Error('Not yet implemented');
+}
+
 function useTransition(): [boolean, (() => void) => void] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
@@ -326,6 +333,7 @@ const Dispatcher: DispatcherType = {
   useState,
   useTransition,
   useMutableSource,
+  useSyncExternalStore,
   useDeferredValue,
   useOpaqueIdentifier,
 };

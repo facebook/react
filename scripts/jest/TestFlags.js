@@ -42,6 +42,8 @@ const environmentFlags = {
   // Similarly, should stable imply "classic"?
   stable: !__EXPERIMENTAL__,
 
+  variant: __VARIANT__,
+
   persistent: global.__PERSISTENT__ === true,
 
   // Use this for tests that are known to be broken.

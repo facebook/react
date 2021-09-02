@@ -70,6 +70,8 @@ export {
   useLayoutEffect,
   useMemo,
   useMutableSource,
+  useSyncExternalStore,
+  useSyncExternalStore as unstable_useSyncExternalStore,
   useReducer,
   useRef,
   useState,

@@ -169,6 +169,14 @@ export function useMutableSource<Source, Snapshot>(
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }
 
+export function useSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useSyncExternalStore(subscribe, getSnapshot);
+}
+
 export function useCacheRefresh(): <T>(?() => T, ?T) => void {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe This is unstable, thus optional

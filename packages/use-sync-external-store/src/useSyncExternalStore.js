@@ -17,8 +17,6 @@ const {
   useEffect,
   useLayoutEffect,
   useDebugValue,
-
-  // $FlowFixMe - useSyncExternalStore not yet part of React Flow types
   useSyncExternalStore: builtInAPI,
 } = React;
 
@@ -26,7 +24,9 @@ const {
 // we're in version 16 or 17, so rendering is always synchronous. The shim
 // does not support concurrent rendering, only the built-in API.
 export const useSyncExternalStore =
-  builtInAPI !== undefined ? builtInAPI : useSyncExternalStore_shim;
+  builtInAPI !== undefined
+    ? ((builtInAPI: any): typeof useSyncExternalStore_shim)
+    : useSyncExternalStore_shim;
 
 let didWarnOld18Alpha = false;
 let didWarnUncachedGetSnapshot = false;
