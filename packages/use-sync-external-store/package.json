@@ -12,6 +12,7 @@
     "README.md",
     "build-info.json",
     "index.js",
+    "extra.js",
     "cjs/"
   ],
   "license": "MIT",
