@@ -13,10 +13,10 @@
  * It should always be imported from "react-devtools-feature-flags".
  ************************************************************************/
 
-export const enableProfilerChangedHookIndices = true;
-export const isInternalFacebookBuild = true;
+export const enableProfilerChangedHookIndices = false;
+export const isInternalFacebookBuild = false;
 
-export const consoleManagedByDevToolsDuringStrictMode = true;
+export const consoleManagedByDevToolsDuringStrictMode = false;
 
 /************************************************************************
  * Do not edit the code below.
@@ -24,7 +24,7 @@ export const consoleManagedByDevToolsDuringStrictMode = true;
  ************************************************************************/
 
 import typeof * as FeatureFlagsType from './DevToolsFeatureFlags.default';
-import typeof * as ExportsType from './DevToolsFeatureFlags.extension-fb';
+import typeof * as ExportsType from './DevToolsFeatureFlags.core-oss';
 
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

@@ -93,6 +93,9 @@ async function buildAndTestExtensions() {
 
 async function buildAndTestStandalonePackage() {
   const corePackagePath = join(ROOT_PATH, 'packages', 'react-devtools-core');
+  const corePackageDest = join(corePackagePath, 'dist');
+
+  await exec(`rm -rf ${corePackageDest}`);
   const buildCorePromise = exec('yarn build', {cwd: corePackagePath});
 
   await logger(
@@ -133,6 +136,9 @@ async function buildAndTestInlinePackage() {
     'packages',
     'react-devtools-inline'
   );
+  const inlinePackageDest = join(inlinePackagePath, 'dist');
+
+  await exec(`rm -rf ${inlinePackageDest}`);
   const buildPromise = exec('yarn build', {cwd: inlinePackagePath});
 
   await logger(

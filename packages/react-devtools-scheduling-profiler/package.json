@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-devtools-scheduling-profiler",
-  "version": "4.17.0",
+  "version": "4.18.0",
   "license": "MIT",
   "dependencies": {
     "@elg/speedscope": "1.9.0-a6f84db",

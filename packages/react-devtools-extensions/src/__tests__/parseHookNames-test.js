@@ -25,6 +25,23 @@ function requireText(path, encoding) {
   }
 }
 
+function initFetchMock() {
+  const fetchMock = require('jest-fetch-mock');
+  fetchMock.enableMocks();
+  fetchMock.mockIf(/.+$/, request => {
+    const url = request.url;
+    const isLoadingExternalSourceMap = /external\/.*\.map/.test(url);
+    if (isLoadingExternalSourceMap) {
+      // Assert that url contains correct query params
+      expect(url.includes('?foo=bar&param=some_value')).toBe(true);
+      const fileSystemPath = url.split('?')[0];
+      return requireText(fileSystemPath, 'utf8');
+    }
+    return requireText(url, 'utf8');
+  });
+  return fetchMock;
+}
+
 describe('parseHookNames', () => {
   let fetchMock;
   let inspectHooks;
@@ -37,12 +54,32 @@ describe('parseHookNames', () => {
       console.trace('source-map-support');
     });
 
-    fetchMock = require('jest-fetch-mock');
-    fetchMock.enableMocks();
+    fetchMock = initFetchMock();
 
     inspectHooks = require('react-debug-tools/src/ReactDebugHooks')
       .inspectHooks;
-    parseHookNames = require('../parseHookNames/parseHookNames').parseHookNames;
+
+    // Jest can't run the workerized version of this module.
+    const {
+      flattenHooksList,
+      loadSourceAndMetadata,
+    } = require('../parseHookNames/loadSourceAndMetadata');
+    const parseSourceAndMetadata = require('../parseHookNames/parseSourceAndMetadata')
+      .parseSourceAndMetadata;
+    parseHookNames = async hooksTree => {
+      const hooksList = flattenHooksList(hooksTree);
+
+      // Runs in the UI thread so it can share Network cache:
+      const locationKeyToHookSourceAndMetadata = await loadSourceAndMetadata(
+        hooksList,
+      );
+
+      // Runs in a Worker because it's CPU intensive:
+      return parseSourceAndMetadata(
+        hooksList,
+        locationKeyToHookSourceAndMetadata,
+      );
+    };
 
     // Jest (jest-runner?) configures Errors to automatically account for source maps.
     // This changes behavior between our tests and the browser.
@@ -55,18 +92,6 @@ describe('parseHookNames', () => {
     Error.prepareStackTrace = (error, trace) => {
       return error.stack;
     };
-
-    fetchMock.mockIf(/.+$/, request => {
-      const url = request.url;
-      const isLoadingExternalSourceMap = /external\/.*\.map/.test(url);
-      if (isLoadingExternalSourceMap) {
-        // Assert that url contains correct query params
-        expect(url.includes('?foo=bar&param=some_value')).toBe(true);
-        const fileSystemPath = url.split('?')[0];
-        return requireText(fileSystemPath, 'utf8');
-      }
-      return requireText(url, 'utf8');
-    });
   });
 
   afterEach(() => {
@@ -880,18 +905,20 @@ describe('parseHookNames', () => {
 describe('parseHookNames worker', () => {
   let inspectHooks;
   let parseHookNames;
-  let workerizedParseHookNamesMock;
+  let workerizedParseSourceAndMetadataMock;
 
   beforeEach(() => {
     window.Worker = undefined;
 
-    workerizedParseHookNamesMock = jest.fn();
+    workerizedParseSourceAndMetadataMock = jest.fn();
 
-    jest.mock('../parseHookNames/parseHookNames.worker.js', () => {
+    initFetchMock();
+
+    jest.mock('../parseHookNames/parseSourceAndMetadata.worker.js', () => {
       return {
         __esModule: true,
         default: () => ({
-          parseHookNames: workerizedParseHookNamesMock,
+          parseSourceAndMetadata: workerizedParseSourceAndMetadataMock,
         }),
       };
     });
@@ -912,11 +939,12 @@ describe('parseHookNames worker', () => {
       .Component;
 
     window.Worker = true;
-    // resets module so mocked worker instance can be updated
+
+    // Reset module so mocked worker instance can be updated.
     jest.resetModules();
     parseHookNames = require('../parseHookNames').parseHookNames;
 
     await getHookNamesForComponent(Component);
-    expect(workerizedParseHookNamesMock).toHaveBeenCalledTimes(1);
+    expect(workerizedParseSourceAndMetadataMock).toHaveBeenCalledTimes(1);
   });
 });

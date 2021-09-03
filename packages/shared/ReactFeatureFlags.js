@@ -175,3 +175,5 @@ export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = false;
 
 export const enablePersistentOffscreenHostContainer = false;
+
+export const consoleManagedByDevToolsDuringStrictMode = false;

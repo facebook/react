@@ -6,20 +6,19 @@
  *
  * @flow
  */
+let React;
+let ReactDOM;
+let act;
+let fakeConsole;
+let legacyRender;
+let mockError;
+let mockInfo;
+let mockLog;
+let mockWarn;
+let patchConsole;
+let unpatchConsole;
 
 describe('console', () => {
-  let React;
-  let ReactDOM;
-  let act;
-  let fakeConsole;
-  let legacyRender;
-  let mockError;
-  let mockInfo;
-  let mockLog;
-  let mockWarn;
-  let patchConsole;
-  let unpatchConsole;
-
   beforeEach(() => {
     jest.resetModules();
 
@@ -539,6 +538,95 @@ describe('console', () => {
         </React.StrictMode>,
       ),
     );
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+  });
+});
+
+describe('console error', () => {
+  beforeEach(() => {
+    jest.resetModules();
+
+    const Console = require('react-devtools-shared/src/backend/console');
+    patchConsole = Console.patch;
+    unpatchConsole = Console.unpatch;
+
+    // Patch a fake console so we can verify with tests below.
+    // Patching the real console is too complicated,
+    // because Jest itself has hooks into it as does our test env setup.
+    mockError = jest.fn();
+    mockInfo = jest.fn();
+    mockLog = jest.fn();
+    mockWarn = jest.fn();
+    fakeConsole = {
+      error: mockError,
+      info: mockInfo,
+      log: mockLog,
+      warn: mockWarn,
+    };
+
+    Console.dangerous_setTargetConsoleForTesting(fakeConsole);
+
+    // Note the Console module only patches once,
+    // so it's important to patch the test console before injection.
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideDoubleLogsInStrictLegacy: false,
+    });
+
+    const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
+      internals.getIsStrictMode = () => {
+        throw Error('foo');
+      };
+      inject(internals);
+
+      Console.registerRenderer(internals);
+    };
+
+    React = require('react');
+    ReactDOM = require('react-dom');
+
+    const utils = require('./utils');
+    act = utils.act;
+    legacyRender = utils.legacyRender;
+  });
+
+  it('error in console log throws without interfering with logging', () => {
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
+
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideConsoleLogsInStrictMode: false,
+    });
+
+    expect(() => {
+      act(() => {
+        root.render(<App />);
+      });
+    }).toThrowError('foo');
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);

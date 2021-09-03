@@ -17,6 +17,7 @@ import type {
   HookSourceLocationKey,
 } from 'react-devtools-shared/src/types';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
+import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const TIMEOUT = 30000;
 
@@ -53,6 +54,11 @@ function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   }
 }
 
+type LoadHookNamesFunction = (
+  hookLog: HooksTree,
+  fetchFileWithCaching: FetchFileWithCaching | null,
+) => Thenable<HookNames>;
+
 // This is intentionally a module-level Map, rather than a React-managed one.
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // TODO Rethink this if the React API constraints change.
@@ -67,7 +73,8 @@ export function hasAlreadyLoadedHookNames(element: Element): boolean {
 export function loadHookNames(
   element: Element,
   hooksTree: HooksTree,
-  loadHookNamesFunction: (hookLog: HooksTree) => Thenable<HookNames>,
+  loadHookNamesFunction: LoadHookNamesFunction,
+  fetchFileWithCaching: FetchFileWithCaching | null,
 ): HookNames | null {
   let record = map.get(element);
 
@@ -103,7 +110,7 @@ export function loadHookNames(
 
     let didTimeout = false;
 
-    loadHookNamesFunction(hooksTree).then(
+    loadHookNamesFunction(hooksTree, fetchFileWithCaching).then(
       function onSuccess(hookNames) {
         if (didTimeout) {
           return;

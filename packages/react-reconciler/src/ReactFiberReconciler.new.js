@@ -35,7 +35,10 @@ import {
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
-import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulingProfiler,
+  consoleManagedByDevToolsDuringStrictMode,
+} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -107,6 +110,7 @@ export {
 
 import * as Scheduler from './Scheduler';
 import {setSuppressWarning} from 'shared/consoleWithStackDev';
+import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 type OpaqueRoot = FiberRoot;
 
@@ -717,14 +721,23 @@ export function getIsStrictModeForDevtools() {
 }
 
 export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
-  // We're in a test because Scheduler.unstable_yieldValue only exists
-  // in SchedulerMock. To reduce the noise in strict mode tests,
-  // suppress warnings and disable scheduler yielding during the double render
-  if (typeof Scheduler.unstable_yieldValue === 'function') {
-    Scheduler.unstable_setDisableYieldValue(newIsStrictMode);
-    setSuppressWarning(newIsStrictMode);
-  }
   isStrictMode = newIsStrictMode;
+
+  if (consoleManagedByDevToolsDuringStrictMode) {
+    // We're in a test because Scheduler.unstable_yieldValue only exists
+    // in SchedulerMock. To reduce the noise in strict mode tests,
+    // suppress warnings and disable scheduler yielding during the double render
+    if (typeof Scheduler.unstable_yieldValue === 'function') {
+      Scheduler.unstable_setDisableYieldValue(newIsStrictMode);
+      setSuppressWarning(newIsStrictMode);
+    }
+  } else {
+    if (newIsStrictMode) {
+      disableLogs();
+    } else {
+      reenableLogs();
+    }
+  }
 }
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {

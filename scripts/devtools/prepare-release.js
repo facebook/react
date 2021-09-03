@@ -115,8 +115,12 @@ async function getPreviousCommitSha() {
   const choices = [];
 
   const lines = await execRead(`
-    git log --max-count=5 --topo-order --pretty=format:'%H:::%s:::%as' HEAD -- ${PACKAGE_PATHS[0]}
+    git log --max-count=5 --topo-order --pretty=format:'%H:::%s:::%as' HEAD -- ${join(
+      ROOT_PATH,
+      PACKAGE_PATHS[0]
+    )}
   `);
+
   lines.split('\n').forEach((line, index) => {
     const [hash, message, date] = line.split(':::');
     choices.push({

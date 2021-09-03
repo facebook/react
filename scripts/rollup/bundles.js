@@ -684,6 +684,24 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* Shim for useSyncExternalStore *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-sync-external-store',
+    global: 'useSyncExternalStore',
+    externals: ['react'],
+  },
+
+  /******* Shim for useSyncExternalStore (+ extra user-space features) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-sync-external-store/extra',
+    global: 'useSyncExternalStoreExtra',
+    externals: ['react', 'use-sync-external-store'],
+  },
+
   /******* React Scheduler (experimental) *******/
   {
     bundleTypes: [

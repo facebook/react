@@ -9,13 +9,22 @@
 
 import {__PERFORMANCE_PROFILE__} from './constants';
 
+const supportsUserTiming =
+  typeof performance !== 'undefined' &&
+  typeof performance.mark === 'function' &&
+  typeof performance.clearMarks === 'function';
+
 function mark(markName: string): void {
-  performance.mark(markName + '-start');
+  if (supportsUserTiming) {
+    performance.mark(markName + '-start');
+  }
 }
 
 function measure(markName: string): void {
-  performance.mark(markName + '-end');
-  performance.measure(markName, markName + '-start', markName + '-end');
+  if (supportsUserTiming) {
+    performance.mark(markName + '-end');
+    performance.measure(markName, markName + '-start', markName + '-end');
+  }
 }
 
 export async function withAsyncPerformanceMark<TReturn>(
