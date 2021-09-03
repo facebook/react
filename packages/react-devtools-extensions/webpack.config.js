@@ -52,7 +52,7 @@ module.exports = {
     path: __dirname + '/build',
     publicPath: '/build/',
     filename: '[name].js',
-    chunkFileName: '[name].bundle.js',
+    chunkFilename: '[name].bundle.js',
   },
   node: {
     // Don't define a polyfill on window.setImmediate
