@@ -183,7 +183,10 @@ module.exports = {
       },
     },
     {
-      files: ['packages/eslint-plugin-react-hooks/src/*.js'],
+      files: [
+        'scripts/eslint-rules/*.js',
+        'packages/eslint-plugin-react-hooks/src/*.js'
+      ],
       plugins: ['eslint-plugin'],
       rules: {
         'eslint-plugin/prefer-object-rule': ERROR,

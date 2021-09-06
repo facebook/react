@@ -10,7 +10,7 @@
 'use strict';
 
 const rule = require('../no-cross-fork-types');
-const RuleTester = require('eslint').RuleTester;
+const {RuleTester} = require('eslint');
 const ruleTester = new RuleTester({
   parserOptions: {
     ecmaVersion: 8,
