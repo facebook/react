@@ -185,7 +185,7 @@ Learn more about this change at [fb.me/devtools-unsupported-bridge-protocol](htt
 
 ## 4.12.4 (April 19, 2021)
 #### Bugfix
-* Remove `@octokit/rest` depedency because of a problem with transitive dependencies ([bvaughn](https://github.com/bvaughn) in [#21317](https://github.com/facebook/react/pull/21317))
+* Remove `@octokit/rest` dependency because of a problem with transitive dependencies ([bvaughn](https://github.com/bvaughn) in [#21317](https://github.com/facebook/react/pull/21317))
 
 ## 4.12.3 (April 19, 2021)
 #### Bugfix
