@@ -17,7 +17,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 
 function MyComponent() {
-    return <div>Hello World</div>;
+  return <div>Hello World</div>;
 }
 
 ReactDOM.render(<MyComponent />, node);
@@ -30,7 +30,7 @@ var React = require('react');
 var ReactDOMServer = require('react-dom/server');
 
 function MyComponent() {
-    return <div>Hello World</div>;
+  return <div>Hello World</div>;
 }
 
 ReactDOMServer.renderToString(<MyComponent />);
