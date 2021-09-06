@@ -7,6 +7,7 @@
 
 const ariaProperties = {
   'aria-current': 0, // state
+  'aria-description': 0,
   'aria-details': 0,
   'aria-disabled': 0, // state
   'aria-hidden': 0, // state
@@ -14,7 +15,6 @@ const ariaProperties = {
   'aria-keyshortcuts': 0,
   'aria-label': 0,
   'aria-roledescription': 0,
-  'aria-description': 0,
   // Widget Attributes
   'aria-autocomplete': 0,
   'aria-checked': 0,
