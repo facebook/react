@@ -269,7 +269,19 @@ function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
 ): T {
-  throw new Error('Not yet implemented');
+  // useSyncExternalStore() composes multiple hooks internally.
+  // Advance the current hook index the same number of times
+  // so that subsequent hooks have the right memoized state.
+  nextHook(); // SyncExternalStore
+  nextHook(); // LayoutEffect
+  nextHook(); // Effect
+  const value = getSnapshot();
+  hookLog.push({
+    primitive: 'SyncExternalStore',
+    stackError: new Error(),
+    value,
+  });
+  return value;
 }
 
 function useTransition(): [boolean, (() => void) => void] {

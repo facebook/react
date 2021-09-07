@@ -878,4 +878,37 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
   });
+
+  // @gate experimental || www
+  it('should support composite useSyncExternalStore hook', () => {
+    const useSyncExternalStore = React.unstable_useSyncExternalStore;
+    function Foo() {
+      const value = useSyncExternalStore(
+        () => () => {},
+        () => 'snapshot',
+      );
+      React.useMemo(() => 'memo', []);
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        id: 0,
+        isStateEditable: false,
+        name: 'SyncExternalStore',
+        value: 'snapshot',
+        subHooks: [],
+      },
+      {
+        id: 1,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'memo',
+        subHooks: [],
+      },
+    ]);
+  });
 });
