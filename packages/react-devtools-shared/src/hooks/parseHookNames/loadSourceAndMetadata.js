@@ -61,7 +61,7 @@ import type {
   HookSource,
   HooksTree,
 } from 'react-debug-tools/src/ReactDebugHooks';
-import type {MixedSourceMap} from 'react-devtools-extensions/src/SourceMapTypes';
+import type {MixedSourceMap} from '../SourceMapTypes';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 // Prefer a cached albeit stale response to reduce download time.

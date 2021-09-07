@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
+Object.defineProperty(exports, '__esModule', {
+  value: true,
 });
 exports.default = testErrorStack;
 exports.SOURCE_STACK_FRAME_LINE_NUMBER = void 0;
