@@ -291,7 +291,7 @@ function createPanelIfReactLoaded() {
 
         render = (overrideTab = mostRecentOverrideTab) => {
           mostRecentOverrideTab = overrideTab;
-          import('./parseHookNames').then(
+          import('react-devtools-shared/src/hooks/parseHookNames').then(
             ({parseHookNames, prefetchSourceFiles, purgeCachedMetadata}) => {
               root.render(
                 createElement(DevTools, {
