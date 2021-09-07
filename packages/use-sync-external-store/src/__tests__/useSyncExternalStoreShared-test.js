@@ -627,7 +627,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       return <Text text={JSON.stringify(text)} />;
     }
 
-    spyOnDevAndProd(console, 'error')
+    spyOnDev(console, 'error')
 
     expect(() => {
       act(() => {
@@ -639,6 +639,8 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' + 
       'the number of nested updates to prevent infinite loops.'
     )
-    expect(console.error.calls.argsFor(0)[0]).toMatch('The result of getSnapshot should be cached to avoid an infinite loop')
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toMatch('The result of getSnapshot should be cached to avoid an infinite loop')
+    }
   });
 });
