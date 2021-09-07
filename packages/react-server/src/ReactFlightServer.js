@@ -827,6 +827,7 @@ const Dispatcher: DispatcherType = {
   useEffect: (unsupportedHook: any),
   useOpaqueIdentifier: (unsupportedHook: any),
   useMutableSource: (unsupportedHook: any),
+  useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;
   },

@@ -45,6 +45,7 @@ export {
   useLayoutEffect,
   useMemo,
   useMutableSource as unstable_useMutableSource,
+  useSyncExternalStore as unstable_useSyncExternalStore,
   useReducer,
   useRef,
   useState,
