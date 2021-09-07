@@ -86,6 +86,7 @@ export type DOMEventName =
   | 'progress'
   | 'ratechange'
   | 'reset'
+  | 'resize'
   | 'scroll'
   | 'seeked'
   | 'seeking'
