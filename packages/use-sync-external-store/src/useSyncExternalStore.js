@@ -29,7 +29,7 @@ export const useSyncExternalStore =
   builtInAPI !== undefined ? builtInAPI : useSyncExternalStore_shim;
 
 let didWarnOld18Alpha = false;
-let didWarnUncachedGetSnapshot = false
+let didWarnUncachedGetSnapshot = false;
 
 // Disclaimer: This shim breaks many of the rules of React, and only works
 // because of a very particular set of implementation details and assumptions
@@ -67,8 +67,10 @@ function useSyncExternalStore_shim<T>(
   if (__DEV__) {
     if (!didWarnUncachedGetSnapshot) {
       if (value !== getSnapshot()) {
-        console.error('The result of getSnapshot should be cached to avoid an infinite loop')
-        didWarnUncachedGetSnapshot = true
+        console.error(
+          'The result of getSnapshot should be cached to avoid an infinite loop',
+        );
+        didWarnUncachedGetSnapshot = true;
       }
     }
   }
