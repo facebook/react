@@ -1,5 +1,6 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -32,15 +33,10 @@ const DEVTOOLS_VERSION = getVersionString();
 
 const config = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
+  devtool: __DEV__ ? 'cheap-module-source-map' : 'source-map',
   entry: {
     app: './src/app/index.js',
     devtools: './src/devtools.js',
-  },
-  node: {
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
   },
   resolve: {
     alias: {
@@ -56,6 +52,9 @@ const config = {
     minimize: false,
   },
   plugins: [
+    new HtmlWebpackPlugin({
+      template: './index.html'
+    }),
     new DefinePlugin({
       __DEV__,
       __EXPERIMENTAL__: true,
@@ -111,9 +110,29 @@ if (TARGET === 'local') {
   config.devServer = {
     hot: true,
     port: 8080,
-    clientLogLevel: 'warning',
-    publicPath: '/dist/',
-    stats: 'errors-only',
+    static: {
+      directory: resolve(__dirname, 'dist'),
+    },
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false,
+      },
+    },
+//     historyApiFallback: {
+//       index: 'index.html'
+//     },
+//     proxy: {
+//       '/': {
+//         target: 'http://localhost:8080',
+//         bypass: function (request, response, proxyOptions) {
+//           if (request.url === '/') {
+// console.log('FOUND IT')
+//             return '/index.html';
+//           }
+//         },
+//       },
+//     },
   };
 } else {
   config.output = {
