@@ -7,14 +7,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 var React = require('react');
 var React__default = _interopDefault(React);
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
+var _jsxFileName = "/Users/bvaughn/Documents/git/react/packages/react-devtools-shared/src/hooks/__tests__/__source__/ComponentUsingHooksIndirectly.js";
 function Component() {
   const countState = React.useState(0);
   const count = countState[0];
@@ -26,8 +19,25 @@ function Component() {
 
   const handleClick = () => setCount(count + 1);
 
-  return /*#__PURE__*/React__default.createElement(React__default.Fragment, null, /*#__PURE__*/React__default.createElement("div", null, "Dark mode? ", isDarkMode), /*#__PURE__*/React__default.createElement("div", null, "Count: ", count), /*#__PURE__*/React__default.createElement("button", {
-    onClick: handleClick
+  return /*#__PURE__*/React__default.createElement(React__default.Fragment, null, /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 28,
+      columnNumber: 7
+    }
+  }, "Dark mode? ", isDarkMode), /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 29,
+      columnNumber: 7
+    }
+  }, "Count: ", count), /*#__PURE__*/React__default.createElement("button", {
+    onClick: handleClick,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 30,
+      columnNumber: 7
+    }
   }, "Update count"));
 }
 
@@ -39,14 +49,7 @@ function useIsDarkMode() {
   return [isDarkMode, () => {}];
 }
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
+var _jsxFileName$1 = "/Users/bvaughn/Documents/git/react/packages/react-devtools-shared/src/hooks/__tests__/__source__/ComponentWithCustomHook.js";
 function Component$1() {
   const [count, setCount] = React.useState(0);
   const isDarkMode = useIsDarkMode$1();
@@ -58,8 +61,31 @@ function Component$1() {
 
   const handleClick = () => setCount(count + 1);
 
-  return /*#__PURE__*/React__default.createElement(React__default.Fragment, null, /*#__PURE__*/React__default.createElement("div", null, "Dark mode? ", isDarkMode), /*#__PURE__*/React__default.createElement("div", null, "Count: ", count), /*#__PURE__*/React__default.createElement("div", null, "Foo: ", foo), /*#__PURE__*/React__default.createElement("button", {
-    onClick: handleClick
+  return /*#__PURE__*/React__default.createElement(React__default.Fragment, null, /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName$1,
+      lineNumber: 25,
+      columnNumber: 7
+    }
+  }, "Dark mode? ", isDarkMode), /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName$1,
+      lineNumber: 26,
+      columnNumber: 7
+    }
+  }, "Count: ", count), /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName$1,
+      lineNumber: 27,
+      columnNumber: 7
+    }
+  }, "Foo: ", foo), /*#__PURE__*/React__default.createElement("button", {
+    onClick: handleClick,
+    __source: {
+      fileName: _jsxFileName$1,
+      lineNumber: 28,
+      columnNumber: 7
+    }
   }, "Update count"));
 }
 
@@ -83,7 +109,7 @@ function useFoo() {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * 
  */
 const ThemeContext = /*#__PURE__*/React.createContext('bright');
 function useTheme() {
@@ -92,17 +118,16 @@ function useTheme() {
   return theme;
 }
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
+var _jsxFileName$2 = "/Users/bvaughn/Documents/git/react/packages/react-devtools-shared/src/hooks/__tests__/__source__/ComponentWithExternalCustomHooks.js";
 function Component$2() {
   const theme = useTheme();
-  return /*#__PURE__*/React__default.createElement("div", null, "theme: ", theme);
+  return /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName$2,
+      lineNumber: 16,
+      columnNumber: 10
+    }
+  }, "theme: ", theme);
 }
 
 /**
@@ -111,7 +136,7 @@ function Component$2() {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * 
  */
 const A = /*#__PURE__*/React.createContext(1);
 const B = /*#__PURE__*/React.createContext(2);
@@ -131,7 +156,7 @@ function Component$3() {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * 
  */
 
 const {
@@ -153,34 +178,54 @@ var ComponentWithNestedHooks = {
 };
 var ComponentWithNestedHooks_1 = ComponentWithNestedHooks.Component;
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
+var _jsxFileName$3 = "/Users/bvaughn/Documents/git/react/packages/react-devtools-shared/src/hooks/__tests__/__source__/ContainingStringSourceMappingURL.js";
 
 function Component$5() {
   const [count, setCount] = React.useState(0);
-  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
-    onClick: () => setCount(count + 1)
+  return /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName$3,
+      lineNumber: 18,
+      columnNumber: 5
+    }
+  }, /*#__PURE__*/React__default.createElement("p", {
+    __source: {
+      fileName: _jsxFileName$3,
+      lineNumber: 19,
+      columnNumber: 7
+    }
+  }, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
+    onClick: () => setCount(count + 1),
+    __source: {
+      fileName: _jsxFileName$3,
+      lineNumber: 20,
+      columnNumber: 7
+    }
   }, "Click me"));
 }
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
+var _jsxFileName$4 = "/Users/bvaughn/Documents/git/react/packages/react-devtools-shared/src/hooks/__tests__/__source__/Example.js";
 function Component$6() {
   const [count, setCount] = React.useState(0);
-  return /*#__PURE__*/React__default.createElement("div", null, /*#__PURE__*/React__default.createElement("p", null, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
-    onClick: () => setCount(count + 1)
+  return /*#__PURE__*/React__default.createElement("div", {
+    __source: {
+      fileName: _jsxFileName$4,
+      lineNumber: 16,
+      columnNumber: 5
+    }
+  }, /*#__PURE__*/React__default.createElement("p", {
+    __source: {
+      fileName: _jsxFileName$4,
+      lineNumber: 17,
+      columnNumber: 7
+    }
+  }, "You clicked ", count, " times"), /*#__PURE__*/React__default.createElement("button", {
+    onClick: () => setCount(count + 1),
+    __source: {
+      fileName: _jsxFileName$4,
+      lineNumber: 18,
+      columnNumber: 7
+    }
   }, "Click me"));
 }
 
@@ -190,7 +235,7 @@ function Component$6() {
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * 
  */
 function Component$7() {
   const [count] = require('react').useState(0);
@@ -198,14 +243,7 @@ function Component$7() {
   return count;
 }
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
+var _jsxFileName$5 = "/Users/bvaughn/Documents/git/react/packages/react-devtools-shared/src/hooks/__tests__/__source__/ToDoList.js";
 function ListItem({
   item,
   removeItem,
@@ -217,12 +255,34 @@ function ListItem({
   const handleToggle = React.useCallback(() => {
     toggleItem(item);
   }, [item, toggleItem]);
-  return /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-    onClick: handleDelete
-  }, "Delete"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  return /*#__PURE__*/React.createElement("li", {
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 23,
+      columnNumber: 5
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleDelete,
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 24,
+      columnNumber: 7
+    }
+  }, "Delete"), /*#__PURE__*/React.createElement("label", {
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 25,
+      columnNumber: 7
+    }
+  }, /*#__PURE__*/React.createElement("input", {
     checked: item.isComplete,
     onChange: handleToggle,
-    type: "checkbox"
+    type: "checkbox",
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 26,
+      columnNumber: 9
+    }
   }), ' ', item.text));
 }
 function List(props) {
@@ -269,23 +329,61 @@ function List(props) {
       isComplete: !itemToToggle.isComplete
     }).concat(items.slice(index + 1)));
   }, [items]);
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", null, "List"), /*#__PURE__*/React.createElement("input", {
+  return /*#__PURE__*/React.createElement(React.Fragment, {
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 102,
+      columnNumber: 5
+    }
+  }, /*#__PURE__*/React.createElement("h1", {
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 103,
+      columnNumber: 7
+    }
+  }, "List"), /*#__PURE__*/React.createElement("input", {
     type: "text",
     placeholder: "New list item...",
     value: newItemText,
     onChange: handleChange,
-    onKeyPress: handleKeyPress
+    onKeyPress: handleKeyPress,
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 104,
+      columnNumber: 7
+    }
   }), /*#__PURE__*/React.createElement("button", {
     disabled: newItemText === '',
-    onClick: handleClick
+    onClick: handleClick,
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 111,
+      columnNumber: 7
+    }
   }, /*#__PURE__*/React.createElement("span", {
     role: "img",
-    "aria-label": "Add item"
-  }, "Add")), /*#__PURE__*/React.createElement("ul", null, items.map(item => /*#__PURE__*/React.createElement(ListItem, {
+    "aria-label": "Add item",
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 112,
+      columnNumber: 9
+    }
+  }, "Add")), /*#__PURE__*/React.createElement("ul", {
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 116,
+      columnNumber: 7
+    }
+  }, items.map(item => /*#__PURE__*/React.createElement(ListItem, {
     key: item.id,
     item: item,
     removeItem: removeItem,
-    toggleItem: toggleItem
+    toggleItem: toggleItem,
+    __source: {
+      fileName: _jsxFileName$5,
+      lineNumber: 118,
+      columnNumber: 11
+    }
   }))));
 }
 

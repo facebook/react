@@ -8,18 +8,12 @@ exports.List = List;
 
 var React = _interopRequireWildcard(require("react"));
 
+var _jsxFileName = "";
+
 function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return null; var cache = new WeakMap(); _getRequireWildcardCache = function () { return cache; }; return cache; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
 function ListItem({
   item,
   removeItem,
@@ -31,12 +25,34 @@ function ListItem({
   const handleToggle = (0, React.useCallback)(() => {
     toggleItem(item);
   }, [item, toggleItem]);
-  return /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("button", {
-    onClick: handleDelete
-  }, "Delete"), /*#__PURE__*/React.createElement("label", null, /*#__PURE__*/React.createElement("input", {
+  return /*#__PURE__*/React.createElement("li", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 23,
+      columnNumber: 5
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: handleDelete,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 24,
+      columnNumber: 7
+    }
+  }, "Delete"), /*#__PURE__*/React.createElement("label", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 25,
+      columnNumber: 7
+    }
+  }, /*#__PURE__*/React.createElement("input", {
     checked: item.isComplete,
     onChange: handleToggle,
-    type: "checkbox"
+    type: "checkbox",
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 26,
+      columnNumber: 9
+    }
   }), ' ', item.text));
 }
 
@@ -84,23 +100,61 @@ function List(props) {
       isComplete: !itemToToggle.isComplete
     }).concat(items.slice(index + 1)));
   }, [items]);
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", null, "List"), /*#__PURE__*/React.createElement("input", {
+  return /*#__PURE__*/React.createElement(React.Fragment, {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 102,
+      columnNumber: 5
+    }
+  }, /*#__PURE__*/React.createElement("h1", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 103,
+      columnNumber: 7
+    }
+  }, "List"), /*#__PURE__*/React.createElement("input", {
     type: "text",
     placeholder: "New list item...",
     value: newItemText,
     onChange: handleChange,
-    onKeyPress: handleKeyPress
+    onKeyPress: handleKeyPress,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 104,
+      columnNumber: 7
+    }
   }), /*#__PURE__*/React.createElement("button", {
     disabled: newItemText === '',
-    onClick: handleClick
+    onClick: handleClick,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 111,
+      columnNumber: 7
+    }
   }, /*#__PURE__*/React.createElement("span", {
     role: "img",
-    "aria-label": "Add item"
-  }, "Add")), /*#__PURE__*/React.createElement("ul", null, items.map(item => /*#__PURE__*/React.createElement(ListItem, {
+    "aria-label": "Add item",
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 112,
+      columnNumber: 9
+    }
+  }, "Add")), /*#__PURE__*/React.createElement("ul", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 116,
+      columnNumber: 7
+    }
+  }, items.map(item => /*#__PURE__*/React.createElement(ListItem, {
     key: item.id,
     item: item,
     removeItem: removeItem,
-    toggleItem: toggleItem
+    toggleItem: toggleItem,
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 118,
+      columnNumber: 11
+    }
   }))));
 }
 //# sourceMappingURL=ToDoList.js.map?foo=bar&param=some_value

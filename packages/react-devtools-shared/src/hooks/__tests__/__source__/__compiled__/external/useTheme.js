@@ -14,7 +14,7 @@ var _react = require("react");
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * 
  */
 const ThemeContext = /*#__PURE__*/(0, _react.createContext)('bright');
 exports.ThemeContext = ThemeContext;
