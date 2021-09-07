@@ -2632,6 +2632,65 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
       expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy']);
     });
+
+    it('assumes passive effect destroy function is either a function or undefined', () => {
+      function App(props) {
+        useEffect(() => {
+          return props.return;
+        });
+        return null;
+      }
+
+      expect(() =>
+        act(() => {
+          ReactNoop.render(<App return={17} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up. You returned: 17',
+      ]);
+
+      // Error on unmount because React assumes the value is a function
+      expect(() =>
+        act(() => {
+          ReactNoop.render(null);
+        }),
+      ).toThrow('is not a function');
+
+      expect(() =>
+        act(() => {
+          ReactNoop.render(<App return={null} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up. You returned null. If your ' +
+          'effect does not require clean up, return undefined (or nothing).',
+      ]);
+
+      // Error on unmount because React assumes the value is a function
+      expect(() =>
+        act(() => {
+          ReactNoop.render(null);
+        }),
+      ).toThrow('is not a function');
+
+      expect(() =>
+        act(() => {
+          ReactNoop.render(<App return={Promise.resolve()} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up.\n\n' +
+          'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
+      ]);
+
+      // Error on unmount because React assumes the value is a function
+      expect(() =>
+        act(() => {
+          ReactNoop.render(null);
+        }),
+      ).toThrow('is not a function');
+    });
   });
 
   describe('useLayoutEffect', () => {
