@@ -618,4 +618,30 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(root).toMatchRenderedOutput('A1B1');
     });
   });
+
+  test('Infinite loop if getSnapshot keeps returning new reference', () => {
+    const store = createExternalStore({});
+
+    function App() {
+      const text = useSyncExternalStore(store.subscribe, () => ({}));
+      return <Text text={JSON.stringify(text)} />;
+    }
+
+    spyOnDev(console, 'error');
+
+    expect(() => {
+      act(() => {
+        createRoot(<App />);
+      });
+    }).toThrow(
+      'Maximum update depth exceeded. This can happen when a component repeatedly ' +
+        'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' +
+        'the number of nested updates to prevent infinite loops.',
+    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toMatch(
+        'The result of getSnapshot should be cached to avoid an infinite loop',
+      );
+    }
+  });
 });
