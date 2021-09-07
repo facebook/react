@@ -2641,25 +2641,20 @@ describe('ReactHooksWithNoopRenderer', () => {
         return null;
       }
 
+      const root1 = ReactNoop.createRoot();
       expect(() =>
         act(() => {
-          ReactNoop.render(<App return={17} />);
+          root1.render(<App return={17} />);
         }),
       ).toErrorDev([
         'Warning: An effect function must not return anything besides a ' +
           'function, which is used for clean-up. You returned: 17',
       ]);
 
-      // Error on unmount because React assumes the value is a function
+      const root2 = ReactNoop.createRoot();
       expect(() =>
         act(() => {
-          ReactNoop.render(null);
-        }),
-      ).toThrow('is not a function');
-
-      expect(() =>
-        act(() => {
-          ReactNoop.render(<App return={null} />);
+          root2.render(<App return={null} />);
         }),
       ).toErrorDev([
         'Warning: An effect function must not return anything besides a ' +
@@ -2667,16 +2662,10 @@ describe('ReactHooksWithNoopRenderer', () => {
           'effect does not require clean up, return undefined (or nothing).',
       ]);
 
-      // Error on unmount because React assumes the value is a function
+      const root3 = ReactNoop.createRoot();
       expect(() =>
         act(() => {
-          ReactNoop.render(null);
-        }),
-      ).toThrow('is not a function');
-
-      expect(() =>
-        act(() => {
-          ReactNoop.render(<App return={Promise.resolve()} />);
+          root3.render(<App return={Promise.resolve()} />);
         }),
       ).toErrorDev([
         'Warning: An effect function must not return anything besides a ' +
@@ -2687,7 +2676,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // Error on unmount because React assumes the value is a function
       expect(() =>
         act(() => {
-          ReactNoop.render(null);
+          root3.unmount();
         }),
       ).toThrow('is not a function');
     });
