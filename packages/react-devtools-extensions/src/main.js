@@ -291,28 +291,21 @@ function createPanelIfReactLoaded() {
 
         render = (overrideTab = mostRecentOverrideTab) => {
           mostRecentOverrideTab = overrideTab;
-          import('react-devtools-shared/src/hooks/parseHookNames').then(
-            ({parseHookNames, prefetchSourceFiles, purgeCachedMetadata}) => {
-              root.render(
-                createElement(DevTools, {
-                  bridge,
-                  browserTheme: getBrowserTheme(),
-                  componentsPortalContainer,
-                  enabledInspectedElementContextMenu: true,
-                  fetchFileWithCaching,
-                  loadHookNames: parseHookNames,
-                  overrideTab,
-                  prefetchSourceFiles,
-                  profilerPortalContainer,
-                  purgeCachedHookNamesMetadata: purgeCachedMetadata,
-                  showTabBar: false,
-                  store,
-                  warnIfUnsupportedVersionDetected: true,
-                  viewAttributeSourceFunction,
-                  viewElementSourceFunction,
-                }),
-              );
-            },
+          root.render(
+            createElement(DevTools, {
+              bridge,
+              browserTheme: getBrowserTheme(),
+              componentsPortalContainer,
+              enabledInspectedElementContextMenu: true,
+              fetchFileWithCaching,
+              overrideTab,
+              profilerPortalContainer,
+              showTabBar: false,
+              store,
+              warnIfUnsupportedVersionDetected: true,
+              viewAttributeSourceFunction,
+              viewElementSourceFunction,
+            }),
           );
         };
 

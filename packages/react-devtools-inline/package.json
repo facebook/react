@@ -20,7 +20,10 @@
     "prepublish": "yarn run build",
     "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "source-map-js": "^0.6.2",
+    "sourcemap-codec": "^1.4.8"
+  },
   "devDependencies": {
     "@babel/core": "^7.11.1",
     "@babel/plugin-proposal-class-properties": "^7.10.4",

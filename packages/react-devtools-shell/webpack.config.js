@@ -108,6 +108,7 @@ const config = {
 };
 
 if (TARGET === 'local') {
+  // Local dev server build.
   config.devServer = {
     hot: true,
     port: 8080,
@@ -116,6 +117,7 @@ if (TARGET === 'local') {
     stats: 'errors-only',
   };
 } else {
+  // Static build to deploy somewhere else.
   config.output = {
     path: resolve(__dirname, 'dist'),
     filename: '[name].js',

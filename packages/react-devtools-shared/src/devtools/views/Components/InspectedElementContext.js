@@ -30,8 +30,10 @@ import {
   hasAlreadyLoadedHookNames,
   loadHookNames,
 } from 'react-devtools-shared/src/hookNamesCache';
-import HookNamesContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesContext';
+import {loadModule} from 'react-devtools-shared/src/dynamicImportCache';
+import FetchFileWithCachingContext from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 import {SettingsContext} from '../Settings/SettingsContext';
+import {enableNamedHooksFeature} from 'react-devtools-feature-flags';
 
 import type {HookNames} from 'react-devtools-shared/src/types';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -58,18 +60,20 @@ export const InspectedElementContext = createContext<Context>(
 
 const POLL_INTERVAL = 1000;
 
+// parseHookNames has a lot of code.
+// Embedding it into a build makes the build large.
+// This component uses Suspense to lazily import() it only if the feature will be used.
+function loadHookNamesModuleLoaderFunction() {
+  return import('react-devtools-shared/src/hooks/parseHookNames');
+}
+
 export type Props = {|
   children: ReactNodeList,
 |};
 
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
-  const {
-    fetchFileWithCaching,
-    loadHookNames: loadHookNamesFunction,
-    prefetchSourceFiles,
-    purgeCachedMetadata,
-  } = useContext(HookNamesContext);
+  const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
@@ -113,24 +117,43 @@ export function InspectedElementContextController({children}: Props) {
     setParseHookNames(parseHookNamesByDefault || alreadyLoadedHookNames);
   }
 
+  const prefetchSourceFilesRef = useRef(null);
+  const purgeCachedMetadataRef = useRef(null);
+
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
   let hookNames: HookNames | null = null;
   let inspectedElement = null;
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
-    if (parseHookNames || alreadyLoadedHookNames) {
-      if (
-        inspectedElement !== null &&
-        inspectedElement.hooks !== null &&
-        loadHookNamesFunction !== null
-      ) {
-        hookNames = loadHookNames(
-          element,
-          inspectedElement.hooks,
-          loadHookNamesFunction,
-          fetchFileWithCaching,
+    if (enableNamedHooksFeature) {
+      if (parseHookNames || alreadyLoadedHookNames) {
+        const loadHookNamesModule = loadModule(
+          loadHookNamesModuleLoaderFunction,
         );
+        if (loadHookNamesModule !== null) {
+          const {
+            parseHookNames: loadHookNamesFunction,
+            prefetchSourceFiles,
+            purgeCachedMetadata,
+          } = loadHookNamesModule;
+
+          purgeCachedMetadataRef.current = purgeCachedMetadata;
+          prefetchSourceFilesRef.current = prefetchSourceFiles;
+
+          if (
+            inspectedElement !== null &&
+            inspectedElement.hooks !== null &&
+            loadHookNamesFunction !== null
+          ) {
+            hookNames = loadHookNames(
+              element,
+              inspectedElement.hooks,
+              loadHookNamesFunction,
+              fetchFileWithCaching,
+            );
+          }
+        }
       }
     }
   }
@@ -164,13 +187,15 @@ export function InspectedElementContextController({children}: Props) {
     ) {
       inspectedElementRef.current = inspectedElement;
 
+      const prefetchSourceFiles = prefetchSourceFilesRef.current;
       if (typeof prefetchSourceFiles === 'function') {
         prefetchSourceFiles(inspectedElement.hooks, fetchFileWithCaching);
       }
     }
-  }, [inspectedElement, prefetchSourceFiles]);
+  }, [inspectedElement]);
 
   useEffect(() => {
+    const purgeCachedMetadata = purgeCachedMetadataRef.current;
     if (typeof purgeCachedMetadata === 'function') {
       // When Fast Refresh updates a component, any cached AST metadata may be invalid.
       const fastRefreshScheduled = () => {
