@@ -41,6 +41,7 @@ import {
 } from './ReactTypeOfMode';
 import {
   NoLane,
+  SyncLane,
   NoLanes,
   isSubsetOfLanes,
   mergeLanes,
@@ -49,9 +50,9 @@ import {
   isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
+  NoTimestamp,
 } from './ReactFiberLane.old';
 import {
-  DiscreteEventPriority,
   ContinuousEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
@@ -147,7 +148,7 @@ export type Hook = {|
   memoizedState: any,
   baseState: any,
   baseQueue: Update<any, any> | null,
-  queue: UpdateQueue<any, any> | null,
+  queue: any,
   next: Hook | null,
 |};
 
@@ -157,6 +158,11 @@ export type Effect = {|
   destroy: (() => void) | void,
   deps: Array<mixed> | null,
   next: Effect,
+|};
+
+type StoreInstance<T> = {|
+  value: T,
+  getSnapshot: () => T,
 |};
 
 export type FunctionComponentUpdateQueue = {|lastEffect: Effect | null|};
@@ -703,14 +709,15 @@ function mountReducer<S, I, A>(
     initialState = ((initialArg: any): S);
   }
   hook.memoizedState = hook.baseState = initialState;
-  const queue = (hook.queue = {
+  const queue: UpdateQueue<S, A> = {
     pending: null,
     interleaved: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
-  });
+  };
+  hook.queue = queue;
   const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
     null,
     currentlyRenderingFiber,
@@ -1196,7 +1203,7 @@ function useMutableSource<Source, Snapshot>(
     // So if there are interleaved updates, they get pushed to the older queue.
     // When this becomes current, the previous queue and dispatch method will be discarded,
     // including any interleaving updates that occur.
-    const newQueue = {
+    const newQueue: UpdateQueue<Snapshot, BasicStateAction<Snapshot>> = {
       pending: null,
       interleaved: null,
       lanes: NoLanes,
@@ -1249,37 +1256,13 @@ function mountSyncExternalStore<T>(
   getSnapshot: () => T,
 ): T {
   const hook = mountWorkInProgressHook();
-  return useSyncExternalStore(hook, subscribe, getSnapshot);
-}
-
-function updateSyncExternalStore<T>(
-  subscribe: (() => void) => () => void,
-  getSnapshot: () => T,
-): T {
-  const hook = updateWorkInProgressHook();
-  return useSyncExternalStore(hook, subscribe, getSnapshot);
-}
-
-function useSyncExternalStore<T>(
-  hook: Hook,
-  subscribe: (() => void) => () => void,
-  getSnapshot: () => T,
-): T {
-  // TODO: This is a copy-paste of the userspace shim. We can improve the
-  // built-in implementation using lower-level APIs. We also intend to move
-  // the tearing checks to an earlier, pre-commit phase so that the layout
-  // effects always observe a consistent tree.
-
-  const dispatcher = ReactCurrentDispatcher.current;
-
-  // Read the current snapshot from the store on every render. Again, this
-  // breaks the rules of React, and only works here because of specific
-  // implementation details, most importantly that updates are
+  // Read the current snapshot from the store on every render. This breaks the
+  // normal rules of React, and only works because store updates are
   // always synchronous.
-  const value = getSnapshot();
+  const nextSnapshot = getSnapshot();
   if (__DEV__) {
     if (!didWarnUncachedGetSnapshot) {
-      if (value !== getSnapshot()) {
+      if (nextSnapshot !== getSnapshot()) {
         console.error(
           'The result of getSnapshot should be cached to avoid an infinite loop',
         );
@@ -1287,48 +1270,72 @@ function useSyncExternalStore<T>(
       }
     }
   }
+  hook.memoizedState = nextSnapshot;
+  const inst: StoreInstance<T> = {
+    value: nextSnapshot,
+    getSnapshot,
+  };
+  hook.queue = inst;
+  return useSyncExternalStore(hook, inst, subscribe, getSnapshot, nextSnapshot);
+}
 
-  // Because updates are synchronous, we don't queue them. Instead we force a
-  // re-render whenever the subscribed state changes by updating an some
-  // arbitrary useState hook. Then, during render, we call getSnapshot to read
-  // the current value.
-  //
-  // Because we don't actually use the state returned by the useState hook, we
-  // can save a bit of memory by storing other stuff in that slot.
-  //
-  // To implement the early bailout, we need to track some things on a mutable
-  // object. Usually, we would put that in a useRef hook, but we can stash it in
-  // our useState hook instead.
-  //
-  // To force a re-render, we call forceUpdate({inst}). That works because the
-  // new object always fails an equality check.
-  const [{inst}, forceUpdate] = dispatcher.useState({
-    inst: {value, getSnapshot},
-  });
+function updateSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+): T {
+  const hook = updateWorkInProgressHook();
+  // Read the current snapshot from the store on every render. This breaks the
+  // normal rules of React, and only works because store updates are
+  // always synchronous.
+  const nextSnapshot = getSnapshot();
+  if (__DEV__) {
+    if (!didWarnUncachedGetSnapshot) {
+      if (nextSnapshot !== getSnapshot()) {
+        console.error(
+          'The result of getSnapshot should be cached to avoid an infinite loop',
+        );
+        didWarnUncachedGetSnapshot = true;
+      }
+    }
+  }
+  const prevSnapshot = hook.memoizedState;
+  if (!is(prevSnapshot, nextSnapshot)) {
+    hook.memoizedState = nextSnapshot;
+    markWorkInProgressReceivedUpdate();
+  }
+  const inst = hook.queue;
+  return useSyncExternalStore(hook, inst, subscribe, getSnapshot, nextSnapshot);
+}
+
+function useSyncExternalStore<T>(
+  hook: Hook,
+  inst: StoreInstance<T>,
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  nextSnapshot: T,
+): T {
+  const fiber = currentlyRenderingFiber;
+  const dispatcher = ReactCurrentDispatcher.current;
 
   // Track the latest getSnapshot function with a ref. This needs to be updated
   // in the layout phase so we can access it during the tearing check that
   // happens on subscribe.
   // TODO: Circumvent SSR warning
   dispatcher.useLayoutEffect(() => {
-    inst.value = value;
+    inst.value = nextSnapshot;
     inst.getSnapshot = getSnapshot;
 
     // Whenever getSnapshot or subscribe changes, we need to check in the
     // commit phase if there was an interleaved mutation. In concurrent mode
     // this can happen all the time, but even in synchronous mode, an earlier
     // effect may have mutated the store.
+    // TODO: Move the tearing checks to an earlier, pre-commit phase so that the
+    // layout effects always observe a consistent tree.
     if (checkIfSnapshotChanged(inst)) {
       // Force a re-render.
-      const prevTransition = ReactCurrentBatchConfig.transition;
-      const prevPriority = getCurrentUpdatePriority();
-      ReactCurrentBatchConfig.transition = 0;
-      setCurrentUpdatePriority(DiscreteEventPriority);
-      forceUpdate({inst});
-      setCurrentUpdatePriority(prevPriority);
-      ReactCurrentBatchConfig.transition = prevTransition;
+      forceStoreRerender(fiber);
     }
-  }, [subscribe, value, getSnapshot]);
+  }, [subscribe, nextSnapshot, getSnapshot]);
 
   dispatcher.useEffect(() => {
     const handleStoreChange = () => {
@@ -1341,13 +1348,7 @@ function useSyncExternalStore<T>(
       // read from the store.
       if (checkIfSnapshotChanged(inst)) {
         // Force a re-render.
-        const prevTransition = ReactCurrentBatchConfig.transition;
-        const prevPriority = getCurrentUpdatePriority();
-        ReactCurrentBatchConfig.transition = 0;
-        setCurrentUpdatePriority(DiscreteEventPriority);
-        forceUpdate({inst});
-        setCurrentUpdatePriority(prevPriority);
-        ReactCurrentBatchConfig.transition = prevTransition;
+        forceStoreRerender(fiber);
       }
     };
     // Check for changes right before subscribing. Subsequent changes will be
@@ -1357,7 +1358,7 @@ function useSyncExternalStore<T>(
     return subscribe(handleStoreChange);
   }, [subscribe]);
 
-  return value;
+  return nextSnapshot;
 }
 
 function checkIfSnapshotChanged(inst) {
@@ -1371,6 +1372,10 @@ function checkIfSnapshotChanged(inst) {
   }
 }
 
+function forceStoreRerender(fiber) {
+  scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
+}
+
 function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
@@ -1380,14 +1385,15 @@ function mountState<S>(
     initialState = initialState();
   }
   hook.memoizedState = hook.baseState = initialState;
-  const queue = (hook.queue = {
+  const queue: UpdateQueue<S, BasicStateAction<S>> = {
     pending: null,
     interleaved: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
-  });
+  };
+  hook.queue = queue;
   const dispatch: Dispatch<
     BasicStateAction<S>,
   > = (queue.dispatch = (dispatchAction.bind(
