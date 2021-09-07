@@ -113,6 +113,17 @@ function row(result) {
     return;
   }
 
+  // Disable sizeBot in a Devtools Pull Request. Because that doesn't affect production bundle size.
+  const commitFiles = [
+    ...danger.git.created_files,
+    ...danger.git.deleted_files,
+    ...danger.git.modified_files,
+  ];
+  if (
+    commitFiles.every(filename => filename.includes('packages/react-devtools'))
+  )
+    return;
+
   const resultsMap = new Map();
 
   // Find all the head (current) artifacts paths.

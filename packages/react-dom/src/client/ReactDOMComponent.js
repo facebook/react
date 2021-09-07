@@ -941,9 +941,6 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is allowed
-        case 'data-reactroot':
-          break;
         // Controlled attributes are not validated
         // TODO: Only ignore them on controlled tags.
         case 'value':

@@ -261,6 +261,9 @@ function getCommandArgs() {
   if (argv.debug) {
     args.unshift('--inspect-brk');
     args.push('--runInBand');
+
+    // Prevent console logs from being hidden until test completes.
+    args.push('--useStderr');
   }
 
   // CI Environments have limited workers.

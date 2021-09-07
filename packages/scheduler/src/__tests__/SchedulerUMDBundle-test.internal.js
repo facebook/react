@@ -21,19 +21,12 @@ describe('Scheduling UMD bundle', () => {
     global.__UMD__ = true;
 
     jest.resetModules();
+    jest.unmock('scheduler');
 
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
-
-    // Mock a browser environment since we're testing UMD modules.
-    global.window = {
-      requestAnimationFrame: jest.fn(),
-      cancelAnimationFrame: jest.fn(),
-    };
     global.MessageChannel = MockMessageChannel;
   });
 
   afterEach(() => {
-    global.window = undefined;
     global.MessageChannel = undefined;
   });
 

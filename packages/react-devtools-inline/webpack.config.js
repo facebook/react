@@ -1,6 +1,12 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {
+  DARK_MODE_DIMMED_WARNING_COLOR,
+  DARK_MODE_DIMMED_ERROR_COLOR,
+  DARK_MODE_DIMMED_LOG_COLOR,
+  LIGHT_MODE_DIMMED_WARNING_COLOR,
+  LIGHT_MODE_DIMMED_ERROR_COLOR,
+  LIGHT_MODE_DIMMED_LOG_COLOR,
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
@@ -15,6 +21,15 @@ if (!NODE_ENV) {
 const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
+
+const babelOptions = {
+  configFile: resolve(
+    __dirname,
+    '..',
+    'react-devtools-shared',
+    'babel.config.js',
+  ),
+};
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
@@ -37,6 +52,11 @@ module.exports = {
     'react-is': 'react-is',
     scheduler: 'scheduler',
   },
+  node: {
+    // source-maps package has a dependency on 'fs'
+    // but this build won't trigger that code path
+    fs: 'empty',
+  },
   resolve: {
     alias: {
       'react-devtools-feature-flags': resolveFeatureFlags('inline'),
@@ -56,21 +76,35 @@ module.exports = {
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
+      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
   ],
   module: {
     rules: [
       {
+        test: /\.worker\.js$/,
+        use: [
+          {
+            loader: 'workerize-loader',
+            options: {
+              inline: true,
+            },
+          },
+          {
+            loader: 'babel-loader',
+            options: babelOptions,
+          },
+        ],
+      },
+      {
         test: /\.js$/,
         loader: 'babel-loader',
-        options: {
-          configFile: resolve(
-            __dirname,
-            '..',
-            'react-devtools-shared',
-            'babel.config.js',
-          ),
-        },
+        options: babelOptions,
       },
       {
         test: /\.css$/,

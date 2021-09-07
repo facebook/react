@@ -30,7 +30,7 @@ describe('ReactFreshIntegration', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
-      act = require('react-dom/test-utils').unstable_concurrentAct;
+      act = require('jest-react').act;
       container = document.createElement('div');
       document.body.appendChild(container);
       exportsObj = undefined;

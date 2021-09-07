@@ -16,7 +16,6 @@ let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
-let ReactTestUtils;
 let act;
 
 function dispatchEvent(element, type) {
@@ -67,7 +66,7 @@ describe('DOMPluginEventSystem', () => {
           ReactDOM = require('react-dom');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
-          act = require('react-dom/test-utils').unstable_concurrentAct;
+          act = require('jest-react').act;
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -575,7 +574,6 @@ describe('DOMPluginEventSystem', () => {
           expect(log).toEqual(['second', 'first']);
         });
 
-        // @gate experimental
         it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
           let suspend = false;
           let resolve;
@@ -1254,11 +1252,10 @@ describe('DOMPluginEventSystem', () => {
             ReactDOM = require('react-dom');
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
-            ReactTestUtils = require('react-dom/test-utils');
-            act = ReactTestUtils.unstable_concurrentAct;
+            act = require('jest-react').act;
           });
 
-          // @gate experimental
+          // @gate www
           it('can render correctly with the ReactDOMServer', () => {
             const clickEvent = jest.fn();
             const setClick = ReactDOM.unstable_createEventHandle('click');
@@ -1273,10 +1270,10 @@ describe('DOMPluginEventSystem', () => {
               return <div ref={divRef}>Hello world</div>;
             }
             const output = ReactDOMServer.renderToString(<Test />);
-            expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
+            expect(output).toBe(`<div>Hello world</div>`);
           });
 
-          // @gate experimental
+          // @gate www
           it('can render correctly with the ReactDOMServer hydration', () => {
             const clickEvent = jest.fn();
             const spanRef = React.createRef();
@@ -1294,9 +1291,7 @@ describe('DOMPluginEventSystem', () => {
               );
             }
             const output = ReactDOMServer.renderToString(<Test />);
-            expect(output).toBe(
-              `<div data-reactroot=""><span>Hello world</span></div>`,
-            );
+            expect(output).toBe(`<div><span>Hello world</span></div>`);
             container.innerHTML = output;
             ReactDOM.hydrate(<Test />, container);
             Scheduler.unstable_flushAll();
@@ -1304,7 +1299,7 @@ describe('DOMPluginEventSystem', () => {
             expect(clickEvent).toHaveBeenCalledTimes(1);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly work for a basic "click" listener', () => {
             let log = [];
             const clickEvent = jest.fn(event => {
@@ -1412,7 +1407,7 @@ describe('DOMPluginEventSystem', () => {
             expect(clickEvent2).toBeCalledTimes(1);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly work for setting and clearing a basic "click" listener', () => {
             const clickEvent = jest.fn();
             const divRef = React.createRef();
@@ -1453,7 +1448,7 @@ describe('DOMPluginEventSystem', () => {
             expect(clickEvent).toBeCalledTimes(0);
           });
 
-          // @gate experimental
+          // @gate www
           it('should handle the target being a text node', () => {
             const clickEvent = jest.fn();
             const buttonRef = React.createRef();
@@ -1475,7 +1470,7 @@ describe('DOMPluginEventSystem', () => {
             expect(clickEvent).toBeCalledTimes(1);
           });
 
-          // @gate experimental
+          // @gate www
           it('handle propagation of click events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -1544,7 +1539,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log[3]).toEqual(['bubble', buttonElement]);
           });
 
-          // @gate experimental
+          // @gate www
           it('handle propagation of click events mixed with onClick events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -1604,7 +1599,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log[5]).toEqual(['bubble', buttonElement]);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly work for a basic "click" listener on the outer target', () => {
             const log = [];
             const clickEvent = jest.fn(event => {
@@ -1669,7 +1664,7 @@ describe('DOMPluginEventSystem', () => {
             expect(clickEvent).toBeCalledTimes(2);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly handle many nested target listeners', () => {
             const buttonRef = React.createRef();
             const targetListener1 = jest.fn();
@@ -1772,7 +1767,7 @@ describe('DOMPluginEventSystem', () => {
             expect(targetListener4).toHaveBeenCalledTimes(2);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly handle stopPropagation correctly for target events', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -1810,7 +1805,7 @@ describe('DOMPluginEventSystem', () => {
             expect(clickEvent).toHaveBeenCalledTimes(0);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly handle stopPropagation correctly for many target events', () => {
             const buttonRef = React.createRef();
             const targetListener1 = jest.fn(e => e.stopPropagation());
@@ -1863,7 +1858,7 @@ describe('DOMPluginEventSystem', () => {
             expect(targetListener4).toHaveBeenCalledTimes(1);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly handle stopPropagation for mixed capture/bubbling target listeners', () => {
             const buttonRef = React.createRef();
             const targetListener1 = jest.fn(e => e.stopPropagation());
@@ -1920,7 +1915,7 @@ describe('DOMPluginEventSystem', () => {
             expect(targetListener4).toHaveBeenCalledTimes(0);
           });
 
-          // @gate experimental
+          // @gate www
           it('should work with concurrent mode updates', async () => {
             const log = [];
             const ref = React.createRef();
@@ -1951,7 +1946,7 @@ describe('DOMPluginEventSystem', () => {
 
             // Increase counter
             if (gate(flags => flags.enableSyncDefaultUpdates)) {
-              React.unstable_startTransition(() => {
+              React.startTransition(() => {
                 root.render(<Test counter={1} />);
               });
             } else {
@@ -1973,7 +1968,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log).toEqual([{counter: 1}]);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly work for a basic "click" window listener', () => {
             const log = [];
             const clickEvent = jest.fn(event => {
@@ -2024,7 +2019,7 @@ describe('DOMPluginEventSystem', () => {
             expect(clickEvent).toBeCalledTimes(2);
           });
 
-          // @gate experimental
+          // @gate www
           it('handle propagation of click events on the window', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -2104,7 +2099,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log[5]).toEqual(['bubble', window]);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly handle stopPropagation for mixed listeners', () => {
             const buttonRef = React.createRef();
             const rootListener1 = jest.fn(e => e.stopPropagation());
@@ -2155,7 +2150,7 @@ describe('DOMPluginEventSystem', () => {
             expect(rootListener2).toHaveBeenCalledTimes(0);
           });
 
-          // @gate experimental
+          // @gate www
           it('should correctly handle stopPropagation for delegated listeners', () => {
             const buttonRef = React.createRef();
             const rootListener1 = jest.fn(e => e.stopPropagation());
@@ -2201,7 +2196,7 @@ describe('DOMPluginEventSystem', () => {
             expect(rootListener4).toHaveBeenCalledTimes(0);
           });
 
-          // @gate experimental
+          // @gate www
           it('handle propagation of click events on the window and document', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -2314,7 +2309,7 @@ describe('DOMPluginEventSystem', () => {
             }
           });
 
-          // @gate experimental
+          // @gate www
           it('does not support custom user events', () => {
             // With eager listeners, supporting custom events via this API doesn't make sense
             // because we can't know a full list of them ahead of time. Let's check we throw
@@ -2326,7 +2321,7 @@ describe('DOMPluginEventSystem', () => {
             );
           });
 
-          // @gate experimental
+          // @gate www
           it('beforeblur and afterblur are called after a focused element is unmounted', () => {
             const log = [];
             // We have to persist here because we want to read relatedTarget later.
@@ -2385,7 +2380,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log).toEqual(['beforeblur', 'afterblur']);
           });
 
-          // @gate experimental
+          // @gate www
           it('beforeblur and afterblur are called after a nested focused element is unmounted', () => {
             const log = [];
             // We have to persist here because we want to read relatedTarget later.
@@ -2448,7 +2443,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log).toEqual(['beforeblur', 'afterblur']);
           });
 
-          // @gate experimental
+          // @gate www
           it('beforeblur should skip handlers from a deleted subtree after the focused element is unmounted', () => {
             const onBeforeBlur = jest.fn();
             const innerRef = React.createRef();
@@ -2502,7 +2497,7 @@ describe('DOMPluginEventSystem', () => {
             expect(onBeforeBlur).toHaveBeenCalledTimes(1);
           });
 
-          // @gate experimental
+          // @gate www
           it('beforeblur and afterblur are called after a focused element is suspended', () => {
             const log = [];
             // We have to persist here because we want to read relatedTarget later.
@@ -2588,7 +2583,7 @@ describe('DOMPluginEventSystem', () => {
             document.body.removeChild(container2);
           });
 
-          // @gate experimental
+          // @gate www
           it('beforeblur should skip handlers from a deleted subtree after the focused element is suspended', () => {
             const onBeforeBlur = jest.fn();
             const innerRef = React.createRef();
@@ -2669,7 +2664,7 @@ describe('DOMPluginEventSystem', () => {
             document.body.removeChild(container2);
           });
 
-          // @gate experimental
+          // @gate www
           it('regression: does not fire beforeblur/afterblur if target is already hidden', () => {
             const Suspense = React.Suspense;
             let suspend = false;
@@ -2731,7 +2726,7 @@ describe('DOMPluginEventSystem', () => {
             document.body.removeChild(container2);
           });
 
-          // @gate experimental
+          // @gate www
           it('handle propagation of click events between disjointed comment roots', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -2802,7 +2797,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log[5]).toEqual(['bubble', buttonElement]);
           });
 
-          // @gate experimental
+          // @gate www
           it('propagates known createEventHandle events through portals without inner listeners', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
@@ -2873,7 +2868,7 @@ describe('DOMPluginEventSystem', () => {
               ReactDOMServer = require('react-dom/server');
             });
 
-            // @gate experimental
+            // @gate www
             it('handle propagation of click events on a scope', () => {
               const buttonRef = React.createRef();
               const log = [];
@@ -2929,7 +2924,7 @@ describe('DOMPluginEventSystem', () => {
               ]);
             });
 
-            // @gate experimental
+            // @gate www
             it('handle mixed propagation of click events on a scope', () => {
               const buttonRef = React.createRef();
               const divRef = React.createRef();
@@ -3020,7 +3015,7 @@ describe('DOMPluginEventSystem', () => {
               ]);
             });
 
-            // @gate experimental
+            // @gate www
             it('should not handle the target being a dangling text node within a scope', () => {
               const clickEvent = jest.fn();
               const buttonRef = React.createRef();
@@ -3051,7 +3046,7 @@ describe('DOMPluginEventSystem', () => {
               expect(clickEvent).toBeCalledTimes(0);
             });
 
-            // @gate experimental
+            // @gate www
             it('handle stopPropagation (inner) correctly between scopes', () => {
               const buttonRef = React.createRef();
               const outerOnClick = jest.fn();
@@ -3093,7 +3088,7 @@ describe('DOMPluginEventSystem', () => {
               expect(outerOnClick).toHaveBeenCalledTimes(0);
             });
 
-            // @gate experimental
+            // @gate www
             it('handle stopPropagation (outer) correctly between scopes', () => {
               const buttonRef = React.createRef();
               const outerOnClick = jest.fn(e => e.stopPropagation());
@@ -3135,7 +3130,7 @@ describe('DOMPluginEventSystem', () => {
               expect(outerOnClick).toHaveBeenCalledTimes(1);
             });
 
-            // @gate experimental
+            // @gate www
             it('handle stopPropagation (inner and outer) correctly between scopes', () => {
               const buttonRef = React.createRef();
               const onClick = jest.fn(e => e.stopPropagation());
@@ -3175,7 +3170,7 @@ describe('DOMPluginEventSystem', () => {
               expect(onClick).toHaveBeenCalledTimes(1);
             });
 
-            // @gate experimental
+            // @gate www
             it('should be able to register handlers for events affected by the intervention', () => {
               const rootContainer = document.createElement('div');
               container.appendChild(rootContainer);

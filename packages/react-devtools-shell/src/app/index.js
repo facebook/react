@@ -5,7 +5,7 @@
 import {createElement} from 'react';
 import {
   // $FlowFixMe Flow does not yet know about createRoot()
-  unstable_createRoot as createRoot,
+  createRoot,
 } from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import Iframe from './Iframe';
@@ -17,8 +17,9 @@ import InspectableElements from './InspectableElements';
 import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
+import ErrorBoundaries from './ErrorBoundaries';
 import SuspenseTree from './SuspenseTree';
-import {ignoreErrors, ignoreWarnings} from './console';
+import {ignoreErrors, ignoreLogs, ignoreWarnings} from './console';
 
 import './styles.css';
 
@@ -31,6 +32,7 @@ ignoreErrors([
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
 ]);
 ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
+ignoreLogs([]);
 
 const roots = [];
 
@@ -54,6 +56,7 @@ function mountTestApp() {
   mountHelper(InlineWarnings);
   mountHelper(ReactNativeWeb);
   mountHelper(Toggle);
+  mountHelper(ErrorBoundaries);
   mountHelper(SuspenseTree);
   mountHelper(DeeplyNestedComponents);
   mountHelper(Iframe);

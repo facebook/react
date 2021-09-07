@@ -8,7 +8,6 @@
  */
 
 import {
-  ROOT_ATTRIBUTE_NAME,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   getPropertyInfo,
@@ -22,10 +21,6 @@ import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 /**
  * Operations for dealing with DOM properties.
  */
-
-export function createMarkupForRoot(): string {
-  return ROOT_ATTRIBUTE_NAME + '=""';
-}
 
 /**
  * Creates markup for a property.

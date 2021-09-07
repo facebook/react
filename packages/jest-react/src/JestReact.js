@@ -10,6 +10,8 @@ import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
+export {act} from './internalAct';
+
 function captureAssertion(fn) {
   // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an
   // assertion; if it throws, we capture the error and return it, so the stack

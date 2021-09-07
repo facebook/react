@@ -11,7 +11,7 @@ import * as React from 'react';
 import {
   useContext,
   unstable_useCacheRefresh as useCacheRefresh,
-  unstable_useTransition as useTransition,
+  useTransition,
 } from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';

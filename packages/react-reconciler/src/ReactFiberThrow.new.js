@@ -33,6 +33,10 @@ import {
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
 } from './ReactFiberFlags';
+import {
+  supportsPersistence,
+  getOffscreenContainerProps,
+} from './ReactFiberHostConfig';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
@@ -40,6 +44,7 @@ import {
   enableSchedulingProfiler,
   enableLazyContextPropagation,
   enableUpdaterTracking,
+  enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -66,7 +71,10 @@ import {
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.new';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
-import {markComponentSuspended} from './SchedulingProfiler';
+import {
+  markComponentRenderStopped,
+  markComponentSuspended,
+} from './SchedulingProfiler';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {
   SyncLane,
@@ -108,8 +116,13 @@ function createClassErrorUpdate(
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
-      logCapturedError(fiber, errorInfo);
       return getDerivedStateFromError(error);
+    };
+    update.callback = () => {
+      if (__DEV__) {
+        markFailedErrorBoundaryForHotReloading(fiber);
+      }
+      logCapturedError(fiber, errorInfo);
     };
   }
 
@@ -119,6 +132,7 @@ function createClassErrorUpdate(
       if (__DEV__) {
         markFailedErrorBoundaryForHotReloading(fiber);
       }
+      logCapturedError(fiber, errorInfo);
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
@@ -126,9 +140,6 @@ function createClassErrorUpdate(
         // TODO: Warn in strict mode if getDerivedStateFromError is
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
-
-        // Only log here if componentDidCatch is the only error boundary method defined
-        logCapturedError(fiber, errorInfo);
       }
       const error = errorInfo.value;
       const stack = errorInfo.stack;
@@ -149,10 +160,6 @@ function createClassErrorUpdate(
           }
         }
       }
-    };
-  } else if (__DEV__) {
-    update.callback = () => {
-      markFailedErrorBoundaryForHotReloading(fiber);
     };
   }
   return update;
@@ -241,7 +248,8 @@ function throwException(
     }
 
     if (enableSchedulingProfiler) {
-      markComponentSuspended(sourceFiber, wakeable);
+      markComponentRenderStopped();
+      markComponentSuspended(sourceFiber, wakeable, rootRenderLanes);
     }
 
     // Reset the memoizedState to what it was before we attempted to render it.
@@ -314,6 +322,26 @@ function throwException(
           // all lifecycle effect tags.
           sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
 
+          if (supportsPersistence && enablePersistentOffscreenHostContainer) {
+            // Another legacy Suspense quirk. In persistent mode, if this is the
+            // initial mount, override the props of the host container to hide
+            // its contents.
+            const currentSuspenseBoundary = workInProgress.alternate;
+            if (currentSuspenseBoundary === null) {
+              const offscreenFiber: Fiber = (workInProgress.child: any);
+              const offscreenContainer = offscreenFiber.child;
+              if (offscreenContainer !== null) {
+                const children = offscreenContainer.memoizedProps.children;
+                const containerProps = getOffscreenContainerProps(
+                  'hidden',
+                  children,
+                );
+                offscreenContainer.pendingProps = containerProps;
+                offscreenContainer.memoizedProps = containerProps;
+              }
+            }
+          }
+
           if (sourceFiber.tag === ClassComponent) {
             const currentSourceFiber = sourceFiber.alternate;
             if (currentSourceFiber === null) {
@@ -384,6 +412,8 @@ function throwException(
         attachPingListener(root, wakeable, rootRenderLanes);
 
         workInProgress.flags |= ShouldCapture;
+        // TODO: I think we can remove this, since we now use `DidCapture` in
+        // the begin phase to prevent an early bailout.
         workInProgress.lanes = rootRenderLanes;
 
         return;

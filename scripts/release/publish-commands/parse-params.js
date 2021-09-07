@@ -43,6 +43,7 @@ module.exports = () => {
       case 'latest':
       case 'next':
       case 'experimental':
+      case 'alpha':
       case 'untagged':
         break;
       default:

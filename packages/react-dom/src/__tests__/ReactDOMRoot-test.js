@@ -25,18 +25,11 @@ describe('ReactDOMRoot', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
   });
 
-  if (!__EXPERIMENTAL__) {
-    it('createRoot is not exposed in stable build', () => {
-      expect(ReactDOM.unstable_createRoot).toBe(undefined);
-    });
-    return;
-  }
-
   it('renders children', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -44,7 +37,7 @@ describe('ReactDOMRoot', () => {
 
   it('warns if a callback parameter is provided to render', () => {
     const callback = jest.fn();
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     expect(() =>
       root.render(<div>Hi</div>, callback),
     ).toErrorDev(
@@ -58,7 +51,7 @@ describe('ReactDOMRoot', () => {
 
   it('warns if a callback parameter is provided to unmount', () => {
     const callback = jest.fn();
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     expect(() =>
       root.unmount(callback),
@@ -72,7 +65,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('unmounts children', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -95,7 +88,7 @@ describe('ReactDOMRoot', () => {
     // Does not hydrate by default
     const container1 = document.createElement('div');
     container1.innerHTML = markup;
-    const root1 = ReactDOM.unstable_createRoot(container1);
+    const root1 = ReactDOM.createRoot(container1);
     root1.render(
       <div>
         <span />
@@ -103,11 +96,10 @@ describe('ReactDOMRoot', () => {
     );
     Scheduler.unstable_flushAll();
 
-    // Accepts `hydrate` option
     const container2 = document.createElement('div');
     container2.innerHTML = markup;
-    const root2 = ReactDOM.unstable_createRoot(container2, {hydrate: true});
-    root2.render(
+    ReactDOM.hydrateRoot(
+      container2,
       <div>
         <span />
       </div>,
@@ -138,7 +130,7 @@ describe('ReactDOMRoot', () => {
 
   it('clears existing children', async () => {
     container.innerHTML = '<div>a</div><div>b</div>';
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(
       <div>
         <span>c</span>
@@ -159,12 +151,12 @@ describe('ReactDOMRoot', () => {
 
   it('throws a good message on invalid containers', () => {
     expect(() => {
-      ReactDOM.unstable_createRoot(<div>Hi</div>);
+      ReactDOM.createRoot(<div>Hi</div>);
     }).toThrow('createRoot(...): Target container is not a DOM element.');
   });
 
   it('warns when rendering with legacy API into createRoot() container', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -187,7 +179,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns when hydrating with legacy API into createRoot() container', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -198,7 +190,7 @@ describe('ReactDOMRoot', () => {
         // We care about this warning:
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
           'passed to ReactDOM.createRoot(). This is not supported. ' +
-          'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
+          'Did you mean to call hydrateRoot(container, element)?',
         // This is more of a symptom but restructuring the code to avoid it isn't worth it:
         'Replacing React-rendered children with a new root component.',
       ],
@@ -207,7 +199,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns when unmounting with legacy API (no previous content)', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -236,7 +228,7 @@ describe('ReactDOMRoot', () => {
     // Currently createRoot().render() doesn't clear this.
     container.appendChild(document.createElement('div'));
     // The rest is the same as test above.
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
@@ -262,7 +254,7 @@ describe('ReactDOMRoot', () => {
   it('warns when passing legacy container to createRoot()', () => {
     ReactDOM.render(<div>Hi</div>, container);
     expect(() => {
-      ReactDOM.unstable_createRoot(container);
+      ReactDOM.createRoot(container);
     }).toErrorDev(
       'You are calling ReactDOM.createRoot() on a container that was previously ' +
         'passed to ReactDOM.render(). This is not supported.',
@@ -271,9 +263,9 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns when creating two roots managing the same container', () => {
-    ReactDOM.unstable_createRoot(container);
+    ReactDOM.createRoot(container);
     expect(() => {
-      ReactDOM.unstable_createRoot(container);
+      ReactDOM.createRoot(container);
     }).toErrorDev(
       'You are calling ReactDOM.createRoot() on a container that ' +
         'has already been passed to createRoot() before. Instead, call ' +
@@ -283,15 +275,15 @@ describe('ReactDOMRoot', () => {
   });
 
   it('does not warn when creating second root after first one is unmounted', () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.unmount();
     Scheduler.unstable_flushAll();
-    ReactDOM.unstable_createRoot(container); // No warning
+    ReactDOM.createRoot(container); // No warning
   });
 
   it('warns if creating a root on the document.body', async () => {
     expect(() => {
-      ReactDOM.unstable_createRoot(document.body);
+      ReactDOM.createRoot(document.body);
     }).toErrorDev(
       'createRoot(): Creating roots directly with document.body is ' +
         'discouraged, since its children are often manipulated by third-party ' +
@@ -303,7 +295,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('warns if updating a root that has had its contents removed', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
     Scheduler.unstable_flushAll();
     container.innerHTML = '';
@@ -319,9 +311,8 @@ describe('ReactDOMRoot', () => {
     );
   });
 
-  // @gate experimental
   it('opts-in to concurrent default updates', async () => {
-    const root = ReactDOM.unstable_createRoot(container, {
+    const root = ReactDOM.createRoot(container, {
       unstable_concurrentUpdatesByDefault: true,
     });
 

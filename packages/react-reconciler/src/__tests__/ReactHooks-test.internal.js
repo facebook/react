@@ -19,8 +19,6 @@ let Scheduler;
 let ReactDOMServer;
 let act;
 
-// Additional tests can be found in ReactHooksWithNoopRenderer. Plan is to
-// gradually migrate those to this file.
 describe('ReactHooks', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -31,7 +29,7 @@ describe('ReactHooks', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = require('jest-react').act;
   });
 
   if (__DEV__) {
@@ -1593,8 +1591,7 @@ describe('ReactHooks', () => {
         }
       });
 
-      it(`warns when more hooks (${(hookNameA,
-      hookNameB)}) are used during update than mount`, () => {
+      it(`warns when more hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1648,8 +1645,7 @@ describe('ReactHooks', () => {
         .replace('use', '')
         .replace('Helper', '');
 
-      it(`warns when fewer hooks (${(hookNameA,
-      hookNameB)}) are used during update than mount`, () => {
+      it(`warns when fewer hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1775,13 +1771,15 @@ describe('ReactHooks', () => {
     }
 
     await act(async () => {
-      ReactTestRenderer.create(
-        <>
-          <A />
-          <B />
-        </>,
-      );
-      expect(() => Scheduler.unstable_flushAll()).toThrow('Hello');
+      ReactTestRenderer.unstable_batchedUpdates(() => {
+        ReactTestRenderer.create(
+          <>
+            <A />
+            <B />
+          </>,
+        );
+        expect(() => Scheduler.unstable_flushAll()).toThrow('Hello');
+      });
     });
 
     if (__DEV__) {

@@ -8,8 +8,8 @@
  */
 
 import {
-  unstable_getCacheForType,
-  unstable_startTransition as startTransition,
+  unstable_getCacheForType as getCacheForType,
+  startTransition,
 } from 'react';
 import Store from './devtools/store';
 import {inspectElement as inspectElementMutableSource} from './inspectedElementMutableSource';
@@ -60,7 +60,7 @@ function createMap(): InspectedElementMap {
 }
 
 function getRecordMap(): WeakMap<Element, Record<InspectedElementFrontend>> {
-  return unstable_getCacheForType(createMap);
+  return getCacheForType(createMap);
 }
 
 function createCacheSeed(
@@ -88,7 +88,6 @@ export function inspectElement(
 ): InspectedElementFrontend | null {
   const map = getRecordMap();
   let record = map.get(element);
-
   if (!record) {
     const callbacks = new Set();
     const wakeable: Wakeable = {
@@ -110,7 +109,7 @@ export function inspectElement(
     if (rendererID == null) {
       const rejectedRecord = ((newRecord: any): RejectedRecord);
       rejectedRecord.status = Rejected;
-      rejectedRecord.value = `Could not inspect element with id ${element.id}`;
+      rejectedRecord.value = `Could not inspect element with id "${element.id}". No renderer found.`;
 
       map.set(element, record);
 
@@ -134,7 +133,7 @@ export function inspectElement(
         if (newRecord.status === Pending) {
           const rejectedRecord = ((newRecord: any): RejectedRecord);
           rejectedRecord.status = Rejected;
-          rejectedRecord.value = `Could not inspect element with id ${element.id}`;
+          rejectedRecord.value = `Could not inspect element with id "${element.id}". Error thrown:\n${error.message}`;
           wake();
         }
       },
@@ -189,4 +188,11 @@ export function checkForUpdate({
       },
     );
   }
+}
+
+export function clearCacheBecauseOfError(refresh: RefreshFunction): void {
+  startTransition(() => {
+    const map = createMap();
+    refresh(createMap, map);
+  });
 }

@@ -9,6 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
+import {OptionsContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -35,6 +36,8 @@ export default function InspectedElementPropsTree({
   inspectedElement,
   store,
 }: Props) {
+  const {readOnly} = React.useContext(OptionsContext);
+
   const {
     canEditFunctionProps,
     canEditFunctionPropsDeletePaths,
@@ -45,7 +48,8 @@ export default function InspectedElementPropsTree({
 
   const canDeletePaths =
     type === ElementTypeClass || canEditFunctionPropsDeletePaths;
-  const canEditValues = type === ElementTypeClass || canEditFunctionProps;
+  const canEditValues =
+    !readOnly && (type === ElementTypeClass || canEditFunctionProps);
   const canRenamePaths =
     type === ElementTypeClass || canEditFunctionPropsRenamePaths;
 

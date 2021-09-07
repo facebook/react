@@ -184,6 +184,21 @@ module.exports = {
     },
     {
       files: [
+        'scripts/eslint-rules/*.js',
+        'packages/eslint-plugin-react-hooks/src/*.js'
+      ],
+      plugins: ['eslint-plugin'],
+      rules: {
+        'eslint-plugin/prefer-object-rule': ERROR,
+        'eslint-plugin/require-meta-fixable': [
+          ERROR,
+          {catchNoFixerButFixableProperty: true},
+        ],
+        'eslint-plugin/require-meta-has-suggestions': ERROR,
+      },
+    },
+    {
+      files: [
         'packages/react-native-renderer/**/*.js',
         'packages/react-server-native-relay/**/*.js',
       ],

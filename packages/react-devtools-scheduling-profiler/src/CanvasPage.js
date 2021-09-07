@@ -7,19 +7,18 @@
  * @flow
  */
 
-import type {
-  Point,
-  HorizontalPanAndZoomViewOnChangeCallback,
-} from './view-base';
+import type {Point} from './view-base';
 import type {
   ReactHoverContextInfo,
   ReactProfilerData,
   ReactMeasure,
+  ViewState,
 } from './types';
 
 import * as React from 'react';
 import {
   Fragment,
+  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -32,30 +31,36 @@ import prettyMilliseconds from 'pretty-ms';
 
 import {
   HorizontalPanAndZoomView,
-  ResizableSplitView,
+  ResizableView,
+  VerticalScrollOverflowView,
   Surface,
   VerticalScrollView,
   View,
-  createComposedLayout,
-  lastViewTakesUpRemainingSpaceLayout,
   useCanvasInteraction,
   verticallyStackedLayout,
   zeroPoint,
 } from './view-base';
 import {
+  ComponentMeasuresView,
   FlamechartView,
-  ReactEventsView,
+  NativeEventsView,
+  NetworkMeasuresView,
   ReactMeasuresView,
+  SchedulingEventsView,
+  SnapshotsView,
+  SuspenseEventsView,
   TimeAxisMarkersView,
   UserTimingMarksView,
 } from './content-views';
 import {COLORS} from './content-views/constants';
-
+import {clampState, moveStateToRange} from './view-base/utils/scrollState';
 import EventTooltip from './EventTooltip';
-import ContextMenu from './context/ContextMenu';
-import ContextMenuItem from './context/ContextMenuItem';
-import useContextMenu from './context/useContextMenu';
+import {RegistryContext} from 'react-devtools-shared/src/devtools/ContextMenu/Contexts';
+import ContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenu';
+import ContextMenuItem from 'react-devtools-shared/src/devtools/ContextMenu/ContextMenuItem';
+import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useContextMenu';
 import {getBatchRange} from './utils/getBatchRange';
+import {MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL} from './view-base/constants';
 
 import styles from './CanvasPage.css';
 
@@ -63,16 +68,22 @@ const CONTEXT_MENU_ID = 'canvas';
 
 type Props = {|
   profilerData: ReactProfilerData,
+  viewState: ViewState,
 |};
 
-function CanvasPage({profilerData}: Props) {
+function CanvasPage({profilerData, viewState}: Props) {
   return (
     <div
       className={styles.CanvasPage}
       style={{backgroundColor: COLORS.BACKGROUND}}>
       <AutoSizer>
         {({height, width}: {height: number, width: number}) => (
-          <AutoSizedCanvas data={profilerData} height={height} width={width} />
+          <AutoSizedCanvas
+            data={profilerData}
+            height={height}
+            viewState={viewState}
+            width={width}
+          />
         )}
       </AutoSizer>
     </div>
@@ -97,24 +108,52 @@ const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
 const zoomToBatch = (
   data: ReactProfilerData,
   measure: ReactMeasure,
-  syncedHorizontalPanAndZoomViews: HorizontalPanAndZoomView[],
+  viewState: ViewState,
+  width: number,
 ) => {
   const {batchUID} = measure;
-  const [startTime, stopTime] = getBatchRange(batchUID, data);
-  syncedHorizontalPanAndZoomViews.forEach(syncedView =>
-    // Using time as range works because the views' intrinsic content size is
-    // based on time.
-    syncedView.zoomToRange(startTime, stopTime),
-  );
+  const [rangeStart, rangeEnd] = getBatchRange(batchUID, data);
+
+  // Convert from time range to ScrollState
+  const scrollState = moveStateToRange({
+    state: viewState.horizontalScrollState,
+    rangeStart,
+    rangeEnd,
+    contentLength: data.duration,
+
+    minContentLength: data.duration * MIN_ZOOM_LEVEL,
+    maxContentLength: data.duration * MAX_ZOOM_LEVEL,
+    containerLength: width,
+  });
+
+  viewState.updateHorizontalScrollState(scrollState);
+};
+
+const EMPTY_CONTEXT_INFO: ReactHoverContextInfo = {
+  componentMeasure: null,
+  flamechartStackFrame: null,
+  measure: null,
+  nativeEvent: null,
+  networkMeasure: null,
+  schedulingEvent: null,
+  snapshot: null,
+  suspenseEvent: null,
+  userTimingMark: null,
 };
 
 type AutoSizedCanvasProps = {|
   data: ReactProfilerData,
   height: number,
+  viewState: ViewState,
   width: number,
 |};
 
-function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
+function AutoSizedCanvas({
+  data,
+  height,
+  viewState,
+  width,
+}: AutoSizedCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [isContextMenuShown, setIsContextMenuShown] = useState<boolean>(false);
@@ -124,47 +163,91 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     setHoveredEvent,
   ] = useState<ReactHoverContextInfo | null>(null);
 
-  const surfaceRef = useRef(new Surface());
-  const userTimingMarksViewRef = useRef(null);
-  const reactEventsViewRef = useRef(null);
-  const reactMeasuresViewRef = useRef(null);
-  const flamechartViewRef = useRef(null);
-  const syncedHorizontalPanAndZoomViewsRef = useRef<HorizontalPanAndZoomView[]>(
+  const resetHoveredEvent = useCallback(
+    () => setHoveredEvent(EMPTY_CONTEXT_INFO),
     [],
   );
+
+  const surfaceRef = useRef(new Surface(resetHoveredEvent));
+  const userTimingMarksViewRef = useRef(null);
+  const nativeEventsViewRef = useRef(null);
+  const schedulingEventsViewRef = useRef(null);
+  const suspenseEventsViewRef = useRef(null);
+  const componentMeasuresViewRef = useRef(null);
+  const reactMeasuresViewRef = useRef(null);
+  const flamechartViewRef = useRef(null);
+  const networkMeasuresViewRef = useRef(null);
+  const snapshotsViewRef = useRef(null);
+
+  const {hideMenu: hideContextMenu} = useContext(RegistryContext);
 
   useLayoutEffect(() => {
     const surface = surfaceRef.current;
     const defaultFrame = {origin: zeroPoint, size: {width, height}};
 
-    // Clear synced views
-    syncedHorizontalPanAndZoomViewsRef.current = [];
+    // Auto hide context menu when panning.
+    viewState.onHorizontalScrollStateChange(scrollState => {
+      hideContextMenu();
+    });
 
-    const syncAllHorizontalPanAndZoomViewStates: HorizontalPanAndZoomViewOnChangeCallback = (
-      newState,
-      triggeringView?: HorizontalPanAndZoomView,
-    ) => {
-      syncedHorizontalPanAndZoomViewsRef.current.forEach(
-        syncedView =>
-          triggeringView !== syncedView && syncedView.setScrollState(newState),
-      );
-    };
-
-    // Top content
-
-    const topContentStack = new View(
-      surface,
-      defaultFrame,
-      verticallyStackedLayout,
+    // Initialize horizontal view state
+    viewState.updateHorizontalScrollState(
+      clampState({
+        state: viewState.horizontalScrollState,
+        minContentLength: data.duration * MIN_ZOOM_LEVEL,
+        maxContentLength: data.duration * MAX_ZOOM_LEVEL,
+        containerLength: defaultFrame.size.width,
+      }),
     );
+
+    function createViewHelper(
+      view: View,
+      label: string,
+      shouldScrollVertically: boolean = false,
+      shouldResizeVertically: boolean = false,
+    ): View {
+      let verticalScrollView = null;
+      if (shouldScrollVertically) {
+        verticalScrollView = new VerticalScrollView(
+          surface,
+          defaultFrame,
+          view,
+          viewState,
+          label,
+        );
+      }
+
+      const horizontalPanAndZoomView = new HorizontalPanAndZoomView(
+        surface,
+        defaultFrame,
+        verticalScrollView !== null ? verticalScrollView : view,
+        data.duration,
+        viewState,
+      );
+
+      let resizableView = null;
+      if (shouldResizeVertically) {
+        resizableView = new ResizableView(
+          surface,
+          defaultFrame,
+          horizontalPanAndZoomView,
+          viewState,
+          canvasRef,
+          label,
+        );
+      }
+
+      return resizableView || horizontalPanAndZoomView;
+    }
 
     const axisMarkersView = new TimeAxisMarkersView(
       surface,
       defaultFrame,
       data.duration,
     );
-    topContentStack.addSubview(axisMarkersView);
+    const axisMarkersViewWrapper = createViewHelper(axisMarkersView, 'time');
 
+    let userTimingMarksViewWrapper = null;
     if (data.otherUserTimingMarks.length > 0) {
       const userTimingMarksView = new UserTimingMarksView(
         surface,
@@ -173,25 +256,47 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         data.duration,
       );
       userTimingMarksViewRef.current = userTimingMarksView;
-      topContentStack.addSubview(userTimingMarksView);
+      userTimingMarksViewWrapper = createViewHelper(
+        userTimingMarksView,
+        'user timing api',
+      );
     }
 
-    const reactEventsView = new ReactEventsView(surface, defaultFrame, data);
-    reactEventsViewRef.current = reactEventsView;
-    topContentStack.addSubview(reactEventsView);
+    const nativeEventsView = new NativeEventsView(surface, defaultFrame, data);
+    nativeEventsViewRef.current = nativeEventsView;
+    const nativeEventsViewWrapper = createViewHelper(
+      nativeEventsView,
+      'events',
+      true,
+      true,
+    );
 
-    const topContentHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
+    const schedulingEventsView = new SchedulingEventsView(
       surface,
       defaultFrame,
-      topContentStack,
-      data.duration,
-      syncAllHorizontalPanAndZoomViewStates,
+      data,
     );
-    syncedHorizontalPanAndZoomViewsRef.current.push(
-      topContentHorizontalPanAndZoomView,
+    schedulingEventsViewRef.current = schedulingEventsView;
+    const schedulingEventsViewWrapper = createViewHelper(
+      schedulingEventsView,
+      'react updates',
     );
 
-    // Resizable content
+    let suspenseEventsViewWrapper = null;
+    if (data.suspenseEvents.length > 0) {
+      const suspenseEventsView = new SuspenseEventsView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      suspenseEventsViewRef.current = suspenseEventsView;
+      suspenseEventsViewWrapper = createViewHelper(
+        suspenseEventsView,
+        'suspense',
+        true,
+        true,
+      );
+    }
 
     const reactMeasuresView = new ReactMeasuresView(
       surface,
@@ -199,21 +304,54 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data,
     );
     reactMeasuresViewRef.current = reactMeasuresView;
-    const reactMeasuresVerticalScrollView = new VerticalScrollView(
-      surface,
-      defaultFrame,
+    const reactMeasuresViewWrapper = createViewHelper(
       reactMeasuresView,
+      'react scheduling',
+      true,
+      true,
     );
-    const reactMeasuresHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
-      surface,
-      defaultFrame,
-      reactMeasuresVerticalScrollView,
-      data.duration,
-      syncAllHorizontalPanAndZoomViewStates,
-    );
-    syncedHorizontalPanAndZoomViewsRef.current.push(
-      reactMeasuresHorizontalPanAndZoomView,
-    );
+
+    let componentMeasuresViewWrapper = null;
+    if (data.componentMeasures.length > 0) {
+      const componentMeasuresView = new ComponentMeasuresView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      componentMeasuresViewRef.current = componentMeasuresView;
+      componentMeasuresViewWrapper = createViewHelper(
+        componentMeasuresView,
+        'react components',
+      );
+    }
+
+    let snapshotsViewWrapper = null;
+    if (data.snapshots.length > 0) {
+      const snapshotsView = new SnapshotsView(surface, defaultFrame, data);
+      snapshotsViewRef.current = snapshotsView;
+      snapshotsViewWrapper = createViewHelper(
+        snapshotsView,
+        'snapshots',
+        true,
+        true,
+      );
+    }
+
+    let networkMeasuresViewWrapper = null;
+    if (data.snapshots.length > 0) {
+      const networkMeasuresView = new NetworkMeasuresView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      networkMeasuresViewRef.current = networkMeasuresView;
+      networkMeasuresViewWrapper = createViewHelper(
+        networkMeasuresView,
+        'network',
+        true,
+        true,
+      );
+    }
 
     const flamechartView = new FlamechartView(
       surface,
@@ -222,41 +360,51 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
-    const flamechartVerticalScrollView = new VerticalScrollView(
-      surface,
-      defaultFrame,
+    const flamechartViewWrapper = createViewHelper(
       flamechartView,
-    );
-    const flamechartHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
-      surface,
-      defaultFrame,
-      flamechartVerticalScrollView,
-      data.duration,
-      syncAllHorizontalPanAndZoomViewStates,
-    );
-    syncedHorizontalPanAndZoomViewsRef.current.push(
-      flamechartHorizontalPanAndZoomView,
+      'flamechart',
+      true,
+      true,
     );
 
-    const resizableContentStack = new ResizableSplitView(
-      surface,
-      defaultFrame,
-      reactMeasuresHorizontalPanAndZoomView,
-      flamechartHorizontalPanAndZoomView,
-    );
-
+    // Root view contains all of the sub views defined above.
+    // The order we add them below determines their vertical position.
     const rootView = new View(
       surface,
       defaultFrame,
-      createComposedLayout(
-        verticallyStackedLayout,
-        lastViewTakesUpRemainingSpaceLayout,
-      ),
+      verticallyStackedLayout,
+      defaultFrame,
+      COLORS.BACKGROUND,
     );
-    rootView.addSubview(topContentHorizontalPanAndZoomView);
-    rootView.addSubview(resizableContentStack);
+    rootView.addSubview(axisMarkersViewWrapper);
+    if (userTimingMarksViewWrapper !== null) {
+      rootView.addSubview(userTimingMarksViewWrapper);
+    }
+    rootView.addSubview(nativeEventsViewWrapper);
+    rootView.addSubview(schedulingEventsViewWrapper);
+    if (suspenseEventsViewWrapper !== null) {
+      rootView.addSubview(suspenseEventsViewWrapper);
+    }
+    rootView.addSubview(reactMeasuresViewWrapper);
+    if (componentMeasuresViewWrapper !== null) {
+      rootView.addSubview(componentMeasuresViewWrapper);
+    }
+    if (snapshotsViewWrapper !== null) {
+      rootView.addSubview(snapshotsViewWrapper);
+    }
+    if (networkMeasuresViewWrapper !== null) {
+      rootView.addSubview(networkMeasuresViewWrapper);
+    }
+    rootView.addSubview(flamechartViewWrapper);
 
-    surfaceRef.current.rootView = rootView;
+    const verticalScrollOverflowView = new VerticalScrollOverflowView(
+      surface,
+      defaultFrame,
+      rootView,
+      viewState,
+    );
+
+    surfaceRef.current.rootView = verticalScrollOverflowView;
   }, [data]);
 
   useLayoutEffect(() => {
@@ -266,10 +414,26 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   }, [width, height]);
 
   const interactor = useCallback(interaction => {
-    if (canvasRef.current === null) {
+    const canvas = canvasRef.current;
+    if (canvas === null) {
       return;
     }
-    surfaceRef.current.handleInteraction(interaction);
+
+    const surface = surfaceRef.current;
+    surface.handleInteraction(interaction);
+
+    // Flush any display work that got queued up as part of the previous interaction.
+    // Typically there should be no work, but certain interactions may need a second pass.
+    // For example, the ResizableView may collapse/expand its contents,
+    // which requires a second layout pass for an ancestor VerticalScrollOverflowView.
+    //
+    // TODO It would be nice to remove this call for performance reasons.
+    // To do that, we'll need to address the UX bug with VerticalScrollOverflowView.
+    // For more info see: https://github.com/facebook/react/pull/22005#issuecomment-896953399
+    surface.displayIfNeeded();
+
+    canvas.style.cursor = surface.getCurrentCursor() || 'default';
+
     // Defer drawing to canvas until React's commit phase, to avoid drawing
     // twice and to ensure that both the canvas and DOM elements managed by
     // React are in sync.
@@ -297,26 +461,72 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       userTimingMarksView.onHover = userTimingMark => {
         if (!hoveredEvent || hoveredEvent.userTimingMark !== userTimingMark) {
           setHoveredEvent({
-            userTimingMark,
-            event: null,
+            componentMeasure: null,
             flamechartStackFrame: null,
             measure: null,
-            data,
+            nativeEvent: null,
+            networkMeasure: null,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark,
           });
         }
       };
     }
 
-    const {current: reactEventsView} = reactEventsViewRef;
-    if (reactEventsView) {
-      reactEventsView.onHover = event => {
-        if (!hoveredEvent || hoveredEvent.event !== event) {
+    const {current: nativeEventsView} = nativeEventsViewRef;
+    if (nativeEventsView) {
+      nativeEventsView.onHover = nativeEvent => {
+        if (!hoveredEvent || hoveredEvent.nativeEvent !== nativeEvent) {
           setHoveredEvent({
-            userTimingMark: null,
-            event,
+            componentMeasure: null,
             flamechartStackFrame: null,
             measure: null,
-            data,
+            nativeEvent,
+            networkMeasure: null,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: schedulingEventsView} = schedulingEventsViewRef;
+    if (schedulingEventsView) {
+      schedulingEventsView.onHover = schedulingEvent => {
+        if (!hoveredEvent || hoveredEvent.schedulingEvent !== schedulingEvent) {
+          setHoveredEvent({
+            componentMeasure: null,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            networkMeasure: null,
+            schedulingEvent,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: suspenseEventsView} = suspenseEventsViewRef;
+    if (suspenseEventsView) {
+      suspenseEventsView.onHover = suspenseEvent => {
+        if (!hoveredEvent || hoveredEvent.suspenseEvent !== suspenseEvent) {
+          setHoveredEvent({
+            componentMeasure: null,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            networkMeasure: null,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent,
+            userTimingMark: null,
           });
         }
       };
@@ -327,11 +537,56 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       reactMeasuresView.onHover = measure => {
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
-            userTimingMark: null,
-            event: null,
+            componentMeasure: null,
             flamechartStackFrame: null,
             measure,
-            data,
+            nativeEvent: null,
+            networkMeasure: null,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: componentMeasuresView} = componentMeasuresViewRef;
+    if (componentMeasuresView) {
+      componentMeasuresView.onHover = componentMeasure => {
+        if (
+          !hoveredEvent ||
+          hoveredEvent.componentMeasure !== componentMeasure
+        ) {
+          setHoveredEvent({
+            componentMeasure,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            networkMeasure: null,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: snapshotsView} = snapshotsViewRef;
+    if (snapshotsView) {
+      snapshotsView.onHover = snapshot => {
+        if (!hoveredEvent || hoveredEvent.snapshot !== snapshot) {
+          setHoveredEvent({
+            componentMeasure: null,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            networkMeasure: null,
+            schedulingEvent: null,
+            snapshot,
+            suspenseEvent: null,
+            userTimingMark: null,
           });
         }
       };
@@ -345,14 +600,37 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           hoveredEvent.flamechartStackFrame !== flamechartStackFrame
         ) {
           setHoveredEvent({
-            userTimingMark: null,
-            event: null,
+            componentMeasure: null,
             flamechartStackFrame,
             measure: null,
-            data,
+            nativeEvent: null,
+            networkMeasure: null,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
           });
         }
       });
+    }
+
+    const {current: networkMeasuresView} = networkMeasuresViewRef;
+    if (networkMeasuresView) {
+      networkMeasuresView.onHover = networkMeasure => {
+        if (!hoveredEvent || hoveredEvent.networkMeasure !== networkMeasure) {
+          setHoveredEvent({
+            componentMeasure: null,
+            flamechartStackFrame: null,
+            measure: null,
+            nativeEvent: null,
+            networkMeasure,
+            schedulingEvent: null,
+            snapshot: null,
+            suspenseEvent: null,
+            userTimingMark: null,
+          });
+        }
+      };
     }
   }, [
     hoveredEvent,
@@ -360,29 +638,52 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   ]);
 
   useLayoutEffect(() => {
-    const {current: userTimingMarksView} = userTimingMarksViewRef;
+    const userTimingMarksView = userTimingMarksViewRef.current;
     if (userTimingMarksView) {
       userTimingMarksView.setHoveredMark(
         hoveredEvent ? hoveredEvent.userTimingMark : null,
       );
     }
 
-    const {current: reactEventsView} = reactEventsViewRef;
-    if (reactEventsView) {
-      reactEventsView.setHoveredEvent(hoveredEvent ? hoveredEvent.event : null);
+    const nativeEventsView = nativeEventsViewRef.current;
+    if (nativeEventsView) {
+      nativeEventsView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.nativeEvent : null,
+      );
     }
 
-    const {current: reactMeasuresView} = reactMeasuresViewRef;
+    const schedulingEventsView = schedulingEventsViewRef.current;
+    if (schedulingEventsView) {
+      schedulingEventsView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.schedulingEvent : null,
+      );
+    }
+
+    const suspenseEventsView = suspenseEventsViewRef.current;
+    if (suspenseEventsView) {
+      suspenseEventsView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.suspenseEvent : null,
+      );
+    }
+
+    const reactMeasuresView = reactMeasuresViewRef.current;
     if (reactMeasuresView) {
       reactMeasuresView.setHoveredMeasure(
         hoveredEvent ? hoveredEvent.measure : null,
       );
     }
 
-    const {current: flamechartView} = flamechartViewRef;
+    const flamechartView = flamechartViewRef.current;
     if (flamechartView) {
       flamechartView.setHoveredFlamechartStackFrame(
         hoveredEvent ? hoveredEvent.flamechartStackFrame : null,
+      );
+    }
+
+    const networkMeasuresView = networkMeasuresViewRef.current;
+    if (networkMeasuresView) {
+      networkMeasuresView.setHoveredEvent(
+        hoveredEvent ? hoveredEvent.networkMeasure : null,
       );
     }
   }, [hoveredEvent]);
@@ -401,34 +702,47 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
             return null;
           }
           const {
-            event,
+            componentMeasure,
             flamechartStackFrame,
             measure,
+            networkMeasure,
+            schedulingEvent,
+            suspenseEvent,
           } = contextData.hoveredEvent;
           return (
             <Fragment>
-              {event !== null && (
+              {componentMeasure !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(event.componentName)}
+                  onClick={() => copy(componentMeasure.componentName)}
                   title="Copy component name">
                   Copy component name
                 </ContextMenuItem>
               )}
-              {event !== null && (
+              {networkMeasure !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(event.componentStack)}
-                  title="Copy component stack">
-                  Copy component stack
+                  onClick={() => copy(networkMeasure.url)}
+                  title="Copy URL">
+                  Copy URL
+                </ContextMenuItem>
+              )}
+              {schedulingEvent !== null && (
+                <ContextMenuItem
+                  onClick={() => copy(schedulingEvent.componentName)}
+                  title="Copy component name">
+                  Copy component name
+                </ContextMenuItem>
+              )}
+              {suspenseEvent !== null && (
+                <ContextMenuItem
+                  onClick={() => copy(suspenseEvent.componentName)}
+                  title="Copy component name">
+                  Copy component name
                 </ContextMenuItem>
               )}
               {measure !== null && (
                 <ContextMenuItem
                   onClick={() =>
-                    zoomToBatch(
-                      contextData.data,
-                      measure,
-                      syncedHorizontalPanAndZoomViewsRef.current,
-                    )
+                    zoomToBatch(contextData.data, measure, viewState, width)
                   }
                   title="Zoom to batch">
                   Zoom to batch
@@ -465,8 +779,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           );
         }}
       </ContextMenu>
-      {!isContextMenuShown && (
+      {!isContextMenuShown && !surfaceRef.current.hasActiveView() && (
         <EventTooltip
+          canvasRef={canvasRef}
           data={data}
           hoveredEvent={hoveredEvent}
           origin={mouseLocation}

@@ -128,8 +128,7 @@
   background-color: var(--color-toggle-text);
 }
 
-.ReleaseNotes,
-.ConsoleAPIWarning {
+.ReleaseNotes {
   width: 100%;
   background-color: var(--color-background-hover);
   padding: 0.25rem 0.5rem;
@@ -138,4 +137,8 @@
 
 .ReleaseNotesLink {
   color: var(--color-button-active);
+}
+
+.Warning {
+  color: var(--color-error-text);
 }

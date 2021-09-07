@@ -15,3 +15,5 @@
 
 export const enableProfilerChangedHookIndices = false;
 export const isInternalFacebookBuild = false;
+
+export const consoleManagedByDevToolsDuringStrictMode = true;

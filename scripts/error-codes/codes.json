@@ -378,7 +378,7 @@
   "387": "Should have a current fiber. This is a bug in React.",
   "388": "Expected to find a bailed out fiber. This is a bug in React.",
   "389": "There can only be one root segment. This is a bug in React.",
-  "390": "Errored or already flushed boundaries should not be flushed again. This is a bug in React.",
+  "390": "Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React.",
   "391": "A previously unvisited boundary must have exactly one root segment. This is a bug in React.",
   "392": "A root segment ID must have been assigned by now. This is a bug in React.",
   "393": "Cache cannot be refreshed during server rendering.",
@@ -392,5 +392,7 @@
   "401": "The stacks must reach the root at the same time. This is a bug in React.",
   "402": "The depth must equal at least at zero before reaching the root. This is a bug in React.",
   "403": "Tried to pop a Context at the root of the app. This is a bug in React.",
-  "404": "Invalid hook call. Hooks can only be called inside of the body of a function component."
+  "404": "Invalid hook call. Hooks can only be called inside of the body of a function component.",
+  "405": "hydrateRoot(...): Target container is not a DOM element.",
+  "406": "act(...) is not supported in production builds of React."
 }

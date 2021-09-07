@@ -10,7 +10,7 @@
 import type {Wakeable} from 'shared/ReactTypes';
 import type {GitHubIssue} from './githubAPI';
 
-import {unstable_getCacheForType} from 'react';
+import {unstable_getCacheForType as getCacheForType} from 'react';
 import {searchGitHubIssues} from './githubAPI';
 
 const API_TIMEOUT = 3000;
@@ -55,7 +55,7 @@ function createMap(): GitHubIssueMap {
 }
 
 function getRecordMap(): Map<string, Record<GitHubIssue>> {
-  return unstable_getCacheForType(createMap);
+  return getCacheForType(createMap);
 }
 
 export function findGitHubIssue(errorMessage: string): GitHubIssue | null {

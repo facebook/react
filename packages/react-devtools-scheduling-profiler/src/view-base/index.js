@@ -7,12 +7,13 @@
  * @flow
  */
 
-export * from './ColorView';
+export * from './BackgroundColorView';
 export * from './HorizontalPanAndZoomView';
-export * from './ResizableSplitView';
 export * from './Surface';
 export * from './VerticalScrollView';
 export * from './View';
 export * from './geometry';
 export * from './layouter';
+export * from './resizable';
 export * from './useCanvasInteraction';
+export * from './vertical-scroll-overflow';

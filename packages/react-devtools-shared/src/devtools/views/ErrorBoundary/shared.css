@@ -37,10 +37,20 @@
   overflow: auto;
 }
 
-.Header {
+.HeaderRow {
+  display: flex;
+  flex-direction: row;
   font-size: var(--font-size-sans-large);
   font-weight: bold;
   color: var(--color-error-text);
+}
+
+.Header {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .Stack {
@@ -75,9 +85,21 @@
 .ReproSteps {
   margin-left: 0.25rem;
   color: var(--color-console-warning-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .UpdateExistingIssuePrompt {
   margin-right: 0.25rem;
   color: var(--color-console-warning-text);
+}
+
+.CloseButton {
+  font-weight: bold;
+}
+
+.CloseButtonIcon {
+  margin-left: 0.25rem;
 }

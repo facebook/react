@@ -10,17 +10,19 @@
 import {useContext, useEffect} from 'react';
 import {RegistryContext} from './Contexts';
 
-import type {RegistryContextType} from './Contexts';
+import type {OnChangeFn, RegistryContextType} from './Contexts';
 import type {ElementRef} from 'react';
 
 export default function useContextMenu({
   data,
   id,
+  onChange,
   ref,
 }: {|
   data: Object,
   id: string,
-  ref: {current: ElementRef<'div'> | null},
+  onChange?: OnChangeFn,
+  ref: {current: ElementRef<*> | null},
 |}) {
   const {showMenu} = useContext<RegistryContextType>(RegistryContext);
 
@@ -37,7 +39,7 @@ export default function useContextMenu({
           (event: any).pageY ||
           (event.touches && (event: any).touches[0].pageY);
 
-        showMenu({data, id, pageX, pageY});
+        showMenu({data, id, onChange, pageX, pageY});
       };
 
       const trigger = ref.current;

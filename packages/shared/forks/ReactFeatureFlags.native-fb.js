@@ -10,14 +10,22 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
 
+// Re-export dynamic flags from the internal module. Intentionally using *
+// because this import is compiled to a `require` call.
+import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
+
+// We destructure each value before re-exporting to avoid a dynamic look-up on
+// the exports object every time a flag is read.
+export const {enablePersistentOffscreenHostContainer} = dynamicFlags;
+
 // The rest of the flags are static for better dead code elimination.
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = false;
-export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerCommitHooks = __PROFILE__;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
-export const enableUpdaterTracking = false;
+export const enableUpdaterTracking = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
@@ -30,7 +38,6 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
-export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
@@ -46,11 +53,11 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 3;
 export const enableSuspenseLayoutEffectSemantics = false;
-
+export const enableGetInspectorDataForInstanceInProduction = true;
 export const enableNewReconciler = false;
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableStrictEffects = __DEV__;
 export const createRootStrictEffectsByDefault = false;
@@ -59,8 +66,10 @@ export const enableUseRefAccessWarning = false;
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
-export const enableSyncDefaultUpdates = false;
-export const allowConcurrentByDefault = false;
+export const enableSyncDefaultUpdates = true;
+export const allowConcurrentByDefault = true;
+
+export const consoleManagedByDevToolsDuringStrictMode = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

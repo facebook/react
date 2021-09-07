@@ -37,6 +37,7 @@ import {
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+  LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
@@ -47,13 +48,17 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
+
 import type {ComponentFilter, ElementType} from './types';
+import type {LRUCache} from 'react-devtools-shared/src/types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-const encodedStringCache = new LRU({max: 1000});
+const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
+  max: 1000,
+});
 
 export function alphaSortKeys(
   a: string | number | Symbol,
@@ -313,6 +318,25 @@ export function setBreakOnConsoleErrors(value: boolean): void {
   );
 }
 
+export function getHideConsoleLogsInStrictMode(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return false;
+}
+
+export function sethideConsoleLogsInStrictMode(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
+    JSON.stringify(value),
+  );
+}
+
 export function getShowInlineWarningsAndErrors(): boolean {
   try {
     const raw = localStorageGetItem(
@@ -540,9 +564,13 @@ export function getDataType(data: Object): DataType {
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
-        return data[Symbol.iterator]() === data
-          ? 'opaque_iterator'
-          : 'iterator';
+        const iterator = data[Symbol.iterator]();
+        if (!iterator) {
+          // Proxies might break assumptoins about iterators.
+          // See github.com/facebook/react/issues/21654
+        } else {
+          return iterator === data ? 'opaque_iterator' : 'iterator';
+        }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else {

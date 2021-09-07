@@ -21,6 +21,7 @@ import {StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
+import {SettingsContext} from '../Settings/SettingsContext';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -50,6 +51,7 @@ import type {
 
 export default function ComponentsSettings(_: {||}) {
   const store = useContext(StoreContext);
+  const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
 
   const collapseNodesByDefaultSubscription = useMemo(
     () => ({
@@ -70,6 +72,13 @@ export default function ComponentsSettings(_: {||}) {
       store.collapseNodesByDefault = !currentTarget.checked;
     },
     [store],
+  );
+
+  const updateParseHookNames = useCallback(
+    ({currentTarget}) => {
+      setParseHookNames(currentTarget.checked);
+    },
+    [setParseHookNames],
   );
 
   const [componentFilters, setComponentFilters] = useState<
@@ -250,6 +259,16 @@ export default function ComponentsSettings(_: {||}) {
           onChange={updateCollapseNodesByDefault}
         />{' '}
         Expand component tree by default
+      </label>
+
+      <label className={styles.Setting}>
+        <input
+          type="checkbox"
+          checked={parseHookNames}
+          onChange={updateParseHookNames}
+        />{' '}
+        Always parse hook names from source{' '}
+        <span className={styles.Warning}>(may be slow)</span>
       </label>
 
       <div className={styles.Header}>Hide components where...</div>

@@ -5,6 +5,7 @@ let ContinuousEventPriority;
 let startTransition;
 let useState;
 let useEffect;
+let act;
 
 describe('ReactUpdatePriority', () => {
   beforeEach(() => {
@@ -13,9 +14,10 @@ describe('ReactUpdatePriority', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     ContinuousEventPriority = require('react-reconciler/constants')
       .ContinuousEventPriority;
-    startTransition = React.unstable_startTransition;
+    startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
   });
@@ -36,7 +38,7 @@ describe('ReactUpdatePriority', () => {
       return <Text text={state} />;
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       ReactNoop.flushSync(() => {
         root.render(<App />);
       });
@@ -61,7 +63,7 @@ describe('ReactUpdatePriority', () => {
       return <Text text={`Idle: ${idleState}, Default: ${defaultState}`} />;
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       ReactNoop.idleUpdates(() => {
         root.render(<App />);
       });
@@ -84,7 +86,6 @@ describe('ReactUpdatePriority', () => {
     expect(Scheduler).toHaveYielded(['Idle: 2, Default: 2']);
   });
 
-  // @gate experimental
   test('continuous updates should interrupt transisions', async () => {
     const root = ReactNoop.createRoot();
 
@@ -107,13 +108,13 @@ describe('ReactUpdatePriority', () => {
       );
     }
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A1', 'B1', 'C1']);
     expect(root).toMatchRenderedOutput('A1B1C1');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       startTransition(() => {
         setCounter(2);
       });
@@ -123,7 +124,7 @@ describe('ReactUpdatePriority', () => {
       });
     });
     expect(Scheduler).toHaveYielded([
-      // Because the hide update has continous priority, it should interrupt the
+      // Because the hide update has continuous priority, it should interrupt the
       // in-progress transition
       '(hidden)',
       // When the transition resumes, it's a no-op because the children are

@@ -1,6 +1,12 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {
+  DARK_MODE_DIMMED_WARNING_COLOR,
+  DARK_MODE_DIMMED_ERROR_COLOR,
+  DARK_MODE_DIMMED_LOG_COLOR,
+  LIGHT_MODE_DIMMED_WARNING_COLOR,
+  LIGHT_MODE_DIMMED_ERROR_COLOR,
+  LIGHT_MODE_DIMMED_LOG_COLOR,
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
@@ -17,6 +23,8 @@ const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
 const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
+
+const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'core/backend-oss';
 
 // This targets RN/Hermes.
 process.env.BABEL_CONFIG_ADDITIONAL_TARGETS = JSON.stringify({
@@ -41,11 +49,14 @@ module.exports = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
-      'react-devtools-feature-flags': resolveFeatureFlags('core/backend'),
+      'react-devtools-feature-flags': resolveFeatureFlags(featureFlagTarget),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
+  },
+  node: {
+    fs: 'empty',
   },
   plugins: [
     new DefinePlugin({
@@ -57,6 +68,12 @@ module.exports = {
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-core"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
+      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
   ],
   optimization: {

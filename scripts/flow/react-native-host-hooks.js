@@ -184,6 +184,9 @@ declare var nativeFabricUIManager: {
     isJsResponder: boolean,
     blockNativeResponder: boolean,
   ) => void,
+  unstable_DefaultEventPriority: number,
+  unstable_DiscreteEventPriority: number,
+  unstable_getCurrentEventPriority: () => number,
   ...
 };
 

@@ -6,19 +6,19 @@
  *
  * @flow
  */
+let React;
+let ReactDOM;
+let act;
+let fakeConsole;
+let legacyRender;
+let mockError;
+let mockInfo;
+let mockLog;
+let mockWarn;
+let patchConsole;
+let unpatchConsole;
 
 describe('console', () => {
-  let React;
-  let ReactDOM;
-  let act;
-  let fakeConsole;
-  let mockError;
-  let mockInfo;
-  let mockLog;
-  let mockWarn;
-  let patchConsole;
-  let unpatchConsole;
-
   beforeEach(() => {
     jest.resetModules();
 
@@ -48,6 +48,7 @@ describe('console', () => {
       appendComponentStack: true,
       breakOnWarn: false,
       showInlineWarningsAndErrors: false,
+      hideDoubleLogsInStrictLegacy: false,
     });
 
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
@@ -62,6 +63,7 @@ describe('console', () => {
 
     const utils = require('./utils');
     act = utils.act;
+    legacyRender = utils.legacyRender;
   });
 
   function normalizeCodeLocInfo(str) {
@@ -73,10 +75,10 @@ describe('console', () => {
     );
   }
 
-  it('should not patch console methods that do not receive component stacks', () => {
+  it('should not patch console methods that are not explicitly overriden', () => {
     expect(fakeConsole.error).not.toBe(mockError);
     expect(fakeConsole.info).toBe(mockInfo);
-    expect(fakeConsole.log).toBe(mockLog);
+    expect(fakeConsole.log).not.toBe(mockLog);
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
@@ -176,7 +178,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Child />, document.createElement('div')));
+    act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -203,7 +205,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -243,7 +245,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -298,8 +300,8 @@ describe('console', () => {
     }
 
     const container = document.createElement('div');
-    act(() => ReactDOM.render(<Parent />, container));
-    act(() => ReactDOM.render(<Parent />, container));
+    act(() => legacyRender(<Parent />, container));
+    act(() => legacyRender(<Parent />, container));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -350,7 +352,7 @@ describe('console', () => {
       }
     }
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -377,7 +379,7 @@ describe('console', () => {
     };
 
     unpatchConsole();
-    act(() => ReactDOM.render(<Child />, document.createElement('div')));
+    act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -391,7 +393,7 @@ describe('console', () => {
       breakOnWarn: false,
       showInlineWarningsAndErrors: false,
     });
-    act(() => ReactDOM.render(<Child />, document.createElement('div')));
+    act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
@@ -435,7 +437,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+    act(() => legacyRender(<Parent />, document.createElement('div')));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -460,9 +462,182 @@ describe('console', () => {
       return null;
     };
 
-    act(() => ReactDOM.render(<Component />, document.createElement('div')));
+    act(() => legacyRender(<Component />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0][0]).toBe('Symbol:');
+  });
+
+  it('should double log if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideConsoleLogsInStrictMode: false,
+    });
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+
+    expect(mockLog).toHaveBeenCalledTimes(2);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+    expect(mockLog.mock.calls[1]).toHaveLength(2);
+    expect(mockLog.mock.calls[1][0]).toBe('%clog');
+
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
+    expect(mockWarn.mock.calls[1][0]).toBe('%cwarn');
+
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(mockError.mock.calls[1]).toHaveLength(2);
+    expect(mockError.mock.calls[1][0]).toBe('%cerror');
+  });
+
+  it('should not double log if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideConsoleLogsInStrictMode: true,
+    });
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+  });
+});
+
+describe('console error', () => {
+  beforeEach(() => {
+    jest.resetModules();
+
+    const Console = require('react-devtools-shared/src/backend/console');
+    patchConsole = Console.patch;
+    unpatchConsole = Console.unpatch;
+
+    // Patch a fake console so we can verify with tests below.
+    // Patching the real console is too complicated,
+    // because Jest itself has hooks into it as does our test env setup.
+    mockError = jest.fn();
+    mockInfo = jest.fn();
+    mockLog = jest.fn();
+    mockWarn = jest.fn();
+    fakeConsole = {
+      error: mockError,
+      info: mockInfo,
+      log: mockLog,
+      warn: mockWarn,
+    };
+
+    Console.dangerous_setTargetConsoleForTesting(fakeConsole);
+
+    // Note the Console module only patches once,
+    // so it's important to patch the test console before injection.
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideDoubleLogsInStrictLegacy: false,
+    });
+
+    const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
+      internals.getIsStrictMode = () => {
+        throw Error('foo');
+      };
+      inject(internals);
+
+      Console.registerRenderer(internals);
+    };
+
+    React = require('react');
+    ReactDOM = require('react-dom');
+
+    const utils = require('./utils');
+    act = utils.act;
+    legacyRender = utils.legacyRender;
+  });
+
+  it('error in console log throws without interfering with logging', () => {
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
+
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+      hideConsoleLogsInStrictMode: false,
+    });
+
+    expect(() => {
+      act(() => {
+        root.render(<App />);
+      });
+    }).toThrowError('foo');
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
   });
 });

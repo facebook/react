@@ -78,7 +78,7 @@ async function pollUntilWorkflowFinishes(workflowID) {
 
 async function main() {
   const headCommitResponse = await fetch(
-    'https://api.github.com/repos/facebook/react/commits/master'
+    'https://api.github.com/repos/facebook/react/commits/main'
   );
   const headCommitJSON = await headCommitResponse.json();
   const headCommitSha = headCommitJSON.sha;

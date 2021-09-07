@@ -52,7 +52,6 @@ import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
 import {
   createMarkupForCustomAttribute,
   createMarkupForProperty,
-  createMarkupForRoot,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
 import {
@@ -195,6 +194,7 @@ const didWarnAboutModulePatternComponent = {};
 const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const didWarnAboutUninitializedState = {};
+const didWarnAboutLegacyLifecyclesAndDerivedState = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -388,28 +388,7 @@ function createOpenTagMarkup(
     }
   }
 
-  // For static pages, no need to put React ID and checksum. Saves lots of
-  // bytes.
-  if (makeStaticMarkup) {
-    return ret;
-  }
-
-  if (isRootElement) {
-    ret += ' ' + createMarkupForRoot();
-  }
   return ret;
-}
-
-function validateRenderResult(child, type) {
-  if (child === undefined) {
-    invariant(
-      false,
-      '%s(...): Nothing was returned from render. This usually means a ' +
-        'return statement is missing. Or, to render nothing, ' +
-        'return null.',
-      getComponentNameFromType(type) || 'Component',
-    );
-  }
 }
 
 function resolve(
@@ -483,6 +462,79 @@ function resolve(
                 componentName,
               );
               didWarnAboutUninitializedState[componentName] = true;
+            }
+          }
+
+          // If new component APIs are defined, "unsafe" lifecycles won't be called.
+          // Warn about these lifecycles if they are present.
+          // Don't warn about react-lifecycles-compat polyfilled methods though.
+          if (
+            typeof Component.getDerivedStateFromProps === 'function' ||
+            typeof inst.getSnapshotBeforeUpdate === 'function'
+          ) {
+            let foundWillMountName = null;
+            let foundWillReceivePropsName = null;
+            let foundWillUpdateName = null;
+            if (
+              typeof inst.componentWillMount === 'function' &&
+              inst.componentWillMount.__suppressDeprecationWarning !== true
+            ) {
+              foundWillMountName = 'componentWillMount';
+            } else if (typeof inst.UNSAFE_componentWillMount === 'function') {
+              foundWillMountName = 'UNSAFE_componentWillMount';
+            }
+            if (
+              typeof inst.componentWillReceiveProps === 'function' &&
+              inst.componentWillReceiveProps.__suppressDeprecationWarning !==
+                true
+            ) {
+              foundWillReceivePropsName = 'componentWillReceiveProps';
+            } else if (
+              typeof inst.UNSAFE_componentWillReceiveProps === 'function'
+            ) {
+              foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
+            }
+            if (
+              typeof inst.componentWillUpdate === 'function' &&
+              inst.componentWillUpdate.__suppressDeprecationWarning !== true
+            ) {
+              foundWillUpdateName = 'componentWillUpdate';
+            } else if (typeof inst.UNSAFE_componentWillUpdate === 'function') {
+              foundWillUpdateName = 'UNSAFE_componentWillUpdate';
+            }
+            if (
+              foundWillMountName !== null ||
+              foundWillReceivePropsName !== null ||
+              foundWillUpdateName !== null
+            ) {
+              const componentName =
+                getComponentNameFromType(Component) || 'Component';
+              const newApiName =
+                typeof Component.getDerivedStateFromProps === 'function'
+                  ? 'getDerivedStateFromProps()'
+                  : 'getSnapshotBeforeUpdate()';
+              if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
+                didWarnAboutLegacyLifecyclesAndDerivedState[
+                  componentName
+                ] = true;
+                console.error(
+                  'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+                    '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
+                    'The above lifecycles should be removed. Learn more about this warning here:\n' +
+                    'https://reactjs.org/link/unsafe-component-lifecycles',
+                  componentName,
+                  newApiName,
+                  foundWillMountName !== null
+                    ? `\n  ${foundWillMountName}`
+                    : '',
+                  foundWillReceivePropsName !== null
+                    ? `\n  ${foundWillReceivePropsName}`
+                    : '',
+                  foundWillUpdateName !== null
+                    ? `\n  ${foundWillUpdateName}`
+                    : '',
+                );
+              }
             }
           }
         }
@@ -567,7 +619,6 @@ function resolve(
         inst.render == null
       ) {
         child = inst;
-        validateRenderResult(child, Component);
         return;
       }
     }
@@ -585,32 +636,32 @@ function resolve(
       typeof inst.componentWillMount === 'function'
     ) {
       if (typeof inst.componentWillMount === 'function') {
-        if (__DEV__) {
-          if (
-            warnAboutDeprecatedLifecycles &&
-            inst.componentWillMount.__suppressDeprecationWarning !== true
-          ) {
-            const componentName =
-              getComponentNameFromType(Component) || 'Unknown';
-
-            if (!didWarnAboutDeprecatedWillMount[componentName]) {
-              console.warn(
-                // keep this warning in sync with ReactStrictModeWarning.js
-                'componentWillMount has been renamed, and is not recommended for use. ' +
-                  'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
-                  '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
-                  'or the constructor.\n' +
-                  '\nPlease update the following components: %s',
-                componentName,
-              );
-              didWarnAboutDeprecatedWillMount[componentName] = true;
-            }
-          }
-        }
-
         // In order to support react-lifecycles-compat polyfilled components,
         // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof Component.getDerivedStateFromProps !== 'function') {
+          if (__DEV__) {
+            if (
+              warnAboutDeprecatedLifecycles &&
+              inst.componentWillMount.__suppressDeprecationWarning !== true
+            ) {
+              const componentName =
+                getComponentNameFromType(Component) || 'Unknown';
+
+              if (!didWarnAboutDeprecatedWillMount[componentName]) {
+                console.warn(
+                  // keep this warning in sync with ReactStrictModeWarning.js
+                  'componentWillMount has been renamed, and is not recommended for use. ' +
+                    'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
+                    '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
+                    'or the constructor.\n' +
+                    '\nPlease update the following components: %s',
+                  componentName,
+                );
+                didWarnAboutDeprecatedWillMount[componentName] = true;
+              }
+            }
+          }
+
           inst.componentWillMount();
         }
       }
@@ -655,15 +706,6 @@ function resolve(
       }
     }
     child = inst.render();
-
-    if (__DEV__) {
-      if (child === undefined && inst.render._isMockFunction) {
-        // This is probably bad practice. Consider warning here and
-        // deprecating this convenience.
-        child = null;
-      }
-    }
-    validateRenderResult(child, Component);
 
     let childContext;
     if (disableLegacyContext) {
@@ -1059,25 +1101,6 @@ class ReactDOMServerRenderer {
         case REACT_SUSPENSE_TYPE: {
           if (enableSuspenseServerRenderer) {
             const fallback = ((nextChild: any): ReactElement).props.fallback;
-            if (fallback === undefined) {
-              // If there is no fallback, then this just behaves as a fragment.
-              const nextChildren = toArray(
-                ((nextChild: any): ReactElement).props.children,
-              );
-              const frame: Frame = {
-                type: null,
-                domNamespace: parentNamespace,
-                children: nextChildren,
-                childIndex: 0,
-                context: context,
-                footer: '',
-              };
-              if (__DEV__) {
-                ((frame: any): FrameDev).debugElementStack = [];
-              }
-              this.stack.push(frame);
-              return '';
-            }
             const fallbackChildren = toArray(fallback);
             const nextChildren = toArray(
               ((nextChild: any): ReactElement).props.children,
