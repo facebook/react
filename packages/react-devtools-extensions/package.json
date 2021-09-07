@@ -16,8 +16,7 @@
     "test:chrome": "node ./chrome/test",
     "test:firefox": "node ./firefox/test",
     "test:edge": "node ./edge/test",
-    "improve-images": "node ./improveImages.mjs",
-    "update-mock-source-maps": "babel-node --presets=@babel/preset-env,@babel/preset-flow ./src/__tests__/updateMockSourceMaps.js"
+    "improve-images": "node ./improveImages.mjs"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
@@ -27,8 +26,6 @@
     "@babel/plugin-transform-flow-strip-types": "^7.10.4",
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
     "@babel/plugin-transform-react-jsx-source": "^7.10.5",
-    "@babel/preset-env": "^7.11.0",
-    "@babel/preset-flow": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
     "acorn-jsx": "^5.2.0",
     "archiver": "^3.0.0",
