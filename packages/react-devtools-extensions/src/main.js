@@ -287,6 +287,9 @@ function createPanelIfReactLoaded() {
           };
         }
 
+        const hookNamesModuleLoaderFunction = () =>
+          import('react-devtools-shared/src/hooks/parseHookNames');
+
         root = createRoot(document.createElement('div'));
 
         render = (overrideTab = mostRecentOverrideTab) => {
@@ -298,6 +301,7 @@ function createPanelIfReactLoaded() {
               componentsPortalContainer,
               enabledInspectedElementContextMenu: true,
               fetchFileWithCaching,
+              hookNamesModuleLoaderFunction,
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,

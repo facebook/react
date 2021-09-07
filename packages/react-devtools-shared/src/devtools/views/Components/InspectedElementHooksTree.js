@@ -26,6 +26,7 @@ import {
   enableNamedHooksFeature,
   enableProfilerChangedHookIndices,
 } from 'react-devtools-feature-flags';
+import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -65,6 +66,8 @@ export function InspectedElementHooksTree({
     toggleParseHookNames();
   };
 
+  const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
+
   const hookParsingFailed = parseHookNames && hookNames === null;
 
   let toggleTitle;
@@ -85,16 +88,18 @@ export function InspectedElementHooksTree({
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
-          {enableNamedHooksFeature && (!parseHookNames || hookParsingFailed) && (
-            <Toggle
-              className={hookParsingFailed ? styles.ToggleError : null}
-              isChecked={parseHookNamesOptimistic}
-              isDisabled={parseHookNamesOptimistic || hookParsingFailed}
-              onChange={handleChange}
-              title={toggleTitle}>
-              <ButtonIcon type="parse-hook-names" />
-            </Toggle>
-          )}
+          {enableNamedHooksFeature &&
+            typeof hookNamesModuleLoader === 'function' &&
+            (!parseHookNames || hookParsingFailed) && (
+              <Toggle
+                className={hookParsingFailed ? styles.ToggleError : null}
+                isChecked={parseHookNamesOptimistic}
+                isDisabled={parseHookNamesOptimistic || hookParsingFailed}
+                onChange={handleChange}
+                title={toggleTitle}>
+                <ButtonIcon type="parse-hook-names" />
+              </Toggle>
+            )}
           <Button onClick={handleCopy} title="Copy to clipboard">
             <ButtonIcon type="copy" />
           </Button>

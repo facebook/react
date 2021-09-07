@@ -10,6 +10,10 @@ import {
 import {initialize as initializeFrontend} from 'react-devtools-inline/frontend';
 import {initDevTools} from 'react-devtools-shared/src/devtools';
 
+// This is a pretty gross hack to make the runtime loaded named-hooks-code work.
+// $FlowFixMe
+__webpack_public_path__ = '/dist/'; // eslint-disable-line no-undef
+
 const iframe = ((document.getElementById('target'): any): HTMLIFrameElement);
 
 const {contentDocument, contentWindow} = iframe;
@@ -50,6 +54,10 @@ mountButton.addEventListener('click', function() {
   }
 });
 
+function hookNamesModuleLoaderFunction() {
+  return import('react-devtools-inline/hookNames');
+}
+
 inject('dist/app.js', () => {
   initDevTools({
     connect(cb) {
@@ -58,6 +66,7 @@ inject('dist/app.js', () => {
         createElement(DevTools, {
           browserTheme: 'light',
           enabledInspectedElementContextMenu: true,
+          hookNamesModuleLoaderFunction,
           showTabBar: true,
           warnIfLegacyBackendDetected: true,
           warnIfUnsupportedVersionDetected: true,

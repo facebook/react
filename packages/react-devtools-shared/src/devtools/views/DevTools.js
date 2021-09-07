@@ -28,6 +28,7 @@ import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
+import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {SchedulingProfilerContextController} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
@@ -42,12 +43,10 @@ import styles from './DevTools.css';
 
 import './root.css';
 
-import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
+import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {HookNames} from 'react-devtools-shared/src/types';
-import type {Thenable} from '../cache';
 
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
@@ -56,9 +55,6 @@ export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement,
 ) => void;
-export type LoadHookNamesFunction = (
-  hooksTree: HooksTree,
-) => Thenable<HookNames>;
 export type ViewAttributeSource = (
   id: number,
   path: Array<string | number>,
@@ -102,6 +98,7 @@ export type Props = {|
   // and extracts hook "names" based on the variables the hook return values get assigned to.
   // Not every DevTools build can load source maps, so this property is optional.
   fetchFileWithCaching?: ?FetchFileWithCaching,
+  hookNamesModuleLoaderFunction?: ?HookNamesModuleLoaderFunction,
 |};
 
 const componentsTab = {
@@ -127,6 +124,7 @@ export default function DevTools({
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
   fetchFileWithCaching,
+  hookNamesModuleLoaderFunction,
   overrideTab,
   profilerPortalContainer,
   showTabBar = false,
@@ -244,52 +242,55 @@ export default function DevTools({
                 componentsPortalContainer={componentsPortalContainer}
                 profilerPortalContainer={profilerPortalContainer}>
                 <ViewElementSourceContext.Provider value={viewElementSource}>
-                  <FetchFileWithCachingContext.Provider
-                    value={fetchFileWithCaching || null}>
-                    <TreeContextController>
-                      <ProfilerContextController>
-                        <SchedulingProfilerContextController>
-                          <ThemeProvider>
-                            <div
-                              className={styles.DevTools}
-                              ref={devToolsRef}
-                              data-react-devtools-portal-root={true}>
-                              {showTabBar && (
-                                <div className={styles.TabBar}>
-                                  <ReactLogo />
-                                  <span className={styles.DevToolsVersion}>
-                                    {process.env.DEVTOOLS_VERSION}
-                                  </span>
-                                  <div className={styles.Spacer} />
-                                  <TabBar
-                                    currentTab={tab}
-                                    id="DevTools"
-                                    selectTab={setTab}
-                                    tabs={tabs}
-                                    type="navigation"
+                  <HookNamesModuleLoaderContext.Provider
+                    value={hookNamesModuleLoaderFunction || null}>
+                    <FetchFileWithCachingContext.Provider
+                      value={fetchFileWithCaching || null}>
+                      <TreeContextController>
+                        <ProfilerContextController>
+                          <SchedulingProfilerContextController>
+                            <ThemeProvider>
+                              <div
+                                className={styles.DevTools}
+                                ref={devToolsRef}
+                                data-react-devtools-portal-root={true}>
+                                {showTabBar && (
+                                  <div className={styles.TabBar}>
+                                    <ReactLogo />
+                                    <span className={styles.DevToolsVersion}>
+                                      {process.env.DEVTOOLS_VERSION}
+                                    </span>
+                                    <div className={styles.Spacer} />
+                                    <TabBar
+                                      currentTab={tab}
+                                      id="DevTools"
+                                      selectTab={setTab}
+                                      tabs={tabs}
+                                      type="navigation"
+                                    />
+                                  </div>
+                                )}
+                                <div
+                                  className={styles.TabContent}
+                                  hidden={tab !== 'components'}>
+                                  <Components
+                                    portalContainer={componentsPortalContainer}
                                   />
                                 </div>
-                              )}
-                              <div
-                                className={styles.TabContent}
-                                hidden={tab !== 'components'}>
-                                <Components
-                                  portalContainer={componentsPortalContainer}
-                                />
+                                <div
+                                  className={styles.TabContent}
+                                  hidden={tab !== 'profiler'}>
+                                  <Profiler
+                                    portalContainer={profilerPortalContainer}
+                                  />
+                                </div>
                               </div>
-                              <div
-                                className={styles.TabContent}
-                                hidden={tab !== 'profiler'}>
-                                <Profiler
-                                  portalContainer={profilerPortalContainer}
-                                />
-                              </div>
-                            </div>
-                          </ThemeProvider>
-                        </SchedulingProfilerContextController>
-                      </ProfilerContextController>
-                    </TreeContextController>
-                  </FetchFileWithCachingContext.Provider>
+                            </ThemeProvider>
+                          </SchedulingProfilerContextController>
+                        </ProfilerContextController>
+                      </TreeContextController>
+                    </FetchFileWithCachingContext.Provider>
+                  </HookNamesModuleLoaderContext.Provider>
                 </ViewElementSourceContext.Provider>
               </SettingsContextController>
               <UnsupportedBridgeProtocolDialog />

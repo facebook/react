@@ -32,6 +32,7 @@ import {
 } from 'react-devtools-shared/src/hookNamesCache';
 import {loadModule} from 'react-devtools-shared/src/dynamicImportCache';
 import FetchFileWithCachingContext from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
+import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {enableNamedHooksFeature} from 'react-devtools-feature-flags';
 
@@ -60,13 +61,6 @@ export const InspectedElementContext = createContext<Context>(
 
 const POLL_INTERVAL = 1000;
 
-// parseHookNames has a lot of code.
-// Embedding it into a build makes the build large.
-// This component uses Suspense to lazily import() it only if the feature will be used.
-function loadHookNamesModuleLoaderFunction() {
-  return import('react-devtools-shared/src/hooks/parseHookNames');
-}
-
 export type Props = {|
   children: ReactNodeList,
 |};
@@ -77,6 +71,11 @@ export function InspectedElementContextController({children}: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
+
+  // parseHookNames has a lot of code.
+  // Embedding it into a build makes the build large.
+  // This function enables DevTools to make use of Suspense to lazily import() it only if the feature will be used.
+  const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
 
   const refresh = useCacheRefresh();
 
@@ -127,31 +126,31 @@ export function InspectedElementContextController({children}: Props) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
 
     if (enableNamedHooksFeature) {
-      if (parseHookNames || alreadyLoadedHookNames) {
-        const loadHookNamesModule = loadModule(
-          loadHookNamesModuleLoaderFunction,
-        );
-        if (loadHookNamesModule !== null) {
-          const {
-            parseHookNames: loadHookNamesFunction,
-            prefetchSourceFiles,
-            purgeCachedMetadata,
-          } = loadHookNamesModule;
+      if (typeof hookNamesModuleLoader === 'function') {
+        if (parseHookNames || alreadyLoadedHookNames) {
+          const hookNamesModule = loadModule(hookNamesModuleLoader);
+          if (hookNamesModule !== null) {
+            const {
+              parseHookNames: loadHookNamesFunction,
+              prefetchSourceFiles,
+              purgeCachedMetadata,
+            } = hookNamesModule;
 
-          purgeCachedMetadataRef.current = purgeCachedMetadata;
-          prefetchSourceFilesRef.current = prefetchSourceFiles;
+            purgeCachedMetadataRef.current = purgeCachedMetadata;
+            prefetchSourceFilesRef.current = prefetchSourceFiles;
 
-          if (
-            inspectedElement !== null &&
-            inspectedElement.hooks !== null &&
-            loadHookNamesFunction !== null
-          ) {
-            hookNames = loadHookNames(
-              element,
-              inspectedElement.hooks,
-              loadHookNamesFunction,
-              fetchFileWithCaching,
-            );
+            if (
+              inspectedElement !== null &&
+              inspectedElement.hooks !== null &&
+              loadHookNamesFunction !== null
+            ) {
+              hookNames = loadHookNames(
+                element,
+                inspectedElement.hooks,
+                loadHookNamesFunction,
+                fetchFileWithCaching,
+              );
+            }
           }
         }
       }
