@@ -570,29 +570,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     }
   });
 
-  test('Infinite loop if getSnapshot keeps returning new reference', () => {
-    const store = createExternalStore({});
-
-    function App() {
-      const text = useSyncExternalStore(store.subscribe, () => ({}));
-      return <Text text={JSON.stringify(text)} />;
-    }
-
-    spyOnDev(console, 'error');
-    const root = createRoot();
-
-    expect(() => act(() => root.render(<App />))).toThrow(
-      'Maximum update depth exceeded. This can happen when a component repeatedly ' +
-        'calls setState inside componentWillUpdate or componentDidUpdate. React limits ' +
-        'the number of nested updates to prevent infinite loops.',
-    );
-    if (__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toMatch(
-        'The result of getSnapshot should be cached to avoid an infinite loop',
-      );
-    }
-  });
-
   describe('extra features implemented in user-space', () => {
     test('memoized selectors are only called once per update', async () => {
       const store = createExternalStore({a: 0, b: 0});

@@ -178,4 +178,4 @@ export const allowConcurrentByDefault = false;
 
 export const enablePersistentOffscreenHostContainer = false;
 
-export const consoleManagedByDevToolsDuringStrictMode = false;
+export const consoleManagedByDevToolsDuringStrictMode = true;
