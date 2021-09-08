@@ -116,9 +116,12 @@ import {
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {getIsStrictModeForDevtools} from './ReactFiberReconciler.old';
-import {warnIfSubscriptionDetected} from 'react/src/ReactCurrentBatchConfig';
 
-const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
+const {
+  ReactCurrentDispatcher,
+  ReactCurrentBatchConfig,
+  warnIfSubscriptionDetected,
+} = ReactSharedInternals;
 
 type Update<S, A> = {|
   lane: Lane,
