@@ -526,6 +526,15 @@ export default {
             reactHooksMap.set(codePathSegment, reactHooks);
           }
           reactHooks.push(node.callee);
+        } else if (node.arguments.some(isHook)) {
+          node.arguments.filter(isHook)
+            .forEach(hook => {
+              const message =
+                `React Hook "${context.getSource(hook)}" cannot be called ` +
+                'inside a callback. React Hooks must be called in a ' +
+                'React function component or a custom React Hook function.';
+              context.report({node: hook, message});
+            })
         }
       },
     };
