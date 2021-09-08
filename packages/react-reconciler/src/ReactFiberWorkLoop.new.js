@@ -386,7 +386,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   const isTransition = requestCurrentTransition() !== NoTransition;
   if (isTransition) {
     if (__DEV__) {
-      ReactCurrentBatchConfig._updatedFibers.add(fiber);
+      (ReactCurrentBatchConfig._updatedFibers: Set<Fiber>).add(fiber);
     }
     // The algorithm for assigning an update to a lane should be stable for all
     // updates at the same priority within the same event. To do this, the

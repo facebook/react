@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Fiber} from './ReactInternalTypes';
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 
 /**
@@ -23,7 +24,8 @@ export function startTransition(scope: () => void) {
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
     if (__DEV__) {
-      const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
+      const updatedFibersCount = (ReactCurrentBatchConfig._updatedFibers: Set<Fiber>)
+        .size;
       if (updatedFibersCount > 10) {
         console.warn(
           'Detected a suspicious number of fibers being updated (10) inside startTransition. ' +
@@ -32,7 +34,7 @@ export function startTransition(scope: () => void) {
             'are off the table.',
         );
       }
-      ReactCurrentBatchConfig._updatedFibers.clear();
+      (ReactCurrentBatchConfig._updatedFibers: Set<Fiber>).clear();
     }
   }
 }
