@@ -99,6 +99,8 @@ export const enableTrustedTypesIntegration = false;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
+export const warnOnSubscriptionInsideStartTransition = false;
+
 export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
