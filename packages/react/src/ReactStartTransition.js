@@ -11,12 +11,6 @@ import ReactCurrentBatchConfig, {
   warnIfSubscriptionDetected,
 } from './ReactCurrentBatchConfig';
 
-/**
- *  If a certain number of fibers are updated inside startTransition then we suspect
- *  that a user-space defined subscription is being wrapped by startTransition.
- *  This is no good, they should instead use built-in APIs for concurrent mode to work correctly.
- */
-
 export function startTransition(scope: () => void) {
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
