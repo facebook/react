@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 
 /**
@@ -23,18 +22,19 @@ export function startTransition(scope: () => void) {
     scope();
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
-    if (__DEV__) {
-      const updatedFibersCount = (ReactCurrentBatchConfig._updatedFibers: Set<Fiber>)
-        .size;
+    if (__DEV__ && ReactCurrentBatchConfig._updatedFibers) {
+      const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
       if (updatedFibersCount > 10) {
-        console.warn(
+        if (__DEV__) {
+console.warn(
           'Detected a suspicious number of fibers being updated (10) inside startTransition. ' +
             'If this is due to a user-space defined subscription please re-write ' +
             'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
             'are off the table.',
-        );
+        )
+};
       }
-      (ReactCurrentBatchConfig._updatedFibers: Set<Fiber>).clear();
+      ReactCurrentBatchConfig._updatedFibers.clear();
     }
   }
 }

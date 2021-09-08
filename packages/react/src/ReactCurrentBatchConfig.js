@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 /**
  * Keeps track of the current batch's configuration such as how long an update
