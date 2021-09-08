@@ -23,6 +23,10 @@ export function startTransition(scope: () => void) {
         warnOnSubscriptionInsideStartTransition &&
         ReactCurrentBatchConfig._updatedFibers
       ) {
+        console.log(
+          'inside warning 1',
+          warnOnSubscriptionInsideStartTransition,
+        );
         const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
         if (updatedFibersCount > 10) {
           console.warn(
