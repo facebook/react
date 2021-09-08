@@ -136,7 +136,7 @@ describe('parseHookNames', () => {
       .Component;
 
     fetchMock.mockIf(/.+$/, request => {
-      // Since th custom hook contains only unnamed hooks, the source code should not be loaded.
+      // Since the custom hook contains only unnamed hooks, the source code should not be loaded.
       if (request.url.endsWith('useCustom.js')) {
         throw Error(`Unexpected file request for "${request.url}"`);
       }
