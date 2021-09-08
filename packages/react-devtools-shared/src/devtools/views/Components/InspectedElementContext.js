@@ -116,7 +116,6 @@ export function InspectedElementContextController({children}: Props) {
     setParseHookNames(parseHookNamesByDefault || alreadyLoadedHookNames);
   }
 
-  const prefetchSourceFilesRef = useRef(null);
   const purgeCachedMetadataRef = useRef(null);
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
@@ -132,12 +131,10 @@ export function InspectedElementContextController({children}: Props) {
           if (hookNamesModule !== null) {
             const {
               parseHookNames: loadHookNamesFunction,
-              prefetchSourceFiles,
               purgeCachedMetadata,
             } = hookNamesModule;
 
             purgeCachedMetadataRef.current = purgeCachedMetadata;
-            prefetchSourceFilesRef.current = prefetchSourceFiles;
 
             if (
               inspectedElement !== null &&
@@ -185,11 +182,6 @@ export function InspectedElementContextController({children}: Props) {
       inspectedElementRef.current !== inspectedElement
     ) {
       inspectedElementRef.current = inspectedElement;
-
-      const prefetchSourceFiles = prefetchSourceFilesRef.current;
-      if (typeof prefetchSourceFiles === 'function') {
-        prefetchSourceFiles(inspectedElement.hooks, fetchFileWithCaching);
-      }
     }
   }, [inspectedElement]);
 
