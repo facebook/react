@@ -52,12 +52,15 @@ describe('ReactStartTransition', () => {
           });
         });
       });
-    }).toWarnDev([
-      'Detected a suspicious number of fibers being updated ' +
-        `(${SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED}) inside startTransition. ` +
-        'If this is due to a user-space defined subscription please re-write ' +
-        'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
-        'are off the table.',
-    ], {withoutStack: true});
+    }).toWarnDev(
+      [
+        'Detected a suspicious number of fibers being updated ' +
+          `(${SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED}) inside startTransition. ` +
+          'If this is due to a user-space defined subscription please re-write ' +
+          'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
+          'are off the table.',
+      ],
+      {withoutStack: true},
+    );
   });
 });

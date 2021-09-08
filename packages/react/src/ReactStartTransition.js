@@ -15,7 +15,6 @@ import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
  *  This is no good, they should instead use built-in APIs for concurrent mode to work correctly.
  */
 
-
 export function startTransition(scope: () => void) {
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
