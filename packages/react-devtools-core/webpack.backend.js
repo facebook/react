@@ -46,6 +46,9 @@ module.exports = {
     libraryTarget: 'umd',
   },
   resolve: {
+    fallback: {
+      fs: false,
+    },
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
@@ -54,9 +57,6 @@ module.exports = {
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
-  },
-  node: {
-    fs: 'empty',
   },
   plugins: [
     new DefinePlugin({
