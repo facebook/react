@@ -26,13 +26,13 @@ export function startTransition(scope: () => void) {
       const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
       if (updatedFibersCount > 10) {
         if (__DEV__) {
-console.warn(
-          'Detected a suspicious number of fibers being updated (10) inside startTransition. ' +
-            'If this is due to a user-space defined subscription please re-write ' +
-            'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
-            'are off the table.',
-        )
-};
+          console.warn(
+            'Detected a suspicious number of fibers being updated (10) inside startTransition. ' +
+              'If this is due to a user-space defined subscription please re-write ' +
+              'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
+              'are off the table.',
+          );
+        }
       }
       ReactCurrentBatchConfig._updatedFibers.clear();
     }
