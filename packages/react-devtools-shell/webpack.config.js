@@ -53,7 +53,7 @@ const config = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './index.html'
+      template: './index.html',
     }),
     new DefinePlugin({
       __DEV__,
@@ -119,20 +119,20 @@ if (TARGET === 'local') {
         warnings: false,
       },
     },
-//     historyApiFallback: {
-//       index: 'index.html'
-//     },
-//     proxy: {
-//       '/': {
-//         target: 'http://localhost:8080',
-//         bypass: function (request, response, proxyOptions) {
-//           if (request.url === '/') {
-// console.log('FOUND IT')
-//             return '/index.html';
-//           }
-//         },
-//       },
-//     },
+    //     historyApiFallback: {
+    //       index: 'index.html'
+    //     },
+    //     proxy: {
+    //       '/': {
+    //         target: 'http://localhost:8080',
+    //         bypass: function (request, response, proxyOptions) {
+    //           if (request.url === '/') {
+    // console.log('FOUND IT')
+    //             return '/index.html';
+    //           }
+    //         },
+    //       },
+    //     },
   };
 } else {
   config.output = {
