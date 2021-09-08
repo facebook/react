@@ -1868,10 +1868,6 @@ function startTransition(setPending, callback) {
         warnOnSubscriptionInsideStartTransition &&
         ReactCurrentBatchConfig._updatedFibers
       ) {
-        console.log(
-          'inside warning 2',
-          warnOnSubscriptionInsideStartTransition,
-        );
         const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
         if (updatedFibersCount > 10) {
           console.warn(
