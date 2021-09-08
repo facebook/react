@@ -2632,6 +2632,54 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
       expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy']);
     });
+
+    it('assumes passive effect destroy function is either a function or undefined', () => {
+      function App(props) {
+        useEffect(() => {
+          return props.return;
+        });
+        return null;
+      }
+
+      const root1 = ReactNoop.createRoot();
+      expect(() =>
+        act(() => {
+          root1.render(<App return={17} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up. You returned: 17',
+      ]);
+
+      const root2 = ReactNoop.createRoot();
+      expect(() =>
+        act(() => {
+          root2.render(<App return={null} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up. You returned null. If your ' +
+          'effect does not require clean up, return undefined (or nothing).',
+      ]);
+
+      const root3 = ReactNoop.createRoot();
+      expect(() =>
+        act(() => {
+          root3.render(<App return={Promise.resolve()} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up.\n\n' +
+          'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
+      ]);
+
+      // Error on unmount because React assumes the value is a function
+      expect(() =>
+        act(() => {
+          root3.unmount();
+        }),
+      ).toThrow('is not a function');
+    });
   });
 
   describe('useLayoutEffect', () => {
@@ -2809,6 +2857,54 @@ describe('ReactHooksWithNoopRenderer', () => {
         'Component render OuterFallback',
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('OuterFallback')]);
+    });
+
+    it('assumes layout effect destroy function is either a function or undefined', () => {
+      function App(props) {
+        useLayoutEffect(() => {
+          return props.return;
+        });
+        return null;
+      }
+
+      const root1 = ReactNoop.createRoot();
+      expect(() =>
+        act(() => {
+          root1.render(<App return={17} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up. You returned: 17',
+      ]);
+
+      const root2 = ReactNoop.createRoot();
+      expect(() =>
+        act(() => {
+          root2.render(<App return={null} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up. You returned null. If your ' +
+          'effect does not require clean up, return undefined (or nothing).',
+      ]);
+
+      const root3 = ReactNoop.createRoot();
+      expect(() =>
+        act(() => {
+          root3.render(<App return={Promise.resolve()} />);
+        }),
+      ).toErrorDev([
+        'Warning: An effect function must not return anything besides a ' +
+          'function, which is used for clean-up.\n\n' +
+          'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
+      ]);
+
+      // Error on unmount because React assumes the value is a function
+      expect(() =>
+        act(() => {
+          root3.unmount();
+        }),
+      ).toThrow('is not a function');
     });
   });
 
