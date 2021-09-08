@@ -15,10 +15,6 @@ import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
  *  This is no good, they should instead use built-in APIs for concurrent mode to work correctly.
  */
 
-let SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED;
-if (__DEV__) {
-  SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED = 10;
-}
 
 export function startTransition(scope: () => void) {
   const prevTransition = ReactCurrentBatchConfig.transition;
@@ -29,10 +25,9 @@ export function startTransition(scope: () => void) {
     ReactCurrentBatchConfig.transition = prevTransition;
     if (__DEV__) {
       const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
-      if (updatedFibersCount > SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED) {
+      if (updatedFibersCount > 10) {
         console.warn(
-          'Detected a suspicious number of fibers being updated ' +
-            `(${SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED}) inside startTransition. ` +
+          'Detected a suspicious number of fibers being updated (10) inside startTransition. ' +
             'If this is due to a user-space defined subscription please re-write ' +
             'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
             'are off the table.',

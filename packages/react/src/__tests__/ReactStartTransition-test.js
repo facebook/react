@@ -33,7 +33,7 @@ describe('ReactStartTransition', () => {
       return value;
     };
     const Component = ({level}) => {
-      const count = useUserSpaceSubscription();
+      useUserSpaceSubscription();
       if (level < SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED) {
         return <Component level={level + 1} />;
       }
