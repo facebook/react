@@ -116,7 +116,7 @@ if (TARGET === 'local') {
     client: {
       overlay: {
         errors: true,
-        warnings: false,
+        warnings: true,
       },
     },
     //     historyApiFallback: {
