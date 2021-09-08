@@ -27,69 +27,65 @@ describe('ReactStartTransition', () => {
     useTransition = React.useTransition;
   });
 
+  // @gate warnOnSubscriptionInsideStartTransition
   it('Warns if a suspicious number of fibers are updated inside startTransition', () => {
-    if (
-      require('shared/ReactFeatureFlags')
-        .warnOnSubscriptionInsideStartTransition
-    ) {
-      const subs = new Set();
-      const useUserSpaceSubscription = () => {
-        const setState = useState(0)[1];
-        subs.add(setState);
-      };
+    const subs = new Set();
+    const useUserSpaceSubscription = () => {
+      const setState = useState(0)[1];
+      subs.add(setState);
+    };
 
-      let triggerHookTransition;
+    let triggerHookTransition;
 
-      const Component = ({level}) => {
-        useUserSpaceSubscription();
-        if (level === 0) {
-          triggerHookTransition = useTransition()[1];
-        }
-        if (level < SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED) {
-          return <Component level={level + 1} />;
-        }
-        return null;
-      };
+    const Component = ({level}) => {
+      useUserSpaceSubscription();
+      if (level === 0) {
+        triggerHookTransition = useTransition()[1];
+      }
+      if (level < SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED) {
+        return <Component level={level + 1} />;
+      }
+      return null;
+    };
 
+    act(() => {
+      ReactTestRenderer.create(<Component level={0} />, {
+        unstable_isConcurrent: true,
+      });
+    });
+
+    expect(() => {
       act(() => {
-        ReactTestRenderer.create(<Component level={0} />, {
-          unstable_isConcurrent: true,
+        React.startTransition(() => {
+          subs.forEach(setState => {
+            setState(state => state + 1);
+          });
         });
       });
+    }).toWarnDev(
+      [
+        'Detected a large number of updates inside startTransition. ' +
+          'If this is due to a subscription please re-write it to use React provided hooks. ' +
+          'Otherwise concurrent mode guarantees are off the table.',
+      ],
+      {withoutStack: true},
+    );
 
-      expect(() => {
-        act(() => {
-          React.startTransition(() => {
-            subs.forEach(setState => {
-              setState(state => state + 1);
-            });
+    expect(() => {
+      act(() => {
+        triggerHookTransition(() => {
+          subs.forEach(setState => {
+            setState(state => state + 1);
           });
         });
-      }).toWarnDev(
-        [
-          'Detected a large number of updates inside startTransition. ' +
-            'If this is due to a subscription please re-write it to use React provided hooks. ' +
-            'Otherwise concurrent mode guarantees are off the table.',
-        ],
-        {withoutStack: true},
-      );
-
-      expect(() => {
-        act(() => {
-          triggerHookTransition(() => {
-            subs.forEach(setState => {
-              setState(state => state + 1);
-            });
-          });
-        });
-      }).toWarnDev(
-        [
-          'Detected a large number of updates inside startTransition. ' +
-            'If this is due to a subscription please re-write it to use React provided hooks. ' +
-            'Otherwise concurrent mode guarantees are off the table.',
-        ],
-        {withoutStack: true},
-      );
-    }
+      });
+    }).toWarnDev(
+      [
+        'Detected a large number of updates inside startTransition. ' +
+          'If this is due to a subscription please re-write it to use React provided hooks. ' +
+          'Otherwise concurrent mode guarantees are off the table.',
+      ],
+      {withoutStack: true},
+    );
   });
 });

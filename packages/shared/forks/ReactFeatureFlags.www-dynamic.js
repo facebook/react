@@ -59,5 +59,5 @@ export const enableLazyContextPropagation = __VARIANT__;
 export const enableSyncDefaultUpdates = __VARIANT__;
 export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
-
+export const warnOnSubscriptionInsideStartTransition = false;
 export const consoleManagedByDevToolsDuringStrictMode = true;
