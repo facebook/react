@@ -110,44 +110,51 @@ export function loadHookNames(
 
     let didTimeout = false;
 
-    loadHookNamesFunction(hooksTree, fetchFileWithCaching).then(
-      function onSuccess(hookNames) {
-        if (didTimeout) {
-          return;
-        }
+    const onSuccess = hookNames => {
+      if (didTimeout) {
+        return;
+      }
 
-        if (__DEBUG__) {
-          console.log('[hookNamesCache] onSuccess() hookNames:', hookNames);
-        }
+      if (__DEBUG__) {
+        console.log('[hookNamesCache] onSuccess() hookNames:', hookNames);
+      }
 
-        if (hookNames) {
-          const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
-          resolvedRecord.status = Resolved;
-          resolvedRecord.value = hookNames;
-        } else {
-          const notFoundRecord = ((newRecord: any): RejectedRecord);
-          notFoundRecord.status = Rejected;
-          notFoundRecord.value = null;
-        }
+      if (hookNames) {
+        const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
+        resolvedRecord.status = Resolved;
+        resolvedRecord.value = hookNames;
+      } else {
+        const notFoundRecord = ((newRecord: any): RejectedRecord);
+        notFoundRecord.status = Rejected;
+        notFoundRecord.value = null;
+      }
 
-        wake();
-      },
-      function onError(error) {
-        if (didTimeout) {
-          return;
-        }
+      wake();
+    };
 
-        if (__DEBUG__) {
-          console.log('[hookNamesCache] onError() error:', error);
-        }
+    const onError = error => {
+      if (didTimeout) {
+        return;
+      }
 
-        const thrownRecord = ((newRecord: any): RejectedRecord);
-        thrownRecord.status = Rejected;
-        thrownRecord.value = null;
+      if (__DEBUG__) {
+        console.log('[hookNamesCache] onError()');
+      }
 
-        wake();
-      },
-    );
+      console.error(error);
+
+      const thrownRecord = ((newRecord: any): RejectedRecord);
+      thrownRecord.status = Rejected;
+      thrownRecord.value = null;
+
+      wake();
+    };
+
+    const thenable = loadHookNamesFunction(hooksTree, fetchFileWithCaching);
+    thenable.then(onSuccess, onError);
+    if (typeof (thenable: any).catch === 'function') {
+      (thenable: any).catch(onError);
+    }
 
     // Eventually timeout and stop trying to load names.
     let timeoutID = setTimeout(function onTimeout() {
