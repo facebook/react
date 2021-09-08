@@ -56,7 +56,7 @@ export const enableSchedulingProfiler =
 // For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
 // At least this will let us stop shipping <Profiler> implementation to all users.
 export const enableSchedulerDebugging = true;
-
+export const warnOnSubscriptionInsideStartTransition = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const warnAboutStringRefs = false;
