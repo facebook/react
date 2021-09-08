@@ -46,9 +46,6 @@ module.exports = {
     libraryTarget: 'umd',
   },
   resolve: {
-    fallback: {
-      fs: false,
-    },
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
