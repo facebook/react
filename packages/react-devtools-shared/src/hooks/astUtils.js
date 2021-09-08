@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {withSyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
+import {withSyncPerformanceMark} from 'react-devtools-shared/src/PerformanceLoggingUtils';
 import traverse, {NodePath, Node} from '@babel/traverse';
 import {File} from '@babel/types';
 

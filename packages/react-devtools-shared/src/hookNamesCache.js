@@ -18,6 +18,8 @@ import type {
 } from 'react-devtools-shared/src/types';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
+import {measureCallbackDuration} from './PerformanceLoggingUtils';
+import {logEvent} from './Logger';
 
 const TIMEOUT = 30000;
 
@@ -92,7 +94,13 @@ export function loadHookNames(
       },
     };
 
-    const wake = () => {
+    let timeoutID;
+
+    const wake = (
+      resolution: 'success' | 'error' | 'timeout',
+      hookNames: HookNames | null,
+      durationMs: number,
+    ) => {
       if (timeoutID) {
         clearTimeout(timeoutID);
         timeoutID = null;
@@ -101,6 +109,15 @@ export function loadHookNames(
       // This assumes they won't throw.
       callbacks.forEach(callback => callback());
       callbacks.clear();
+
+      // Log duration for parsing hook names
+      logEvent({
+        name: 'parseHookNames',
+        displayName: element.displayName,
+        numberOfHooks: hookNames?.size ?? null,
+        durationMs,
+        resolution,
+      });
     };
 
     const newRecord: Record<HookNames> = (record = {
@@ -110,64 +127,65 @@ export function loadHookNames(
 
     let didTimeout = false;
 
-    loadHookNamesFunction(hooksTree, fetchFileWithCaching).then(
-      function onSuccess(hookNames) {
-        if (didTimeout) {
-          return;
-        }
+    measureCallbackDuration(done => {
+      loadHookNamesFunction(hooksTree, fetchFileWithCaching).then(
+        function onSuccess(hookNames) {
+          if (didTimeout) {
+            return;
+          }
 
+          if (__DEBUG__) {
+            console.log('[hookNamesCache] onSuccess() hookNames:', hookNames);
+          }
+
+          if (hookNames) {
+            const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
+            resolvedRecord.status = Resolved;
+            resolvedRecord.value = hookNames;
+          } else {
+            const notFoundRecord = ((newRecord: any): RejectedRecord);
+            notFoundRecord.status = Rejected;
+            notFoundRecord.value = null;
+          }
+
+          wake('success', hookNames, done());
+        },
+        function onError(error) {
+          if (didTimeout) {
+            return;
+          }
+
+          if (__DEBUG__) {
+            console.log('[hookNamesCache] onError()');
+          }
+
+          console.error(error);
+
+          const thrownRecord = ((newRecord: any): RejectedRecord);
+          thrownRecord.status = Rejected;
+          thrownRecord.value = null;
+
+          wake('error', null, done());
+        },
+      );
+
+      // Eventually timeout and stop trying to load names.
+      timeoutID = setTimeout(function onTimeout() {
         if (__DEBUG__) {
-          console.log('[hookNamesCache] onSuccess() hookNames:', hookNames);
+          console.log('[hookNamesCache] onTimeout()');
         }
 
-        if (hookNames) {
-          const resolvedRecord = ((newRecord: any): ResolvedRecord<HookNames>);
-          resolvedRecord.status = Resolved;
-          resolvedRecord.value = hookNames;
-        } else {
-          const notFoundRecord = ((newRecord: any): RejectedRecord);
-          notFoundRecord.status = Rejected;
-          notFoundRecord.value = null;
-        }
+        timeoutID = null;
 
-        wake();
-      },
-      function onError(error) {
-        if (didTimeout) {
-          return;
-        }
+        didTimeout = true;
 
-        if (__DEBUG__) {
-          console.log('[hookNamesCache] onError()');
-        }
+        const timedoutRecord = ((newRecord: any): RejectedRecord);
+        timedoutRecord.status = Rejected;
+        timedoutRecord.value = null;
 
-        console.error(error);
-
-        const thrownRecord = ((newRecord: any): RejectedRecord);
-        thrownRecord.status = Rejected;
-        thrownRecord.value = null;
-
-        wake();
-      },
-    );
-
-    // Eventually timeout and stop trying to load names.
-    let timeoutID = setTimeout(function onTimeout() {
-      if (__DEBUG__) {
-        console.log('[hookNamesCache] onTimeout()');
-      }
-
-      timeoutID = null;
-
-      didTimeout = true;
-
-      const timedoutRecord = ((newRecord: any): RejectedRecord);
-      timedoutRecord.status = Rejected;
-      timedoutRecord.value = null;
-
-      wake();
-    }, TIMEOUT);
-
+        wake('timeout', null, done());
+      }, TIMEOUT);
+    });
     map.set(element, record);
   }
 

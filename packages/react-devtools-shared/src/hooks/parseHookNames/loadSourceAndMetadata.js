@@ -52,7 +52,7 @@ import {
   withAsyncPerformanceMark,
   withCallbackPerformanceMark,
   withSyncPerformanceMark,
-} from 'react-devtools-shared/src/PerformanceMarks';
+} from 'react-devtools-shared/src/PerformanceLoggingUtils';
 
 import type {
   HooksNode,

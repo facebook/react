@@ -14,6 +14,9 @@ const supportsUserTiming =
   typeof performance.mark === 'function' &&
   typeof performance.clearMarks === 'function';
 
+const supportsPerformanceNow =
+  typeof performance !== 'undefined' && typeof performance.now === 'function';
+
 function mark(markName: string): void {
   if (supportsUserTiming) {
     performance.mark(markName + '-start');
@@ -25,6 +28,13 @@ function measure(markName: string): void {
     performance.mark(markName + '-end');
     performance.measure(markName, markName + '-start', markName + '-end');
   }
+}
+
+function now(): number {
+  if (supportsPerformanceNow) {
+    return performance.now();
+  }
+  return Date.now();
 }
 
 export async function withAsyncPerformanceMark<TReturn>(
@@ -65,4 +75,33 @@ export function withCallbackPerformanceMark<TReturn>(
     return callback(done);
   }
   return callback(() => {});
+}
+
+export async function measureAsyncDuration<TReturn>(
+  callback: () => Promise<TReturn>,
+): Promise<[number, TReturn]> {
+  const start = now();
+  const result = await callback();
+  const duration = now() - start;
+  return [duration, result];
+}
+
+export function measureSyncDuration<TReturn>(
+  callback: () => TReturn,
+): [number, TReturn] {
+  const start = now();
+  const result = callback();
+  const duration = now() - start;
+  return [duration, result];
+}
+
+export function measureCallbackDuration<TReturn>(
+  callback: (done: () => number) => TReturn,
+): TReturn {
+  const start = now();
+  const done = () => {
+    const duration = now() - start;
+    return duration;
+  };
+  return callback(done);
 }

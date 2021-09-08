@@ -21,7 +21,7 @@ import {SourceMapMetadataConsumer} from '../SourceMapMetadataConsumer';
 import {
   withAsyncPerformanceMark,
   withSyncPerformanceMark,
-} from 'react-devtools-shared/src/PerformanceMarks';
+} from 'react-devtools-shared/src/PerformanceLoggingUtils';
 
 import type {
   HooksList,
