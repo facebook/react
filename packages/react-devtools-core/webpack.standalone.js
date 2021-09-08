@@ -59,6 +59,8 @@ module.exports = {
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
+  // webpack doesnt like these bundled
+  externals: ['utf-8-validate','bufferutil'],
   node: {
     // Don't replace __dirname!
     // This would break the standalone DevTools ability to load the backend.
