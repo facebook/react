@@ -98,6 +98,7 @@ export type Props = {|
   // and extracts hook "names" based on the variables the hook return values get assigned to.
   // Not every DevTools build can load source maps, so this property is optional.
   fetchFileWithCaching?: ?FetchFileWithCaching,
+  // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
   hookNamesModuleLoaderFunction?: ?HookNamesModuleLoaderFunction,
 |};
 

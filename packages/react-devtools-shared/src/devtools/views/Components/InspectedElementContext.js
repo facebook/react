@@ -75,6 +75,7 @@ export function InspectedElementContextController({children}: Props) {
   // parseHookNames has a lot of code.
   // Embedding it into a build makes the build large.
   // This function enables DevTools to make use of Suspense to lazily import() it only if the feature will be used.
+  // TODO (Webpack 5) Hopefully we can remove this indirection once the Webpack 5 upgrade is completed.
   const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
 
   const refresh = useCacheRefresh();

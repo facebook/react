@@ -287,6 +287,7 @@ function createPanelIfReactLoaded() {
           };
         }
 
+        // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
         const hookNamesModuleLoaderFunction = () =>
           import('react-devtools-shared/src/hooks/parseHookNames');
 
