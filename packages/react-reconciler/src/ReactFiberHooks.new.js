@@ -116,6 +116,7 @@ import {
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {getIsStrictModeForDevtools} from './ReactFiberReconciler.new';
+import {warnIfSubscriptionDetected} from 'react/src/ReactCurrentBatchConfig';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1861,6 +1862,7 @@ function startTransition(setPending, callback) {
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    warnIfSubscriptionDetected();
   }
 }
 

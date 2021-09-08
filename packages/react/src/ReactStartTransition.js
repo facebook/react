@@ -7,7 +7,9 @@
  * @flow
  */
 
-import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
+import ReactCurrentBatchConfig, {
+  warnIfSubscriptionDetected,
+} from './ReactCurrentBatchConfig';
 
 /**
  *  If a certain number of fibers are updated inside startTransition then we suspect
@@ -22,19 +24,8 @@ export function startTransition(scope: () => void) {
     scope();
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
-    if (__DEV__ && ReactCurrentBatchConfig._updatedFibers) {
-      const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
-      if (updatedFibersCount > 10) {
-        if (__DEV__) {
-          console.warn(
-            'Detected a suspicious number of fibers being updated (10) inside startTransition. ' +
-              'If this is due to a user-space defined subscription please re-write ' +
-              'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
-              'are off the table.',
-          );
-        }
-      }
-      ReactCurrentBatchConfig._updatedFibers.clear();
+    if (__DEV__) {
+      warnIfSubscriptionDetected();
     }
   }
 }

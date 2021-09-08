@@ -48,6 +48,7 @@ export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
+export const warnOnSubscriptionInsideStartTransition = false;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
