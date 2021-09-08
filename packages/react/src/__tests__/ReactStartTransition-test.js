@@ -27,10 +27,11 @@ describe('ReactStartTransition', () => {
     useTransition = React.useTransition;
   });
 
-  if (
-    require('shared/ReactFeatureFlags').warnOnSubscriptionInsideStartTransition
-  ) {
-    it('Warns if a suspicious number of fibers are updated inside startTransition', () => {
+  it('Warns if a suspicious number of fibers are updated inside startTransition', () => {
+    if (
+      require('shared/ReactFeatureFlags')
+        .warnOnSubscriptionInsideStartTransition
+    ) {
       const subs = new Set();
       const useUserSpaceSubscription = () => {
         const setState = useState(0)[1];
@@ -83,16 +84,12 @@ describe('ReactStartTransition', () => {
         });
       }).toWarnDev(
         [
-          'Detected a suspicious number of fibers being updated ' +
-            `(${SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED}) inside startTransition. ` +
-            'If this is due to a user-space defined subscription please re-write ' +
-            'it to use React provided hooks. Otherwise concurrent mode guarantees ' +
-            'are off the table.',
+          'Detected a large number of updates inside startTransition. ' +
+            'If this is due to a subscription please re-write it to use React provided hooks. ' +
+            'Otherwise concurrent mode guarantees are off the table.',
         ],
         {withoutStack: true},
       );
-    });
-  } else {
-    it('Dummy test so that jest doesnt complain about lack of tests in this file when the warning feature flag is off', () => {});
-  }
+    }
+  });
 });

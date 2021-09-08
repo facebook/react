@@ -7,9 +7,7 @@
 
 import assign from 'object-assign';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
-import ReactCurrentBatchConfig, {
-  warnIfSubscriptionDetected,
-} from './ReactCurrentBatchConfig';
+import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 import ReactCurrentActQueue from './ReactCurrentActQueue';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
@@ -25,7 +23,6 @@ const ReactSharedInternals = {
 if (__DEV__) {
   ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
   ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
-  ReactSharedInternals.warnIfSubscriptionDetected = warnIfSubscriptionDetected;
 }
 
 export default ReactSharedInternals;

@@ -8,7 +8,6 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 
 type BatchConfig = {
   transition: number,
@@ -24,26 +23,6 @@ const ReactCurrentBatchConfig: BatchConfig = {
 
 if (__DEV__) {
   ReactCurrentBatchConfig._updatedFibers = new Set();
-}
-
-export function warnIfSubscriptionDetected() {
-  if (
-    __DEV__ &&
-    warnOnSubscriptionInsideStartTransition &&
-    ReactCurrentBatchConfig._updatedFibers
-  ) {
-    const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
-    if (updatedFibersCount > 10) {
-      if (__DEV__) {
-        console.warn(
-          'Detected a large number of updates inside startTransition. ' +
-            'If this is due to a subscription please re-write it to use React provided hooks. ' +
-            'Otherwise concurrent mode guarantees are off the table.',
-        );
-      }
-    }
-    ReactCurrentBatchConfig._updatedFibers.clear();
-  }
 }
 
 export default ReactCurrentBatchConfig;
