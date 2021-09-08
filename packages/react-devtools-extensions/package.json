@@ -65,7 +65,7 @@
     "webpack": "^5",
     "webpack-cli": "^4",
     "webpack-dev-server": "^4",
-    "workerize-loader": "^1.3.0"
+    "workerize-loader-5": "^1.4.0"
   },
   "dependencies": {
     "web-ext": "^4"

@@ -90,7 +90,7 @@ module.exports = {
         test: /\.worker\.js$/,
         use: [
           {
-            loader: 'workerize-loader',
+            loader: 'workerize-loader-5',
             options: {
               inline: true,
             },

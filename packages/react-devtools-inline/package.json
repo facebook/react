@@ -40,6 +40,6 @@
     "webpack": "^5",
     "webpack-cli": "^4",
     "webpack-dev-server": "^4",
-    "worker-loader": "^3.0.3"
+    "worker-loader": "^3.0.8"
   }
 }
