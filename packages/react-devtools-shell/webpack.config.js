@@ -119,20 +119,6 @@ if (TARGET === 'local') {
         warnings: true,
       },
     },
-    //     historyApiFallback: {
-    //       index: 'index.html'
-    //     },
-    //     proxy: {
-    //       '/': {
-    //         target: 'http://localhost:8080',
-    //         bypass: function (request, response, proxyOptions) {
-    //           if (request.url === '/') {
-    // console.log('FOUND IT')
-    //             return '/index.html';
-    //           }
-    //         },
-    //       },
-    //     },
   };
 } else {
   config.output = {
