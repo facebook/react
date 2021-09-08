@@ -116,6 +116,7 @@ import {
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {getIsStrictModeForDevtools} from './ReactFiberReconciler.new';
+import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
