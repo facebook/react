@@ -1862,7 +1862,9 @@ function startTransition(setPending, callback) {
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
-    warnIfSubscriptionDetected();
+    if (__DEV__) {
+      warnIfSubscriptionDetected();
+    }
   }
 }
 
