@@ -524,7 +524,7 @@ function commitHookEffectListMount(tag: HookFlags, finishedWork: Fiber) {
           const destroy = effect.destroy;
           if (destroy !== undefined && typeof destroy !== 'function') {
             let hookName;
-            if (effect.tag === (HasEffect | Layout)) {
+            if ((effect.tag & Layout) !== NoFlags) {
               hookName = 'useLayoutEffect';
             } else {
               hookName = 'useEffect';
