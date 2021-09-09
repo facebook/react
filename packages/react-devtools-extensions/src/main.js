@@ -25,7 +25,7 @@ const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
 
 const isChrome = getBrowserName() === 'Chrome';
 
-const cachedNetworkEvents = new Map();
+const cachedSources = new Map();
 
 // Cache JavaScript resources as the page loads them.
 // This helps avoid unnecessary duplicate requests when hook names are parsed.
@@ -33,13 +33,17 @@ const cachedNetworkEvents = new Map();
 // This lets us avoid a possible (expensive) cache miss.
 // For more info see: github.com/facebook/react/pull/22198
 chrome.devtools.network.onRequestFinished.addListener(
-  function onRequestFinished(event) {
-    if (event.request.method === 'GET') {
-      switch (event.response.content.mimeType) {
+  function onRequestFinished(request) {
+    if (request.request.method === 'GET') {
+      switch (request.response.content.mimeType) {
         case 'application/javascript':
         case 'application/x-javascript':
         case 'text/javascript':
-          cachedNetworkEvents.set(event.request.url, event);
+          request.getContent(content => {
+            if (content != null) {
+              cachedSources.set(request.request.url, content);
+            }
+          });
           break;
       }
     }
@@ -242,13 +246,13 @@ function createPanelIfReactLoaded() {
           // This helper function allows the extension to request files to be fetched
           // by the content script (running in the page) to increase the likelihood of a cache hit.
           fetchFileWithCaching = url => {
-            const event = cachedNetworkEvents.get(url);
-            if (event != null) {
+            const content = cachedSources.get(url);
+            if (content != null) {
               // If this resource has already been cached locally,
               // skip the network queue (which might not be a cache hit anyway)
               // and just use the cached response.
               return new Promise(resolve => {
-                event.getContent(content => resolve(content));
+                resolve(content);
               });
             }
 
@@ -442,7 +446,7 @@ function createPanelIfReactLoaded() {
       // Re-initialize DevTools panel when a new page is loaded.
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
         // Clear cached requests when a new page is opened.
-        cachedNetworkEvents.clear();
+        cachedSources.clear();
 
         // Re-initialize saved filters on navigation,
         // since global values stored on window get reset in this case.
@@ -461,7 +465,7 @@ function createPanelIfReactLoaded() {
 // Load (or reload) the DevTools extension when the user navigates to a new page.
 function checkPageForReact() {
   // Clear cached requests when a new page is opened.
-  cachedNetworkEvents.clear();
+  cachedSources.clear();
 
   syncSavedPreferences();
   createPanelIfReactLoaded();
