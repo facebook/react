@@ -1897,6 +1897,15 @@ function commitRootImpl(root, renderPriorityLevel) {
   remainingLanes = root.pendingLanes;
 
   // Check if there's remaining work on this root
+  // TODO: This is part of the `componentDidCatch` implementation. Its purpose
+  // is to detect whether something might have called setState inside
+  // `componentDidCatch`. The mechanism is known to be flawed because `setState`
+  // inside `componentDidCatch` is itself flawed — that's why we recommend
+  // `getDerivedStateFromError` instead. However, it could be improved by
+  // checking if remainingLanes includes Sync work, instead of whether there's
+  // any work remaining at all (which would also include stuff like Suspense
+  // retries or transitions). It's been like this for a while, though, so fixing
+  // it probably isn't that urgent.
   if (remainingLanes === NoLanes) {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
@@ -1907,23 +1916,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     if (!rootDidHavePassiveEffects) {
       commitDoubleInvokeEffectsInDEV(root.current, false);
     }
-  }
-
-  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
-    if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
-      markNestedUpdateScheduled();
-    }
-
-    // Count the number of times the root synchronously re-renders without
-    // finishing. If there are too many, it indicates an infinite update loop.
-    if (root === rootWithNestedUpdates) {
-      nestedUpdateCount++;
-    } else {
-      nestedUpdateCount = 0;
-      rootWithNestedUpdates = root;
-    }
-  } else {
-    nestedUpdateCount = 0;
   }
 
   onCommitRootDevTools(finishedWork.stateNode, renderPriorityLevel);
@@ -1962,6 +1954,25 @@ function commitRootImpl(root, renderPriorityLevel) {
     root.tag !== LegacyRoot
   ) {
     flushPassiveEffects();
+  }
+
+  // Read this again, since a passive effect might have updated it
+  remainingLanes = root.pendingLanes;
+  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
+    if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
+      markNestedUpdateScheduled();
+    }
+
+    // Count the number of times the root synchronously re-renders without
+    // finishing. If there are too many, it indicates an infinite update loop.
+    if (root === rootWithNestedUpdates) {
+      nestedUpdateCount++;
+    } else {
+      nestedUpdateCount = 0;
+      rootWithNestedUpdates = root;
+    }
+  } else {
+    nestedUpdateCount = 0;
   }
 
   // If layout work was scheduled, flush it now.
