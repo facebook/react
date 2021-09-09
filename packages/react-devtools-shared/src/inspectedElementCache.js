@@ -116,28 +116,34 @@ export function inspectElement(
       return null;
     }
 
-    inspectElementMutableSource({
+    const onSuccess = ([inspectedElement: InspectedElementFrontend]) => {
+      const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
+      resolvedRecord.status = Resolved;
+      resolvedRecord.value = inspectedElement;
+      wake();
+    };
+
+    const onError = error => {
+      if (newRecord.status === Pending) {
+        const rejectedRecord = ((newRecord: any): RejectedRecord);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.value = `Could not inspect element with id "${element.id}". Error thrown:\n${error.message}`;
+        wake();
+      }
+    };
+
+    const thenable = inspectElementMutableSource({
       bridge,
       element,
       path,
       rendererID: ((rendererID: any): number),
-    }).then(
-      ([inspectedElement: InspectedElementFrontend]) => {
-        const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
-        resolvedRecord.status = Resolved;
-        resolvedRecord.value = inspectedElement;
-        wake();
-      },
+    });
+    thenable.then(onSuccess, onError);
 
-      error => {
-        if (newRecord.status === Pending) {
-          const rejectedRecord = ((newRecord: any): RejectedRecord);
-          rejectedRecord.status = Rejected;
-          rejectedRecord.value = `Could not inspect element with id "${element.id}". Error thrown:\n${error.message}`;
-          wake();
-        }
-      },
-    );
+    if (typeof (thenable: any).catch === 'function') {
+      (thenable: any).catch();
+    }
+
     map.set(element, record);
   }
 

@@ -148,6 +148,14 @@ function extractAndLoadSourceMapJSON(
   // Deduplicate fetches, since there can be multiple location keys per source map.
   const dedupedFetchPromises = new Map();
 
+  if (__DEBUG__) {
+    console.log(
+      'extractAndLoadSourceMapJSON() load',
+      locationKeyToHookSourceAndMetadata.size,
+      'source maps',
+    );
+  }
+
   const setterPromises = [];
   locationKeyToHookSourceAndMetadata.forEach(hookSourceAndMetadata => {
     const sourceMapRegex = / ?sourceMappingURL=([^\s'"]+)/gm;
@@ -177,45 +185,52 @@ function extractAndLoadSourceMapJSON(
         const sourceMappingURL = sourceMappingURLMatch[1];
         const hasInlineSourceMap = sourceMappingURL.indexOf('base64,') >= 0;
         if (hasInlineSourceMap) {
-          // TODO (named hooks) deduplicate parsing in this branch (similar to fetching in the other branch)
-          // since there can be multiple location keys per source map.
+          try {
+            // TODO (named hooks) deduplicate parsing in this branch (similar to fetching in the other branch)
+            // since there can be multiple location keys per source map.
 
-          // Web apps like Code Sandbox embed multiple inline source maps.
-          // In this case, we need to loop through and find the right one.
-          // We may also need to trim any part of this string that isn't based64 encoded data.
-          const trimmed = ((sourceMappingURL.match(
-            /base64,([a-zA-Z0-9+\/=]+)/,
-          ): any): Array<string>)[1];
-          const decoded = withSyncPerformanceMark('decodeBase64String()', () =>
-            decodeBase64String(trimmed),
-          );
-
-          const sourceMapJSON = withSyncPerformanceMark(
-            'JSON.parse(decoded)',
-            () => JSON.parse(decoded),
-          );
-
-          if (__DEBUG__) {
-            console.groupCollapsed(
-              'extractAndLoadSourceMapJSON() Inline source map',
+            // Web apps like Code Sandbox embed multiple inline source maps.
+            // In this case, we need to loop through and find the right one.
+            // We may also need to trim any part of this string that isn't based64 encoded data.
+            const trimmed = ((sourceMappingURL.match(
+              /base64,([a-zA-Z0-9+\/=]+)/,
+            ): any): Array<string>)[1];
+            const decoded = withSyncPerformanceMark(
+              'decodeBase64String()',
+              () => decodeBase64String(trimmed),
             );
-            console.log(sourceMapJSON);
-            console.groupEnd();
-          }
 
-          // Hook source might be a URL like "https://4syus.csb.app/src/App.js"
-          // Parsed source map might be a partial path like "src/App.js"
-          if (sourceMapIncludesSource(sourceMapJSON, runtimeSourceURL)) {
-            hookSourceAndMetadata.sourceMapJSON = sourceMapJSON;
+            const sourceMapJSON = withSyncPerformanceMark(
+              'JSON.parse(decoded)',
+              () => JSON.parse(decoded),
+            );
 
-            // OPTIMIZATION If we've located a source map for this source,
-            // we'll use it to retrieve the original source (to extract hook names).
-            // We only fall back to parsing the full source code is when there's no source map.
-            // The source is (potentially) very large,
-            // So we can avoid the overhead of serializing it unnecessarily.
-            hookSourceAndMetadata.runtimeSourceCode = null;
+            if (__DEBUG__) {
+              console.groupCollapsed(
+                'extractAndLoadSourceMapJSON() Inline source map',
+              );
+              console.log(sourceMapJSON);
+              console.groupEnd();
+            }
 
-            break;
+            // Hook source might be a URL like "https://4syus.csb.app/src/App.js"
+            // Parsed source map might be a partial path like "src/App.js"
+            if (sourceMapIncludesSource(sourceMapJSON, runtimeSourceURL)) {
+              hookSourceAndMetadata.sourceMapJSON = sourceMapJSON;
+
+              // OPTIMIZATION If we've located a source map for this source,
+              // we'll use it to retrieve the original source (to extract hook names).
+              // We only fall back to parsing the full source code is when there's no source map.
+              // The source is (potentially) very large,
+              // So we can avoid the overhead of serializing it unnecessarily.
+              hookSourceAndMetadata.runtimeSourceCode = null;
+
+              break;
+            }
+          } catch (error) {
+            // We've likely encountered a string in the source code that looks like a source map but isn't.
+            // Maybe the source code contains a "sourceMappingURL" comment or soething similar.
+            // In either case, let's skip this and keep looking.
           }
         } else {
           externalSourceMapURLs.push(sourceMappingURL);
