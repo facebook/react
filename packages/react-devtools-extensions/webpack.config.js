@@ -52,6 +52,7 @@ module.exports = {
     path: __dirname + '/build',
     publicPath: '/build/',
     filename: '[name].js',
+    chunkFilename: '[name].chunk.js',
   },
   node: {
     // Don't define a polyfill on window.setImmediate

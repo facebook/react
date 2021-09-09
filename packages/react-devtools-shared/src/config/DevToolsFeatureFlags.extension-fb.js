@@ -15,7 +15,7 @@
 
 export const enableProfilerChangedHookIndices = true;
 export const isInternalFacebookBuild = true;
-
+export const enableNamedHooksFeature = true;
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 /************************************************************************

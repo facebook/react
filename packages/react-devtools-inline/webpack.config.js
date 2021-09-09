@@ -37,10 +37,12 @@ module.exports = {
   entry: {
     backend: './src/backend.js',
     frontend: './src/frontend.js',
+    hookNames: './src/hookNames.js',
   },
   output: {
     path: __dirname + '/dist',
     filename: '[name].js',
+    chunkFilename: '[name].chunk.js',
     library: '[name]',
     libraryTarget: 'commonjs2',
   },

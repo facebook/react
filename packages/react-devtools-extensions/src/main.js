@@ -287,32 +287,30 @@ function createPanelIfReactLoaded() {
           };
         }
 
+        // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
+        const hookNamesModuleLoaderFunction = () =>
+          import('react-devtools-inline/hookNames');
+
         root = createRoot(document.createElement('div'));
 
         render = (overrideTab = mostRecentOverrideTab) => {
           mostRecentOverrideTab = overrideTab;
-          import('react-devtools-shared/src/hooks/parseHookNames').then(
-            ({parseHookNames, prefetchSourceFiles, purgeCachedMetadata}) => {
-              root.render(
-                createElement(DevTools, {
-                  bridge,
-                  browserTheme: getBrowserTheme(),
-                  componentsPortalContainer,
-                  enabledInspectedElementContextMenu: true,
-                  fetchFileWithCaching,
-                  loadHookNames: parseHookNames,
-                  overrideTab,
-                  prefetchSourceFiles,
-                  profilerPortalContainer,
-                  purgeCachedHookNamesMetadata: purgeCachedMetadata,
-                  showTabBar: false,
-                  store,
-                  warnIfUnsupportedVersionDetected: true,
-                  viewAttributeSourceFunction,
-                  viewElementSourceFunction,
-                }),
-              );
-            },
+          root.render(
+            createElement(DevTools, {
+              bridge,
+              browserTheme: getBrowserTheme(),
+              componentsPortalContainer,
+              enabledInspectedElementContextMenu: true,
+              fetchFileWithCaching,
+              hookNamesModuleLoaderFunction,
+              overrideTab,
+              profilerPortalContainer,
+              showTabBar: false,
+              store,
+              warnIfUnsupportedVersionDetected: true,
+              viewAttributeSourceFunction,
+              viewElementSourceFunction,
+            }),
           );
         };
 

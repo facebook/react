@@ -10,20 +10,14 @@
 import type {HookSourceAndMetadata} from './loadSourceAndMetadata';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames} from 'react-devtools-shared/src/types';
-import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 
 import {withAsyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
 import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
 import typeof * as ParseSourceAndMetadataModule from './parseSourceAndMetadata';
-import {
-  flattenHooksList,
-  loadSourceAndMetadata,
-  prefetchSourceFiles,
-} from './loadSourceAndMetadata';
+import {flattenHooksList, loadSourceAndMetadata} from './loadSourceAndMetadata';
 
 const workerizedParseHookNames: ParseSourceAndMetadataModule = WorkerizedParseSourceAndMetadata();
-
-export {prefetchSourceFiles};
 
 export function parseSourceAndMetadata(
   hooksList: Array<HooksNode>,
