@@ -38,14 +38,6 @@ module.exports = {
     path: __dirname + '/build',
     filename: 'react_devtools_backend.js',
   },
-  node: {
-    // Don't define a polyfill on window.setImmediate
-    setImmediate: false,
-
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
-  },
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),

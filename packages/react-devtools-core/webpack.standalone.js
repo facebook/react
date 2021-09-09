@@ -59,6 +59,8 @@ module.exports = {
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
+  // webpack doesnt like these bundled
+  externals: ['utf-8-validate', 'bufferutil'],
   node: {
     // Don't replace __dirname!
     // This would break the standalone DevTools ability to load the backend.
@@ -90,7 +92,7 @@ module.exports = {
         test: /\.worker\.js$/,
         use: [
           {
-            loader: 'workerize-loader',
+            loader: 'workerize-loader-5',
             options: {
               inline: true,
             },

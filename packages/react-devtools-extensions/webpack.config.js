@@ -53,14 +53,6 @@ module.exports = {
     publicPath: '/build/',
     filename: '[name].js',
   },
-  node: {
-    // Don't define a polyfill on window.setImmediate
-    setImmediate: false,
-
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
-  },
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),
@@ -110,7 +102,7 @@ module.exports = {
         test: /\.worker\.js$/,
         use: [
           {
-            loader: 'workerize-loader',
+            loader: 'workerize-loader-5',
             options: {
               inline: true,
             },
