@@ -38,7 +38,6 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
-import {Layout, HasEffect} from './ReactHookEffectTags';
 import {
   FunctionComponent,
   ForwardRef,
@@ -524,7 +523,7 @@ function commitHookEffectListMount(tag: HookFlags, finishedWork: Fiber) {
           const destroy = effect.destroy;
           if (destroy !== undefined && typeof destroy !== 'function') {
             let hookName;
-            if ((effect.tag & Layout) !== NoFlags) {
+            if ((effect.tag & HookLayout) !== NoFlags) {
               hookName = 'useLayoutEffect';
             } else {
               hookName = 'useEffect';
