@@ -44,6 +44,7 @@ import {
   SyncLane,
   NoLanes,
   isSubsetOfLanes,
+  includesBlockingLane,
   mergeLanes,
   removeLanes,
   intersectLanes,
@@ -68,6 +69,7 @@ import {
   PassiveStatic as PassiveStaticEffect,
   StaticMask as StaticMaskEffect,
   Update as UpdateEffect,
+  StoreConsistency,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -166,7 +168,15 @@ type StoreInstance<T> = {|
   getSnapshot: () => T,
 |};
 
-export type FunctionComponentUpdateQueue = {|lastEffect: Effect | null|};
+type StoreConsistencyCheck<T> = {|
+  value: T,
+  getSnapshot: () => T,
+|};
+
+export type FunctionComponentUpdateQueue = {|
+  lastEffect: Effect | null,
+  stores: Array<StoreConsistencyCheck<any>> | null,
+|};
 
 type BasicStateAction<S> = (S => S) | S;
 
@@ -689,6 +699,7 @@ function updateWorkInProgressHook(): Hook {
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
   return {
     lastEffect: null,
+    stores: null,
   };
 }
 
@@ -1289,17 +1300,25 @@ function mountSyncExternalStore<T>(
   // don't need to set a static flag, either.
   // TODO: We can move this to the passive phase once we add a pre-commit
   // consistency check. See the next comment.
-  fiber.flags |= UpdateEffect;
+  fiber.flags |= PassiveEffect;
   pushEffect(
-    HookHasEffect | HookLayout,
+    HookHasEffect | HookPassive,
     updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
     undefined,
     null,
   );
-  // TODO: Unless this is a synchronous render, schedule a consistency check.
-  // Right before committing, we will walk the tree and check if any of the
-  // stores were mutated.
-  // pushConsistencyCheck(inst, getSnapshot, nextSnapshot);
+
+  // Unless we're rendering a blocking lane, schedule a consistency check. Right
+  // before committing, we will walk the tree and check if any of the stores
+  // were mutated.
+  const root: FiberRoot | null = getWorkInProgressRoot();
+  invariant(
+    root !== null,
+    'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+  );
+  if (!includesBlockingLane(root, renderLanes)) {
+    pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+  }
 
   return nextSnapshot;
 }
@@ -1348,23 +1367,53 @@ function updateSyncExternalStore<T>(
     (workInProgressHook !== null &&
       workInProgressHook.memoizedState.tag & HookHasEffect)
   ) {
-    // TODO: We can move this to the passive phase once we add a pre-commit
-    // consistency check. See the next comment.
-    fiber.flags |= UpdateEffect;
+    fiber.flags |= PassiveEffect;
     pushEffect(
-      HookHasEffect | HookLayout,
+      HookHasEffect | HookPassive,
       updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
       undefined,
       null,
     );
 
-    // TODO: Unless this is a synchronous render, schedule a consistency check.
+    // Unless we're rendering a blocking lane, schedule a consistency check.
     // Right before committing, we will walk the tree and check if any of the
     // stores were mutated.
-    // pushConsistencyCheck(inst, getSnapshot, nextSnapshot);
+    const root: FiberRoot | null = getWorkInProgressRoot();
+    invariant(
+      root !== null,
+      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+    );
+    if (!includesBlockingLane(root, renderLanes)) {
+      pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+    }
   }
 
   return nextSnapshot;
+}
+
+function pushStoreConsistencyCheck<T>(
+  fiber: Fiber,
+  getSnapshot: () => T,
+  renderedSnapshot: T,
+) {
+  fiber.flags |= StoreConsistency;
+  const check: StoreConsistencyCheck<T> = {
+    getSnapshot,
+    value: renderedSnapshot,
+  };
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
+  if (componentUpdateQueue === null) {
+    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
+    componentUpdateQueue.stores = [check];
+  } else {
+    const stores = componentUpdateQueue.stores;
+    if (stores === null) {
+      componentUpdateQueue.stores = [check];
+    } else {
+      stores.push(check);
+    }
+  }
 }
 
 function updateStoreInstance<T>(
@@ -1373,11 +1422,14 @@ function updateStoreInstance<T>(
   nextSnapshot: T,
   getSnapshot: () => T,
 ) {
+  // These are updated in the passive phase
   inst.value = nextSnapshot;
   inst.getSnapshot = getSnapshot;
 
-  // TODO: Move the tearing checks to an earlier, pre-commit phase so that the
-  // layout effects always observe a consistent tree.
+  // Something may have been mutated in between render and commit. This could
+  // have been in an event that fired before the passive effects, or it could
+  // have been in a layout effect. In that case, we would have used the old
+  // snapsho and getSnapshot values to bail out. We need to check one more time.
   if (checkIfSnapshotChanged(inst)) {
     // Force a re-render.
     forceStoreRerender(fiber);
@@ -1393,11 +1445,6 @@ function subscribeToStore(fiber, inst, subscribe) {
       forceStoreRerender(fiber);
     }
   };
-  // Check for changes right before subscribing. Subsequent changes will be
-  // detected in the subscription handler.
-  // TODO: Once updateStoreInstance is moved to the passive phase, we can rely
-  // on that check instead of checking again here.
-  handleStoreChange();
   // Subscribe to the store and return a clean-up function.
   return subscribe(handleStoreChange);
 }
