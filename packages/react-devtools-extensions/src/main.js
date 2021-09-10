@@ -258,7 +258,7 @@ function createPanelIfReactLoaded() {
                       }
 
                       // Edge case where getContent() returned null; fall back to fetch.
-                      fetchFromPage(url, resolve);
+                      fetchFromPage(url, resolve, reject);
                     }
                   });
 
@@ -273,7 +273,7 @@ function createPanelIfReactLoaded() {
               }
 
               // No matching URL found; fall back to fetch.
-              fetchFromPage(url, resolve);
+              fetchFromPage(url, resolve, reject);
             });
           };
 
