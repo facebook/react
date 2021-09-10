@@ -26,7 +26,7 @@ const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
 
 const isChrome = getBrowserName() === 'Chrome';
 
-const cachedSources = new Map();
+const cachedRequests = new Map();
 
 // Cache JavaScript resources as the page loads them.
 // This helps avoid unnecessary duplicate requests when hook names are parsed.
@@ -47,24 +47,7 @@ chrome.devtools.network.onRequestFinished.addListener(
               url,
             );
           }
-          request.getContent(content => {
-            if (content != null) {
-              if (__DEBUG__) {
-                console.log(
-                  '[main] onRequestFinished() Cached source file content for ',
-                  url,
-                );
-              }
-              cachedSources.set(url, content);
-            } else {
-              if (__DEBUG__) {
-                console.log(
-                  '[main] onRequestFinished() Invalid content returned by getContent() for ',
-                  url,
-                );
-              }
-            }
-          });
+          cachedRequests.set(url, request);
           break;
       }
     }
@@ -267,40 +250,59 @@ function createPanelIfReactLoaded() {
           // This helper function allows the extension to request files to be fetched
           // by the content script (running in the page) to increase the likelihood of a cache hit.
           fetchFileWithCaching = url => {
-            const content = cachedSources.get(url);
-            if (content != null) {
+            if (__DEBUG__) {
+              console.log('[main] fetchFileWithCaching() for ', url);
+            }
+            return new Promise((resolve, reject) => {
+              const request = cachedRequests.get(url);
+              let cachedContent = null;
+              if (request != null) {
+                if (__DEBUG__) {
+                  console.log(
+                    '[main] fetchFileWithCaching() Found a cached network request for ',
+                    url,
+                  );
+                }
+
+                request.getContent(content => {
+                  if (content != null) {
+                    cachedContent = content;
+                  } else {
+                    if (__DEBUG__) {
+                      console.log(
+                        '[main] fetchFileWithCaching() Invalid source file content returned by getContent() for ',
+                        url,
+                      );
+                    }
+                  }
+                });
+              }
+
+              // If this request has already been cached locally,
+              // skip the network queue (which might not be a cache hit anyway)
+              // and use the cached response.
+              if (cachedContent != null) {
+                if (__DEBUG__) {
+                  console.log(
+                    '[main] fetchFileWithCaching() Reusing cached source file content for ',
+                    url,
+                  );
+                }
+                resolve(cachedContent);
+                return;
+              }
+
+              // If we didn't find a cached network request, or were unable to
+              // obtain valid content for the cached request, fall back to a fetch()
+              // and hope we get a cached response.
+              // We might miss caching some network requests if DevTools was opened
+              // after the page started loading.
               if (__DEBUG__) {
                 console.log(
-                  '[main] fetchFileWithCaching() Found a cached source file for ',
+                  '[main] fetchFileWithCaching() Fetching from page: ',
                   url,
                 );
               }
-
-              // If this resource has already been cached locally,
-              // skip the network queue (which might not be a cache hit anyway)
-              // and just use the cached response.
-              return new Promise(resolve => {
-                resolve(content);
-              });
-            }
-
-            if (__DEBUG__) {
-              console.log(
-                '[main] fetchFileWithCaching() No cached source file found for ',
-                url,
-              );
-            }
-
-            // If DevTools was opened after the page started loading,
-            // we may have missed some requests.
-            // So fall back to a fetch() and hope we get a cached response.
-            if (__DEBUG__) {
-              console.log(
-                '[main] fetchFileWithCaching() Fetching from page: ',
-                url,
-              );
-            }
-            return new Promise((resolve, reject) => {
               function onPortMessage({payload, source}) {
                 if (source === 'react-devtools-content-script') {
                   switch (payload?.type) {
@@ -486,7 +488,7 @@ function createPanelIfReactLoaded() {
       // Re-initialize DevTools panel when a new page is loaded.
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
         // Clear cached requests when a new page is opened.
-        cachedSources.clear();
+        cachedRequests.clear();
 
         // Re-initialize saved filters on navigation,
         // since global values stored on window get reset in this case.
@@ -505,7 +507,7 @@ function createPanelIfReactLoaded() {
 // Load (or reload) the DevTools extension when the user navigates to a new page.
 function checkPageForReact() {
   // Clear cached requests when a new page is opened.
-  cachedSources.clear();
+  cachedRequests.clear();
 
   syncSavedPreferences();
   createPanelIfReactLoaded();
