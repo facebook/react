@@ -66,7 +66,7 @@ const DevTools = initialize(contentWindow);
 
 ### Supporting named hooks
 
-DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and infering the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
+DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and inferring the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
 
 To configure this package to support this functionality, you'll need to provide a prop that dynamically imports the extra functionality:
 ```js

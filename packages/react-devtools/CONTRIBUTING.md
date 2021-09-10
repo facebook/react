@@ -1,5 +1,5 @@
 
-Intrested in contributing to React DevTools, but not sure where to start? This is the place!
+Interested in contributing to React DevTools, but not sure where to start? This is the place!
 
 # Install project dependencies
 To get started, check out the React repo:
