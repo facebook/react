@@ -2647,7 +2647,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root1.render(<App return={17} />);
         }),
       ).toErrorDev([
-        'Warning: An effect function must not return anything besides a ' +
+        'Warning: useEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned: 17',
       ]);
 
@@ -2657,7 +2657,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root2.render(<App return={null} />);
         }),
       ).toErrorDev([
-        'Warning: An effect function must not return anything besides a ' +
+        'Warning: useEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned null. If your ' +
           'effect does not require clean up, return undefined (or nothing).',
       ]);
@@ -2668,7 +2668,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root3.render(<App return={Promise.resolve()} />);
         }),
       ).toErrorDev([
-        'Warning: An effect function must not return anything besides a ' +
+        'Warning: useEffect must not return anything besides a ' +
           'function, which is used for clean-up.\n\n' +
           'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
       ]);
@@ -2873,7 +2873,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root1.render(<App return={17} />);
         }),
       ).toErrorDev([
-        'Warning: An effect function must not return anything besides a ' +
+        'Warning: useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned: 17',
       ]);
 
@@ -2883,7 +2883,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           root2.render(<App return={null} />);
         }),
       ).toErrorDev([
-        'Warning: An effect function must not return anything besides a ' +
+        'Warning: useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up. You returned null. If your ' +
           'effect does not require clean up, return undefined (or nothing).',
       ]);
@@ -2894,9 +2894,9 @@ describe('ReactHooksWithNoopRenderer', () => {
           root3.render(<App return={Promise.resolve()} />);
         }),
       ).toErrorDev([
-        'Warning: An effect function must not return anything besides a ' +
+        'Warning: useLayoutEffect must not return anything besides a ' +
           'function, which is used for clean-up.\n\n' +
-          'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
+          'It looks like you wrote useLayoutEffect(async () => ...) or returned a Promise.',
       ]);
 
       // Error on unmount because React assumes the value is a function

@@ -507,7 +507,7 @@ function commitHookEffectListUnmount(
   }
 }
 
-function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
+function commitHookEffectListMount(tag: HookFlags, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -522,6 +522,12 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
         if (__DEV__) {
           const destroy = effect.destroy;
           if (destroy !== undefined && typeof destroy !== 'function') {
+            let hookName;
+            if ((effect.tag & HookLayout) !== NoFlags) {
+              hookName = 'useLayoutEffect';
+            } else {
+              hookName = 'useEffect';
+            }
             let addendum;
             if (destroy === null) {
               addendum =
@@ -529,10 +535,13 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
                 'up, return undefined (or nothing).';
             } else if (typeof destroy.then === 'function') {
               addendum =
-                '\n\nIt looks like you wrote useEffect(async () => ...) or returned a Promise. ' +
+                '\n\nIt looks like you wrote ' +
+                hookName +
+                '(async () => ...) or returned a Promise. ' +
                 'Instead, write the async function inside your effect ' +
                 'and call it immediately:\n\n' +
-                'useEffect(() => {\n' +
+                hookName +
+                '(() => {\n' +
                 '  async function fetchData() {\n' +
                 '    // You can await here\n' +
                 '    const response = await MyAPI.getData(someId);\n' +
@@ -545,8 +554,9 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
               addendum = ' You returned: ' + destroy;
             }
             console.error(
-              'An effect function must not return anything besides a function, ' +
+              '%s must not return anything besides a function, ' +
                 'which is used for clean-up.%s',
+              hookName,
               addendum,
             );
           }
