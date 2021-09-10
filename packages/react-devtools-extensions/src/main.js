@@ -43,7 +43,7 @@ chrome.devtools.network.onRequestFinished.addListener(
           const url = request.request.url;
           if (__DEBUG__) {
             console.log(
-              '[main] onRequestFinished() Request finished for ',
+              '[main] onRequestFinished() Caching request that finished for ',
               url,
             );
           }
@@ -245,6 +245,39 @@ function createPanelIfReactLoaded() {
         // never reaches the chrome.runtime.onMessage event listener.
         let fetchFileWithCaching = null;
         if (isChrome) {
+          const fetchFromPage = (url, resolve, reject) => {
+            if (__DEBUG__) {
+              console.log('[main] fetchFromPage()', url);
+            }
+
+            function onPortMessage({payload, source}) {
+              if (source === 'react-devtools-content-script') {
+                switch (payload?.type) {
+                  case 'fetch-file-with-cache-complete':
+                    chrome.runtime.onMessage.removeListener(onPortMessage);
+                    resolve(payload.value);
+                    break;
+                  case 'fetch-file-with-cache-error':
+                    chrome.runtime.onMessage.removeListener(onPortMessage);
+                    reject(payload.value);
+                    break;
+                }
+              }
+            }
+
+            chrome.runtime.onMessage.addListener(onPortMessage);
+
+            chrome.devtools.inspectedWindow.eval(`
+              window.postMessage({
+                source: 'react-devtools-extension',
+                payload: {
+                  type: 'fetch-file-with-cache',
+                  url: "${url}",
+                },
+              });
+            `);
+          };
+
           // Fetching files from the extension won't make use of the network cache
           // for resources that have already been loaded by the page.
           // This helper function allows the extension to request files to be fetched
@@ -255,8 +288,12 @@ function createPanelIfReactLoaded() {
             }
             return new Promise((resolve, reject) => {
               const request = cachedRequests.get(url);
-              let cachedContent = null;
               if (request != null) {
+                // If this request has already been cached locally, check if
+                // we can obtain the cached response, and if so
+                // skip making a network request (which might not be a cache hit anyway)
+                // and use our cached response.
+
                 if (__DEBUG__) {
                   console.log(
                     '[main] fetchFileWithCaching() Found a cached network request for ',
@@ -266,7 +303,13 @@ function createPanelIfReactLoaded() {
 
                 request.getContent(content => {
                   if (content != null) {
-                    cachedContent = content;
+                    if (__DEBUG__) {
+                      console.log(
+                        '[main] fetchFileWithCaching() Reusing cached source file content for ',
+                        url,
+                      );
+                    }
+                    resolve(content);
                   } else {
                     if (__DEBUG__) {
                       console.log(
@@ -274,61 +317,21 @@ function createPanelIfReactLoaded() {
                         url,
                       );
                     }
+
+                    // Edge case where getContent() returned null; fall back to fetch.
+                    fetchFromPage(url, resolve, reject);
                   }
                 });
-              }
 
-              // If this request has already been cached locally,
-              // skip the network queue (which might not be a cache hit anyway)
-              // and use the cached response.
-              if (cachedContent != null) {
-                if (__DEBUG__) {
-                  console.log(
-                    '[main] fetchFileWithCaching() Reusing cached source file content for ',
-                    url,
-                  );
-                }
-                resolve(cachedContent);
                 return;
               }
 
               // If we didn't find a cached network request, or were unable to
-              // obtain valid content for the cached request, fall back to a fetch()
-              // and hope we get a cached response.
+              // obtain a valid cached response to that request, fall back to a fetch()
+              // and hope we get a cached response from the browser.
               // We might miss caching some network requests if DevTools was opened
               // after the page started loading.
-              if (__DEBUG__) {
-                console.log(
-                  '[main] fetchFileWithCaching() Fetching from page: ',
-                  url,
-                );
-              }
-              function onPortMessage({payload, source}) {
-                if (source === 'react-devtools-content-script') {
-                  switch (payload?.type) {
-                    case 'fetch-file-with-cache-complete':
-                      chrome.runtime.onMessage.removeListener(onPortMessage);
-                      resolve(payload.value);
-                      break;
-                    case 'fetch-file-with-cache-error':
-                      chrome.runtime.onMessage.removeListener(onPortMessage);
-                      reject(payload.value);
-                      break;
-                  }
-                }
-              }
-
-              chrome.runtime.onMessage.addListener(onPortMessage);
-
-              chrome.devtools.inspectedWindow.eval(`
-                window.postMessage({
-                  source: 'react-devtools-extension',
-                  payload: {
-                    type: 'fetch-file-with-cache',
-                    url: "${url}",
-                  },
-                });
-              `);
+              fetchFromPage(url, resolve, reject);
             });
           };
         }
