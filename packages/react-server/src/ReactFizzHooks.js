@@ -9,12 +9,7 @@
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 
-import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 
 import type {ResponseState, OpaqueIDType} from './ReactServerFormatConfig';
 
@@ -449,18 +444,6 @@ export function useCallback<T>(
   return useMemo(() => callback, deps);
 }
 
-// TODO Decide on how to implement this hook for server rendering.
-// If a mutation occurs during render, consider triggering a Suspense boundary
-// and falling back to client rendering.
-function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  resolveCurrentlyRenderingComponent();
-  return getSnapshot(source._source);
-}
-
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
@@ -515,8 +498,6 @@ export const Dispatcher: DispatcherType = {
   useDeferredValue,
   useTransition,
   useOpaqueIdentifier,
-  // Subscriptions are not setup in a server environment.
-  useMutableSource,
   useSyncExternalStore,
 };
 

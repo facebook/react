@@ -7,12 +7,7 @@
  * @flow
  */
 
-import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {HookFlags} from './ReactHookEffectTags';
@@ -50,7 +45,6 @@ import {
   intersectLanes,
   isTransitionLane,
   markRootEntangled,
-  markRootMutableRead,
   NoTimestamp,
 } from './ReactFiberLane.new';
 import {
@@ -102,12 +96,6 @@ import {
   makeClientIdInDEV,
   makeOpaqueHydratingObject,
 } from './ReactFiberHostConfig';
-import {
-  getWorkInProgressVersion,
-  markSourceAsDirty,
-  setWorkInProgressVersion,
-  warnAboutMultipleRenderersDEV,
-} from './ReactMutableSource.new';
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
@@ -118,7 +106,6 @@ import {
   entangleTransitions,
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
-import {getIsStrictModeForDevtools} from './ReactFiberReconciler.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
@@ -946,322 +933,6 @@ function rerenderReducer<S, I, A>(
     queue.lastRenderedState = newState;
   }
   return [newState, dispatch];
-}
-
-type MutableSourceMemoizedState<Source, Snapshot> = {|
-  refs: {
-    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    setSnapshot: Snapshot => void,
-  },
-  source: MutableSource<any>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-|};
-
-function readFromUnsubscribedMutableSource<Source, Snapshot>(
-  root: FiberRoot,
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-): Snapshot {
-  if (__DEV__) {
-    warnAboutMultipleRenderersDEV(source);
-  }
-
-  const getVersion = source._getVersion;
-  const version = getVersion(source._source);
-
-  // Is it safe for this component to read from this source during the current render?
-  let isSafeToReadFromSource = false;
-
-  // Check the version first.
-  // If this render has already been started with a specific version,
-  // we can use it alone to determine if we can safely read from the source.
-  const currentRenderVersion = getWorkInProgressVersion(source);
-  if (currentRenderVersion !== null) {
-    // It's safe to read if the store hasn't been mutated since the last time
-    // we read something.
-    isSafeToReadFromSource = currentRenderVersion === version;
-  } else {
-    // If there's no version, then this is the first time we've read from the
-    // source during the current render pass, so we need to do a bit more work.
-    // What we need to determine is if there are any hooks that already
-    // subscribed to the source, and if so, whether there are any pending
-    // mutations that haven't been synchronized yet.
-    //
-    // If there are no pending mutations, then `root.mutableReadLanes` will be
-    // empty, and we know we can safely read.
-    //
-    // If there *are* pending mutations, we may still be able to safely read
-    // if the currently rendering lanes are inclusive of the pending mutation
-    // lanes, since that guarantees that the value we're about to read from
-    // the source is consistent with the values that we read during the most
-    // recent mutation.
-    isSafeToReadFromSource = isSubsetOfLanes(
-      renderLanes,
-      root.mutableReadLanes,
-    );
-
-    if (isSafeToReadFromSource) {
-      // If it's safe to read from this source during the current render,
-      // store the version in case other components read from it.
-      // A changed version number will let those components know to throw and restart the render.
-      setWorkInProgressVersion(source, version);
-    }
-  }
-
-  if (isSafeToReadFromSource) {
-    const snapshot = getSnapshot(source._source);
-    if (__DEV__) {
-      if (typeof snapshot === 'function') {
-        console.error(
-          'Mutable source should not return a function as the snapshot value. ' +
-            'Functions may close over mutable values and cause tearing.',
-        );
-      }
-    }
-    return snapshot;
-  } else {
-    // This handles the special case of a mutable source being shared between renderers.
-    // In that case, if the source is mutated between the first and second renderer,
-    // The second renderer don't know that it needs to reset the WIP version during unwind,
-    // (because the hook only marks sources as dirty if it's written to their WIP version).
-    // That would cause this tear check to throw again and eventually be visible to the user.
-    // We can avoid this infinite loop by explicitly marking the source as dirty.
-    //
-    // This can lead to tearing in the first renderer when it resumes,
-    // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
-    markSourceAsDirty(source);
-
-    // Intentioally throw an error to force React to retry synchronously. During
-    // the synchronous retry, it will block interleaved mutations, so we should
-    // get a consistent read. Therefore, the following error should never be
-    // visible to the user.
-    //
-    // If it were to become visible to the user, it suggests one of two things:
-    // a bug in React, or (more likely), a mutation during the render phase that
-    // caused the second re-render attempt to be different from the first.
-    //
-    // We know it's the second case if the logs are currently disabled. So in
-    // dev, we can present a more accurate error message.
-    if (__DEV__) {
-      // eslint-disable-next-line react-internal/no-production-logging
-      if (getIsStrictModeForDevtools()) {
-        // If getIsStrictModeForDevtools is true, this is the dev-only double render
-        // This is only reachable if there was a mutation during render. Show a helpful
-        // error message.
-        //
-        // Something interesting to note: because we only double render in
-        // development, this error will never happen during production. This is
-        // actually true of all errors that occur during a double render,
-        // because if the first render had thrown, we would have exited the
-        // begin phase without double rendering. We should consider suppressing
-        // any error from a double render (with a warning) to more closely match
-        // the production behavior.
-        const componentName = getComponentNameFromFiber(
-          currentlyRenderingFiber,
-        );
-        invariant(
-          false,
-          'A mutable source was mutated while the %s component was rendering. ' +
-            'This is not supported. Move any mutations into event handlers ' +
-            'or effects.',
-          componentName,
-        );
-      }
-    }
-
-    // We expect this error not to be thrown during the synchronous retry,
-    // because we blocked interleaved mutations.
-    invariant(
-      false,
-      'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
-    );
-  }
-}
-
-function useMutableSource<Source, Snapshot>(
-  hook: Hook,
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  const root = ((getWorkInProgressRoot(): any): FiberRoot);
-  invariant(
-    root !== null,
-    'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-  );
-
-  const getVersion = source._getVersion;
-  const version = getVersion(source._source);
-
-  const dispatcher = ReactCurrentDispatcher.current;
-
-  // eslint-disable-next-line prefer-const
-  let [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
-    readFromUnsubscribedMutableSource(root, source, getSnapshot),
-  );
-  let snapshot = currentSnapshot;
-
-  // Grab a handle to the state hook as well.
-  // We use it to clear the pending update queue if we have a new source.
-  const stateHook = ((workInProgressHook: any): Hook);
-
-  const memoizedState = ((hook.memoizedState: any): MutableSourceMemoizedState<
-    Source,
-    Snapshot,
-  >);
-  const refs = memoizedState.refs;
-  const prevGetSnapshot = refs.getSnapshot;
-  const prevSource = memoizedState.source;
-  const prevSubscribe = memoizedState.subscribe;
-
-  const fiber = currentlyRenderingFiber;
-
-  hook.memoizedState = ({
-    refs,
-    source,
-    subscribe,
-  }: MutableSourceMemoizedState<Source, Snapshot>);
-
-  // Sync the values needed by our subscription handler after each commit.
-  dispatcher.useEffect(() => {
-    refs.getSnapshot = getSnapshot;
-
-    // Normally the dispatch function for a state hook never changes,
-    // but this hook recreates the queue in certain cases  to avoid updates from stale sources.
-    // handleChange() below needs to reference the dispatch function without re-subscribing,
-    // so we use a ref to ensure that it always has the latest version.
-    refs.setSnapshot = setSnapshot;
-
-    // Check for a possible change between when we last rendered now.
-    const maybeNewVersion = getVersion(source._source);
-    if (!is(version, maybeNewVersion)) {
-      const maybeNewSnapshot = getSnapshot(source._source);
-      if (__DEV__) {
-        if (typeof maybeNewSnapshot === 'function') {
-          console.error(
-            'Mutable source should not return a function as the snapshot value. ' +
-              'Functions may close over mutable values and cause tearing.',
-          );
-        }
-      }
-
-      if (!is(snapshot, maybeNewSnapshot)) {
-        setSnapshot(maybeNewSnapshot);
-
-        const lane = requestUpdateLane(fiber);
-        markRootMutableRead(root, lane);
-      }
-      // If the source mutated between render and now,
-      // there may be state updates already scheduled from the old source.
-      // Entangle the updates so that they render in the same batch.
-      markRootEntangled(root, root.mutableReadLanes);
-    }
-  }, [getSnapshot, source, subscribe]);
-
-  // If we got a new source or subscribe function, re-subscribe in a passive effect.
-  dispatcher.useEffect(() => {
-    const handleChange = () => {
-      const latestGetSnapshot = refs.getSnapshot;
-      const latestSetSnapshot = refs.setSnapshot;
-
-      try {
-        latestSetSnapshot(latestGetSnapshot(source._source));
-
-        // Record a pending mutable source update with the same expiration time.
-        const lane = requestUpdateLane(fiber);
-
-        markRootMutableRead(root, lane);
-      } catch (error) {
-        // A selector might throw after a source mutation.
-        // e.g. it might try to read from a part of the store that no longer exists.
-        // In this case we should still schedule an update with React.
-        // Worst case the selector will throw again and then an error boundary will handle it.
-        latestSetSnapshot(
-          (() => {
-            throw error;
-          }: any),
-        );
-      }
-    };
-
-    const unsubscribe = subscribe(source._source, handleChange);
-    if (__DEV__) {
-      if (typeof unsubscribe !== 'function') {
-        console.error(
-          'Mutable source subscribe function must return an unsubscribe function.',
-        );
-      }
-    }
-
-    return unsubscribe;
-  }, [source, subscribe]);
-
-  // If any of the inputs to useMutableSource change, reading is potentially unsafe.
-  //
-  // If either the source or the subscription have changed we can't can't trust the update queue.
-  // Maybe the source changed in a way that the old subscription ignored but the new one depends on.
-  //
-  // If the getSnapshot function changed, we also shouldn't rely on the update queue.
-  // It's possible that the underlying source was mutated between the when the last "change" event fired,
-  // and when the current render (with the new getSnapshot function) is processed.
-  //
-  // In both cases, we need to throw away pending updates (since they are no longer relevant)
-  // and treat reading from the source as we do in the mount case.
-  if (
-    !is(prevGetSnapshot, getSnapshot) ||
-    !is(prevSource, source) ||
-    !is(prevSubscribe, subscribe)
-  ) {
-    // Create a new queue and setState method,
-    // So if there are interleaved updates, they get pushed to the older queue.
-    // When this becomes current, the previous queue and dispatch method will be discarded,
-    // including any interleaving updates that occur.
-    const newQueue: UpdateQueue<Snapshot, BasicStateAction<Snapshot>> = {
-      pending: null,
-      interleaved: null,
-      lanes: NoLanes,
-      dispatch: null,
-      lastRenderedReducer: basicStateReducer,
-      lastRenderedState: snapshot,
-    };
-    newQueue.dispatch = setSnapshot = (dispatchAction.bind(
-      null,
-      currentlyRenderingFiber,
-      newQueue,
-    ): any);
-    stateHook.queue = newQueue;
-    stateHook.baseQueue = null;
-    snapshot = readFromUnsubscribedMutableSource(root, source, getSnapshot);
-    stateHook.memoizedState = stateHook.baseState = snapshot;
-  }
-
-  return snapshot;
-}
-
-function mountMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  const hook = mountWorkInProgressHook();
-  hook.memoizedState = ({
-    refs: {
-      getSnapshot,
-      setSnapshot: (null: any),
-    },
-    source,
-    subscribe,
-  }: MutableSourceMemoizedState<Source, Snapshot>);
-  return useMutableSource(hook, source, getSnapshot, subscribe);
-}
-
-function updateMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  const hook = updateWorkInProgressHook();
-  return useMutableSource(hook, source, getSnapshot, subscribe);
 }
 
 function mountSyncExternalStore<T>(
@@ -2334,7 +2005,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useDebugValue: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
-  useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useOpaqueIdentifier: throwInvalidHookError,
 
@@ -2361,7 +2031,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useDebugValue: mountDebugValue,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
-  useMutableSource: mountMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
   useOpaqueIdentifier: mountOpaqueIdentifier,
 
@@ -2388,7 +2057,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDebugValue: updateDebugValue,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
-  useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useOpaqueIdentifier: updateOpaqueIdentifier,
 
@@ -2415,7 +2083,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDebugValue: updateDebugValue,
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
-  useMutableSource: updateMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
   useOpaqueIdentifier: rerenderOpaqueIdentifier,
 
@@ -2565,15 +2232,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -2704,15 +2362,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return mountTransition();
-    },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      updateHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
@@ -2845,15 +2494,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -2985,15 +2625,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return rerenderTransition();
-    },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
@@ -3139,16 +2770,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountTransition();
-    },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
@@ -3297,16 +2918,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -3454,16 +3065,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderTransition();
-    },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
     },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
