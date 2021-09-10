@@ -6,6 +6,7 @@ import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {getBrowserName, getBrowserTheme} from './utils';
 import {LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY} from 'react-devtools-shared/src/constants';
+import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {
   getAppendComponentStack,
   getBreakOnConsoleErrors,
@@ -39,9 +40,29 @@ chrome.devtools.network.onRequestFinished.addListener(
         case 'application/javascript':
         case 'application/x-javascript':
         case 'text/javascript':
+          const url = request.request.url;
+          if (__DEBUG__) {
+            console.log(
+              '[main] onRequestFinished() Request finished for ',
+              url,
+            );
+          }
           request.getContent(content => {
             if (content != null) {
-              cachedSources.set(request.request.url, content);
+              if (__DEBUG__) {
+                console.log(
+                  '[main] onRequestFinished() Cached source file content for ',
+                  url,
+                );
+              }
+              cachedSources.set(url, content);
+            } else {
+              if (__DEBUG__) {
+                console.log(
+                  '[main] onRequestFinished() Invalid content returned by getContent() for ',
+                  url,
+                );
+              }
             }
           });
           break;
@@ -248,6 +269,13 @@ function createPanelIfReactLoaded() {
           fetchFileWithCaching = url => {
             const content = cachedSources.get(url);
             if (content != null) {
+              if (__DEBUG__) {
+                console.log(
+                  '[main] fetchFileWithCaching() Found a cached source file for ',
+                  url,
+                );
+              }
+
               // If this resource has already been cached locally,
               // skip the network queue (which might not be a cache hit anyway)
               // and just use the cached response.
@@ -256,10 +284,22 @@ function createPanelIfReactLoaded() {
               });
             }
 
+            if (__DEBUG__) {
+              console.log(
+                '[main] fetchFileWithCaching() No cached source file found for ',
+                url,
+              );
+            }
+
             // If DevTools was opened after the page started loading,
             // we may have missed some requests.
             // So fall back to a fetch() and hope we get a cached response.
-
+            if (__DEBUG__) {
+              console.log(
+                '[main] fetchFileWithCaching() Fetching from page: ',
+                url,
+              );
+            }
             return new Promise((resolve, reject) => {
               function onPortMessage({payload, source}) {
                 if (source === 'react-devtools-content-script') {
