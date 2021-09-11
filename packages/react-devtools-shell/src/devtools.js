@@ -50,7 +50,7 @@ mountButton.addEventListener('click', function() {
   }
 });
 
-inject('dist/app.js', () => {
+inject('/app.js', () => {
   initDevTools({
     connect(cb) {
       const root = createRoot(container);

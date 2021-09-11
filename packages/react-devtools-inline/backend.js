@@ -1,1 +1,1 @@
-module.exports = require('./dist/backend');
+module.exports = require('./dist/backend').backend;
