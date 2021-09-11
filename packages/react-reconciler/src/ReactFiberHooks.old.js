@@ -1019,7 +1019,7 @@ function readFromUnsubscribedMutableSource<Source, Snapshot>(
     // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
     markSourceAsDirty(source);
 
-    // Intentioally throw an error to force React to retry synchronously. During
+    // Intentionally throw an error to force React to retry synchronously. During
     // the synchronous retry, it will block interleaved mutations, so we should
     // get a consistent read. Therefore, the following error should never be
     // visible to the user.

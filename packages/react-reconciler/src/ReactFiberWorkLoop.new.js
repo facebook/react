@@ -2572,7 +2572,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         }
       }
       // We always throw the original error in case the second render pass is not idempotent.
-      // This can happen if a memoized function or CommonJS module doesn't throw after first invokation.
+      // This can happen if a memoized function or CommonJS module doesn't throw after first invocation.
       throw originalError;
     }
   };
