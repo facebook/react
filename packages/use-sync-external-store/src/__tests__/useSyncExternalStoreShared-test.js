@@ -571,6 +571,8 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   });
 
   describe('extra features implemented in user-space', () => {
+    // The selector implementation uses the lazy ref initialization pattern
+    // @gate !(enableUseRefAccessWarning && __DEV__)
     test('memoized selectors are only called once per update', async () => {
       const store = createExternalStore({a: 0, b: 0});
 
@@ -610,6 +612,8 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(root).toMatchRenderedOutput('A1');
     });
 
+    // The selector implementation uses the lazy ref initialization pattern
+    // @gate !(enableUseRefAccessWarning && __DEV__)
     test('Using isEqual to bailout', async () => {
       const store = createExternalStore({a: 0, b: 0});
 
@@ -665,5 +669,82 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(Scheduler).toHaveYielded(['A1']);
       expect(root).toMatchRenderedOutput('A1B1');
     });
+  });
+
+  // The selector implementation uses the lazy ref initialization pattern
+  // @gate !(enableUseRefAccessWarning && __DEV__)
+  test('compares selection to rendered selection even if selector changes', async () => {
+    const store = createExternalStore({items: ['A', 'B']});
+
+    const shallowEqualArray = (a, b) => {
+      if (a.length !== b.length) {
+        return false;
+      }
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    const List = React.memo(({items}) => {
+      return (
+        <ul>
+          {items.map(text => (
+            <li key={text}>
+              <Text key={text} text={text} />
+            </li>
+          ))}
+        </ul>
+      );
+    });
+
+    function App({step}) {
+      const inlineSelector = state => {
+        Scheduler.unstable_yieldValue('Inline selector');
+        return [...state.items, 'C'];
+      };
+      const items = useSyncExternalStoreExtra(
+        store.subscribe,
+        store.getState,
+        inlineSelector,
+        shallowEqualArray,
+      );
+      return (
+        <>
+          <List items={items} />
+          <Text text={'Sibling: ' + step} />
+        </>
+      );
+    }
+
+    const root = createRoot();
+    await act(() => {
+      root.render(<App step={0} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Inline selector',
+      'A',
+      'B',
+      'C',
+      'Sibling: 0',
+    ]);
+
+    await act(() => {
+      root.render(<App step={1} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      // We had to call the selector again because it's not memoized
+      'Inline selector',
+
+      // But because the result was the same (according to isEqual) we can
+      // bail out of rendering the memoized list. These are skipped:
+      // 'A',
+      // 'B',
+      // 'C',
+
+      'Sibling: 1',
+    ]);
   });
 });

@@ -13,7 +13,7 @@ import {useSyncExternalStore} from 'use-sync-external-store';
 
 // Intentionally not using named imports because Rollup uses dynamic
 // dispatch for CommonJS interop named imports.
-const {useMemo, useDebugValue} = React;
+const {useRef, useEffect, useMemo, useDebugValue} = React;
 
 // Same as useSyncExternalStore, but supports selector and isEqual arguments.
 export function useSyncExternalStoreExtra<Snapshot, Selection>(
@@ -22,6 +22,19 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
   selector: (snapshot: Snapshot) => Selection,
   isEqual?: (a: Selection, b: Selection) => boolean,
 ): Selection {
+  // Use this to track the rendered snapshot.
+  const instRef = useRef(null);
+  let inst;
+  if (instRef.current === null) {
+    inst = {
+      hasValue: false,
+      value: (null: Selection | null),
+    };
+    instRef.current = inst;
+  } else {
+    inst = instRef.current;
+  }
+
   const getSnapshotWithMemoizedSelector = useMemo(() => {
     // Track the memoized state using closure variables that are local to this
     // memoized instance of a getSnapshot function. Intentionally not using a
@@ -38,6 +51,18 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
         hasMemo = true;
         memoizedSnapshot = nextSnapshot;
         const nextSelection = selector(nextSnapshot);
+        if (isEqual !== undefined) {
+          // Even if the selector has changed, the currently rendered selection
+          // may be equal to the new selection. We should attempt to reuse the
+          // current value if possible, to preserve downstream memoizations.
+          if (inst.hasValue) {
+            const currentSelection = inst.value;
+            if (isEqual(currentSelection, nextSelection)) {
+              memoizedSelection = currentSelection;
+              return currentSelection;
+            }
+          }
+        }
         memoizedSelection = nextSelection;
         return nextSelection;
       }
@@ -67,10 +92,17 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
       return nextSelection;
     };
   }, [getSnapshot, selector, isEqual]);
+
   const value = useSyncExternalStore(
     subscribe,
     getSnapshotWithMemoizedSelector,
   );
+
+  useEffect(() => {
+    inst.hasValue = true;
+    inst.value = value;
+  }, [value]);
+
   useDebugValue(value);
   return value;
 }
