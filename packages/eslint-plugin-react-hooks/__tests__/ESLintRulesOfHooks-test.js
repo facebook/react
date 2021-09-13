@@ -337,6 +337,18 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    {
+      code: `
+        // valid because componentWrapperFunctions is not matched
+        const ObservedButton = pureRouteMemo(withWorkspace(props => {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button {...props} />
+        }));
+      `,
+      options: [{componentWrapperFunctions: '^(observer|styled)$'}],
+    },
   ],
   invalid: [
     {
@@ -886,6 +898,30 @@ const tests = {
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
+    },
+    {
+      code: `
+        const ObservedButton = observer(props => {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button {...props} />
+        });
+      `,
+      options: [{componentWrapperFunctions: '^observer$'}],
+      errors: [conditionalError('useCustomHook')],
+    },
+    {
+      code: `
+        const ObservedButton = observer(styled(props => {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button {...props} />
+        }));
+      `,
+      options: [{componentWrapperFunctions: '^observer$'}],
+      errors: [conditionalError('useCustomHook')],
     },
   ],
 };

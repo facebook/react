@@ -88,7 +88,24 @@ function isMemoCallback(node) {
   );
 }
 
-function isInsideComponentOrHook(node) {
+function isKnownWrapperFunction(node, componentWrapperFunctions) {
+  if (!componentWrapperFunctions) {
+    return false;
+  }
+
+  let parent = node.parent;
+  while (parent && parent.callee) {
+    if (componentWrapperFunctions.test(parent.callee.name)) {
+      return true;
+    }
+
+    parent = parent.parent;
+  }
+
+  return false;
+}
+
+function isInsideComponentOrHook(node, componentWrapperFunctions) {
   while (node) {
     const functionName = getFunctionName(node);
     if (functionName) {
@@ -96,7 +113,11 @@ function isInsideComponentOrHook(node) {
         return true;
       }
     }
-    if (isForwardRefCallback(node) || isMemoCallback(node)) {
+    if (
+      isForwardRefCallback(node) ||
+      isMemoCallback(node) ||
+      isKnownWrapperFunction(node, componentWrapperFunctions)
+    ) {
       return true;
     }
     node = node.parent;
@@ -114,6 +135,13 @@ export default {
     },
   },
   create(context) {
+    const componentWrapperFunctions =
+      context.options &&
+      context.options[0] &&
+      context.options[0].componentWrapperFunctions
+        ? new RegExp(context.options[0].componentWrapperFunctions)
+        : undefined;
+
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
     return {
@@ -347,11 +375,14 @@ export default {
         // function component or we are in a hook function.
         const isSomewhereInsideComponentOrHook = isInsideComponentOrHook(
           codePathNode,
+          componentWrapperFunctions,
         );
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)
-          : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
+          : isForwardRefCallback(codePathNode) ||
+            isMemoCallback(codePathNode) ||
+            isKnownWrapperFunction(codePathNode, componentWrapperFunctions); // Compute the earliest finalizer level using information from the
 
         // Compute the earliest finalizer level using information from the
         // cache. We expect all reachable final segments to have a cache entry
