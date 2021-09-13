@@ -84,6 +84,10 @@ function getTestFlags() {
       source: !process.env.IS_BUILD,
       www,
 
+      // This isn't a flag, just a useful alias for tests. Remove once
+      // useSyncExternalStore lands in the `next` channel.
+      supportsNativeUseSyncExternalStore: __EXPERIMENTAL__ || www,
+
       // If there's a naming conflict between scheduler and React feature flags, the
       // React ones take precedence.
       // TODO: Maybe we should error on conflicts? Or we could namespace

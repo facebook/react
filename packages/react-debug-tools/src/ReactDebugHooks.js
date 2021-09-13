@@ -273,7 +273,6 @@ function useSyncExternalStore<T>(
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
   nextHook(); // SyncExternalStore
-  nextHook(); // LayoutEffect
   nextHook(); // Effect
   const value = getSnapshot();
   hookLog.push({

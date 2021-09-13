@@ -44,6 +44,7 @@ import {
   SyncLane,
   NoLanes,
   isSubsetOfLanes,
+  includesBlockingLane,
   mergeLanes,
   removeLanes,
   intersectLanes,
@@ -68,6 +69,7 @@ import {
   PassiveStatic as PassiveStaticEffect,
   StaticMask as StaticMaskEffect,
   Update as UpdateEffect,
+  StoreConsistency,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -166,7 +168,15 @@ type StoreInstance<T> = {|
   getSnapshot: () => T,
 |};
 
-export type FunctionComponentUpdateQueue = {|lastEffect: Effect | null|};
+type StoreConsistencyCheck<T> = {|
+  value: T,
+  getSnapshot: () => T,
+|};
+
+export type FunctionComponentUpdateQueue = {|
+  lastEffect: Effect | null,
+  stores: Array<StoreConsistencyCheck<any>> | null,
+|};
 
 type BasicStateAction<S> = (S => S) | S;
 
@@ -689,6 +699,7 @@ function updateWorkInProgressHook(): Hook {
 function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
   return {
     lastEffect: null,
+    stores: null,
   };
 }
 
@@ -1256,6 +1267,7 @@ function mountSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
 ): T {
+  const fiber = currentlyRenderingFiber;
   const hook = mountWorkInProgressHook();
   // Read the current snapshot from the store on every render. This breaks the
   // normal rules of React, and only works because store updates are
@@ -1277,13 +1289,45 @@ function mountSyncExternalStore<T>(
     getSnapshot,
   };
   hook.queue = inst;
-  return useSyncExternalStore(hook, inst, subscribe, getSnapshot, nextSnapshot);
+
+  // Schedule an effect to subscribe to the store.
+  mountEffect(subscribeToStore.bind(null, fiber, inst, subscribe), [subscribe]);
+
+  // Schedule an effect to update the mutable instance fields. We will update
+  // this whenever subscribe, getSnapshot, or value changes. Because there's no
+  // clean-up function, and we track the deps correctly, we can call pushEffect
+  // directly, without storing any additional state. For the same reason, we
+  // don't need to set a static flag, either.
+  // TODO: We can move this to the passive phase once we add a pre-commit
+  // consistency check. See the next comment.
+  fiber.flags |= PassiveEffect;
+  pushEffect(
+    HookHasEffect | HookPassive,
+    updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
+    undefined,
+    null,
+  );
+
+  // Unless we're rendering a blocking lane, schedule a consistency check. Right
+  // before committing, we will walk the tree and check if any of the stores
+  // were mutated.
+  const root: FiberRoot | null = getWorkInProgressRoot();
+  invariant(
+    root !== null,
+    'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+  );
+  if (!includesBlockingLane(root, renderLanes)) {
+    pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+  }
+
+  return nextSnapshot;
 }
 
 function updateSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
 ): T {
+  const fiber = currentlyRenderingFiber;
   const hook = updateWorkInProgressHook();
   // Read the current snapshot from the store on every render. This breaks the
   // normal rules of React, and only works because store updates are
@@ -1300,66 +1344,109 @@ function updateSyncExternalStore<T>(
     }
   }
   const prevSnapshot = hook.memoizedState;
-  if (!is(prevSnapshot, nextSnapshot)) {
+  const snapshotChanged = !is(prevSnapshot, nextSnapshot);
+  if (snapshotChanged) {
     hook.memoizedState = nextSnapshot;
     markWorkInProgressReceivedUpdate();
   }
   const inst = hook.queue;
-  return useSyncExternalStore(hook, inst, subscribe, getSnapshot, nextSnapshot);
+
+  updateEffect(subscribeToStore.bind(null, fiber, inst, subscribe), [
+    subscribe,
+  ]);
+
+  // Whenever getSnapshot or subscribe changes, we need to check in the
+  // commit phase if there was an interleaved mutation. In concurrent mode
+  // this can happen all the time, but even in synchronous mode, an earlier
+  // effect may have mutated the store.
+  if (
+    inst.getSnapshot !== getSnapshot ||
+    snapshotChanged ||
+    // Check if the susbcribe function changed. We can save some memory by
+    // checking whether we scheduled a subscription effect above.
+    (workInProgressHook !== null &&
+      workInProgressHook.memoizedState.tag & HookHasEffect)
+  ) {
+    fiber.flags |= PassiveEffect;
+    pushEffect(
+      HookHasEffect | HookPassive,
+      updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
+      undefined,
+      null,
+    );
+
+    // Unless we're rendering a blocking lane, schedule a consistency check.
+    // Right before committing, we will walk the tree and check if any of the
+    // stores were mutated.
+    const root: FiberRoot | null = getWorkInProgressRoot();
+    invariant(
+      root !== null,
+      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+    );
+    if (!includesBlockingLane(root, renderLanes)) {
+      pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+    }
+  }
+
+  return nextSnapshot;
 }
 
-function useSyncExternalStore<T>(
-  hook: Hook,
-  inst: StoreInstance<T>,
-  subscribe: (() => void) => () => void,
+function pushStoreConsistencyCheck<T>(
+  fiber: Fiber,
   getSnapshot: () => T,
+  renderedSnapshot: T,
+) {
+  fiber.flags |= StoreConsistency;
+  const check: StoreConsistencyCheck<T> = {
+    getSnapshot,
+    value: renderedSnapshot,
+  };
+  let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
+  if (componentUpdateQueue === null) {
+    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = (componentUpdateQueue: any);
+    componentUpdateQueue.stores = [check];
+  } else {
+    const stores = componentUpdateQueue.stores;
+    if (stores === null) {
+      componentUpdateQueue.stores = [check];
+    } else {
+      stores.push(check);
+    }
+  }
+}
+
+function updateStoreInstance<T>(
+  fiber: Fiber,
+  inst: StoreInstance<T>,
   nextSnapshot: T,
-): T {
-  const fiber = currentlyRenderingFiber;
-  const dispatcher = ReactCurrentDispatcher.current;
+  getSnapshot: () => T,
+) {
+  // These are updated in the passive phase
+  inst.value = nextSnapshot;
+  inst.getSnapshot = getSnapshot;
 
-  // Track the latest getSnapshot function with a ref. This needs to be updated
-  // in the layout phase so we can access it during the tearing check that
-  // happens on subscribe.
-  // TODO: Circumvent SSR warning
-  dispatcher.useLayoutEffect(() => {
-    inst.value = nextSnapshot;
-    inst.getSnapshot = getSnapshot;
+  // Something may have been mutated in between render and commit. This could
+  // have been in an event that fired before the passive effects, or it could
+  // have been in a layout effect. In that case, we would have used the old
+  // snapsho and getSnapshot values to bail out. We need to check one more time.
+  if (checkIfSnapshotChanged(inst)) {
+    // Force a re-render.
+    forceStoreRerender(fiber);
+  }
+}
 
-    // Whenever getSnapshot or subscribe changes, we need to check in the
-    // commit phase if there was an interleaved mutation. In concurrent mode
-    // this can happen all the time, but even in synchronous mode, an earlier
-    // effect may have mutated the store.
-    // TODO: Move the tearing checks to an earlier, pre-commit phase so that the
-    // layout effects always observe a consistent tree.
+function subscribeToStore(fiber, inst, subscribe) {
+  const handleStoreChange = () => {
+    // The store changed. Check if the snapshot changed since the last time we
+    // read from the store.
     if (checkIfSnapshotChanged(inst)) {
       // Force a re-render.
       forceStoreRerender(fiber);
     }
-  }, [subscribe, nextSnapshot, getSnapshot]);
-
-  dispatcher.useEffect(() => {
-    const handleStoreChange = () => {
-      // TODO: Because there is no cross-renderer API for batching updates, it's
-      // up to the consumer of this library to wrap their subscription event
-      // with unstable_batchedUpdates. Should we try to detect when this isn't
-      // the case and print a warning in development?
-
-      // The store changed. Check if the snapshot changed since the last time we
-      // read from the store.
-      if (checkIfSnapshotChanged(inst)) {
-        // Force a re-render.
-        forceStoreRerender(fiber);
-      }
-    };
-    // Check for changes right before subscribing. Subsequent changes will be
-    // detected in the subscription handler.
-    handleStoreChange();
-    // Subscribe to the store and return a clean-up function.
-    return subscribe(handleStoreChange);
-  }, [subscribe]);
-
-  return nextSnapshot;
+  };
+  // Subscribe to the store and return a clean-up function.
+  return subscribe(handleStoreChange);
 }
 
 function checkIfSnapshotChanged(inst) {
