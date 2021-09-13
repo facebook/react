@@ -88,7 +88,7 @@ function createPanelIfReactLoaded() {
 
       const tabId = chrome.devtools.inspectedWindow.tabId;
 
-      registerEventLogger((_event: LogEvent) => {
+      registerEventLogger((event: LogEvent) => {
         // TODO: hook up event logging
       });
 
