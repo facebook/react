@@ -10,7 +10,7 @@
 import {enableLogger} from 'react-devtools-feature-flags';
 
 export type LogEvent = {|
-  +name: 'parseHookNames',
+  +name: 'loadHookNames',
   +displayName: string | null,
   +numberOfHooks: number | null,
   +durationMs: number,

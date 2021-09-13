@@ -37,71 +37,71 @@ function now(): number {
   return Date.now();
 }
 
-export async function withAsyncPerformanceMark<TReturn>(
+export async function withAsyncPerfMeasurements<TReturn>(
   markName: string,
   callback: () => Promise<TReturn>,
+  onComplete?: number => void,
 ): Promise<TReturn> {
-  if (__PERFORMANCE_PROFILE__) {
-    mark(markName);
-    const result = await callback();
-    measure(markName);
-    return result;
-  }
-  return callback();
-}
-
-export function withSyncPerformanceMark<TReturn>(
-  markName: string,
-  callback: () => TReturn,
-): TReturn {
-  if (__PERFORMANCE_PROFILE__) {
-    mark(markName);
-    const result = callback();
-    measure(markName);
-    return result;
-  }
-  return callback();
-}
-
-export function withCallbackPerformanceMark<TReturn>(
-  markName: string,
-  callback: (done: () => void) => TReturn,
-): TReturn {
-  if (__PERFORMANCE_PROFILE__) {
-    mark(markName);
-    const done = () => {
-      measure(markName);
-    };
-    return callback(done);
-  }
-  return callback(() => {});
-}
-
-export async function measureAsyncDuration<TReturn>(
-  callback: () => Promise<TReturn>,
-): Promise<[number, TReturn]> {
   const start = now();
+  if (__PERFORMANCE_PROFILE__) {
+    mark(markName);
+  }
   const result = await callback();
-  const duration = now() - start;
-  return [duration, result];
+
+  if (__PERFORMANCE_PROFILE__) {
+    measure(markName);
+  }
+
+  if (onComplete != null) {
+    const duration = now() - start;
+    onComplete(duration);
+  }
+
+  return result;
 }
 
-export function measureSyncDuration<TReturn>(
+export function withSyncPerfMeasurements<TReturn>(
+  markName: string,
   callback: () => TReturn,
-): [number, TReturn] {
-  const start = now();
-  const result = callback();
-  const duration = now() - start;
-  return [duration, result];
-}
-
-export function measureCallbackDuration<TReturn>(
-  callback: (done: () => number) => TReturn,
+  onComplete?: number => void,
 ): TReturn {
   const start = now();
-  const done = () => {
+  if (__PERFORMANCE_PROFILE__) {
+    mark(markName);
+  }
+  const result = callback();
+
+  if (__PERFORMANCE_PROFILE__) {
+    measure(markName);
+  }
+
+  if (onComplete != null) {
     const duration = now() - start;
-    return duration;
+    onComplete(duration);
+  }
+
+  return result;
+}
+
+export function withCallbackPerfMeasurements<TReturn, TArgs>(
+  markName: string,
+  callback: (done: (...args: TArgs[]) => void) => TReturn,
+  onComplete?: (number, ...args: TArgs[]) => void,
+): TReturn {
+  const start = now();
+  if (__PERFORMANCE_PROFILE__) {
+    mark(markName);
+  }
+
+  const done = (...args) => {
+    if (__PERFORMANCE_PROFILE__) {
+      measure(markName);
+    }
+
+    if (onComplete != null) {
+      const duration = now() - start;
+      onComplete(duration, ...args);
+    }
   };
   return callback(done);
 }
