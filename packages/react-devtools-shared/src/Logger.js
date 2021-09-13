@@ -9,13 +9,17 @@
 
 import {enableLogger} from 'react-devtools-feature-flags';
 
-export type LogEvent = {|
+type LoadHookNamesEvent = {|
   +name: 'loadHookNames',
   +displayName: string | null,
   +numberOfHooks: number | null,
   +durationMs: number,
   +resolution: 'success' | 'error' | 'timeout',
 |};
+
+// prettier-ignore
+export type LogEvent =
+  | LoadHookNamesEvent;
 
 export type LogFunction = LogEvent => void;
 
