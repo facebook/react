@@ -23,7 +23,7 @@ export type LogEvent =
 
 export type LogFunction = LogEvent => void;
 
-let loggers = [];
+let loggers: Array<LogFunction> = [];
 export const logEvent: LogFunction =
   enableLogger === true
     ? function logEvent(event: LogEvent): void {
