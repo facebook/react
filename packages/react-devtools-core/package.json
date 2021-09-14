@@ -13,7 +13,8 @@
     "dist",
     "backend.js",
     "build-info.json",
-    "standalone.js"
+    "standalone.js",
+    "hookNames.js"
   ],
   "scripts": {
     "build": "yarn build:backend && yarn build:standalone",
