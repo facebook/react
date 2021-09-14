@@ -498,24 +498,28 @@ function renderSuspenseBoundary(
   boundarySegment.status = COMPLETED;
   boundarySegment.children.push(innerSegment);
 
-  // We create suspended task for the fallback because we don't want to actually work
-  // on it yet in case we finish the main content, so we queue for later.
-  const suspendedFallbackTask = createTask(
-    request,
-    fallback,
-    parentBoundary,
-    innerSegment,
-    fallbackAbortSet,
-    task.legacyContext,
-    task.context,
-    null,
-  );
-  if (__DEV__) {
-    suspendedFallbackTask.componentStack = task.componentStack;
+  // if avoidThisFallback is set to true then we act as though there is no fallback in SSR
+  // Instead, we let the client render the fallback if the component suspends there.
+  if (!props.unstable_avoidThisFallback === true) {
+    // We create suspended task for the fallback because we don't want to actually work
+    // on it yet in case we finish the main content, so we queue for later.
+    const suspendedFallbackTask = createTask(
+      request,
+      fallback,
+      parentBoundary,
+      innerSegment,
+      fallbackAbortSet,
+      task.legacyContext,
+      task.context,
+      null,
+    );
+    if (__DEV__) {
+      suspendedFallbackTask.componentStack = task.componentStack;
+    }
+    // TODO: This should be queued at a separate lower priority queue so that we only work
+    // on preparing fallbacks if we don't have any more main content to task on.
+    request.pingedTasks.push(suspendedFallbackTask);
   }
-  // TODO: This should be queued at a separate lower priority queue so that we only work
-  // on preparing fallbacks if we don't have any more main content to task on.
-  request.pingedTasks.push(suspendedFallbackTask);
 
   popComponentStackInDEV(task);
 }

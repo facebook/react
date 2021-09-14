@@ -1478,4 +1478,81 @@ describe('ReactDOMFizzServer', () => {
     // We should've been able to display the content without waiting for the rest of the fallback.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
+
+  // @gate experimental
+  it('should respect unstable_avoidThisFallback', async () => {
+    let resolveInnerPromise;
+    const innerPromise = new Promise((res, rej) => {
+      resolveInnerPromise = res;
+    });
+    let innerPromisesResolved = false;
+
+    const InnerComponent = ({isClient}) => {
+      if (isClient) {
+        // Resuspend after re-rendering on client to check that fallback shows on client
+        throw new Promise(() => {});
+      }
+      if (!innerPromisesResolved) {
+        throw innerPromise;
+      }
+      return <Text text="inner component resolved" />;
+    };
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Text text="Non Suspense Content" />
+          <Suspense
+            fallback={
+              <span>
+                <Text text="Loading Outer" />
+              </span>
+            }
+            unstable_avoidThisFallback={true}>
+            <span>
+              <InnerComponent isClient={isClient} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App isClient={false} />,
+        writable,
+      );
+      startWriting();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>Non Suspense Content</div>,
+    );
+
+    await act(async () => {
+      innerPromisesResolved = true;
+      resolveInnerPromise();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Non Suspense Content<span>inner component resolved</span>
+      </div>,
+    );
+
+    // TODO: Get resuspending on the client to work to make sure it shows the fallback on the client;
+    // await act(async () => {
+    //   const root = ReactDOM.createRoot(container, {hydrate: true});
+    //   root.render(<App isClient={true} />);
+
+    //   Scheduler.unstable_flushAll();
+    //   await jest.runAllTimers();
+    // });
+
+    // expect(getVisibleChildren(container)).toEqual(
+    //   <div>
+    //     Non Suspense Content<span>Loading Outer</span>
+    //   </div>,
+    // );
+  });
 });
