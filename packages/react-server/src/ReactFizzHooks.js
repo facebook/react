@@ -503,6 +503,7 @@ export const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
+  useInsertionEffect: noop,
   useLayoutEffect,
   useCallback,
   // useImperativeHandle is not run in the server environment

@@ -822,6 +822,7 @@ const Dispatcher: DispatcherType = {
   useReducer: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
   useState: (unsupportedHook: any),
+  useInsertionEffect: (unsupportedHook: any),
   useLayoutEffect: (unsupportedHook: any),
   useImperativeHandle: (unsupportedHook: any),
   useEffect: (unsupportedHook: any),

@@ -78,6 +78,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         Dispatcher.useCacheRefresh();
       }
       Dispatcher.useLayoutEffect(() => {});
+      Dispatcher.useInsertionEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useDebugValue(null);
@@ -186,6 +187,18 @@ function useLayoutEffect(
   nextHook();
   hookLog.push({
     primitive: 'LayoutEffect',
+    stackError: new Error(),
+    value: create,
+  });
+}
+
+function useInsertionEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+): void {
+  nextHook();
+  hookLog.push({
+    primitive: 'InsertionEffect',
     stackError: new Error(),
     value: create,
   });
@@ -338,6 +351,7 @@ const Dispatcher: DispatcherType = {
   useImperativeHandle,
   useDebugValue,
   useLayoutEffect,
+  useInsertionEffect,
   useMemo,
   useReducer,
   useRef,

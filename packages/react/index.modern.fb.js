@@ -46,6 +46,7 @@ export {
   useDeferredValue as unstable_useDeferredValue, // TODO: Remove once call sights updated to useDeferredValue
   useEffect,
   useImperativeHandle,
+  unstable_useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useMutableSource,

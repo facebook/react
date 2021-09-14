@@ -75,6 +75,7 @@ import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
+  Insertion as HookInsertion,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -1708,6 +1709,20 @@ function updateEffect(
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
+function mountInsertionEffect(
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
+): void {
+  return mountEffectImpl(UpdateEffect, HookInsertion, create, deps);
+}
+
+function updateInsertionEffect(
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
+): void {
+  return updateEffectImpl(UpdateEffect, HookInsertion, create, deps);
+}
+
 function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
@@ -2310,6 +2325,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
+  useInsertionEffect: throwInvalidHookError,
   useLayoutEffect: throwInvalidHookError,
   useMemo: throwInvalidHookError,
   useReducer: throwInvalidHookError,
@@ -2337,6 +2353,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
+  useInsertionEffect: mountInsertionEffect,
   useMemo: mountMemo,
   useReducer: mountReducer,
   useRef: mountRef,
@@ -2362,6 +2379,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useContext: readContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
+  useInsertionEffect: updateInsertionEffect,
   useLayoutEffect: updateLayoutEffect,
   useMemo: updateMemo,
   useReducer: updateReducer,
@@ -2388,6 +2406,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useContext: readContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
+  useInsertionEffect: updateInsertionEffect,
   useLayoutEffect: updateLayoutEffect,
   useMemo: updateMemo,
   useReducer: rerenderReducer,
@@ -2467,6 +2486,15 @@ if (__DEV__) {
       mountHookTypesDev();
       checkDepsAreArrayDev(deps);
       return mountImperativeHandle(ref, create, deps);
+    },
+    useInsertionEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useInsertionEffect';
+      mountHookTypesDev();
+      checkDepsAreArrayDev(deps);
+      return mountInsertionEffect(create, deps);
     },
     useLayoutEffect(
       create: () => (() => void) | void,
@@ -2602,6 +2630,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountImperativeHandle(ref, create, deps);
     },
+    useInsertionEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useInsertionEffect';
+      updateHookTypesDev();
+      return mountInsertionEffect(create, deps);
+    },
     useLayoutEffect(
       create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
@@ -2733,6 +2769,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useImperativeHandle';
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
+    },
+    useInsertionEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useInsertionEffect';
+      updateHookTypesDev();
+      return updateInsertionEffect(create, deps);
     },
     useLayoutEffect(
       create: () => (() => void) | void,
@@ -2866,6 +2910,14 @@ if (__DEV__) {
       currentHookNameInDev = 'useImperativeHandle';
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
+    },
+    useInsertionEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useInsertionEffect';
+      updateHookTypesDev();
+      return updateInsertionEffect(create, deps);
     },
     useLayoutEffect(
       create: () => (() => void) | void,
@@ -3003,6 +3055,15 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountImperativeHandle(ref, create, deps);
+    },
+    useInsertionEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useInsertionEffect';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountInsertionEffect(create, deps);
     },
     useLayoutEffect(
       create: () => (() => void) | void,
@@ -3152,6 +3213,15 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
     },
+    useInsertionEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useInsertionEffect';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateInsertionEffect(create, deps);
+    },
     useLayoutEffect(
       create: () => (() => void) | void,
       deps: Array<mixed> | void | null,
@@ -3300,6 +3370,15 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateImperativeHandle(ref, create, deps);
+    },
+    useInsertionEffect(
+      create: () => (() => void) | void,
+      deps: Array<mixed> | void | null,
+    ): void {
+      currentHookNameInDev = 'useInsertionEffect';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateInsertionEffect(create, deps);
     },
     useLayoutEffect(
       create: () => (() => void) | void,

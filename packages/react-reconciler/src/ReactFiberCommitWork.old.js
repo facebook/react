@@ -136,6 +136,7 @@ import {
   NoFlags as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
+  Insertion as HookInsertion,
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
@@ -525,6 +526,8 @@ function commitHookEffectListMount(tag: HookFlags, finishedWork: Fiber) {
             let hookName;
             if ((effect.tag & HookLayout) !== NoFlags) {
               hookName = 'useLayoutEffect';
+            } else if ((effect.tag & HookInsertion) !== NoFlags) {
+              hookName = 'useInsertionEffect';
             } else {
               hookName = 'useEffect';
             }
@@ -1153,7 +1156,10 @@ function commitUnmount(
           do {
             const {destroy, tag} = effect;
             if (destroy !== undefined) {
-              if ((tag & HookLayout) !== NoHookEffect) {
+              if (
+                (tag & HookInsertion) !== NoHookEffect ||
+                (tag & HookLayout) !== NoHookEffect
+              ) {
                 if (
                   enableProfilerTimer &&
                   enableProfilerCommitHooks &&
@@ -1738,6 +1744,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case ForwardRef:
       case MemoComponent:
       case SimpleMemoComponent: {
+        commitHookEffectListUnmount(
+          HookInsertion | HookHasEffect,
+          finishedWork,
+          finishedWork.return,
+        );
+        commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
+
         // Layout effects are destroyed during the mutation phase so that all
         // destroy functions for all fibers are called before any create functions.
         // This prevents sibling component effects from interfering with each other,
@@ -1810,6 +1823,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      commitHookEffectListUnmount(
+        HookInsertion | HookHasEffect,
+        finishedWork,
+        finishedWork.return,
+      );
+      commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
       // Layout effects are destroyed during the mutation phase so that all
       // destroy functions for all fibers are called before any create functions.
       // This prevents sibling component effects from interfering with each other,
