@@ -14,6 +14,9 @@ const supportsUserTiming =
   typeof performance.mark === 'function' &&
   typeof performance.clearMarks === 'function';
 
+const supportsPerformanceNow =
+  typeof performance !== 'undefined' && typeof performance.now === 'function';
+
 function mark(markName: string): void {
   if (supportsUserTiming) {
     performance.mark(markName + '-start');
@@ -27,42 +30,78 @@ function measure(markName: string): void {
   }
 }
 
-export async function withAsyncPerformanceMark<TReturn>(
+function now(): number {
+  if (supportsPerformanceNow) {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+export async function withAsyncPerfMeasurements<TReturn>(
   markName: string,
   callback: () => Promise<TReturn>,
+  onComplete?: number => void,
 ): Promise<TReturn> {
+  const start = now();
   if (__PERFORMANCE_PROFILE__) {
     mark(markName);
-    const result = await callback();
-    measure(markName);
-    return result;
   }
-  return callback();
+  const result = await callback();
+
+  if (__PERFORMANCE_PROFILE__) {
+    measure(markName);
+  }
+
+  if (onComplete != null) {
+    const duration = now() - start;
+    onComplete(duration);
+  }
+
+  return result;
 }
 
-export function withSyncPerformanceMark<TReturn>(
+export function withSyncPerfMeasurements<TReturn>(
   markName: string,
   callback: () => TReturn,
+  onComplete?: number => void,
 ): TReturn {
+  const start = now();
   if (__PERFORMANCE_PROFILE__) {
     mark(markName);
-    const result = callback();
-    measure(markName);
-    return result;
   }
-  return callback();
+  const result = callback();
+
+  if (__PERFORMANCE_PROFILE__) {
+    measure(markName);
+  }
+
+  if (onComplete != null) {
+    const duration = now() - start;
+    onComplete(duration);
+  }
+
+  return result;
 }
 
-export function withCallbackPerformanceMark<TReturn>(
+export function withCallbackPerfMeasurements<TReturn>(
   markName: string,
   callback: (done: () => void) => TReturn,
+  onComplete?: number => void,
 ): TReturn {
+  const start = now();
   if (__PERFORMANCE_PROFILE__) {
     mark(markName);
-    const done = () => {
-      measure(markName);
-    };
-    return callback(done);
   }
-  return callback(() => {});
+
+  const done = () => {
+    if (__PERFORMANCE_PROFILE__) {
+      measure(markName);
+    }
+
+    if (onComplete != null) {
+      const duration = now() - start;
+      onComplete(duration);
+    }
+  };
+  return callback(done);
 }
