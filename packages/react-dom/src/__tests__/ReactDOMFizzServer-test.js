@@ -1540,19 +1540,23 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
-    // TODO: Get resuspending on the client to work to make sure it shows the fallback on the client;
-    // await act(async () => {
-    //   const root = ReactDOM.createRoot(container, {hydrate: true});
-    //   root.render(<App isClient={true} />);
+    await act(async () => {
+      const root = ReactDOM.createRoot(container, {hydrate: true});
+      // TODO: Figure out why it takes two renders to get suspense fallback to show
+      // render 1
+      root.render(<App isClient={true} />);
+      Scheduler.unstable_flushAll();
+      await jest.runAllTimers();
+      // render 2
+      root.render(<App isClient={true} />);
+      Scheduler.unstable_flushAll();
+      await jest.runAllTimers();
+    });
 
-    //   Scheduler.unstable_flushAll();
-    //   await jest.runAllTimers();
-    // });
-
-    // expect(getVisibleChildren(container)).toEqual(
-    //   <div>
-    //     Non Suspense Content<span>Loading Outer</span>
-    //   </div>,
-    // );
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Non Suspense Content<span>Loading Outer</span>
+      </div>,
+    );
   });
 });
