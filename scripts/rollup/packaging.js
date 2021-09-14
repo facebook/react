@@ -145,7 +145,13 @@ for (const bundle of Bundles.bundles) {
 function filterOutEntrypoints(name) {
   // Remove entry point files that are not built in this configuration.
   let jsonPath = `build/node_modules/${name}/package.json`;
-  let packageJSON = JSON.parse(readFileSync(jsonPath));
+  let packageJSON;
+  try {
+    packageJSON = JSON.parse(readFileSync(jsonPath).toString());
+  } catch (error) {
+    console.error(`Error parsing JSON: ${jsonPath}`);
+    throw error;
+  }
   let files = packageJSON.files;
   if (!Array.isArray(files)) {
     throw new Error('expected all package.json files to contain a files field');
@@ -196,6 +202,7 @@ async function prepareNpmPackage(name) {
     ),
     asyncCopyTo(`packages/${name}/npm`, `build/node_modules/${name}`),
   ]);
+
   filterOutEntrypoints(name);
   const tgzName = (
     await asyncExecuteCommand(`npm pack build/node_modules/${name}`)
@@ -205,14 +212,14 @@ async function prepareNpmPackage(name) {
   unlinkSync(tgzName);
 }
 
-async function prepareNpmPackages() {
+async function prepareNpmPackages(packagesBuild) {
   if (!existsSync('build/node_modules')) {
     // We didn't build any npm packages.
     return;
   }
-  const builtPackageFolders = readdirSync('build/node_modules').filter(
-    dir => dir.charAt(0) !== '.'
-  );
+  const builtPackageFolders =
+    packagesBuild ||
+    readdirSync('build/node_modules').filter(dir => dir.charAt(0) !== '.');
   await Promise.all(builtPackageFolders.map(prepareNpmPackage));
 }
 

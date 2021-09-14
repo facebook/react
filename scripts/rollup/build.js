@@ -99,6 +99,9 @@ const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
 
+// Track which packages we build to avoid erasing unbuilt packages later.
+const packagesBuilt = [];
+
 const closureOptions = {
   compilation_level: 'SIMPLE',
   language_in: 'ECMASCRIPT_2015',
@@ -542,6 +545,8 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
+  packagesBuilt.push(packageName);
+
   const isFBWWWBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
@@ -777,7 +782,7 @@ async function buildEverything() {
   }
 
   await Packaging.copyAllShims();
-  await Packaging.prepareNpmPackages();
+  await Packaging.prepareNpmPackages(packagesBuilt);
 
   if (syncFBSourcePath) {
     await Sync.syncReactNative(syncFBSourcePath);
