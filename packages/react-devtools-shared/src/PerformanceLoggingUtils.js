@@ -83,24 +83,24 @@ export function withSyncPerfMeasurements<TReturn>(
   return result;
 }
 
-export function withCallbackPerfMeasurements<TReturn, TArgs>(
+export function withCallbackPerfMeasurements<TReturn>(
   markName: string,
-  callback: (done: (args: TArgs) => void) => TReturn,
-  onComplete?: (number, args: TArgs) => void,
+  callback: (done: () => void) => TReturn,
+  onComplete?: number => void,
 ): TReturn {
   const start = now();
   if (__PERFORMANCE_PROFILE__) {
     mark(markName);
   }
 
-  const done = args => {
+  const done = () => {
     if (__PERFORMANCE_PROFILE__) {
       measure(markName);
     }
 
     if (onComplete != null) {
       const duration = now() - start;
-      onComplete(duration, args);
+      onComplete(duration);
     }
   };
   return callback(done);

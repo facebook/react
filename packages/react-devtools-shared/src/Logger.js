@@ -14,7 +14,7 @@ type LoadHookNamesEvent = {|
   +displayName: string | null,
   +numberOfHooks: number | null,
   +durationMs: number,
-  +resolution: 'success' | 'error' | 'timeout',
+  +resolution: 'success' | 'error' | 'timeout' | 'unknown',
 |};
 
 // prettier-ignore

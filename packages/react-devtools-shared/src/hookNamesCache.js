@@ -95,6 +95,9 @@ export function loadHookNames(
     };
 
     let timeoutID;
+    let didTimeout = false;
+    let resolution = 'unknown';
+    let resolvedHookNames: HookNames | null = null;
 
     const wake = () => {
       if (timeoutID) {
@@ -107,20 +110,14 @@ export function loadHookNames(
       callbacks.clear();
     };
 
-    const handleLoadComplete = (
-      durationMs: number,
-      args: {|
-        resolution: 'success' | 'error' | 'timeout',
-        hookNames: HookNames | null,
-      |},
-    ): void => {
+    const handleLoadComplete = (durationMs: number): void => {
       // Log duration for parsing hook names
       logEvent({
         name: 'loadHookNames',
         displayName: element.displayName,
-        numberOfHooks: args.hookNames?.size ?? null,
+        numberOfHooks: resolvedHookNames?.size ?? null,
         durationMs,
-        resolution: args.resolution,
+        resolution,
       });
     };
 
@@ -128,8 +125,6 @@ export function loadHookNames(
       status: Pending,
       value: wakeable,
     });
-
-    let didTimeout = false;
 
     withCallbackPerfMeasurements(
       'loadHookNames',
@@ -154,7 +149,9 @@ export function loadHookNames(
               notFoundRecord.value = null;
             }
 
-            done({resolution: 'success', hookNames});
+            resolution = 'success';
+            resolvedHookNames = hookNames;
+            done();
             wake();
           },
           function onError(error) {
@@ -172,7 +169,8 @@ export function loadHookNames(
             thrownRecord.status = Rejected;
             thrownRecord.value = null;
 
-            done({resolution: 'error', hookNames: null});
+            resolution = 'error';
+            done();
             wake();
           },
         );
@@ -191,7 +189,8 @@ export function loadHookNames(
           timedoutRecord.status = Rejected;
           timedoutRecord.value = null;
 
-          done({resolution: 'timeout', hookNames: null});
+          resolution = 'timeout';
+          done();
           wake();
         }, TIMEOUT);
       },
