@@ -74,7 +74,7 @@ To achieve that one can make use of `componentWrapperFunctions` option, which, s
       "rules": {
         // ...
         "react-hooks/rules-of-hooks": ["warn", {
-          "additionalHooks": '^(observer|styled)$'
+          "componentWrapperFunctions": '^(observer|styled)$'
         }]
       }
     }
