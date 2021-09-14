@@ -1,6 +1,6 @@
 'use strict';
 
-const ncp = require('ncp').ncp;
+const copy = require('recursive-copy');
 const path = require('path');
 const mkdirp = require('mkdirp');
 const rimraf = require('rimraf');
@@ -8,18 +8,8 @@ const exec = require('child_process').exec;
 const targz = require('targz');
 
 function asyncCopyTo(from, to) {
-  return asyncMkDirP(path.dirname(to)).then(
-    () =>
-      new Promise((resolve, reject) => {
-        ncp(from, to, error => {
-          if (error) {
-            // Wrap to have a useful stack trace.
-            reject(new Error(error));
-            return;
-          }
-          resolve();
-        });
-      })
+  return asyncMkDirP(path.dirname(to)).then(() =>
+    copy(from, to, {overwrite: true})
   );
 }
 
