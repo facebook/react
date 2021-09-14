@@ -500,7 +500,7 @@ function renderSuspenseBoundary(
 
   // if avoidThisFallback is set to true then we act as though there is no fallback in SSR
   // Instead, we let the client render the fallback if the component suspends there.
-  if (!props.unstable_avoidThisFallback === true) {
+  if (props.unstable_avoidThisFallback !== true) {
     // We create suspended task for the fallback because we don't want to actually work
     // on it yet in case we finish the main content, so we queue for later.
     const suspendedFallbackTask = createTask(
