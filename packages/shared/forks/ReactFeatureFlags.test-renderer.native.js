@@ -53,6 +53,7 @@ export const warnOnSubscriptionInsideStartTransition = false;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
+export const warnAboutCallbackRefReturningFunction = false;
 
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
