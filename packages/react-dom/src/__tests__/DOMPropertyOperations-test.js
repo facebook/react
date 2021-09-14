@@ -263,6 +263,32 @@ describe('DOMPropertyOperations', () => {
         .dispatchEvent(new Event('customevent', {bubbles: false}));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
+
+    it('innerHTML should not work on custom elements', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-custom-element innerHTML="foo" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('innerHTML')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('innerText should not work on custom elements', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-custom-element innerText="foo" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('innerText')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('textContent should not work on custom elements', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-custom-element textContent="foo" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('textContent')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+    });
   });
 
   describe('deleteValueForProperty', () => {
