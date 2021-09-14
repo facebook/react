@@ -17,7 +17,8 @@ const {
   useEffect,
   useLayoutEffect,
   useDebugValue,
-  useSyncExternalStore: builtInAPI,
+  // The built-in API is still prefixed.
+  unstable_useSyncExternalStore: builtInAPI,
 } = React;
 
 // Prefer the built-in API, if it exists. If it doesn't exist, then we assume
