@@ -37,6 +37,7 @@ import {
   deletedTreeCleanUpLevel,
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
+  warnAboutCallbackRefReturningFunction,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -250,6 +251,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   const ref = current.ref;
   if (ref !== null) {
     if (typeof ref === 'function') {
+      let retVal;
       try {
         if (
           enableProfilerTimer &&
@@ -258,16 +260,28 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         ) {
           try {
             startLayoutEffectTimer();
-            ref(null);
+            retVal = ref(null);
           } finally {
             recordLayoutEffectDuration(current);
           }
         } else {
-          ref(null);
+          retVal = ref(null);
         }
       } catch (error) {
         reportUncaughtErrorInDEV(error);
         captureCommitPhaseError(current, nearestMountedAncestor, error);
+      }
+      if (__DEV__) {
+        if (
+          warnAboutCallbackRefReturningFunction &&
+          typeof retVal === 'function'
+        ) {
+          console.error(
+            'Unexpected return value from a callback ref in %s. ' +
+              'A callback ref should not return a function.',
+            getComponentNameFromFiber(current),
+          );
+        }
       }
     } else {
       ref.current = null;
@@ -1077,6 +1091,7 @@ function commitAttachRef(finishedWork: Fiber) {
       instanceToUse = instance;
     }
     if (typeof ref === 'function') {
+      let retVal;
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
@@ -1084,12 +1099,24 @@ function commitAttachRef(finishedWork: Fiber) {
       ) {
         try {
           startLayoutEffectTimer();
-          ref(instanceToUse);
+          retVal = ref(instanceToUse);
         } finally {
           recordLayoutEffectDuration(finishedWork);
         }
       } else {
-        ref(instanceToUse);
+        retVal = ref(instanceToUse);
+      }
+      if (__DEV__) {
+        if (
+          warnAboutCallbackRefReturningFunction &&
+          typeof retVal === 'function'
+        ) {
+          console.error(
+            'Unexpected return value from a callback ref in %s. ' +
+              'A callback ref should not return a function.',
+            getComponentNameFromFiber(finishedWork),
+          );
+        }
       }
     } else {
       if (__DEV__) {

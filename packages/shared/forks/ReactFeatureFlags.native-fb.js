@@ -63,6 +63,7 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableStrictEffects = __DEV__;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
+export const warnAboutCallbackRefReturningFunction = false;
 
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
