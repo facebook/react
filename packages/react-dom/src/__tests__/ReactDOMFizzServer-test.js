@@ -1479,7 +1479,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
-  // @gate experimental
+  // @gate experimental && enableFizzSuspenseAvoidThisFallback
   it('should respect unstable_avoidThisFallback', async () => {
     let resolveInnerPromise;
     const innerPromise = new Promise((res, rej) => {
@@ -1540,14 +1540,22 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
+    let root;
     await act(async () => {
-      const root = ReactDOM.createRoot(container, {hydrate: true});
-      // TODO: Figure out why it takes two renders to get suspense fallback to show
-      // render 1
-      root.render(<App isClient={true} />);
+      root = ReactDOM.hydrateRoot(container, <App isClient={false} />);
       Scheduler.unstable_flushAll();
       await jest.runAllTimers();
-      // render 2
+    });
+
+    // No change after hydration
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Non Suspense Content<span>inner component resolved</span>
+      </div>,
+    );
+
+    await act(async () => {
+      // Trigger update by changing isClient to true
       root.render(<App isClient={true} />);
       Scheduler.unstable_flushAll();
       await jest.runAllTimers();
@@ -1555,7 +1563,9 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Non Suspense Content<span>Loading Outer</span>
+        Non Suspense Content
+        <span style="display: none;">inner component resolved</span>
+        <span>Loading Outer</span>
       </div>,
     );
   });

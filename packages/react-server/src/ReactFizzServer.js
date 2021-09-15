@@ -107,6 +107,7 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableLazyElements,
+  enableFizzSuspenseAvoidThisFallback,
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -498,28 +499,112 @@ function renderSuspenseBoundary(
   boundarySegment.status = COMPLETED;
   boundarySegment.children.push(innerSegment);
 
-  // if avoidThisFallback is set to true then we act as though there is no fallback in SSR
-  // Instead, we let the client render the fallback if the component suspends there.
-  if (props.unstable_avoidThisFallback !== true) {
-    // We create suspended task for the fallback because we don't want to actually work
-    // on it yet in case we finish the main content, so we queue for later.
-    const suspendedFallbackTask = createTask(
-      request,
-      fallback,
-      parentBoundary,
-      innerSegment,
-      fallbackAbortSet,
-      task.legacyContext,
-      task.context,
-      null,
-    );
-    if (__DEV__) {
-      suspendedFallbackTask.componentStack = task.componentStack;
-    }
-    // TODO: This should be queued at a separate lower priority queue so that we only work
-    // on preparing fallbacks if we don't have any more main content to task on.
-    request.pingedTasks.push(suspendedFallbackTask);
+  // We create suspended task for the fallback because we don't want to actually work
+  // on it yet in case we finish the main content, so we queue for later.
+  const suspendedFallbackTask = createTask(
+    request,
+    fallback,
+    parentBoundary,
+    innerSegment,
+    fallbackAbortSet,
+    task.legacyContext,
+    task.context,
+    null,
+  );
+  if (__DEV__) {
+    suspendedFallbackTask.componentStack = task.componentStack;
   }
+  // TODO: This should be queued at a separate lower priority queue so that we only work
+  // on preparing fallbacks if we don't have any more main content to task on.
+  request.pingedTasks.push(suspendedFallbackTask);
+
+  popComponentStackInDEV(task);
+}
+
+function renderSuspenseBoundaryWithoutFallback(
+  request: Request,
+  task: Task,
+  props: Object,
+) {
+  pushBuiltInComponentStackInDEV(task, 'Suspense');
+  const parentBoundary = task.blockedBoundary;
+  const parentSegment = task.blockedSegment;
+
+  // We need to push an "empty" thing here to identify the parent suspense boundary.
+  pushEmpty(parentSegment.chunks, request.responseState, task.assignID);
+  task.assignID = null;
+
+  const fallbackAbortSet: Set<Task> = new Set();
+  const content: ReactNodeList = props.children;
+
+  const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+  const insertionIndex = parentSegment.chunks.length;
+
+  // The children of the boundary segment is actually the fallback.
+  const boundarySegment = createPendingSegment(
+    request,
+    insertionIndex,
+    newBoundary,
+    parentSegment.formatContext,
+  );
+  parentSegment.children.push(boundarySegment);
+
+  // This segment is the actual child content. We can start rendering that immediately.
+  const contentRootSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    parentSegment.formatContext,
+  );
+  // We mark the root segment as having its parent flushed. It's not really flushed but there is
+  // no parent segment so there's nothing to wait on.
+  contentRootSegment.parentFlushed = true;
+
+  // Currently this is running synchronously. We could instead schedule this to pingedTasks.
+  // I suspect that there might be some efficiency benefits from not creating the suspended task
+  // and instead just using the stack if possible.
+  // TODO: Call this directly instead of messing with saving and restoring contexts.
+
+  // We can reuse the current context and task to render the content immediately without
+  // context switching. We just need to temporarily switch which boundary and which segment
+  // we're writing to. If something suspends, it'll spawn new suspended task with that context.
+  task.blockedBoundary = newBoundary;
+  task.blockedSegment = contentRootSegment;
+  try {
+    // We use the safe form because we don't handle suspending here. Only error handling.
+    renderNode(request, task, content);
+    contentRootSegment.status = COMPLETED;
+    newBoundary.completedSegments.push(contentRootSegment);
+    if (newBoundary.pendingTasks === 0) {
+      // This must have been the last segment we were waiting on. This boundary is now complete.
+      // Therefore we won't need the fallback. We early return so that we don't have to create
+      // the fallback.
+      popComponentStackInDEV(task);
+      return;
+    }
+  } catch (error) {
+    contentRootSegment.status = ERRORED;
+    reportError(request, error);
+    newBoundary.forceClientRender = true;
+    // We don't need to decrement any task numbers because we didn't spawn any new task.
+    // We don't need to schedule any task because we know the parent has written yet.
+  } finally {
+    task.blockedBoundary = parentBoundary;
+    task.blockedSegment = parentSegment;
+  }
+
+  // This injects an extra segment just to contain an empty tag with an ID.
+  // This means that we're not actually using the assignID anywhere.
+  // TODO: Rethink the assignID approach.
+  pushEmpty(boundarySegment.chunks, request.responseState, newBoundary.id);
+  const innerSegment = createPendingSegment(
+    request,
+    boundarySegment.chunks.length,
+    null,
+    boundarySegment.formatContext,
+  );
+  boundarySegment.status = COMPLETED;
+  boundarySegment.children.push(innerSegment);
 
   popComponentStackInDEV(task);
 }
@@ -990,7 +1075,14 @@ function renderElement(
     }
     // eslint-disable-next-line-no-fallthrough
     case REACT_SUSPENSE_TYPE: {
-      renderSuspenseBoundary(request, task, props);
+      if (
+        enableFizzSuspenseAvoidThisFallback &&
+        props.unstable_avoidThisFallback === true
+      ) {
+        renderSuspenseBoundaryWithoutFallback(request, task, props);
+      } else {
+        renderSuspenseBoundary(request, task, props);
+      }
       return;
     }
   }
