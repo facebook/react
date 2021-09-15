@@ -407,7 +407,6 @@ function parseSourceAST(
             '[@babel/parser] parse(originalSourceCode)',
             () =>
               parse(originalSourceCode, {
-                errorRecovery: true,
                 sourceType: 'unambiguous',
                 plugins: ['jsx', plugin],
               }),
