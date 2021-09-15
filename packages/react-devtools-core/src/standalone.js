@@ -45,7 +45,9 @@ let statusListener: StatusListener = (message: string) => {};
 
 // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
 function hookNamesModuleLoaderFunction() {
-  return import('./hookNames');
+  return import(
+    /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
+  );
 }
 
 function setContentDOMNode(value: HTMLElement) {

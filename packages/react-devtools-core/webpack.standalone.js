@@ -38,11 +38,10 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-source-map' : 'source-map',
+  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
   target: 'electron-main',
   entry: {
     standalone: './src/standalone.js',
-    hookNames: './src/hookNames.js',
   },
   output: {
     path: __dirname + '/dist',
