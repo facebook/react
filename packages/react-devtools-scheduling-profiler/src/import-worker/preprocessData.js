@@ -677,7 +677,7 @@ function processTimelineEvent(
           const stopTime = nativeEvent.timestamp + nativeEvent.duration;
 
           // If React work was scheduled during an event handler, and the event had a long duration,
-          // it might be because the React render was long and stretched the event.
+          // it might be because the React render were long and stretched the event.
           // It might also be that the React work was short and that something else stretched the event.
           // Make a note of this event for now and we'll examine the batch of React render work later.
           // (We can't know until we're done processing the React update anyway.)
@@ -917,12 +917,12 @@ export default async function preprocessData(
       profilerData.batchUIDToMeasuresMap.size === 0
     ) {
       // No profiler version could indicate data was logged using an older build of React,
-      // before an explicitly profiler version was included in the logging data.
+      // before an explicit profiler version was included in the logging data.
       // But it could also indicate that the website was either not using React, or using a production build.
       // The easiest way to check for this case is to see if the data contains any scheduled updates or render work.
       throw new InvalidProfileError(
-        'No React marks were found in the provided profile.' +
-          ' Please provide profiling data from an React application running in development or profiling mode.',
+        'No, React marks were found in the provided profile.' +
+          ' Please provide profiling data from a React application running in development or profiling mode.',
       );
     }
 
