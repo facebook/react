@@ -58,7 +58,7 @@ export class View {
   _needsDisplay = true;
 
   /**
-   * Whether the heirarchy below this view has subviews that need display.
+   * Whether the heirarchy below this view has subviews that need a display.
    *
    * NOTE: Do not set directly! Use `setSubviewsNeedDisplay`.
    *
@@ -225,7 +225,7 @@ export class View {
    *
    * Implementations should call `setNeedsDisplay` if a draw is required.
    *
-   * The default implementation uses `this.layouter` to lay out subviews.
+   * The default implementation uses `this.layouter` to layout subviews.
    *
    * Can be overwritten by subclasses that wish to manually manage their
    * subviews' layout.
