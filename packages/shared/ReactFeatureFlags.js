@@ -32,7 +32,7 @@ export const enableStrictEffects = __DEV__;
 export const createRootStrictEffectsByDefault = false;
 
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
-// replay the begin phase of a failed component inside invokeGuardedCallback.
+// replay the beginning phase of a failed component inside invokeGuardedCallback.
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
@@ -77,7 +77,7 @@ export const enableCreateEventHandleAPI = false;
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
-// Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
+// Till then, we warn about the missing mock, but still fall back to a legacy mode compatible version
 
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
@@ -116,7 +116,7 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 // If there are no still-mounted boundaries, the errors should be rethrown.
 export const skipUnmountedBoundaries = false;
 
-// When a node is unmounted, recurse into the Fiber subtree and clean out
+// When a node is unmounted, recurse into the Fiber subtree and cleanout
 // references. Each level cleans up more fiber fields than the previous level.
 // As far as we know, React itself doesn't leak, but because the Fiber contains
 // cycles, even a single leak in product code can cause us to retain large
