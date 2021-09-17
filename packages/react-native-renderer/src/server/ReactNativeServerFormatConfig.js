@@ -225,8 +225,7 @@ export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  writeChunk(destination, SUSPENSE_CLIENT_RENDER);
-  return writeChunk(destination);
+  return writeChunk(destination, SUSPENSE_CLIENT_RENDER);
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
