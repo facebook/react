@@ -287,7 +287,7 @@ export class VerticalScrollView extends View {
 
     // Don't allow wheel events to bubble past this view even if we've scrolled to the edge.
     // It just feels bad to have the scrolling jump unexpectedly from in a container to the outer page.
-    // The only exception is when the container fitst the contnet (no scrolling).
+    // The only exception is when the container fits the content (no scrolling).
     if (contentHeight === containerHeight) {
       return false;
     }
