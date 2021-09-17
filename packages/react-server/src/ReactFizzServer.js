@@ -1072,7 +1072,7 @@ function validateIterable(iterable, iteratorFn: Function): void {
     // We don't support rendering Generators because it's a mutation.
     // See https://github.com/facebook/react/issues/12995
     if (
-      typeof Symbol === 'function' && -
+      typeof Symbol === 'function' &&
       // $FlowFixMe Flow doesn't know about toStringTag
       iterable[Symbol.toStringTag] === 'Generator'
     ) {
