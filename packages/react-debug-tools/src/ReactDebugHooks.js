@@ -258,6 +258,7 @@ function useMemo<T>(
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
   // useSyncExternalStore() composes multiple hooks internally.
   // Advance the current hook index the same number of times

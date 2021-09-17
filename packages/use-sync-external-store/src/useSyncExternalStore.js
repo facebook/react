@@ -45,6 +45,8 @@ let didWarnUncachedGetSnapshot = false;
 function useSyncExternalStore_shim<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  // TODO: Add a canUseDOM check and use this one on the server
+  getServerSnapshot?: () => T,
 ): T {
   if (__DEV__) {
     if (!didWarnOld18Alpha) {
@@ -95,7 +97,7 @@ function useSyncExternalStore_shim<T>(
   // Track the latest getSnapshot function with a ref. This needs to be updated
   // in the layout phase so we can access it during the tearing check that
   // happens on subscribe.
-  // TODO: Circumvent SSR warning
+  // TODO: Circumvent SSR warning with canUseDOM check
   useLayoutEffect(() => {
     inst.value = value;
     inst.getSnapshot = getSnapshot;

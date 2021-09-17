@@ -938,23 +938,64 @@ function rerenderReducer<S, I, A>(
 function mountSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
   const fiber = currentlyRenderingFiber;
   const hook = mountWorkInProgressHook();
+
+  let nextSnapshot;
+  const isHydrating = getIsHydrating();
+  if (isHydrating) {
+    if (getServerSnapshot === undefined) {
+      invariant(
+        false,
+        'Missing getServerSnapshot, which is required for ' +
+          'server-rendered content. Will revert to client rendering.',
+      );
+    }
+    nextSnapshot = getServerSnapshot();
+    if (__DEV__) {
+      if (!didWarnUncachedGetSnapshot) {
+        if (nextSnapshot !== getServerSnapshot()) {
+          console.error(
+            'The result of getServerSnapshot should be cached to avoid an infinite loop',
+          );
+          didWarnUncachedGetSnapshot = true;
+        }
+      }
+    }
+  } else {
+    nextSnapshot = getSnapshot();
+    if (__DEV__) {
+      if (!didWarnUncachedGetSnapshot) {
+        if (nextSnapshot !== getSnapshot()) {
+          console.error(
+            'The result of getSnapshot should be cached to avoid an infinite loop',
+          );
+          didWarnUncachedGetSnapshot = true;
+        }
+      }
+    }
+    // Unless we're rendering a blocking lane, schedule a consistency check.
+    // Right before committing, we will walk the tree and check if any of the
+    // stores were mutated.
+    //
+    // We won't do this if we're hydrating server-rendered content, because if
+    // the content is stale, it's already visible anyway. Instead we'll patch
+    // it up in a passive effect.
+    const root: FiberRoot | null = getWorkInProgressRoot();
+    invariant(
+      root !== null,
+      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+    );
+    if (!includesBlockingLane(root, renderLanes)) {
+      pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
+    }
+  }
+
   // Read the current snapshot from the store on every render. This breaks the
   // normal rules of React, and only works because store updates are
   // always synchronous.
-  const nextSnapshot = getSnapshot();
-  if (__DEV__) {
-    if (!didWarnUncachedGetSnapshot) {
-      if (nextSnapshot !== getSnapshot()) {
-        console.error(
-          'The result of getSnapshot should be cached to avoid an infinite loop',
-        );
-        didWarnUncachedGetSnapshot = true;
-      }
-    }
-  }
   hook.memoizedState = nextSnapshot;
   const inst: StoreInstance<T> = {
     value: nextSnapshot,
@@ -980,24 +1021,13 @@ function mountSyncExternalStore<T>(
     null,
   );
 
-  // Unless we're rendering a blocking lane, schedule a consistency check. Right
-  // before committing, we will walk the tree and check if any of the stores
-  // were mutated.
-  const root: FiberRoot | null = getWorkInProgressRoot();
-  invariant(
-    root !== null,
-    'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-  );
-  if (!includesBlockingLane(root, renderLanes)) {
-    pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
-  }
-
   return nextSnapshot;
 }
 
 function updateSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
   const fiber = currentlyRenderingFiber;
   const hook = updateWorkInProgressHook();
@@ -2235,10 +2265,11 @@ if (__DEV__) {
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
+      getServerSnapshot?: () => T,
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       mountHookTypesDev();
-      return mountSyncExternalStore(subscribe, getSnapshot);
+      return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2366,10 +2397,11 @@ if (__DEV__) {
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
+      getServerSnapshot?: () => T,
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
-      return mountSyncExternalStore(subscribe, getSnapshot);
+      return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2497,10 +2529,11 @@ if (__DEV__) {
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
+      getServerSnapshot?: () => T,
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2629,10 +2662,11 @@ if (__DEV__) {
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
+      getServerSnapshot?: () => T,
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2774,11 +2808,12 @@ if (__DEV__) {
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
+      getServerSnapshot?: () => T,
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountSyncExternalStore(subscribe, getSnapshot);
+      return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -2921,11 +2956,12 @@ if (__DEV__) {
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
+      getServerSnapshot?: () => T,
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
@@ -3069,11 +3105,12 @@ if (__DEV__) {
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
+      getServerSnapshot?: () => T,
     ): T {
       currentHookNameInDev = 'useSyncExternalStore';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateSyncExternalStore(subscribe, getSnapshot);
+      return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
     useOpaqueIdentifier(): OpaqueIDType | void {
       currentHookNameInDev = 'useOpaqueIdentifier';
