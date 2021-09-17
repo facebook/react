@@ -22,15 +22,27 @@ async function main() {
   await Promise.all(oldFilenames.map(unforkFile));
 
   // Use ESLint to autofix imports
-  const spawn = spawnSync('yarn', ['linc', '--fix'], {
+  spawnSync('yarn', ['linc', '--fix'], {
     stdio: ['inherit', 'inherit', 'pipe'],
   });
-  if (spawn.stderr.toString() !== '') {
-    spawnSync('git', ['checkout', '.']);
+  // TODO: If eslint crashes, it may not have successfully fixed all
+  // the imports, which would leave the reconciler files in an inconsistent
+  // state. So we used to crash and reset the working directory. But that
+  // solution assumed that the working directory was clean before you run the
+  // command — if it wasn't, it'll not only reset the synced reconciler files,
+  // but all the other uncommitted changes.
+  //
+  // We need a different strategy to prevent loss of work. For example, we could
+  // exit early if the working directory is not clean before you run the script.
+  //
+  // Until we think of something better, I've commmented out this branch to
+  // prevent work from accidentally being lost.
+  // if (spawn.stderr.toString() !== '') {
+  //   spawnSync('git', ['checkout', '.']);
 
-    console.log(Error(spawn.stderr));
-    process.exitCode = 1;
-  }
+  //   console.log(Error(spawn.stderr));
+  //   process.exitCode = 1;
+  // }
 }
 
 async function unforkFile(oldFilename) {
