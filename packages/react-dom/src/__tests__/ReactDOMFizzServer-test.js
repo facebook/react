@@ -1538,11 +1538,6 @@ describe('ReactDOMFizzServer', () => {
       const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
         <App isClient={false} />,
         writable,
-        {
-          onCompleteAll() {
-            console.log('ONCOMPLETEALL');
-          }
-        }
       );
       startWriting();
     });
