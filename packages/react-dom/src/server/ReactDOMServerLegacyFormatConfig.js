@@ -118,18 +118,13 @@ export function pushTextInstance(
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  id: SuspenseBoundaryID,
 ): boolean {
   if (responseState.generateStaticMarkup) {
     // A completed boundary is done and doesn't need a representation in the HTML
     // if we're not going to be hydrating it.
     return true;
   }
-  return writeStartCompletedSuspenseBoundaryImpl(
-    destination,
-    responseState,
-    id,
-  );
+  return writeStartCompletedSuspenseBoundaryImpl(destination, responseState);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,

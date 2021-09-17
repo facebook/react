@@ -1685,12 +1685,7 @@ function flushSegment(
     return writeEndPendingSuspenseBoundary(destination, request.responseState);
   } else {
     // We can inline this boundary's content as a complete boundary.
-
-    writeStartCompletedSuspenseBoundary(
-      destination,
-      request.responseState,
-      boundary.id,
-    );
+    writeStartCompletedSuspenseBoundary(destination, request.responseState);
 
     const completedSegments = boundary.completedSegments;
     invariant(

@@ -204,10 +204,8 @@ export function writePlaceholder(
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  id: SuspenseBoundaryID,
 ): boolean {
-  writeChunk(destination, SUSPENSE_COMPLETE);
-  return writeChunk(destination, formatID(id));
+  return writeChunk(destination, SUSPENSE_COMPLETE);
 }
 
 export function pushStartCompletedSuspenseBoundary(
@@ -221,16 +219,14 @@ export function writeStartPendingSuspenseBoundary(
   responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
-  writeChunk(destination, SUSPENSE_PENDING);
-  return writeChunk(destination, formatID(id));
+  return writeChunk(destination, SUSPENSE_PENDING);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, SUSPENSE_CLIENT_RENDER);
-  return writeChunk(destination, formatID(id));
+  return writeChunk(destination);
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
