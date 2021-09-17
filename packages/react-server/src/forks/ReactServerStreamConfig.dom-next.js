@@ -7,4 +7,4 @@
  * @flow
  */
 
- export * from '../ReactServerStreamConfigNext';
+export * from '../ReactServerStreamConfigNext';

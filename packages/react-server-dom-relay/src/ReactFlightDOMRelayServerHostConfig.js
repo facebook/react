@@ -133,7 +133,7 @@ export function processSymbolChunk(
   return ['S', id, name];
 }
 
-export function scheduleWork(callback: () => void) {
+export function scheduleWork(destination: Destination, callback: () => void) {
   callback();
 }
 

@@ -7,6 +7,5 @@
  * @flow
  */
 
- export * from '../ReactFlightServerConfigStream';
- export * from 'react-server-dom-webpack/src/ReactFlightServerWebpackBundlerConfig';
- 
+export * from '../ReactFlightServerConfigStream';
+export * from 'react-server-dom-webpack/src/ReactFlightServerWebpackBundlerConfig';

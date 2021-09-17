@@ -183,7 +183,7 @@ function pingSegment(request: Request, segment: Segment): void {
   const pingedSegments = request.pingedSegments;
   pingedSegments.push(segment);
   if (pingedSegments.length === 1) {
-    scheduleWork(() => performWork(request));
+    scheduleWork(request.destination, () => performWork(request));
   }
 }
 
@@ -768,7 +768,7 @@ function flushCompletedChunks(request: Request): void {
 
 export function startWork(request: Request): void {
   request.flowing = true;
-  scheduleWork(() => performWork(request));
+  scheduleWork(request.destination, () => performWork(request));
 }
 
 export function startFlowing(request: Request): void {
