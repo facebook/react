@@ -1508,7 +1508,6 @@ export function writeStartPendingSuspenseBoundary(
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  id: SuspenseBoundaryID,
 ): boolean {
   return writeChunk(destination, startClientRenderedSuspenseBoundary);
 }
