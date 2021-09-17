@@ -149,11 +149,7 @@ import {
   getOffscreenContainerProps,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {
-  shouldError,
-  shouldSuspend,
-  setIsStrictModeForDevtools,
-} from './ReactFiberReconciler';
+import {shouldError, shouldSuspend} from './ReactFiberReconciler';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.old';
 import {
   suspenseStackCursor,
@@ -235,6 +231,7 @@ import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.old';
 import is from 'shared/objectIs';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

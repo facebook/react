@@ -48,8 +48,6 @@ import {
   observeVisibleRects as observeVisibleRects_old,
   runWithPriority as runWithPriority_old,
   getCurrentUpdatePriority as getCurrentUpdatePriority_old,
-  getIsStrictModeForDevtools as getIsStrictModeForDevtools_old,
-  setIsStrictModeForDevtools as setIsStrictModeForDevtools_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -86,8 +84,6 @@ import {
   observeVisibleRects as observeVisibleRects_new,
   runWithPriority as runWithPriority_new,
   getCurrentUpdatePriority as getCurrentUpdatePriority_new,
-  getIsStrictModeForDevtools as getIsStrictModeForDevtools_new,
-  setIsStrictModeForDevtools as setIsStrictModeForDevtools_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -189,10 +185,3 @@ export const observeVisibleRects = enableNewReconciler
 export const runWithPriority = enableNewReconciler
   ? runWithPriority_new
   : runWithPriority_old;
-
-export const getIsStrictModeForDevtools = enableNewReconciler
-  ? getIsStrictModeForDevtools_new
-  : getIsStrictModeForDevtools_old;
-export const setIsStrictModeForDevtools = enableNewReconciler
-  ? setIsStrictModeForDevtools_new
-  : setIsStrictModeForDevtools_old;
