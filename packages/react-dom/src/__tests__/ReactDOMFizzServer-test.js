@@ -1481,21 +1481,25 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental && enableFizzSuspenseAvoidThisFallback
   it('should respect unstable_avoidThisFallback', async () => {
-    let resolveInnerPromise;
-    const innerPromise = new Promise((res, rej) => {
-      resolveInnerPromise = res;
-    });
-    let innerPromisesResolved = false;
+    const resolved = {
+      0: false,
+      1: false,
+    }
+    const promiseRes = {}
+    const promises = {
+      0: new Promise((res) => { promiseRes[0] = () => { resolved[0] = true; res(); } }),
+      1: new Promise((res) => { promiseRes[1] = () => { resolved[1] = true; res(); } }),
+    }
 
-    const InnerComponent = ({isClient}) => {
+    const InnerComponent = ({ isClient, depth }) => {
       if (isClient) {
         // Resuspend after re-rendering on client to check that fallback shows on client
         throw new Promise(() => {});
       }
-      if (!innerPromisesResolved) {
-        throw innerPromise;
+      if (!resolved[depth]) {
+        throw promises[depth];
       }
-      return <Text text="inner component resolved" />;
+      return <div><Text text={`resolved ${depth}`} /></div>;
     };
 
     function App({isClient}) {
@@ -1505,38 +1509,65 @@ describe('ReactDOMFizzServer', () => {
           <Suspense
             fallback={
               <span>
-                <Text text="Loading Outer" />
+                <Text text="Avoided Fallback" />
               </span>
             }
             unstable_avoidThisFallback={true}>
-            <span>
-              <InnerComponent isClient={isClient} />
-            </span>
+            <InnerComponent isClient={isClient} depth={0} />
+            <div>
+              <Suspense fallback={<Text text="Fallback" />}>
+                <Suspense
+                  fallback={
+                    <span>
+                      <Text text="Avoided Fallback2" />
+                    </span>
+                  }
+                  unstable_avoidThisFallback={true}>
+                  <InnerComponent isClient={isClient} depth={1} />
+                </Suspense>
+              </Suspense>
+            </div>
           </Suspense>
         </div>
       );
     }
 
+    await jest.runAllTimers();
+
     await act(async () => {
       const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
         <App isClient={false} />,
         writable,
+        {
+          onCompleteAll() {
+            console.log('ONCOMPLETEALL');
+          }
+        }
       );
       startWriting();
     });
 
-    expect(getVisibleChildren(container)).toEqual(
-      <div>Non Suspense Content</div>,
-    );
+    // Nothing is output since root has a suspense with avoidedThisFallback that hasn't resolved
+    expect(getVisibleChildren(container)).toEqual(undefined);
 
-    await act(async () => {
-      innerPromisesResolved = true;
-      resolveInnerPromise();
-    });
+    // resolve first suspense component with avoidThisFallback
+    await act(async () => { promiseRes[0]() });
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Non Suspense Content<span>inner component resolved</span>
+        Non Suspense Content
+        <div>resolved 0</div>
+        <div>Fallback</div>
+      </div>,
+    );
+
+    await act(async () => { promiseRes[1]() });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Non Suspense Content
+        <div>resolved 0</div>
+        <div><div>resolved 1</div></div>
       </div>,
     );
 
@@ -1550,7 +1581,9 @@ describe('ReactDOMFizzServer', () => {
     // No change after hydration
     expect(getVisibleChildren(container)).toEqual(
       <div>
-        Non Suspense Content<span>inner component resolved</span>
+        Non Suspense Content
+        <div>resolved 0</div>
+        <div><div>resolved 1</div></div>
       </div>,
     );
 
@@ -1561,11 +1594,13 @@ describe('ReactDOMFizzServer', () => {
       await jest.runAllTimers();
     });
 
+    // Now that we've resuspended at the root we show the root fallback
     expect(getVisibleChildren(container)).toEqual(
       <div>
         Non Suspense Content
-        <span style="display: none;">inner component resolved</span>
-        <span>Loading Outer</span>
+        <div style="display: none;">resolved 0</div>
+        <div style="display: none;"><div>resolved 1</div></div>
+        <span>Avoided Fallback</span>
       </div>,
     );
   });

@@ -1480,6 +1480,23 @@ const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
 );
 const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
+export function pushStartCompletedSuspenseBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+) {
+  target.push(startCompletedSuspenseBoundary)
+}
+
+export function pushEndSuspenseBoundary(
+  target: Array<Chunk | PrecomputedChunk>,
+  type: string,
+  props: Object,
+  responseState: ResponseState,
+  formatContext: FormatContext,
+  assignID: null | SuspenseBoundaryID,
+) {
+  target.push(endSuspenseBoundary)
+}
+
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
