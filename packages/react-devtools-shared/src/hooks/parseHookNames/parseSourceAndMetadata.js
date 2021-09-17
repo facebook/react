@@ -394,33 +394,41 @@ function parseSourceAST(
         hookParsedMetadata.originalSourceCode =
           sourceMetadata.originalSourceCode;
       } else {
-        // TypeScript is the most commonly used typed JS variant so let's default to it
-        // unless we detect explicit Flow usage via the "@flow" pragma.
-        const plugin =
-          originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
+        try {
+          // TypeScript is the most commonly used typed JS variant so let's default to it
+          // unless we detect explicit Flow usage via the "@flow" pragma.
+          const plugin =
+            originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
 
-        // TODO (named hooks) This is probably where we should check max source length,
-        // rather than in loadSourceAndMetatada -> loadSourceFiles().
-        const originalSourceAST = withSyncPerfMeasurements(
-          '[@babel/parser] parse(originalSourceCode)',
-          () =>
-            parse(originalSourceCode, {
-              sourceType: 'unambiguous',
-              plugins: ['jsx', plugin],
-            }),
-        );
-        hookParsedMetadata.originalSourceAST = originalSourceAST;
+          // TODO (named hooks) This is probably where we should check max source length,
+          // rather than in loadSourceAndMetatada -> loadSourceFiles().
+          // TODO(#22319): Support source files that are html files with inline script tags.
+          const originalSourceAST = withSyncPerfMeasurements(
+            '[@babel/parser] parse(originalSourceCode)',
+            () =>
+              parse(originalSourceCode, {
+                sourceType: 'unambiguous',
+                plugins: ['jsx', plugin],
+              }),
+          );
+          hookParsedMetadata.originalSourceAST = originalSourceAST;
 
-        if (__DEBUG__) {
-          console.log(
-            `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
+          if (__DEBUG__) {
+            console.log(
+              `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
+            );
+          }
+
+          originalURLToMetadataCache.set(originalSourceURL, {
+            originalSourceAST,
+            originalSourceCode,
+          });
+        } catch (error) {
+          throw new Error(
+            `Failed to parse source file: ${originalSourceURL}\n\n` +
+              `Original error: ${error}`,
           );
         }
-
-        originalURLToMetadataCache.set(originalSourceURL, {
-          originalSourceAST,
-          originalSourceCode,
-        });
       }
     },
   );
