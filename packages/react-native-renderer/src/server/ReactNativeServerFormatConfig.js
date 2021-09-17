@@ -211,9 +211,9 @@ export function writeStartCompletedSuspenseBoundary(
 }
 
 export function pushStartCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>
+  target: Array<Chunk | PrecomputedChunk>,
 ): void {
-  target.push(SUSPENSE_COMPLETE, formatID(id))
+  target.push(SUSPENSE_COMPLETE, formatID(id));
 }
 
 export function writeStartPendingSuspenseBoundary(
@@ -239,7 +239,7 @@ export function writeEndCompletedSuspenseBoundary(
   return writeChunk(destination, END);
 }
 export function pushEndCompletedSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>
+  target: Array<Chunk | PrecomputedChunk>,
 ): void {
   target.push(END);
 }

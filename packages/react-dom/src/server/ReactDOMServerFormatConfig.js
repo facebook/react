@@ -1483,7 +1483,7 @@ const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
 ) {
-  target.push(startCompletedSuspenseBoundary)
+  target.push(startCompletedSuspenseBoundary);
 }
 
 export function pushEndSuspenseBoundary(
@@ -1494,7 +1494,7 @@ export function pushEndSuspenseBoundary(
   formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
 ) {
-  target.push(endSuspenseBoundary)
+  target.push(endSuspenseBoundary);
 }
 
 export function writeStartCompletedSuspenseBoundary(

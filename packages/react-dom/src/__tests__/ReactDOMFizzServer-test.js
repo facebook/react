@@ -1484,14 +1484,24 @@ describe('ReactDOMFizzServer', () => {
     const resolved = {
       0: false,
       1: false,
-    }
-    const promiseRes = {}
+    };
+    const promiseRes = {};
     const promises = {
-      0: new Promise((res) => { promiseRes[0] = () => { resolved[0] = true; res(); } }),
-      1: new Promise((res) => { promiseRes[1] = () => { resolved[1] = true; res(); } }),
-    }
+      0: new Promise(res => {
+        promiseRes[0] = () => {
+          resolved[0] = true;
+          res();
+        };
+      }),
+      1: new Promise(res => {
+        promiseRes[1] = () => {
+          resolved[1] = true;
+          res();
+        };
+      }),
+    };
 
-    const InnerComponent = ({ isClient, depth }) => {
+    const InnerComponent = ({isClient, depth}) => {
       if (isClient) {
         // Resuspend after re-rendering on client to check that fallback shows on client
         throw new Promise(() => {});
@@ -1499,7 +1509,11 @@ describe('ReactDOMFizzServer', () => {
       if (!resolved[depth]) {
         throw promises[depth];
       }
-      return <div><Text text={`resolved ${depth}`} /></div>;
+      return (
+        <div>
+          <Text text={`resolved ${depth}`} />
+        </div>
+      );
     };
 
     function App({isClient}) {
@@ -1544,10 +1558,12 @@ describe('ReactDOMFizzServer', () => {
 
     // Nothing is output since root has a suspense with avoidedThisFallback that hasn't resolved
     expect(getVisibleChildren(container)).toEqual(undefined);
-    expect(container.innerHTML).not.toContain('Avoided Fallback')
+    expect(container.innerHTML).not.toContain('Avoided Fallback');
 
     // resolve first suspense component with avoidThisFallback
-    await act(async () => { promiseRes[0]() });
+    await act(async () => {
+      promiseRes[0]();
+    });
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -1557,15 +1573,19 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
 
-    expect(container.innerHTML).not.toContain('Avoided Fallback2')
+    expect(container.innerHTML).not.toContain('Avoided Fallback2');
 
-    await act(async () => { promiseRes[1]() });
+    await act(async () => {
+      promiseRes[1]();
+    });
 
     expect(getVisibleChildren(container)).toEqual(
       <div>
         Non Suspense Content
         <div>resolved 0</div>
-        <div><div>resolved 1</div></div>
+        <div>
+          <div>resolved 1</div>
+        </div>
       </div>,
     );
 
@@ -1581,7 +1601,9 @@ describe('ReactDOMFizzServer', () => {
       <div>
         Non Suspense Content
         <div>resolved 0</div>
-        <div><div>resolved 1</div></div>
+        <div>
+          <div>resolved 1</div>
+        </div>
       </div>,
     );
 
@@ -1597,7 +1619,9 @@ describe('ReactDOMFizzServer', () => {
       <div>
         Non Suspense Content
         <div style="display: none;">resolved 0</div>
-        <div style="display: none;"><div>resolved 1</div></div>
+        <div style="display: none;">
+          <div>resolved 1</div>
+        </div>
         <span>Avoided Fallback</span>
       </div>,
     );

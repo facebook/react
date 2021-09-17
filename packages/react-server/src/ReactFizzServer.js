@@ -530,7 +530,7 @@ function renderBackupSuspenseBoundary(
 ) {
   pushBuiltInComponentStackInDEV(task, 'Suspense');
 
-  const content = props.children
+  const content = props.children;
   const segment = task.blockedSegment;
 
   pushStartCompletedSuspenseBoundary(segment.chunks);
