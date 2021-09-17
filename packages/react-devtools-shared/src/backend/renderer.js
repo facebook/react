@@ -1140,6 +1140,13 @@ export function attach(
 
     untrackFibersSet.add(fiber);
 
+    // React may detach alternate pointers during unmount;
+    // Since our untracking code is async, we should explicily track the pending alternate here as well.
+    const alternate = fiber.alternate;
+    if (alternate !== null) {
+      untrackFibersSet.add(alternate);
+    }
+
     if (untrackFibersTimeoutID === null) {
       untrackFibersTimeoutID = setTimeout(untrackFibers, 1000);
     }
