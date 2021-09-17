@@ -53,7 +53,7 @@ import {
   pushStartInstance,
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
-  pushEndSuspenseBoundary,
+  pushEndCompletedSuspenseBoundary,
   createSuspenseBoundaryID,
   getChildFormatContext,
 } from './ReactServerFormatConfig';
@@ -535,7 +535,7 @@ function renderBackupSuspenseBoundary(
 
   pushStartCompletedSuspenseBoundary(segment.chunks);
   renderNode(request, task, content);
-  pushEndSuspenseBoundary(segment.chunks);
+  pushEndCompletedSuspenseBoundary(segment.chunks);
 
   popComponentStackInDEV(task);
 }
