@@ -16,7 +16,7 @@ export type Destination = {
 export type PrecomputedChunk = string;
 export type Chunk = string;
 
-export function scheduleWork(callback: () => void) {
+export function scheduleWork(destination: Destination, callback: () => void) {
   callback();
 }
 

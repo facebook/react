@@ -67,6 +67,17 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-next',
+    entryPoints: [
+      'react-dom/src/server/ReactDOMFizzServerNext', // react-dom/server
+    ],
+    paths: [
+      'react-dom/src/server/ReactDOMFizzServerNext.js', // react-dom/server.browser
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'art',
     entryPoints: ['react-art'],
     paths: ['react-art'],

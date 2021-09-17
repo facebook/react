@@ -19,7 +19,7 @@ export type Destination = Writable & MightBeFlushable;
 export type PrecomputedChunk = Uint8Array;
 export type Chunk = string;
 
-export function scheduleWork(callback: () => void) {
+export function scheduleWork(destination: Destination, callback: () => void) {
   setImmediate(callback);
 }
 

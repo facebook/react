@@ -56,7 +56,7 @@ const POP = Buffer.from('/', 'utf8');
 let opaqueID = 0;
 
 const ReactNoopServer = ReactFizzServer({
-  scheduleWork(callback: () => void) {
+  scheduleWork(destination: Destination, callback: () => void) {
     callback();
   },
   beginWriting(destination: Destination): void {},

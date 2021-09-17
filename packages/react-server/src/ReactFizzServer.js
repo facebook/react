@@ -272,7 +272,7 @@ function pingTask(request: Request, task: Task): void {
   const pingedTasks = request.pingedTasks;
   pingedTasks.push(task);
   if (pingedTasks.length === 1) {
-    scheduleWork(() => performWork(request));
+    scheduleWork(request.destination, () => performWork(request));
   }
 }
 
@@ -1899,7 +1899,7 @@ function flushCompletedQueues(request: Request): void {
 }
 
 export function startWork(request: Request): void {
-  scheduleWork(() => performWork(request));
+  scheduleWork(request.destination, () => performWork(request));
 }
 
 export function startFlowing(request: Request): void {
@@ -1913,6 +1913,13 @@ export function startFlowing(request: Request): void {
     reportError(request, error);
     fatalError(request, error);
   }
+}
+
+export function stopFlowing(request: Request): void {
+  if (request.status === CLOSED) {
+    return;
+  }
+  request.status = BUFFERING;
 }
 
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
