@@ -1486,14 +1486,7 @@ export function pushStartCompletedSuspenseBoundary(
   target.push(startCompletedSuspenseBoundary);
 }
 
-export function pushEndSuspenseBoundary(
-  target: Array<Chunk | PrecomputedChunk>,
-  type: string,
-  props: Object,
-  responseState: ResponseState,
-  formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
-) {
+export function pushEndSuspenseBoundary(target: Array<Chunk | PrecomputedChunk>) {
   target.push(endSuspenseBoundary);
 }
 
