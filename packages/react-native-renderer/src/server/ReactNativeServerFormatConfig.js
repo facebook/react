@@ -213,7 +213,7 @@ export function writeStartCompletedSuspenseBoundary(
 export function pushStartCompletedSuspenseBoundary(
   target: Array<Chunk | PrecomputedChunk>,
 ): void {
-  target.push(SUSPENSE_COMPLETE, formatID(id));
+  target.push(SUSPENSE_COMPLETE);
 }
 
 export function writeStartPendingSuspenseBoundary(
