@@ -86,6 +86,8 @@ export {
   pushEmpty,
   pushStartInstance,
   pushEndInstance,
+  pushStartCompletedSuspenseBoundary,
+  pushEndSuspenseBoundary,
   writeStartSegment,
   writeEndSegment,
   writeCompletedSegmentInstruction,
