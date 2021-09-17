@@ -27,6 +27,8 @@ function measure(markName: string): void {
   if (supportsUserTiming) {
     performance.mark(markName + '-end');
     performance.measure(markName, markName + '-start', markName + '-end');
+    performance.clearMarks(markName + '-start');
+    performance.clearMarks(markName + '-end');
   }
 }
 
