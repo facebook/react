@@ -129,7 +129,6 @@ export function writeStartCompletedSuspenseBoundary(
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  id: SuspenseBoundaryID,
 ): boolean {
   if (responseState.generateStaticMarkup) {
     // A client rendered boundary is done and doesn't need a representation in the HTML
@@ -139,7 +138,6 @@ export function writeStartClientRenderedSuspenseBoundary(
   return writeStartClientRenderedSuspenseBoundaryImpl(
     destination,
     responseState,
-    id,
   );
 }
 export function writeEndCompletedSuspenseBoundary(

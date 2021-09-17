@@ -1631,7 +1631,6 @@ function flushSegment(
     writeStartClientRenderedSuspenseBoundary(
       destination,
       request.responseState,
-      boundary.id,
     );
 
     // Flush the fallback.
