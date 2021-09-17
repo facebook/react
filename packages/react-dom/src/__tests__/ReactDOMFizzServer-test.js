@@ -1549,6 +1549,7 @@ describe('ReactDOMFizzServer', () => {
 
     // Nothing is output since root has a suspense with avoidedThisFallback that hasn't resolved
     expect(getVisibleChildren(container)).toEqual(undefined);
+    expect(container.innerHTML).not.toContain('Avoided Fallback')
 
     // resolve first suspense component with avoidThisFallback
     await act(async () => { promiseRes[0]() });
@@ -1560,6 +1561,8 @@ describe('ReactDOMFizzServer', () => {
         <div>Fallback</div>
       </div>,
     );
+
+    expect(container.innerHTML).not.toContain('Avoided Fallback2')
 
     await act(async () => { promiseRes[1]() });
 
