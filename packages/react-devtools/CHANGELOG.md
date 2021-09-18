@@ -92,7 +92,7 @@ Here’s an example profile that suspends during the initial render to lazy-load
 
 https://user-images.githubusercontent.com/29597/129054366-2700e7e8-0172-4f61-9453-475acd740456.mp4
 
-We plan to expand support for Suspense in the coming weeks to more explicitly show when suspense fallbacks are rendered and which subsequent renders are related to an initial update that suspended.
+We plan to expand support for Suspense in the coming weeks to more explicitly show when suspense fallbacks are rendered and which subsequent renders are related to an initial update that was suspended.
 
 ###### What else might cause a render to get delayed?
 
@@ -110,7 +110,7 @@ For example, suspending during an update is generally a bad user experience beca
 
 https://user-images.githubusercontent.com/29597/128972228-3b23f01a-8017-43ad-b371-975ffed26c06.mp4
 
-The new profiler also warns about scheduling a long, synchronous React update inside of event handler.
+The new profiler also warns about scheduling a long, synchronous React update inside of the event handler.
 
 https://user-images.githubusercontent.com/29597/128972000-d7477ba3-b779-46f2-b141-aaa712e9d6d2.mp4
 
@@ -482,7 +482,7 @@ New keys can be added to object props/state/hooks now. Existing keys can be rena
 #### Bug fixes
 * ES6 `Map` and `Set`, typed arrays, and other unserializable types (e.g. Immutable JS) can now be inspected.
 * Empty objects and arrays now display an "(empty)" label to the right to reduce confusion.
-* Components that use only the `useContext` hook now properly display hooks values in side panel.
+* Components that use only the `useContext` hook now properly display hooks values in a side panel.
 * Style editor now supports single quotes around string values (e.g. both `"red"` and `'red'`).
 * Fixed edge case bug that prevented profiling when both React v16 and v15 were present on a page.
 
@@ -499,7 +499,7 @@ New keys can be added to object props/state/hooks now. Existing keys can be rena
 ### General changes
 
 #### Improved performance
-The legacy DevTools extension used to add significant performance overhead, making it unusable for some larger React applications. That overhead has been effectively eliminated in version 4.
+The legacy DevTools extension was used to add significant performance overhead, making it unusable for some larger React applications. That overhead has been effectively eliminated in version 4.
 
 [Learn more](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md) about the performance optimizations that made this possible.
 
@@ -555,7 +555,7 @@ Double click a component to view the owners tree and click the "x" button to ret
 
 #### No more horizontal scrolling
 
-Deeply nested components used to require both vertical and horizontal scrolling to see, making it easy to "get lost" within large component trees. DevTools now dynamically adjusts nesting indentation to eliminate horizontal scrolling.
+Deeply nested components used to require both vertical and horizontal scrolling to see, making it easy to "get lost" within large component trees. DevTools now dynamically adjust nesting indentation to eliminate horizontal scrolling.
 
 ![Video demonstration dynamic indentation to eliminate horizontal scrolling](https://user-images.githubusercontent.com/29597/62246661-f8ad0400-b398-11e9-885f-284f150a6d76.gif)
 
@@ -627,6 +627,6 @@ Because this feature adds a small amount of overhead, it can be disabled in the 
 
 #### Component renders list
 
-The profiler now displays a list of each time the selected component rendered during a profiling session, along with the duration of each render. This list can be used to quickly jump between commits when analyzing the performance of a specific component.
+The profiler now displays a list of each time the selected component is rendered during a profiling session, along with the duration of each render. This list can be used to quickly jump between commits when analyzing the performance of a specific component.
 
 ![Video demonstrating profiler's component renders list](https://user-images.githubusercontent.com/29597/62234547-bcb97500-b37f-11e9-9615-54fba8b574b9.gif)
