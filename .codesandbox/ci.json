@@ -1,11 +1,12 @@
 {
-  "packages": ["packages/react", "packages/react-dom", "packages/scheduler"],
-  "buildCommand": "build --type=NODE react/index,react-dom/index,react-dom/src/server,react-dom/test-utils,scheduler/index,react/jsx-runtime,react/jsx-dev-runtime",
+  "packages": ["packages/react", "packages/react-dom", "packages/scheduler", "packages/use-sync-external-store"],
+  "buildCommand": "build --type=NODE react/index,react-dom/index,react-dom/src/server,react-dom/test-utils,scheduler/index,react/jsx-runtime,react/jsx-dev-runtime,use-sync-external-store,use-sync-external-store/extra",
   "node": "12",
   "publishDirectory": {
     "react": "build/node_modules/react",
     "react-dom": "build/node_modules/react-dom",
-    "scheduler": "build/node_modules/scheduler"
+    "scheduler": "build/node_modules/scheduler",
+    "use-sync-external-store": "build/node_modules/use-sync-external-store"
   },
   "sandboxes": ["new"],
   "silent": true
