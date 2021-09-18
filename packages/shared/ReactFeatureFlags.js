@@ -101,7 +101,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 
 export const warnOnSubscriptionInsideStartTransition = false;
 
-export const enableFizzSuspenseAvoidThisFallback = false;
+export const enableSuspenseAvoidThisFallback = false;
 
 export const enableComponentStackLocations = true;
 

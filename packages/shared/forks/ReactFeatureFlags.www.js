@@ -32,7 +32,7 @@ export const {
   enableLazyContextPropagation,
   enableSyncDefaultUpdates,
   warnOnSubscriptionInsideStartTransition,
-  enableFizzSuspenseAvoidThisFallback,
+  enableSuspenseAvoidThisFallback,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

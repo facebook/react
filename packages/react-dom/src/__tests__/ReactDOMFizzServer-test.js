@@ -1479,7 +1479,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
-  // @gate experimental && enableFizzSuspenseAvoidThisFallback
+  // @gate experimental && enableSuspenseAvoidThisFallback
   it('should respect unstable_avoidThisFallback', async () => {
     const resolved = {
       0: false,

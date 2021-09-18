@@ -26,7 +26,7 @@ export const enableLazyContextPropagation = __VARIANT__;
 export const enableSyncDefaultUpdates = __VARIANT__;
 export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
 export const warnOnSubscriptionInsideStartTransition = __VARIANT__;
-export const enableFizzSuspenseAvoidThisFallback = __VARIANT__;
+export const enableSuspenseAvoidThisFallback = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.

@@ -109,7 +109,7 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableLazyElements,
-  enableFizzSuspenseAvoidThisFallback,
+  enableSuspenseAvoidThisFallback,
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -1007,7 +1007,7 @@ function renderElement(
     // eslint-disable-next-line-no-fallthrough
     case REACT_SUSPENSE_TYPE: {
       if (
-        enableFizzSuspenseAvoidThisFallback &&
+        enableSuspenseAvoidThisFallback &&
         props.unstable_avoidThisFallback === true
       ) {
         renderBackupSuspenseBoundary(request, task, props);
