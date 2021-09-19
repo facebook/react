@@ -686,6 +686,58 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       expect(Scheduler).toHaveYielded(['A1']);
       expect(container.textContent).toEqual('A1B1');
     });
+
+    test('basic server hydration', async () => {
+      const store = createExternalStore('client');
+
+      const ref = React.createRef();
+      function App() {
+        const text = useSyncExternalStore(
+          store.subscribe,
+          store.getState,
+          () => 'server',
+        );
+        useEffect(() => {
+          Scheduler.unstable_yieldValue('Passive effect: ' + text);
+        }, [text]);
+        return (
+          <div ref={ref}>
+            <Text text={text} />
+          </div>
+        );
+      }
+
+      const container = document.createElement('div');
+      container.innerHTML = '<div>server</div>';
+      const serverRenderedDiv = container.getElementsByTagName('div')[0];
+
+      if (gate(flags => flags.supportsNativeUseSyncExternalStore)) {
+        act(() => {
+          ReactDOM.hydrateRoot(container, <App />);
+        });
+        expect(Scheduler).toHaveYielded([
+          // First it hydrates the server rendered HTML
+          'server',
+          'Passive effect: server',
+          // Then in a second paint, it re-renders with the client state
+          'client',
+          'Passive effect: client',
+        ]);
+      } else {
+        // In the userspace shim, there's no mechanism to detect whether we're
+        // currently hydrating, so `getServerSnapshot` is not called on the
+        // client. To avoid this server mismatch warning, user must account for
+        // this themselves and return the correct value inside `getSnapshot`.
+        act(() => {
+          expect(() => ReactDOM.hydrate(<App />, container)).toErrorDev(
+            'Text content did not match',
+          );
+        });
+        expect(Scheduler).toHaveYielded(['client', 'Passive effect: client']);
+      }
+      expect(container.textContent).toEqual('client');
+      expect(ref.current).toEqual(serverRenderedDiv);
+    });
   });
 
   // The selector implementation uses the lazy ref initialization pattern
