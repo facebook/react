@@ -235,7 +235,12 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'B',
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
+      {isStateEditable: false,
+         id: 2, 
+         name: 'Ref', 
+         value: 'C', 
+         subHooks: [],
+      },
       {
         isStateEditable: false,
         id: 3,
