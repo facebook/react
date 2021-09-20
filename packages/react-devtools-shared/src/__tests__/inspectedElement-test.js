@@ -176,7 +176,7 @@ describe('InspectedElement', () => {
           "a": 1,
           "b": "abc",
         },
-        "rootType": "createLegacyRoot()",
+        "rootType": "render()",
         "state": null,
       }
     `);
@@ -1585,7 +1585,7 @@ describe('InspectedElement', () => {
           "a": 1,
           "b": "abc",
         },
-        "rootType": "createLegacyRoot()",
+        "rootType": "render()",
         "state": null,
       }
     `);
@@ -1914,7 +1914,7 @@ describe('InspectedElement', () => {
         "id": 2,
         "owners": null,
         "props": Object {},
-        "rootType": "createLegacyRoot()",
+        "rootType": "render()",
         "state": null,
       }
     `);
@@ -1947,7 +1947,7 @@ describe('InspectedElement', () => {
         "id": 2,
         "owners": null,
         "props": Object {},
-        "rootType": "createLegacyRoot()",
+        "rootType": "render()",
         "state": null,
       }
     `);
@@ -1968,9 +1968,7 @@ describe('InspectedElement', () => {
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
-    expect(inspectedElement.rootType).toMatchInlineSnapshot(
-      `"createLegacyRoot()"`,
-    );
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrate()"`);
   });
 
   it('should display the root type for ReactDOM.render', async () => {
@@ -1982,9 +1980,7 @@ describe('InspectedElement', () => {
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
-    expect(inspectedElement.rootType).toMatchInlineSnapshot(
-      `"createLegacyRoot()"`,
-    );
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"render()"`);
   });
 
   it('should display the root type for ReactDOM.hydrateRoot', async () => {
@@ -1997,7 +1993,7 @@ describe('InspectedElement', () => {
     }, false);
 
     const inspectedElement = await inspectElementAtIndex(0);
-    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"createRoot()"`);
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrateRoot()"`);
   });
 
   it('should display the root type for ReactDOM.createRoot', async () => {
