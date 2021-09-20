@@ -9,8 +9,6 @@
 
 import * as React from 'react';
 import is from 'shared/objectIs';
-import invariant from 'shared/invariant';
-import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 // Intentionally not using named imports because Rollup uses dynamic
 // dispatch for CommonJS interop named imports.
