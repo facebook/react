@@ -8,14 +8,7 @@
  */
 
 import type {Source} from 'shared/ReactElementType';
-import type {
-  RefObject,
-  ReactContext,
-  MutableSourceSubscribeFn,
-  MutableSourceGetSnapshotFn,
-  MutableSourceVersion,
-  MutableSource,
-} from 'shared/ReactTypes';
+import type {RefObject, ReactContext} from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -41,7 +34,6 @@ export type HookType =
   | 'useDebugValue'
   | 'useDeferredValue'
   | 'useTransition'
-  | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useOpaqueIdentifier'
   | 'useCacheRefresh';
@@ -214,11 +206,6 @@ type BaseFiberRootProperties = {|
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
 
-  // Used by useMutableSource hook to avoid tearing during hydration.
-  mutableSourceEagerHydrationData?: Array<
-    MutableSource<any> | MutableSourceVersion,
-  > | null,
-
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: *,
@@ -230,7 +217,6 @@ type BaseFiberRootProperties = {|
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
   expiredLanes: Lanes,
-  mutableReadLanes: Lanes,
 
   finishedLanes: Lanes,
 
@@ -305,11 +291,6 @@ export type Dispatcher = {|
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useDeferredValue<T>(value: T): T,
   useTransition(): [boolean, (() => void) => void],
-  useMutableSource<Source, Snapshot>(
-    source: MutableSource<Source>,
-    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-  ): Snapshot,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,
