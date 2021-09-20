@@ -1,1 +1,1 @@
-export {default as useSyncExternalStore} from './useSyncExternalStoreClient';
+export * from './useSyncExternalStoreClient';
