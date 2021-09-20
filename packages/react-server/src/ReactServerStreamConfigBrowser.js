@@ -12,7 +12,7 @@ export type Destination = ReadableStreamController;
 export type PrecomputedChunk = Uint8Array;
 export type Chunk = Uint8Array;
 
-export function scheduleWork(destination: Destination, callback: () => void) {
+export function scheduleWork(callback: () => void) {
   callback();
 }
 

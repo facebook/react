@@ -7,20 +7,23 @@
  * @flow
  */
 
-export type Destination = {
+declare function __next_scheduleReactServerStreamWork(
+  callback: () => void,
+): void;
+
+export type Destination = {|
   write: (chunk: Uint8Array) => void,
   buffer: (shouldBuffer: boolean) => void,
   flush: () => void,
   close: (error: mixed) => void,
-  schedule: (callback: () => void) => void,
   ready: boolean,
-};
+|};
 
 export type PrecomputedChunk = Uint8Array;
 export type Chunk = Uint8Array;
 
-export function scheduleWork(destination: Destination, callback: () => void) {
-  destination.schedule(callback);
+export function scheduleWork(callback: () => void) {
+  __next_scheduleReactServerStreamWork(callback);
 }
 
 export function flushBuffered(destination: Destination) {

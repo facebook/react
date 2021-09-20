@@ -1899,7 +1899,7 @@ function flushCompletedQueues(request: Request): void {
 }
 
 export function startWork(request: Request): void {
-  scheduleWork(request.destination, () => performWork(request));
+  scheduleWork(() => performWork(request));
 }
 
 export function startFlowing(request: Request): void {
