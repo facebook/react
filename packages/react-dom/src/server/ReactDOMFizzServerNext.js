@@ -36,8 +36,7 @@ type Options = {|
 
 type Controls = {|
   abort(): void,
-  startWriting(): void,
-  stopWriting(): void,
+  update(): void,
 |};
 
 function createRequestImpl(
@@ -68,11 +67,12 @@ function renderToNextStream(
     abort() {
       abort(request);
     },
-    startWriting() {
-      startFlowing(request);
-    },
-    stopWriting() {
-      stopFlowing(request);
+    update() {
+      if (destination.ready) {
+        startFlowing();
+      } else {
+        stopFlowing();
+      }
     },
   };
 }
