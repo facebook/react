@@ -166,9 +166,14 @@ export function useOpaqueIdentifier(): OpaqueIDType | void {
 export function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useSyncExternalStore(subscribe, getSnapshot);
+  return dispatcher.useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 }
 
 export function useCacheRefresh(): <T>(?() => T, ?T) => void {

@@ -588,6 +588,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         const a = useSyncExternalStoreExtra(
           store.subscribe,
           store.getState,
+          null,
           selector,
         );
         return <Text text={'A' + a} />;
@@ -623,6 +624,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         const {a} = useSyncExternalStoreExtra(
           store.subscribe,
           store.getState,
+          null,
           state => ({a: state.a}),
           (state1, state2) => state1.a === state2.a,
         );
@@ -632,6 +634,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         const {b} = useSyncExternalStoreExtra(
           store.subscribe,
           store.getState,
+          null,
           state => {
             return {b: state.b};
           },
@@ -710,6 +713,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       const items = useSyncExternalStoreExtra(
         store.subscribe,
         store.getState,
+        null,
         inlineSelector,
         shallowEqualArray,
       );

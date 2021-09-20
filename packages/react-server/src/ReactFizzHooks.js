@@ -447,8 +447,16 @@ export function useCallback<T>(
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
-  throw new Error('Not yet implemented');
+  if (getServerSnapshot === undefined) {
+    invariant(
+      false,
+      'Missing getServerSnapshot, which is required for ' +
+        'server-rendered content. Will revert to client rendering.',
+    );
+  }
+  return getServerSnapshot();
 }
 
 function useDeferredValue<T>(value: T): T {

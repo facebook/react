@@ -17,6 +17,8 @@ let ReactDOM;
 let ReactDOMFizzServer;
 let Suspense;
 let SuspenseList;
+let useSyncExternalStore;
+let useSyncExternalStoreExtra;
 let PropTypes;
 let textCache;
 let document;
@@ -39,6 +41,9 @@ describe('ReactDOMFizzServer', () => {
     Stream = require('stream');
     Suspense = React.Suspense;
     SuspenseList = React.SuspenseList;
+    useSyncExternalStore = React.unstable_useSyncExternalStore;
+    useSyncExternalStoreExtra = require('use-sync-external-store/extra')
+      .useSyncExternalStoreExtra;
     PropTypes = require('prop-types');
 
     textCache = new Map();
@@ -1477,5 +1482,157 @@ describe('ReactDOMFizzServer', () => {
     });
     // We should've been able to display the content without waiting for the rest of the fallback.
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  // @gate supportsNativeUseSyncExternalStore
+  // @gate experimental
+  it('calls getServerSnapshot instead of getSnapshot', async () => {
+    const ref = React.createRef();
+
+    function getServerSnapshot() {
+      return 'server';
+    }
+
+    function getClientSnapshot() {
+      return 'client';
+    }
+
+    function subscribe() {
+      return () => {};
+    }
+
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App() {
+      const value = useSyncExternalStore(
+        subscribe,
+        getClientSnapshot,
+        getServerSnapshot,
+      );
+      return (
+        <div ref={ref}>
+          <Child text={value} />
+        </div>
+      );
+    }
+
+    const loggedErrors = [];
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <Suspense fallback="Loading...">
+          <App />
+        </Suspense>,
+        writable,
+        {
+          onError(x) {
+            loggedErrors.push(x);
+          },
+        },
+      );
+      startWriting();
+    });
+    expect(Scheduler).toHaveYielded(['server']);
+
+    const serverRenderedDiv = container.getElementsByTagName('div')[0];
+
+    ReactDOM.hydrateRoot(container, <App />);
+
+    // The first paint uses the server snapshot
+    expect(Scheduler).toFlushUntilNextPaint(['server']);
+    expect(getVisibleChildren(container)).toEqual(<div>server</div>);
+    // Hydration succeeded
+    expect(ref.current).toEqual(serverRenderedDiv);
+
+    // Asynchronously we detect that the store has changed on the client,
+    // and patch up the inconsistency
+    expect(Scheduler).toFlushUntilNextPaint(['client']);
+    expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+    expect(ref.current).toEqual(serverRenderedDiv);
+  });
+
+  // The selector implementation uses the lazy ref initialization pattern
+  // @gate !(enableUseRefAccessWarning && __DEV__)
+  // @gate supportsNativeUseSyncExternalStore
+  // @gate experimental
+  it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
+    // Same as previous test, but with a selector that returns a complex object
+    // that is memoized with a custom `isEqual` function.
+    const ref = React.createRef();
+
+    function getServerSnapshot() {
+      return {env: 'server', other: 'unrelated'};
+    }
+
+    function getClientSnapshot() {
+      return {env: 'client', other: 'unrelated'};
+    }
+
+    function selector({env}) {
+      return {env};
+    }
+
+    function isEqual(a, b) {
+      return a.env === b.env;
+    }
+
+    function subscribe() {
+      return () => {};
+    }
+
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(text);
+      return text;
+    }
+
+    function App() {
+      const {env} = useSyncExternalStoreExtra(
+        subscribe,
+        getClientSnapshot,
+        getServerSnapshot,
+        selector,
+        isEqual,
+      );
+      return (
+        <div ref={ref}>
+          <Child text={env} />
+        </div>
+      );
+    }
+
+    const loggedErrors = [];
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <Suspense fallback="Loading...">
+          <App />
+        </Suspense>,
+        writable,
+        {
+          onError(x) {
+            loggedErrors.push(x);
+          },
+        },
+      );
+      startWriting();
+    });
+    expect(Scheduler).toHaveYielded(['server']);
+
+    const serverRenderedDiv = container.getElementsByTagName('div')[0];
+
+    ReactDOM.hydrateRoot(container, <App />);
+
+    // The first paint uses the server snapshot
+    expect(Scheduler).toFlushUntilNextPaint(['server']);
+    expect(getVisibleChildren(container)).toEqual(<div>server</div>);
+    // Hydration succeeded
+    expect(ref.current).toEqual(serverRenderedDiv);
+
+    // Asynchronously we detect that the store has changed on the client,
+    // and patch up the inconsistency
+    expect(Scheduler).toFlushUntilNextPaint(['client']);
+    expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+    expect(ref.current).toEqual(serverRenderedDiv);
   });
 });

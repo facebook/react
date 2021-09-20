@@ -19,6 +19,7 @@ const {useRef, useEffect, useMemo, useDebugValue} = React;
 export function useSyncExternalStoreExtra<Snapshot, Selection>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => Snapshot,
+  getServerSnapshot: void | null | (() => Snapshot),
   selector: (snapshot: Snapshot) => Selection,
   isEqual?: (a: Selection, b: Selection) => boolean,
 ): Selection {
@@ -35,7 +36,7 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
     inst = instRef.current;
   }
 
-  const getSnapshotWithMemoizedSelector = useMemo(() => {
+  const [getSelection, getServerSelection] = useMemo(() => {
     // Track the memoized state using closure variables that are local to this
     // memoized instance of a getSnapshot function. Intentionally not using a
     // useRef hook, because that state would be shared across all concurrent
@@ -43,9 +44,7 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
     let hasMemo = false;
     let memoizedSnapshot;
     let memoizedSelection;
-    return () => {
-      const nextSnapshot = getSnapshot();
-
+    const memoizedSelector = nextSnapshot => {
       if (!hasMemo) {
         // The first time the hook is called, there is no memoized result.
         hasMemo = true;
@@ -91,11 +90,21 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
       memoizedSelection = nextSelection;
       return nextSelection;
     };
-  }, [getSnapshot, selector, isEqual]);
+    // Assigning this to a constant so that Flow knows it can't change.
+    const maybeGetServerSnapshot =
+      getServerSnapshot === undefined ? null : getServerSnapshot;
+    const getSnapshotWithSelector = () => memoizedSelector(getSnapshot());
+    const getServerSnapshotWithSelector =
+      maybeGetServerSnapshot === null
+        ? undefined
+        : () => memoizedSelector(maybeGetServerSnapshot());
+    return [getSnapshotWithSelector, getServerSnapshotWithSelector];
+  }, [getSnapshot, getServerSnapshot, selector, isEqual]);
 
   const value = useSyncExternalStore(
     subscribe,
-    getSnapshotWithMemoizedSelector,
+    getSelection,
+    getServerSelection,
   );
 
   useEffect(() => {

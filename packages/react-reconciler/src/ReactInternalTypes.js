@@ -294,6 +294,7 @@ export type Dispatcher = {|
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,
+    getServerSnapshot?: () => T,
   ): T,
   useOpaqueIdentifier(): any,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
