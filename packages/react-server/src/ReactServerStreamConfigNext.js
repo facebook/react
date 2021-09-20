@@ -7,7 +7,7 @@
  * @flow
  */
 
-declare function __next_scheduleReactServerStreamWork(
+declare function __next_scheduleReactServerStreamWork__(
   callback: () => void,
 ): void;
 
@@ -23,7 +23,7 @@ export type PrecomputedChunk = Uint8Array;
 export type Chunk = Uint8Array;
 
 export function scheduleWork(callback: () => void) {
-  __next_scheduleReactServerStreamWork(callback);
+  __next_scheduleReactServerStreamWork__(callback);
 }
 
 export function flushBuffered(destination: Destination) {
