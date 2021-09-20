@@ -52,6 +52,8 @@ import {
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
+  pushStartCompletedSuspenseBoundary,
+  pushEndCompletedSuspenseBoundary,
   createSuspenseBoundaryID,
   getChildFormatContext,
 } from './ReactServerFormatConfig';
@@ -107,6 +109,7 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableLazyElements,
+  enableSuspenseAvoidThisFallback,
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -516,6 +519,23 @@ function renderSuspenseBoundary(
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
+
+  popComponentStackInDEV(task);
+}
+
+function renderBackupSuspenseBoundary(
+  request: Request,
+  task: Task,
+  props: Object,
+) {
+  pushBuiltInComponentStackInDEV(task, 'Suspense');
+
+  const content = props.children;
+  const segment = task.blockedSegment;
+
+  pushStartCompletedSuspenseBoundary(segment.chunks);
+  renderNode(request, task, content);
+  pushEndCompletedSuspenseBoundary(segment.chunks);
 
   popComponentStackInDEV(task);
 }
@@ -986,7 +1006,14 @@ function renderElement(
     }
     // eslint-disable-next-line-no-fallthrough
     case REACT_SUSPENSE_TYPE: {
-      renderSuspenseBoundary(request, task, props);
+      if (
+        enableSuspenseAvoidThisFallback &&
+        props.unstable_avoidThisFallback === true
+      ) {
+        renderBackupSuspenseBoundary(request, task, props);
+      } else {
+        renderSuspenseBoundary(request, task, props);
+      }
       return;
     }
   }
@@ -1604,7 +1631,6 @@ function flushSegment(
     writeStartClientRenderedSuspenseBoundary(
       destination,
       request.responseState,
-      boundary.id,
     );
 
     // Flush the fallback.
@@ -1658,12 +1684,7 @@ function flushSegment(
     return writeEndPendingSuspenseBoundary(destination, request.responseState);
   } else {
     // We can inline this boundary's content as a complete boundary.
-
-    writeStartCompletedSuspenseBoundary(
-      destination,
-      request.responseState,
-      boundary.id,
-    );
+    writeStartCompletedSuspenseBoundary(destination, request.responseState);
 
     const completedSegments = boundary.completedSegments;
     invariant(
