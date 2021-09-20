@@ -8,9 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {
-  Destination,
-} from 'react-server/src/ReactServerStreamConfigNext';
+import type {Destination} from 'react-server/src/ReactServerStreamConfigNext';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -71,10 +69,10 @@ function renderToNextStream(
       abort(request);
     },
     startWriting() {
-      startFlowing(request)
+      startFlowing(request);
     },
     stopWriting() {
-      stopFlowing(request)
+      stopFlowing(request);
     },
   };
 }

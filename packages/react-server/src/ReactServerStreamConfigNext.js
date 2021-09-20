@@ -20,31 +20,31 @@ export type PrecomputedChunk = Uint8Array;
 export type Chunk = Uint8Array;
 
 export function scheduleWork(destination: Destination, callback: () => void) {
-  destination.schedule(callback)
+  destination.schedule(callback);
 }
 
 export function flushBuffered(destination: Destination) {
-  destination.flush()
+  destination.flush();
 }
 
 export function beginWriting(destination: Destination) {
-  destination.buffer(true)
+  destination.buffer(true);
 }
 
 export function writeChunk(
   destination: Destination,
   chunk: PrecomputedChunk | Chunk,
 ): boolean {
-  destination.write(chunk)
+  destination.write(chunk);
   return destination.ready;
 }
 
 export function completeWriting(destination: Destination) {
-  destination.buffer(false)
+  destination.buffer(false);
 }
 
 export function close(destination: Destination) {
-  destination.close()
+  destination.close();
 }
 
 const textEncoder = new TextEncoder();
@@ -58,5 +58,5 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
-  destination.close(error)
+  destination.close(error);
 }
