@@ -41,7 +41,7 @@ If you're using React Native 0.43 or higher, it should connect to your simulator
 
 ### Integration with React Native Inspector
 
-You can open the [in-app developer menu](https://reactnative.dev/docs/debugging.html#accessing-the-in-app-developer-menu) and choose "Show Inspector". It will bring up an overlay that lets you tap on any UI element and see information about it:
+You can open the [in-app developer menu](https://reactnative.dev/docs/debugging#accessing-the-in-app-developer-menu) and choose "Show Inspector". It will bring up an overlay that lets you tap on any UI element and see information about it:
 
 ![React Native Inspector](https://i.imgur.com/ReFhREb.gif)
 
@@ -56,7 +56,7 @@ You can choose "Hide Inspector" in the same menu to exit this mode.
 
 When debugging JavaScript in Chrome, you can inspect the props and state of the React components in the browser console.
 
-First, follow the [instructions for debugging in Chrome](https://reactnative.dev/docs/debugging.html#chrome-developer-tools) to open the Chrome console.
+First, follow the [instructions for debugging in Chrome](https://reactnative.dev/docs/debugging#chrome-developer-tools) to open the Chrome console.
 
 Make sure that the dropdown in the top left corner of the Chrome console says `debuggerWorker.js`. **This step is essential.**
 
