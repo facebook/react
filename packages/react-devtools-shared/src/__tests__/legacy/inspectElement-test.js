@@ -83,6 +83,7 @@ describe('InspectedElementContext', () => {
           "a": 1,
           "b": "abc",
         },
+        "rootType": null,
         "state": null,
       }
     `);
@@ -133,6 +134,7 @@ describe('InspectedElementContext', () => {
           "value_null": null,
           "value_undefined": undefined,
         },
+        "rootType": null,
         "state": null,
       }
     `);
@@ -408,6 +410,7 @@ describe('InspectedElementContext', () => {
             "preview_long": Generator,
           },
         },
+        "rootType": null,
         "state": null,
       }
     `);
@@ -461,6 +464,7 @@ describe('InspectedElementContext', () => {
             "number": 42,
           },
         },
+        "rootType": null,
         "state": null,
       }
     `);
@@ -552,6 +556,7 @@ describe('InspectedElementContext', () => {
             "enumerableStringBase": 1,
           },
         },
+        "rootType": null,
         "state": null,
       }
     `);

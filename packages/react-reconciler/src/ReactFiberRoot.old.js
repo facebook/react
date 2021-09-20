@@ -83,10 +83,10 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (__DEV__) {
     switch (tag) {
       case ConcurrentRoot:
-        this._debugRootType = 'createRoot()';
+        this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
         break;
       case LegacyRoot:
-        this._debugRootType = 'createLegacyRoot()';
+        this._debugRootType = hydrate ? 'hydrate()' : 'render()';
         break;
     }
   }

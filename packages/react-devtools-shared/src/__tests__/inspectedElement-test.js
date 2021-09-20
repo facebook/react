@@ -176,6 +176,7 @@ describe('InspectedElement', () => {
           "a": 1,
           "b": "abc",
         },
+        "rootType": "render()",
         "state": null,
       }
     `);
@@ -1584,6 +1585,7 @@ describe('InspectedElement', () => {
           "a": 1,
           "b": "abc",
         },
+        "rootType": "render()",
         "state": null,
       }
     `);
@@ -1912,6 +1914,7 @@ describe('InspectedElement', () => {
         "id": 2,
         "owners": null,
         "props": Object {},
+        "rootType": "render()",
         "state": null,
       }
     `);
@@ -1944,9 +1947,65 @@ describe('InspectedElement', () => {
         "id": 2,
         "owners": null,
         "props": Object {},
+        "rootType": "render()",
         "state": null,
       }
     `);
+  });
+
+  it('should display the root type for ReactDOM.hydrate', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      container.innerHTML = '<div></div>';
+      withErrorsOrWarningsIgnored(
+        ['ReactDOM.hydrate is no longer supported in React 18'],
+        () => {
+          ReactDOM.hydrate(<Example />, container);
+        },
+      );
+    }, false);
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrate()"`);
+  });
+
+  it('should display the root type for ReactDOM.render', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      legacyRender(<Example />, container);
+    }, false);
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"render()"`);
+  });
+
+  it('should display the root type for ReactDOM.hydrateRoot', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      container.innerHTML = '<div></div>';
+      ReactDOM.hydrateRoot(container).render(<Example />);
+    }, false);
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"hydrateRoot()"`);
+  });
+
+  it('should display the root type for ReactDOM.createRoot', async () => {
+    const Example = () => <div />;
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      ReactDOM.createRoot(container).render(<Example />);
+    }, false);
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.rootType).toMatchInlineSnapshot(`"createRoot()"`);
   });
 
   describe('$r', () => {
