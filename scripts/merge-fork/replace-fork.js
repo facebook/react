@@ -4,9 +4,10 @@
 
 // Copies the contents of the new fork into the old fork
 
+const chalk = require('chalk');
 const {promisify} = require('util');
 const glob = promisify(require('glob'));
-const {spawnSync} = require('child_process');
+const {execSync, spawnSync} = require('child_process');
 const fs = require('fs');
 const minimist = require('minimist');
 
@@ -18,31 +19,71 @@ const argv = minimist(process.argv.slice(2), {
 });
 
 async function main() {
+  const status = execSync('git status').toString();
+  const hadUnstagedChanges = status.includes('Changes not staged for commit');
+  if (hadUnstagedChanges) {
+    const readline = require('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    await new Promise(resolve => {
+      rl.question(
+        `\n${chalk.yellow.bold(
+          'Unstaged changes were found in repository.'
+        )} Do you want to continue? (Y/n) `,
+        input => {
+          switch (input.trim().toLowerCase()) {
+            case '':
+            case 'y':
+            case 'yes':
+              resolve();
+              break;
+            default:
+              console.log('No modifications were made.');
+              process.exit(0);
+              break;
+          }
+        }
+      );
+    });
+  }
+
   const oldFilenames = await glob('packages/react-reconciler/**/*.old.js');
   await Promise.all(oldFilenames.map(unforkFile));
 
   // Use ESLint to autofix imports
-  spawnSync('yarn', ['linc', '--fix'], {
+  const command = spawnSync('yarn', ['linc', '--fix'], {
     stdio: ['inherit', 'inherit', 'pipe'],
   });
-  // TODO: If eslint crashes, it may not have successfully fixed all
-  // the imports, which would leave the reconciler files in an inconsistent
-  // state. So we used to crash and reset the working directory. But that
-  // solution assumed that the working directory was clean before you run the
-  // command — if it wasn't, it'll not only reset the synced reconciler files,
-  // but all the other uncommitted changes.
-  //
-  // We need a different strategy to prevent loss of work. For example, we could
-  // exit early if the working directory is not clean before you run the script.
-  //
-  // Until we think of something better, I've commmented out this branch to
-  // prevent work from accidentally being lost.
-  // if (spawn.stderr.toString() !== '') {
-  //   spawnSync('git', ['checkout', '.']);
+  if (command.status === 1) {
+    console.log(
+      chalk.bold.red('\nreplace-fork script failed with the following error:')
+    );
+    console.error(Error(command.stderr));
 
-  //   console.log(Error(spawn.stderr));
-  //   process.exitCode = 1;
-  // }
+    // If eslint crashes, it may not have successfully fixed all the imports,
+    // which would leave the reconciler files in an inconsistent stat.
+    // It would be nice to clean up the working directory in this case,
+    // but it's only safe to do that if we aren't going to override any previous changes.
+    if (!hadUnstagedChanges) {
+      spawnSync('git', ['checkout', '.']);
+    } else {
+      console.log(
+        `\n${chalk.yellow.bold(
+          'Unstaged changes were present when `replace-fork` was run.'
+        )} ` +
+          `To cleanup the repository run:\n  ${chalk.bold(
+            'git checkout packages/react-reconciler'
+          )}`
+      );
+    }
+
+    process.exit(1);
+  } else {
+    process.exit(0);
+  }
 }
 
 async function unforkFile(oldFilename) {
