@@ -1547,10 +1547,10 @@ describe('ReactDOMFizzServer', () => {
               </Suspense>
             </div>
           </Suspense>
-          </div>
+        </div>
       );
     }
-    
+
     await jest.runAllTimers();
 
     await act(async () => {
@@ -1631,7 +1631,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
   });
-  
+
   // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot', async () => {
