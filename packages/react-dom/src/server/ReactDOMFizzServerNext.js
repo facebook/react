@@ -69,9 +69,9 @@ function renderToNextStream(
     },
     update() {
       if (destination.ready) {
-        startFlowing();
+        startFlowing(request);
       } else {
-        stopFlowing();
+        stopFlowing(request);
       }
     },
   };
