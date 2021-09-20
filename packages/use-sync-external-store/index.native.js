@@ -1,1 +1,1 @@
-export * from './useSyncExternalStoreClient';
+export * from './src/useSyncExternalStoreClient';
