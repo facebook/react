@@ -32,7 +32,7 @@ const DEVTOOLS_VERSION = getVersionString();
 
 const config = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
+  devtool: __DEV__ ? 'cheap-source-map' : 'source-map',
   entry: {
     app: './src/app/index.js',
     devtools: './src/devtools.js',
@@ -108,6 +108,7 @@ const config = {
 };
 
 if (TARGET === 'local') {
+  // Local dev server build.
   config.devServer = {
     hot: true,
     port: 8080,
@@ -116,6 +117,7 @@ if (TARGET === 'local') {
     stats: 'errors-only',
   };
 } else {
+  // Static build to deploy somewhere else.
   config.output = {
     path: resolve(__dirname, 'dist'),
     filename: '[name].js',

@@ -7,13 +7,7 @@
  * @flow
  */
 
-import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
-  ReactContext,
-  ReactProviderType,
-} from 'shared/ReactTypes';
+import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {
   Fiber,
   Dispatcher as DispatcherType,
@@ -78,6 +72,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         Dispatcher.useCacheRefresh();
       }
       Dispatcher.useLayoutEffect(() => {});
+      Dispatcher.useInsertionEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useDebugValue(null);
@@ -191,6 +186,18 @@ function useLayoutEffect(
   });
 }
 
+function useInsertionEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+): void {
+  nextHook();
+  hookLog.push({
+    primitive: 'InsertionEffect',
+    stackError: new Error(),
+    value: create,
+  });
+}
+
 function useEffect(
   create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
@@ -248,32 +255,15 @@ function useMemo<T>(
   return value;
 }
 
-function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  // useMutableSource() composes multiple hooks internally.
-  // Advance the current hook index the same number of times
-  // so that subsequent hooks have the right memoized state.
-  nextHook(); // MutableSource
-  nextHook(); // State
-  nextHook(); // Effect
-  nextHook(); // Effect
-  const value = getSnapshot(source._source);
-  hookLog.push({primitive: 'MutableSource', stackError: new Error(), value});
-  return value;
-}
-
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
   // useSyncExternalStore() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
   nextHook(); // SyncExternalStore
-  nextHook(); // LayoutEffect
   nextHook(); // Effect
   const value = getSnapshot();
   hookLog.push({
@@ -339,12 +329,12 @@ const Dispatcher: DispatcherType = {
   useImperativeHandle,
   useDebugValue,
   useLayoutEffect,
+  useInsertionEffect,
   useMemo,
   useReducer,
   useRef,
   useState,
   useTransition,
-  useMutableSource,
   useSyncExternalStore,
   useDeferredValue,
   useOpaqueIdentifier,

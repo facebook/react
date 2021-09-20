@@ -27,6 +27,7 @@ let useCallback;
 let useMemo;
 let useRef;
 let useImperativeHandle;
+let useInsertionEffect;
 let useLayoutEffect;
 let useDebugValue;
 let useOpaqueIdentifier;
@@ -54,6 +55,7 @@ function initModules() {
   useRef = React.useRef;
   useDebugValue = React.useDebugValue;
   useImperativeHandle = React.useImperativeHandle;
+  useInsertionEffect = React.unstable_useInsertionEffect;
   useLayoutEffect = React.useLayoutEffect;
   useOpaqueIdentifier = React.unstable_useOpaqueIdentifier;
   forwardRef = React.forwardRef;
@@ -633,6 +635,22 @@ describe('ReactDOMServerHooks', () => {
       const domNode = await serverRender(
         <Counter label="Count" ref={counter} />,
       );
+      expect(clearYields()).toEqual(['Count: 0']);
+      expect(domNode.tagName).toEqual('SPAN');
+      expect(domNode.textContent).toEqual('Count: 0');
+    });
+  });
+  describe('useInsertionEffect', () => {
+    // @gate experimental || www
+    it('should warn when invoked during render', async () => {
+      function Counter() {
+        useInsertionEffect(() => {
+          throw new Error('should not be invoked');
+        });
+
+        return <Text text="Count: 0" />;
+      }
+      const domNode = await serverRender(<Counter />, 1);
       expect(clearYields()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');

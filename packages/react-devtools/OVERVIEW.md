@@ -297,3 +297,10 @@ Once profiling is finished, the frontend requests profiling data from the backen
 ### Importing/exporting data
 
 Because all of the data is merged in the frontend after a profiling session is completed, it can be exported and imported (as a single JSON object), enabling profiling sessions to be shared between users.
+
+## Package Specific Details
+
+### Devtools Extension Overview Diagram
+
+![React Devtools Extension](https://user-images.githubusercontent.com/2735514/132768489-6ab85156-b816-442f-9c3f-7af738ee9e49.png)
+

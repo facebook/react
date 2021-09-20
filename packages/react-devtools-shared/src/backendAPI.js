@@ -158,7 +158,9 @@ function getPromiseForRequestID<T>(
 
     const onTimeout = () => {
       cleanup();
-      reject();
+      reject(
+        new Error(`Timed out waiting for event '${eventType}' from bridge`),
+      );
     };
 
     bridge.addListener(eventType, onInspectedElement);

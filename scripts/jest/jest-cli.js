@@ -309,17 +309,11 @@ function main() {
   validateOptions();
   const args = getCommandArgs();
   const envars = getEnvars();
+  const env = Object.entries(envars).map(([k, v]) => `${k}=${v}`);
 
   // Print the full command we're actually running.
-  console.log(
-    chalk.dim(
-      `$ ${Object.keys(envars)
-        .map(envar => `${envar}=${envars[envar]}`)
-        .join(' ')}`,
-      'node',
-      args.join(' ')
-    )
-  );
+  const command = `$ ${env.join(' ')} node ${args.join(' ')}`;
+  console.log(chalk.dim(command));
 
   // Print the release channel and project we're running for quick confirmation.
   console.log(

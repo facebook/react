@@ -116,34 +116,30 @@ export function inspectElement(
       return null;
     }
 
-    const onSuccess = ([inspectedElement: InspectedElementFrontend]) => {
-      const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
-      resolvedRecord.status = Resolved;
-      resolvedRecord.value = inspectedElement;
-      wake();
-    };
-
-    const onError = error => {
-      if (newRecord.status === Pending) {
-        const rejectedRecord = ((newRecord: any): RejectedRecord);
-        rejectedRecord.status = Rejected;
-        rejectedRecord.value = `Could not inspect element with id "${element.id}". Error thrown:\n${error.message}`;
-        wake();
-      }
-    };
-
-    const thenable = inspectElementMutableSource({
+    inspectElementMutableSource({
       bridge,
       element,
       path,
       rendererID: ((rendererID: any): number),
-    });
-    thenable.then(onSuccess, onError);
+    }).then(
+      ([inspectedElement: InspectedElementFrontend]) => {
+        const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
+        resolvedRecord.status = Resolved;
+        resolvedRecord.value = inspectedElement;
 
-    if (typeof (thenable: any).catch === 'function') {
-      (thenable: any).catch();
-    }
+        wake();
+      },
 
+      error => {
+        console.error(error);
+
+        const rejectedRecord = ((newRecord: any): RejectedRecord);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.value = `Could not inspect element with id "${element.id}". Error thrown:\n${error.message}`;
+
+        wake();
+      },
+    );
     map.set(element, record);
   }
 
@@ -191,6 +187,12 @@ export function checkForUpdate({
             refresh(key, value);
           });
         }
+      },
+
+      // There isn't much to do about errors in this case,
+      // but we should at least log them so they aren't silent.
+      error => {
+        console.error(error);
       },
     );
   }

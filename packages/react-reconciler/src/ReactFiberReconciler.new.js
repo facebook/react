@@ -93,7 +93,6 @@ import {
 } from './ReactFiberHotReloading.new';
 import {markRenderScheduled} from './SchedulingProfiler';
 import ReactVersion from 'shared/ReactVersion';
-export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
