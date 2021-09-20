@@ -395,5 +395,6 @@
   "404": "Invalid hook call. Hooks can only be called inside of the body of a function component.",
   "405": "hydrateRoot(...): Target container is not a DOM element.",
   "406": "act(...) is not supported in production builds of React.",
-  "407": "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering."
+  "407": "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering.",
+  "408": "Missing getServerSnapshot, which is required for server-rendered content."
 }

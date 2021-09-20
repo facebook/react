@@ -9,6 +9,8 @@
 
 import * as React from 'react';
 import is from 'shared/objectIs';
+import invariant from 'shared/invariant';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 // Intentionally not using named imports because Rollup uses dynamic
 // dispatch for CommonJS interop named imports.
@@ -21,16 +23,37 @@ const {
   unstable_useSyncExternalStore: builtInAPI,
 } = React;
 
+// TODO: This heuristic doesn't work in React Native. We'll need to provide a
+// special build, using the `.native` extension.
+const isServerEnvironment = !canUseDOM;
+
 // Prefer the built-in API, if it exists. If it doesn't exist, then we assume
 // we're in version 16 or 17, so rendering is always synchronous. The shim
 // does not support concurrent rendering, only the built-in API.
 export const useSyncExternalStore =
   builtInAPI !== undefined
-    ? ((builtInAPI: any): typeof useSyncExternalStore_shim)
-    : useSyncExternalStore_shim;
+    ? ((builtInAPI: any): typeof useSyncExternalStore_client)
+    : isServerEnvironment
+    ? useSyncExternalStore_server
+    : useSyncExternalStore_client;
 
 let didWarnOld18Alpha = false;
 let didWarnUncachedGetSnapshot = false;
+
+function useSyncExternalStore_server<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  if (getServerSnapshot === undefined) {
+    invariant(
+      false,
+      'Missing getServerSnapshot, which is required for server-' +
+        'rendered content.',
+    );
+  }
+  return getServerSnapshot();
+}
 
 // Disclaimer: This shim breaks many of the rules of React, and only works
 // because of a very particular set of implementation details and assumptions
@@ -42,10 +65,13 @@ let didWarnUncachedGetSnapshot = false;
 //
 // Do not assume that the clever hacks used by this hook also work in general.
 // The point of this shim is to replace the need for hacks by other libraries.
-function useSyncExternalStore_shim<T>(
+function useSyncExternalStore_client<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
-  // TODO: Add a canUseDOM check and use this one on the server
+  // Note: The client shim does not use getServerSnapshot, because pre-18
+  // versions of React do not expose a way to check if we're hydrating. So
+  // users of the shim will need to track that themselves and return the
+  // correct value from `getSnapshot`.
   getServerSnapshot?: () => T,
 ): T {
   if (__DEV__) {
@@ -97,7 +123,6 @@ function useSyncExternalStore_shim<T>(
   // Track the latest getSnapshot function with a ref. This needs to be updated
   // in the layout phase so we can access it during the tearing check that
   // happens on subscribe.
-  // TODO: Circumvent SSR warning with canUseDOM check
   useLayoutEffect(() => {
     inst.value = value;
     inst.getSnapshot = getSnapshot;
