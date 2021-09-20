@@ -280,7 +280,7 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/src/server/ReactDOMFizzServerNext',
-    name: 'react-dom-server.next',
+    name: 'react-dom-server-next',
     global: 'ReactDOMServer',
     externals: ['react'],
   },

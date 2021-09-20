@@ -7,61 +7,44 @@
  * @flow
  */
 
-const INIT: 0 = 0;
-const WRITE: 1 = 1;
-const BUFFER: 2 = 2;
-const FLUSH: 3 = 3;
-const CLOSE: 4 = 4;
-const SCHEDULE: 5 = 5;
-
-type NextExecutorCommand =
-  | [typeof INIT, {full: boolean, update: () => void}]
-  | [typeof WRITE, Uint8Array]
-  | [typeof BUFFER, boolean]
-  | [typeof FLUSH]
-  | [typeof CLOSE]
-  | [typeof CLOSE, mixed]
-  | [typeof SCHEDULE, () => void];
-
-export type NextExecutor = (...args: NextExecutorCommand) => void;
-
 export type Destination = {
-  exec: NextExecutor,
-  state: {
-    full: boolean,
-    update: () => void,
-  },
+  write: (chunk: Uint8Array) => void,
+  buffer: (shouldBuffer: boolean) => void,
+  flush: () => void,
+  close: (error: mixed) => void,
+  schedule: (callback: () => void) => void,
+  ready: boolean,
 };
 
 export type PrecomputedChunk = Uint8Array;
 export type Chunk = Uint8Array;
 
 export function scheduleWork(destination: Destination, callback: () => void) {
-  destination.exec(SCHEDULE, callback);
+  destination.schedule(callback)
 }
 
 export function flushBuffered(destination: Destination) {
-  destination.exec(FLUSH);
+  destination.flush()
 }
 
 export function beginWriting(destination: Destination) {
-  destination.exec(BUFFER, true);
+  destination.buffer(true)
 }
 
 export function writeChunk(
   destination: Destination,
   chunk: PrecomputedChunk | Chunk,
 ): boolean {
-  destination.exec(WRITE, chunk);
-  return destination.state.full;
+  destination.write(chunk)
+  return destination.ready;
 }
 
 export function completeWriting(destination: Destination) {
-  destination.exec(BUFFER, false);
+  destination.buffer(false)
 }
 
 export function close(destination: Destination) {
-  destination.exec(CLOSE);
+  destination.close()
 }
 
 const textEncoder = new TextEncoder();
@@ -75,5 +58,5 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
 }
 
 export function closeWithError(destination: Destination, error: mixed): void {
-  destination.exec(CLOSE, error);
+  destination.close(error)
 }

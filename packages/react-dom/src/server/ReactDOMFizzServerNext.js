@@ -10,7 +10,6 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Destination,
-  NextExecutor,
 } from 'react-server/src/ReactServerStreamConfigNext';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -38,9 +37,9 @@ type Options = {|
 |};
 
 type Controls = {|
-  // Cancel any pending I/O and put anything remaining into
-  // client rendered mode.
   abort(): void,
+  startWriting(): void,
+  stopWriting(): void,
 |};
 
 function createRequestImpl(
@@ -60,33 +59,24 @@ function createRequestImpl(
   );
 }
 
-function pipeToNextExecutor(
+function renderToNextStream(
   children: ReactNodeList,
-  executor: NextExecutor,
+  destination: Destination,
   options?: Options,
 ): Controls {
-  const destination = {
-    exec: executor,
-    state: {
-      full: false,
-      update: () => {},
-    },
-  };
   const request = createRequestImpl(children, destination, options);
-  destination.state.update = () => {
-    if (destination.state.full) {
-      stopFlowing(request);
-    } else {
-      startFlowing(request);
-    }
-  };
-  executor(0, destination.state);
   startWork(request);
   return {
     abort() {
       abort(request);
     },
+    startWriting() {
+      startFlowing(request)
+    },
+    stopWriting() {
+      stopFlowing(request)
+    },
   };
 }
 
-export {pipeToNextExecutor, ReactVersion as version};
+export {renderToNextStream, ReactVersion as version};
