@@ -235,11 +235,12 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'B',
         subHooks: [],
       },
-      {isStateEditable: false,
-         id: 2, 
-         name: 'Ref', 
-         value: 'C', 
-         subHooks: [],
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: 'C',
+        subHooks: [],
       },
       {
         isStateEditable: false,
@@ -345,7 +346,13 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'b',
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: 'c',
+        subHooks: [],
+      },
       {
         isStateEditable: false,
         id: 3,
@@ -410,7 +417,13 @@ describe('ReactHooksInspectionIntegration', () => {
         value: 'B',
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: 'C',
+        subHooks: [],
+      },
       {
         isStateEditable: false,
         id: 3,
