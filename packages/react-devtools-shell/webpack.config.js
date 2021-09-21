@@ -28,7 +28,7 @@ const builtModulesDir = resolve(
   __dirname,
   '..',
   '..',
-  'build2',
+  'build',
   'oss-experimental',
 );
 
