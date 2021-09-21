@@ -480,7 +480,7 @@ export function installHook(target: any): DevToolsHook | null {
       }
     } else {
       // This should only happen during initial render in the extension before DevTools
-      // finishes its handshake with React DOM
+      // finishes its handshake with the injected renderer
       if (isStrictMode) {
         const hideConsoleLogsInStrictMode =
           window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
