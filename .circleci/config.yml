@@ -213,9 +213,9 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
+      - attach_workspace:
+          at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_yarn_cache
       - *restore_node_modules
       - run:
           name: Install Packages
@@ -344,17 +344,6 @@ jobs:
 workflows:
   version: 2
 
-  experimental:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - setup
-      - yarn_build:
-          requires:
-            - setup
-      - build_devtools_and_process_artifacts:
-          requires:
-            - yarn_build
-
   # New workflow that will replace "stable" and "experimental"
   build_and_test:
     unless: << pipeline.parameters.prerelease_commit_sha >>
@@ -451,6 +440,10 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
             - yarn_build_combined
+      - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build_combined
+
   fuzz_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     triggers:
