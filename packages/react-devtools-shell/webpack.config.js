@@ -24,7 +24,13 @@ if (!TARGET) {
   process.exit(1);
 }
 
-const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
+const builtModulesDir = resolve(
+  __dirname,
+  '..',
+  '..',
+  'build2',
+  'oss-experimental',
+);
 
 const __DEV__ = NODE_ENV === 'development';
 
