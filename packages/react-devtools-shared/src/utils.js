@@ -573,13 +573,15 @@ export function getDataType(data: Object): DataType {
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
-        }
+        try {
+          const iterator = data[Symbol.iterator]();
+          
+          if (!iterator) {// Proxies might break assumptions about iterators.
+            // See github.com/facebook/react/issues/21654
+          } else {
+            return iterator === data ? 'opaque_iterator' : 'iterator';
+          }
+        } catch (e) { }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else {
