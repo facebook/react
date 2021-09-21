@@ -343,16 +343,6 @@ jobs:
 
 workflows:
   version: 2
-  stable:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - setup
-      - yarn_lint:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_build:
-          requires:
-            - setup
 
   experimental:
     unless: << pipeline.parameters.prerelease_commit_sha >>
@@ -376,6 +366,9 @@ workflows:
       # NOTE: This job is only enabled when we want the forks to be in sync.
       # When the forks intentionally diverge, comment out the job to disable it.
       - sync_reconciler_forks:
+          requires:
+            - setup
+      - yarn_lint:
           requires:
             - setup
       - yarn_test:
