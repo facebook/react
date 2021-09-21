@@ -192,6 +192,7 @@ jobs:
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
+      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build2.tgz ./build2
         # TODO: Migrate scripts to use `build` directory instead of `build2`
@@ -209,6 +210,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
+      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
