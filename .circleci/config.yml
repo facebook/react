@@ -343,13 +343,6 @@ jobs:
 
 workflows:
   version: 2
-  stable:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - setup
-      - RELEASE_CHANNEL_stable_yarn_build:
-          requires:
-            - setup
 
   experimental:
     unless: << pipeline.parameters.prerelease_commit_sha >>
