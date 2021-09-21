@@ -56,11 +56,6 @@ if (process.env.CIRCLE_NODE_TOTAL) {
     buildForChannel('experimental', nodeTotal, nodeIndex);
     processExperimental('./build');
   }
-
-  // TODO: Currently storing a copy of the artifacts as `./build2`, because
-  // some scripts reference that directory. Remove once we migrate everything to
-  // reference `./build` instead.
-  fse.copySync('./build', './build2');
 } else {
   // Running locally, no concurrency. Move each channel's build artifacts into
   // a temporary directory so that they don't conflict.
@@ -87,10 +82,6 @@ if (process.env.CIRCLE_NODE_TOTAL) {
 
   // Now restore the combined directory back to its original name
   crossDeviceRenameSync(stableDir, './build');
-  // TODO: Currently storing a copy of the artifacts as `./build2`, because
-  // some scripts reference that directory. Remove once we migrate everything to
-  // reference `./build` instead.
-  fse.copySync('./build', './build2');
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {

@@ -6,9 +6,6 @@ packages/react-art/npm/lib
 
 # Build products
 build/
-# TODO: Currently storing artifacts as `./build2` so that it doesn't conflict
-# with old build job. Remove once we migrate rest of build/test pipeline.
-build2/
 coverage/
 fixtures/
 scripts/bench/benchmarks/**/*.js
