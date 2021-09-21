@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {
+  consoleManagedByDevToolsDuringStrictMode,
+  enableProfilerTimer,
+} from 'shared/ReactFeatureFlags';
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -25,7 +28,11 @@ import {
   UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
+  unstable_yieldValue,
+  unstable_setDisableYieldValue,
 } from './Scheduler';
+import {setSuppressWarning} from 'shared/consoleWithStackDev';
+import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -168,6 +175,40 @@ export function onCommitUnmount(fiber: Fiber) {
           console.error('React instrumentation encountered an error: %s', err);
         }
       }
+    }
+  }
+}
+
+export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
+  if (consoleManagedByDevToolsDuringStrictMode) {
+    if (typeof unstable_yieldValue === 'function') {
+      // We're in a test because Scheduler.unstable_yieldValue only exists
+      // in SchedulerMock. To reduce the noise in strict mode tests,
+      // suppress warnings and disable scheduler yielding during the double render
+      unstable_setDisableYieldValue(newIsStrictMode);
+      setSuppressWarning(newIsStrictMode);
+    }
+
+    if (injectedHook && typeof injectedHook.setStrictMode === 'function') {
+      try {
+        injectedHook.setStrictMode(rendererID, newIsStrictMode);
+      } catch (err) {
+        if (__DEV__) {
+          if (!hasLoggedError) {
+            hasLoggedError = true;
+            console.error(
+              'React instrumentation encountered an error: %s',
+              err,
+            );
+          }
+        }
+      }
+    }
+  } else {
+    if (newIsStrictMode) {
+      disableLogs();
+    } else {
+      reenableLogs();
     }
   }
 }

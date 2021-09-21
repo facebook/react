@@ -17,11 +17,10 @@ let mockLog;
 let mockWarn;
 let patchConsole;
 let unpatchConsole;
+let rendererID;
 
 describe('console', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     const Console = require('react-devtools-shared/src/backend/console');
     patchConsole = Console.patch;
     unpatchConsole = Console.unpatch;
@@ -41,21 +40,16 @@ describe('console', () => {
     };
 
     Console.dangerous_setTargetConsoleForTesting(fakeConsole);
-
-    // Note the Console module only patches once,
-    // so it's important to patch the test console before injection.
-    patchConsole({
-      appendComponentStack: true,
-      breakOnWarn: false,
-      showInlineWarningsAndErrors: false,
-      hideDoubleLogsInStrictLegacy: false,
-    });
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.dangerous_setTargetConsoleForTesting(
+      fakeConsole,
+    );
 
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
-      inject(internals);
+      rendererID = inject(internals);
 
       Console.registerRenderer(internals);
+      return rendererID;
     };
 
     React = require('react');
@@ -78,7 +72,7 @@ describe('console', () => {
   it('should not patch console methods that are not explicitly overriden', () => {
     expect(fakeConsole.error).not.toBe(mockError);
     expect(fakeConsole.info).toBe(mockInfo);
-    expect(fakeConsole.log).not.toBe(mockLog);
+    expect(fakeConsole.log).toBe(mockLog);
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
@@ -90,7 +84,7 @@ describe('console', () => {
 
     patchConsole({
       appendComponentStack: true,
-      breakOnWarn: false,
+      breakOnConsoleErrors: false,
       showInlineWarningsAndErrors: false,
     });
 
@@ -98,7 +92,7 @@ describe('console', () => {
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
-  it('should patch the console when breakOnWarn is enabled', () => {
+  it('should patch the console when breakOnConsoleErrors is enabled', () => {
     unpatchConsole();
 
     expect(fakeConsole.error).toBe(mockError);
@@ -106,7 +100,7 @@ describe('console', () => {
 
     patchConsole({
       appendComponentStack: false,
-      breakOnWarn: true,
+      breakOnConsoleErrors: true,
       showInlineWarningsAndErrors: false,
     });
 
@@ -122,7 +116,7 @@ describe('console', () => {
 
     patchConsole({
       appendComponentStack: false,
-      breakOnWarn: false,
+      breakOnConsoleErrors: false,
       showInlineWarningsAndErrors: true,
     });
 
@@ -135,7 +129,7 @@ describe('console', () => {
 
     patchConsole({
       appendComponentStack: true,
-      breakOnWarn: false,
+      breakOnConsoleErrors: false,
       showInlineWarningsAndErrors: false,
     });
 
@@ -172,6 +166,8 @@ describe('console', () => {
   });
 
   it('should not append multiple stacks', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
+
     const Child = ({children}) => {
       fakeConsole.warn('warn\n    in Child (at fake.js:123)');
       fakeConsole.error('error', '\n    in Child (at fake.js:123)');
@@ -192,6 +188,8 @@ describe('console', () => {
   });
 
   it('should append component stacks to errors and warnings logged during render', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
+
     const Intermediate = ({children}) => children;
     const Parent = ({children}) => (
       <Intermediate>
@@ -277,6 +275,8 @@ describe('console', () => {
   });
 
   it('should append component stacks to errors and warnings logged from commit hooks', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
+
     const Intermediate = ({children}) => children;
     const Parent = ({children}) => (
       <Intermediate>
@@ -372,13 +372,14 @@ describe('console', () => {
   });
 
   it('should append stacks after being uninstalled and reinstalled', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+
     const Child = ({children}) => {
       fakeConsole.warn('warn');
       fakeConsole.error('error');
       return null;
     };
 
-    unpatchConsole();
     act(() => legacyRender(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
@@ -390,7 +391,7 @@ describe('console', () => {
 
     patchConsole({
       appendComponentStack: true,
-      breakOnWarn: false,
+      breakOnConsoleErrors: false,
       showInlineWarningsAndErrors: false,
     });
     act(() => legacyRender(<Child />, document.createElement('div')));
@@ -410,6 +411,8 @@ describe('console', () => {
   });
 
   it('should be resilient to prepareStackTrace', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
+
     Error.prepareStackTrace = function(error, callsites) {
       const stack = ['An error occurred:', error.message];
       for (let i = 0; i < callsites.length; i++) {
@@ -469,6 +472,9 @@ describe('console', () => {
   });
 
   it('should double log if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
 
@@ -479,12 +485,86 @@ describe('console', () => {
       return <div />;
     }
 
-    patchConsole({
-      appendComponentStack: false,
-      breakOnWarn: false,
-      showInlineWarningsAndErrors: false,
-      hideConsoleLogsInStrictMode: false,
-    });
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+    expect(mockLog.mock.calls[1]).toHaveLength(2);
+    expect(mockLog.mock.calls[1][0]).toBe('%clog');
+
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
+    expect(mockWarn.mock.calls[1][0]).toBe('%cwarn');
+
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(mockError.mock.calls[1]).toHaveLength(2);
+    expect(mockError.mock.calls[1][0]).toBe('%cerror');
+  });
+
+  it('should not double log if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = true;
+
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+  });
+
+  it('should double log in Strict mode initial render for extension', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+
+    // This simulates a render that happens before React DevTools have finished
+    // their handshake to attach the React DOM renderer functions to DevTools
+    // In this case, we should still be able to mock the console in Strict mode
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.rendererInterfaces.set(
+      rendererID,
+      null,
+    );
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    function App() {
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      fakeConsole.error('error');
+      return <div />;
+    }
 
     act(() =>
       root.render(
@@ -513,7 +593,17 @@ describe('console', () => {
     expect(mockError.mock.calls[1][0]).toBe('%cerror');
   });
 
-  it('should not double log if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
+  it('should not double log in Strict mode initial render for extension', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = true;
+
+    // This simulates a render that happens before React DevTools have finished
+    // their handshake to attach the React DOM renderer functions to DevTools
+    // In this case, we should still be able to mock the console in Strict mode
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.rendererInterfaces.set(
+      rendererID,
+      null,
+    );
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
 
@@ -524,13 +614,6 @@ describe('console', () => {
       return <div />;
     }
 
-    patchConsole({
-      appendComponentStack: false,
-      breakOnWarn: false,
-      showInlineWarningsAndErrors: false,
-      hideConsoleLogsInStrictMode: true,
-    });
-
     act(() =>
       root.render(
         <React.StrictMode>
@@ -538,7 +621,6 @@ describe('console', () => {
         </React.StrictMode>,
       ),
     );
-
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
     expect(mockLog.mock.calls[0][0]).toBe('log');
@@ -550,6 +632,56 @@ describe('console', () => {
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
+  });
+
+  it('should properly dim component stacks during strict mode double log', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = true;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+
+    const Intermediate = ({children}) => children;
+    const Parent = ({children}) => (
+      <Intermediate>
+        <Child />
+      </Intermediate>
+    );
+    const Child = ({children}) => {
+      fakeConsole.error('error');
+      fakeConsole.warn('warn');
+      return null;
+    };
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <Parent />
+        </React.StrictMode>,
+      ),
+    );
+
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[0]).toHaveLength(2);
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+    expect(mockWarn.mock.calls[1]).toHaveLength(2);
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][0])).toEqual(
+      '%cwarn \n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+    expect(mockWarn.mock.calls[1][1]).toMatch('color: rgba(');
+
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toEqual(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+    expect(mockError.mock.calls[1]).toHaveLength(2);
+    expect(normalizeCodeLocInfo(mockError.mock.calls[1][0])).toEqual(
+      '%cerror \n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+    expect(mockError.mock.calls[1][1]).toMatch('color: rgba(');
   });
 });
 
@@ -577,23 +709,13 @@ describe('console error', () => {
 
     Console.dangerous_setTargetConsoleForTesting(fakeConsole);
 
-    // Note the Console module only patches once,
-    // so it's important to patch the test console before injection.
-    patchConsole({
-      appendComponentStack: true,
-      breakOnWarn: false,
-      showInlineWarningsAndErrors: false,
-      hideDoubleLogsInStrictLegacy: false,
-    });
-
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
-      internals.getIsStrictMode = () => {
-        throw Error('foo');
-      };
       inject(internals);
 
-      Console.registerRenderer(internals);
+      Console.registerRenderer(internals, () => {
+        throw Error('foo');
+      });
     };
 
     React = require('react');
@@ -617,8 +739,8 @@ describe('console error', () => {
 
     patchConsole({
       appendComponentStack: true,
-      breakOnWarn: false,
-      showInlineWarningsAndErrors: false,
+      breakOnConsoleErrors: false,
+      showInlineWarningsAndErrors: true,
       hideConsoleLogsInStrictMode: false,
     });
 

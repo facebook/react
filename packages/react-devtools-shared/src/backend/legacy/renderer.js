@@ -1073,6 +1073,10 @@ export function attach(
     // Not implemented
   }
 
+  function patchConsoleForStrictMode() {}
+
+  function unpatchConsoleForStrictMode() {}
+
   return {
     clearErrorsAndWarnings,
     clearErrorsForFiberID,
@@ -1101,6 +1105,7 @@ export function attach(
     overrideSuspense,
     overrideValueAtPath,
     renamePath,
+    patchConsoleForStrictMode,
     prepareViewAttributeSource,
     prepareViewElementSource,
     renderer,
@@ -1109,6 +1114,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    unpatchConsoleForStrictMode,
     updateComponentFilters,
   };
 }

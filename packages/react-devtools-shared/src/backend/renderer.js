@@ -59,6 +59,8 @@ import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
+  patchForStrictMode as patchConsoleForStrictMode,
+  unpatchForStrictMode as unpatchConsoleForStrictMode,
 } from './console';
 import {
   CONCURRENT_MODE_NUMBER,
@@ -4249,6 +4251,7 @@ export function attach(
     handlePostCommitFiberRoot,
     inspectElement,
     logElementToConsole,
+    patchConsoleForStrictMode,
     prepareViewAttributeSource,
     prepareViewElementSource,
     overrideError,
@@ -4261,6 +4264,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    unpatchConsoleForStrictMode,
     updateComponentFilters,
   };
 }

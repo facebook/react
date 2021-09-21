@@ -110,7 +110,7 @@ import {
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
-import {setIsStrictModeForDevtools} from './ReactFiberReconciler';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
 
 import invariant from 'shared/invariant';
 

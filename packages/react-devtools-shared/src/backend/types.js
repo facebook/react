@@ -136,8 +136,6 @@ export type ReactRenderer = {
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
-
-  getIsStrictMode?: () => boolean,
   // 17.0.2+
   reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
@@ -352,6 +350,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     value: any,
   ) => void,
+  patchConsoleForStrictMode: () => void,
   prepareViewAttributeSource: (
     id: number,
     path: Array<string | number>,
@@ -374,6 +373,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   ...
 };
@@ -408,5 +408,8 @@ export type DevToolsHook = {
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
   ) => void,
+
+  // Testing
+  dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
   ...
 };

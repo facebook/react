@@ -38,7 +38,7 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
-import {setIsStrictModeForDevtools} from './ReactFiberReconciler';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
