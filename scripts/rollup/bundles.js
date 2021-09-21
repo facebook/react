@@ -707,7 +707,7 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'use-sync-external-store/index.native',
-    global: 'useSyncExternalStore',
+    global: 'useSyncExternalStoreNative',
     externals: ['react', 'ReactNativeInternalFeatureFlags'],
   },
 

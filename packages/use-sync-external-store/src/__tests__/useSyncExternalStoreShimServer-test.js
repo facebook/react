@@ -100,21 +100,4 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     expect(Scheduler).toHaveYielded(['server']);
     expect(html).toEqual('server');
   });
-
-  test('native version', async () => {
-    const store = createExternalStore('client');
-
-    function App() {
-      const text = useSyncExternalStoreNative(
-        store.subscribe,
-        store.getState,
-        () => 'server',
-      );
-      return <Text text={text} />;
-    }
-
-    const html = ReactNoop.render(<App />);
-    expect(Scheduler).toHaveYielded(['client']);
-    expect(html).toEqual('client');
-  });
 });
