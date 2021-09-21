@@ -1,7 +1,7 @@
 /**
  * Install the hook on window, which is an event emitter.
  * Note because Chrome content scripts cannot directly modify the window object,
- * we are evaling this function by inserting a script tag.
+ * we are evading this function by inserting a script tag.
  * That's why we have to inline the whole event emitter implementation,
  * the string format implementation, and part of the console implementation here.
  *
@@ -39,7 +39,7 @@ export function installHook(target: any): DevToolsHook | null {
         }
 
         // React 16 uses flat bundles. If we report the bundle as production
-        // version, it means we also minified and envified it ourselves.
+        // version, it means we also minified and envied it ourselves.
         return 'production';
         // Note: There is still a risk that the CommonJS entry point has not
         // been envified or uglified. In this case the user would have *both*
@@ -334,7 +334,7 @@ export function installHook(target: any): DevToolsHook | null {
     // For React Native, we intentionally patch early (during injection).
     // This provides React Native developers with components stacks even if they don't run DevTools.
     //
-    // This won't work for DOM though, since this entire file is eval'ed and inserted as a script tag.
+    // This won't work for DOM though, since this entire file is evaded and inserted as a script tag.
     // In that case, we'll only patch parts of the console that are needed during the first render
     // and patch everything else later (when the frontend attaches).
     //
