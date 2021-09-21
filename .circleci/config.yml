@@ -158,8 +158,10 @@ jobs:
       - run: yarn build-combined
       - persist_to_workspace:
           root: .
+          # TODO: Migrate scripts to use `build` directory instead of `build2`
           paths:
             - build2
+            - build
 
   get_base_build:
     docker: *docker
@@ -192,8 +194,12 @@ jobs:
       - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build2.tgz ./build2
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: tar -zcvf ./build.tgz ./build
       - store_artifacts:
           path: ./build2.tgz
+      - store_artifacts:
+          path: ./build.tgz
 
   sizebot:
     docker: *docker
