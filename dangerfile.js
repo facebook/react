@@ -35,7 +35,7 @@ const gzipSize = require('gzip-size');
 const {readFileSync, statSync} = require('fs');
 
 const BASE_DIR = 'base-build';
-const HEAD_DIR = 'build2';
+const HEAD_DIR = 'build';
 
 const CRITICAL_THRESHOLD = 0.02;
 const SIGNIFICANCE_THRESHOLD = 0.002;
@@ -127,7 +127,7 @@ function row(result) {
   const resultsMap = new Map();
 
   // Find all the head (current) artifacts paths.
-  const headArtifactPaths = await glob('**/*.js', {cwd: 'build2'});
+  const headArtifactPaths = await glob('**/*.js', {cwd: 'build'});
   for (const artifactPath of headArtifactPaths) {
     try {
       // This will throw if there's no matching base artifact
