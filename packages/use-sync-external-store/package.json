@@ -13,6 +13,7 @@
     "build-info.json",
     "index.js",
     "extra.js",
+    "index.native.js",
     "cjs/"
   ],
   "license": "MIT",

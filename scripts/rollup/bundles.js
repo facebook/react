@@ -702,6 +702,15 @@ const bundles = [
     externals: ['react', 'use-sync-external-store'],
   },
 
+  /******* Shim for useSyncExternalStore ReactNative *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-sync-external-store/index.native',
+    global: 'useSyncExternalStoreNative',
+    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+  },
+
   /******* React Scheduler (experimental) *******/
   {
     bundleTypes: [
