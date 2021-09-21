@@ -15,7 +15,7 @@ let useSyncExternalStore;
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactNoop;
+// let ReactNoop;
 let Scheduler;
 
 // This tests the userspace shim of `useSyncExternalStore` in a server-rendering
@@ -46,7 +46,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactNoop = require('react-noop-renderer');
+    // ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
 
     useSyncExternalStore = require('use-sync-external-store')
