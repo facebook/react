@@ -4,7 +4,6 @@
 
 const {exec} = require('child-process-promise');
 const {existsSync} = require('fs');
-const fse = require('fs-extra');
 const {join} = require('path');
 const {getArtifactsList, logPromise} = require('../utils');
 const theme = require('../theme');
@@ -30,11 +29,6 @@ const run = async ({build, cwd, releaseChannel}) => {
       cwd,
     }
   );
-
-  // TODO: Currently storing a copy of the artifacts as `./build2`, because
-  // some scripts reference that directory. Remove once we migrate everything to
-  // reference `./build` instead.
-  fse.copySync('./build', './build2');
 
   // Copy to staging directory
   // TODO: Consider staging the release in a different directory from the CI

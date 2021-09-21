@@ -103,9 +103,7 @@ jobs:
       - run: yarn build-combined
       - persist_to_workspace:
           root: .
-          # TODO: Migrate scripts to use `build` directory instead of `build2`
           paths:
-            - build2
             - build
 
   get_base_build:
@@ -121,7 +119,7 @@ jobs:
               git fetch origin main
               cd ./scripts/release && yarn && cd ../../
               scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main)
-              mv ./build2 ./base-build
+              mv ./build ./base-build
       - persist_to_workspace:
           root: .
           paths:
@@ -136,12 +134,11 @@ jobs:
           at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
-      - run: tar -zcvf ./build2.tgz ./build2
-        # TODO: Migrate scripts to use `build` directory instead of `build2`
       - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
       - store_artifacts:
           path: ./build2.tgz
       - store_artifacts:
@@ -154,7 +151,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
       - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
