@@ -1019,7 +1019,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       await advanceTimers(1000);
 
       // Timing out should commit the fallback and destroy inner layout effects.
-      // Even though the innermost layout effects are beneat a hidden HostComponent.
+      // Even though the innermost layout effects are beneath a hidden HostComponent.
       expect(Scheduler).toHaveYielded([
         'Text:Outer destroy layout',
         'Text:MemoizedInner destroy layout',
@@ -1147,7 +1147,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('OuterFallback'),
       ]);
 
-      // Show the inner Susepnse subtree (no effects should be recreated)
+      // Show the inner Suspense subtree (no effects should be recreated)
       await act(async () => {
         await resolveText('InnerAsync_1');
       });
@@ -1189,7 +1189,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('OuterFallback'),
       ]);
 
-      // Show the outer Susepnse subtree (only outer effects should be recreated)
+      // Show the outer Suspense subtree (only outer effects should be recreated)
       await act(async () => {
         await resolveText('OuterAsync_1');
       });
@@ -1213,7 +1213,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('InnerFallback'),
       ]);
 
-      // Show the inner Susepnse subtree (only inner effects should be recreated)
+      // Show the inner Suspense subtree (only inner effects should be recreated)
       await act(async () => {
         await resolveText('InnerAsync_2');
       });
@@ -1517,7 +1517,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
         span('Outside'),
       ]);
 
-      // Resolving both resources should cleanup fallabck effects and recreate main effects
+      // Resolving both resources should cleanup fallback effects and recreate main effects
       await act(async () => {
         await resolveText('FallbackAsync');
         await resolveText('OutsideAsync');
@@ -1974,7 +1974,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInWillUnmount componentWillUnmount',
           'Text:Inside destroy layout',
 
-          // Finish the in-progess commit
+          // Finish the in-progress commit
           'Text:Fallback create layout',
           'Text:Fallback create passive',
 
@@ -2114,7 +2114,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInLayoutEffect useLayoutEffect create',
           'Text:Inside create layout',
 
-          // Finish the in-progess commit
+          // Finish the in-progress commit
           'Text:Fallback destroy passive',
           'AsyncText:Async create passive',
 
@@ -2139,7 +2139,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       // @gate enableSuspenseLayoutEffectSemantics
       // @gate enableCache
       // @gate replayFailedUnitOfWorkWithInvokeGuardedCallback
-      it('are properly handled for layout effect descruction', async () => {
+      it('are properly handled for layout effect destruction', async () => {
         function ThrowsInLayoutEffectDestroy() {
           Scheduler.unstable_yieldValue('ThrowsInLayoutEffectDestroy render');
           React.useLayoutEffect(() => {
@@ -2226,7 +2226,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
           'ThrowsInLayoutEffectDestroy useLayoutEffect destroy',
           'Text:Inside destroy layout',
 
-          // Finish the in-progess commit
+          // Finish the in-progress commit
           'Text:Fallback create layout',
           'Text:Fallback create passive',
 

@@ -990,7 +990,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(Scheduler).toFlushAndYield(['Foo']);
   });
 
-  it('can schedule updates after uncaught error during umounting', () => {
+  it('can schedule updates after uncaught error during unmounting', () => {
     class BrokenComponentWillUnmount extends React.Component {
       render() {
         return <div />;

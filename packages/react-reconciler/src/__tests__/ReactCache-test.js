@@ -461,7 +461,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    // Fefresh for new data.
+    // Refresh for new data.
     await act(async () => {
       startTransition(() => refresh());
     });
