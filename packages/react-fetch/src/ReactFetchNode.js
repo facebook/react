@@ -145,10 +145,6 @@ Response.prototype = {
     const buffer = readRecordValue(this._bufferRecord);
     return buffer;
   },
-  blob() {
-    // TODO: Is this needed?
-    throw new Error('Not implemented.');
-  },
   json() {
     if (this._json !== null) {
       return this._json;
