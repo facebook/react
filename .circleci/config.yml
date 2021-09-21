@@ -274,7 +274,8 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
+      - attach_workspace:
+          at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
@@ -352,9 +353,6 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_build:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
 
   experimental:
     unless: << pipeline.parameters.prerelease_commit_sha >>
@@ -455,6 +453,9 @@ workflows:
             - get_base_build
             - yarn_build_combined
       - yarn_lint_build:
+          requires:
+            - yarn_build_combined
+      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
             - yarn_build_combined
   fuzz_tests:
