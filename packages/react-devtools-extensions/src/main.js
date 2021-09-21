@@ -18,6 +18,7 @@ import {
   localStorageRemoveItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
+import {registerEventLogger} from 'react-devtools-shared/src/Logger';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
@@ -86,6 +87,10 @@ function createPanelIfReactLoaded() {
       let root = null;
 
       const tabId = chrome.devtools.inspectedWindow.tabId;
+
+      registerEventLogger((event: LogEvent) => {
+        // TODO: hook up event logging
+      });
 
       function initBridgeAndStore() {
         const port = chrome.runtime.connect({
@@ -326,7 +331,9 @@ function createPanelIfReactLoaded() {
 
         // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
         const hookNamesModuleLoaderFunction = () =>
-          import('react-devtools-shared/src/hooks/parseHookNames');
+          import(
+            /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
+          );
 
         root = createRoot(document.createElement('div'));
 

@@ -35,6 +35,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     useReducer: unsupported,
     useRef: unsupported,
     useState: unsupported,
+    useInsertionEffect: unsupported,
     useLayoutEffect: unsupported,
     useCallback: unsupported,
     useImperativeHandle: unsupported,
@@ -43,7 +44,6 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     useDeferredValue: unsupported,
     useTransition: unsupported,
     useOpaqueIdentifier: unsupported,
-    useMutableSource: unsupported,
     useSyncExternalStore: unsupported,
     useCacheRefresh: unsupported,
   };

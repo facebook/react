@@ -49,10 +49,10 @@ import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 import {sourceMapIncludesSource} from '../SourceMapUtils';
 import {
-  withAsyncPerformanceMark,
-  withCallbackPerformanceMark,
-  withSyncPerformanceMark,
-} from 'react-devtools-shared/src/PerformanceMarks';
+  withAsyncPerfMeasurements,
+  withCallbackPerfMeasurements,
+  withSyncPerfMeasurements,
+} from 'react-devtools-shared/src/PerformanceLoggingUtils';
 
 import type {
   HooksNode,
@@ -98,17 +98,17 @@ export async function loadSourceAndMetadata(
   hooksList: HooksList,
   fetchFileWithCaching: FetchFileWithCaching | null,
 ): Promise<LocationKeyToHookSourceAndMetadata> {
-  return withAsyncPerformanceMark('loadSourceAndMetadata()', async () => {
-    const locationKeyToHookSourceAndMetadata = withSyncPerformanceMark(
+  return withAsyncPerfMeasurements('loadSourceAndMetadata()', async () => {
+    const locationKeyToHookSourceAndMetadata = withSyncPerfMeasurements(
       'initializeHookSourceAndMetadata',
       () => initializeHookSourceAndMetadata(hooksList),
     );
 
-    await withAsyncPerformanceMark('loadSourceFiles()', () =>
+    await withAsyncPerfMeasurements('loadSourceFiles()', () =>
       loadSourceFiles(locationKeyToHookSourceAndMetadata, fetchFileWithCaching),
     );
 
-    await withAsyncPerformanceMark('extractAndLoadSourceMapJSON()', () =>
+    await withAsyncPerfMeasurements('extractAndLoadSourceMapJSON()', () =>
       extractAndLoadSourceMapJSON(locationKeyToHookSourceAndMetadata),
     );
 
@@ -157,7 +157,7 @@ function extractAndLoadSourceMapJSON(
     // TODO (named hooks) If this RegExp search is slow, we could try breaking it up
     // first using an indexOf(' sourceMappingURL=') to find the start of the comment
     // (probably at the end of the file) and then running the RegExp on the remaining substring.
-    let sourceMappingURLMatch = withSyncPerformanceMark(
+    let sourceMappingURLMatch = withSyncPerfMeasurements(
       'sourceMapRegex.exec(runtimeSourceCode)',
       () => sourceMapRegex.exec(runtimeSourceCode),
     );
@@ -185,12 +185,12 @@ function extractAndLoadSourceMapJSON(
             const trimmed = ((sourceMappingURL.match(
               /base64,([a-zA-Z0-9+\/=]+)/,
             ): any): Array<string>)[1];
-            const decoded = withSyncPerformanceMark(
+            const decoded = withSyncPerfMeasurements(
               'decodeBase64String()',
               () => decodeBase64String(trimmed),
             );
 
-            const sourceMapJSON = withSyncPerformanceMark(
+            const sourceMapJSON = withSyncPerfMeasurements(
               'JSON.parse(decoded)',
               () => JSON.parse(decoded),
             );
@@ -227,7 +227,7 @@ function extractAndLoadSourceMapJSON(
         }
 
         // If the first source map we found wasn't a match, check for more.
-        sourceMappingURLMatch = withSyncPerformanceMark(
+        sourceMappingURLMatch = withSyncPerfMeasurements(
           'sourceMapRegex.exec(runtimeSourceCode)',
           () => sourceMapRegex.exec(runtimeSourceCode),
         );
@@ -266,7 +266,7 @@ function extractAndLoadSourceMapJSON(
             dedupedFetchPromises.get(url) ||
             fetchFile(url).then(
               sourceMapContents => {
-                const sourceMapJSON = withSyncPerformanceMark(
+                const sourceMapJSON = withSyncPerfMeasurements(
                   'JSON.parse(sourceMapContents)',
                   () => JSON.parse(sourceMapContents),
                 );
@@ -316,7 +316,7 @@ function fetchFile(
   url: string,
   markName?: string = 'fetchFile',
 ): Promise<string> {
-  return withCallbackPerformanceMark(`${markName}("${url}")`, done => {
+  return withCallbackPerfMeasurements(`${markName}("${url}")`, done => {
     return new Promise((resolve, reject) => {
       fetch(url, FETCH_OPTIONS).then(
         response => {
@@ -376,7 +376,7 @@ export function hasNamedHooks(hooksTree: HooksTree): boolean {
 
 export function flattenHooksList(hooksTree: HooksTree): HooksList {
   const hooksList: HooksList = [];
-  withSyncPerformanceMark('flattenHooksList()', () => {
+  withSyncPerfMeasurements('flattenHooksList()', () => {
     flattenHooksListImpl(hooksTree, hooksList);
   });
 
@@ -472,7 +472,7 @@ function loadSourceFiles(
       // If a helper function has been injected to fetch with caching,
       // use it to fetch the (already loaded) source file.
       fetchFileFunction = url => {
-        return withAsyncPerformanceMark(
+        return withAsyncPerfMeasurements(
           `fetchFileWithCaching("${url}")`,
           () => {
             return ((fetchFileWithCaching: any): FetchFileWithCaching)(url);

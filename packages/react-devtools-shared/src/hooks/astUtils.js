@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {withSyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
+import {withSyncPerfMeasurements} from 'react-devtools-shared/src/PerformanceLoggingUtils';
 import traverse, {NodePath, Node} from '@babel/traverse';
 import {File} from '@babel/types';
 
@@ -132,7 +132,7 @@ export function getHookName(
   originalSourceLineNumber: number,
   originalSourceColumnNumber: number,
 ): string | null {
-  const hooksFromAST = withSyncPerformanceMark(
+  const hooksFromAST = withSyncPerfMeasurements(
     'getPotentialHookDeclarationsFromAST(originalSourceAST)',
     () => getPotentialHookDeclarationsFromAST(originalSourceAST),
   );
@@ -176,7 +176,7 @@ export function getHookName(
   // nodesAssociatedWithReactHookASTNode could directly be used to obtain the hook variable name
   // depending on the type of potentialReactHookASTNode
   try {
-    const nodesAssociatedWithReactHookASTNode = withSyncPerformanceMark(
+    const nodesAssociatedWithReactHookASTNode = withSyncPerfMeasurements(
       'getFilteredHookASTNodes()',
       () =>
         getFilteredHookASTNodes(
@@ -186,7 +186,7 @@ export function getHookName(
         ),
     );
 
-    const name = withSyncPerformanceMark('getHookNameFromNode()', () =>
+    const name = withSyncPerfMeasurements('getHookNameFromNode()', () =>
       getHookNameFromNode(
         hook,
         nodesAssociatedWithReactHookASTNode,
@@ -297,7 +297,7 @@ function getHookVariableName(
 
 function getPotentialHookDeclarationsFromAST(sourceAST: File): NodePath[] {
   const potentialHooksFound: NodePath[] = [];
-  withSyncPerformanceMark('traverse(sourceAST)', () =>
+  withSyncPerfMeasurements('traverse(sourceAST)', () =>
     traverse(sourceAST, {
       enter(path) {
         if (path.isVariableDeclarator() && isPotentialHookDeclaration(path)) {

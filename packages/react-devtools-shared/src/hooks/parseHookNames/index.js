@@ -12,7 +12,7 @@ import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames} from 'react-devtools-shared/src/types';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 
-import {withAsyncPerformanceMark} from 'react-devtools-shared/src/PerformanceMarks';
+import {withAsyncPerfMeasurements} from 'react-devtools-shared/src/PerformanceLoggingUtils';
 import WorkerizedParseSourceAndMetadata from './parseSourceAndMetadata.worker';
 import typeof * as ParseSourceAndMetadataModule from './parseSourceAndMetadata';
 import {flattenHooksList, loadSourceAndMetadata} from './loadSourceAndMetadata';
@@ -37,7 +37,7 @@ export async function parseHookNames(
   hooksTree: HooksTree,
   fetchFileWithCaching: FetchFileWithCaching | null,
 ): Promise<HookNames | null> {
-  return withAsyncPerformanceMark('parseHookNames', async () => {
+  return withAsyncPerfMeasurements('parseHookNames', async () => {
     const hooksList = flattenHooksList(hooksTree);
     if (hooksList.length === 0) {
       // This component tree contains no named hooks.

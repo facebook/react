@@ -19,9 +19,9 @@ import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
 import {SourceMapMetadataConsumer} from '../SourceMapMetadataConsumer';
 import {
-  withAsyncPerformanceMark,
-  withSyncPerformanceMark,
-} from 'react-devtools-shared/src/PerformanceMarks';
+  withAsyncPerfMeasurements,
+  withSyncPerfMeasurements,
+} from 'react-devtools-shared/src/PerformanceLoggingUtils';
 
 import type {
   HooksList,
@@ -106,27 +106,27 @@ export async function parseSourceAndMetadata(
   hooksList: HooksList,
   locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
 ): Promise<HookNames | null> {
-  return withAsyncPerformanceMark('parseSourceAndMetadata()', async () => {
-    const locationKeyToHookParsedMetadata = withSyncPerformanceMark(
+  return withAsyncPerfMeasurements('parseSourceAndMetadata()', async () => {
+    const locationKeyToHookParsedMetadata = withSyncPerfMeasurements(
       'initializeHookParsedMetadata',
       () => initializeHookParsedMetadata(locationKeyToHookSourceAndMetadata),
     );
 
-    withSyncPerformanceMark('parseSourceMaps', () =>
+    withSyncPerfMeasurements('parseSourceMaps', () =>
       parseSourceMaps(
         locationKeyToHookSourceAndMetadata,
         locationKeyToHookParsedMetadata,
       ),
     );
 
-    withSyncPerformanceMark('parseSourceAST()', () =>
+    withSyncPerfMeasurements('parseSourceAST()', () =>
       parseSourceAST(
         locationKeyToHookSourceAndMetadata,
         locationKeyToHookParsedMetadata,
       ),
     );
 
-    return withSyncPerformanceMark('findHookNames()', () =>
+    return withSyncPerfMeasurements('findHookNames()', () =>
       findHookNames(hooksList, locationKeyToHookParsedMetadata),
     );
   });
@@ -174,7 +174,7 @@ function findHookNames(
     let name;
     const {metadataConsumer} = hookParsedMetadata;
     if (metadataConsumer != null) {
-      name = withSyncPerformanceMark('metadataConsumer.hookNameFor()', () =>
+      name = withSyncPerfMeasurements('metadataConsumer.hookNameFor()', () =>
         metadataConsumer.hookNameFor({
           line: originalSourceLineNumber,
           column: originalSourceColumnNumber,
@@ -184,7 +184,7 @@ function findHookNames(
     }
 
     if (name == null) {
-      name = withSyncPerformanceMark('getHookName()', () =>
+      name = withSyncPerfMeasurements('getHookName()', () =>
         getHookName(
           hook,
           hookParsedMetadata.originalSourceAST,
@@ -303,7 +303,7 @@ function parseSourceAST(
         // Now that the source map has been loaded,
         // extract the original source for later.
         // TODO (named hooks) Refactor this read, github.com/facebook/react/pull/22181
-        const {column, line, source} = withSyncPerformanceMark(
+        const {column, line, source} = withSyncPerfMeasurements(
           'sourceConsumer.originalPositionFor()',
           () =>
             sourceConsumer.originalPositionFor({
@@ -329,7 +329,7 @@ function parseSourceAST(
         // It can be relative if the source map specifies it that way,
         // but we use it as a cache key across different source maps and there can be collisions.
         originalSourceURL = (source: string);
-        originalSourceCode = withSyncPerformanceMark(
+        originalSourceCode = withSyncPerfMeasurements(
           'sourceConsumer.sourceContentFor()',
           () => (sourceConsumer.sourceContentFor(source, true): string),
         );
@@ -394,33 +394,41 @@ function parseSourceAST(
         hookParsedMetadata.originalSourceCode =
           sourceMetadata.originalSourceCode;
       } else {
-        // TypeScript is the most commonly used typed JS variant so let's default to it
-        // unless we detect explicit Flow usage via the "@flow" pragma.
-        const plugin =
-          originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
+        try {
+          // TypeScript is the most commonly used typed JS variant so let's default to it
+          // unless we detect explicit Flow usage via the "@flow" pragma.
+          const plugin =
+            originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
 
-        // TODO (named hooks) This is probably where we should check max source length,
-        // rather than in loadSourceAndMetatada -> loadSourceFiles().
-        const originalSourceAST = withSyncPerformanceMark(
-          '[@babel/parser] parse(originalSourceCode)',
-          () =>
-            parse(originalSourceCode, {
-              sourceType: 'unambiguous',
-              plugins: ['jsx', plugin],
-            }),
-        );
-        hookParsedMetadata.originalSourceAST = originalSourceAST;
+          // TODO (named hooks) This is probably where we should check max source length,
+          // rather than in loadSourceAndMetatada -> loadSourceFiles().
+          // TODO(#22319): Support source files that are html files with inline script tags.
+          const originalSourceAST = withSyncPerfMeasurements(
+            '[@babel/parser] parse(originalSourceCode)',
+            () =>
+              parse(originalSourceCode, {
+                sourceType: 'unambiguous',
+                plugins: ['jsx', plugin],
+              }),
+          );
+          hookParsedMetadata.originalSourceAST = originalSourceAST;
 
-        if (__DEBUG__) {
-          console.log(
-            `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
+          if (__DEBUG__) {
+            console.log(
+              `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
+            );
+          }
+
+          originalURLToMetadataCache.set(originalSourceURL, {
+            originalSourceAST,
+            originalSourceCode,
+          });
+        } catch (error) {
+          throw new Error(
+            `Failed to parse source file: ${originalSourceURL}\n\n` +
+              `Original error: ${error}`,
           );
         }
-
-        originalURLToMetadataCache.set(originalSourceURL, {
-          originalSourceAST,
-          originalSourceCode,
-        });
       }
     },
   );
@@ -441,11 +449,11 @@ function parseSourceMaps(
 
       const sourceMapJSON = hookSourceAndMetadata.sourceMapJSON;
       if (sourceMapJSON != null) {
-        hookParsedMetadata.metadataConsumer = withSyncPerformanceMark(
+        hookParsedMetadata.metadataConsumer = withSyncPerfMeasurements(
           'new SourceMapMetadataConsumer(sourceMapJSON)',
           () => new SourceMapMetadataConsumer(sourceMapJSON),
         );
-        hookParsedMetadata.sourceConsumer = withSyncPerformanceMark(
+        hookParsedMetadata.sourceConsumer = withSyncPerfMeasurements(
           'new SourceMapConsumer(sourceMapJSON)',
           () => new SourceMapConsumer(sourceMapJSON),
         );

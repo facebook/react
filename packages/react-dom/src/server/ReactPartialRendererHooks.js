@@ -9,12 +9,7 @@
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 
-import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
@@ -385,6 +380,22 @@ function useRef<T>(initialValue: T): {|current: T|} {
   }
 }
 
+function useInsertionEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+) {
+  if (__DEV__) {
+    currentHookNameInDev = 'useInsertionEffect';
+    console.error(
+      'useInsertionEffect does nothing on the server, because its effect cannot ' +
+        "be encoded into the server renderer's output format. This will lead " +
+        'to a mismatch between the initial, non-hydrated UI and the intended ' +
+        'UI. To avoid this, useInsertionEffect should only be used in ' +
+        'components that render exclusively on the client.',
+    );
+  }
+}
+
 export function useLayoutEffect(
   create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
@@ -450,23 +461,19 @@ export function useCallback<T>(
   return useMemo(() => callback, deps);
 }
 
-// TODO Decide on how to implement this hook for server rendering.
-// If a mutation occurs during render, consider triggering a Suspense boundary
-// and falling back to client rendering.
-function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  resolveCurrentlyRenderingComponent();
-  return getSnapshot(source._source);
-}
-
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
-  throw new Error('Not yet implemented');
+  if (getServerSnapshot === undefined) {
+    invariant(
+      false,
+      'Missing getServerSnapshot, which is required for ' +
+        'server-rendered content. Will revert to client rendering.',
+    );
+  }
+  return getServerSnapshot();
 }
 
 function useDeferredValue<T>(value: T): T {
@@ -508,6 +515,7 @@ export const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
+  useInsertionEffect,
   useLayoutEffect,
   useCallback,
   // useImperativeHandle is not run in the server environment
@@ -519,8 +527,6 @@ export const Dispatcher: DispatcherType = {
   useDeferredValue,
   useTransition,
   useOpaqueIdentifier,
-  // Subscriptions are not setup in a server environment.
-  useMutableSource,
   useSyncExternalStore,
 };
 

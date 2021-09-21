@@ -48,6 +48,7 @@ export const enableProfilerNestedUpdateScheduledHook =
 export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseLayoutEffectSemantics = true;
+export const enableSuspenseAvoidThisFallback = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler =
@@ -64,6 +65,7 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
+export const warnAboutCallbackRefReturningFunction = true;
 
 export const enableLazyElements = true;
 export const enableCache = true;

@@ -10,7 +10,7 @@
 import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 
-import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
+import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
 import {
   NoLane,
@@ -49,7 +49,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
 
   this.entangledLanes = NoLanes;
@@ -58,10 +57,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (enableCache) {
     this.pooledCache = null;
     this.pooledCacheLanes = NoLanes;
-  }
-
-  if (supportsHydration) {
-    this.mutableSourceEagerHydrationData = null;
   }
 
   if (enableSuspenseCallback) {
@@ -84,10 +79,10 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (__DEV__) {
     switch (tag) {
       case ConcurrentRoot:
-        this._debugRootType = 'createRoot()';
+        this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
         break;
       case LegacyRoot:
-        this._debugRootType = 'createLegacyRoot()';
+        this._debugRootType = hydrate ? 'hydrate()' : 'render()';
         break;
     }
   }

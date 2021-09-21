@@ -50,9 +50,11 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = false;
 export const warnOnSubscriptionInsideStartTransition = false;
+export const enableSuspenseAvoidThisFallback = false;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
+export const warnAboutCallbackRefReturningFunction = false;
 
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;

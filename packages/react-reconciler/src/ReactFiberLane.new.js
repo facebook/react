@@ -283,9 +283,9 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // time it takes to show the final state, which is what they are actually
   // waiting for.
   //
-  // For those exceptions where entanglement is semantically important, like
-  // useMutableSource, we should ensure that there is no partial work at the
-  // time we apply the entanglement.
+  // For those exceptions where entanglement is semantically important, we
+  // should ensure that there is no partial work at the time we apply the
+  // entanglement.
   const entangledLanes = root.entangledLanes;
   if (entangledLanes !== NoLanes) {
     const entanglements = root.entanglements;
@@ -453,27 +453,26 @@ export function includesOnlyTransitions(lanes: Lanes) {
   return (lanes & TransitionLanes) === lanes;
 }
 
-export function shouldTimeSlice(root: FiberRoot, lanes: Lanes) {
-  if ((lanes & root.expiredLanes) !== NoLanes) {
-    // At least one of these lanes expired. To prevent additional starvation,
-    // finish rendering without yielding execution.
-    return false;
-  }
-
+export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
   if (
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
   ) {
     // Concurrent updates by default always use time slicing.
-    return true;
+    return false;
   }
-
   const SyncDefaultLanes =
     InputContinuousHydrationLane |
     InputContinuousLane |
     DefaultHydrationLane |
     DefaultLane;
-  return (lanes & SyncDefaultLanes) === NoLanes;
+  return (lanes & SyncDefaultLanes) !== NoLanes;
+}
+
+export function includesExpiredLane(root: FiberRoot, lanes: Lanes) {
+  // This is a separate check from includesBlockingLane because a lane can
+  // expire after a render has already started.
+  return (lanes & root.expiredLanes) !== NoLanes;
 }
 
 export function isTransitionLane(lane: Lane) {
@@ -618,10 +617,6 @@ export function markRootPinged(
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
-export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
-  root.mutableReadLanes |= updateLane & root.pendingLanes;
-}
-
 export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
@@ -632,7 +627,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pingedLanes = 0;
 
   root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
 
