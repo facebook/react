@@ -84,6 +84,7 @@ const runtimeURLToMetadataCache: LRUCache<
       );
     }
 
+console.log(`runtimeURLToMetadataCache() dispose of "${runtimeSourceURL}"`);
     const sourceConsumer = metadata.sourceConsumer;
     if (sourceConsumer !== null) {
       sourceConsumer.destroy();
@@ -249,25 +250,6 @@ function initializeHookParsedMetadata(
       };
 
       locationKeyToHookParsedMetadata.set(locationKey, hookParsedMetadata);
-
-      const runtimeSourceURL = hookSourceAndMetadata.runtimeSourceURL;
-
-      // If we've already loaded the source map info for this file,
-      // we can skip reloading it (and more importantly, re-parsing it).
-      const runtimeMetadata = runtimeURLToMetadataCache.get(runtimeSourceURL);
-      if (runtimeMetadata != null) {
-        if (__DEBUG__) {
-          console.groupCollapsed(
-            `parseHookNames() Found cached runtime metadata for file "${runtimeSourceURL}"`,
-          );
-          console.log(runtimeMetadata);
-          console.groupEnd();
-        }
-        hookParsedMetadata.metadataConsumer = runtimeMetadata.metadataConsumer;
-        hookParsedMetadata.sourceConsumer = runtimeMetadata.sourceConsumer;
-        hookParsedMetadata.sourceMapConsumer =
-          runtimeMetadata.sourceMapConsumer;
-      }
     },
   );
 
@@ -635,32 +617,40 @@ function parseSourceMaps(
       }
 
       const sourceMapJSON = hookSourceAndMetadata.sourceMapJSON;
-      if (sourceMapJSON != null) {
-        hookParsedMetadata.metadataConsumer = withSyncPerfMeasurements(
-          'new SourceMapMetadataConsumer(sourceMapJSON)',
-          () => new SourceMapMetadataConsumer(sourceMapJSON),
-        );
-        hookParsedMetadata.sourceConsumer = withSyncPerfMeasurements(
-          'new SourceMapConsumer(sourceMapJSON)',
-          () => new SourceMapConsumer(sourceMapJSON),
-        );
 
-        const runtimeSourceURL = hookSourceAndMetadata.runtimeSourceURL;
-
-        // Only set once to avoid triggering eviction/cleanup code.
-        if (!runtimeURLToMetadataCache.has(runtimeSourceURL)) {
-          if (__DEBUG__) {
-            console.log(
-              `parseSourceMaps() Caching runtime metadata for "${runtimeSourceURL}"`,
-            );
-          }
-
-          runtimeURLToMetadataCache.set(runtimeSourceURL, {
-            metadataConsumer: hookParsedMetadata.metadataConsumer,
-            sourceConsumer: hookParsedMetadata.sourceConsumer,
-            sourceMapConsumer: null,
-          });
+      if (hookParsedMetadata.sourceConsumer === null) {
+        if (sourceMapJSON != null) {
+          hookParsedMetadata.sourceConsumer = withSyncPerfMeasurements(
+            'new SourceMapConsumer(sourceMapJSON)',
+            () => new SourceMapConsumer(sourceMapJSON),
+          );
         }
+      }
+
+      if (hookParsedMetadata.metadataConsumer === null) {
+        if (sourceMapJSON != null) {
+          hookParsedMetadata.metadataConsumer = withSyncPerfMeasurements(
+            'new SourceMapMetadataConsumer(sourceMapJSON)',
+            () => new SourceMapMetadataConsumer(sourceMapJSON),
+          );
+        }
+      }
+
+      const runtimeSourceURL = hookSourceAndMetadata.runtimeSourceURL;
+
+      // Only set once to avoid triggering eviction/cleanup code.
+      if (!runtimeURLToMetadataCache.has(runtimeSourceURL)) {
+        if (__DEBUG__) {
+          console.log(
+            `parseSourceMaps() Caching runtime metadata for "${runtimeSourceURL}"`,
+          );
+        }
+
+        runtimeURLToMetadataCache.set(runtimeSourceURL, {
+          metadataConsumer: hookParsedMetadata.metadataConsumer,
+          sourceConsumer: hookParsedMetadata.sourceConsumer,
+          sourceMapConsumer: null,
+        });
       }
     },
   );
@@ -679,31 +669,43 @@ function parseSourceMapsAlternate(
         throw Error(`Expected to find HookParsedMetadata for "${locationKey}"`);
       }
 
-      const sourceMapJSON = hookSourceAndMetadata.sourceMapJSON;
-      if (sourceMapJSON != null) {
-        hookParsedMetadata.metadataConsumer = withSyncPerfMeasurements(
-          'new SourceMapMetadataConsumer(sourceMapJSON)',
-          () => new SourceMapMetadataConsumer(sourceMapJSON),
-        );
-        hookParsedMetadata.sourceMapConsumer = withSyncPerfMeasurements(
-          'new SourceMapCodecConsumer(sourceMapJSON)',
-          () => SourceMapCodecConsumer(sourceMapJSON),
-        );
+      const {runtimeSourceURL, sourceMapJSON} = hookSourceAndMetadata;
 
-        const runtimeSourceURL = hookSourceAndMetadata.runtimeSourceURL;
+      // If we've already loaded the source map info for this file,
+      // we can skip reloading it (and more importantly, re-parsing it).
+      const runtimeMetadata = runtimeURLToMetadataCache.get(runtimeSourceURL);
+      if (runtimeMetadata != null) {
+        if (__DEBUG__) {
+          console.groupCollapsed(
+            `parseHookNames() Found cached runtime metadata for file "${runtimeSourceURL}"`,
+          );
+          console.log(runtimeMetadata);
+          console.groupEnd();
+        }
 
-        // Only set once to avoid triggering eviction/cleanup code.
-        if (!runtimeURLToMetadataCache.has(runtimeSourceURL)) {
-          if (__DEBUG__) {
-            console.log(
-              `parseSourceMaps() Caching runtime metadata for "${runtimeSourceURL}"`,
-            );
-          }
+        hookParsedMetadata.metadataConsumer = runtimeMetadata.metadataConsumer;
+        hookParsedMetadata.sourceConsumer = runtimeMetadata.sourceConsumer;
+        hookParsedMetadata.sourceMapConsumer = runtimeMetadata.sourceMapConsumer;
+      } else {
+        if (sourceMapJSON != null) {
+          const sourceMapConsumer = withSyncPerfMeasurements(
+            'new SourceMapCodecConsumer(sourceMapJSON)',
+            () => SourceMapCodecConsumer(sourceMapJSON),
+          );
 
+          const metadataConsumer = withSyncPerfMeasurements(
+            'new SourceMapMetadataConsumer(sourceMapJSON)',
+            () => new SourceMapMetadataConsumer(sourceMapJSON),
+          );
+
+          hookParsedMetadata.metadataConsumer = metadataConsumer;
+          hookParsedMetadata.sourceMapConsumer = sourceMapConsumer;
+
+          // Only set once to avoid triggering eviction/cleanup code.
           runtimeURLToMetadataCache.set(runtimeSourceURL, {
-            metadataConsumer: hookParsedMetadata.metadataConsumer,
+            metadataConsumer: metadataConsumer,
             sourceConsumer: null,
-            sourceMapConsumer: hookParsedMetadata.sourceMapConsumer,
+            sourceMapConsumer: sourceMapConsumer,
           });
         }
       }
