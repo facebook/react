@@ -7,13 +7,13 @@
  * @flow
  */
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {addEventListener, removeEventListener} from 'shared/Globals';
 
 export let passiveBrowserEventsSupported = false;
 
 // Check if browser support events with passive listeners
 // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
-if (canUseDOM) {
+if (addEventListener && removeEventListener) {
   try {
     const options = {};
     // $FlowFixMe: Ignore Flow complaining about needing a value
@@ -22,10 +22,8 @@ if (canUseDOM) {
         passiveBrowserEventsSupported = true;
       },
     });
-    // eslint-disable-next-line react-internal/no-raw-global-usage
-    window.addEventListener('test', options, options);
-    // eslint-disable-next-line react-internal/no-raw-global-usage
-    window.removeEventListener('test', options, options);
+    addEventListener('test', options, options);
+    removeEventListener('test', options, options);
   } catch (e) {
     passiveBrowserEventsSupported = false;
   }

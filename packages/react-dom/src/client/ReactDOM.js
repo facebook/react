@@ -19,6 +19,7 @@ import {
 } from './ReactDOMLegacy';
 import {createRoot, hydrateRoot, isValidContainer} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
+import {window} from 'shared/Globals';
 
 import {
   batchedUpdates,
@@ -196,15 +197,13 @@ const foundDevTools = injectIntoDevTools({
 });
 
 if (__DEV__) {
-  // eslint-disable-next-line react-internal/no-raw-global-usage
-  if (!foundDevTools && canUseDOM && window.top === window.self) {
+  if (!foundDevTools && canUseDOM && window && window.top === window.self) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&
         navigator.userAgent.indexOf('Edge') === -1) ||
       navigator.userAgent.indexOf('Firefox') > -1
     ) {
-      // eslint-disable-next-line react-internal/no-raw-global-usage
       const protocol = window.location.protocol;
       // Don't warn in exotic cases like chrome-extension://.
       if (/^(https?|file):$/.test(protocol)) {

@@ -19,6 +19,7 @@ export const addEventListener = windowDefined
   : undefined;
 export const dispatchEvent = windowDefined ? window.dispatchEvent : undefined;
 export const document = windowDefined ? window.document : undefined;
+export const fetch = windowDefined ? window.fetch : undefined;
 export const hasOwnProperty = windowDefined
   ? window.hasOwnProperty
   : global.hasOwnProperty;

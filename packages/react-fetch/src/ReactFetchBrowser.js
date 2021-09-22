@@ -8,7 +8,7 @@
  */
 
 import type {Wakeable} from 'shared/ReactTypes';
-
+import {fetch as nativeFetch} from 'shared/Globals';
 import {unstable_getCacheForType} from 'react';
 
 const Pending = 0;
@@ -31,10 +31,6 @@ type RejectedRecord = {|
 |};
 
 type Record = PendingRecord | ResolvedRecord | RejectedRecord;
-
-// TODO: this is a browser-only version. Add a separate Node entry point.
-// eslint-disable-next-line react-internal/no-raw-global-usage
-const nativeFetch = window.fetch;
 
 function getRecordMap(): Map<string, Record> {
   return unstable_getCacheForType(createRecordMap);
@@ -133,7 +129,8 @@ function preloadRecord(url: string, options: mixed): Record {
         throw Error('Unsupported option');
       }
     }
-    const thenable = nativeFetch(url, options);
+    // TODO: this is a browser-only version. Add a separate Node entry point.
+    const thenable = (nativeFetch: any)(url, options);
     record = createRecordFromThenable(thenable);
     map.set(url, record);
   }

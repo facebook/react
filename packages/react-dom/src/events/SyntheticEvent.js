@@ -10,6 +10,7 @@
 /* eslint valid-typeof: 0 */
 
 import getEventCharCode from './getEventCharCode';
+import {window} from 'shared/Globals';
 
 type EventInterfaceType = {
   [propName: string]: 0 | ((event: {[propName: string]: mixed}) => mixed),
@@ -265,8 +266,7 @@ const ClipboardEventInterface: EventInterfaceType = {
   clipboardData: function(event) {
     return 'clipboardData' in event
       ? event.clipboardData
-      : // eslint-disable-next-line react-internal/no-raw-global-usage
-        window.clipboardData;
+      : (window: any).clipboardData;
   },
 };
 export const SyntheticClipboardEvent = createSyntheticEvent(

@@ -14,7 +14,7 @@ function reportUnexpectedGlobal(context, node) {
     node: node,
     message:
       'Unexpected use of {{global}}. Please import {{identifier}} from ' +
-      'shared/Globals to ensure safe access. ',
+      'shared/Globals to ensure safe access.',
     data: {
       identifier: node.property.name,
       global: node.object.name,

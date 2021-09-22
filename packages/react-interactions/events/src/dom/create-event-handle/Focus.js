@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import useEvent from './useEvent';
+import {window, PointerEvent, addEventListener} from 'shared/Globals';
 
 const {useCallback, useEffect, useLayoutEffect, useRef} = React;
 
@@ -33,15 +34,11 @@ type UseFocusWithinOptions = {
 };
 
 const isMac =
-  // eslint-disable-next-line react-internal/no-raw-global-usage
-  typeof window !== 'undefined' && window.navigator != null
-    ? // eslint-disable-next-line react-internal/no-raw-global-usage
-      /^Mac/.test(window.navigator.platform)
+  window && window.navigator != null
+    ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const hasPointerEvents =
-  // eslint-disable-next-line react-internal/no-raw-global-usage
-  typeof window !== 'undefined' && window.PointerEvent != null;
+const hasPointerEvents = PointerEvent != null;
 
 const globalFocusVisibleEvents = hasPointerEvents
   ? ['keydown', 'pointermove', 'pointerdown', 'pointerup']
@@ -61,8 +58,7 @@ let hasTrackedGlobalFocusVisible = false;
 
 function trackGlobalFocusVisible() {
   globalFocusVisibleEvents.forEach(type => {
-    // eslint-disable-next-line react-internal/no-raw-global-usage
-    window.addEventListener(type, handleGlobalFocusVisibleEvent, true);
+    (addEventListener: any)(type, handleGlobalFocusVisibleEvent, true);
   });
 }
 
