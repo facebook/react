@@ -91,6 +91,22 @@ jobs:
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
+  scrape_warning_messages:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          command: |
+            mkdir -p ./build
+            node ./scripts/print-warnings/print-warnings.js > build/WARNINGS
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
 
   yarn_build_combined:
     docker: *docker
@@ -345,8 +361,12 @@ workflows:
       - yarn_build_combined:
           requires:
             - setup
+      - scrape_warning_messages:
+          requires:
+            - setup
       - process_artifacts_combined:
           requires:
+            - scrape_warning_messages
             - yarn_build_combined
       - yarn_test_build:
           requires:
