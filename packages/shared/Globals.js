@@ -36,4 +36,4 @@ export const removeEventListener = windowDefined
   : undefined;
 export const setInterval = windowDefined ? window.setInterval : undefined;
 export const setTimeout = windowDefined ? window.setTimeout : undefined;
-export const scheduler = windowDefined ? window.scheduler : global.scheduler;
+export const scheduler = global.scheduler;
