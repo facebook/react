@@ -120,6 +120,14 @@ jobs:
               cd ./scripts/release && yarn && cd ../../
               scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main)
               mv ./build ./base-build
+      - run:
+          # TODO: The `download-experimental-build` script copies the npm
+          # packages into the `node_modules` directory. This is a historical
+          # quirk of how the release script works. Let's pretend they
+          # don't exist.
+          name: Delete extraneous files
+          command: rm -rf ./base-build/node_modules
+
       - persist_to_workspace:
           root: .
           paths:
