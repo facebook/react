@@ -46,6 +46,7 @@ import {
   findBoundingRects as findBoundingRects_old,
   focusWithin as focusWithin_old,
   observeVisibleRects as observeVisibleRects_old,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_old,
   runWithPriority as runWithPriority_old,
   getCurrentUpdatePriority as getCurrentUpdatePriority_old,
 } from './ReactFiberReconciler.old';
@@ -82,6 +83,7 @@ import {
   findBoundingRects as findBoundingRects_new,
   focusWithin as focusWithin_new,
   observeVisibleRects as observeVisibleRects_new,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_new,
   runWithPriority as runWithPriority_new,
   getCurrentUpdatePriority as getCurrentUpdatePriority_new,
 } from './ReactFiberReconciler.new';
@@ -182,6 +184,9 @@ export const focusWithin = enableNewReconciler
 export const observeVisibleRects = enableNewReconciler
   ? observeVisibleRects_new
   : observeVisibleRects_old;
+export const registerMutableSourceForHydration = enableNewReconciler
+  ? registerMutableSourceForHydration_new
+  : registerMutableSourceForHydration_old;
 export const runWithPriority = enableNewReconciler
   ? runWithPriority_new
   : runWithPriority_old;

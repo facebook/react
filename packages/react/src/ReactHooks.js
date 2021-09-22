@@ -8,7 +8,12 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {ReactContext} from 'shared/ReactTypes';
+import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
+  ReactContext,
+} from 'shared/ReactTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
@@ -161,6 +166,15 @@ export function useDeferredValue<T>(value: T): T {
 export function useOpaqueIdentifier(): OpaqueIDType | void {
   const dispatcher = resolveDispatcher();
   return dispatcher.useOpaqueIdentifier();
+}
+
+export function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }
 
 export function useSyncExternalStore<T>(

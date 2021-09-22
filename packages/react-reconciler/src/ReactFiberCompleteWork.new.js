@@ -30,6 +30,8 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
+
 import {now} from './Scheduler';
 
 import {
@@ -852,6 +854,7 @@ function completeWork(
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
+      resetMutableSourceWorkInProgressVersions();
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
         fiberRoot.pendingContext = null;

@@ -12,6 +12,7 @@ import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes, Lane} from './ReactFiberLane.old';
+import type {MutableSource} from 'shared/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -144,6 +145,7 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
   registerSuspenseInstanceRetry,
+  supportsHydration,
   isPrimaryRenderer,
   supportsPersistence,
   getOffscreenContainerProps,
@@ -218,6 +220,7 @@ import {
   RetryAfterError,
   NoContext,
 } from './ReactFiberWorkLoop.old';
+import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {
   requestCacheFromPool,
   pushCacheProvider,
@@ -1297,6 +1300,21 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     // We always try to hydrate. If this isn't a hydration pass there won't
     // be any children to hydrate which is effectively the same thing as
     // not hydrating.
+
+    if (supportsHydration) {
+      const mutableSourceEagerHydrationData =
+        root.mutableSourceEagerHydrationData;
+      if (mutableSourceEagerHydrationData != null) {
+        for (let i = 0; i < mutableSourceEagerHydrationData.length; i += 2) {
+          const mutableSource = ((mutableSourceEagerHydrationData[
+            i
+          ]: any): MutableSource<any>);
+          const version = mutableSourceEagerHydrationData[i + 1];
+          setWorkInProgressVersion(mutableSource, version);
+        }
+      }
+    }
+
     const child = mountChildFibers(
       workInProgress,
       null,
