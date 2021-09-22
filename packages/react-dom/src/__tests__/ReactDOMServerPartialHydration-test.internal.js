@@ -2671,32 +2671,4 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
-
-  it('should retry on client if something throws', async () => {
-    let isServer = true;
-    function ThrowsOnServerOnly() {
-      if (isServer) {
-        throw new Error('Oops!');
-      }
-      return 'Yay!';
-    }
-
-    function App() {
-      return (
-        <React.Suspense fallback="Loading...">
-          <ThrowsOnServerOnly />
-        </React.Suspense>
-      );
-    }
-
-    const element = document.createElement('div');
-    element.innerHTML = ReactDOMServer.renderToString(<App />);
-    expect(element.textContent).toBe('Loading...');
-
-    isServer = false;
-    await act(async () => {
-      ReactDOM.hydrateRoot(element, <App />);
-    });
-    expect(element.textContent).toBe('Yay!');
-  });
 });
