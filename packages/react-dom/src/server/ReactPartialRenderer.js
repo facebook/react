@@ -969,22 +969,33 @@ class ReactDOMServerRenderer {
         try {
           outBuffer += this.render(child, frame.context, frame.domNamespace);
         } catch (err) {
-          if (err != null && typeof err.then === 'function') {
-            if (enableSuspenseServerRenderer) {
-              invariant(
-                this.suspenseDepth > 0,
-                // TODO: include component name. This is a bit tricky with current factoring.
-                'A React component suspended while rendering, but no fallback UI was specified.\n' +
-                  '\n' +
-                  'Add a <Suspense fallback=...> component higher in the tree to ' +
-                  'provide a loading indicator or placeholder to display.',
-              );
+          if (enableSuspenseServerRenderer) {
+            if (this.suspenseDepth > 0) {
+              // Regardless of whether this is an error or a suspense thenable,
+              // trigger the nearest Suspense boundary. We'll try to render this
+              // tree again on the client.
               suspended = true;
             } else {
-              invariant(false, 'ReactDOMServer does not yet support Suspense.');
+              // Missing a Suspense boundary. This is a fatal error.
+              if (err != null && typeof err.then === 'function') {
+                invariant(
+                  false,
+                  // TODO: include component name. This is a bit tricky with current factoring.
+                  'A React component suspended while rendering, but no fallback UI was specified.\n' +
+                    '\n' +
+                    'Add a <Suspense fallback=...> component higher in the tree to ' +
+                    'provide a loading indicator or placeholder to display.',
+                );
+              } else {
+                throw err;
+              }
             }
           } else {
-            throw err;
+            if (err != null && typeof err.then === 'function') {
+              invariant(false, 'ReactDOMServer does not yet support Suspense.');
+            } else {
+              throw err;
+            }
           }
         } finally {
           if (__DEV__) {
