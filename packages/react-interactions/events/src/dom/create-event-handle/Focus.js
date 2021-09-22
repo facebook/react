@@ -33,11 +33,14 @@ type UseFocusWithinOptions = {
 };
 
 const isMac =
+  // eslint-disable-next-line react-internal/no-raw-global-usage
   typeof window !== 'undefined' && window.navigator != null
-    ? /^Mac/.test(window.navigator.platform)
+    ? // eslint-disable-next-line react-internal/no-raw-global-usage
+      /^Mac/.test(window.navigator.platform)
     : false;
 
 const hasPointerEvents =
+  // eslint-disable-next-line react-internal/no-raw-global-usage
   typeof window !== 'undefined' && window.PointerEvent != null;
 
 const globalFocusVisibleEvents = hasPointerEvents
@@ -58,6 +61,7 @@ let hasTrackedGlobalFocusVisible = false;
 
 function trackGlobalFocusVisible() {
   globalFocusVisibleEvents.forEach(type => {
+    // eslint-disable-next-line react-internal/no-raw-global-usage
     window.addEventListener(type, handleGlobalFocusVisibleEvent, true);
   });
 }

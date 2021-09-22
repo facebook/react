@@ -265,7 +265,8 @@ const ClipboardEventInterface: EventInterfaceType = {
   clipboardData: function(event) {
     return 'clipboardData' in event
       ? event.clipboardData
-      : window.clipboardData;
+      : // eslint-disable-next-line react-internal/no-raw-global-usage
+        window.clipboardData;
   },
 };
 export const SyntheticClipboardEvent = createSyntheticEvent(

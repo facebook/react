@@ -22,7 +22,9 @@ if (canUseDOM) {
         passiveBrowserEventsSupported = true;
       },
     });
+    // eslint-disable-next-line react-internal/no-raw-global-usage
     window.addEventListener('test', options, options);
+    // eslint-disable-next-line react-internal/no-raw-global-usage
     window.removeEventListener('test', options, options);
   } catch (e) {
     passiveBrowserEventsSupported = false;

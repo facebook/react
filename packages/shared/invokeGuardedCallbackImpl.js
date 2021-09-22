@@ -8,6 +8,13 @@
  */
 
 import invariant from 'shared/invariant';
+import {
+  dispatchEvent,
+  document,
+  addEventListener,
+  removeEventListener,
+  window,
+} from 'shared/Globals';
 
 function invokeGuardedCallbackProd<A, B, C, D, E, F, Context>(
   name: string | null,
@@ -53,10 +60,11 @@ if (__DEV__) {
   // Check that the browser supports the APIs we need to implement our special
   // DEV version of invokeGuardedCallback
   if (
-    typeof window !== 'undefined' &&
-    typeof window.dispatchEvent === 'function' &&
-    typeof document !== 'undefined' &&
-    typeof document.createEvent === 'function'
+    dispatchEvent &&
+    addEventListener &&
+    removeEventListener &&
+    window &&
+    document
   ) {
     const fakeNode = document.createElement('react');
 

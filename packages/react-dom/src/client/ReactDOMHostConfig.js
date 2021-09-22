@@ -375,6 +375,7 @@ export function createTextInstance(
 }
 
 export function getCurrentEventPriority(): * {
+  // eslint-disable-next-line react-internal/no-raw-global-usage
   const currentEvent = window.event;
   if (currentEvent === undefined) {
     return DefaultEventPriority;

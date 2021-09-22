@@ -112,6 +112,7 @@ module.exports = {
     'react-internal/invariant-args': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
+    'react-internal/no-raw-global-usage': ERROR,
     'react-internal/no-cross-fork-imports': ERROR,
     'react-internal/no-cross-fork-types': [
       ERROR,
@@ -159,6 +160,7 @@ module.exports = {
         'jest/no-focused-tests': ERROR,
         'jest/valid-expect': ERROR,
         'jest/valid-expect-in-promise': ERROR,
+        'react-internal/no-raw-global-usage': OFF,
       },
     },
     {
@@ -172,6 +174,7 @@ module.exports = {
       rules: {
         'react-internal/no-production-logging': OFF,
         'react-internal/warning-args': OFF,
+        'react-internal/no-raw-global-usage': OFF,
 
         // Disable accessibility checks
         'jsx-a11y/aria-role': OFF,
@@ -185,7 +188,7 @@ module.exports = {
     {
       files: [
         'scripts/eslint-rules/*.js',
-        'packages/eslint-plugin-react-hooks/src/*.js'
+        'packages/eslint-plugin-react-hooks/src/*.js',
       ],
       plugins: ['eslint-plugin'],
       rules: {

@@ -179,4 +179,5 @@ const RCTFabricUIManager = {
   setIsJSResponder: jest.fn(),
 };
 
+// eslint-disable-next-line react-internal/no-raw-global-usage
 global.nativeFabricUIManager = RCTFabricUIManager;

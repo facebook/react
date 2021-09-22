@@ -8,6 +8,7 @@
  */
 
 import type {PriorityLevel} from '../SchedulerPriorities';
+import {scheduler, performance as perf, setTimeout} from 'shared/Globals';
 
 declare class TaskController {
   constructor(priority?: string): TaskController;
@@ -37,14 +38,7 @@ export {
   LowPriority as unstable_LowPriority,
 };
 
-// Capture local references to native APIs, in case a polyfill overrides them.
-const perf = window.performance;
-const setTimeout = window.setTimeout;
-
-// Use experimental Chrome Scheduler postTask API.
-const scheduler = global.scheduler;
-
-const getCurrentTime = perf.now.bind(perf);
+const getCurrentTime = perf ? perf.now.bind(perf) : () => 0;
 
 export const unstable_now = getCurrentTime;
 
@@ -160,9 +154,11 @@ function runTask<T>(
     // (non-Promise) tasks get for unhandled errors.
     //
     // So we'll re-throw the error inside a regular browser task.
-    setTimeout(() => {
-      throw error;
-    });
+    if (setTimeout) {
+      setTimeout(() => {
+        throw error;
+      });
+    }
   } finally {
     currentPriorityLevel_DEPRECATED = NormalPriority;
   }

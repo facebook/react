@@ -33,6 +33,7 @@ type RejectedRecord = {|
 type Record = PendingRecord | ResolvedRecord | RejectedRecord;
 
 // TODO: this is a browser-only version. Add a separate Node entry point.
+// eslint-disable-next-line react-internal/no-raw-global-usage
 const nativeFetch = window.fetch;
 
 function getRecordMap(): Map<string, Record> {
