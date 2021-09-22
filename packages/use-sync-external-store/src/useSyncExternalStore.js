@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/Globals';
 import {useSyncExternalStore as client} from './useSyncExternalStoreClient';
 import {useSyncExternalStore as server} from './useSyncExternalStoreServer';
 

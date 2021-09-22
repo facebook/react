@@ -14,6 +14,12 @@ const windowDefined = typeof window !== 'undefined';
 
 export const PointerEvent = windowDefined ? window.PointerEvent : undefined;
 
+export const canUseDOM: boolean = !!(
+  windowDefined &&
+  typeof window.document !== 'undefined' &&
+  typeof window.document.createElement !== 'undefined'
+);
+
 export const addEventListener = windowDefined
   ? window.addEventListener
   : undefined;

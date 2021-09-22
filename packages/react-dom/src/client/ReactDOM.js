@@ -38,7 +38,7 @@ import {
   getCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/Globals';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 import {

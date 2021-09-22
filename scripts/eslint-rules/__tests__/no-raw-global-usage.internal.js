@@ -11,7 +11,12 @@
 
 const rule = require('../no-production-logging');
 const {RuleTester} = require('eslint');
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester({
+  parserOptions: {
+    ecmaVersion: 8,
+    sourceType: 'module',
+  },
+});
 
 ruleTester.run('no-production-logging', rule, {
   valid: [
@@ -26,11 +31,12 @@ ruleTester.run('no-production-logging', rule, {
   ],
   invalid: [
     {
-      code: "window.addEventListener('click', (e) => {})",
+      code: 'window.setTimeout(() => {}, 1000)',
+      filename: 'test.js',
       errors: [
         {
           message:
-            'Unexpected use of window. Please import addEventListener from ' +
+            'Unexpected use of window. Please import setTimeout from ' +
             'shared/Globals to ensure safe access.',
         },
       ],

@@ -53,6 +53,14 @@ module.exports = {
           reportUnexpectedGlobal(context, node);
         }
       },
+
+      Program: function() {
+        const scope = context.getScope();
+        scope.variables.forEach(variable => {
+          if (!variable.defs.length) {
+          }
+        });
+      },
     };
   },
 };

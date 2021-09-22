@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/Globals';
 
 /**
  * Checks if an event is supported in the current execution environment.

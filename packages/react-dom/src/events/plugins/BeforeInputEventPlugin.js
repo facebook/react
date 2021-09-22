@@ -13,7 +13,7 @@ import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/Globals';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
 import {

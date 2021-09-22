@@ -12,7 +12,7 @@ import {
   possibleRegistrationNames,
 } from '../events/EventRegistry';
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/Globals';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
 import {
