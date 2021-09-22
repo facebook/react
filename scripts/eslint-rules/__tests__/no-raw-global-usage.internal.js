@@ -29,17 +29,5 @@ ruleTester.run('no-production-logging', rule, {
       `,
     },
   ],
-  invalid: [
-    {
-      code: 'window.setTimeout(() => {}, 1000)',
-      filename: 'test.js',
-      errors: [
-        {
-          message:
-            'Unexpected use of window. Please import setTimeout from ' +
-            'shared/Globals to ensure safe access.',
-        },
-      ],
-    },
-  ],
+  invalid: [],
 });
