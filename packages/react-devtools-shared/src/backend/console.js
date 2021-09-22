@@ -14,7 +14,6 @@ import {format} from './utils';
 
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
-import {consoleManagedByDevToolsDuringStrictMode} from 'react-devtools-feature-flags';
 
 const OVERRIDE_CONSOLE_METHODS = ['error', 'trace', 'warn'];
 const DIMMED_NODE_CONSOLE_COLOR = '\x1b[2m%s\x1b[0m';
@@ -299,66 +298,62 @@ let unpatchForStrictModeFn: null | (() => void) = null;
 
 // NOTE: KEEP IN SYNC with src/hook.js:patchConsoleForInitialRenderInStrictMode
 export function patchForStrictMode() {
-  if (consoleManagedByDevToolsDuringStrictMode) {
-    const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
+  const overrideConsoleMethods = ['error', 'trace', 'warn', 'log'];
 
-    if (unpatchForStrictModeFn !== null) {
-      // Don't patch twice.
-      return;
-    }
+  if (unpatchForStrictModeFn !== null) {
+    // Don't patch twice.
+    return;
+  }
 
-    const originalConsoleMethods = {};
+  const originalConsoleMethods = {};
 
-    unpatchForStrictModeFn = () => {
-      for (const method in originalConsoleMethods) {
-        try {
-          // $FlowFixMe property error|warn is not writable.
-          targetConsole[method] = originalConsoleMethods[method];
-        } catch (error) {}
-      }
-    };
-
-    overrideConsoleMethods.forEach(method => {
+  unpatchForStrictModeFn = () => {
+    for (const method in originalConsoleMethods) {
       try {
-        const originalMethod = (originalConsoleMethods[method] = targetConsole[
-          method
-        ].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
-          ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
-          : targetConsole[method]);
+        // $FlowFixMe property error|warn is not writable.
+        targetConsole[method] = originalConsoleMethods[method];
+      } catch (error) {}
+    }
+  };
 
-        const overrideMethod = (...args) => {
-          if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
-            // Dim the text color of the double logs if we're not
-            // hiding them.
-            if (isNode) {
-              originalMethod(DIMMED_NODE_CONSOLE_COLOR, format(...args));
+  overrideConsoleMethods.forEach(method => {
+    try {
+      const originalMethod = (originalConsoleMethods[method] = targetConsole[
+        method
+      ].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
+        ? targetConsole[method].__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__
+        : targetConsole[method]);
+
+      const overrideMethod = (...args) => {
+        if (!consoleSettingsRef.hideConsoleLogsInStrictMode) {
+          // Dim the text color of the double logs if we're not
+          // hiding them.
+          if (isNode) {
+            originalMethod(DIMMED_NODE_CONSOLE_COLOR, format(...args));
+          } else {
+            const color = getConsoleColor(method);
+            if (color) {
+              originalMethod(`%c${format(...args)}`, `color: ${color}`);
             } else {
-              const color = getConsoleColor(method);
-              if (color) {
-                originalMethod(`%c${format(...args)}`, `color: ${color}`);
-              } else {
-                throw Error('Console color is not defined');
-              }
+              throw Error('Console color is not defined');
             }
           }
-        };
+        }
+      };
 
-        overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
-        originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
+      overrideMethod.__REACT_DEVTOOLS_STRICT_MODE_ORIGINAL_METHOD__ = originalMethod;
+      originalMethod.__REACT_DEVTOOLS_STRICT_MODE_OVERRIDE_METHOD__ = overrideMethod;
 
-        // $FlowFixMe property error|warn is not writable.
-        targetConsole[method] = overrideMethod;
-      } catch (error) {}
-    });
-  }
+      // $FlowFixMe property error|warn is not writable.
+      targetConsole[method] = overrideMethod;
+    } catch (error) {}
+  });
 }
 
 // NOTE: KEEP IN SYNC with src/hook.js:unpatchConsoleForInitialRenderInStrictMode
 export function unpatchForStrictMode(): void {
-  if (consoleManagedByDevToolsDuringStrictMode) {
-    if (unpatchForStrictModeFn !== null) {
-      unpatchForStrictModeFn();
-      unpatchForStrictModeFn = null;
-    }
+  if (unpatchForStrictModeFn !== null) {
+    unpatchForStrictModeFn();
+    unpatchForStrictModeFn = null;
   }
 }

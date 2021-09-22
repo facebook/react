@@ -72,7 +72,7 @@ export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 
-export const consoleManagedByDevToolsDuringStrictMode = false;
+export const consoleManagedByDevToolsDuringStrictMode = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

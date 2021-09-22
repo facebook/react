@@ -10,7 +10,7 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 
-export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
@@ -64,7 +64,7 @@ export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = false;
 export const enablePersistentOffscreenHostContainer = false;
 
-export const consoleManagedByDevToolsDuringStrictMode = false;
+export const consoleManagedByDevToolsDuringStrictMode = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
