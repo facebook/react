@@ -12,7 +12,6 @@
 
 import {parse} from '@babel/parser';
 import LRU from 'lru-cache';
-import {SourceMapConsumer} from 'source-map-js';
 import {getHookName} from '../astUtils';
 import {areSourceMapsAppliedToErrors} from '../ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
@@ -22,7 +21,7 @@ import {
   withAsyncPerfMeasurements,
   withSyncPerfMeasurements,
 } from 'react-devtools-shared/src/PerformanceLoggingUtils';
-import SourceMapCodecConsumer from '../SourceMapConsumer';
+import SourceMapConsumer from '../SourceMapConsumer';
 
 import type {SourceMapConsumerType} from '../SourceMapConsumer';
 import type {
@@ -31,9 +30,6 @@ import type {
 } from './loadSourceAndMetadata';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
-import type {SourceConsumer} from '../astUtils';
-
-const USE_ALTERNATE_SOURCE_MAP = true;
 
 type AST = mixed;
 
@@ -57,9 +53,6 @@ type HookParsedMetadata = {|
   // Column number in original source code.
   originalSourceColumnNumber: number | null,
 
-  // APIs from source-map for parsing source maps (if detected).
-  sourceConsumer: SourceConsumer | null,
-
   // Alternate APIs from source-map for parsing source maps (if detected).
   sourceMapConsumer: SourceMapConsumerType | null,
 |};
@@ -68,29 +61,13 @@ type LocationKeyToHookParsedMetadata = Map<string, HookParsedMetadata>;
 
 type CachedRuntimeCodeMetadata = {|
   metadataConsumer: SourceMapMetadataConsumer | null,
-  sourceConsumer: SourceConsumer | null,
   sourceMapConsumer: SourceMapConsumerType | null,
 |};
 
 const runtimeURLToMetadataCache: LRUCache<
   string,
   CachedRuntimeCodeMetadata,
-> = new LRU({
-  max: 50,
-  dispose: (runtimeSourceURL: string, metadata: CachedRuntimeCodeMetadata) => {
-    if (__DEBUG__) {
-      console.log(
-        `runtimeURLToMetadataCache.dispose() Evicting cached metadata for "${runtimeSourceURL}"`,
-      );
-    }
-
-console.log(`runtimeURLToMetadataCache() dispose of "${runtimeSourceURL}"`);
-    const sourceConsumer = metadata.sourceConsumer;
-    if (sourceConsumer !== null) {
-      sourceConsumer.destroy();
-    }
-  },
-});
+> = new LRU({max: 50});
 
 type CachedSourceCodeMetadata = {|
   originalSourceAST: AST,
@@ -121,35 +98,19 @@ export async function parseSourceAndMetadata(
       () => initializeHookParsedMetadata(locationKeyToHookSourceAndMetadata),
     );
 
-    if (USE_ALTERNATE_SOURCE_MAP) {
-      withSyncPerfMeasurements('parseSourceMapsAlternate', () =>
-        parseSourceMapsAlternate(
-          locationKeyToHookSourceAndMetadata,
-          locationKeyToHookParsedMetadata,
-        ),
-      );
+    withSyncPerfMeasurements('parseSourceMaps', () =>
+      parseSourceMaps(
+        locationKeyToHookSourceAndMetadata,
+        locationKeyToHookParsedMetadata,
+      ),
+    );
 
-      withSyncPerfMeasurements('parseSourceASTAlternate()', () =>
-        parseSourceASTAlternate(
-          locationKeyToHookSourceAndMetadata,
-          locationKeyToHookParsedMetadata,
-        ),
-      );
-    } else {
-      withSyncPerfMeasurements('parseSourceMaps', () =>
-        parseSourceMaps(
-          locationKeyToHookSourceAndMetadata,
-          locationKeyToHookParsedMetadata,
-        ),
-      );
-
-      withSyncPerfMeasurements('parseSourceAST()', () =>
-        parseSourceAST(
-          locationKeyToHookSourceAndMetadata,
-          locationKeyToHookParsedMetadata,
-        ),
-      );
-    }
+    withSyncPerfMeasurements('parseSourceAST()', () =>
+      parseSourceAST(
+        locationKeyToHookSourceAndMetadata,
+        locationKeyToHookParsedMetadata,
+      ),
+    );
 
     return withSyncPerfMeasurements('findHookNames()', () =>
       findHookNames(hooksList, locationKeyToHookParsedMetadata),
@@ -245,7 +206,6 @@ function initializeHookParsedMetadata(
         originalSourceURL: null,
         originalSourceLineNumber: null,
         originalSourceColumnNumber: null,
-        sourceConsumer: null,
         sourceMapConsumer: null,
       };
 
@@ -257,194 +217,6 @@ function initializeHookParsedMetadata(
 }
 
 function parseSourceAST(
-  locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
-  locationKeyToHookParsedMetadata: LocationKeyToHookParsedMetadata,
-): void {
-  locationKeyToHookSourceAndMetadata.forEach(
-    (hookSourceAndMetadata, locationKey) => {
-      const hookParsedMetadata = locationKeyToHookParsedMetadata.get(
-        locationKey,
-      );
-      if (hookParsedMetadata == null) {
-        throw Error(`Expected to find HookParsedMetadata for "${locationKey}"`);
-      }
-
-      if (hookParsedMetadata.originalSourceAST !== null) {
-        // Use cached metadata.
-        return;
-      }
-
-      if (
-        hookParsedMetadata.originalSourceURL != null &&
-        hookParsedMetadata.originalSourceCode != null &&
-        hookParsedMetadata.originalSourceColumnNumber != null &&
-        hookParsedMetadata.originalSourceLineNumber != null
-      ) {
-        // Use cached metadata.
-        return;
-      }
-
-      const {lineNumber, columnNumber} = hookSourceAndMetadata.hookSource;
-      if (lineNumber == null || columnNumber == null) {
-        throw Error('Hook source code location not found.');
-      }
-
-      const {metadataConsumer, sourceConsumer} = hookParsedMetadata;
-      const runtimeSourceCode = ((hookSourceAndMetadata.runtimeSourceCode: any): string);
-
-      let hasHookMap = false;
-      let originalSourceURL;
-      let originalSourceCode;
-      let originalSourceColumnNumber;
-      let originalSourceLineNumber;
-      if (areSourceMapsAppliedToErrors() || sourceConsumer == null) {
-        // Either the current environment automatically applies source maps to errors,
-        // or the current code had no source map to begin with.
-        // Either way, we don't need to convert the Error stack frame locations.
-        originalSourceColumnNumber = columnNumber;
-        originalSourceLineNumber = lineNumber;
-        // There's no source map to parse here so we can just parse the original source itself.
-        originalSourceCode = runtimeSourceCode;
-        // TODO (named hooks) This mixes runtimeSourceURLs with source mapped URLs in the same cache key space.
-        // Namespace them?
-        originalSourceURL = hookSourceAndMetadata.runtimeSourceURL;
-      } else {
-        // Parse and extract the AST from the source map.
-        // Now that the source map has been loaded,
-        // extract the original source for later.
-        // TODO (named hooks) Refactor this read, github.com/facebook/react/pull/22181
-        const {column, line, source} = withSyncPerfMeasurements(
-          'sourceConsumer.originalPositionFor()',
-          () =>
-            sourceConsumer.originalPositionFor({
-              line: lineNumber,
-
-              // Column numbers are represented differently between tools/engines.
-              // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
-              // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
-              column: columnNumber - 1,
-            }),
-        );
-
-        if (source == null) {
-          // TODO (named hooks) maybe fall back to the runtime source instead of throwing?
-          throw new Error(
-            'Could not map hook runtime location to original source location',
-          );
-        }
-
-        originalSourceColumnNumber = column;
-        originalSourceLineNumber = line;
-        // TODO (named hooks) maybe canonicalize this URL somehow?
-        // It can be relative if the source map specifies it that way,
-        // but we use it as a cache key across different source maps and there can be collisions.
-        originalSourceURL = (source: string);
-        originalSourceCode = withSyncPerfMeasurements(
-          'sourceConsumer.sourceContentFor()',
-          () => (sourceConsumer.sourceContentFor(source, true): string),
-        );
-
-        if (__DEBUG__) {
-          console.groupCollapsed(
-            `parseSourceAST() Extracted source code from source map for "${originalSourceURL}"`,
-          );
-          console.log(originalSourceCode);
-          console.groupEnd();
-        }
-
-        if (
-          metadataConsumer != null &&
-          metadataConsumer.hasHookMap(originalSourceURL)
-        ) {
-          hasHookMap = true;
-        }
-      }
-
-      if (__DEBUG__) {
-        console.log(
-          `parseSourceAST() mapped line ${lineNumber}->${originalSourceLineNumber} and column ${columnNumber}->${originalSourceColumnNumber}`,
-        );
-      }
-
-      hookParsedMetadata.originalSourceCode = originalSourceCode;
-      hookParsedMetadata.originalSourceURL = originalSourceURL;
-      hookParsedMetadata.originalSourceLineNumber = originalSourceLineNumber;
-      hookParsedMetadata.originalSourceColumnNumber = originalSourceColumnNumber;
-
-      if (hasHookMap) {
-        if (__DEBUG__) {
-          console.log(
-            `parseSourceAST() Found hookMap and skipping parsing for "${originalSourceURL}"`,
-          );
-        }
-        // If there's a hook map present from an extended sourcemap then
-        // we don't need to parse the source files and instead can use the
-        // hook map to extract hook names.
-        return;
-      }
-
-      if (__DEBUG__) {
-        console.log(
-          `parseSourceAST() Did not find hook map for "${originalSourceURL}"`,
-        );
-      }
-
-      // The cache also serves to deduplicate parsing by URL in our loop over location keys.
-      // This may need to change if we switch to async parsing.
-      const sourceMetadata = originalURLToMetadataCache.get(originalSourceURL);
-      if (sourceMetadata != null) {
-        if (__DEBUG__) {
-          console.groupCollapsed(
-            `parseSourceAST() Found cached source metadata for "${originalSourceURL}"`,
-          );
-          console.log(sourceMetadata);
-          console.groupEnd();
-        }
-        hookParsedMetadata.originalSourceAST = sourceMetadata.originalSourceAST;
-        hookParsedMetadata.originalSourceCode =
-          sourceMetadata.originalSourceCode;
-      } else {
-        try {
-          // TypeScript is the most commonly used typed JS variant so let's default to it
-          // unless we detect explicit Flow usage via the "@flow" pragma.
-          const plugin =
-            originalSourceCode.indexOf('@flow') > 0 ? 'flow' : 'typescript';
-
-          // TODO (named hooks) This is probably where we should check max source length,
-          // rather than in loadSourceAndMetatada -> loadSourceFiles().
-          // TODO(#22319): Support source files that are html files with inline script tags.
-          const originalSourceAST = withSyncPerfMeasurements(
-            '[@babel/parser] parse(originalSourceCode)',
-            () =>
-              parse(originalSourceCode, {
-                sourceType: 'unambiguous',
-                plugins: ['jsx', plugin],
-              }),
-          );
-          hookParsedMetadata.originalSourceAST = originalSourceAST;
-
-          if (__DEBUG__) {
-            console.log(
-              `parseSourceAST() Caching source metadata for "${originalSourceURL}"`,
-            );
-          }
-
-          originalURLToMetadataCache.set(originalSourceURL, {
-            originalSourceAST,
-            originalSourceCode,
-          });
-        } catch (error) {
-          throw new Error(
-            `Failed to parse source file: ${originalSourceURL}\n\n` +
-              `Original error: ${error}`,
-          );
-        }
-      }
-    },
-  );
-}
-
-function parseSourceASTAlternate(
   locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
   locationKeyToHookParsedMetadata: LocationKeyToHookParsedMetadata,
 ): void {
@@ -616,59 +388,6 @@ function parseSourceMaps(
         throw Error(`Expected to find HookParsedMetadata for "${locationKey}"`);
       }
 
-      const sourceMapJSON = hookSourceAndMetadata.sourceMapJSON;
-
-      if (hookParsedMetadata.sourceConsumer === null) {
-        if (sourceMapJSON != null) {
-          hookParsedMetadata.sourceConsumer = withSyncPerfMeasurements(
-            'new SourceMapConsumer(sourceMapJSON)',
-            () => new SourceMapConsumer(sourceMapJSON),
-          );
-        }
-      }
-
-      if (hookParsedMetadata.metadataConsumer === null) {
-        if (sourceMapJSON != null) {
-          hookParsedMetadata.metadataConsumer = withSyncPerfMeasurements(
-            'new SourceMapMetadataConsumer(sourceMapJSON)',
-            () => new SourceMapMetadataConsumer(sourceMapJSON),
-          );
-        }
-      }
-
-      const runtimeSourceURL = hookSourceAndMetadata.runtimeSourceURL;
-
-      // Only set once to avoid triggering eviction/cleanup code.
-      if (!runtimeURLToMetadataCache.has(runtimeSourceURL)) {
-        if (__DEBUG__) {
-          console.log(
-            `parseSourceMaps() Caching runtime metadata for "${runtimeSourceURL}"`,
-          );
-        }
-
-        runtimeURLToMetadataCache.set(runtimeSourceURL, {
-          metadataConsumer: hookParsedMetadata.metadataConsumer,
-          sourceConsumer: hookParsedMetadata.sourceConsumer,
-          sourceMapConsumer: null,
-        });
-      }
-    },
-  );
-}
-
-function parseSourceMapsAlternate(
-  locationKeyToHookSourceAndMetadata: LocationKeyToHookSourceAndMetadata,
-  locationKeyToHookParsedMetadata: LocationKeyToHookParsedMetadata,
-) {
-  locationKeyToHookSourceAndMetadata.forEach(
-    (hookSourceAndMetadata, locationKey) => {
-      const hookParsedMetadata = locationKeyToHookParsedMetadata.get(
-        locationKey,
-      );
-      if (hookParsedMetadata == null) {
-        throw Error(`Expected to find HookParsedMetadata for "${locationKey}"`);
-      }
-
       const {runtimeSourceURL, sourceMapJSON} = hookSourceAndMetadata;
 
       // If we've already loaded the source map info for this file,
@@ -684,13 +403,13 @@ function parseSourceMapsAlternate(
         }
 
         hookParsedMetadata.metadataConsumer = runtimeMetadata.metadataConsumer;
-        hookParsedMetadata.sourceConsumer = runtimeMetadata.sourceConsumer;
-        hookParsedMetadata.sourceMapConsumer = runtimeMetadata.sourceMapConsumer;
+        hookParsedMetadata.sourceMapConsumer =
+          runtimeMetadata.sourceMapConsumer;
       } else {
         if (sourceMapJSON != null) {
           const sourceMapConsumer = withSyncPerfMeasurements(
-            'new SourceMapCodecConsumer(sourceMapJSON)',
-            () => SourceMapCodecConsumer(sourceMapJSON),
+            'new SourceMapConsumer(sourceMapJSON)',
+            () => SourceMapConsumer(sourceMapJSON),
           );
 
           const metadataConsumer = withSyncPerfMeasurements(
@@ -704,7 +423,6 @@ function parseSourceMapsAlternate(
           // Only set once to avoid triggering eviction/cleanup code.
           runtimeURLToMetadataCache.set(runtimeSourceURL, {
             metadataConsumer: metadataConsumer,
-            sourceConsumer: null,
             sourceMapConsumer: sourceMapConsumer,
           });
         }
