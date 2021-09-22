@@ -13,6 +13,7 @@ import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
 
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 import {
   ClassComponent,
   HostRoot,
@@ -82,6 +83,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
+      resetMutableSourceWorkInProgressVersions();
       const flags = workInProgress.flags;
       invariant(
         (flags & DidCapture) === NoFlags,
@@ -177,6 +179,7 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
       }
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
+      resetMutableSourceWorkInProgressVersions();
       break;
     }
     case HostComponent: {

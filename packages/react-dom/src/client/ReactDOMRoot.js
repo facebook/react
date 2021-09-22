@@ -8,7 +8,7 @@
  */
 
 import type {Container} from './ReactDOMHostConfig';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
 export type RootType = {
@@ -24,6 +24,7 @@ export type CreateRootOptions = {
   hydrationOptions?: {
     onHydrated?: (suspenseNode: Comment) => void,
     onDeleted?: (suspenseNode: Comment) => void,
+    mutableSources?: Array<MutableSource<any>>,
     ...
   },
   // END OF TODO
@@ -34,6 +35,7 @@ export type CreateRootOptions = {
 
 export type HydrateRootOptions = {
   // Hydration options
+  hydratedSources?: Array<MutableSource<any>>,
   onHydrated?: (suspenseNode: Comment) => void,
   onDeleted?: (suspenseNode: Comment) => void,
   // Options for all roots
@@ -59,6 +61,7 @@ import {
   createContainer,
   updateContainer,
   findHostInstanceWithNoPortals,
+  registerMutableSourceForHydration,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
@@ -126,6 +129,11 @@ export function createRoot(
   const hydrate = options != null && options.hydrate === true;
   const hydrationCallbacks =
     (options != null && options.hydrationOptions) || null;
+  const mutableSources =
+    (options != null &&
+      options.hydrationOptions != null &&
+      options.hydrationOptions.mutableSources) ||
+    null;
   // END TODO
 
   const isStrictMode = options != null && options.unstable_strictMode === true;
@@ -151,6 +159,15 @@ export function createRoot(
     container.nodeType === COMMENT_NODE ? container.parentNode : container;
   listenToAllSupportedEvents(rootContainerElement);
 
+  // TODO: Delete this path
+  if (mutableSources) {
+    for (let i = 0; i < mutableSources.length; i++) {
+      const mutableSource = mutableSources[i];
+      registerMutableSourceForHydration(root, mutableSource);
+    }
+  }
+  // END TODO
+
   return new ReactDOMRoot(root);
 }
 
@@ -168,6 +185,7 @@ export function hydrateRoot(
   // For now we reuse the whole bag of options since they contain
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
+  const mutableSources = (options != null && options.hydratedSources) || null;
   const isStrictMode = options != null && options.unstable_strictMode === true;
 
   let concurrentUpdatesByDefaultOverride = null;
@@ -189,6 +207,13 @@ export function hydrateRoot(
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
+
+  if (mutableSources) {
+    for (let i = 0; i < mutableSources.length; i++) {
+      const mutableSource = mutableSources[i];
+      registerMutableSourceForHydration(root, mutableSource);
+    }
+  }
 
   // Render the initial children
   updateContainer(initialChildren, root, null, null);
