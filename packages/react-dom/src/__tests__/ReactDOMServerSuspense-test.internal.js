@@ -115,6 +115,20 @@ describe('ReactDOMServerSuspense', () => {
     expect(getVisibleChildren(c)).toEqual(<div>Fallback</div>);
   });
 
+  it('should render the fallback when an error is thrown', async () => {
+    function Throws() {
+      throw new Error('Oops!');
+    }
+    const c = await serverRender(
+      <div>
+        <React.Suspense fallback={<Text text="Fallback" />}>
+          <Throws />
+        </React.Suspense>
+      </div>,
+    );
+    expect(getVisibleChildren(c)).toEqual(<div>Fallback</div>);
+  });
+
   it('should work with nested suspense components', async () => {
     const c = await serverRender(
       <div>
