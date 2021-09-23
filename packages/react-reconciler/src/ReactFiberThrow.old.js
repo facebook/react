@@ -297,76 +297,82 @@ function throwException(
           wakeables.add(wakeable);
         }
 
-        // If the boundary is in legacy mode, we should *not*
-        // suspend the commit. Pretend as if the suspended component rendered
-        // null and keep rendering. In the commit phase, we'll schedule a
-        // subsequent synchronous update to re-render the Suspense.
-        //
-        // Note: It doesn't matter whether the component that suspended was
-        // inside a concurrent mode tree. If the Suspense is outside of it, we
-        // should *not* suspend the commit.
-        //
-        // If the suspense boundary suspended itself suspended, we don't have to
-        // do this trick because nothing was partially started. We can just
-        // directly do a second pass over the fallback in this render and
-        // pretend we meant to render that directly.
-        if (
-          (workInProgress.mode & ConcurrentMode) === NoMode &&
-          workInProgress !== returnFiber
-        ) {
-          workInProgress.flags |= DidCapture;
-          sourceFiber.flags |= ForceUpdateForLegacySuspense;
+        if ((workInProgress.mode & ConcurrentMode) === NoMode) {
+          // Legacy Mode Suspense
+          //
+          // If the boundary is in legacy mode, we should *not*
+          // suspend the commit. Pretend as if the suspended component rendered
+          // null and keep rendering. When the Suspense boundary completes,
+          // we'll do a second pass to render the fallback.
+          if (workInProgress === returnFiber) {
+            // Special case where we suspended while reconciling the children of
+            // a Suspense boundary's inner Offscreen wrapper fiber. This happens
+            // when a React.lazy component is a direct child of a
+            // Suspense boundary.
+            //
+            // Suspense boundaries are implemented as multiple fibers, but they
+            // are a single conceptual unit. The legacy mode behavior where we
+            // pretend the suspended fiber committed as `null` won't work,
+            // because in this case the "suspended" fiber is the inner
+            // Offscreen wrapper.
+            //
+            // Because the contents of the boundary haven't started rendering
+            // yet (i.e. nothing in the tree has partially rendered) we can
+            // switch to the regular, concurrent mode behavior: mark the
+            // boundary with ShouldCapture and enter the unwind phase.
+            workInProgress.flags |= ShouldCapture;
+          } else {
+            workInProgress.flags |= DidCapture;
+            sourceFiber.flags |= ForceUpdateForLegacySuspense;
 
-          // We're going to commit this fiber even though it didn't complete.
-          // But we shouldn't call any lifecycle methods or callbacks. Remove
-          // all lifecycle effect tags.
-          sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
+            // We're going to commit this fiber even though it didn't complete.
+            // But we shouldn't call any lifecycle methods or callbacks. Remove
+            // all lifecycle effect tags.
+            sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
 
-          if (supportsPersistence && enablePersistentOffscreenHostContainer) {
-            // Another legacy Suspense quirk. In persistent mode, if this is the
-            // initial mount, override the props of the host container to hide
-            // its contents.
-            const currentSuspenseBoundary = workInProgress.alternate;
-            if (currentSuspenseBoundary === null) {
-              const offscreenFiber: Fiber = (workInProgress.child: any);
-              const offscreenContainer = offscreenFiber.child;
-              if (offscreenContainer !== null) {
-                const children = offscreenContainer.memoizedProps.children;
-                const containerProps = getOffscreenContainerProps(
-                  'hidden',
-                  children,
-                );
-                offscreenContainer.pendingProps = containerProps;
-                offscreenContainer.memoizedProps = containerProps;
+            if (supportsPersistence && enablePersistentOffscreenHostContainer) {
+              // Another legacy Suspense quirk. In persistent mode, if this is the
+              // initial mount, override the props of the host container to hide
+              // its contents.
+              const currentSuspenseBoundary = workInProgress.alternate;
+              if (currentSuspenseBoundary === null) {
+                const offscreenFiber: Fiber = (workInProgress.child: any);
+                const offscreenContainer = offscreenFiber.child;
+                if (offscreenContainer !== null) {
+                  const children = offscreenContainer.memoizedProps.children;
+                  const containerProps = getOffscreenContainerProps(
+                    'hidden',
+                    children,
+                  );
+                  offscreenContainer.pendingProps = containerProps;
+                  offscreenContainer.memoizedProps = containerProps;
+                }
               }
             }
-          }
 
-          if (sourceFiber.tag === ClassComponent) {
-            const currentSourceFiber = sourceFiber.alternate;
-            if (currentSourceFiber === null) {
-              // This is a new mount. Change the tag so it's not mistaken for a
-              // completed class component. For example, we should not call
-              // componentWillUnmount if it is deleted.
-              sourceFiber.tag = IncompleteClassComponent;
-            } else {
-              // When we try rendering again, we should not reuse the current fiber,
-              // since it's known to be in an inconsistent state. Use a force update to
-              // prevent a bail out.
-              const update = createUpdate(NoTimestamp, SyncLane);
-              update.tag = ForceUpdate;
-              enqueueUpdate(sourceFiber, update, SyncLane);
+            if (sourceFiber.tag === ClassComponent) {
+              const currentSourceFiber = sourceFiber.alternate;
+              if (currentSourceFiber === null) {
+                // This is a new mount. Change the tag so it's not mistaken for a
+                // completed class component. For example, we should not call
+                // componentWillUnmount if it is deleted.
+                sourceFiber.tag = IncompleteClassComponent;
+              } else {
+                // When we try rendering again, we should not reuse the current fiber,
+                // since it's known to be in an inconsistent state. Use a force update to
+                // prevent a bail out.
+                const update = createUpdate(NoTimestamp, SyncLane);
+                update.tag = ForceUpdate;
+                enqueueUpdate(sourceFiber, update, SyncLane);
+              }
             }
+
+            // The source fiber did not complete. Mark it with Sync priority to
+            // indicate that it still has pending work.
+            sourceFiber.lanes = mergeLanes(sourceFiber.lanes, SyncLane);
           }
-
-          // The source fiber did not complete. Mark it with Sync priority to
-          // indicate that it still has pending work.
-          sourceFiber.lanes = mergeLanes(sourceFiber.lanes, SyncLane);
-
-          // Exit without suspending.
           return;
         }
-
         // Confirmed that the boundary is in a concurrent mode tree. Continue
         // with the normal suspend path.
         //
@@ -415,7 +421,6 @@ function throwException(
         // TODO: I think we can remove this, since we now use `DidCapture` in
         // the begin phase to prevent an early bailout.
         workInProgress.lanes = rootRenderLanes;
-
         return;
       }
       // This boundary already captured during this render. Continue to the next
