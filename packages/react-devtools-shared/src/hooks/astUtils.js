@@ -18,8 +18,6 @@ export type Position = {|
   column: number,
 |};
 
-export type SourceConsumer = any;
-
 export type SourceFileASTWithHookDetails = {
   sourceFileAST: File,
   line: number,

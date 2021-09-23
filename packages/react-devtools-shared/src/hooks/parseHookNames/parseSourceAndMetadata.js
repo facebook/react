@@ -12,7 +12,6 @@
 
 import {parse} from '@babel/parser';
 import LRU from 'lru-cache';
-import {SourceMapConsumer} from 'source-map-js';
 import {getHookName} from '../astUtils';
 import {areSourceMapsAppliedToErrors} from '../ErrorTester';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
@@ -22,14 +21,15 @@ import {
   withAsyncPerfMeasurements,
   withSyncPerfMeasurements,
 } from 'react-devtools-shared/src/PerformanceLoggingUtils';
+import SourceMapConsumer from '../SourceMapConsumer';
 
+import type {SourceMapConsumerType} from '../SourceMapConsumer';
 import type {
   HooksList,
   LocationKeyToHookSourceAndMetadata,
 } from './loadSourceAndMetadata';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
-import type {SourceConsumer} from '../astUtils';
 
 type AST = mixed;
 
@@ -53,35 +53,21 @@ type HookParsedMetadata = {|
   // Column number in original source code.
   originalSourceColumnNumber: number | null,
 
-  // APIs from source-map for parsing source maps (if detected).
-  sourceConsumer: SourceConsumer | null,
+  // Alternate APIs from source-map for parsing source maps (if detected).
+  sourceMapConsumer: SourceMapConsumerType | null,
 |};
 
 type LocationKeyToHookParsedMetadata = Map<string, HookParsedMetadata>;
 
 type CachedRuntimeCodeMetadata = {|
-  sourceConsumer: SourceConsumer | null,
   metadataConsumer: SourceMapMetadataConsumer | null,
+  sourceMapConsumer: SourceMapConsumerType | null,
 |};
 
 const runtimeURLToMetadataCache: LRUCache<
   string,
   CachedRuntimeCodeMetadata,
-> = new LRU({
-  max: 50,
-  dispose: (runtimeSourceURL: string, metadata: CachedRuntimeCodeMetadata) => {
-    if (__DEBUG__) {
-      console.log(
-        `runtimeURLToMetadataCache.dispose() Evicting cached metadata for "${runtimeSourceURL}"`,
-      );
-    }
-
-    const sourceConsumer = metadata.sourceConsumer;
-    if (sourceConsumer !== null) {
-      sourceConsumer.destroy();
-    }
-  },
-});
+> = new LRU({max: 50});
 
 type CachedSourceCodeMetadata = {|
   originalSourceAST: AST,
@@ -220,27 +206,10 @@ function initializeHookParsedMetadata(
         originalSourceURL: null,
         originalSourceLineNumber: null,
         originalSourceColumnNumber: null,
-        sourceConsumer: null,
+        sourceMapConsumer: null,
       };
 
       locationKeyToHookParsedMetadata.set(locationKey, hookParsedMetadata);
-
-      const runtimeSourceURL = hookSourceAndMetadata.runtimeSourceURL;
-
-      // If we've already loaded the source map info for this file,
-      // we can skip reloading it (and more importantly, re-parsing it).
-      const runtimeMetadata = runtimeURLToMetadataCache.get(runtimeSourceURL);
-      if (runtimeMetadata != null) {
-        if (__DEBUG__) {
-          console.groupCollapsed(
-            `parseHookNames() Found cached runtime metadata for file "${runtimeSourceURL}"`,
-          );
-          console.log(runtimeMetadata);
-          console.groupEnd();
-        }
-        hookParsedMetadata.sourceConsumer = runtimeMetadata.sourceConsumer;
-        hookParsedMetadata.metadataConsumer = runtimeMetadata.metadataConsumer;
-      }
     },
   );
 
@@ -280,14 +249,14 @@ function parseSourceAST(
         throw Error('Hook source code location not found.');
       }
 
-      const {metadataConsumer, sourceConsumer} = hookParsedMetadata;
+      const {metadataConsumer, sourceMapConsumer} = hookParsedMetadata;
       const runtimeSourceCode = ((hookSourceAndMetadata.runtimeSourceCode: any): string);
       let hasHookMap = false;
       let originalSourceURL;
       let originalSourceCode;
       let originalSourceColumnNumber;
       let originalSourceLineNumber;
-      if (areSourceMapsAppliedToErrors() || sourceConsumer == null) {
+      if (areSourceMapsAppliedToErrors() || sourceMapConsumer === null) {
         // Either the current environment automatically applies source maps to errors,
         // or the current code had no source map to begin with.
         // Either way, we don't need to convert the Error stack frame locations.
@@ -299,55 +268,32 @@ function parseSourceAST(
         // Namespace them?
         originalSourceURL = hookSourceAndMetadata.runtimeSourceURL;
       } else {
-        // Parse and extract the AST from the source map.
-        // Now that the source map has been loaded,
-        // extract the original source for later.
-        // TODO (named hooks) Refactor this read, github.com/facebook/react/pull/22181
-        const {column, line, source} = withSyncPerfMeasurements(
-          'sourceConsumer.originalPositionFor()',
-          () =>
-            sourceConsumer.originalPositionFor({
-              line: lineNumber,
-
-              // Column numbers are represented differently between tools/engines.
-              // Error.prototype.stack columns are 1-based (like most IDEs) but ASTs are 0-based.
-              // For more info see https://github.com/facebook/react/issues/21792#issuecomment-873171991
-              column: columnNumber - 1,
-            }),
-        );
-
-        if (source == null) {
-          // TODO (named hooks) maybe fall back to the runtime source instead of throwing?
-          throw new Error(
-            'Could not map hook runtime location to original source location',
-          );
-        }
+        const {
+          column,
+          line,
+          sourceContent,
+          sourceURL,
+        } = sourceMapConsumer.originalPositionFor({
+          columnNumber,
+          lineNumber,
+        });
 
         originalSourceColumnNumber = column;
         originalSourceLineNumber = line;
-        // TODO (named hooks) maybe canonicalize this URL somehow?
-        // It can be relative if the source map specifies it that way,
-        // but we use it as a cache key across different source maps and there can be collisions.
-        originalSourceURL = (source: string);
-        originalSourceCode = withSyncPerfMeasurements(
-          'sourceConsumer.sourceContentFor()',
-          () => (sourceConsumer.sourceContentFor(source, true): string),
-        );
+        originalSourceCode = sourceContent;
+        originalSourceURL = sourceURL;
+      }
 
-        if (__DEBUG__) {
-          console.groupCollapsed(
-            `parseSourceAST() Extracted source code from source map for "${originalSourceURL}"`,
-          );
-          console.log(originalSourceCode);
-          console.groupEnd();
-        }
+      hookParsedMetadata.originalSourceCode = originalSourceCode;
+      hookParsedMetadata.originalSourceURL = originalSourceURL;
+      hookParsedMetadata.originalSourceLineNumber = originalSourceLineNumber;
+      hookParsedMetadata.originalSourceColumnNumber = originalSourceColumnNumber;
 
-        if (
-          metadataConsumer != null &&
-          metadataConsumer.hasHookMap(originalSourceURL)
-        ) {
-          hasHookMap = true;
-        }
+      if (
+        metadataConsumer != null &&
+        metadataConsumer.hasHookMap(originalSourceURL)
+      ) {
+        hasHookMap = true;
       }
 
       if (__DEBUG__) {
@@ -355,11 +301,6 @@ function parseSourceAST(
           `parseSourceAST() mapped line ${lineNumber}->${originalSourceLineNumber} and column ${columnNumber}->${originalSourceColumnNumber}`,
         );
       }
-
-      hookParsedMetadata.originalSourceCode = originalSourceCode;
-      hookParsedMetadata.originalSourceURL = originalSourceURL;
-      hookParsedMetadata.originalSourceLineNumber = originalSourceLineNumber;
-      hookParsedMetadata.originalSourceColumnNumber = originalSourceColumnNumber;
 
       if (hasHookMap) {
         if (__DEBUG__) {
@@ -447,30 +388,42 @@ function parseSourceMaps(
         throw Error(`Expected to find HookParsedMetadata for "${locationKey}"`);
       }
 
-      const sourceMapJSON = hookSourceAndMetadata.sourceMapJSON;
-      if (sourceMapJSON != null) {
-        hookParsedMetadata.metadataConsumer = withSyncPerfMeasurements(
-          'new SourceMapMetadataConsumer(sourceMapJSON)',
-          () => new SourceMapMetadataConsumer(sourceMapJSON),
-        );
-        hookParsedMetadata.sourceConsumer = withSyncPerfMeasurements(
-          'new SourceMapConsumer(sourceMapJSON)',
-          () => new SourceMapConsumer(sourceMapJSON),
-        );
+      const {runtimeSourceURL, sourceMapJSON} = hookSourceAndMetadata;
 
-        const runtimeSourceURL = hookSourceAndMetadata.runtimeSourceURL;
+      // If we've already loaded the source map info for this file,
+      // we can skip reloading it (and more importantly, re-parsing it).
+      const runtimeMetadata = runtimeURLToMetadataCache.get(runtimeSourceURL);
+      if (runtimeMetadata != null) {
+        if (__DEBUG__) {
+          console.groupCollapsed(
+            `parseHookNames() Found cached runtime metadata for file "${runtimeSourceURL}"`,
+          );
+          console.log(runtimeMetadata);
+          console.groupEnd();
+        }
 
-        // Only set once to avoid triggering eviction/cleanup code.
-        if (!runtimeURLToMetadataCache.has(runtimeSourceURL)) {
-          if (__DEBUG__) {
-            console.log(
-              `parseSourceMaps() Caching runtime metadata for "${runtimeSourceURL}"`,
-            );
-          }
+        hookParsedMetadata.metadataConsumer = runtimeMetadata.metadataConsumer;
+        hookParsedMetadata.sourceMapConsumer =
+          runtimeMetadata.sourceMapConsumer;
+      } else {
+        if (sourceMapJSON != null) {
+          const sourceMapConsumer = withSyncPerfMeasurements(
+            'new SourceMapConsumer(sourceMapJSON)',
+            () => SourceMapConsumer(sourceMapJSON),
+          );
 
+          const metadataConsumer = withSyncPerfMeasurements(
+            'new SourceMapMetadataConsumer(sourceMapJSON)',
+            () => new SourceMapMetadataConsumer(sourceMapJSON),
+          );
+
+          hookParsedMetadata.metadataConsumer = metadataConsumer;
+          hookParsedMetadata.sourceMapConsumer = sourceMapConsumer;
+
+          // Only set once to avoid triggering eviction/cleanup code.
           runtimeURLToMetadataCache.set(runtimeSourceURL, {
-            metadataConsumer: hookParsedMetadata.metadataConsumer,
-            sourceConsumer: hookParsedMetadata.sourceConsumer,
+            metadataConsumer: metadataConsumer,
+            sourceMapConsumer: sourceMapConsumer,
           });
         }
       }
