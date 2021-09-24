@@ -56,7 +56,10 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
+const encodedStringCache: LRUCache<
+  string,
+  Array<number> | Uint8Array,
+> = new LRU({
   max: 1000,
 });
 
@@ -125,30 +128,46 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
+const isTextEncoderSupported =
+  typeof TextDecoder === 'function' && typeof TextEncoder === 'function';
+
 export function utfDecodeString(array: Array<number>): string {
-  // Avoid spreading the array (e.g. String.fromCodePoint(...array))
-  // Functions arguments are first placed on the stack before the function is called
-  // which throws a RangeError for large arrays.
-  // See github.com/facebook/react/issues/22293
-  let string = '';
-  for (let i = 0; i < array.length; i++) {
-    const char = array[i];
-    string += String.fromCodePoint(char);
+  if (isTextEncoderSupported) {
+    // Handles multi-byte characters; use if available.
+    return new TextDecoder().decode(new Uint8Array(array));
+  } else {
+    // Avoid spreading the array (e.g. String.fromCodePoint(...array))
+    // Functions arguments are first placed on the stack before the function is called
+    // which throws a RangeError for large arrays.
+    // See github.com/facebook/react/issues/22293
+    let string = '';
+    for (let i = 0; i < array.length; i++) {
+      const char = array[i];
+      string += String.fromCodePoint(char);
+    }
+    return string;
   }
-  return string;
 }
 
-export function utfEncodeString(string: string): Array<number> {
+export function utfEncodeString(string: string): Array<number> | Uint8Array {
   const cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
 
-  const encoded = new Array(string.length);
-  for (let i = 0; i < string.length; i++) {
-    encoded[i] = string.codePointAt(i);
+  let encoded;
+  if (isTextEncoderSupported) {
+    // Handles multi-byte characters; use if available.
+    encoded = new TextEncoder().encode(string);
+  } else {
+    encoded = new Array(string.length);
+    for (let i = 0; i < string.length; i++) {
+      encoded[i] = string.codePointAt(i);
+    }
   }
+
   encodedStringCache.set(string, encoded);
+
   return encoded;
 }
 
