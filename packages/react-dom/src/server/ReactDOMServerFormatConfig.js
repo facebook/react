@@ -224,16 +224,6 @@ function pushDummyNodeWithID(
   target.push(dummyNode1, id, dummyNode2);
 }
 
-export function pushEmpty(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
-): void {
-  if (assignID !== null) {
-    pushDummyNodeWithID(target, responseState, assignID);
-  }
-}
-
 const textSeparator = stringToPrecomputedChunk('<!-- -->');
 
 export function pushTextInstance(

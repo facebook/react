@@ -125,14 +125,6 @@ export function makeServerID(
 
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
 
-export function pushEmpty(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
-): void {
-  // This is not used since we don't need to assign any IDs.
-}
-
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,

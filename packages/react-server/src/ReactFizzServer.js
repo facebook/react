@@ -48,7 +48,6 @@ import {
   writeClientRenderBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeCompletedSegmentInstruction,
-  pushEmpty,
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
@@ -421,9 +420,6 @@ function renderSuspenseBoundary(
   const parentBoundary = task.blockedBoundary;
   const parentSegment = task.blockedSegment;
 
-  // We need to push an "empty" thing here to identify the parent suspense boundary.
-  pushEmpty(parentSegment.chunks, request.responseState, task.assignID);
-  task.assignID = null;
   // Each time we enter a suspense boundary, we split out into a new segment for
   // the fallback so that we can later replace that segment with the content.
   // This also lets us split out the main content even if it doesn't suspend,
@@ -488,26 +484,13 @@ function renderSuspenseBoundary(
     task.blockedSegment = parentSegment;
   }
 
-  // This injects an extra segment just to contain an empty tag with an ID.
-  // This means that we're not actually using the assignID anywhere.
-  // TODO: Rethink the assignID approach.
-  pushEmpty(boundarySegment.chunks, request.responseState, newBoundary.id);
-  const innerSegment = createPendingSegment(
-    request,
-    boundarySegment.chunks.length,
-    null,
-    boundarySegment.formatContext,
-  );
-  boundarySegment.status = COMPLETED;
-  boundarySegment.children.push(innerSegment);
-
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
   const suspendedFallbackTask = createTask(
     request,
     fallback,
     parentBoundary,
-    innerSegment,
+    boundarySegment,
     fallbackAbortSet,
     task.legacyContext,
     task.context,
@@ -1143,20 +1126,11 @@ function renderNodeDestructive(
     }
 
     if (isArray(node)) {
-      if (node.length > 0) {
-        for (let i = 0; i < node.length; i++) {
-          // Recursively render the rest. We need to use the non-destructive form
-          // so that we can safely pop back up and render the sibling if something
-          // suspends.
-          renderNode(request, task, node[i]);
-        }
-      } else {
-        pushEmpty(
-          task.blockedSegment.chunks,
-          request.responseState,
-          task.assignID,
-        );
-        task.assignID = null;
+      for (let i = 0; i < node.length; i++) {
+        // Recursively render the rest. We need to use the non-destructive form
+        // so that we can safely pop back up and render the sibling if something
+        // suspends.
+        renderNode(request, task, node[i]);
       }
       return;
     }
@@ -1181,12 +1155,6 @@ function renderNodeDestructive(
           return;
         }
       }
-      pushEmpty(
-        task.blockedSegment.chunks,
-        request.responseState,
-        task.assignID,
-      );
-      task.assignID = null;
     }
 
     const childString = Object.prototype.toString.call(node);
@@ -1232,10 +1200,6 @@ function renderNodeDestructive(
       );
     }
   }
-
-  // Any other type is assumed to be empty.
-  pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
-  task.assignID = null;
 }
 
 function spawnNewSuspendedTask(

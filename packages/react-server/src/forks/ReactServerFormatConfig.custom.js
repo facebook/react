@@ -35,7 +35,6 @@ export const isPrimaryRenderer = false;
 export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
 export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
 export const makeServerID = $$$hostConfig.makeServerID;
-export const pushEmpty = $$$hostConfig.pushEmpty;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;
 export const pushStartInstance = $$$hostConfig.pushStartInstance;
 export const pushEndInstance = $$$hostConfig.pushEndInstance;
