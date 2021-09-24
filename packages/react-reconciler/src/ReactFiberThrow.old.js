@@ -32,6 +32,7 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
+  ForceClientRender,
 } from './ReactFiberFlags';
 import {
   supportsPersistence,
@@ -78,6 +79,7 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane.old';
+import {getIsHydrating} from './ReactFiberHydrationContext.old';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -480,6 +482,28 @@ function throwException(
           'Add a <Suspense fallback=...> component higher in the tree to ' +
           'provide a loading indicator or placeholder to display.',
       );
+    }
+  } else {
+    // This is a regular error, not a Suspense wakeable.
+    if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+      // If the error was thrown during hydration, we may be able to recover by
+      // discarding the dehydrated content and switching to a client render.
+      // Instead of surfacing the error, find the nearest Suspense boundary
+      // and render it again without hydration.
+      const suspenseBoundary = markNearestSuspenseBoundaryShouldCapture(
+        returnFiber,
+        sourceFiber,
+        root,
+        rootRenderLanes,
+      );
+      if (suspenseBoundary !== null) {
+        // Set a flag to indicate that we should try rendering the normal
+        // children again, not the fallback.
+        suspenseBoundary.flags |= ForceClientRender;
+        return;
+      }
+    } else {
+      // Otherwise, fall through to the error path.
     }
   }
 

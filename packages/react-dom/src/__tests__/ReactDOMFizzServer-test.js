@@ -1783,4 +1783,263 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
     expect(ref.current).toEqual(serverRenderedDiv);
   });
+
+  // @gate supportsNativeUseSyncExternalStore
+  // @gate experimental
+  it(
+    'errors during hydration force a client render at the nearest Suspense ' +
+      'boundary, and during the client render it recovers',
+    async () => {
+      let isClient = false;
+
+      function subscribe() {
+        return () => {};
+      }
+      function getClientSnapshot() {
+        return 'Yay!';
+      }
+
+      // At the time of writing, the only API that exposes whether it's currently
+      // hydrating is the `getServerSnapshot` API, so I'm using that here to
+      // simulate an error during hydration.
+      function getServerSnapshot() {
+        if (isClient) {
+          throw new Error('Hydration error');
+        }
+        return 'Yay!';
+      }
+
+      function Child() {
+        const value = useSyncExternalStore(
+          subscribe,
+          getClientSnapshot,
+          getServerSnapshot,
+        );
+        Scheduler.unstable_yieldValue(value);
+        return value;
+      }
+
+      const span1Ref = React.createRef();
+      const span2Ref = React.createRef();
+      const span3Ref = React.createRef();
+
+      function App() {
+        return (
+          <div>
+            <span ref={span1Ref} />
+            <Suspense fallback="Loading...">
+              <span ref={span2Ref}>
+                <Child />
+              </span>
+            </Suspense>
+            <span ref={span3Ref} />
+          </div>
+        );
+      }
+
+      await act(async () => {
+        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+          <App />,
+          writable,
+        );
+        startWriting();
+      });
+      expect(Scheduler).toHaveYielded(['Yay!']);
+
+      const [span1, span2, span3] = container.getElementsByTagName('span');
+
+      // Hydrate the tree. Child will throw during hydration, but not when it
+      // falls back to client rendering.
+      isClient = true;
+      ReactDOM.hydrateRoot(container, <App />);
+
+      expect(Scheduler).toFlushAndYield(['Yay!']);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <span />
+          <span>Yay!</span>
+          <span />
+        </div>,
+      );
+
+      // The node that's inside the boundary that errored during hydration was
+      // not hydrated.
+      expect(span2Ref.current).not.toBe(span2);
+
+      // But the nodes outside the boundary were.
+      expect(span1Ref.current).toBe(span1);
+      expect(span3Ref.current).toBe(span3);
+    },
+  );
+
+  // @gate experimental
+  it(
+    'errors during hydration force a client render at the nearest Suspense ' +
+      'boundary, and during the client render it fails again',
+    async () => {
+      // Similar to previous test, but the client render errors, too. We should
+      // be able to capture it with an error boundary.
+
+      let isClient = false;
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error) {
+          return {error};
+        }
+        render() {
+          if (this.state.error !== null) {
+            return this.state.error.message;
+          }
+          return this.props.children;
+        }
+      }
+
+      function Child() {
+        if (isClient) {
+          throw new Error('Oops!');
+        }
+        Scheduler.unstable_yieldValue('Yay!');
+        return 'Yay!';
+      }
+
+      const span1Ref = React.createRef();
+      const span2Ref = React.createRef();
+      const span3Ref = React.createRef();
+
+      function App() {
+        return (
+          <ErrorBoundary>
+            <span ref={span1Ref} />
+            <Suspense fallback="Loading...">
+              <span ref={span2Ref}>
+                <Child />
+              </span>
+            </Suspense>
+            <span ref={span3Ref} />
+          </ErrorBoundary>
+        );
+      }
+
+      await act(async () => {
+        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+          <App />,
+          writable,
+        );
+        startWriting();
+      });
+      expect(Scheduler).toHaveYielded(['Yay!']);
+
+      // Hydrate the tree. Child will throw during render.
+      isClient = true;
+      ReactDOM.hydrateRoot(container, <App />);
+
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual('Oops!');
+    },
+  );
+
+  // @gate supportsNativeUseSyncExternalStore
+  // @gate experimental
+  it(
+    'errors during hydration force a client render at the nearest Suspense ' +
+      'boundary, and during the client render it recovers, then a deeper ' +
+      'child suspends',
+    async () => {
+      let isClient = false;
+
+      function subscribe() {
+        return () => {};
+      }
+      function getClientSnapshot() {
+        return 'Yay!';
+      }
+
+      // At the time of writing, the only API that exposes whether it's currently
+      // hydrating is the `getServerSnapshot` API, so I'm using that here to
+      // simulate an error during hydration.
+      function getServerSnapshot() {
+        if (isClient) {
+          throw new Error('Hydration error');
+        }
+        return 'Yay!';
+      }
+
+      function Child() {
+        const value = useSyncExternalStore(
+          subscribe,
+          getClientSnapshot,
+          getServerSnapshot,
+        );
+        if (isClient) {
+          readText(value);
+        }
+        Scheduler.unstable_yieldValue(value);
+        return value;
+      }
+
+      const span1Ref = React.createRef();
+      const span2Ref = React.createRef();
+      const span3Ref = React.createRef();
+
+      function App() {
+        return (
+          <div>
+            <span ref={span1Ref} />
+            <Suspense fallback="Loading...">
+              <span ref={span2Ref}>
+                <Child />
+              </span>
+            </Suspense>
+            <span ref={span3Ref} />
+          </div>
+        );
+      }
+
+      await act(async () => {
+        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+          <App />,
+          writable,
+        );
+        startWriting();
+      });
+      expect(Scheduler).toHaveYielded(['Yay!']);
+
+      const [span1, span2, span3] = container.getElementsByTagName('span');
+
+      // Hydrate the tree. Child will throw during hydration, but not when it
+      // falls back to client rendering.
+      isClient = true;
+      ReactDOM.hydrateRoot(container, <App />);
+
+      expect(Scheduler).toFlushAndYield([]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <span />
+          Loading...
+          <span />
+        </div>,
+      );
+
+      await act(async () => {
+        resolveText('Yay!');
+      });
+      expect(Scheduler).toFlushAndYield(['Yay!']);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <span />
+          <span>Yay!</span>
+          <span />
+        </div>,
+      );
+
+      // The node that's inside the boundary that errored during hydration was
+      // not hydrated.
+      expect(span2Ref.current).not.toBe(span2);
+
+      // But the nodes outside the boundary were.
+      expect(span1Ref.current).toBe(span1);
+      expect(span3Ref.current).toBe(span3);
+    },
+  );
 });
