@@ -48,13 +48,13 @@ import {
   writeClientRenderBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeCompletedSegmentInstruction,
-  pushEmpty,
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
   pushEndCompletedSuspenseBoundary,
-  createSuspenseBoundaryID,
+  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
+  assignSuspenseBoundaryID,
   getChildFormatContext,
 } from './ReactServerFormatConfig';
 import {
@@ -124,7 +124,7 @@ type LegacyContext = {
 };
 
 type SuspenseBoundary = {
-  +id: SuspenseBoundaryID,
+  id: SuspenseBoundaryID,
   rootSegmentID: number,
   forceClientRender: boolean, // if it errors or infinitely suspends
   parentFlushed: boolean,
@@ -142,7 +142,6 @@ type Task = {
   abortSet: Set<Task>, // the abortable set that this task belongs to
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
-  assignID: null | SuspenseBoundaryID, // id to assign to the content
   componentStack: null | ComponentStackNode, // DEV-only component stack
 };
 
@@ -265,7 +264,6 @@ export function createRequest(
     abortSet,
     emptyContextObject,
     rootContextSnapshot,
-    null,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -284,7 +282,7 @@ function createSuspenseBoundary(
   fallbackAbortableTasks: Set<Task>,
 ): SuspenseBoundary {
   return {
-    id: createSuspenseBoundaryID(request.responseState),
+    id: UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
@@ -303,7 +301,6 @@ function createTask(
   abortSet: Set<Task>,
   legacyContext: LegacyContext,
   context: ContextSnapshot,
-  assignID: null | SuspenseBoundaryID,
 ): Task {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -319,7 +316,6 @@ function createTask(
     abortSet,
     legacyContext,
     context,
-    assignID,
   }: any);
   if (__DEV__) {
     task.componentStack = null;
@@ -421,9 +417,6 @@ function renderSuspenseBoundary(
   const parentBoundary = task.blockedBoundary;
   const parentSegment = task.blockedSegment;
 
-  // We need to push an "empty" thing here to identify the parent suspense boundary.
-  pushEmpty(parentSegment.chunks, request.responseState, task.assignID);
-  task.assignID = null;
   // Each time we enter a suspense boundary, we split out into a new segment for
   // the fallback so that we can later replace that segment with the content.
   // This also lets us split out the main content even if it doesn't suspend,
@@ -488,30 +481,16 @@ function renderSuspenseBoundary(
     task.blockedSegment = parentSegment;
   }
 
-  // This injects an extra segment just to contain an empty tag with an ID.
-  // This means that we're not actually using the assignID anywhere.
-  // TODO: Rethink the assignID approach.
-  pushEmpty(boundarySegment.chunks, request.responseState, newBoundary.id);
-  const innerSegment = createPendingSegment(
-    request,
-    boundarySegment.chunks.length,
-    null,
-    boundarySegment.formatContext,
-  );
-  boundarySegment.status = COMPLETED;
-  boundarySegment.children.push(innerSegment);
-
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
   const suspendedFallbackTask = createTask(
     request,
     fallback,
     parentBoundary,
-    innerSegment,
+    boundarySegment,
     fallbackAbortSet,
     task.legacyContext,
     task.context,
-    null,
   );
   if (__DEV__) {
     suspendedFallbackTask.componentStack = task.componentStack;
@@ -554,10 +533,7 @@ function renderHostElement(
     props,
     request.responseState,
     segment.formatContext,
-    task.assignID,
   );
-  // We must have assigned it already above so we don't need this anymore.
-  task.assignID = null;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
   // We use the non-destructive form because if something suspends, we still
@@ -1143,20 +1119,11 @@ function renderNodeDestructive(
     }
 
     if (isArray(node)) {
-      if (node.length > 0) {
-        for (let i = 0; i < node.length; i++) {
-          // Recursively render the rest. We need to use the non-destructive form
-          // so that we can safely pop back up and render the sibling if something
-          // suspends.
-          renderNode(request, task, node[i]);
-        }
-      } else {
-        pushEmpty(
-          task.blockedSegment.chunks,
-          request.responseState,
-          task.assignID,
-        );
-        task.assignID = null;
+      for (let i = 0; i < node.length; i++) {
+        // Recursively render the rest. We need to use the non-destructive form
+        // so that we can safely pop back up and render the sibling if something
+        // suspends.
+        renderNode(request, task, node[i]);
       }
       return;
     }
@@ -1181,12 +1148,6 @@ function renderNodeDestructive(
           return;
         }
       }
-      pushEmpty(
-        task.blockedSegment.chunks,
-        request.responseState,
-        task.assignID,
-      );
-      task.assignID = null;
     }
 
     const childString = Object.prototype.toString.call(node);
@@ -1202,13 +1163,7 @@ function renderNodeDestructive(
   }
 
   if (typeof node === 'string') {
-    pushTextInstance(
-      task.blockedSegment.chunks,
-      node,
-      request.responseState,
-      task.assignID,
-    );
-    task.assignID = null;
+    pushTextInstance(task.blockedSegment.chunks, node, request.responseState);
     return;
   }
 
@@ -1217,9 +1172,7 @@ function renderNodeDestructive(
       task.blockedSegment.chunks,
       '' + node,
       request.responseState,
-      task.assignID,
     );
-    task.assignID = null;
     return;
   }
 
@@ -1232,10 +1185,6 @@ function renderNodeDestructive(
       );
     }
   }
-
-  // Any other type is assumed to be empty.
-  pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
-  task.assignID = null;
 }
 
 function spawnNewSuspendedTask(
@@ -1261,7 +1210,6 @@ function spawnNewSuspendedTask(
     task.abortSet,
     task.legacyContext,
     task.context,
-    task.assignID,
   );
   if (__DEV__) {
     if (task.componentStack !== null) {
@@ -1270,8 +1218,6 @@ function spawnNewSuspendedTask(
       newTask.componentStack = task.componentStack.parent;
     }
   }
-  // We've delegated the assignment.
-  task.assignID = null;
   const ping = newTask.ping;
   x.then(ping, ping);
 }
@@ -1650,11 +1596,10 @@ function flushSegment(
       request.partialBoundaries.push(boundary);
     }
 
-    writeStartPendingSuspenseBoundary(
-      destination,
-      request.responseState,
-      boundary.id,
-    );
+    /// This is the first time we should have referenced this ID.
+    const id = (boundary.id = assignSuspenseBoundaryID(request.responseState));
+
+    writeStartPendingSuspenseBoundary(destination, request.responseState, id);
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);

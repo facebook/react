@@ -103,10 +103,11 @@ export function getChildFormatContext(
 // This is very specific to DOM where we can't assign an ID to.
 export type SuspenseBoundaryID = number;
 
-export function createSuspenseBoundaryID(
+export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID = -1;
+
+export function assignSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
-  // TODO: This is not deterministic since it's created during render.
   return responseState.nextSuspenseID++;
 }
 
@@ -125,19 +126,10 @@ export function makeServerID(
 
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
 
-export function pushEmpty(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
-): void {
-  // This is not used since we don't need to assign any IDs.
-}
-
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): void {
   target.push(
     INSTANCE,
@@ -154,7 +146,6 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(
     INSTANCE,
