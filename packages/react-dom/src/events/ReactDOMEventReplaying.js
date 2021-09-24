@@ -399,7 +399,7 @@ function attemptExplicitHydrationTarget(
         }
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
-        if (root.hydrate) {
+        if (root.isDehydrated) {
           queuedTarget.blockedOn = getContainerFromFiber(nearestMounted);
           // We don't currently have a way to increase the priority of
           // a root other than sync.

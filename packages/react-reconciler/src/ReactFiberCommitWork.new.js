@@ -1827,9 +1827,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case HostRoot: {
         if (supportsHydration) {
           const root: FiberRoot = finishedWork.stateNode;
-          if (root.hydrate) {
+          if (root.isDehydrated) {
             // We've just hydrated. No need to hydrate again.
-            root.hydrate = false;
+            root.isDehydrated = false;
             commitHydratedContainer(root.containerInfo);
           }
         }
@@ -1933,9 +1933,9 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case HostRoot: {
       if (supportsHydration) {
         const root: FiberRoot = finishedWork.stateNode;
-        if (root.hydrate) {
+        if (root.isDehydrated) {
           // We've just hydrated. No need to hydrate again.
-          root.hydrate = false;
+          root.isDehydrated = false;
           commitHydratedContainer(root.containerInfo);
         }
       }

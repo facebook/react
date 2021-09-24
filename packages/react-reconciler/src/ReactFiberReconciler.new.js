@@ -353,7 +353,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
   switch (fiber.tag) {
     case HostRoot:
       const root: FiberRoot = fiber.stateNode;
-      if (root.hydrate) {
+      if (root.isDehydrated) {
         // Flush the first scheduled "update".
         const lanes = getHighestPriorityPendingLanes(root);
         flushRoot(root, lanes);
