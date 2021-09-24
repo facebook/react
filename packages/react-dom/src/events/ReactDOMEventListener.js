@@ -264,7 +264,7 @@ export function attemptToDispatchEvent(
         targetInst = null;
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
-        if (root.hydrate) {
+        if (root.isDehydrated) {
           // If this happens during a replay something went wrong and it might block
           // the whole system.
           return getContainerFromFiber(nearestMounted);
