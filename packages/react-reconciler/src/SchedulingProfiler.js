@@ -144,6 +144,33 @@ export function markComponentRenderStopped(): void {
   }
 }
 
+export function markComponentErrored(
+  fiber: Fiber,
+  thrownValue: mixed,
+  lanes: Lanes,
+): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      const phase = fiber.alternate === null ? 'mount' : 'update';
+
+      let message = '';
+      if (
+        thrownValue !== null &&
+        typeof thrownValue === 'object' &&
+        typeof thrownValue.message === 'string'
+      ) {
+        message = thrownValue.message;
+      } else if (typeof thrownValue === 'string') {
+        message = thrownValue;
+      }
+
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--error-${componentName}-${phase}-${message}`);
+    }
+  }
+}
+
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
 // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
