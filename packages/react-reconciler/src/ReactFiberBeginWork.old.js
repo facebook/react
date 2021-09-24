@@ -74,6 +74,7 @@ import {
   ForceUpdateForLegacySuspense,
   StaticMask,
   ShouldCapture,
+  ForceClientRender,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -2079,6 +2080,14 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
               workInProgress,
               dehydrated,
               prevState,
+              renderLanes,
+            );
+          } else if (workInProgress.flags & ForceClientRender) {
+            // Something errored during hydration. Try again without hydrating.
+            workInProgress.flags &= ~ForceClientRender;
+            return retrySuspenseComponentWithoutHydrating(
+              current,
+              workInProgress,
               renderLanes,
             );
           } else if (
