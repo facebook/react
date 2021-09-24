@@ -68,6 +68,9 @@ import {
 import {
   markCommitStarted,
   markCommitStopped,
+  markComponentRenderStopped,
+  markComponentSuspended,
+  markComponentErrored,
   markLayoutEffectsStarted,
   markLayoutEffectsStopped,
   markPassiveEffectsStarted,
@@ -1354,6 +1357,29 @@ function handleError(root, thrownValue): void {
         // avoids inaccurate Profiler durations in the case of a
         // suspended render.
         stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true);
+      }
+
+      if (enableSchedulingProfiler) {
+        markComponentRenderStopped();
+
+        if (
+          thrownValue !== null &&
+          typeof thrownValue === 'object' &&
+          typeof thrownValue.then === 'function'
+        ) {
+          const wakeable: Wakeable = (thrownValue: any);
+          markComponentSuspended(
+            erroredWork,
+            wakeable,
+            workInProgressRootRenderLanes,
+          );
+        } else {
+          markComponentErrored(
+            erroredWork,
+            thrownValue,
+            workInProgressRootRenderLanes,
+          );
+        }
       }
 
       throwException(

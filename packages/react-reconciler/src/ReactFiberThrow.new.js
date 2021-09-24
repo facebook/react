@@ -41,7 +41,6 @@ import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
-  enableSchedulingProfiler,
   enableLazyContextPropagation,
   enableUpdaterTracking,
   enablePersistentOffscreenHostContainer,
@@ -71,10 +70,6 @@ import {
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.new';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
-import {
-  markComponentRenderStopped,
-  markComponentSuspended,
-} from './SchedulingProfiler';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {
   SyncLane,
@@ -245,11 +240,6 @@ function throwException(
           logComponentSuspended(name, wakeable);
         }
       }
-    }
-
-    if (enableSchedulingProfiler) {
-      markComponentRenderStopped();
-      markComponentSuspended(sourceFiber, wakeable, rootRenderLanes);
     }
 
     // Reset the memoizedState to what it was before we attempted to render it.
