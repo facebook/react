@@ -168,9 +168,6 @@ export function getChildFormatContext(
   return parentContext;
 }
 
-// This object is used to lazily reuse the ID of the first generated node, or assign one.
-// We can't assign an ID up front because the node we're attaching it to might already
-// have one. So we need to lazily use that if it's available.
 export type SuspenseBoundaryID = {
   formattedID: null | PrecomputedChunk,
 };
@@ -205,23 +202,10 @@ function assignAnID(
   responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): PrecomputedChunk {
-  // TODO: This approach doesn't yield deterministic results since this is assigned during render.
   const generatedID = responseState.nextSuspenseID++;
   return (id.formattedID = stringToPrecomputedChunk(
     responseState.boundaryPrefix + generatedID.toString(16),
   ));
-}
-
-const dummyNode1 = stringToPrecomputedChunk('<template id="');
-const dummyNode2 = stringToPrecomputedChunk('"></template>');
-
-function pushDummyNodeWithID(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: SuspenseBoundaryID,
-): void {
-  const id = assignAnID(responseState, assignID);
-  target.push(dummyNode1, id, dummyNode2);
 }
 
 const textSeparator = stringToPrecomputedChunk('<!-- -->');
@@ -499,30 +483,6 @@ function pushAttribute(
 
 const endOfStartTag = stringToPrecomputedChunk('>');
 const endOfStartTagSelfClosing = stringToPrecomputedChunk('/>');
-
-const idAttr = stringToPrecomputedChunk(' id="');
-const attrEnd = stringToPrecomputedChunk('"');
-
-function pushID(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: SuspenseBoundaryID,
-  existingID: mixed,
-): void {
-  if (
-    existingID !== null &&
-    existingID !== undefined &&
-    (typeof existingID === 'string' || typeof existingID === 'object')
-  ) {
-    // We can reuse the existing ID for our purposes.
-    assignID.formattedID = stringToPrecomputedChunk(
-      escapeTextForBrowser(existingID),
-    );
-  } else {
-    const encodedID = assignAnID(responseState, assignID);
-    target.push(idAttr, encodedID, attrEnd);
-  }
-}
 
 function pushInnerHTML(
   target: Array<Chunk | PrecomputedChunk>,
@@ -1384,7 +1344,10 @@ export function writePlaceholder(
 
 // Suspense boundaries are encoded as comments.
 const startCompletedSuspenseBoundary = stringToPrecomputedChunk('<!--$-->');
-const startPendingSuspenseBoundary = stringToPrecomputedChunk('<!--$?-->');
+const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
+  '<!--$?--><template id="',
+);
+const startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>');
 const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
   '<!--$!-->',
 );
@@ -1413,7 +1376,10 @@ export function writeStartPendingSuspenseBoundary(
   responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
-  return writeChunk(destination, startPendingSuspenseBoundary);
+  writeChunk(destination, startPendingSuspenseBoundary1);
+  const formattedID = assignAnID(responseState, id);
+  writeChunk(destination, formattedID);
+  return writeChunk(destination, startPendingSuspenseBoundary2);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
