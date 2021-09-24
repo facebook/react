@@ -975,9 +975,9 @@ function pushStartTextArea(
         children.length <= 1,
         '<textarea> can only have at most one child.',
       );
-      value = '' + children[0];
+    } else {
+      value = '' + children;
     }
-    value = '' + children;
   }
 
   if (typeof value === 'string' && value[0] === '\n') {
