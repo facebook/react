@@ -1445,7 +1445,8 @@ export function renderDidSuspend(): void {
 export function renderDidSuspendDelayIfPossible(): void {
   if (
     workInProgressRootExitStatus === RootIncomplete ||
-    workInProgressRootExitStatus === RootSuspended
+    workInProgressRootExitStatus === RootSuspended ||
+    workInProgressRootExitStatus === RootErrored
   ) {
     workInProgressRootExitStatus = RootSuspendedWithDelay;
   }
@@ -1469,7 +1470,7 @@ export function renderDidSuspendDelayIfPossible(): void {
 }
 
 export function renderDidError() {
-  if (workInProgressRootExitStatus !== RootCompleted) {
+  if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
   }
 }
