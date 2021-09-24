@@ -7,10 +7,7 @@
  * @flow
  */
 
-import type {
-  SuspenseBoundaryID,
-  FormatContext,
-} from './ReactDOMServerFormatConfig';
+import type {FormatContext} from './ReactDOMServerFormatConfig';
 
 import {
   createResponseState as createResponseStateImpl,
@@ -81,9 +78,9 @@ export type {
 
 export {
   getChildFormatContext,
-  createSuspenseBoundaryID,
+  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
+  assignSuspenseBoundaryID,
   makeServerID,
-  pushEmpty,
   pushStartInstance,
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
@@ -106,12 +103,11 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): void {
   if (responseState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
   } else {
-    pushTextInstanceImpl(target, text, responseState, assignID);
+    pushTextInstanceImpl(target, text, responseState);
   }
 }
 

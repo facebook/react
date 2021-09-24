@@ -168,17 +168,17 @@ export function getChildFormatContext(
   return parentContext;
 }
 
-// This object is used to lazily reuse the ID of the first generated node, or assign one.
-// We can't assign an ID up front because the node we're attaching it to might already
-// have one. So we need to lazily use that if it's available.
-export type SuspenseBoundaryID = {
-  formattedID: null | PrecomputedChunk,
-};
+export type SuspenseBoundaryID = null | PrecomputedChunk;
 
-export function createSuspenseBoundaryID(
+export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID: SuspenseBoundaryID = null;
+
+export function assignSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
-  return {formattedID: null};
+  const generatedID = responseState.nextSuspenseID++;
+  return stringToPrecomputedChunk(
+    responseState.boundaryPrefix + generatedID.toString(16),
+  );
 }
 
 export type OpaqueIDType = string;
@@ -201,50 +201,13 @@ function encodeHTMLTextNode(text: string): string {
   return escapeTextForBrowser(text);
 }
 
-function assignAnID(
-  responseState: ResponseState,
-  id: SuspenseBoundaryID,
-): PrecomputedChunk {
-  // TODO: This approach doesn't yield deterministic results since this is assigned during render.
-  const generatedID = responseState.nextSuspenseID++;
-  return (id.formattedID = stringToPrecomputedChunk(
-    responseState.boundaryPrefix + generatedID.toString(16),
-  ));
-}
-
-const dummyNode1 = stringToPrecomputedChunk('<template id="');
-const dummyNode2 = stringToPrecomputedChunk('"></template>');
-
-function pushDummyNodeWithID(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: SuspenseBoundaryID,
-): void {
-  const id = assignAnID(responseState, assignID);
-  target.push(dummyNode1, id, dummyNode2);
-}
-
-export function pushEmpty(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
-): void {
-  if (assignID !== null) {
-    pushDummyNodeWithID(target, responseState, assignID);
-  }
-}
-
 const textSeparator = stringToPrecomputedChunk('<!-- -->');
 
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): void {
-  if (assignID !== null) {
-    pushDummyNodeWithID(target, responseState, assignID);
-  }
   if (text === '') {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
     return;
@@ -514,30 +477,6 @@ function pushAttribute(
 const endOfStartTag = stringToPrecomputedChunk('>');
 const endOfStartTagSelfClosing = stringToPrecomputedChunk('/>');
 
-const idAttr = stringToPrecomputedChunk(' id="');
-const attrEnd = stringToPrecomputedChunk('"');
-
-function pushID(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: SuspenseBoundaryID,
-  existingID: mixed,
-): void {
-  if (
-    existingID !== null &&
-    existingID !== undefined &&
-    (typeof existingID === 'string' || typeof existingID === 'object')
-  ) {
-    // We can reuse the existing ID for our purposes.
-    assignID.formattedID = stringToPrecomputedChunk(
-      escapeTextForBrowser(existingID),
-    );
-  } else {
-    const encodedID = assignAnID(responseState, assignID);
-    target.push(idAttr, encodedID, attrEnd);
-  }
-}
-
 function pushInnerHTML(
   target: Array<Chunk | PrecomputedChunk>,
   innerHTML,
@@ -598,7 +537,6 @@ function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('select', props);
@@ -651,9 +589,6 @@ function pushStartSelect(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -693,7 +628,6 @@ function pushStartOption(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   const selectedValue = formatContext.selectedValue;
 
@@ -776,10 +710,6 @@ function pushStartOption(
     target.push(selectedMarkerAttribute);
   }
 
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
-
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   return children;
@@ -789,7 +719,6 @@ function pushInput(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('input', props);
@@ -883,10 +812,6 @@ function pushInput(
     pushAttribute(target, responseState, 'value', defaultValue);
   }
 
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
-
   target.push(endOfStartTagSelfClosing);
   return null;
 }
@@ -895,7 +820,6 @@ function pushStartTextArea(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -952,10 +876,6 @@ function pushStartTextArea(
     value = defaultValue;
   }
 
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
-
   target.push(endOfStartTag);
 
   // TODO (yungsters): Remove support for children content in <textarea>.
@@ -1002,7 +922,6 @@ function pushSelfClosing(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1028,9 +947,6 @@ function pushSelfClosing(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTagSelfClosing);
   return null;
@@ -1040,7 +956,6 @@ function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag('menuitem'));
 
@@ -1064,9 +979,6 @@ function pushStartMenuItem(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   return null;
@@ -1077,7 +989,6 @@ function pushStartGenericElement(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1102,9 +1013,6 @@ function pushStartGenericElement(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -1122,7 +1030,6 @@ function pushStartCustomElement(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1166,9 +1073,6 @@ function pushStartCustomElement(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -1182,7 +1086,6 @@ function pushStartPreformattedElement(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1206,9 +1109,6 @@ function pushStartPreformattedElement(
           break;
       }
     }
-  }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
   }
 
   target.push(endOfStartTag);
@@ -1275,7 +1175,6 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     validateARIAProperties(type, props);
@@ -1317,31 +1216,19 @@ export function pushStartInstance(
   switch (type) {
     // Special tags
     case 'select':
-      return pushStartSelect(target, props, responseState, assignID);
+      return pushStartSelect(target, props, responseState);
     case 'option':
-      return pushStartOption(
-        target,
-        props,
-        responseState,
-        formatContext,
-        assignID,
-      );
+      return pushStartOption(target, props, responseState, formatContext);
     case 'textarea':
-      return pushStartTextArea(target, props, responseState, assignID);
+      return pushStartTextArea(target, props, responseState);
     case 'input':
-      return pushInput(target, props, responseState, assignID);
+      return pushInput(target, props, responseState);
     case 'menuitem':
-      return pushStartMenuItem(target, props, responseState, assignID);
+      return pushStartMenuItem(target, props, responseState);
     // Newline eating tags
     case 'listing':
     case 'pre': {
-      return pushStartPreformattedElement(
-        target,
-        props,
-        type,
-        responseState,
-        assignID,
-      );
+      return pushStartPreformattedElement(target, props, type, responseState);
     }
     // Omitted close tags
     case 'area':
@@ -1358,7 +1245,7 @@ export function pushStartInstance(
     case 'source':
     case 'track':
     case 'wbr': {
-      return pushSelfClosing(target, props, type, responseState, assignID);
+      return pushSelfClosing(target, props, type, responseState);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
@@ -1370,13 +1257,7 @@ export function pushStartInstance(
     case 'font-face-format':
     case 'font-face-name':
     case 'missing-glyph': {
-      return pushStartGenericElement(
-        target,
-        props,
-        type,
-        responseState,
-        assignID,
-      );
+      return pushStartGenericElement(target, props, type, responseState);
     }
     case 'html': {
       if (formatContext.insertionMode === ROOT_HTML_MODE) {
@@ -1385,33 +1266,15 @@ export function pushStartInstance(
         // rendering the whole document.
         target.push(DOCTYPE);
       }
-      return pushStartGenericElement(
-        target,
-        props,
-        type,
-        responseState,
-        assignID,
-      );
+      return pushStartGenericElement(target, props, type, responseState);
     }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
         // Generic element
-        return pushStartGenericElement(
-          target,
-          props,
-          type,
-          responseState,
-          assignID,
-        );
+        return pushStartGenericElement(target, props, type, responseState);
       } else {
         // Custom element
-        return pushStartCustomElement(
-          target,
-          props,
-          type,
-          responseState,
-          assignID,
-        );
+        return pushStartCustomElement(target, props, type, responseState);
       }
     }
   }
@@ -1474,7 +1337,10 @@ export function writePlaceholder(
 
 // Suspense boundaries are encoded as comments.
 const startCompletedSuspenseBoundary = stringToPrecomputedChunk('<!--$-->');
-const startPendingSuspenseBoundary = stringToPrecomputedChunk('<!--$?-->');
+const startPendingSuspenseBoundary1 = stringToPrecomputedChunk(
+  '<!--$?--><template id="',
+);
+const startPendingSuspenseBoundary2 = stringToPrecomputedChunk('"></template>');
 const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
   '<!--$!-->',
 );
@@ -1503,7 +1369,13 @@ export function writeStartPendingSuspenseBoundary(
   responseState: ResponseState,
   id: SuspenseBoundaryID,
 ): boolean {
-  return writeChunk(destination, startPendingSuspenseBoundary);
+  writeChunk(destination, startPendingSuspenseBoundary1);
+  invariant(
+    id !== null,
+    'An ID must have been assigned before we can complete the boundary.',
+  );
+  writeChunk(destination, id);
+  return writeChunk(destination, startPendingSuspenseBoundary2);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
@@ -1671,19 +1543,14 @@ export function writeEndSegment(
 //
 // function clientRenderBoundary(suspenseBoundaryID) {
 //   // Find the fallback's first element.
-//   let suspenseNode = document.getElementById(suspenseBoundaryID);
-//   if (!suspenseNode) {
+//   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
+//   if (!suspenseIdNode) {
 //     // The user must have already navigated away from this tree.
 //     // E.g. because the parent was hydrated.
 //     return;
 //   }
-//   // Find the boundary around the fallback. This might include text nodes.
-//   do {
-//     suspenseNode = suspenseNode.previousSibling;
-//   } while (
-//     suspenseNode.nodeType !== COMMENT_NODE ||
-//     suspenseNode.data !== SUSPENSE_PENDING_START_DATA
-//   );
+//   // Find the boundary around the fallback. This is always the previous node.
+//   const suspenseNode = suspenseIdNode.previousSibling;
 //   // Tag it to be client rendered.
 //   suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
 //   // Tell React to retry it if the parent already hydrated.
@@ -1694,24 +1561,19 @@ export function writeEndSegment(
 //
 // function completeBoundary(suspenseBoundaryID, contentID) {
 //   // Find the fallback's first element.
-//   let suspenseNode = document.getElementById(suspenseBoundaryID);
+//   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
 //   const contentNode = document.getElementById(contentID);
 //   // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
 //   // This might also help by not causing recalcing each time we move a child from here to the target.
 //   contentNode.parentNode.removeChild(contentNode);
-//   if (!suspenseNode) {
+//   if (!suspenseIdNode) {
 //     // The user must have already navigated away from this tree.
 //     // E.g. because the parent was hydrated. That's fine there's nothing to do
 //     // but we have to make sure that we already deleted the container node.
 //     return;
 //   }
-//   // Find the boundary around the fallback. This might include text nodes.
-//   do {
-//     suspenseNode = suspenseNode.previousSibling;
-//   } while (
-//     suspenseNode.nodeType !== COMMENT_NODE ||
-//     suspenseNode.data !== SUSPENSE_PENDING_START_DATA
-//   );
+//   // Find the boundary around the fallback. This is always the previous node.
+//   const suspenseNode = suspenseIdNode.previousSibling;
 //
 //   // Clear all the existing children. This is complicated because
 //   // there can be embedded Suspense boundaries in the fallback.
@@ -1774,11 +1636,11 @@ export function writeEndSegment(
 // }
 
 const completeSegmentFunction =
-  'function $RS(b,f){var a=document.getElementById(b),c=document.getElementById(f);for(a.parentNode.removeChild(a);a.firstChild;)c.parentNode.insertBefore(a.firstChild,c);c.parentNode.removeChild(c)}';
+  'function $RS(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)}';
 const completeBoundaryFunction =
-  'function $RC(b,f){var a=document.getElementById(b),c=document.getElementById(f);c.parentNode.removeChild(c);if(a){do a=a.previousSibling;while(8!==a.nodeType||"$?"!==a.data);var h=a.parentNode,d=a.nextSibling,g=0;do{if(d&&8===d.nodeType){var e=d.data;if("/$"===e)if(0===g)break;else g--;else"$"!==e&&"$?"!==e&&"$!"!==e||g++}e=d.nextSibling;h.removeChild(d);d=e}while(d);for(;c.firstChild;)h.insertBefore(c.firstChild,d);a.data="$";a._reactRetry&&a._reactRetry()}}';
+  'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
 const clientRenderFunction =
-  'function $RX(b){if(b=document.getElementById(b)){do b=b.previousSibling;while(8!==b.nodeType||"$?"!==b.data);b.data="$!";b._reactRetry&&b._reactRetry()}}';
+  'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
   '<script>' + completeSegmentFunction + ';$RS("',
@@ -1832,13 +1694,12 @@ export function writeCompletedBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, completeBoundaryScript1Partial);
   }
-  const formattedBoundaryID = boundaryID.formattedID;
   invariant(
-    formattedBoundaryID !== null,
+    boundaryID !== null,
     'An ID must have been assigned before we can complete the boundary.',
   );
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
-  writeChunk(destination, formattedBoundaryID);
+  writeChunk(destination, boundaryID);
   writeChunk(destination, completeBoundaryScript2);
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
@@ -1864,11 +1725,10 @@ export function writeClientRenderBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, clientRenderScript1Partial);
   }
-  const formattedBoundaryID = boundaryID.formattedID;
   invariant(
-    formattedBoundaryID !== null,
+    boundaryID !== null,
     'An ID must have been assigned before we can complete the boundary.',
   );
-  writeChunk(destination, formattedBoundaryID);
+  writeChunk(destination, boundaryID);
   return writeChunk(destination, clientRenderScript2);
 }
