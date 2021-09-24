@@ -272,7 +272,7 @@ export class SuspenseEventsView extends View {
           borderFrame,
           visibleArea,
         );
-        context.fillStyle = COLORS.PRIORITY_BORDER;
+        context.fillStyle = COLORS.REACT_WORK_BORDER;
         context.fillRect(
           borderDrawableRect.origin.x,
           borderDrawableRect.origin.y,

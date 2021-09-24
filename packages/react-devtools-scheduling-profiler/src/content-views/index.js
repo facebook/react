@@ -15,5 +15,6 @@ export * from './ReactMeasuresView';
 export * from './SchedulingEventsView';
 export * from './SnapshotsView';
 export * from './SuspenseEventsView';
+export * from './ThrownErrorsView';
 export * from './TimeAxisMarkersView';
 export * from './UserTimingMarksView';

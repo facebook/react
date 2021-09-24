@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {SchedulingEvent, ReactProfilerData} from '../types';
+import type {ThrownError, ReactProfilerData} from '../types';
 import type {
   Interaction,
   MouseMoveInteraction,
@@ -39,12 +39,11 @@ import {
 const EVENT_ROW_HEIGHT_FIXED =
   TOP_ROW_PADDING + REACT_EVENT_DIAMETER + TOP_ROW_PADDING;
 
-export class SchedulingEventsView extends View {
+export class ThrownErrorsView extends View {
   _profilerData: ReactProfilerData;
   _intrinsicSize: Size;
-
-  _hoveredEvent: SchedulingEvent | null = null;
-  onHover: ((event: SchedulingEvent | null) => void) | null = null;
+  _hoveredEvent: ThrownError | null = null;
+  onHover: ((event: ThrownError | null) => void) | null = null;
 
   constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
     super(surface, frame);
@@ -60,7 +59,7 @@ export class SchedulingEventsView extends View {
     return this._intrinsicSize;
   }
 
-  setHoveredEvent(hoveredEvent: SchedulingEvent | null) {
+  setHoveredEvent(hoveredEvent: ThrownError | null) {
     if (this._hoveredEvent === hoveredEvent) {
       return;
     }
@@ -69,18 +68,18 @@ export class SchedulingEventsView extends View {
   }
 
   /**
-   * Draw a single `SchedulingEvent` as a circle in the canvas.
+   * Draw a single `ThrownError` as a circle in the canvas.
    */
-  _drawSingleSchedulingEvent(
+  _drawSingleThrownError(
     context: CanvasRenderingContext2D,
     rect: Rect,
-    event: SchedulingEvent,
+    thrownError: ThrownError,
     baseY: number,
     scaleFactor: number,
     showHoverHighlight: boolean,
   ) {
     const {frame} = this;
-    const {timestamp, type, warning} = event;
+    const {timestamp} = thrownError;
 
     const x = timestampToPosition(timestamp, scaleFactor, frame);
     const radius = REACT_EVENT_DIAMETER / 2;
@@ -95,43 +94,22 @@ export class SchedulingEventsView extends View {
       return; // Not in view
     }
 
-    let fillStyle = null;
+    const fillStyle = showHoverHighlight
+      ? COLORS.REACT_THROWN_ERROR_HOVER
+      : COLORS.REACT_THROWN_ERROR;
 
-    if (warning !== null) {
-      fillStyle = showHoverHighlight
-        ? COLORS.WARNING_BACKGROUND_HOVER
-        : COLORS.WARNING_BACKGROUND;
-    } else {
-      switch (type) {
-        case 'schedule-render':
-        case 'schedule-state-update':
-        case 'schedule-force-update':
-          fillStyle = showHoverHighlight
-            ? COLORS.REACT_SCHEDULE_HOVER
-            : COLORS.REACT_SCHEDULE;
-          break;
-        default:
-          if (__DEV__) {
-            console.warn('Unexpected event type "%s"', type);
-          }
-          break;
-      }
-    }
+    const y = eventRect.origin.y + radius;
 
-    if (fillStyle !== null) {
-      const y = eventRect.origin.y + radius;
-
-      context.beginPath();
-      context.fillStyle = fillStyle;
-      context.arc(x, y, radius, 0, 2 * Math.PI);
-      context.fill();
-    }
+    context.beginPath();
+    context.fillStyle = fillStyle;
+    context.arc(x, y, radius, 0, 2 * Math.PI);
+    context.fill();
   }
 
   draw(context: CanvasRenderingContext2D) {
     const {
       frame,
-      _profilerData: {schedulingEvents},
+      _profilerData: {thrownErrors},
       _hoveredEvent,
       visibleArea,
     } = this;
@@ -151,17 +129,17 @@ export class SchedulingEventsView extends View {
       frame,
     );
 
-    const highlightedEvents: SchedulingEvent[] = [];
+    const highlightedEvents: ThrownError[] = [];
 
-    schedulingEvents.forEach(event => {
-      if (event === _hoveredEvent) {
-        highlightedEvents.push(event);
+    thrownErrors.forEach(thrownError => {
+      if (thrownError === _hoveredEvent) {
+        highlightedEvents.push(thrownError);
         return;
       }
-      this._drawSingleSchedulingEvent(
+      this._drawSingleThrownError(
         context,
         visibleArea,
-        event,
+        thrownError,
         baseY,
         scaleFactor,
         false,
@@ -170,18 +148,18 @@ export class SchedulingEventsView extends View {
 
     // Draw the highlighted items on top so they stand out.
     // This is helpful if there are multiple (overlapping) items close to each other.
-    highlightedEvents.forEach(event => {
-      this._drawSingleSchedulingEvent(
+    highlightedEvents.forEach(thrownError => {
+      this._drawSingleThrownError(
         context,
         visibleArea,
-        event,
+        thrownError,
         baseY,
         scaleFactor,
         true,
       );
     });
 
-    // Render bottom border.
+    // Render bottom borders.
     // Propose border rect, check if intersects with `rect`, draw intersection.
     const borderFrame: Rect = {
       origin: {
@@ -221,7 +199,7 @@ export class SchedulingEventsView extends View {
     }
 
     const {
-      _profilerData: {schedulingEvents},
+      _profilerData: {thrownErrors},
     } = this;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
@@ -235,8 +213,8 @@ export class SchedulingEventsView extends View {
 
     // Because data ranges may overlap, we want to find the last intersecting item.
     // This will always be the one on "top" (the one the user is hovering over).
-    for (let index = schedulingEvents.length - 1; index >= 0; index--) {
-      const event = schedulingEvents[index];
+    for (let index = thrownErrors.length - 1; index >= 0; index--) {
+      const event = thrownErrors[index];
       const {timestamp} = event;
 
       if (

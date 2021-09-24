@@ -550,6 +550,16 @@ function processTimelineEvent(
         }
 
         currentProfilerData.schedulingEvents.push(stateUpdateEvent);
+      } else if (name.startsWith('--error-')) {
+        const [componentName, phase, message] = name.substr(8).split('-');
+
+        currentProfilerData.thrownErrors.push({
+          componentName,
+          message,
+          phase: ((phase: any): Phase),
+          timestamp: startTime,
+          type: 'thrown-error',
+        });
       } // eslint-disable-line brace-style
 
       // React Events - suspense
@@ -865,6 +875,7 @@ export default async function preprocessData(
     snapshots: [],
     startTime: 0,
     suspenseEvents: [],
+    thrownErrors: [],
   };
 
   // Sort `timeline`. JSON Array Format trace events need not be ordered. See:
