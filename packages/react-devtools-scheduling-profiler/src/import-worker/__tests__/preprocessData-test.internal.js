@@ -354,6 +354,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 1,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -570,6 +571,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 1,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -761,6 +763,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 4,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -1107,6 +1110,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 4,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -1532,6 +1536,52 @@ describe('preprocessData', () => {
           );
           expect(event.warning).toMatchInlineSnapshot(
             `"A big nested update was scheduled during layout. Nested updates require React to re-render synchronously before the browser can paint. Consider delaying this update by moving it to a passive effect (useEffect)."`,
+          );
+        }
+      });
+    });
+
+    describe('errors thrown while rendering', () => {
+      it('shoult parse Errors thrown during render', async () => {
+        spyOnDev(console, 'error');
+        spyOnProd(console, 'error');
+
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            if (this.state.error) {
+              return null;
+            }
+            return this.props.children;
+          }
+        }
+
+        function ExampleThatThrows() {
+          throw Error('Expected error');
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const testMarks = [creactCpuProfilerSample()];
+
+          // Mount and commit the app
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() =>
+            root.render(
+              <ErrorBoundary>
+                <ExampleThatThrows />
+              </ErrorBoundary>,
+            ),
+          );
+
+          testMarks.push(...createUserTimingData(clearedMarks));
+
+          const data = await preprocessData(testMarks);
+          expect(data.thrownErrors).toHaveLength(2);
+          expect(data.thrownErrors[0].message).toMatchInlineSnapshot(
+            '"Expected error"',
           );
         }
       });
