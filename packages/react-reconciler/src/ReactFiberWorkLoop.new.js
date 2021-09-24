@@ -859,8 +859,8 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
 
   // If an error occurred during hydration, discard server response and fall
   // back to client side render.
-  if (root.hydrate) {
-    root.hydrate = false;
+  if (root.isDehydrated) {
+    root.isDehydrated = false;
     if (__DEV__) {
       errorHydratingContainer(root.containerInfo);
     }
@@ -1076,8 +1076,8 @@ function performSyncWorkOnRoot(root) {
 
     // If an error occurred during hydration,
     // discard server response and fall back to client side render.
-    if (root.hydrate) {
-      root.hydrate = false;
+    if (root.isDehydrated) {
+      root.isDehydrated = false;
       if (__DEV__) {
         errorHydratingContainer(root.containerInfo);
       }
