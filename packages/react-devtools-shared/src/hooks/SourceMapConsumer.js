@@ -11,6 +11,7 @@ import {decode} from 'sourcemap-codec';
 
 import type {
   IndexSourceMap,
+  IndexSourceMapSection,
   BasicSourceMap,
   MixedSourceMap,
 } from './SourceMapTypes';
@@ -34,7 +35,7 @@ export type SourceMapConsumerType = {|
 type Mappings = Array<Array<Array<number>>>;
 
 export default function SourceMapConsumer(
-  sourceMapJSON: MixedSourceMap,
+  sourceMapJSON: MixedSourceMap | IndexSourceMapSection,
 ): SourceMapConsumerType {
   if (sourceMapJSON.sections != null) {
     return IndexedSourceMapConsumer(((sourceMapJSON: any): IndexSourceMap));
@@ -137,13 +138,22 @@ function BasicSourceMapConsumer(sourceMapJSON: BasicSourceMap) {
   }: any): SourceMapConsumerType);
 }
 
+type Section = {|
+  +generatedColumn: number,
+  +generatedLine: number,
+  +map: MixedSourceMap,
+
+  // Lazily parsed only when/as the section is needed.
+  sourceMapConsumer: SourceMapConsumerType | null,
+|};
+
 function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
   let lastOffset = {
     line: -1,
     column: 0,
   };
 
-  const sections = sourceMapJSON.sections.map(section => {
+  const sections: Array<Section> = sourceMapJSON.sections.map(section => {
     const offset = section.offset;
     const offsetLine = offset.line;
     const offsetColumn = offset.column;
@@ -161,7 +171,8 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
       // The offset fields are 0-based, but we use 1-based indices when encoding/decoding from VLQ.
       generatedLine: offsetLine + 1,
       generatedColumn: offsetColumn + 1,
-      sourceMapConsumer: new SourceMapConsumer(section.map),
+      map: section.map,
+      sourceMapConsumer: null,
     };
   });
 
@@ -227,6 +238,11 @@ function IndexedSourceMapConsumer(sourceMapJSON: IndexSourceMap) {
       throw Error(
         `Could not find matching section for line:${lineNumber} and column:${columnNumber}`,
       );
+    }
+
+    if (section.sourceMapConsumer === null) {
+      // Lazily parse the section only when it's needed.
+      section.sourceMapConsumer = new SourceMapConsumer(section.map);
     }
 
     return section.sourceMapConsumer.originalPositionFor({
