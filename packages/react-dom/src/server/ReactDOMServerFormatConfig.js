@@ -1543,19 +1543,14 @@ export function writeEndSegment(
 //
 // function clientRenderBoundary(suspenseBoundaryID) {
 //   // Find the fallback's first element.
-//   let suspenseNode = document.getElementById(suspenseBoundaryID);
-//   if (!suspenseNode) {
+//   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
+//   if (!suspenseIdNode) {
 //     // The user must have already navigated away from this tree.
 //     // E.g. because the parent was hydrated.
 //     return;
 //   }
-//   // Find the boundary around the fallback. This might include text nodes.
-//   do {
-//     suspenseNode = suspenseNode.previousSibling;
-//   } while (
-//     suspenseNode.nodeType !== COMMENT_NODE ||
-//     suspenseNode.data !== SUSPENSE_PENDING_START_DATA
-//   );
+//   // Find the boundary around the fallback. This is always the previous node.
+//   const suspenseNode = suspenseIdNode.previousSibling;
 //   // Tag it to be client rendered.
 //   suspenseNode.data = SUSPENSE_FALLBACK_START_DATA;
 //   // Tell React to retry it if the parent already hydrated.
@@ -1566,24 +1561,19 @@ export function writeEndSegment(
 //
 // function completeBoundary(suspenseBoundaryID, contentID) {
 //   // Find the fallback's first element.
-//   let suspenseNode = document.getElementById(suspenseBoundaryID);
+//   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
 //   const contentNode = document.getElementById(contentID);
 //   // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
 //   // This might also help by not causing recalcing each time we move a child from here to the target.
 //   contentNode.parentNode.removeChild(contentNode);
-//   if (!suspenseNode) {
+//   if (!suspenseIdNode) {
 //     // The user must have already navigated away from this tree.
 //     // E.g. because the parent was hydrated. That's fine there's nothing to do
 //     // but we have to make sure that we already deleted the container node.
 //     return;
 //   }
-//   // Find the boundary around the fallback. This might include text nodes.
-//   do {
-//     suspenseNode = suspenseNode.previousSibling;
-//   } while (
-//     suspenseNode.nodeType !== COMMENT_NODE ||
-//     suspenseNode.data !== SUSPENSE_PENDING_START_DATA
-//   );
+//   // Find the boundary around the fallback. This is always the previous node.
+//   const suspenseNode = suspenseIdNode.previousSibling;
 //
 //   // Clear all the existing children. This is complicated because
 //   // there can be embedded Suspense boundaries in the fallback.
@@ -1646,11 +1636,11 @@ export function writeEndSegment(
 // }
 
 const completeSegmentFunction =
-  'function $RS(b,f){var a=document.getElementById(b),c=document.getElementById(f);for(a.parentNode.removeChild(a);a.firstChild;)c.parentNode.insertBefore(a.firstChild,c);c.parentNode.removeChild(c)}';
+  'function $RS(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)}';
 const completeBoundaryFunction =
-  'function $RC(b,f){var a=document.getElementById(b),c=document.getElementById(f);c.parentNode.removeChild(c);if(a){do a=a.previousSibling;while(8!==a.nodeType||"$?"!==a.data);var h=a.parentNode,d=a.nextSibling,g=0;do{if(d&&8===d.nodeType){var e=d.data;if("/$"===e)if(0===g)break;else g--;else"$"!==e&&"$?"!==e&&"$!"!==e||g++}e=d.nextSibling;h.removeChild(d);d=e}while(d);for(;c.firstChild;)h.insertBefore(c.firstChild,d);a.data="$";a._reactRetry&&a._reactRetry()}}';
+  'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
 const clientRenderFunction =
-  'function $RX(b){if(b=document.getElementById(b)){do b=b.previousSibling;while(8!==b.nodeType||"$?"!==b.data);b.data="$!";b._reactRetry&&b._reactRetry()}}';
+  'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
   '<script>' + completeSegmentFunction + ';$RS("',
