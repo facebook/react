@@ -81,7 +81,9 @@ const ReactNoopServer = ReactFizzServer({
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
-  createSuspenseBoundaryID(): SuspenseInstance {
+  UNINITIALIZED_SUSPENSE_BOUNDARY_ID: null,
+
+  assignSuspenseBoundaryID(): SuspenseInstance {
     // The ID is a pointer to the boundary itself.
     return {state: 'pending', children: []};
   },

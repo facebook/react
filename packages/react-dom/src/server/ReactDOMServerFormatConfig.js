@@ -168,14 +168,17 @@ export function getChildFormatContext(
   return parentContext;
 }
 
-export type SuspenseBoundaryID = {
-  formattedID: null | PrecomputedChunk,
-};
+export type SuspenseBoundaryID = null | PrecomputedChunk;
 
-export function createSuspenseBoundaryID(
+export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID: SuspenseBoundaryID = null;
+
+export function assignSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
-  return {formattedID: null};
+  const generatedID = responseState.nextSuspenseID++;
+  return stringToPrecomputedChunk(
+    responseState.boundaryPrefix + generatedID.toString(16),
+  );
 }
 
 export type OpaqueIDType = string;
@@ -196,16 +199,6 @@ export function makeServerID(
 
 function encodeHTMLTextNode(text: string): string {
   return escapeTextForBrowser(text);
-}
-
-function assignAnID(
-  responseState: ResponseState,
-  id: SuspenseBoundaryID,
-): PrecomputedChunk {
-  const generatedID = responseState.nextSuspenseID++;
-  return (id.formattedID = stringToPrecomputedChunk(
-    responseState.boundaryPrefix + generatedID.toString(16),
-  ));
 }
 
 const textSeparator = stringToPrecomputedChunk('<!-- -->');
@@ -1377,8 +1370,11 @@ export function writeStartPendingSuspenseBoundary(
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, startPendingSuspenseBoundary1);
-  const formattedID = assignAnID(responseState, id);
-  writeChunk(destination, formattedID);
+  invariant(
+    id !== null,
+    'An ID must have been assigned before we can complete the boundary.',
+  );
+  writeChunk(destination, id);
   return writeChunk(destination, startPendingSuspenseBoundary2);
 }
 export function writeStartClientRenderedSuspenseBoundary(
@@ -1708,13 +1704,12 @@ export function writeCompletedBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, completeBoundaryScript1Partial);
   }
-  const formattedBoundaryID = boundaryID.formattedID;
   invariant(
-    formattedBoundaryID !== null,
+    boundaryID !== null,
     'An ID must have been assigned before we can complete the boundary.',
   );
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
-  writeChunk(destination, formattedBoundaryID);
+  writeChunk(destination, boundaryID);
   writeChunk(destination, completeBoundaryScript2);
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
@@ -1740,11 +1735,10 @@ export function writeClientRenderBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, clientRenderScript1Partial);
   }
-  const formattedBoundaryID = boundaryID.formattedID;
   invariant(
-    formattedBoundaryID !== null,
+    boundaryID !== null,
     'An ID must have been assigned before we can complete the boundary.',
   );
-  writeChunk(destination, formattedBoundaryID);
+  writeChunk(destination, boundaryID);
   return writeChunk(destination, clientRenderScript2);
 }

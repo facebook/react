@@ -103,10 +103,11 @@ export function getChildFormatContext(
 // This is very specific to DOM where we can't assign an ID to.
 export type SuspenseBoundaryID = number;
 
-export function createSuspenseBoundaryID(
+export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID = -1;
+
+export function assignSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
-  // TODO: This is not deterministic since it's created during render.
   return responseState.nextSuspenseID++;
 }
 

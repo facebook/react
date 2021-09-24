@@ -78,7 +78,8 @@ export type {
 
 export {
   getChildFormatContext,
-  createSuspenseBoundaryID,
+  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
+  assignSuspenseBoundaryID,
   makeServerID,
   pushStartInstance,
   pushEndInstance,

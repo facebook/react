@@ -53,7 +53,8 @@ import {
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
   pushEndCompletedSuspenseBoundary,
-  createSuspenseBoundaryID,
+  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
+  assignSuspenseBoundaryID,
   getChildFormatContext,
 } from './ReactServerFormatConfig';
 import {
@@ -123,7 +124,7 @@ type LegacyContext = {
 };
 
 type SuspenseBoundary = {
-  +id: SuspenseBoundaryID,
+  id: SuspenseBoundaryID,
   rootSegmentID: number,
   forceClientRender: boolean, // if it errors or infinitely suspends
   parentFlushed: boolean,
@@ -281,7 +282,7 @@ function createSuspenseBoundary(
   fallbackAbortableTasks: Set<Task>,
 ): SuspenseBoundary {
   return {
-    id: createSuspenseBoundaryID(request.responseState),
+    id: UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
@@ -1595,11 +1596,10 @@ function flushSegment(
       request.partialBoundaries.push(boundary);
     }
 
-    writeStartPendingSuspenseBoundary(
-      destination,
-      request.responseState,
-      boundary.id,
-    );
+    /// This is the first time we should have referenced this ID.
+    const id = (boundary.id = assignSuspenseBoundaryID(request.responseState));
+
+    writeStartPendingSuspenseBoundary(destination, request.responseState, id);
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
