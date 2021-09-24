@@ -49,6 +49,7 @@ import {
   SchedulingEventsView,
   SnapshotsView,
   SuspenseEventsView,
+  ThrownErrorsView,
   TimeAxisMarkersView,
   UserTimingMarksView,
 } from './content-views';
@@ -138,6 +139,7 @@ const EMPTY_CONTEXT_INFO: ReactHoverContextInfo = {
   schedulingEvent: null,
   snapshot: null,
   suspenseEvent: null,
+  thrownError: null,
   userTimingMark: null,
 };
 
@@ -178,6 +180,7 @@ function AutoSizedCanvas({
   const flamechartViewRef = useRef(null);
   const networkMeasuresViewRef = useRef(null);
   const snapshotsViewRef = useRef(null);
+  const thrownErrorsViewRef = useRef(null);
 
   const {hideMenu: hideContextMenu} = useContext(RegistryContext);
 
@@ -270,6 +273,20 @@ function AutoSizedCanvas({
       true,
       true,
     );
+
+    let thrownErrorsViewWrapper = null;
+    if (data.thrownErrors.length > 0) {
+      const thrownErrorsView = new ThrownErrorsView(
+        surface,
+        defaultFrame,
+        data,
+      );
+      thrownErrorsViewRef.current = thrownErrorsView;
+      thrownErrorsViewWrapper = createViewHelper(
+        thrownErrorsView,
+        'thrown errors',
+      );
+    }
 
     const schedulingEventsView = new SchedulingEventsView(
       surface,
@@ -382,6 +399,9 @@ function AutoSizedCanvas({
     }
     rootView.addSubview(nativeEventsViewWrapper);
     rootView.addSubview(schedulingEventsViewWrapper);
+    if (thrownErrorsViewWrapper !== null) {
+      rootView.addSubview(thrownErrorsViewWrapper);
+    }
     if (suspenseEventsViewWrapper !== null) {
       rootView.addSubview(suspenseEventsViewWrapper);
     }
@@ -461,14 +481,7 @@ function AutoSizedCanvas({
       userTimingMarksView.onHover = userTimingMark => {
         if (!hoveredEvent || hoveredEvent.userTimingMark !== userTimingMark) {
           setHoveredEvent({
-            componentMeasure: null,
-            flamechartStackFrame: null,
-            measure: null,
-            nativeEvent: null,
-            networkMeasure: null,
-            schedulingEvent: null,
-            snapshot: null,
-            suspenseEvent: null,
+            ...EMPTY_CONTEXT_INFO,
             userTimingMark,
           });
         }
@@ -480,15 +493,8 @@ function AutoSizedCanvas({
       nativeEventsView.onHover = nativeEvent => {
         if (!hoveredEvent || hoveredEvent.nativeEvent !== nativeEvent) {
           setHoveredEvent({
-            componentMeasure: null,
-            flamechartStackFrame: null,
-            measure: null,
+            ...EMPTY_CONTEXT_INFO,
             nativeEvent,
-            networkMeasure: null,
-            schedulingEvent: null,
-            snapshot: null,
-            suspenseEvent: null,
-            userTimingMark: null,
           });
         }
       };
@@ -499,15 +505,8 @@ function AutoSizedCanvas({
       schedulingEventsView.onHover = schedulingEvent => {
         if (!hoveredEvent || hoveredEvent.schedulingEvent !== schedulingEvent) {
           setHoveredEvent({
-            componentMeasure: null,
-            flamechartStackFrame: null,
-            measure: null,
-            nativeEvent: null,
-            networkMeasure: null,
+            ...EMPTY_CONTEXT_INFO,
             schedulingEvent,
-            snapshot: null,
-            suspenseEvent: null,
-            userTimingMark: null,
           });
         }
       };
@@ -518,15 +517,8 @@ function AutoSizedCanvas({
       suspenseEventsView.onHover = suspenseEvent => {
         if (!hoveredEvent || hoveredEvent.suspenseEvent !== suspenseEvent) {
           setHoveredEvent({
-            componentMeasure: null,
-            flamechartStackFrame: null,
-            measure: null,
-            nativeEvent: null,
-            networkMeasure: null,
-            schedulingEvent: null,
-            snapshot: null,
+            ...EMPTY_CONTEXT_INFO,
             suspenseEvent,
-            userTimingMark: null,
           });
         }
       };
@@ -537,15 +529,8 @@ function AutoSizedCanvas({
       reactMeasuresView.onHover = measure => {
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
-            componentMeasure: null,
-            flamechartStackFrame: null,
+            ...EMPTY_CONTEXT_INFO,
             measure,
-            nativeEvent: null,
-            networkMeasure: null,
-            schedulingEvent: null,
-            snapshot: null,
-            suspenseEvent: null,
-            userTimingMark: null,
           });
         }
       };
@@ -559,15 +544,8 @@ function AutoSizedCanvas({
           hoveredEvent.componentMeasure !== componentMeasure
         ) {
           setHoveredEvent({
+            ...EMPTY_CONTEXT_INFO,
             componentMeasure,
-            flamechartStackFrame: null,
-            measure: null,
-            nativeEvent: null,
-            networkMeasure: null,
-            schedulingEvent: null,
-            snapshot: null,
-            suspenseEvent: null,
-            userTimingMark: null,
           });
         }
       };
@@ -578,15 +556,8 @@ function AutoSizedCanvas({
       snapshotsView.onHover = snapshot => {
         if (!hoveredEvent || hoveredEvent.snapshot !== snapshot) {
           setHoveredEvent({
-            componentMeasure: null,
-            flamechartStackFrame: null,
-            measure: null,
-            nativeEvent: null,
-            networkMeasure: null,
-            schedulingEvent: null,
+            ...EMPTY_CONTEXT_INFO,
             snapshot,
-            suspenseEvent: null,
-            userTimingMark: null,
           });
         }
       };
@@ -600,15 +571,8 @@ function AutoSizedCanvas({
           hoveredEvent.flamechartStackFrame !== flamechartStackFrame
         ) {
           setHoveredEvent({
-            componentMeasure: null,
+            ...EMPTY_CONTEXT_INFO,
             flamechartStackFrame,
-            measure: null,
-            nativeEvent: null,
-            networkMeasure: null,
-            schedulingEvent: null,
-            snapshot: null,
-            suspenseEvent: null,
-            userTimingMark: null,
           });
         }
       });
@@ -619,15 +583,20 @@ function AutoSizedCanvas({
       networkMeasuresView.onHover = networkMeasure => {
         if (!hoveredEvent || hoveredEvent.networkMeasure !== networkMeasure) {
           setHoveredEvent({
-            componentMeasure: null,
-            flamechartStackFrame: null,
-            measure: null,
-            nativeEvent: null,
+            ...EMPTY_CONTEXT_INFO,
             networkMeasure,
-            schedulingEvent: null,
-            snapshot: null,
-            suspenseEvent: null,
-            userTimingMark: null,
+          });
+        }
+      };
+    }
+
+    const {current: thrownErrorsView} = thrownErrorsViewRef;
+    if (thrownErrorsView) {
+      thrownErrorsView.onHover = thrownError => {
+        if (!hoveredEvent || hoveredEvent.thrownError !== thrownError) {
+          setHoveredEvent({
+            ...EMPTY_CONTEXT_INFO,
+            thrownError,
           });
         }
       };
