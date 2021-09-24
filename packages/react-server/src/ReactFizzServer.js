@@ -141,7 +141,6 @@ type Task = {
   abortSet: Set<Task>, // the abortable set that this task belongs to
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
-  assignID: null | SuspenseBoundaryID, // id to assign to the content
   componentStack: null | ComponentStackNode, // DEV-only component stack
 };
 
@@ -264,7 +263,6 @@ export function createRequest(
     abortSet,
     emptyContextObject,
     rootContextSnapshot,
-    null,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -302,7 +300,6 @@ function createTask(
   abortSet: Set<Task>,
   legacyContext: LegacyContext,
   context: ContextSnapshot,
-  assignID: null | SuspenseBoundaryID,
 ): Task {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -318,7 +315,6 @@ function createTask(
     abortSet,
     legacyContext,
     context,
-    assignID,
   }: any);
   if (__DEV__) {
     task.componentStack = null;
@@ -494,7 +490,6 @@ function renderSuspenseBoundary(
     fallbackAbortSet,
     task.legacyContext,
     task.context,
-    null,
   );
   if (__DEV__) {
     suspendedFallbackTask.componentStack = task.componentStack;
@@ -537,10 +532,7 @@ function renderHostElement(
     props,
     request.responseState,
     segment.formatContext,
-    task.assignID,
   );
-  // We must have assigned it already above so we don't need this anymore.
-  task.assignID = null;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
   // We use the non-destructive form because if something suspends, we still
@@ -1170,13 +1162,7 @@ function renderNodeDestructive(
   }
 
   if (typeof node === 'string') {
-    pushTextInstance(
-      task.blockedSegment.chunks,
-      node,
-      request.responseState,
-      task.assignID,
-    );
-    task.assignID = null;
+    pushTextInstance(task.blockedSegment.chunks, node, request.responseState);
     return;
   }
 
@@ -1185,9 +1171,7 @@ function renderNodeDestructive(
       task.blockedSegment.chunks,
       '' + node,
       request.responseState,
-      task.assignID,
     );
-    task.assignID = null;
     return;
   }
 
@@ -1225,7 +1209,6 @@ function spawnNewSuspendedTask(
     task.abortSet,
     task.legacyContext,
     task.context,
-    task.assignID,
   );
   if (__DEV__) {
     if (task.componentStack !== null) {
@@ -1234,8 +1217,6 @@ function spawnNewSuspendedTask(
       newTask.componentStack = task.componentStack.parent;
     }
   }
-  // We've delegated the assignment.
-  task.assignID = null;
   const ping = newTask.ping;
   x.then(ping, ping);
 }

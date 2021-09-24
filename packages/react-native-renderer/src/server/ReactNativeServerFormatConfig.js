@@ -129,7 +129,6 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): void {
   target.push(
     INSTANCE,
@@ -146,7 +145,6 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(
     INSTANCE,

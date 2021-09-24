@@ -230,11 +230,7 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): void {
-  if (assignID !== null) {
-    pushDummyNodeWithID(target, responseState, assignID);
-  }
   if (text === '') {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
     return;
@@ -588,7 +584,6 @@ function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('select', props);
@@ -641,9 +636,6 @@ function pushStartSelect(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -683,7 +675,6 @@ function pushStartOption(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   const selectedValue = formatContext.selectedValue;
 
@@ -766,10 +757,6 @@ function pushStartOption(
     target.push(selectedMarkerAttribute);
   }
 
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
-
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   return children;
@@ -779,7 +766,6 @@ function pushInput(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('input', props);
@@ -873,10 +859,6 @@ function pushInput(
     pushAttribute(target, responseState, 'value', defaultValue);
   }
 
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
-
   target.push(endOfStartTagSelfClosing);
   return null;
 }
@@ -885,7 +867,6 @@ function pushStartTextArea(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('textarea', props);
@@ -942,10 +923,6 @@ function pushStartTextArea(
     value = defaultValue;
   }
 
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
-
   target.push(endOfStartTag);
 
   // TODO (yungsters): Remove support for children content in <textarea>.
@@ -992,7 +969,6 @@ function pushSelfClosing(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1018,9 +994,6 @@ function pushSelfClosing(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTagSelfClosing);
   return null;
@@ -1030,7 +1003,6 @@ function pushStartMenuItem(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag('menuitem'));
 
@@ -1054,9 +1026,6 @@ function pushStartMenuItem(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   return null;
@@ -1067,7 +1036,6 @@ function pushStartGenericElement(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1092,9 +1060,6 @@ function pushStartGenericElement(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -1112,7 +1077,6 @@ function pushStartCustomElement(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1156,9 +1120,6 @@ function pushStartCustomElement(
       }
     }
   }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
-  }
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
@@ -1172,7 +1133,6 @@ function pushStartPreformattedElement(
   props: Object,
   tag: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(startChunkForTag(tag));
 
@@ -1196,9 +1156,6 @@ function pushStartPreformattedElement(
           break;
       }
     }
-  }
-  if (assignID !== null) {
-    pushID(target, responseState, assignID, props.id);
   }
 
   target.push(endOfStartTag);
@@ -1265,7 +1222,6 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
     validateARIAProperties(type, props);
@@ -1307,31 +1263,19 @@ export function pushStartInstance(
   switch (type) {
     // Special tags
     case 'select':
-      return pushStartSelect(target, props, responseState, assignID);
+      return pushStartSelect(target, props, responseState);
     case 'option':
-      return pushStartOption(
-        target,
-        props,
-        responseState,
-        formatContext,
-        assignID,
-      );
+      return pushStartOption(target, props, responseState, formatContext);
     case 'textarea':
-      return pushStartTextArea(target, props, responseState, assignID);
+      return pushStartTextArea(target, props, responseState);
     case 'input':
-      return pushInput(target, props, responseState, assignID);
+      return pushInput(target, props, responseState);
     case 'menuitem':
-      return pushStartMenuItem(target, props, responseState, assignID);
+      return pushStartMenuItem(target, props, responseState);
     // Newline eating tags
     case 'listing':
     case 'pre': {
-      return pushStartPreformattedElement(
-        target,
-        props,
-        type,
-        responseState,
-        assignID,
-      );
+      return pushStartPreformattedElement(target, props, type, responseState);
     }
     // Omitted close tags
     case 'area':
@@ -1348,7 +1292,7 @@ export function pushStartInstance(
     case 'source':
     case 'track':
     case 'wbr': {
-      return pushSelfClosing(target, props, type, responseState, assignID);
+      return pushSelfClosing(target, props, type, responseState);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
     // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
@@ -1360,13 +1304,7 @@ export function pushStartInstance(
     case 'font-face-format':
     case 'font-face-name':
     case 'missing-glyph': {
-      return pushStartGenericElement(
-        target,
-        props,
-        type,
-        responseState,
-        assignID,
-      );
+      return pushStartGenericElement(target, props, type, responseState);
     }
     case 'html': {
       if (formatContext.insertionMode === ROOT_HTML_MODE) {
@@ -1375,33 +1313,15 @@ export function pushStartInstance(
         // rendering the whole document.
         target.push(DOCTYPE);
       }
-      return pushStartGenericElement(
-        target,
-        props,
-        type,
-        responseState,
-        assignID,
-      );
+      return pushStartGenericElement(target, props, type, responseState);
     }
     default: {
       if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
         // Generic element
-        return pushStartGenericElement(
-          target,
-          props,
-          type,
-          responseState,
-          assignID,
-        );
+        return pushStartGenericElement(target, props, type, responseState);
       } else {
         // Custom element
-        return pushStartCustomElement(
-          target,
-          props,
-          type,
-          responseState,
-          assignID,
-        );
+        return pushStartCustomElement(target, props, type, responseState);
       }
     }
   }
