@@ -11,6 +11,10 @@ const evalToString = require('../shared/evalToString');
 const invertObject = require('./invertObject');
 const helperModuleImports = require('@babel/helper-module-imports');
 
+const errorMap = invertObject(
+  JSON.parse(fs.readFileSync(__dirname + '/codes.json', 'utf-8'))
+);
+
 module.exports = function(babel) {
   const t = babel.types;
 
@@ -80,12 +84,6 @@ module.exports = function(babel) {
             );
             return;
           }
-
-          // Avoid caching because we write it as we go.
-          const existingErrorMap = JSON.parse(
-            fs.readFileSync(__dirname + '/codes.json', 'utf-8')
-          );
-          const errorMap = invertObject(existingErrorMap);
 
           let prodErrorId = errorMap[errorMsgLiteral];
 
