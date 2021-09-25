@@ -7,6 +7,7 @@
  */
 
 /* eslint-disable no-var */
+/* eslint-disable react-internal/prod-error-codes */
 
 import {
   enableSchedulerDebugging,

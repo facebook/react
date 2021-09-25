@@ -128,6 +128,41 @@ module.exports = {
 
   overrides: [
     {
+      // By default, anything error message that appears the packages directory
+      // must have a corresponding error code. The exceptions are defined
+      // in the next override entry.
+      files: ['packages/**/*.js'],
+      rules: {
+        'react-internal/prod-error-codes': ERROR,
+      },
+    },
+    {
+      // These are files where it's OK to have unminified error messages. These
+      // are environments where bundle size isn't a concern, like tests
+      // or Node.
+      files: [
+        'packages/react-dom/src/test-utils/**/*.js',
+        'packages/react-devtools-shared/**/*.js',
+        'packages/react-noop-renderer/**/*.js',
+        'packages/react-pg/**/*.js',
+        'packages/react-fs/**/*.js',
+        'packages/react-refresh/**/*.js',
+        'packages/react-server-dom-webpack/**/*.js',
+        'packages/react-test-renderer/**/*.js',
+        'packages/react-debug-tools/**/*.js',
+        'packages/react-devtools-extensions/**/*.js',
+        'packages/react-devtools-scheduling-profiler/**/*.js',
+        'packages/react-native-renderer/**/*.js',
+        'packages/eslint-plugin-react-hooks/**/*.js',
+        'packages/jest-react/**/*.js',
+        'packages/**/__tests__/*.js',
+        'packages/**/npm/*.js',
+      ],
+      rules: {
+        'react-internal/prod-error-codes': OFF,
+      },
+    },
+    {
       // We apply these settings to files that we ship through npm.
       // They must be ES5.
       files: es5Paths,

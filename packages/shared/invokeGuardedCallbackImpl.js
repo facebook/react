@@ -201,6 +201,7 @@ if (__DEV__) {
       if (didCall && didError) {
         if (!didSetError) {
           // The callback errored, but the error event never fired.
+          // eslint-disable-next-line react-internal/prod-error-codes
           error = new Error(
             'An error was thrown inside one of your components, but React ' +
               "doesn't know what it was. This is likely due to browser " +
@@ -212,6 +213,7 @@ if (__DEV__) {
               'actually an issue with React, please file an issue.',
           );
         } else if (isCrossOriginError) {
+          // eslint-disable-next-line react-internal/prod-error-codes
           error = new Error(
             "A cross-origin error was thrown. React doesn't have access to " +
               'the actual error object in development. ' +

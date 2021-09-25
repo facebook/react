@@ -1050,6 +1050,7 @@ function updateClassComponent(
       case true: {
         workInProgress.flags |= DidCapture;
         workInProgress.flags |= ShouldCapture;
+        // eslint-disable-next-line react-internal/prod-error-codes
         const error = new Error('Simulated error coming from DevTools');
         const lane = pickArbitraryLane(renderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
@@ -3317,6 +3318,7 @@ function remountFiber(
   if (__DEV__) {
     const returnFiber = oldWorkInProgress.return;
     if (returnFiber === null) {
+      // eslint-disable-next-line react-internal/prod-error-codes
       throw new Error('Cannot swap the root fiber.');
     }
 
@@ -3337,11 +3339,13 @@ function remountFiber(
     } else {
       let prevSibling = returnFiber.child;
       if (prevSibling === null) {
+        // eslint-disable-next-line react-internal/prod-error-codes
         throw new Error('Expected parent to have a child.');
       }
       while (prevSibling.sibling !== oldWorkInProgress) {
         prevSibling = prevSibling.sibling;
         if (prevSibling === null) {
+          // eslint-disable-next-line react-internal/prod-error-codes
           throw new Error('Expected to find the previous sibling.');
         }
       }
