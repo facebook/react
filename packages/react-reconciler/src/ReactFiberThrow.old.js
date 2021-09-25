@@ -474,7 +474,8 @@ function throwException(
       return;
     } else {
       // No boundary was found. Fallthrough to error mode.
-      // TODO: Use invariant so the message is stripped in prod?
+      // TODO: We should never call getComponentNameFromFiber in production.
+      // Log a warning or something to prevent us from accidentally bundling it.
       value = new Error(
         (getComponentNameFromFiber(sourceFiber) || 'A React component') +
           ' suspended while rendering, but no fallback UI was specified.\n' +
