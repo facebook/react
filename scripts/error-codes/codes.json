@@ -395,5 +395,6 @@
   "406": "act(...) is not supported in production builds of React.",
   "407": "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering.",
   "408": "Missing getServerSnapshot, which is required for server-rendered content.",
-  "409": "Cannot update an unmounted root."
+  "409": "Cannot update an unmounted root.",
+  "410": "%s suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display."
 }
