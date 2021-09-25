@@ -433,25 +433,25 @@ export function clearContainer(container) {
 }
 
 export function getInstanceFromNode(node) {
-  throw new Error('Not yet implemented.');
+  throw new Error('Not implemented.');
 }
 
 export function isOpaqueHydratingObject(value: mixed): boolean {
-  throw new Error('Not yet implemented');
+  throw new Error('Not implemented.');
 }
 
 export function makeOpaqueHydratingObject(
   attemptToReadValue: () => void,
 ): OpaqueIDType {
-  throw new Error('Not yet implemented.');
+  throw new Error('Not implemented.');
 }
 
 export function makeClientId(): OpaqueIDType {
-  throw new Error('Not yet implemented');
+  throw new Error('Not implemented.');
 }
 
 export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
-  throw new Error('Not yet implemented');
+  throw new Error('Not implemented.');
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
