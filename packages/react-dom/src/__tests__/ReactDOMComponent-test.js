@@ -56,7 +56,7 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.fontFamily).toEqual('Arial');
 
       // reset the style to their default state
-      const reset = {display: '', left: null, top: false, fontFamily: true};
+      const reset = {display: '', left: null, top: false, fontFamily: ''};
       ReactDOM.render(<div style={reset} />, container);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.left).toEqual('');
