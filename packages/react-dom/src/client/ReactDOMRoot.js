@@ -65,7 +65,6 @@ import {
   flushSync,
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import invariant from 'shared/invariant';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
@@ -76,7 +75,7 @@ function ReactDOMRoot(internalRoot: FiberRoot) {
 ReactDOMRoot.prototype.render = function(children: ReactNodeList): void {
   const root = this._internalRoot;
   if (root === null) {
-    invariant(false, 'Cannot update an unmounted root.');
+    throw new Error('Cannot update an unmounted root.');
   }
 
   if (__DEV__) {
@@ -138,10 +137,10 @@ export function createRoot(
   container: Container,
   options?: CreateRootOptions,
 ): RootType {
-  invariant(
-    isValidContainerLegacy(container),
-    'createRoot(...): Target container is not a DOM element.',
-  );
+  if (!isValidContainerLegacy(container)) {
+    throw new Error('createRoot(...): Target container is not a DOM element.');
+  }
+
   warnIfReactDOMContainerInDEV(container);
 
   // TODO: Delete these options
@@ -195,10 +194,10 @@ export function hydrateRoot(
   initialChildren: ReactNodeList,
   options?: HydrateRootOptions,
 ): RootType {
-  invariant(
-    isValidContainer(container),
-    'hydrateRoot(...): Target container is not a DOM element.',
-  );
+  if (!isValidContainer(container)) {
+    throw new Error('hydrateRoot(...): Target container is not a DOM element.');
+  }
+
   warnIfReactDOMContainerInDEV(container);
 
   // For now we reuse the whole bag of options since they contain

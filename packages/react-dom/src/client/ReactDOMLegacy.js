@@ -36,7 +36,6 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
@@ -238,10 +237,10 @@ export function hydrate(
     );
   }
 
-  invariant(
-    isValidContainerLegacy(container),
-    'Target container is not a DOM element.',
-  );
+  if (!isValidContainerLegacy(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
   if (__DEV__) {
     const isModernRoot =
       isContainerMarkedAsRoot(container) &&
@@ -278,10 +277,10 @@ export function render(
     );
   }
 
-  invariant(
-    isValidContainerLegacy(container),
-    'Target container is not a DOM element.',
-  );
+  if (!isValidContainerLegacy(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
   if (__DEV__) {
     const isModernRoot =
       isContainerMarkedAsRoot(container) &&
@@ -309,14 +308,14 @@ export function unstable_renderSubtreeIntoContainer(
   containerNode: Container,
   callback: ?Function,
 ) {
-  invariant(
-    isValidContainerLegacy(containerNode),
-    'Target container is not a DOM element.',
-  );
-  invariant(
-    parentComponent != null && hasInstance(parentComponent),
-    'parentComponent must be a valid React Component',
-  );
+  if (!isValidContainerLegacy(containerNode)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
+  if (parentComponent == null || !hasInstance(parentComponent)) {
+    throw new Error('parentComponent must be a valid React Component');
+  }
+
   return legacyRenderSubtreeIntoContainer(
     parentComponent,
     element,
@@ -327,10 +326,11 @@ export function unstable_renderSubtreeIntoContainer(
 }
 
 export function unmountComponentAtNode(container: Container) {
-  invariant(
-    isValidContainerLegacy(container),
-    'unmountComponentAtNode(...): Target container is not a DOM element.',
-  );
+  if (!isValidContainerLegacy(container)) {
+    throw new Error(
+      'unmountComponentAtNode(...): Target container is not a DOM element.',
+    );
+  }
 
   if (__DEV__) {
     const isModernRoot =

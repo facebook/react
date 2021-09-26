@@ -51,8 +51,6 @@ import {
 } from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 
-import invariant from 'shared/invariant';
-
 function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   switch (workInProgress.tag) {
     case ClassComponent: {
@@ -85,11 +83,14 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
       const flags = workInProgress.flags;
-      invariant(
-        (flags & DidCapture) === NoFlags,
-        'The root failed to unmount after an error. This is likely a bug in ' +
-          'React. Please file an issue.',
-      );
+
+      if ((flags & DidCapture) !== NoFlags) {
+        throw new Error(
+          'The root failed to unmount after an error. This is likely a bug in ' +
+            'React. Please file an issue.',
+        );
+      }
+
       workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
       return workInProgress;
     }
@@ -104,11 +105,13 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
         const suspenseState: null | SuspenseState =
           workInProgress.memoizedState;
         if (suspenseState !== null && suspenseState.dehydrated !== null) {
-          invariant(
-            workInProgress.alternate !== null,
-            'Threw in newly mounted dehydrated component. This is likely a bug in ' +
-              'React. Please file an issue.',
-          );
+          if (workInProgress.alternate === null) {
+            throw new Error(
+              'Threw in newly mounted dehydrated component. This is likely a bug in ' +
+                'React. Please file an issue.',
+            );
+          }
+
           resetHydrationState();
         }
       }

@@ -10,7 +10,6 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 
-import invariant from 'shared/invariant';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {
@@ -116,17 +115,22 @@ export function createTestNameSelector(id: string): TestNameSelector {
 function findFiberRootForHostRoot(hostRoot: Instance): Fiber {
   const maybeFiber = getInstanceFromNode((hostRoot: any));
   if (maybeFiber != null) {
-    invariant(
-      typeof maybeFiber.memoizedProps['data-testname'] === 'string',
-      'Invalid host root specified. Should be either a React container or a node with a testname attribute.',
-    );
+    if (typeof maybeFiber.memoizedProps['data-testname'] !== 'string') {
+      throw new Error(
+        'Invalid host root specified. Should be either a React container or a node with a testname attribute.',
+      );
+    }
+
     return ((maybeFiber: any): Fiber);
   } else {
     const fiberRoot = findFiberRoot(hostRoot);
-    invariant(
-      fiberRoot !== null,
-      'Could not find React container within specified host subtree.',
-    );
+
+    if (fiberRoot === null) {
+      throw new Error(
+        'Could not find React container within specified host subtree.',
+      );
+    }
+
     // The Flow type for FiberRoot is a little funky.
     // createFiberRoot() cheats this by treating the root as :any and adding stateNode lazily.
     return ((fiberRoot: any).stateNode.current: Fiber);
@@ -179,7 +183,10 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
       }
       break;
     default:
-      invariant(null, 'Invalid selector type %s specified.', selector);
+      if (!null) {
+        throw new Error(`Invalid selector type ${selector} specified.`);
+      }
+
       break;
   }
 
@@ -200,7 +207,10 @@ function selectorToString(selector: Selector): string | null {
     case TEST_NAME_TYPE:
       return `[data-testname="${((selector: any): TestNameSelector).value}"]`;
     default:
-      invariant(null, 'Invalid selector type %s specified.', selector);
+      if (!null) {
+        throw new Error(`Invalid selector type ${selector} specified.`);
+      }
+
       break;
   }
 
@@ -277,7 +287,7 @@ export function findAllNodes(
   selectors: Array<Selector>,
 ): Array<Instance> {
   if (!supportsTestSelectors) {
-    invariant(false, 'Test selector API is not supported by this renderer.');
+    throw new Error('Test selector API is not supported by this renderer.');
   }
 
   const root = findFiberRootForHostRoot(hostRoot);
@@ -311,7 +321,7 @@ export function getFindAllNodesFailureDescription(
   selectors: Array<Selector>,
 ): string | null {
   if (!supportsTestSelectors) {
-    invariant(false, 'Test selector API is not supported by this renderer.');
+    throw new Error('Test selector API is not supported by this renderer.');
   }
 
   const root = findFiberRootForHostRoot(hostRoot);
@@ -376,7 +386,7 @@ export function findBoundingRects(
   selectors: Array<Selector>,
 ): Array<BoundingRect> {
   if (!supportsTestSelectors) {
-    invariant(false, 'Test selector API is not supported by this renderer.');
+    throw new Error('Test selector API is not supported by this renderer.');
   }
 
   const instanceRoots = findAllNodes(hostRoot, selectors);
@@ -466,7 +476,7 @@ export function focusWithin(
   selectors: Array<Selector>,
 ): boolean {
   if (!supportsTestSelectors) {
-    invariant(false, 'Test selector API is not supported by this renderer.');
+    throw new Error('Test selector API is not supported by this renderer.');
   }
 
   const root = findFiberRootForHostRoot(hostRoot);
@@ -516,7 +526,7 @@ export function observeVisibleRects(
   options?: IntersectionObserverOptions,
 ): {|disconnect: () => void|} {
   if (!supportsTestSelectors) {
-    invariant(false, 'Test selector API is not supported by this renderer.');
+    throw new Error('Test selector API is not supported by this renderer.');
   }
 
   const instanceRoots = findAllNodes(hostRoot, selectors);

@@ -16,7 +16,6 @@ import {
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
 import {SyntheticEvent} from '../events/SyntheticEvent';
-import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import {
   rethrowCaughtError,
@@ -105,12 +104,10 @@ function validateClassInstance(inst, methodName) {
   } else {
     received = stringified;
   }
-  invariant(
-    false,
-    '%s(...): the first argument must be a React class instance. ' +
-      'Instead received: %s.',
-    methodName,
-    received,
+
+  throw new Error(
+    `${methodName}(...): the first argument must be a React class instance. ` +
+      `Instead received: ${received}.`,
   );
 }
 
@@ -197,11 +194,13 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
       const classList = className.split(/\s+/);
 
       if (!isArray(classNames)) {
-        invariant(
-          classNames !== undefined,
-          'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
-            'className as a second argument.',
-        );
+        if (classNames === undefined) {
+          throw new Error(
+            'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
+              'className as a second argument.',
+          );
+        }
+
         classNames = classNames.split(/\s+/);
       }
       return classNames.every(function(name) {
@@ -478,12 +477,13 @@ function getListener(inst: Fiber, registrationName: string) {
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;
   }
-  invariant(
-    !listener || typeof listener === 'function',
-    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
-    registrationName,
-    typeof listener,
-  );
+
+  if (listener && typeof listener !== 'function') {
+    throw new Error(
+      `Expected \`${registrationName}\` listener to be a function, instead got a value of \`${typeof listener}\` type.`,
+    );
+  }
+
   return listener;
 }
 
@@ -564,17 +564,20 @@ const directDispatchEventTypes = new Set([
  */
 function makeSimulator(eventType) {
   return function(domNode, eventData) {
-    invariant(
-      !React.isValidElement(domNode),
-      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-        'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
-        'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
-    );
-    invariant(
-      !isCompositeComponent(domNode),
-      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-        'a component instance. Pass the DOM node you wish to simulate the event on instead.',
-    );
+    if (React.isValidElement(domNode)) {
+      throw new Error(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
+          'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
+      );
+    }
+
+    if (isCompositeComponent(domNode)) {
+      throw new Error(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a component instance. Pass the DOM node you wish to simulate the event on instead.',
+      );
+    }
 
     const reactName = 'on' + eventType[0].toUpperCase() + eventType.slice(1);
     const fakeNativeEvent = new Event();

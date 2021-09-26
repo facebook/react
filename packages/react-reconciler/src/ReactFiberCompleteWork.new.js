@@ -73,7 +73,6 @@ import {
   StaticMask,
   MutationMask,
 } from './ReactFiberFlags';
-import invariant from 'shared/invariant';
 
 import {
   createInstance,
@@ -897,11 +896,13 @@ function completeWork(
         }
       } else {
         if (!newProps) {
-          invariant(
-            workInProgress.stateNode !== null,
-            'We must have new props for new mounts. This error is likely ' +
-              'caused by a bug in React. Please file an issue.',
-          );
+          if (workInProgress.stateNode === null) {
+            throw new Error(
+              'We must have new props for new mounts. This error is likely ' +
+                'caused by a bug in React. Please file an issue.',
+            );
+          }
+
           // This can happen when we abort work.
           bubbleProperties(workInProgress);
           return null;
@@ -973,11 +974,12 @@ function completeWork(
         updateHostText(current, workInProgress, oldText, newText);
       } else {
         if (typeof newText !== 'string') {
-          invariant(
-            workInProgress.stateNode !== null,
-            'We must have new props for new mounts. This error is likely ' +
-              'caused by a bug in React. Please file an issue.',
-          );
+          if (workInProgress.stateNode === null) {
+            throw new Error(
+              'We must have new props for new mounts. This error is likely ' +
+                'caused by a bug in React. Please file an issue.',
+            );
+          }
           // This can happen when we abort work.
         }
         const rootContainerInstance = getRootHostContainer();
@@ -1007,11 +1009,14 @@ function completeWork(
         if (nextState !== null && nextState.dehydrated !== null) {
           if (current === null) {
             const wasHydrated = popHydrationState(workInProgress);
-            invariant(
-              wasHydrated,
-              'A dehydrated suspense component was completed without a hydrated node. ' +
-                'This is probably a bug in React.',
-            );
+
+            if (!wasHydrated) {
+              throw new Error(
+                'A dehydrated suspense component was completed without a hydrated node. ' +
+                  'This is probably a bug in React.',
+              );
+            }
+
             prepareToHydrateHostSuspenseInstance(workInProgress);
             bubbleProperties(workInProgress);
             if (enableProfilerTimer) {
@@ -1478,11 +1483,10 @@ function completeWork(
       }
     }
   }
-  invariant(
-    false,
-    'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
+
+  throw new Error(
+    `Unknown unit of work tag (${workInProgress.tag}). This error is likely caused by a bug in ` +
       'React. Please file an issue.',
-    workInProgress.tag,
   );
 }
 

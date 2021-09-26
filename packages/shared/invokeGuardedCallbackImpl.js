@@ -7,8 +7,6 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
-
 function invokeGuardedCallbackProd<A, B, C, D, E, F, Context>(
   name: string | null,
   func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
@@ -83,16 +81,18 @@ if (__DEV__) {
       // when we call document.createEvent(). However this can cause confusing
       // errors: https://github.com/facebook/create-react-app/issues/3482
       // So we preemptively throw with a better message instead.
-      invariant(
-        typeof document !== 'undefined',
-        'The `document` global was defined when React was initialized, but is not ' +
-          'defined anymore. This can happen in a test environment if a component ' +
-          'schedules an update from an asynchronous callback, but the test has already ' +
-          'finished running. To solve this, you can either unmount the component at ' +
-          'the end of your test (and ensure that any asynchronous operations get ' +
-          'canceled in `componentWillUnmount`), or you can change the test itself ' +
-          'to be asynchronous.',
-      );
+      if (typeof document === 'undefined') {
+        throw new Error(
+          'The `document` global was defined when React was initialized, but is not ' +
+            'defined anymore. This can happen in a test environment if a component ' +
+            'schedules an update from an asynchronous callback, but the test has already ' +
+            'finished running. To solve this, you can either unmount the component at ' +
+            'the end of your test (and ensure that any asynchronous operations get ' +
+            'canceled in `componentWillUnmount`), or you can change the test itself ' +
+            'to be asynchronous.',
+        );
+      }
+
       const evt = document.createEvent('Event');
 
       let didCall = false;

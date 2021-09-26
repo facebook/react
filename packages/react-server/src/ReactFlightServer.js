@@ -43,7 +43,6 @@ import {
 } from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
 type ReactJSONValue =
@@ -141,8 +140,7 @@ function attemptResolveElement(
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.
-    invariant(
-      false,
+    throw new Error(
       'Refs cannot be used in server components, nor passed to client components.',
     );
   }
@@ -178,10 +176,8 @@ function attemptResolveElement(
       }
     }
   }
-  invariant(
-    false,
-    'Unsupported server component type: %s',
-    describeValueForErrorMessage(type),
+  throw new Error(
+    `Unsupported server component type: ${describeValueForErrorMessage(type)}`,
   );
 }
 
@@ -395,8 +391,7 @@ export function resolveModelToJSON(
     case REACT_ELEMENT_TYPE:
       return '$';
     case REACT_LAZY_TYPE:
-      invariant(
-        false,
+      throw new Error(
         'React Lazy Components are not yet supported on the server.',
       );
   }
@@ -537,23 +532,25 @@ export function resolveModelToJSON(
 
   if (typeof value === 'function') {
     if (/^on[A-Z]/.test(key)) {
-      invariant(
-        false,
+      throw new Error(
         'Event handlers cannot be passed to client component props. ' +
-          'Remove %s from these props if possible: %s\n' +
+          `Remove ${describeKeyForErrorMessage(
+            key,
+          )} from these props if possible: ${describeObjectForErrorMessage(
+            parent,
+          )}
+` +
           'If you need interactivity, consider converting part of this to a client component.',
-        describeKeyForErrorMessage(key),
-        describeObjectForErrorMessage(parent),
       );
     } else {
-      invariant(
-        false,
+      throw new Error(
         'Functions cannot be passed directly to client components ' +
           "because they're not serializable. " +
-          'Remove %s (%s) from this object, or avoid the entire object: %s',
-        describeKeyForErrorMessage(key),
-        value.displayName || value.name || 'function',
-        describeObjectForErrorMessage(parent),
+          `Remove ${describeKeyForErrorMessage(key)} (${value.displayName ||
+            value.name ||
+            'function'}) from this object, or avoid the entire object: ${describeObjectForErrorMessage(
+            parent,
+          )}`,
       );
     }
   }
@@ -565,15 +562,19 @@ export function resolveModelToJSON(
       return serializeByValueID(existingId);
     }
     const name = value.description;
-    invariant(
-      Symbol.for(name) === value,
-      'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
-        'The symbol Symbol.for(%s) cannot be found among global symbols. ' +
-        'Remove %s from this object, or avoid the entire object: %s',
-      value.description,
-      describeKeyForErrorMessage(key),
-      describeObjectForErrorMessage(parent),
-    );
+
+    if (Symbol.for(name) !== value) {
+      throw new Error(
+        'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
+          `The symbol Symbol.for(${value.description}) cannot be found among global symbols. ` +
+          `Remove ${describeKeyForErrorMessage(
+            key,
+          )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
+            parent,
+          )}`,
+      );
+    }
+
     request.pendingChunks++;
     const symbolId = request.nextChunkId++;
     emitSymbolChunk(request, symbolId, name);
@@ -583,23 +584,23 @@ export function resolveModelToJSON(
 
   // $FlowFixMe: bigint isn't added to Flow yet.
   if (typeof value === 'bigint') {
-    invariant(
-      false,
-      'BigInt (%s) is not yet supported in client component props. ' +
-        'Remove %s from this object or use a plain number instead: %s',
-      value,
-      describeKeyForErrorMessage(key),
-      describeObjectForErrorMessage(parent),
+    throw new Error(
+      `BigInt (${value}) is not yet supported in client component props. ` +
+        `Remove ${describeKeyForErrorMessage(
+          key,
+        )} from this object or use a plain number instead: ${describeObjectForErrorMessage(
+          parent,
+        )}`,
     );
   }
 
-  invariant(
-    false,
-    'Type %s is not supported in client component props. ' +
-      'Remove %s from this object, or avoid the entire object: %s',
-    typeof value,
-    describeKeyForErrorMessage(key),
-    describeObjectForErrorMessage(parent),
+  throw new Error(
+    `Type ${typeof value} is not supported in client component props. ` +
+      `Remove ${describeKeyForErrorMessage(
+        key,
+      )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
+        parent,
+      )}`,
   );
 }
 
@@ -799,14 +800,15 @@ export function startFlowing(request: Request, destination: Destination): void {
 }
 
 function unsupportedHook(): void {
-  invariant(false, 'This Hook is not supported in Server Components.');
+  throw new Error('This Hook is not supported in Server Components.');
 }
 
 function unsupportedRefresh(): void {
-  invariant(
-    currentCache,
-    'Refreshing the cache is not supported in Server Components.',
-  );
+  if (!currentCache) {
+    throw new Error(
+      'Refreshing the cache is not supported in Server Components.',
+    );
+  }
 }
 
 let currentCache: Map<Function, mixed> | null = null;
@@ -822,10 +824,10 @@ const Dispatcher: DispatcherType = {
   useDeferredValue: (unsupportedHook: any),
   useTransition: (unsupportedHook: any),
   getCacheForType<T>(resourceType: () => T): T {
-    invariant(
-      currentCache,
-      'Reading the cache is only supported while rendering.',
-    );
+    if (!currentCache) {
+      throw new Error('Reading the cache is only supported while rendering.');
+    }
+
     let entry: T | void = (currentCache.get(resourceType): any);
     if (entry === undefined) {
       entry = resourceType();

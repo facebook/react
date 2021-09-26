@@ -92,7 +92,6 @@ import {
   enableSchedulingProfiler,
   enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -1265,12 +1264,15 @@ function pushHostRootContext(workInProgress) {
 function updateHostRoot(current, workInProgress, renderLanes) {
   pushHostRootContext(workInProgress);
   const updateQueue = workInProgress.updateQueue;
-  invariant(
-    current !== null && updateQueue !== null,
-    'If the root does not have an updateQueue, we should have already ' +
-      'bailed out. This error is likely caused by a bug in React. Please ' +
-      'file an issue.',
-  );
+
+  if (current === null || updateQueue === null) {
+    throw new Error(
+      'If the root does not have an updateQueue, we should have already ' +
+        'bailed out. This error is likely caused by a bug in React. Please ' +
+        'file an issue.',
+    );
+  }
+
   const nextProps = workInProgress.pendingProps;
   const prevState = workInProgress.memoizedState;
   const prevChildren = prevState.element;
@@ -1497,15 +1499,13 @@ function mountLazyComponent(
       hint = ' Did you wrap a component in React.lazy() more than once?';
     }
   }
+
   // This message intentionally doesn't mention ForwardRef or MemoComponent
   // because the fact that it's a separate type of work is an
   // implementation detail.
-  invariant(
-    false,
-    'Element type is invalid. Received a promise that resolves to: %s. ' +
-      'Lazy element type must resolve to a class or function.%s',
-    Component,
-    hint,
+  throw new Error(
+    `Element type is invalid. Received a promise that resolves to: ${Component}. ` +
+      `Lazy element type must resolve to a class or function.${hint}`,
   );
 }
 
@@ -3840,11 +3840,10 @@ function beginWork(
       break;
     }
   }
-  invariant(
-    false,
-    'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
+
+  throw new Error(
+    `Unknown unit of work tag (${workInProgress.tag}). This error is likely caused by a bug in ` +
       'React. Please file an issue.',
-    workInProgress.tag,
   );
 }
 

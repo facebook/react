@@ -35,7 +35,6 @@ import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
@@ -148,8 +147,7 @@ if (__DEV__) {
   Object.defineProperty(fakeInternalInstance, '_processChildContext', {
     enumerable: false,
     value: function() {
-      invariant(
-        false,
+      throw new Error(
         '_processChildContext is not available in React 16+. This likely ' +
           'means you have multiple copies of React and are attempting to nest ' +
           'a React 15 tree inside a React 16 tree using ' +

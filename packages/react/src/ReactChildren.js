@@ -9,7 +9,6 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {
   getIteratorFn,
@@ -205,14 +204,17 @@ function mapIntoArray(
     } else if (type === 'object') {
       // eslint-disable-next-line react-internal/safe-string-coercion
       const childrenString = String((children: any));
-      invariant(
-        false,
-        'Objects are not valid as a React child (found: %s). ' +
+
+      throw new Error(
+        `Objects are not valid as a React child (found: ${
+          childrenString === '[object Object]'
+            ? 'object with keys {' +
+              Object.keys((children: any)).join(', ') +
+              '}'
+            : childrenString
+        }). ` +
           'If you meant to render a collection of children, use an array ' +
           'instead.',
-        childrenString === '[object Object]'
-          ? 'object with keys {' + Object.keys((children: any)).join(', ') + '}'
-          : childrenString,
       );
     }
   }
@@ -323,10 +325,12 @@ function toArray(children: ?ReactNodeList): Array<React$Node> {
  * structure.
  */
 function onlyChild<T>(children: T): T {
-  invariant(
-    isValidElement(children),
-    'React.Children.only expected to receive a single React element child.',
-  );
+  if (!isValidElement(children)) {
+    throw new Error(
+      'React.Children.only expected to receive a single React element child.',
+    );
+  }
+
   return children;
 }
 

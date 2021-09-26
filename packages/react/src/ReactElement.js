@@ -6,7 +6,6 @@
  */
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
@@ -484,11 +483,11 @@ export function cloneAndReplaceKey(oldElement, newKey) {
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 export function cloneElement(element, config, children) {
-  invariant(
-    !(element === null || element === undefined),
-    'React.cloneElement(...): The argument must be a React element, but you passed %s.',
-    element,
-  );
+  if (element === null || element === undefined) {
+    throw new Error(
+      `React.cloneElement(...): The argument must be a React element, but you passed ${element}.`,
+    );
+  }
 
   let propName;
 

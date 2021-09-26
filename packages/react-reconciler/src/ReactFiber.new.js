@@ -17,7 +17,6 @@ import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseInstance, Props} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
-import invariant from 'shared/invariant';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
@@ -565,13 +564,11 @@ export function createFiberFromTypeAndProps(
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
         }
-        invariant(
-          false,
+
+        throw new Error(
           'Element type is invalid: expected a string (for built-in ' +
             'components) or a class/function (for composite components) ' +
-            'but got: %s.%s',
-          type == null ? type : typeof type,
-          info,
+            `but got: ${type == null ? type : typeof type}.${info}`,
         );
       }
     }
@@ -604,7 +601,7 @@ export function createOffscreenHostContainerFiber(
     return fiber;
   } else {
     // Only implemented in persistent mode
-    invariant(false, 'Not implemented.');
+    throw new Error('Not implemented.');
   }
 }
 

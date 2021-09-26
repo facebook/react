@@ -21,8 +21,6 @@ import {
   stringToPrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
-import invariant from 'shared/invariant';
-
 export const isPrimaryRenderer = true;
 
 // Every list of children or string is null terminated.
@@ -116,10 +114,12 @@ export type OpaqueIDType = number;
 export function makeServerID(
   responseState: null | ResponseState,
 ): OpaqueIDType {
-  invariant(
-    responseState !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
-  );
+  if (responseState === null) {
+    throw new Error(
+      'Invalid hook call. Hooks can only be called inside of the body of a function component.',
+    );
+  }
+
   // TODO: This is not deterministic since it's created during render.
   return responseState.nextOpaqueID++;
 }
@@ -167,8 +167,7 @@ export function pushEndInstance(
 // IDs are formatted as little endian Uint16
 function formatID(id: number): Uint8Array {
   if (id > 0xffff) {
-    invariant(
-      false,
+    throw new Error(
       'More boundaries or placeholders than we expected to ever emit.',
     );
   }

@@ -7,7 +7,6 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
 // A javascript: URL can contain leading C0 control or \u0020 SPACE,
@@ -26,10 +25,11 @@ let didWarn = false;
 
 function sanitizeURL(url: string) {
   if (disableJavaScriptURLs) {
-    invariant(
-      !isJavaScriptProtocol.test(url),
-      'React has blocked a javascript: URL as a security precaution.',
-    );
+    if (isJavaScriptProtocol.test(url)) {
+      throw new Error(
+        'React has blocked a javascript: URL as a security precaution.',
+      );
+    }
   } else if (__DEV__) {
     if (!didWarn && isJavaScriptProtocol.test(url)) {
       didWarn = true;
