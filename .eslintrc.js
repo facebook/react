@@ -265,16 +265,6 @@ module.exports = {
         TaskController: true,
       },
     },
-    // TODO: I'm adding this plugin to the repo temporarily, but I'll revert it
-    // in the same PR. That way we don't have to check it in but it's still
-    // accessible (via the PR) if we need it later.
-    {
-      files: ['packages/**/*.js'],
-      plugins: ['unused-imports'],
-      rules: {
-        'unused-imports/no-unused-imports': ERROR,
-      },
-    },
   ],
 
   globals: {
