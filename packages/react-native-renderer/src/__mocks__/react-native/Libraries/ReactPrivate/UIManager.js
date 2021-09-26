@@ -40,8 +40,6 @@ function insertSubviewAtIndex(parent, child, index) {
     );
   }
 
-  // FIXME: Review this condition before merging
-  // Should be equivalent to: !(0 <= index && index <= parentInfo.children.length)
   if (0 > index || index > parentInfo.children.length) {
     throw new Error(
       `Invalid index ${index} for children ${parentInfo.children}`,
@@ -57,8 +55,6 @@ function removeChild(parent, child) {
   const childInfo = views.get(child);
   const index = parentInfo.children.indexOf(child);
 
-  // FIXME: Review this condition before merging
-  // Should be equivalent to: !(index >= 0)
   if (index < 0) {
     throw new Error(`Missing view ${child} during removal`);
   }

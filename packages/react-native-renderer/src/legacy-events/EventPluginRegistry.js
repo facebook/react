@@ -44,8 +44,6 @@ function recomputePluginOrdering(): void {
     const pluginModule = namesToPlugins[pluginName];
     const pluginIndex = eventPluginOrder.indexOf(pluginName);
 
-    // FIXME: Review this condition before merging
-    // Should be equivalent to: !(pluginIndex > -1)
     if (pluginIndex <= -1) {
       throw new Error(
         'EventPluginRegistry: Cannot inject event plugins that do not exist in ' +

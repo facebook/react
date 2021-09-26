@@ -154,10 +154,9 @@ function findHostInstance(component: Object): PublicInstance | null {
     if (typeof component.render === 'function') {
       throw new Error('Unable to find node on an unmounted component.');
     } else {
+      const keys = Object.keys(component).join(',');
       throw new Error(
-        `Argument appears to not be a ReactComponent. Keys: ${Object.keys(
-          component,
-        )}`,
+        `Argument appears to not be a ReactComponent. Keys: ${keys}`,
       );
     }
   }
@@ -178,10 +177,9 @@ function findHostInstanceWithWarning(
       if (typeof component.render === 'function') {
         throw new Error('Unable to find node on an unmounted component.');
       } else {
+        const keys = Object.keys(component).join(',');
         throw new Error(
-          `Argument appears to not be a ReactComponent. Keys: ${Object.keys(
-            component,
-          )}`,
+          `Argument appears to not be a ReactComponent. Keys: ${keys}`,
         );
       }
     }

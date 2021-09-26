@@ -24,8 +24,6 @@ function growThreadCountAndReturnNextAvailable() {
   const oldSize = oldArray.length;
   const newSize = oldSize * 2;
 
-  // FIXME: Review this condition before merging
-  // Should be equivalent to: !(newSize <= 0x10000)
   if (newSize > 0x10000) {
     throw new Error(
       'Maximum number of concurrent React renderers exceeded. ' +

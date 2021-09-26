@@ -980,8 +980,6 @@ class ReactDOMServerRenderer {
         } catch (err) {
           if (err != null && typeof err.then === 'function') {
             if (enableSuspenseServerRenderer) {
-              // FIXME: Review this condition before merging
-              // Should be equivalent to: !(this.suspenseDepth > 0)
               if (this.suspenseDepth <= 0) {
                 throw new Error(
                   // TODO: include component name. This is a bit tricky with current factoring.
@@ -1481,8 +1479,6 @@ class ReactDOMServerRenderer {
           }
 
           if (isArray(textareaChildren)) {
-            // FIXME: Review this condition before merging
-            // Should be equivalent to: !(textareaChildren.length <= 1)
             if (textareaChildren.length > 1) {
               throw new Error('<textarea> can only have at most one child.');
             }

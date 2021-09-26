@@ -170,6 +170,8 @@ function coerceRef(
             'bug in React. Please file an issue.',
         );
       }
+      // Assigning this to a const so Flow knows it won't change in the closure
+      const resolvedInst = inst;
 
       if (__DEV__) {
         checkPropStringCoercion(mixedRef, 'ref');
@@ -185,10 +187,10 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        let refs = inst.refs;
+        let refs = resolvedInst.refs;
         if (refs === emptyRefsObject) {
           // This is a lazy pooled frozen object, so we need to initialize.
-          refs = inst.refs = {};
+          refs = resolvedInst.refs = {};
         }
         if (value === null) {
           delete refs[stringRef];

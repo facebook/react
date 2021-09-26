@@ -104,8 +104,6 @@ export function initWrapperState(element: Element, props: Object) {
         }
 
         if (isArray(children)) {
-          // FIXME: Review this condition before merging
-          // Should be equivalent to: !(children.length <= 1)
           if (children.length > 1) {
             throw new Error('<textarea> can only have at most one child.');
           }

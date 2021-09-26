@@ -435,8 +435,6 @@ export function renderWithHooks<Props, SecondArg>(
     do {
       didScheduleRenderPhaseUpdateDuringThisPass = false;
 
-      // FIXME: Review this condition before merging
-      // Should be equivalent to: !(numberOfReRenders < RE_RENDER_LIMIT)
       if (numberOfReRenders >= RE_RENDER_LIMIT) {
         throw new Error(
           'Too many re-renders. React limits the number of renders to prevent ' +

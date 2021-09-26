@@ -150,6 +150,7 @@ const ReactNativeBridgeEventPlugin = {
 
     if (!bubbleDispatchConfig && !directDispatchConfig) {
       throw new Error(
+        // $FlowFixMe - Flow doesn't like this string coercion because DOMTopLevelEventType is opaque
         `Unsupported top level event type "${topLevelType}" dispatched`,
       );
     }

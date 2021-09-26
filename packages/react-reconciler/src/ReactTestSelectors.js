@@ -183,11 +183,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
       }
       break;
     default:
-      if (!null) {
-        throw new Error(`Invalid selector type ${selector} specified.`);
-      }
-
-      break;
+      throw new Error('Invalid selector type specified.');
   }
 
   return false;
@@ -207,14 +203,8 @@ function selectorToString(selector: Selector): string | null {
     case TEST_NAME_TYPE:
       return `[data-testname="${((selector: any): TestNameSelector).value}"]`;
     default:
-      if (!null) {
-        throw new Error(`Invalid selector type ${selector} specified.`);
-      }
-
-      break;
+      throw new Error('Invalid selector type specified.');
   }
-
-  return null;
 }
 
 function findPaths(root: Fiber, selectors: Array<Selector>): Array<Fiber> {
