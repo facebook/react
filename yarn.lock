@@ -6455,6 +6455,13 @@ eslint-plugin-react@^6.7.1:
     jsx-ast-utils "^1.3.4"
     object.assign "^4.0.4"
 
+eslint-plugin-unused-imports@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-unused-imports/-/eslint-plugin-unused-imports-1.1.5.tgz#a2b992ef0faf6c6c75c3815cc47bde76739513c2"
+  integrity sha512-TeV8l8zkLQrq9LBeYFCQmYVIXMjfHgdRQLw7dEZp4ZB3PeR10Y5Uif11heCsHRmhdRIYMoewr1d9ouUHLbLHew==
+  dependencies:
+    eslint-rule-composer "^0.3.0"
+
 eslint-rule-composer@^0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/eslint-rule-composer/-/eslint-rule-composer-0.3.0.tgz#79320c927b0c5c0d3d3d2b76c8b4a488f25bbaf9"
