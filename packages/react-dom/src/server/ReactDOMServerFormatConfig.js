@@ -975,6 +975,7 @@ function pushStartTextArea(
         children.length <= 1,
         '<textarea> can only have at most one child.',
       );
+      // Fall through. `'' + children` is same as `'' + children[0]` for 1-element arrays.
     }
     value = '' + children;
   }
