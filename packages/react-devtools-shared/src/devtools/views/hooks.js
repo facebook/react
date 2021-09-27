@@ -264,11 +264,11 @@ export function useSubscription<Value>({
   getCurrentValue: () => Value,
   subscribe: (callback: Function) => () => void,
 |}): Value {
-  const [state, setState] = useState({
+  const [state, setState] = useState(() => ({
     getCurrentValue,
     subscribe,
     value: getCurrentValue(),
-  });
+  }));
 
   if (
     state.getCurrentValue !== getCurrentValue ||
