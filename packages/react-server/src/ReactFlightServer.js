@@ -763,7 +763,6 @@ function flushCompletedChunks(request: Request): void {
 }
 
 export function startWork(request: Request): void {
-  request.flowing = true;
   scheduleWork(() => performWork(request));
 }
 

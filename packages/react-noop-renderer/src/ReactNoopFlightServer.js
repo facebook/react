@@ -68,6 +68,7 @@ function render(model: ReactModel, options?: Options): Destination {
     options ? options.onError : undefined,
   );
   ReactNoopFlightServer.startWork(request);
+  ReactNoopFlightServer.startFlowing(request);
   return destination;
 }
 
