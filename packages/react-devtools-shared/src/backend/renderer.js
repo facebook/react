@@ -85,6 +85,7 @@ import {format} from './utils';
 import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -1380,13 +1381,13 @@ export function attach(
       return false;
     }
     const {deps} = memoizedState;
-    const hasOwnProperty = Object.prototype.hasOwnProperty.bind(memoizedState);
+    const boundHasOwnProperty = hasOwnProperty.bind(memoizedState);
     return (
-      hasOwnProperty('create') &&
-      hasOwnProperty('destroy') &&
-      hasOwnProperty('deps') &&
-      hasOwnProperty('next') &&
-      hasOwnProperty('tag') &&
+      boundHasOwnProperty('create') &&
+      boundHasOwnProperty('destroy') &&
+      boundHasOwnProperty('deps') &&
+      boundHasOwnProperty('next') &&
+      boundHasOwnProperty('tag') &&
       (deps === null || isArray(deps))
     );
   }
