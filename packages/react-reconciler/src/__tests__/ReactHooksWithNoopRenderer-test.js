@@ -3915,6 +3915,60 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('2');
   });
 
+  it('useReducer does not replay previous no-op actions when other state changes', () => {
+    let increment;
+    let setDisabled;
+
+    function Counter() {
+      const [disabled, _setDisabled] = useState(true);
+      const [count, dispatch] = useReducer((state, action) => {
+        if (disabled) {
+          return state;
+        }
+        if (action.type === 'increment') {
+          return state + 1;
+        }
+        return state;
+      }, 0);
+
+      increment = () => dispatch({type: 'increment'});
+      setDisabled = _setDisabled;
+
+      Scheduler.unstable_yieldValue('Render disabled: ' + disabled);
+      Scheduler.unstable_yieldValue('Render count: ' + count);
+      return count;
+    }
+
+    ReactNoop.render(<Counter />);
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      // These increments should have no effect, since disabled=true
+      increment();
+      increment();
+      increment();
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      // Enabling the updater should *not* replay the previous increment() actions
+      setDisabled(false);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render disabled: false',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+  });
+
   it('useReducer does not replay previous no-op actions when props change', () => {
     let setDisabled;
     let increment;
