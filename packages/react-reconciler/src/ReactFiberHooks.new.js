@@ -125,7 +125,7 @@ const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 type Update<S, A> = {|
   lane: Lane,
   action: A,
-  eagerReducer: ((S, A) => S) | null,
+  hasEagerState: boolean,
   eagerState: S | null,
   next: Update<S, A>,
 |};
@@ -801,7 +801,7 @@ function updateReducer<S, I, A>(
         const clone: Update<S, A> = {
           lane: updateLane,
           action: update.action,
-          eagerReducer: update.eagerReducer,
+          hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
           next: (null: any),
         };
@@ -829,7 +829,7 @@ function updateReducer<S, I, A>(
             // this will never be skipped by the check above.
             lane: NoLane,
             action: update.action,
-            eagerReducer: update.eagerReducer,
+            hasEagerState: update.hasEagerState,
             eagerState: update.eagerState,
             next: (null: any),
           };
@@ -837,9 +837,9 @@ function updateReducer<S, I, A>(
         }
 
         // Process this update.
-        if (update.eagerReducer === reducer) {
-          // If this update was processed eagerly, and its reducer matches the
-          // current reducer, we can use the eagerly computed state.
+        if (update.hasEagerState) {
+          // If this update is a state update (not a reducer) and was processed eagerly,
+          // we can use the eagerly computed state
           newState = ((update.eagerState: any): S);
         } else {
           const action = update.action;
@@ -2171,7 +2171,7 @@ function dispatchReducerAction<S, A>(
   const update: Update<S, A> = {
     lane,
     action,
-    eagerReducer: null,
+    hasEagerState: false,
     eagerState: null,
     next: (null: any),
   };
@@ -2283,7 +2283,7 @@ function dispatchSetState<S, A>(
   const update: Update<S, A> = {
     lane,
     action,
-    eagerReducer: null,
+    hasEagerState: false,
     eagerState: null,
     next: (null: any),
   };
@@ -2353,7 +2353,7 @@ function dispatchSetState<S, A>(
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
           // without calling the reducer again.
-          update.eagerReducer = lastRenderedReducer;
+          update.hasEagerState = true;
           update.eagerState = eagerState;
           if (is(eagerState, currentState)) {
             // Fast path. We can bail out without scheduling React to re-render.
