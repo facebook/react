@@ -296,7 +296,7 @@ function describeValueForErrorMessage(value: ReactModel): string {
     case 'function':
       return 'function';
     default:
-      // eslint-disable-next-line
+      // eslint-disable-next-line react-internal/safe-string-coercion
       return String(value);
   }
 }
@@ -615,8 +615,10 @@ function emitErrorChunk(request: Request, id: number, error: mixed): void {
   let stack = '';
   try {
     if (error instanceof Error) {
-      message = '' + error.message;
-      stack = '' + error.stack;
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      stack = String(error.stack);
     } else {
       message = 'Error: ' + (error: any);
     }

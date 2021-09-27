@@ -18,13 +18,13 @@ const {
 // Runs the build script for both stable and experimental release channels,
 // by configuring an environment variable.
 
-const sha = (
-  spawnSync('git', ['show', '-s', '--format=%h']).stdout + ''
+const sha = String(
+  spawnSync('git', ['show', '-s', '--format=%h']).stdout
 ).trim();
 
-let dateString = (
+let dateString = String(
   spawnSync('git', ['show', '-s', '--format=%cd', '--date=format:%Y%m%d', sha])
-    .stdout + ''
+    .stdout
 ).trim();
 
 // On CI environment, this string is wrapped with quotes '...'s

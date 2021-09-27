@@ -19,8 +19,8 @@ export function alphaSortEntries(
 ): number {
   const a = entryA[0];
   const b = entryB[0];
-  if ('' + +a === a) {
-    if ('' + +b !== b) {
+  if (String(+a) === a) {
+    if (String(+b) !== b) {
       return -1;
     }
     return +a < +b ? -1 : 1;

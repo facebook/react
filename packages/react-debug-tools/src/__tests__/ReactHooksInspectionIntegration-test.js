@@ -615,7 +615,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].id).toEqual(0);
     expect(tree[0].isStateEditable).toEqual(false);
     expect(tree[0].name).toEqual('OpaqueIdentifier');
-    expect((tree[0].value + '').startsWith('c_')).toBe(true);
+    expect(String(tree[0].value).startsWith('c_')).toBe(true);
 
     expect(tree[1]).toEqual({
       id: 1,
@@ -646,7 +646,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].id).toEqual(0);
     expect(tree[0].isStateEditable).toEqual(false);
     expect(tree[0].name).toEqual('OpaqueIdentifier');
-    expect((tree[0].value + '').startsWith('c_')).toBe(true);
+    expect(String(tree[0].value).startsWith('c_')).toBe(true);
 
     expect(tree[1]).toEqual({
       id: 1,

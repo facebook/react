@@ -1745,7 +1745,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();
@@ -1769,7 +1769,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();
@@ -1793,7 +1793,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns if you try to use the result as a string in a child component', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();
@@ -1817,7 +1817,7 @@ describe('ReactDOMServerHooks', () => {
     it('useOpaqueIdentifier warns if you try to use the result as a string', async () => {
       function App() {
         const id = useOpaqueIdentifier();
-        return <div aria-labelledby={id + ''} />;
+        return <div aria-labelledby={String(id)} />;
       }
 
       const container = document.createElement('div');
@@ -1836,7 +1836,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns if you try to use the result as a string in a child component wrapped in a Suspense', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();

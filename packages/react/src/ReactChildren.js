@@ -16,6 +16,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
+import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 import {isValidElement, cloneAndReplaceKey} from './ReactElement';
 
@@ -65,6 +66,9 @@ function getElementKey(element: any, index: number): string {
   // that we don't block potential future ES APIs.
   if (typeof element === 'object' && element !== null && element.key != null) {
     // Explicit key
+    if (__DEV__) {
+      checkKeyStringCoercion(element.key);
+    }
     return escape('' + element.key);
   }
   // Implicit key determined by the index in the set
@@ -119,6 +123,14 @@ function mapIntoArray(
       mapIntoArray(mappedChild, array, escapedChildKey, '', c => c);
     } else if (mappedChild != null) {
       if (isValidElement(mappedChild)) {
+        if (__DEV__) {
+          // The `if` statement here prevents auto-disabling of the safe
+          // coercion ESLint rule, so we must manually disable it below.
+          // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+          if (mappedChild.key && (!child || child.key !== mappedChild.key)) {
+            checkKeyStringCoercion(mappedChild.key);
+          }
+        }
         mappedChild = cloneAndReplaceKey(
           mappedChild,
           // Keep both the (mapped) and old keys if they differ, just as
@@ -127,6 +139,7 @@ function mapIntoArray(
             // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
             (mappedChild.key && (!child || child.key !== mappedChild.key)
               ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
+                // eslint-disable-next-line react-internal/safe-string-coercion
                 escapeUserProvidedKey('' + mappedChild.key) + '/'
               : '') +
             childKey,
@@ -190,7 +203,8 @@ function mapIntoArray(
         );
       }
     } else if (type === 'object') {
-      const childrenString = '' + (children: any);
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      const childrenString = String((children: any));
       invariant(
         false,
         'Objects are not valid as a React child (found: %s). ' +

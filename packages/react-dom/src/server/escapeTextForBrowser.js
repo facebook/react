@@ -36,6 +36,8 @@
  * @private
  */
 
+import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
+
 const matchHtmlRegExp = /["'&<>]/;
 
 /**
@@ -47,6 +49,9 @@ const matchHtmlRegExp = /["'&<>]/;
  */
 
 function escapeHtml(string) {
+  if (__DEV__) {
+    checkHtmlStringCoercion(string);
+  }
   const str = '' + string;
   const match = matchHtmlRegExp.exec(str);
 

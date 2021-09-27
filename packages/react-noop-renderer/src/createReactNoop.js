@@ -22,6 +22,7 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {
   DefaultEventPriority,
   IdleEventPriority,
@@ -215,6 +216,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     keepChildren: boolean,
     recyclableInstance: null | Instance,
   ): Instance {
+    if (__DEV__) {
+      checkPropStringCoercion(newProps.children, 'children');
+    }
     const clone = {
       id: instance.id,
       type: type,
@@ -293,13 +297,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
+      if (__DEV__) {
+        // The `if` statement here prevents auto-disabling of the safe coercion
+        // ESLint rule, so we must manually disable it below.
+        if (shouldSetTextContent(type, props)) {
+          checkPropStringCoercion(props.children, 'children');
+        }
+      }
       const inst = {
         id: instanceCounter++,
         type: type,
         children: [],
         parent: -1,
         text: shouldSetTextContent(type, props)
-          ? computeText((props.children: any) + '', hostContext)
+          ? // eslint-disable-next-line react-internal/safe-string-coercion
+            computeText((props.children: any) + '', hostContext)
           : null,
         prop: props.prop,
         hidden: !!props.hidden,
@@ -481,6 +493,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance.prop = newProps.prop;
           instance.hidden = !!newProps.hidden;
           if (shouldSetTextContent(type, newProps)) {
+            if (__DEV__) {
+              checkPropStringCoercion(newProps.children, 'children');
+            }
             instance.text = computeText(
               (newProps.children: any) + '',
               instance.context,

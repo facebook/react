@@ -18,6 +18,7 @@ import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes
 import {updateValueIfChanged} from './inputValueTracking';
 import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
 
@@ -365,6 +366,9 @@ function updateNamedCousins(rootNode, props) {
     // the input might not even be in a form. It might not even be in the
     // document. Let's just use the local `querySelectorAll` to ensure we don't
     // miss anything.
+    if (__DEV__) {
+      checkAttributeStringCoercion(name, 'name');
+    }
     const group = queryRoot.querySelectorAll(
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
     );
