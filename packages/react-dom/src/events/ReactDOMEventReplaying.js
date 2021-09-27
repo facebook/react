@@ -38,12 +38,6 @@ export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
   attemptSynchronousHydration = fn;
 }
 
-let attemptDiscreteHydration: (fiber: Object) => void;
-
-export function setAttemptDiscreteHydration(fn: (fiber: Object) => void) {
-  attemptDiscreteHydration = fn;
-}
-
 export function attemptSynchronousEventHydration(fiber: Object): void {
   attemptSynchronousHydration(fiber);
 }

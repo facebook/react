@@ -17,7 +17,7 @@ import {
   clearIfContinuousEvent,
   queueIfContinuousEvent,
 } from './ReactDOMEventReplaying';
-import { enableSelectiveHydration } from 'shared/ReactFeatureFlags';
+import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {
   getNearestMountedFiber,
   getContainerFromFiber,

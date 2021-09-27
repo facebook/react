@@ -28,7 +28,6 @@ import {
   flushControlled,
   injectIntoDevTools,
   attemptSynchronousHydration,
-  attemptDiscreteHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
@@ -54,7 +53,6 @@ import {
 import {restoreControlledState} from './ReactDOMComponent';
 import {
   setAttemptSynchronousHydration,
-  setAttemptDiscreteHydration,
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
@@ -69,7 +67,6 @@ import {
 } from '../events/ReactDOMControlledComponent';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
-setAttemptDiscreteHydration(attemptDiscreteHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 setGetCurrentUpdatePriority(getCurrentUpdatePriority);
