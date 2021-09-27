@@ -174,9 +174,7 @@ export function dispatchEvent(
 
   if (blockedOn === null) {
     // We successfully dispatched this event.
-    if (allowReplay) {
-      clearIfContinuousEvent(domEventName, nativeEvent);
-    }
+    clearIfContinuousEvent(domEventName, nativeEvent);
     return;
   }
 
