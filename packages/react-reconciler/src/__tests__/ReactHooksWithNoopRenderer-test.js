@@ -3867,6 +3867,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
+  // TODO: delete now that we removed the eager bailout optimization? or do we want to keep this
+  // around in some capacity?
   it('eager bailout optimization should always compare to latest rendered reducer', () => {
     // Edge case based on a bug report
     let setCounter;
@@ -3898,7 +3900,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         'Render: -1',
         'Effect: 1',
         'Reducer: 1',
-        'Reducer: 1',
         'Render: 1',
       ]);
       expect(ReactNoop).toMatchRenderedOutput('1');
@@ -3910,7 +3911,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded([
       'Render: 1',
       'Effect: 2',
-      'Reducer: 2',
       'Reducer: 2',
       'Render: 2',
     ]);
