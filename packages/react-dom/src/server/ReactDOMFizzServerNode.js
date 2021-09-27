@@ -56,7 +56,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
   );
 }
 
-function pipeToNodeWritable(
+function renderToNodePipe(
   children: ReactNodeList,
   destination: Writable,
   options?: Options,
@@ -79,4 +79,4 @@ function pipeToNodeWritable(
   };
 }
 
-export {pipeToNodeWritable, ReactVersion as version};
+export {renderToNodePipe, ReactVersion as version};

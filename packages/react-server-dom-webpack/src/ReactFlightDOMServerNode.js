@@ -25,7 +25,7 @@ type Options = {
   onError?: (error: mixed) => void,
 };
 
-function pipeToNodeWritable(
+function renderToNodePipe(
   model: ReactModel,
   destination: Writable,
   webpackMap: BundlerConfig,
@@ -41,4 +41,4 @@ function pipeToNodeWritable(
   destination.on('drain', createDrainHandler(destination, request));
 }
 
-export {pipeToNodeWritable};
+export {renderToNodePipe};

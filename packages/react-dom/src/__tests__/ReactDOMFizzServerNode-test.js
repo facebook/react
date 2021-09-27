@@ -57,9 +57,9 @@ describe('ReactDOMFizzServer', () => {
   }
 
   // @gate experimental
-  it('should call pipeToNodeWritable', () => {
+  it('should call renderToNodePipe', () => {
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>hello world</div>,
       writable,
     );
@@ -71,7 +71,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', () => {
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <html>
         <body>hello world</body>
       </html>,
@@ -87,7 +87,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should start writing after startWriting', () => {
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>hello world</div>,
       writable,
     );
@@ -115,7 +115,7 @@ describe('ReactDOMFizzServer', () => {
     }
     let isCompleteCalls = 0;
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>
         <Suspense fallback="Loading">
           <Wait />
@@ -154,7 +154,7 @@ describe('ReactDOMFizzServer', () => {
   it('should error the stream when an error is thrown at the root', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>
         <Throw />
       </div>,
@@ -181,7 +181,7 @@ describe('ReactDOMFizzServer', () => {
   it('should error the stream when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>
         <Suspense fallback={<Throw />}>
           <InfiniteSuspend />
@@ -207,7 +207,7 @@ describe('ReactDOMFizzServer', () => {
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
@@ -242,7 +242,7 @@ describe('ReactDOMFizzServer', () => {
     function Content() {
       return 'Hi';
     }
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <Suspense fallback={<Fallback />}>
         <Content />
       </Suspense>,
@@ -261,7 +261,7 @@ describe('ReactDOMFizzServer', () => {
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     let isCompleteCalls = 0;
     const {writable, output, completed} = getTestWritable();
-    const {startWriting, abort} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting, abort} = ReactDOMFizzServer.renderToNodePipe(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -294,7 +294,7 @@ describe('ReactDOMFizzServer', () => {
   it('should be able to complete by abort when the fallback is also suspended', async () => {
     let isCompleteCalls = 0;
     const {writable, output, completed} = getTestWritable();
-    const {startWriting, abort} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting, abort} = ReactDOMFizzServer.renderToNodePipe(
       <div>
         <Suspense fallback="Loading">
           <Suspense fallback={<InfiniteSuspend />}>

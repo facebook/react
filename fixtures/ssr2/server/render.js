@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 // import {renderToString} from 'react-dom/server';
-import {pipeToNodeWritable} from 'react-dom/server';
+import {renderToNodePipe} from 'react-dom/server';
 import App from '../src/App';
 import {DataProvider} from '../src/data';
 import {API_DELAY, ABORT_DELAY} from './delays';
@@ -37,7 +37,7 @@ module.exports = function render(url, res) {
   });
   let didError = false;
   const data = createServerData();
-  const {startWriting, abort} = pipeToNodeWritable(
+  const {startWriting, abort} = renderToNodePipe(
     <DataProvider data={data}>
       <App assets={assets} />
     </DataProvider>,

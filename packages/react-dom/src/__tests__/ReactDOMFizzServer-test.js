@@ -239,7 +239,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <div>
           <div>
             <Suspense fallback={<Text text="Loading..." />}>
@@ -304,7 +304,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App isClient={false} />,
         writable,
         {
@@ -356,7 +356,7 @@ describe('ReactDOMFizzServer', () => {
     });
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
             {lazyElement}
@@ -396,7 +396,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App isClient={false} />,
         writable,
         {
@@ -441,7 +441,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should asynchronously load the suspense boundary', async () => {
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text="Hello World" />
@@ -475,7 +475,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App />,
         writable,
       );
@@ -550,7 +550,7 @@ describe('ReactDOMFizzServer', () => {
 
     // We originally suspend the boundary and start streaming the loading state.
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App />,
         writable,
         {
@@ -633,7 +633,7 @@ describe('ReactDOMFizzServer', () => {
 
     // We originally suspend the boundary and start streaming the loading state.
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App showMore={false} />,
         writable,
       );
@@ -701,7 +701,7 @@ describe('ReactDOMFizzServer', () => {
 
     let controls;
     await act(async () => {
-      controls = ReactDOMFizzServer.pipeToNodeWritable(<App />, writable);
+      controls = ReactDOMFizzServer.renderToNodePipe(<App />, writable);
       controls.startWriting();
     });
 
@@ -753,7 +753,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         // We use two nested boundaries to flush out coverage of an old reentrancy bug.
         <Suspense fallback="Loading...">
           <Suspense fallback={<Text text="Loading A..." />}>
@@ -778,7 +778,7 @@ describe('ReactDOMFizzServer', () => {
     });
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <Suspense fallback={<Text text="Loading B..." />}>
           <Text text="This will show B: " />
           <div>
@@ -876,7 +876,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App />,
         writable,
       );
@@ -967,7 +967,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App />,
         writable,
       );
@@ -1024,7 +1024,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App />,
         writable,
         {
@@ -1111,7 +1111,7 @@ describe('ReactDOMFizzServer', () => {
 
     try {
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
           <A />,
           writable,
         );
@@ -1213,7 +1213,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <TestProvider ctx="A">
           <div>
             <Suspense fallback={[<Text text="Loading: " />, <TestConsumer />]}>
@@ -1272,7 +1272,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <div>
           <PrintA />
           <div>
@@ -1335,7 +1335,7 @@ describe('ReactDOMFizzServer', () => {
 
     const loggedErrors = [];
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <div>
           <PrintA />
           <div>
@@ -1396,7 +1396,7 @@ describe('ReactDOMFizzServer', () => {
     const loggedErrors = [];
     let controls;
     await act(async () => {
-      controls = ReactDOMFizzServer.pipeToNodeWritable(
+      controls = ReactDOMFizzServer.renderToNodePipe(
         <App isClient={false} />,
         writable,
         {
@@ -1456,7 +1456,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should be able to abort the fallback if the main content finishes first', async () => {
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <Suspense fallback={<Text text="Loading Outer" />}>
           <div>
             <Suspense
@@ -1554,7 +1554,7 @@ describe('ReactDOMFizzServer', () => {
     await jest.runAllTimers();
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <App isClient={false} />,
         writable,
       );
@@ -1669,7 +1669,7 @@ describe('ReactDOMFizzServer', () => {
 
     const loggedErrors = [];
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
@@ -1752,7 +1752,7 @@ describe('ReactDOMFizzServer', () => {
 
     const loggedErrors = [];
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
@@ -1838,7 +1838,7 @@ describe('ReactDOMFizzServer', () => {
       }
 
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
           <App />,
           writable,
         );
@@ -1922,7 +1922,7 @@ describe('ReactDOMFizzServer', () => {
       }
 
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
           <App />,
           writable,
         );
@@ -1997,7 +1997,7 @@ describe('ReactDOMFizzServer', () => {
       }
 
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
           <App />,
           writable,
         );

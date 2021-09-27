@@ -36,8 +36,8 @@ export function renderToStaticNodeStream() {
   );
 }
 
-export function pipeToNodeWritable() {
-  return require('./src/server/ReactDOMFizzServerNode').pipeToNodeWritable.apply(
+export function renderToNodePipe() {
+  return require('./src/server/ReactDOMFizzServerNode').renderToNodePipe.apply(
     this,
     arguments,
   );
