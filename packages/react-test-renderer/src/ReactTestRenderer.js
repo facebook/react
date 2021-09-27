@@ -44,6 +44,7 @@ import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
@@ -251,6 +252,9 @@ function getChildren(parent: Fiber) {
     if (validWrapperTypes.has(node.tag)) {
       children.push(wrapFiber(node));
     } else if (node.tag === HostText) {
+      if (__DEV__) {
+        checkPropStringCoercion(node.memoizedProps, 'memoizedProps');
+      }
       children.push('' + node.memoizedProps);
     } else {
       descend = true;

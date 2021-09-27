@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {checkFormFieldValueStringCoercion} from 'shared/CheckStringCoercion';
+
 type ValueTracker = {|
   getValue(): string,
   setValue(value: string): void,
@@ -55,6 +57,9 @@ function trackValueOnNode(node: any): ?ValueTracker {
     valueField,
   );
 
+  if (__DEV__) {
+    checkFormFieldValueStringCoercion(node[valueField]);
+  }
   let currentValue = '' + node[valueField];
 
   // if someone has already defined a value or Safari, then bail
@@ -76,6 +81,9 @@ function trackValueOnNode(node: any): ?ValueTracker {
       return get.call(this);
     },
     set: function(value) {
+      if (__DEV__) {
+        checkFormFieldValueStringCoercion(value);
+      }
       currentValue = '' + value;
       set.call(this, value);
     },
@@ -93,6 +101,9 @@ function trackValueOnNode(node: any): ?ValueTracker {
       return currentValue;
     },
     setValue(value) {
+      if (__DEV__) {
+        checkFormFieldValueStringCoercion(value);
+      }
       currentValue = '' + value;
     },
     stopTracking() {

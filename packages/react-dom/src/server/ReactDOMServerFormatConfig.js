@@ -9,6 +9,12 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {
+  checkHtmlStringCoercion,
+  checkCSSPropertyStringCoercion,
+  checkAttributeStringCoercion,
+} from 'shared/CheckStringCoercion';
+
 import {Children} from 'react';
 
 import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
@@ -272,6 +278,9 @@ function pushStyle(
     const isCustomProperty = styleName.indexOf('--') === 0;
     if (isCustomProperty) {
       nameChunk = stringToChunk(escapeTextForBrowser(styleName));
+      if (__DEV__) {
+        checkCSSPropertyStringCoercion(styleValue, styleName);
+      }
       valueChunk = stringToChunk(
         escapeTextForBrowser(('' + styleValue).trim()),
       );
@@ -291,6 +300,9 @@ function pushStyle(
           valueChunk = stringToChunk('' + styleValue);
         }
       } else {
+        if (__DEV__) {
+          checkCSSPropertyStringCoercion(styleValue, styleName);
+        }
         valueChunk = stringToChunk(
           escapeTextForBrowser(('' + styleValue).trim()),
         );
@@ -439,6 +451,9 @@ function pushAttribute(
         break;
       default:
         if (propertyInfo.sanitizeURL) {
+          if (__DEV__) {
+            checkAttributeStringCoercion(value, attributeName);
+          }
           value = '' + (value: any);
           sanitizeURL(value);
         }
@@ -496,6 +511,9 @@ function pushInnerHTML(
     );
     const html = innerHTML.__html;
     if (html !== null && html !== undefined) {
+      if (__DEV__) {
+        checkHtmlStringCoercion(html);
+      }
       target.push(stringToChunk('' + html));
     }
   }
@@ -679,6 +697,9 @@ function pushStartOption(
   if (selectedValue !== null) {
     let stringValue;
     if (value !== null) {
+      if (__DEV__) {
+        checkAttributeStringCoercion(value, 'value');
+      }
       stringValue = '' + value;
     } else {
       if (__DEV__) {
@@ -697,6 +718,9 @@ function pushStartOption(
     if (isArray(selectedValue)) {
       // multiple
       for (let i = 0; i < selectedValue.length; i++) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(selectedValue[i], 'value');
+        }
         const v = '' + selectedValue[i];
         if (v === stringValue) {
           target.push(selectedMarkerAttribute);
@@ -895,7 +919,15 @@ function pushStartTextArea(
         children.length <= 1,
         '<textarea> can only have at most one child.',
       );
+      // TODO: remove the coercion and the DEV check below because it will
+      // always be overwritten by the coercion several lines below it. #22309
+      if (__DEV__) {
+        checkHtmlStringCoercion(children[0]);
+      }
       value = '' + children[0];
+    }
+    if (__DEV__) {
+      checkHtmlStringCoercion(children);
     }
     value = '' + children;
   }
@@ -1142,6 +1174,9 @@ function pushStartPreformattedElement(
       if (typeof html === 'string' && html.length > 0 && html[0] === '\n') {
         target.push(leadingNewline, stringToChunk(html));
       } else {
+        if (__DEV__) {
+          checkHtmlStringCoercion(html);
+        }
         target.push(stringToChunk('' + html));
       }
     }
