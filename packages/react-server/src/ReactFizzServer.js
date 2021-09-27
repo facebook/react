@@ -190,10 +190,10 @@ export opaque type Request = {
   // onCompleteAll is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
   onCompleteAll: () => void,
-  // onReadyToStream is called when there is at least a root fallback ready to show.
+  // onCompleteShell is called when there is at least a root fallback ready to show.
   // Typically you don't need this callback because it's best practice to always have a
   // root fallback ready so there's no need to wait.
-  onReadyToStream: () => void,
+  onCompleteShell: () => void,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -227,7 +227,7 @@ export function createRequest(
   progressiveChunkSize: void | number,
   onError: void | ((error: mixed) => void),
   onCompleteAll: void | (() => void),
-  onReadyToStream: void | (() => void),
+  onCompleteShell: void | (() => void),
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
@@ -250,7 +250,7 @@ export function createRequest(
     partialBoundaries: [],
     onError: onError === undefined ? defaultErrorHandler : onError,
     onCompleteAll: onCompleteAll === undefined ? noop : onCompleteAll,
-    onReadyToStream: onReadyToStream === undefined ? noop : onReadyToStream,
+    onCompleteShell: onCompleteShell === undefined ? noop : onCompleteShell,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);
@@ -1370,8 +1370,8 @@ function finishedTask(
     }
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
-      const onReadyToStream = request.onReadyToStream;
-      onReadyToStream();
+      const onCompleteShell = request.onCompleteShell;
+      onCompleteShell();
     }
   } else {
     boundary.pendingTasks--;
