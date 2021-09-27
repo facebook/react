@@ -18,8 +18,8 @@ import type {
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lane} from './ReactFiberLane.new';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
+import type { Lane } from './ReactFiberLane.old';
+import type { SuspenseState } from './ReactFiberSuspenseComponent.old';
 
 import {
   findCurrentHostFiber,
@@ -42,9 +42,9 @@ import {
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext.new';
-import {createFiberRoot} from './ReactFiberRoot.new';
-import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.new';
+} from './ReactFiberContext.old';
+import { createFiberRoot } from './ReactFiberRoot.old';
+import { injectInternals, onScheduleRoot } from './ReactFiberDevToolsHook.old';
 import {
   requestEventTime,
   requestUpdateLane,
@@ -57,12 +57,12 @@ import {
   deferredUpdates,
   discreteUpdates,
   flushPassiveEffects,
-} from './ReactFiberWorkLoop.new';
+} from './ReactFiberWorkLoop.old';
 import {
   createUpdate,
   enqueueUpdate,
   entangleTransitions,
-} from './ReactUpdateQueue.new';
+} from './ReactUpdateQueue.old';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
@@ -76,20 +76,20 @@ import {
   NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
-} from './ReactFiberLane.new';
+} from './ReactFiberLane.old';
 import {
   getCurrentUpdatePriority,
   runWithPriority,
-} from './ReactEventPriorities.new';
+} from './ReactEventPriorities.old';
 import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
   findHostInstancesForRefresh,
-} from './ReactFiberHotReloading.new';
+} from './ReactFiberHotReloading.old';
 import {markRenderScheduled} from './SchedulingProfiler';
 import ReactVersion from 'shared/ReactVersion';
-export {registerMutableSourceForHydration} from './ReactMutableSource.new';
+export { registerMutableSourceForHydration } from './ReactMutableSource.old';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
