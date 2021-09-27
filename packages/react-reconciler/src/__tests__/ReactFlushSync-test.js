@@ -6,6 +6,8 @@ let useState;
 let useEffect;
 let startTransition;
 
+// TODO: Migrate tests to React DOM instead of React Noop
+
 describe('ReactFlushSync', () => {
   beforeEach(() => {
     jest.resetModules();
