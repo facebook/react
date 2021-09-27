@@ -48,6 +48,7 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
+import isArray from './isArray';
 
 import type {ComponentFilter, ElementType} from './types';
 import type {LRUCache} from 'react-devtools-shared/src/types';
@@ -475,7 +476,7 @@ export function deletePathInObject(
   if (object != null) {
     const parent = getInObject(object, path.slice(0, length - 1));
     if (parent) {
-      if (Array.isArray(parent)) {
+      if (isArray(parent)) {
         parent.splice(((last: any): number), 1);
       } else {
         delete parent[last];
@@ -496,7 +497,7 @@ export function renamePathInObject(
       const lastOld = oldPath[length - 1];
       const lastNew = newPath[length - 1];
       parent[lastNew] = parent[lastOld];
-      if (Array.isArray(parent)) {
+      if (isArray(parent)) {
         parent.splice(((lastOld: any): number), 1);
       } else {
         delete parent[lastOld];
@@ -580,7 +581,7 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
-      if (Array.isArray(data)) {
+      if (isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
         return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
@@ -799,7 +800,7 @@ export function formatDataForPreview(
           // To mimic their behavior, detect if we've been given an entries tuple.
           //   Map(2) {"abc" => 123, "def" => 123}
           //   Set(2) {"abc", 123}
-          if (Array.isArray(entryOrEntries)) {
+          if (isArray(entryOrEntries)) {
             const key = formatDataForPreview(entryOrEntries[0], true);
             const value = formatDataForPreview(entryOrEntries[1], false);
             formatted += `${key} => ${value}`;
