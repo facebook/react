@@ -7,24 +7,24 @@
  * @flow
  */
 
-import type { AnyNativeEvent } from '../events/PluginModuleType';
-import type { FiberRoot } from 'react-reconciler/src/ReactInternalTypes';
-import type { Container, SuspenseInstance } from '../client/ReactDOMHostConfig';
-import type { DOMEventName } from '../events/DOMEventNames';
+import type {AnyNativeEvent} from '../events/PluginModuleType';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
+import type {DOMEventName} from '../events/DOMEventNames';
 
 import {
   attemptSynchronousHydration,
   clearIfContinuousEvent,
   queueIfContinuousEvent,
 } from './ReactDOMEventReplaying';
-import { enableSelectiveHydration } from 'shared/ReactFeatureFlags';
+import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {
   getNearestMountedFiber,
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import { HostRoot, SuspenseComponent } from 'react-reconciler/src/ReactWorkTags';
-import { type EventSystemFlags, IS_CAPTURE_PHASE } from './EventSystemFlags';
+import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
 import {
@@ -32,7 +32,7 @@ import {
   getClosestInstanceFromNode,
 } from '../client/ReactDOMComponentTree';
 
-import { dispatchEventForPluginEventSystem } from './DOMPluginEventSystem';
+import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 
 import {
   getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
@@ -52,7 +52,7 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const { ReactCurrentBatchConfig } = ReactSharedInternals;
+const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
 export let _enabled = true;

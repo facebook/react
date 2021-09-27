@@ -1831,7 +1831,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(newSpan.className).toBe('hi');
   });
 
-
   it('does not invoke an event on a hydrated node until it commits', async () => {
     let suspend = false;
     let resolve;

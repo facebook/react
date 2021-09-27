@@ -9,7 +9,7 @@
 
 'use strict';
 
-import { createEventTarget } from 'dom-event-testing-library';
+import {createEventTarget} from 'dom-event-testing-library';
 
 let React;
 let ReactDOM;
@@ -99,7 +99,7 @@ function dispatchClickEvent(target) {
 function TODO_scheduleIdleDOMSchedulerTask(fn) {
   ReactDOM.unstable_runWithPriority(IdleEventPriority, () => {
     const prevEvent = window.event;
-    window.event = { type: 'message' };
+    window.event = {type: 'message'};
     try {
       fn();
     } finally {
@@ -125,7 +125,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
   });
 
   it('hydrates the target boundary synchronously during a click', async () => {
-    function Child({ text }) {
+    function Child({text}) {
       Scheduler.unstable_yieldValue(text);
       return (
         <span
@@ -166,7 +166,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     const span = container.getElementsByTagName('span')[1];
 
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -195,7 +195,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
-    function Child({ text }) {
+    function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
       }
@@ -247,7 +247,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -282,7 +282,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
-    function Child({ text }) {
+    function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
       }
@@ -336,7 +336,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -373,7 +373,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let isServerRendering = true;
 
-    function Child({ text }) {
+    function Child({text}) {
       const ref = React.useRef(null);
       Scheduler.unstable_yieldValue(text);
       if (!isServerRendering) {
@@ -413,7 +413,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     isServerRendering = false;
 
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
 
     root.render(<App />);
 
@@ -445,7 +445,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
     const setClick = ReactDOM.unstable_createEventHandle('click');
 
-    function Child({ text }) {
+    function Child({text}) {
       const ref = React.useRef(null);
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
@@ -500,7 +500,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -534,7 +534,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
-    function Child({ text }) {
+    function Child({text}) {
       const ref = React.useRef(null);
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
@@ -590,7 +590,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -628,7 +628,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
-    function Child({ text }) {
+    function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
       }
@@ -686,7 +686,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -724,7 +724,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
-    function Child({ text }) {
+    function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
       }
@@ -780,7 +780,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -812,7 +812,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   // @gate experimental || www
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
-    function Child({ text }) {
+    function Child({text}) {
       Scheduler.unstable_yieldValue(text);
       return <span>{text}</span>;
     }
@@ -844,7 +844,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanB = container.getElementsByTagName('span')[1];
     const spanC = container.getElementsByTagName('span')[2];
 
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -861,11 +861,11 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   // @gate experimental || www
   it('hydrates before an update even if hydration moves away from it', async () => {
-    function Child({ text }) {
+    function Child({text}) {
       Scheduler.unstable_yieldValue(text);
       return <span>{text}</span>;
     }
-    const ChildWithBoundary = React.memo(function ({ text }) {
+    const ChildWithBoundary = React.memo(function({text}) {
       return (
         <Suspense fallback="Loading...">
           <Child text={text} />
@@ -874,7 +874,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     });
 
-    function App({ a }) {
+    function App({a}) {
       Scheduler.unstable_yieldValue('App');
       React.useEffect(() => {
         Scheduler.unstable_yieldValue('Commit');
@@ -902,7 +902,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanB = container.getElementsByTagName('span')[2];
     const spanC = container.getElementsByTagName('span')[4];
 
-    const root = ReactDOM.createRoot(container, { hydrate: true });
+    const root = ReactDOM.createRoot(container, {hydrate: true});
     act(() => {
       root.render(<App a="A" />);
 
