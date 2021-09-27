@@ -14,6 +14,7 @@ import {
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
   getValueForAttribute,
@@ -139,6 +140,9 @@ if (__DEV__) {
   const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
   normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
+    if (__DEV__) {
+      checkHtmlStringCoercion(markup);
+    }
     const markupString =
       typeof markup === 'string' ? markup : '' + (markup: any);
     return markupString

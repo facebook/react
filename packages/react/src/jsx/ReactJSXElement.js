@@ -9,6 +9,7 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -222,10 +223,16 @@ export function jsx(type, config, maybeKey) {
   // <div {...props} key="Hi" />, because we aren't currently able to tell if
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
+    if (__DEV__) {
+      checkKeyStringCoercion(maybeKey);
+    }
     key = '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
+    if (__DEV__) {
+      checkKeyStringCoercion(config.key);
+    }
     key = '' + config.key;
   }
 
@@ -287,10 +294,16 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     // <div {...props} key="Hi" />, because we aren't currently able to tell if
     // key is explicitly declared to be undefined or not.
     if (maybeKey !== undefined) {
+      if (__DEV__) {
+        checkKeyStringCoercion(maybeKey);
+      }
       key = '' + maybeKey;
     }
 
     if (hasValidKey(config)) {
+      if (__DEV__) {
+        checkKeyStringCoercion(config.key);
+      }
       key = '' + config.key;
     }
 

@@ -25,6 +25,10 @@ import {
   enableSuspenseServerRenderer,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
+import {
+  checkPropStringCoercion,
+  checkFormFieldValueStringCoercion,
+} from 'shared/CheckStringCoercion';
 
 import {
   REACT_DEBUG_TRACING_MODE_TYPE,
@@ -1472,6 +1476,9 @@ class ReactDOMServerRenderer {
             textareaChildren = textareaChildren[0];
           }
 
+          if (__DEV__) {
+            checkPropStringCoercion(textareaChildren, 'children');
+          }
           defaultValue = '' + textareaChildren;
         }
         if (defaultValue == null) {
@@ -1480,6 +1487,9 @@ class ReactDOMServerRenderer {
         initialValue = defaultValue;
       }
 
+      if (__DEV__) {
+        checkFormFieldValueStringCoercion(initialValue);
+      }
       props = Object.assign({}, props, {
         value: undefined,
         children: '' + initialValue,
@@ -1535,6 +1545,9 @@ class ReactDOMServerRenderer {
       if (selectValue != null) {
         let value;
         if (props.value != null) {
+          if (__DEV__) {
+            checkFormFieldValueStringCoercion(props.value);
+          }
           value = props.value + '';
         } else {
           if (__DEV__) {
@@ -1554,12 +1567,18 @@ class ReactDOMServerRenderer {
         if (isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
+            if (__DEV__) {
+              checkFormFieldValueStringCoercion(selectValue[j]);
+            }
             if ('' + selectValue[j] === value) {
               selected = true;
               break;
             }
           }
         } else {
+          if (__DEV__) {
+            checkFormFieldValueStringCoercion(selectValue);
+          }
           selected = '' + selectValue === value;
         }
 

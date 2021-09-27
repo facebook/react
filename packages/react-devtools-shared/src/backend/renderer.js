@@ -1848,7 +1848,7 @@ export function attach(
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      const keyString = key === null ? null : '' + key;
+      const keyString = key === null ? null : String(key);
       const keyStringID = getStringID(keyString);
 
       pushOperation(TREE_OPERATION_ADD);

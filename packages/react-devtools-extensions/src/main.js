@@ -94,7 +94,7 @@ function createPanelIfReactLoaded() {
 
       function initBridgeAndStore() {
         const port = chrome.runtime.connect({
-          name: '' + tabId,
+          name: String(tabId),
         });
         // Looks like `port.onDisconnect` does not trigger on in-tab navigation like new URL or back/forward navigation,
         // so it makes no sense to handle it here.

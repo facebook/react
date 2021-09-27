@@ -95,7 +95,7 @@ function validateClassInstance(inst, methodName) {
     return;
   }
   let received;
-  const stringified = '' + inst;
+  const stringified = String(inst);
   if (isArray(inst)) {
     received = 'an array';
   } else if (inst && inst.nodeType === ELEMENT_NODE && inst.tagName) {

@@ -28,6 +28,7 @@ import {
   warnAboutStringRefs,
   enableLazyElements,
 } from 'shared/ReactFeatureFlags';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
   createWorkInProgress,
@@ -163,6 +164,9 @@ function coerceRef(
           'bug in React. Please file an issue.',
         mixedRef,
       );
+      if (__DEV__) {
+        checkPropStringCoercion(mixedRef, 'ref');
+      }
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
       if (

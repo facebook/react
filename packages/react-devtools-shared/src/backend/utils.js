@@ -166,11 +166,7 @@ export function format(
 ): string {
   const args = inputArgs.slice();
 
-  // Symbols cannot be concatenated with Strings.
-  let formatted: string =
-    typeof maybeMessage === 'symbol'
-      ? maybeMessage.toString()
-      : '' + maybeMessage;
+  let formatted: string = String(maybeMessage);
 
   // If the first argument is a string, check for substitutions.
   if (typeof maybeMessage === 'string') {
@@ -203,17 +199,14 @@ export function format(
   // Arguments that remain after formatting.
   if (args.length) {
     for (let i = 0; i < args.length; i++) {
-      const arg = args[i];
-
-      // Symbols cannot be concatenated with Strings.
-      formatted += ' ' + (typeof arg === 'symbol' ? arg.toString() : arg);
+      formatted += ' ' + String(args[i]);
     }
   }
 
   // Update escaped %% values.
   formatted = formatted.replace(/%{2,2}/g, '%');
 
-  return '' + formatted;
+  return String(formatted);
 }
 
 export function isSynchronousXHRSupported(): boolean {
