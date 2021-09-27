@@ -4024,7 +4024,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('0');
   });
 
-  it('useReducer should apply potential no-op changes if made relevant by other updates in the batch', () => {
+  it('useReducer applies potential no-op changes if made relevant by other updates in the batch', () => {
     let setDisabled;
     let increment;
 
