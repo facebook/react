@@ -2754,7 +2754,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create insertion [current: ${committedText}]`,
           );
-          committedText = props.count + '';
+          committedText = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy insertion [current: ${committedText}]`,
@@ -2817,7 +2817,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create insertion [current: ${committedText}]`,
           );
-          committedText = props.count + '';
+          committedText = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy insertion [current: ${committedText}]`,
@@ -2828,7 +2828,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create layout [current: ${committedText}]`,
           );
-          committedText = props.count + '';
+          committedText = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy layout [current: ${committedText}]`,
@@ -2886,7 +2886,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 1 for Component A [A: ${committedA}, B: ${committedB}]`,
           );
-          committedA = props.count + '';
+          committedA = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 1 for Component A [A: ${committedA}, B: ${committedB}]`,
@@ -2897,7 +2897,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 2 for Component A [A: ${committedA}, B: ${committedB}]`,
           );
-          committedA = props.count + '';
+          committedA = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 2 for Component A [A: ${committedA}, B: ${committedB}]`,
@@ -2934,7 +2934,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 1 for Component B [A: ${committedA}, B: ${committedB}]`,
           );
-          committedB = props.count + '';
+          committedB = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 1 for Component B [A: ${committedA}, B: ${committedB}]`,
@@ -2945,7 +2945,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 2 for Component B [A: ${committedA}, B: ${committedB}]`,
           );
-          committedB = props.count + '';
+          committedB = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 2 for Component B [A: ${committedA}, B: ${committedB}]`,
@@ -3140,7 +3140,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         useLayoutEffect(() => {
           // Normally this would go in a mutation effect, but this test
           // intentionally omits a mutation effect.
-          committedText = props.count + '';
+          committedText = String(props.count);
 
           Scheduler.unstable_yieldValue(
             `Mount layout [current: ${committedText}]`,

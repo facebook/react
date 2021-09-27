@@ -875,7 +875,7 @@ describe('ReactCache', () => {
     function Unrelated() {
       const [count, _updateUnrelated] = useState(0);
       updateUnrelated = _updateUnrelated;
-      return <Text text={count + ''} />;
+      return <Text text={String(count)} />;
     }
 
     const root = ReactNoop.createRoot();

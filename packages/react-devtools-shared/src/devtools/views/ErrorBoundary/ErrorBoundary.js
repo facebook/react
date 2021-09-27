@@ -46,7 +46,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       error !== null &&
       error.hasOwnProperty('message')
         ? error.message
-        : '' + error;
+        : String(error);
 
     const callStack =
       typeof error === 'object' &&

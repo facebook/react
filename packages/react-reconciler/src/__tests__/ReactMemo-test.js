@@ -223,7 +223,7 @@ describe('memo', () => {
         class CounterInner extends React.Component {
           static defaultProps = {suffix: '!'};
           render() {
-            return <Text text={this.props.count + '' + this.props.suffix} />;
+            return <Text text={this.props.count + String(this.props.suffix)} />;
           }
         }
         const Counter = memo(CounterInner);

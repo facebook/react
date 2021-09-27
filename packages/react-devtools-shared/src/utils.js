@@ -834,7 +834,7 @@ export function formatDataForPreview(
       return data;
     default:
       try {
-        return truncateForDisplay('' + data);
+        return truncateForDisplay(String(data));
       } catch (error) {
         return 'unserializable';
       }

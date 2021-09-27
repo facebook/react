@@ -41,7 +41,7 @@ class ErrorBoundary extends React.Component {
       if (this.state.error) {
         return <p>Captured an error: {this.state.error.message}</p>;
       } else {
-        return <p>Captured an error: {'' + this.state.error}</p>;
+        return <p>Captured an error: {String(this.state.error)}</p>;
       }
     }
     if (this.state.shouldThrow) {

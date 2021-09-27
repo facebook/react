@@ -102,8 +102,8 @@ function row(result) {
   let headSha;
   let baseSha;
   try {
-    headSha = (readFileSync(HEAD_DIR + '/COMMIT_SHA') + '').trim();
-    baseSha = (readFileSync(BASE_DIR + '/COMMIT_SHA') + '').trim();
+    headSha = String(readFileSync(HEAD_DIR + '/COMMIT_SHA')).trim();
+    baseSha = String(readFileSync(BASE_DIR + '/COMMIT_SHA')).trim();
   } catch {
     warn(
       "Failed to read build artifacts. It's possible a build configuration " +
