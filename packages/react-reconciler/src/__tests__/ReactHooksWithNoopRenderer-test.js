@@ -3915,7 +3915,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('2');
   });
 
-  it('successful eager bailout should not store dispatched item in the queue', () => {
+  it('useReducer does not replay previous no-op actions when props change', () => {
     let setDisabled;
     let increment;
 
@@ -3951,6 +3951,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('0');
 
     act(() => {
+      // These increments should have no effect, since disabled=true
       increment();
       increment();
       increment();
@@ -3959,6 +3960,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('0');
 
     act(() => {
+      // Enabling the updater should *not* replay the previous increment() actions
       setDisabled(false);
     });
     expect(Scheduler).toHaveYielded([
@@ -3968,7 +3970,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('0');
   });
 
-  it('eager bailout should get ignored in batch update when parent rerenders with new props', () => {
+  it('useReducer should apply potential no-op changes negated by other updates in the batch', () => {
     let setDisabled;
     let increment;
 
@@ -4004,6 +4006,9 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('0');
 
     act(() => {
+      // Although the increment happens first, because these calls are in a batch
+      // the parent updates first, updating the child with disabled=false. The
+      // increment should therefore take effect and render the updated count.
       increment();
       setDisabled(false);
     });
