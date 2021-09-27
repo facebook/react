@@ -56,10 +56,7 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-const encodedStringCache: LRUCache<
-  string,
-  Array<number> | Uint8Array,
-> = new LRU({
+const encodedStringCache: LRUCache<string, Array<number>> = new LRU({
   max: 1000,
 });
 
@@ -128,42 +125,46 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-const isTextEncoderSupported =
-  typeof TextDecoder === 'function' && typeof TextEncoder === 'function';
-
 export function utfDecodeString(array: Array<number>): string {
-  if (isTextEncoderSupported) {
-    // Handles multi-byte characters; use if available.
-    return new TextDecoder().decode(new Uint8Array(array));
-  } else {
-    // Avoid spreading the array (e.g. String.fromCodePoint(...array))
-    // Functions arguments are first placed on the stack before the function is called
-    // which throws a RangeError for large arrays.
-    // See github.com/facebook/react/issues/22293
-    let string = '';
-    for (let i = 0; i < array.length; i++) {
-      const char = array[i];
-      string += String.fromCodePoint(char);
-    }
-    return string;
+  // Avoid spreading the array (e.g. String.fromCodePoint(...array))
+  // Functions arguments are first placed on the stack before the function is called
+  // which throws a RangeError for large arrays.
+  // See github.com/facebook/react/issues/22293
+  let string = '';
+  for (let i = 0; i < array.length; i++) {
+    const char = array[i];
+    string += String.fromCodePoint(char);
   }
+  return string;
 }
 
-export function utfEncodeString(string: string): Array<number> | Uint8Array {
+function surrogatePairToCodePoint(
+  charCode1: number,
+  charCode2: number,
+): number {
+  return ((charCode1 & 0x3ff) << 10) + (charCode2 & 0x3ff) + 0x10000;
+}
+
+// Credit for this encoding approach goes to Tim Down:
+// https://stackoverflow.com/questions/4877326/how-can-i-tell-if-a-string-contains-multibyte-characters-in-javascript
+export function utfEncodeString(string: string): Array<number> {
   const cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
 
-  let encoded;
-  if (isTextEncoderSupported) {
-    // Handles multi-byte characters; use if available.
-    encoded = new TextEncoder().encode(string);
-  } else {
-    encoded = new Array(string.length);
-    for (let i = 0; i < string.length; i++) {
-      encoded[i] = string.codePointAt(i);
+  const encoded = [];
+  let i = 0;
+  let charCode;
+  while (i < string.length) {
+    charCode = string.charCodeAt(i);
+    // Handle multibyte unicode characters (like emoji).
+    if ((charCode & 0xf800) === 0xd800) {
+      encoded.push(surrogatePairToCodePoint(charCode, string.charCodeAt(++i)));
+    } else {
+      encoded.push(charCode);
     }
+    ++i;
   }
 
   encodedStringCache.set(string, encoded);

@@ -24,6 +24,3 @@ global.process.env.DARK_MODE_DIMMED_LOG_COLOR = DARK_MODE_DIMMED_LOG_COLOR;
 global.process.env.LIGHT_MODE_DIMMED_WARNING_COLOR = LIGHT_MODE_DIMMED_WARNING_COLOR;
 global.process.env.LIGHT_MODE_DIMMED_ERROR_COLOR = LIGHT_MODE_DIMMED_ERROR_COLOR;
 global.process.env.LIGHT_MODE_DIMMED_LOG_COLOR = LIGHT_MODE_DIMMED_LOG_COLOR;
-
-global.TextEncoder = require('util').TextEncoder;
-global.TextDecoder = require('util').TextDecoder;
