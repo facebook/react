@@ -1905,8 +1905,15 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(clicks).toBe(1);
+    // Clicks aren't replayed
+    expect(clicks).toBe(0);
+    expect(container.textContent).toBe('Click meHello');
 
+    await act(async () => {
+      a.click();
+    });
+    // Now click went through
+    expect(clicks).toBe(1);
     expect(container.textContent).toBe('Hello');
 
     document.body.removeChild(container);
@@ -1991,8 +1998,13 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    expect(onEvent).toHaveBeenCalledTimes(2);
+    // Clicks are not replayed
+    expect(onEvent).toHaveBeenCalledTimes(0);
 
+    await act(async () => {
+      a.click();
+    });
+    expect(onEvent).toHaveBeenCalledTimes(1);
     document.body.removeChild(container);
   });
 
@@ -2072,7 +2084,13 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(clicks).toBe(2);
+    // clicks are not replayed
+    expect(clicks).toBe(0);
+
+    await act(async () => {
+      a.click();
+    });
+    expect(clicks).toBe(1);
 
     document.body.removeChild(container);
   });
@@ -2158,7 +2176,16 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(onEvent).toHaveBeenCalledTimes(2);
+
+    // Stays 0 because we don't replay clicks
+    expect(onEvent).toHaveBeenCalledTimes(0);
+
+    await act(async () => {
+      a.click();
+    });
+
+    // Clicks now go through after resolving
+    expect(onEvent).toHaveBeenCalledTimes(1);
 
     document.body.removeChild(container);
   });
@@ -2231,6 +2258,13 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
+    // Stays 0 because we don't replay click events
+    expect(clicksOnChild).toBe(0);
+
+    await act(async () => {
+      span.click();
+    });
+    // Now click events go through
     expect(clicksOnChild).toBe(1);
     // This will be zero due to the stopPropagation.
     expect(clicksOnParent).toBe(0);
@@ -2309,8 +2343,12 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    // We're now full hydrated.
+    // We're now full hydrated but we don't replay clicks
+    expect(clicks).toBe(0);
 
+    await act(async () => {
+      a.click();
+    });
     expect(clicks).toBe(1);
 
     document.body.removeChild(parentContainer);
@@ -2351,7 +2389,7 @@ describe('ReactDOMServerPartialHydration', () => {
               onMouseLeave={() => ops.push('Mouse Leave First')}
             />
             {/* We suspend after to test what happens when we eager
-                attach the listener. */}
+                 attach the listener. */}
             <First />
           </Suspense>
           <Suspense fallback="Loading Second...">
@@ -2396,9 +2434,11 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ops).toEqual([]);
 
     // Resolving the second promise so that rendering can complete.
-    suspend2 = false;
-    resolve2();
-    await promise2;
+    await act(async () => {
+      suspend2 = false;
+      resolve2();
+      await promise2;
+    });
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -2407,10 +2447,12 @@ describe('ReactDOMServerPartialHydration', () => {
     // able to replay it now.
     expect(ops).toEqual(['Mouse Enter Second']);
 
-    // Resolving the first promise has no effect now.
-    suspend1 = false;
-    resolve1();
-    await promise1;
+    await act(async () => {
+      // Resolving the first promise has no effect now.
+      suspend1 = false;
+      resolve1();
+      await promise1;
+    });
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -2580,6 +2622,18 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
+    // Submit event is not replayed
+    expect(submits).toBe(0);
+    expect(container.textContent).toBe('Click meHello');
+
+    await act(async () => {
+      form.dispatchEvent(
+        new Event('submit', {
+          bubbles: true,
+        }),
+      );
+    });
+    // Submit event has now gone through
     expect(submits).toBe(1);
     expect(container.textContent).toBe('Hello');
     document.body.removeChild(container);
