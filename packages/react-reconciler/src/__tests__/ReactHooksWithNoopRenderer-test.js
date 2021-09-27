@@ -3867,9 +3867,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  // TODO: delete now that we removed the eager bailout optimization? or do we want to keep this
-  // around in some capacity?
-  it('eager bailout optimization should always compare to latest rendered reducer', () => {
+  it('useReducer does not eagerly bail out of state updates', () => {
     // Edge case based on a bug report
     let setCounter;
     function App() {
