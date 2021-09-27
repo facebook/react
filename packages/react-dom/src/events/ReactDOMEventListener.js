@@ -25,7 +25,7 @@ import {
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
-import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
+import {type EventSystemFlags} from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
