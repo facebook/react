@@ -28,7 +28,7 @@ type Options = {|
   namespaceURI?: string,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onReadyToStream?: () => void,
+  onCompleteShell?: () => void,
   onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
 |};
@@ -56,7 +56,7 @@ function renderToReadableStream(
         options ? options.progressiveChunkSize : undefined,
         options ? options.onError : undefined,
         options ? options.onCompleteAll : undefined,
-        options ? options.onReadyToStream : undefined,
+        options ? options.onCompleteShell : undefined,
       );
       startWork(request);
     },

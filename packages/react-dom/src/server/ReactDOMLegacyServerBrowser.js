@@ -54,7 +54,7 @@ function renderToStringImpl(
   };
 
   let readyToStream = false;
-  function onReadyToStream() {
+  function onCompleteShell() {
     readyToStream = true;
   }
   const request = createRequest(
@@ -68,7 +68,7 @@ function renderToStringImpl(
     Infinity,
     onError,
     undefined,
-    onReadyToStream,
+    onCompleteShell,
   );
   startWork(request);
   // If anything suspended and is still pending, we'll abort it before writing.

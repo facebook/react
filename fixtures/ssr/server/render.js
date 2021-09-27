@@ -24,7 +24,7 @@ export default function render(url, res) {
     <App assets={assets} />,
     res,
     {
-      onReadyToStream() {
+      onCompleteShell() {
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;
         res.setHeader('Content-type', 'text/html');

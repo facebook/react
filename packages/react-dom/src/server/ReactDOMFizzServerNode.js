@@ -32,7 +32,7 @@ type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
   progressiveChunkSize?: number,
-  onReadyToStream?: () => void,
+  onCompleteShell?: () => void,
   onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
 |};
@@ -57,7 +57,7 @@ function createRequestImpl(
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
     options ? options.onCompleteAll : undefined,
-    options ? options.onReadyToStream : undefined,
+    options ? options.onCompleteShell : undefined,
   );
 }
 
