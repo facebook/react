@@ -190,22 +190,22 @@ export function dispatchEvent(
 
   // Synchronously hydrate non-replayable / non-continuous events
   if (enableSelectiveHydration) {
-    // while (blockedOn !== null) {
-    //   const fiber = getInstanceFromNode(blockedOn);
-    //   if (fiber !== null) {
-    //     attemptSynchronousHydration(fiber);
-    //   }
-    //   const nextBlockedOn = attemptToDispatchEvent(
-    //     domEventName,
-    //     eventSystemFlags,
-    //     targetContainer,
-    //     nativeEvent,
-    //   );
-    //   if (nextBlockedOn === blockedOn) {
-    //     break;
-    //   }
-    //   blockedOn = nextBlockedOn;
-    // }
+    while (blockedOn !== null) {
+      const fiber = getInstanceFromNode(blockedOn);
+      if (fiber !== null) {
+        attemptSynchronousHydration(fiber);
+      }
+      const nextBlockedOn = attemptToDispatchEvent(
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
+      if (nextBlockedOn === blockedOn) {
+        break;
+      }
+      blockedOn = nextBlockedOn;
+    }
   }
   // We need to clear only if we didn't queue because
   // queueing is accumulative.
