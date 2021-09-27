@@ -921,6 +921,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return children;
   }
 
+  function flushSync<R>(fn: () => R): R {
+    if (__DEV__) {
+      if (NoopRenderer.isAlreadyRendering()) {
+        console.error(
+          'flushSync was called from inside a lifecycle method. React cannot ' +
+            'flush when React is already rendering. Consider moving this call to ' +
+            'a scheduler task or micro task.',
+        );
+      }
+    }
+    return NoopRenderer.flushSync(fn);
+  }
+
   let idCounter = 0;
 
   const ReactNoop = {
@@ -1136,7 +1149,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    flushSync: NoopRenderer.flushSync,
+    flushSync,
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
 
     // Logs the current state of the tree.
