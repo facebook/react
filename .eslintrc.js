@@ -108,6 +108,10 @@ module.exports = {
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
     'react-internal/no-primitive-constructors': ERROR,
+    'react-internal/safe-string-coercion': [
+      ERROR,
+      {isProductionUserAppCode: true},
+    ],
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/invariant-args': ERROR,
     'react-internal/warning-args': ERROR,
@@ -168,10 +172,17 @@ module.exports = {
         'packages/*/npm/**/*.js',
         'packages/dom-event-testing-library/**/*.js',
         'packages/react-devtools*/**/*.js',
+        'dangerfile.js',
+        'fixtures',
+        'packages/react-dom/src/test-utils/*.js',
       ],
       rules: {
         'react-internal/no-production-logging': OFF,
         'react-internal/warning-args': OFF,
+        'react-internal/safe-string-coercion': [
+          ERROR,
+          {isProductionUserAppCode: false},
+        ],
 
         // Disable accessibility checks
         'jsx-a11y/aria-role': OFF,
@@ -185,7 +196,7 @@ module.exports = {
     {
       files: [
         'scripts/eslint-rules/*.js',
-        'packages/eslint-plugin-react-hooks/src/*.js'
+        'packages/eslint-plugin-react-hooks/src/*.js',
       ],
       plugins: ['eslint-plugin'],
       rules: {
