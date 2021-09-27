@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMEventName} from '../events/DOMEventNames';
+import type { AnyNativeEvent } from '../events/PluginModuleType';
+import type { FiberRoot } from 'react-reconciler/src/ReactInternalTypes';
+import type { Container, SuspenseInstance } from '../client/ReactDOMHostConfig';
+import type { DOMEventName } from '../events/DOMEventNames';
 
 import {
   attemptSynchronousHydration,
@@ -23,8 +23,8 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
-import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
+import { HostRoot, SuspenseComponent } from 'react-reconciler/src/ReactWorkTags';
+import { type EventSystemFlags, IS_CAPTURE_PHASE } from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
 import {
@@ -32,7 +32,7 @@ import {
   getClosestInstanceFromNode,
 } from '../client/ReactDOMComponentTree';
 
-import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
+import { dispatchEventForPluginEventSystem } from './DOMPluginEventSystem';
 
 import {
   getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
@@ -52,7 +52,7 @@ import {
 } from 'react-reconciler/src/ReactEventPriorities';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
+const { ReactCurrentBatchConfig } = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -160,7 +160,7 @@ export function dispatchEvent(
   // to filter them out until we fix the logic to handle them correctly.
   const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
 
-  const blockedOn = attemptToDispatchEvent(
+  let blockedOn = attemptToDispatchEvent(
     domEventName,
     eventSystemFlags,
     targetContainer,
@@ -189,11 +189,23 @@ export function dispatchEvent(
   }
 
   // Synchronously hydrate non-replayable / non-continuous events
-  if (enableSelectiveHydration && blockedOn) {
-    const fiber = getInstanceFromNode(blockedOn);
-    if (fiber !== null) {
-      attemptSynchronousHydration(fiber);
-    }
+  if (enableSelectiveHydration) {
+    // while (blockedOn !== null) {
+    //   const fiber = getInstanceFromNode(blockedOn);
+    //   if (fiber !== null) {
+    //     attemptSynchronousHydration(fiber);
+    //   }
+    //   const nextBlockedOn = attemptToDispatchEvent(
+    //     domEventName,
+    //     eventSystemFlags,
+    //     targetContainer,
+    //     nativeEvent,
+    //   );
+    //   if (nextBlockedOn === blockedOn) {
+    //     break;
+    //   }
+    //   blockedOn = nextBlockedOn;
+    // }
   }
   // We need to clear only if we didn't queue because
   // queueing is accumulative.
