@@ -459,7 +459,15 @@ describe('ReactDOMServerSelectiveHydration', () => {
         });
       }
 
-      return <span ref={ref}>{text}</span>;
+      return (
+        <span
+          ref={ref}
+          onClickCapture={() => {
+            Scheduler.unstable_yieldValue('Capture Clicked ' + text);
+          }}>
+          {text}
+        </span>
+      );
     }
 
     function App() {
@@ -519,7 +527,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       resolve();
       await promise;
     });
-    expect(Scheduler).toHaveYielded(['D', 'Clicked D', 'A']);
+    expect(Scheduler).toHaveYielded([
+      'D',
+      'Capture Clicked D',
+      'Clicked D',
+      'A',
+    ]);
 
     document.body.removeChild(container);
   });

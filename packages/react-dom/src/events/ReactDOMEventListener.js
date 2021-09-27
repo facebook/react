@@ -151,18 +151,7 @@ export function dispatchEvent(
     return;
   }
 
-  // TODO: replaying capture phase events is currently broken
-  // because we used to do it during top-level native bubble handlers
-  // but now we use different bubble and capture handlers.
-  // In eager mode, we attach capture listeners early, so we need
-  // to filter them out until we fix the logic to handle them correctly.
-  const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
-
-  if (
-    allowReplay &&
-    hasQueuedDiscreteEvents() &&
-    isReplayableDiscreteEvent(domEventName)
-  ) {
+  if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(domEventName)) {
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
     // need to dispatch in order.
@@ -191,33 +180,31 @@ export function dispatchEvent(
     return;
   }
 
-  if (allowReplay) {
-    if (isReplayableDiscreteEvent(domEventName)) {
-      // This this to be replayed later once the target is available.
-      queueDiscreteEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      );
-      return;
-    }
-    if (
-      queueIfContinuousEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      )
-    ) {
-      return;
-    }
-    // We need to clear only if we didn't queue because
-    // queueing is accumulative.
-    clearIfContinuousEvent(domEventName, nativeEvent);
+  if (isReplayableDiscreteEvent(domEventName)) {
+    // This this to be replayed later once the target is available.
+    queueDiscreteEvent(
+      blockedOn,
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+    return;
   }
+  if (
+    queueIfContinuousEvent(
+      blockedOn,
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    )
+  ) {
+    return;
+  }
+  // We need to clear only if we didn't queue because
+  // queueing is accumulative.
+  clearIfContinuousEvent(domEventName, nativeEvent);
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
