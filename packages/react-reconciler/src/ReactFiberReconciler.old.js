@@ -18,8 +18,8 @@ import type {
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type { Lane } from './ReactFiberLane.old';
-import type { SuspenseState } from './ReactFiberSuspenseComponent.old';
+import type {Lane} from './ReactFiberLane.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
   findCurrentHostFiber,
@@ -43,8 +43,8 @@ import {
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext.old';
-import { createFiberRoot } from './ReactFiberRoot.old';
-import { injectInternals, onScheduleRoot } from './ReactFiberDevToolsHook.old';
+import {createFiberRoot} from './ReactFiberRoot.old';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.old';
 import {
   requestEventTime,
   requestUpdateLane,
@@ -89,7 +89,7 @@ import {
 } from './ReactFiberHotReloading.old';
 import {markRenderScheduled} from './SchedulingProfiler';
 import ReactVersion from 'shared/ReactVersion';
-export { registerMutableSourceForHydration } from './ReactMutableSource.old';
+export {registerMutableSourceForHydration} from './ReactMutableSource.old';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
