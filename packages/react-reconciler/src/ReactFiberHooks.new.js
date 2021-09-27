@@ -125,7 +125,7 @@ const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 type Update<S, A> = {|
   lane: Lane,
   action: A,
-  eagerReducer: ((S, A) => S) | null,
+  hasEagerState: boolean,
   eagerState: S | null,
   next: Update<S, A>,
 |};
@@ -730,7 +730,7 @@ function mountReducer<S, I, A>(
     lastRenderedState: (initialState: any),
   };
   hook.queue = queue;
-  const dispatch: Dispatch<A> = (queue.dispatch = (dispatchAction.bind(
+  const dispatch: Dispatch<A> = (queue.dispatch = (dispatchReducerAction.bind(
     null,
     currentlyRenderingFiber,
     queue,
@@ -801,7 +801,7 @@ function updateReducer<S, I, A>(
         const clone: Update<S, A> = {
           lane: updateLane,
           action: update.action,
-          eagerReducer: update.eagerReducer,
+          hasEagerState: update.hasEagerState,
           eagerState: update.eagerState,
           next: (null: any),
         };
@@ -829,7 +829,7 @@ function updateReducer<S, I, A>(
             // this will never be skipped by the check above.
             lane: NoLane,
             action: update.action,
-            eagerReducer: update.eagerReducer,
+            hasEagerState: update.hasEagerState,
             eagerState: update.eagerState,
             next: (null: any),
           };
@@ -837,9 +837,9 @@ function updateReducer<S, I, A>(
         }
 
         // Process this update.
-        if (update.eagerReducer === reducer) {
-          // If this update was processed eagerly, and its reducer matches the
-          // current reducer, we can use the eagerly computed state.
+        if (update.hasEagerState) {
+          // If this update is a state update (not a reducer) and was processed eagerly,
+          // we can use the eagerly computed state
           newState = ((update.eagerState: any): S);
         } else {
           const action = update.action;
@@ -1190,7 +1190,7 @@ function useMutableSource<Source, Snapshot>(
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: snapshot,
     };
-    newQueue.dispatch = setSnapshot = (dispatchAction.bind(
+    newQueue.dispatch = setSnapshot = (dispatchSetState.bind(
       null,
       currentlyRenderingFiber,
       newQueue,
@@ -1481,7 +1481,7 @@ function mountState<S>(
   hook.queue = queue;
   const dispatch: Dispatch<
     BasicStateAction<S>,
-  > = (queue.dispatch = (dispatchAction.bind(
+  > = (queue.dispatch = (dispatchSetState.bind(
     null,
     currentlyRenderingFiber,
     queue,
@@ -2150,7 +2150,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
   // TODO: Warn if unmounted?
 }
 
-function dispatchAction<S, A>(
+function dispatchReducerAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
   action: A,
@@ -2171,7 +2171,119 @@ function dispatchAction<S, A>(
   const update: Update<S, A> = {
     lane,
     action,
-    eagerReducer: null,
+    hasEagerState: false,
+    eagerState: null,
+    next: (null: any),
+  };
+
+  const alternate = fiber.alternate;
+  if (
+    fiber === currentlyRenderingFiber ||
+    (alternate !== null && alternate === currentlyRenderingFiber)
+  ) {
+    // This is a render phase update. Stash it in a lazily-created map of
+    // queue -> linked list of updates. After this render pass, we'll restart
+    // and apply the stashed updates on top of the work-in-progress hook.
+    didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
+    const pending = queue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    queue.pending = update;
+  } else {
+    if (isInterleavedUpdate(fiber, lane)) {
+      const interleaved = queue.interleaved;
+      if (interleaved === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+        // At the end of the current render, this queue's interleaved updates will
+        // be transferred to the pending queue.
+        pushInterleavedQueue(queue);
+      } else {
+        update.next = interleaved.next;
+        interleaved.next = update;
+      }
+      queue.interleaved = update;
+    } else {
+      const pending = queue.pending;
+      if (pending === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+      } else {
+        update.next = pending.next;
+        pending.next = update;
+      }
+      queue.pending = update;
+    }
+
+    if (__DEV__) {
+      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+      if ('undefined' !== typeof jest) {
+        warnIfNotCurrentlyActingUpdatesInDev(fiber);
+      }
+    }
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (isTransitionLane(lane) && root !== null) {
+      let queueLanes = queue.lanes;
+
+      // If any entangled lanes are no longer pending on the root, then they
+      // must have finished. We can remove them from the shared queue, which
+      // represents a superset of the actually pending lanes. In some cases we
+      // may entangle more than we need to, but that's OK. In fact it's worse if
+      // we *don't* entangle when we should.
+      queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+      // Entangle the new transition lane with the other transition lanes.
+      const newQueueLanes = mergeLanes(queueLanes, lane);
+      queue.lanes = newQueueLanes;
+      // Even if queue.lanes already include lane, we don't know for certain if
+      // the lane finished since the last time we entangled it. So we need to
+      // entangle it again, just to be sure.
+      markRootEntangled(root, newQueueLanes);
+    }
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      if (fiber.mode & DebugTracingMode) {
+        const name = getComponentNameFromFiber(fiber) || 'Unknown';
+        logStateUpdateScheduled(name, lane, action);
+      }
+    }
+  }
+
+  if (enableSchedulingProfiler) {
+    markStateUpdateScheduled(fiber, lane);
+  }
+}
+
+function dispatchSetState<S, A>(
+  fiber: Fiber,
+  queue: UpdateQueue<S, A>,
+  action: A,
+) {
+  if (__DEV__) {
+    if (typeof arguments[3] === 'function') {
+      console.error(
+        "State updates from the useState() and useReducer() Hooks don't support the " +
+          'second callback argument. To execute a side effect after ' +
+          'rendering, declare it in the component body with useEffect().',
+      );
+    }
+  }
+
+  const eventTime = requestEventTime();
+  const lane = requestUpdateLane(fiber);
+
+  const update: Update<S, A> = {
+    lane,
+    action,
+    hasEagerState: false,
     eagerState: null,
     next: (null: any),
   };
@@ -2241,7 +2353,7 @@ function dispatchAction<S, A>(
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
           // without calling the reducer again.
-          update.eagerReducer = lastRenderedReducer;
+          update.hasEagerState = true;
           update.eagerState = eagerState;
           if (is(eagerState, currentState)) {
             // Fast path. We can bail out without scheduling React to re-render.
