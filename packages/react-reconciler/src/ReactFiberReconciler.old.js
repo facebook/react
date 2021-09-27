@@ -18,8 +18,8 @@ import type {
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lane} from './ReactFiberLane.old';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {Lane} from './ReactFiberLane.new';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {
   findCurrentHostFiber,
@@ -42,9 +42,9 @@ import {
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext.old';
-import {createFiberRoot} from './ReactFiberRoot.old';
-import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.old';
+} from './ReactFiberContext.new';
+import {createFiberRoot} from './ReactFiberRoot.new';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.new';
 import {
   requestEventTime,
   requestUpdateLane,
@@ -57,12 +57,12 @@ import {
   deferredUpdates,
   discreteUpdates,
   flushPassiveEffects,
-} from './ReactFiberWorkLoop.old';
+} from './ReactFiberWorkLoop.new';
 import {
   createUpdate,
   enqueueUpdate,
   entangleTransitions,
-} from './ReactUpdateQueue.old';
+} from './ReactUpdateQueue.new';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
@@ -76,20 +76,20 @@ import {
   NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
-} from './ReactFiberLane.old';
+} from './ReactFiberLane.new';
 import {
   getCurrentUpdatePriority,
   runWithPriority,
-} from './ReactEventPriorities.old';
+} from './ReactEventPriorities.new';
 import {
   scheduleRefresh,
   scheduleRoot,
   setRefreshHandler,
   findHostInstancesForRefresh,
-} from './ReactFiberHotReloading.old';
+} from './ReactFiberHotReloading.new';
 import {markRenderScheduled} from './SchedulingProfiler';
 import ReactVersion from 'shared/ReactVersion';
-export {registerMutableSourceForHydration} from './ReactMutableSource.old';
+export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
@@ -385,20 +385,6 @@ function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   if (alternate) {
     markRetryLaneImpl(alternate, retryLane);
   }
-}
-
-export function attemptDiscreteHydration(fiber: Fiber): void {
-  if (fiber.tag !== SuspenseComponent) {
-    // We ignore HostRoots here because we can't increase
-    // their priority and they should not suspend on I/O,
-    // since you have to wrap anything that might suspend in
-    // Suspense.
-    return;
-  }
-  const eventTime = requestEventTime();
-  const lane = SyncLane;
-  scheduleUpdateOnFiber(fiber, lane, eventTime);
-  markRetryLaneIfNotHydrated(fiber, lane);
 }
 
 export function attemptContinuousHydration(fiber: Fiber): void {
