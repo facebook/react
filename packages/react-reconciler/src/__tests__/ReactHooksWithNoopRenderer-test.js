@@ -3970,7 +3970,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('0');
   });
 
-  it('useReducer should apply potential no-op changes negated by other updates in the batch', () => {
+  it('useReducer should apply potential no-op changes if made relevant by other updates in the batch', () => {
     let setDisabled;
     let increment;
 
@@ -4006,9 +4006,10 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('0');
 
     act(() => {
-      // Although the increment happens first, because these calls are in a batch
-      // the parent updates first, updating the child with disabled=false. The
-      // increment should therefore take effect and render the updated count.
+      // Although the increment happens first (and would seem to do nothing since disabled=true),
+      // because these calls are in a batch the parent updates first. This should cause the child
+      // to re-render with disabled=false and *then* process the increment action, which now
+      // increments the count and causes the component output to change.
       increment();
       setDisabled(false);
     });
