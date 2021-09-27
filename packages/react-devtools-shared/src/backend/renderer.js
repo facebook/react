@@ -1514,11 +1514,16 @@ export function attach(
 
   type OperationsArray = Array<number>;
 
+  type StringTableEntry = {|
+    encodedString: Array<number>,
+    id: number,
+  |};
+
   const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
   const pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
-  const pendingStringTable: Map<string, number> = new Map();
+  const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
   let pendingUnmountedRootID: number | null = null;
 
@@ -1736,13 +1741,19 @@ export function attach(
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
     operations[i++] = pendingStringTableLength;
-    pendingStringTable.forEach((value, key) => {
-      operations[i++] = key.length;
-      const encodedKey = utfEncodeString(key);
-      for (let j = 0; j < encodedKey.length; j++) {
-        operations[i + j] = encodedKey[j];
+    pendingStringTable.forEach((entry, stringKey) => {
+      const encodedString = entry.encodedString;
+
+      // Don't use the string length.
+      // It won't work for multibyte characters (like emoji).
+      const length = encodedString.length;
+
+      operations[i++] = length;
+      for (let j = 0; j < length; j++) {
+        operations[i + j] = encodedString[j];
       }
-      i += key.length;
+
+      i += length;
     });
 
     if (numUnmountIDs > 0) {
@@ -1789,21 +1800,31 @@ export function attach(
     pendingStringTableLength = 0;
   }
 
-  function getStringID(str: string | null): number {
-    if (str === null) {
+  function getStringID(string: string | null): number {
+    if (string === null) {
       return 0;
     }
-    const existingID = pendingStringTable.get(str);
-    if (existingID !== undefined) {
-      return existingID;
+    const existingEntry = pendingStringTable.get(string);
+    if (existingEntry !== undefined) {
+      return existingEntry.id;
     }
-    const stringID = pendingStringTable.size + 1;
-    pendingStringTable.set(str, stringID);
-    // The string table total length needs to account
-    // both for the string length, and for the array item
-    // that contains the length itself. Hence + 1.
-    pendingStringTableLength += str.length + 1;
-    return stringID;
+
+    const id = pendingStringTable.size + 1;
+    const encodedString = utfEncodeString(string);
+
+    pendingStringTable.set(string, {
+      encodedString,
+      id,
+    });
+
+    // The string table total length needs to account both for the string length,
+    // and for the array item that contains the length itself.
+    //
+    // Don't use string length for this table.
+    // It won't work for multibyte characters (like emoji).
+    pendingStringTableLength += encodedString.length + 1;
+
+    return id;
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {

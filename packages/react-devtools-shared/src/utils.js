@@ -138,17 +138,37 @@ export function utfDecodeString(array: Array<number>): string {
   return string;
 }
 
+function surrogatePairToCodePoint(
+  charCode1: number,
+  charCode2: number,
+): number {
+  return ((charCode1 & 0x3ff) << 10) + (charCode2 & 0x3ff) + 0x10000;
+}
+
+// Credit for this encoding approach goes to Tim Down:
+// https://stackoverflow.com/questions/4877326/how-can-i-tell-if-a-string-contains-multibyte-characters-in-javascript
 export function utfEncodeString(string: string): Array<number> {
   const cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
 
-  const encoded = new Array(string.length);
-  for (let i = 0; i < string.length; i++) {
-    encoded[i] = string.codePointAt(i);
+  const encoded = [];
+  let i = 0;
+  let charCode;
+  while (i < string.length) {
+    charCode = string.charCodeAt(i);
+    // Handle multibyte unicode characters (like emoji).
+    if ((charCode & 0xf800) === 0xd800) {
+      encoded.push(surrogatePairToCodePoint(charCode, string.charCodeAt(++i)));
+    } else {
+      encoded.push(charCode);
+    }
+    ++i;
   }
+
   encodedStringCache.set(string, encoded);
+
   return encoded;
 }
 
