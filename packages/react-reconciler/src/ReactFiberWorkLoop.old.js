@@ -1191,11 +1191,11 @@ export function discreteUpdates<A, B, C, D, R>(
 
 // Overload the definition to the two valid signatures.
 // Warning, this opts-out of checking the function body.
-declare function flushSyncWithoutWarningIfAlreadyRendering<R>(fn: () => R): R;
+declare function flushSync<R>(fn: () => R): R;
 // eslint-disable-next-line no-redeclare
-declare function flushSyncWithoutWarningIfAlreadyRendering(): void;
+declare function flushSync(): void;
 // eslint-disable-next-line no-redeclare
-export function flushSyncWithoutWarningIfAlreadyRendering(fn) {
+export function flushSync(fn) {
   // In legacy mode, we flush pending passive effects at the beginning of the
   // next event, not at the end of the previous one.
   if (
@@ -1232,23 +1232,13 @@ export function flushSyncWithoutWarningIfAlreadyRendering(fn) {
   }
 }
 
-// Overload the definition to the two valid signatures.
-// Warning, this opts-out of checking the function body.
-declare function flushSync<R>(fn: () => R): R;
-// eslint-disable-next-line no-redeclare
-declare function flushSync(): void;
-// eslint-disable-next-line no-redeclare
-export function flushSync(fn) {
-  if (__DEV__) {
-    if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-      console.error(
-        'flushSync was called from inside a lifecycle method. React cannot ' +
-          'flush when React is already rendering. Consider moving this call to ' +
-          'a scheduler task or micro task.',
-      );
-    }
-  }
-  return flushSyncWithoutWarningIfAlreadyRendering(fn);
+export function isAlreadyRendering() {
+  // Used by the renderer to print a warning if certain APIs are called from
+  // the wrong context.
+  return (
+    __DEV__ &&
+    (executionContext & (RenderContext | CommitContext)) !== NoContext
+  );
 }
 
 export function flushControlled(fn: () => mixed): void {

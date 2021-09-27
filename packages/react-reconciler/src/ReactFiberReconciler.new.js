@@ -53,10 +53,10 @@ import {
   flushRoot,
   batchedUpdates,
   flushSync,
+  isAlreadyRendering,
   flushControlled,
   deferredUpdates,
   discreteUpdates,
-  flushSyncWithoutWarningIfAlreadyRendering,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.new';
 import {
@@ -330,7 +330,7 @@ export {
   discreteUpdates,
   flushControlled,
   flushSync,
-  flushSyncWithoutWarningIfAlreadyRendering,
+  isAlreadyRendering,
   flushPassiveEffects,
 };
 
