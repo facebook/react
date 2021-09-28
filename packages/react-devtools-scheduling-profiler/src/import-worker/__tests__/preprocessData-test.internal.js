@@ -1195,6 +1195,46 @@ describe('preprocessData', () => {
     `);
   });
 
+  it('should include a suspended resource "displayName" if one is set', async () => {
+    let promise = null;
+    let resolvedValue = null;
+    function readValue(value) {
+      if (resolvedValue !== null) {
+        return resolvedValue;
+      } else if (promise === null) {
+        promise = Promise.resolve(true).then(() => {
+          resolvedValue = value;
+        });
+        promise.displayName = 'Testing displayName';
+      }
+      throw promise;
+    }
+
+    function Component() {
+      const value = readValue(123);
+      return value;
+    }
+
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      const testMarks = [creactCpuProfilerSample()];
+
+      const root = ReactDOM.createRoot(document.createElement('div'));
+      act(() =>
+        root.render(
+          <React.Suspense fallback="Loading...">
+            <Component />
+          </React.Suspense>,
+        ),
+      );
+
+      testMarks.push(...createUserTimingData(clearedMarks));
+
+      const data = await preprocessData(testMarks);
+      expect(data.suspenseEvents).toHaveLength(1);
+      expect(data.suspenseEvents[0].promiseName).toBe('Testing displayName');
+    }
+  });
+
   describe('warnings', () => {
     describe('long event handlers', () => {
       it('should not warn when React scedules a (sync) update inside of a short event handler', async () => {

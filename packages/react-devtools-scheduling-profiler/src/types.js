@@ -60,6 +60,7 @@ export type SuspenseEvent = {|
   duration: number | null,
   +id: string,
   +phase: Phase | null,
+  promiseName: string | null,
   resolution: 'rejected' | 'resolved' | 'unresolved',
   resuspendTimestamps: Array<number> | null,
   +type: 'suspense',

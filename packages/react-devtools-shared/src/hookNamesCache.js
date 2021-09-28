@@ -92,6 +92,9 @@ export function loadHookNames(
       then(callback) {
         callbacks.add(callback);
       },
+
+      // Optional property used by Scheduling Profiler:
+      displayName: `Loading hook names for ${element.displayName || 'Unknown'}`,
     };
 
     let timeoutID;
