@@ -72,6 +72,8 @@ type Segment = {
 };
 
 export type Request = {
+  status: 0 | 1 | 2,
+  fatalError: mixed,
   destination: null | Destination,
   bundlerConfig: BundlerConfig,
   cache: Map<Function, mixed>,
@@ -90,8 +92,13 @@ export type Request = {
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 function defaultErrorHandler(error: mixed) {
-  console['error'](error); // Don't transform to our wrapper
+  console['error'](error);
+  // Don't transform to our wrapper
 }
+
+const OPEN = 0;
+const CLOSING = 1;
+const CLOSED = 2;
 
 export function createRequest(
   model: ReactModel,
@@ -100,6 +107,8 @@ export function createRequest(
 ): Request {
   const pingedSegments = [];
   const request = {
+    status: OPEN,
+    fatalError: null,
     destination: null,
     bundlerConfig,
     cache: new Map(),
@@ -602,7 +611,11 @@ function reportError(request: Request, error: mixed): void {
 function fatalError(request: Request, error: mixed): void {
   // This is called outside error handling code such as if an error happens in React internals.
   if (request.destination !== null) {
+    request.status = CLOSED;
     closeWithError(request.destination, error);
+  } else {
+    request.status = CLOSING;
+    request.fatalError = error;
   }
 }
 
@@ -768,6 +781,14 @@ export function startWork(request: Request): void {
 }
 
 export function startFlowing(request: Request, destination: Destination): void {
+  if (request.status === CLOSING) {
+    request.status = CLOSED;
+    closeWithError(destination, request.fatalError);
+    return;
+  }
+  if (request.status === CLOSED) {
+    return;
+  }
   request.destination = destination;
   try {
     flushCompletedChunks(request, destination);
