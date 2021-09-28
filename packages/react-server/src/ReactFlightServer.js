@@ -84,7 +84,6 @@ export type Request = {
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
   onError: (error: mixed) => void,
-  flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
@@ -113,7 +112,6 @@ export function createRequest(
     writtenSymbols: new Map(),
     writtenModules: new Map(),
     onError: onError === undefined ? defaultErrorHandler : onError,
-    flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
@@ -695,7 +693,7 @@ function performWork(request: Request): void {
       const segment = pingedSegments[i];
       retrySegment(request, segment);
     }
-    if (request.flowing && request.destination !== null) {
+    if (request.destination !== null) {
       flushCompletedChunks(request, request.destination);
     }
   } catch (error) {
@@ -721,7 +719,7 @@ function flushCompletedChunks(
       request.pendingChunks--;
       const chunk = moduleChunks[i];
       if (!writeChunk(destination, chunk)) {
-        request.flowing = false;
+        request.destination = null;
         i++;
         break;
       }
@@ -734,7 +732,7 @@ function flushCompletedChunks(
       request.pendingChunks--;
       const chunk = jsonChunks[i];
       if (!writeChunk(destination, chunk)) {
-        request.flowing = false;
+        request.destination = null;
         i++;
         break;
       }
@@ -749,7 +747,7 @@ function flushCompletedChunks(
       request.pendingChunks--;
       const chunk = errorChunks[i];
       if (!writeChunk(destination, chunk)) {
-        request.flowing = false;
+        request.destination = null;
         i++;
         break;
       }
@@ -770,7 +768,6 @@ export function startWork(request: Request): void {
 }
 
 export function startFlowing(request: Request, destination: Destination): void {
-  request.flowing = true;
   request.destination = destination;
   try {
     flushCompletedChunks(request, destination);

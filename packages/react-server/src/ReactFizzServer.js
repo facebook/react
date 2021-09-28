@@ -166,16 +166,15 @@ type Segment = {
   +boundary: null | SuspenseBoundary,
 };
 
-const BUFFERING = 0;
-const FLOWING = 1;
-const CLOSING = 2;
-const CLOSED = 3;
+const OPEN = 0;
+const CLOSING = 1;
+const CLOSED = 2;
 
 export opaque type Request = {
   destination: null | Destination,
   +responseState: ResponseState,
   +progressiveChunkSize: number,
-  status: 0 | 1 | 2 | 3,
+  status: 0 | 1 | 2,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
@@ -239,7 +238,7 @@ export function createRequest(
       progressiveChunkSize === undefined
         ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
         : progressiveChunkSize,
-    status: BUFFERING,
+    status: OPEN,
     fatalError: null,
     nextSegmentId: 0,
     allPendingTasks: 0,
@@ -1499,7 +1498,7 @@ export function performWork(request: Request): void {
       retryTask(request, task);
     }
     pingedTasks.splice(0, i);
-    if (request.status === FLOWING && request.destination !== null) {
+    if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
@@ -1786,7 +1785,7 @@ function flushCompletedQueues(
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       const boundary = clientRenderedBoundaries[i];
       if (!flushClientRenderedBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         clientRenderedBoundaries.splice(0, i);
         return;
@@ -1801,7 +1800,7 @@ function flushCompletedQueues(
     for (i = 0; i < completedBoundaries.length; i++) {
       const boundary = completedBoundaries[i];
       if (!flushCompletedBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         completedBoundaries.splice(0, i);
         return;
@@ -1822,7 +1821,7 @@ function flushCompletedQueues(
     for (i = 0; i < partialBoundaries.length; i++) {
       const boundary = partialBoundaries[i];
       if (!flushPartialBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         partialBoundaries.splice(0, i);
         return;
@@ -1837,7 +1836,7 @@ function flushCompletedQueues(
     for (i = 0; i < largeBoundaries.length; i++) {
       const boundary = largeBoundaries[i];
       if (!flushCompletedBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         largeBoundaries.splice(0, i);
         return;
@@ -1875,13 +1874,12 @@ export function startWork(request: Request): void {
 export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
-    closeWithError(destination, request.fatalError)
+    closeWithError(destination, request.fatalError);
     return;
   }
   if (request.status === CLOSED) {
     return;
   }
-  request.status = FLOWING;
   request.destination = destination;
   try {
     flushCompletedQueues(request, destination);
@@ -1897,7 +1895,7 @@ export function abort(request: Request): void {
     const abortableTasks = request.abortableTasks;
     abortableTasks.forEach(abortTask, request);
     abortableTasks.clear();
-    if (request.status === FLOWING && request.destination !== null) {
+    if (request.destination !== null) {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
