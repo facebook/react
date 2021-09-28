@@ -259,7 +259,6 @@ function render(children: React$Element<any>, options?: Options): Destination {
   };
   const request = ReactNoopServer.createRequest(
     children,
-    destination,
     null,
     null,
     options ? options.progressiveChunkSize : undefined,
@@ -268,7 +267,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
     options ? options.onCompleteShell : undefined,
   );
   ReactNoopServer.startWork(request);
-  ReactNoopServer.startFlowing(request);
+  ReactNoopServer.startFlowing(request, destination);
   return destination;
 }
 

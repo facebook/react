@@ -59,7 +59,6 @@ function renderToStringImpl(
   }
   const request = createRequest(
     children,
-    destination,
     createResponseState(
       generateStaticMarkup,
       options ? options.identifierPrefix : undefined,
@@ -74,7 +73,7 @@ function renderToStringImpl(
   // If anything suspended and is still pending, we'll abort it before writing.
   // That way we write only client-rendered boundaries from the start.
   abort(request);
-  startFlowing(request);
+  startFlowing(request, destination);
   if (didFatal) {
     throw fatalError;
   }

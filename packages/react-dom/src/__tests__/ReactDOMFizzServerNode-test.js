@@ -154,7 +154,7 @@ describe('ReactDOMFizzServer', () => {
   it('should error the stream when an error is thrown at the root', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    ReactDOMFizzServer.pipeToNodeWritable(
+    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
       <div>
         <Throw />
       </div>,
@@ -166,7 +166,8 @@ describe('ReactDOMFizzServer', () => {
       },
     );
 
-    // The stream is errored even if we haven't started writing.
+    // The stream is errored once we start writing.
+    startWriting();
 
     await completed;
 

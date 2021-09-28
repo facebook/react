@@ -25,15 +25,13 @@ function renderToReadableStream(
   webpackMap: BundlerConfig,
   options?: Options,
 ): ReadableStream {
-  let request;
+  const request = createRequest(
+    model,
+    webpackMap,
+    options ? options.onError : undefined,
+  );
   const stream = new ReadableStream({
     start(controller) {
-      request = createRequest(
-        model,
-        controller,
-        webpackMap,
-        options ? options.onError : undefined,
-      );
       startWork(request);
     },
     pull(controller) {
@@ -42,7 +40,7 @@ function renderToReadableStream(
       // is actually used by something so we can give it the best result possible
       // at that point.
       if (stream.locked) {
-        startFlowing(request);
+        startFlowing(request, controller);
       }
     },
     cancel(reason) {},

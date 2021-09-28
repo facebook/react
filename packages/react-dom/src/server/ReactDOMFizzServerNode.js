@@ -25,7 +25,7 @@ import {
 } from './ReactDOMServerFormatConfig';
 
 function createDrainHandler(destination, request) {
-  return () => startFlowing(request);
+  return () => startFlowing(request, destination);
 }
 
 type Options = {|
@@ -44,14 +44,9 @@ type Controls = {|
   startWriting(): void,
 |};
 
-function createRequestImpl(
-  children: ReactNodeList,
-  destination: Writable,
-  options: void | Options,
-) {
+function createRequestImpl(children: ReactNodeList, options: void | Options) {
   return createRequest(
     children,
-    destination,
     createResponseState(options ? options.identifierPrefix : undefined),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -66,7 +61,7 @@ function pipeToNodeWritable(
   destination: Writable,
   options?: Options,
 ): Controls {
-  const request = createRequestImpl(children, destination, options);
+  const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {
@@ -75,7 +70,7 @@ function pipeToNodeWritable(
         return;
       }
       hasStartedFlowing = true;
-      startFlowing(request);
+      startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
     },
     abort() {

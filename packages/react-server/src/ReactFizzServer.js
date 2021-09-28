@@ -166,15 +166,16 @@ type Segment = {
   +boundary: null | SuspenseBoundary,
 };
 
-const BUFFERING = 0;
-const FLOWING = 1;
+const OPEN = 0;
+const CLOSING = 1;
 const CLOSED = 2;
 
 export opaque type Request = {
-  +destination: Destination,
+  destination: null | Destination,
   +responseState: ResponseState,
   +progressiveChunkSize: number,
   status: 0 | 1 | 2,
+  fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
@@ -221,7 +222,6 @@ function noop(): void {}
 
 export function createRequest(
   children: ReactNodeList,
-  destination: Destination,
   responseState: ResponseState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
@@ -232,13 +232,14 @@ export function createRequest(
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
   const request = {
-    destination,
+    destination: null,
     responseState,
     progressiveChunkSize:
       progressiveChunkSize === undefined
         ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
         : progressiveChunkSize,
-    status: BUFFERING,
+    status: OPEN,
+    fatalError: null,
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
@@ -404,8 +405,13 @@ function fatalError(request: Request, error: mixed): void {
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
-  request.status = CLOSED;
-  closeWithError(request.destination, error);
+  if (request.destination !== null) {
+    request.status = CLOSED;
+    closeWithError(request.destination, error);
+  } else {
+    request.status = CLOSING;
+    request.fatalError = error;
+  }
 }
 
 function renderSuspenseBoundary(
@@ -1330,7 +1336,9 @@ function abortTask(task: Task): void {
     // the request;
     if (request.status !== CLOSED) {
       request.status = CLOSED;
-      close(request.destination);
+      if (request.destination !== null) {
+        close(request.destination);
+      }
     }
   } else {
     boundary.pendingTasks--;
@@ -1490,8 +1498,8 @@ export function performWork(request: Request): void {
       retryTask(request, task);
     }
     pingedTasks.splice(0, i);
-    if (request.status === FLOWING) {
-      flushCompletedQueues(request);
+    if (request.destination !== null) {
+      flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
     reportError(request, error);
@@ -1748,8 +1756,10 @@ function flushPartiallyCompletedSegment(
   }
 }
 
-function flushCompletedQueues(request: Request): void {
-  const destination = request.destination;
+function flushCompletedQueues(
+  request: Request,
+  destination: Destination,
+): void {
   beginWriting(destination);
   try {
     // The structure of this is to go through each queue one by one and write
@@ -1775,7 +1785,7 @@ function flushCompletedQueues(request: Request): void {
     for (i = 0; i < clientRenderedBoundaries.length; i++) {
       const boundary = clientRenderedBoundaries[i];
       if (!flushClientRenderedBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         clientRenderedBoundaries.splice(0, i);
         return;
@@ -1790,7 +1800,7 @@ function flushCompletedQueues(request: Request): void {
     for (i = 0; i < completedBoundaries.length; i++) {
       const boundary = completedBoundaries[i];
       if (!flushCompletedBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         completedBoundaries.splice(0, i);
         return;
@@ -1811,7 +1821,7 @@ function flushCompletedQueues(request: Request): void {
     for (i = 0; i < partialBoundaries.length; i++) {
       const boundary = partialBoundaries[i];
       if (!flushPartialBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         partialBoundaries.splice(0, i);
         return;
@@ -1826,7 +1836,7 @@ function flushCompletedQueues(request: Request): void {
     for (i = 0; i < largeBoundaries.length; i++) {
       const boundary = largeBoundaries[i];
       if (!flushCompletedBoundary(request, destination, boundary)) {
-        request.status = BUFFERING;
+        request.destination = null;
         i++;
         largeBoundaries.splice(0, i);
         return;
@@ -1861,13 +1871,18 @@ export function startWork(request: Request): void {
   scheduleWork(() => performWork(request));
 }
 
-export function startFlowing(request: Request): void {
+export function startFlowing(request: Request, destination: Destination): void {
+  if (request.status === CLOSING) {
+    request.status = CLOSED;
+    closeWithError(destination, request.fatalError);
+    return;
+  }
   if (request.status === CLOSED) {
     return;
   }
-  request.status = FLOWING;
+  request.destination = destination;
   try {
-    flushCompletedQueues(request);
+    flushCompletedQueues(request, destination);
   } catch (error) {
     reportError(request, error);
     fatalError(request, error);
@@ -1880,8 +1895,8 @@ export function abort(request: Request): void {
     const abortableTasks = request.abortableTasks;
     abortableTasks.forEach(abortTask, request);
     abortableTasks.clear();
-    if (request.status === FLOWING) {
-      flushCompletedQueues(request);
+    if (request.destination !== null) {
+      flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
     reportError(request, error);
