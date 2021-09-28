@@ -706,12 +706,7 @@ function performWork(request: Request): void {
   }
 }
 
-let reentrant = false;
 function flushCompletedChunks(request: Request): void {
-  if (reentrant) {
-    return;
-  }
-  reentrant = true;
   const destination = request.destination;
   beginWriting(destination);
   try {
@@ -758,7 +753,6 @@ function flushCompletedChunks(request: Request): void {
     }
     errorChunks.splice(0, i);
   } finally {
-    reentrant = false;
     completeWriting(destination);
   }
   flushBuffered(destination);
@@ -769,7 +763,6 @@ function flushCompletedChunks(request: Request): void {
 }
 
 export function startWork(request: Request): void {
-  request.flowing = true;
   scheduleWork(() => performWork(request));
 }
 

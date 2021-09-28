@@ -1853,11 +1853,6 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
-"@mattiasbuelens/web-streams-polyfill@^0.3.2":
-  version "0.3.2"
-  resolved "https://registry.yarnpkg.com/@mattiasbuelens/web-streams-polyfill/-/web-streams-polyfill-0.3.2.tgz#d7d180e769ac38f30c4a8e1dd9bd4412affb7f42"
-  integrity sha512-ANZvP8lC9IXiaPM3rwM8BGMbFIZbbj0goZT/xP2IA95UIZjEToyHXT/k8G0MmSAnxKRMh5E6oLVE6jmOt5zZ/g==
-
 "@nodelib/fs.scandir@2.1.3":
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.3.tgz#3a582bdb53804c6ba6d146579c46e52130cf4a3b"
@@ -6447,6 +6442,7 @@ eslint-plugin-no-unsanitized@3.1.2:
 
 "eslint-plugin-react-internal@link:./scripts/eslint-rules":
   version "0.0.0"
+  uid ""
 
 eslint-plugin-react@^6.7.1:
   version "6.10.3"
@@ -15950,6 +15946,11 @@ web-ext@^4:
     ws "7.2.3"
     yargs "15.3.1"
     zip-dir "1.0.2"
+
+web-streams-polyfill@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-3.1.1.tgz#1516f2d4ea8f1bdbfed15eb65cb2df87098c8364"
+  integrity sha512-Czi3fG883e96T4DLEPRvufrF2ydhOOW1+1a6c3gNjH2aIh50DNFBdfwh2AKoOf1rXvpvavAoA11Qdq9+BKjE0Q==
 
 webidl-conversions@^4.0.2:
   version "4.0.2"

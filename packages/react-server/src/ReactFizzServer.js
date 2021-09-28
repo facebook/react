@@ -1748,13 +1748,7 @@ function flushPartiallyCompletedSegment(
   }
 }
 
-let reentrant = false;
 function flushCompletedQueues(request: Request): void {
-  if (reentrant) {
-    return;
-  }
-  reentrant = true;
-
   const destination = request.destination;
   beginWriting(destination);
   try {
@@ -1840,7 +1834,6 @@ function flushCompletedQueues(request: Request): void {
     }
     largeBoundaries.splice(0, i);
   } finally {
-    reentrant = false;
     completeWriting(destination);
     flushBuffered(destination);
     if (
