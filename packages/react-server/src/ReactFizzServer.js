@@ -168,13 +168,15 @@ type Segment = {
 
 const BUFFERING = 0;
 const FLOWING = 1;
-const CLOSED = 2;
+const CLOSING = 2;
+const CLOSED = 3;
 
 export opaque type Request = {
   destination: null | Destination,
   +responseState: ResponseState,
   +progressiveChunkSize: number,
-  status: 0 | 1 | 2,
+  status: 0 | 1 | 2 | 3,
+  fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
@@ -238,6 +240,7 @@ export function createRequest(
         ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
         : progressiveChunkSize,
     status: BUFFERING,
+    fatalError: null,
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
@@ -403,9 +406,12 @@ function fatalError(request: Request, error: mixed): void {
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
-  request.status = CLOSED;
   if (request.destination !== null) {
+    request.status = CLOSED;
     closeWithError(request.destination, error);
+  } else {
+    request.status = CLOSING;
+    request.fatalError = error;
   }
 }
 
@@ -1867,6 +1873,11 @@ export function startWork(request: Request): void {
 }
 
 export function startFlowing(request: Request, destination: Destination): void {
+  if (request.status === CLOSING) {
+    request.status = CLOSED;
+    closeWithError(destination, request.fatalError)
+    return;
+  }
   if (request.status === CLOSED) {
     return;
   }
