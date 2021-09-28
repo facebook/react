@@ -20,12 +20,12 @@ export default function render(url, res) {
     console.error('Fatal', error);
   });
   let didError = false;
-  const {startWriting, abort} = renderToNodePipe(<App assets={assets} />, {
+  const {pipe, abort} = renderToNodePipe(<App assets={assets} />, {
     onCompleteShell() {
       // If something errored before we started streaming, we set the error code appropriately.
       res.statusCode = didError ? 500 : 200;
       res.setHeader('Content-type', 'text/html');
-      startWriting(res);
+      pipe(res);
     },
     onError(x) {
       didError = true;

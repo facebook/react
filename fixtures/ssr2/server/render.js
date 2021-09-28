@@ -37,7 +37,7 @@ module.exports = function render(url, res) {
   });
   let didError = false;
   const data = createServerData();
-  const {startWriting, abort} = renderToNodePipe(
+  const {pipe, abort} = renderToNodePipe(
     <DataProvider data={data}>
       <App assets={assets} />
     </DataProvider>,
@@ -46,7 +46,7 @@ module.exports = function render(url, res) {
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;
         res.setHeader('Content-type', 'text/html');
-        startWriting(res);
+        pipe(res);
       },
       onError(x) {
         didError = true;

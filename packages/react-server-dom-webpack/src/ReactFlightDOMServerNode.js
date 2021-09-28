@@ -26,7 +26,7 @@ type Options = {
 };
 
 type Controls = {|
-  startWriting(destination: Writable): void,
+  pipe<T: Writable>(destination: T): T,
 |};
 
 function renderToNodePipe(
@@ -42,13 +42,16 @@ function renderToNodePipe(
   let hasStartedFlowing = false;
   startWork(request);
   return {
-    startWriting(destination) {
+    pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {
-        return;
+        throw new Error(
+          'React currently only supports piping to one writable stream.',
+        );
       }
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      return destination;
     },
   };
 }
