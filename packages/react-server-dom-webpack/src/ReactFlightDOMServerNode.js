@@ -37,8 +37,9 @@ function pipeToNodeWritable(
     webpackMap,
     options ? options.onError : undefined,
   );
-  destination.on('drain', createDrainHandler(destination, request));
   startWork(request);
+  startFlowing(request);
+  destination.on('drain', createDrainHandler(destination, request));
 }
 
 export {pipeToNodeWritable};

@@ -10,7 +10,7 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextDecoder = require('util').TextDecoder;
 
 // Don't wait before processing work on the server.
