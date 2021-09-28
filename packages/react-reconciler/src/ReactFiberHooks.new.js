@@ -113,9 +113,9 @@ import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
 import {CacheContext} from './ReactFiberCacheComponent.new';
 import {
-  createUpdate,
-  enqueueUpdate,
-  entangleTransitions,
+  createUpdate as createLegacyQueueUpdate,
+  enqueueUpdate as enqueueLegacyQueueUpdate,
+  entangleTransitions as entangleLegacyQueueTransitions,
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
@@ -2125,7 +2125,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         const eventTime = requestEventTime();
         const root = scheduleUpdateOnFiber(provider, lane, eventTime);
         if (root !== null) {
-          entangleTransitions(root, provider, lane);
+          entangleLegacyQueueTransitions(root, provider, lane);
         }
 
         const seededCache = new Map();
@@ -2136,12 +2136,12 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         }
 
         // Schedule an update on the cache boundary to trigger a refresh.
-        const refreshUpdate = createUpdate(eventTime, lane);
+        const refreshUpdate = createLegacyQueueUpdate(eventTime, lane);
         const payload = {
           cache: seededCache,
         };
         refreshUpdate.payload = payload;
-        enqueueUpdate(provider, refreshUpdate, lane);
+        enqueueLegacyQueueUpdate(provider, refreshUpdate, lane);
         return;
       }
     }
@@ -2165,7 +2165,6 @@ function dispatchReducerAction<S, A>(
     }
   }
 
-  const eventTime = requestEventTime();
   const lane = requestUpdateLane(fiber);
 
   const update: Update<S, A> = {
@@ -2176,49 +2175,10 @@ function dispatchReducerAction<S, A>(
     next: (null: any),
   };
 
-  const alternate = fiber.alternate;
-  if (
-    fiber === currentlyRenderingFiber ||
-    (alternate !== null && alternate === currentlyRenderingFiber)
-  ) {
-    // This is a render phase update. Stash it in a lazily-created map of
-    // queue -> linked list of updates. After this render pass, we'll restart
-    // and apply the stashed updates on top of the work-in-progress hook.
-    didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
-    const pending = queue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    queue.pending = update;
+  if (isRenderPhaseUpdate(fiber)) {
+    enqueueRenderPhaseUpdate(queue, update);
   } else {
-    if (isInterleavedUpdate(fiber, lane)) {
-      const interleaved = queue.interleaved;
-      if (interleaved === null) {
-        // This is the first update. Create a circular list.
-        update.next = update;
-        // At the end of the current render, this queue's interleaved updates will
-        // be transferred to the pending queue.
-        pushInterleavedQueue(queue);
-      } else {
-        update.next = interleaved.next;
-        interleaved.next = update;
-      }
-      queue.interleaved = update;
-    } else {
-      const pending = queue.pending;
-      if (pending === null) {
-        // This is the first update. Create a circular list.
-        update.next = update;
-      } else {
-        update.next = pending.next;
-        pending.next = update;
-      }
-      queue.pending = update;
-    }
+    enqueueUpdate(fiber, queue, update, lane);
 
     if (__DEV__) {
       // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
@@ -2226,40 +2186,14 @@ function dispatchReducerAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
+    const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
-
-    if (isTransitionLane(lane) && root !== null) {
-      let queueLanes = queue.lanes;
-
-      // If any entangled lanes are no longer pending on the root, then they
-      // must have finished. We can remove them from the shared queue, which
-      // represents a superset of the actually pending lanes. In some cases we
-      // may entangle more than we need to, but that's OK. In fact it's worse if
-      // we *don't* entangle when we should.
-      queueLanes = intersectLanes(queueLanes, root.pendingLanes);
-
-      // Entangle the new transition lane with the other transition lanes.
-      const newQueueLanes = mergeLanes(queueLanes, lane);
-      queue.lanes = newQueueLanes;
-      // Even if queue.lanes already include lane, we don't know for certain if
-      // the lane finished since the last time we entangled it. So we need to
-      // entangle it again, just to be sure.
-      markRootEntangled(root, newQueueLanes);
+    if (root !== null) {
+      entangleTransitionUpdate(root, queue, lane);
     }
   }
 
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      if (fiber.mode & DebugTracingMode) {
-        const name = getComponentNameFromFiber(fiber) || 'Unknown';
-        logStateUpdateScheduled(name, lane, action);
-      }
-    }
-  }
-
-  if (enableSchedulingProfiler) {
-    markStateUpdateScheduled(fiber, lane);
-  }
+  markUpdateInDevTools(fiber, lane, action);
 }
 
 function dispatchSetState<S, A>(
@@ -2277,7 +2211,6 @@ function dispatchSetState<S, A>(
     }
   }
 
-  const eventTime = requestEventTime();
   const lane = requestUpdateLane(fiber);
 
   const update: Update<S, A> = {
@@ -2288,50 +2221,12 @@ function dispatchSetState<S, A>(
     next: (null: any),
   };
 
-  const alternate = fiber.alternate;
-  if (
-    fiber === currentlyRenderingFiber ||
-    (alternate !== null && alternate === currentlyRenderingFiber)
-  ) {
-    // This is a render phase update. Stash it in a lazily-created map of
-    // queue -> linked list of updates. After this render pass, we'll restart
-    // and apply the stashed updates on top of the work-in-progress hook.
-    didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
-    const pending = queue.pending;
-    if (pending === null) {
-      // This is the first update. Create a circular list.
-      update.next = update;
-    } else {
-      update.next = pending.next;
-      pending.next = update;
-    }
-    queue.pending = update;
+  if (isRenderPhaseUpdate(fiber)) {
+    enqueueRenderPhaseUpdate(queue, update);
   } else {
-    if (isInterleavedUpdate(fiber, lane)) {
-      const interleaved = queue.interleaved;
-      if (interleaved === null) {
-        // This is the first update. Create a circular list.
-        update.next = update;
-        // At the end of the current render, this queue's interleaved updates will
-        // be transferred to the pending queue.
-        pushInterleavedQueue(queue);
-      } else {
-        update.next = interleaved.next;
-        interleaved.next = update;
-      }
-      queue.interleaved = update;
-    } else {
-      const pending = queue.pending;
-      if (pending === null) {
-        // This is the first update. Create a circular list.
-        update.next = update;
-      } else {
-        update.next = pending.next;
-        pending.next = update;
-      }
-      queue.pending = update;
-    }
+    enqueueUpdate(fiber, queue, update, lane);
 
+    const alternate = fiber.alternate;
     if (
       fiber.lanes === NoLanes &&
       (alternate === null || alternate.lanes === NoLanes)
@@ -2377,28 +2272,101 @@ function dispatchSetState<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
+    const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
-
-    if (isTransitionLane(lane) && root !== null) {
-      let queueLanes = queue.lanes;
-
-      // If any entangled lanes are no longer pending on the root, then they
-      // must have finished. We can remove them from the shared queue, which
-      // represents a superset of the actually pending lanes. In some cases we
-      // may entangle more than we need to, but that's OK. In fact it's worse if
-      // we *don't* entangle when we should.
-      queueLanes = intersectLanes(queueLanes, root.pendingLanes);
-
-      // Entangle the new transition lane with the other transition lanes.
-      const newQueueLanes = mergeLanes(queueLanes, lane);
-      queue.lanes = newQueueLanes;
-      // Even if queue.lanes already include lane, we don't know for certain if
-      // the lane finished since the last time we entangled it. So we need to
-      // entangle it again, just to be sure.
-      markRootEntangled(root, newQueueLanes);
+    if (root !== null) {
+      entangleTransitionUpdate(root, queue, lane);
     }
   }
 
+  markUpdateInDevTools(fiber, lane, action);
+}
+
+function isRenderPhaseUpdate(fiber: Fiber) {
+  const alternate = fiber.alternate;
+  return (
+    fiber === currentlyRenderingFiber ||
+    (alternate !== null && alternate === currentlyRenderingFiber)
+  );
+}
+
+function enqueueRenderPhaseUpdate<S, A>(
+  queue: UpdateQueue<S, A>,
+  update: Update<S, A>,
+) {
+  // This is a render phase update. Stash it in a lazily-created map of
+  // queue -> linked list of updates. After this render pass, we'll restart
+  // and apply the stashed updates on top of the work-in-progress hook.
+  didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
+  const pending = queue.pending;
+  if (pending === null) {
+    // This is the first update. Create a circular list.
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
+  queue.pending = update;
+}
+
+function enqueueUpdate<S, A>(
+  fiber: Fiber,
+  queue: UpdateQueue<S, A>,
+  update: Update<S, A>,
+  lane: Lane,
+) {
+  if (isInterleavedUpdate(fiber, lane)) {
+    const interleaved = queue.interleaved;
+    if (interleaved === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+      // At the end of the current render, this queue's interleaved updates will
+      // be transferred to the pending queue.
+      pushInterleavedQueue(queue);
+    } else {
+      update.next = interleaved.next;
+      interleaved.next = update;
+    }
+    queue.interleaved = update;
+  } else {
+    const pending = queue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    queue.pending = update;
+  }
+}
+
+function entangleTransitionUpdate<S, A>(
+  root: FiberRoot,
+  queue: UpdateQueue<S, A>,
+  lane: Lane,
+) {
+  if (isTransitionLane(lane)) {
+    let queueLanes = queue.lanes;
+
+    // If any entangled lanes are no longer pending on the root, then they
+    // must have finished. We can remove them from the shared queue, which
+    // represents a superset of the actually pending lanes. In some cases we
+    // may entangle more than we need to, but that's OK. In fact it's worse if
+    // we *don't* entangle when we should.
+    queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+    // Entangle the new transition lane with the other transition lanes.
+    const newQueueLanes = mergeLanes(queueLanes, lane);
+    queue.lanes = newQueueLanes;
+    // Even if queue.lanes already include lane, we don't know for certain if
+    // the lane finished since the last time we entangled it. So we need to
+    // entangle it again, just to be sure.
+    markRootEntangled(root, newQueueLanes);
+  }
+}
+
+function markUpdateInDevTools(fiber, lane, action) {
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
