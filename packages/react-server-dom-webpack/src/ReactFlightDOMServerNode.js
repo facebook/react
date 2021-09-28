@@ -18,7 +18,7 @@ import {
 } from 'react-server/src/ReactFlightServer';
 
 function createDrainHandler(destination, request) {
-  return () => startFlowing(request);
+  return () => startFlowing(request, destination);
 }
 
 type Options = {
@@ -33,12 +33,11 @@ function pipeToNodeWritable(
 ): void {
   const request = createRequest(
     model,
-    destination,
     webpackMap,
     options ? options.onError : undefined,
   );
   startWork(request);
-  startFlowing(request);
+  startFlowing(request, destination);
   destination.on('drain', createDrainHandler(destination, request));
 }
 

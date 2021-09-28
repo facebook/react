@@ -72,7 +72,7 @@ type Segment = {
 };
 
 export type Request = {
-  destination: Destination,
+  destination: null | Destination,
   bundlerConfig: BundlerConfig,
   cache: Map<Function, mixed>,
   nextChunkId: number,
@@ -96,13 +96,12 @@ function defaultErrorHandler(error: mixed) {
 
 export function createRequest(
   model: ReactModel,
-  destination: Destination,
   bundlerConfig: BundlerConfig,
   onError: void | ((error: mixed) => void),
 ): Request {
   const pingedSegments = [];
   const request = {
-    destination,
+    destination: null,
     bundlerConfig,
     cache: new Map(),
     nextChunkId: 0,
@@ -604,7 +603,9 @@ function reportError(request: Request, error: mixed): void {
 
 function fatalError(request: Request, error: mixed): void {
   // This is called outside error handling code such as if an error happens in React internals.
-  closeWithError(request.destination, error);
+  if (request.destination !== null) {
+    closeWithError(request.destination, error);
+  }
 }
 
 function emitErrorChunk(request: Request, id: number, error: mixed): void {
@@ -694,8 +695,8 @@ function performWork(request: Request): void {
       const segment = pingedSegments[i];
       retrySegment(request, segment);
     }
-    if (request.flowing) {
-      flushCompletedChunks(request);
+    if (request.flowing && request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
     }
   } catch (error) {
     reportError(request, error);
@@ -706,8 +707,10 @@ function performWork(request: Request): void {
   }
 }
 
-function flushCompletedChunks(request: Request): void {
-  const destination = request.destination;
+function flushCompletedChunks(
+  request: Request,
+  destination: Destination,
+): void {
   beginWriting(destination);
   try {
     // We emit module chunks first in the stream so that
@@ -766,10 +769,11 @@ export function startWork(request: Request): void {
   scheduleWork(() => performWork(request));
 }
 
-export function startFlowing(request: Request): void {
+export function startFlowing(request: Request, destination: Destination): void {
   request.flowing = true;
+  request.destination = destination;
   try {
-    flushCompletedChunks(request);
+    flushCompletedChunks(request, destination);
   } catch (error) {
     reportError(request, error);
     fatalError(request, error);

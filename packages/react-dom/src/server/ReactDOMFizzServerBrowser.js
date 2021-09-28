@@ -37,7 +37,15 @@ function renderToReadableStream(
   children: ReactNodeList,
   options?: Options,
 ): ReadableStream {
-  let request;
+  const request = createRequest(
+    children,
+    createResponseState(options ? options.identifierPrefix : undefined),
+    createRootFormatContext(options ? options.namespaceURI : undefined),
+    options ? options.progressiveChunkSize : undefined,
+    options ? options.onError : undefined,
+    options ? options.onCompleteAll : undefined,
+    options ? options.onCompleteShell : undefined,
+  );
   if (options && options.signal) {
     const signal = options.signal;
     const listener = () => {
@@ -48,16 +56,6 @@ function renderToReadableStream(
   }
   const stream = new ReadableStream({
     start(controller) {
-      request = createRequest(
-        children,
-        controller,
-        createResponseState(options ? options.identifierPrefix : undefined),
-        createRootFormatContext(options ? options.namespaceURI : undefined),
-        options ? options.progressiveChunkSize : undefined,
-        options ? options.onError : undefined,
-        options ? options.onCompleteAll : undefined,
-        options ? options.onCompleteShell : undefined,
-      );
       startWork(request);
     },
     pull(controller) {
@@ -66,7 +64,7 @@ function renderToReadableStream(
       // is actually used by something so we can give it the best result possible
       // at that point.
       if (stream.locked) {
-        startFlowing(request);
+        startFlowing(request, controller);
       }
     },
     cancel(reason) {},

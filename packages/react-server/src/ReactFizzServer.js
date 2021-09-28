@@ -171,7 +171,7 @@ const FLOWING = 1;
 const CLOSED = 2;
 
 export opaque type Request = {
-  +destination: Destination,
+  destination: null | Destination,
   +responseState: ResponseState,
   +progressiveChunkSize: number,
   status: 0 | 1 | 2,
@@ -221,7 +221,6 @@ function noop(): void {}
 
 export function createRequest(
   children: ReactNodeList,
-  destination: Destination,
   responseState: ResponseState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
@@ -232,7 +231,7 @@ export function createRequest(
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
   const request = {
-    destination,
+    destination: null,
     responseState,
     progressiveChunkSize:
       progressiveChunkSize === undefined
@@ -405,7 +404,9 @@ function fatalError(request: Request, error: mixed): void {
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
   request.status = CLOSED;
-  closeWithError(request.destination, error);
+  if (request.destination !== null) {
+    closeWithError(request.destination, error);
+  }
 }
 
 function renderSuspenseBoundary(
@@ -1330,7 +1331,9 @@ function abortTask(task: Task): void {
     // the request;
     if (request.status !== CLOSED) {
       request.status = CLOSED;
-      close(request.destination);
+      if (request.destination !== null) {
+        close(request.destination);
+      }
     }
   } else {
     boundary.pendingTasks--;
@@ -1490,8 +1493,8 @@ export function performWork(request: Request): void {
       retryTask(request, task);
     }
     pingedTasks.splice(0, i);
-    if (request.status === FLOWING) {
-      flushCompletedQueues(request);
+    if (request.status === FLOWING && request.destination !== null) {
+      flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
     reportError(request, error);
@@ -1748,8 +1751,10 @@ function flushPartiallyCompletedSegment(
   }
 }
 
-function flushCompletedQueues(request: Request): void {
-  const destination = request.destination;
+function flushCompletedQueues(
+  request: Request,
+  destination: Destination,
+): void {
   beginWriting(destination);
   try {
     // The structure of this is to go through each queue one by one and write
@@ -1861,13 +1866,14 @@ export function startWork(request: Request): void {
   scheduleWork(() => performWork(request));
 }
 
-export function startFlowing(request: Request): void {
+export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSED) {
     return;
   }
   request.status = FLOWING;
+  request.destination = destination;
   try {
-    flushCompletedQueues(request);
+    flushCompletedQueues(request, destination);
   } catch (error) {
     reportError(request, error);
     fatalError(request, error);
@@ -1880,8 +1886,8 @@ export function abort(request: Request): void {
     const abortableTasks = request.abortableTasks;
     abortableTasks.forEach(abortTask, request);
     abortableTasks.clear();
-    if (request.status === FLOWING) {
-      flushCompletedQueues(request);
+    if (request.status === FLOWING && request.destination !== null) {
+      flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
     reportError(request, error);
