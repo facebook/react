@@ -335,6 +335,7 @@ const TooltipSuspenseEvent = ({
     componentName,
     duration,
     phase,
+    promiseName,
     resolution,
     timestamp,
     warning,
@@ -356,6 +357,12 @@ const TooltipSuspenseEvent = ({
         {label}
         <div className={styles.Divider} />
         <div className={styles.DetailsGrid}>
+          {promiseName !== null && (
+            <>
+              <div className={styles.DetailsGridLabel}>Resource:</div>
+              <div className={styles.DetailsGridLongValue}>{promiseName}</div>
+            </>
+          )}
           <div className={styles.DetailsGridLabel}>Status:</div>
           <div>{resolution}</div>
           <div className={styles.DetailsGridLabel}>Timestamp:</div>

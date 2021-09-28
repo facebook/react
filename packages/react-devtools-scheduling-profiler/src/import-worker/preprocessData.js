@@ -564,9 +564,13 @@ function processTimelineEvent(
 
       // React Events - suspense
       else if (name.startsWith('--suspense-suspend-')) {
-        const [id, componentName, phase, laneBitmaskString] = name
-          .substr(19)
-          .split('-');
+        const [
+          id,
+          componentName,
+          phase,
+          laneBitmaskString,
+          promiseName,
+        ] = name.substr(19).split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
         const availableDepths = new Array(
@@ -595,6 +599,7 @@ function processTimelineEvent(
           duration: null,
           id,
           phase: ((phase: any): Phase),
+          promiseName: promiseName || null,
           resolution: 'unresolved',
           resuspendTimestamps: null,
           timestamp: startTime,

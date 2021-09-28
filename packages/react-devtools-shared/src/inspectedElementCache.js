@@ -94,7 +94,11 @@ export function inspectElement(
       then(callback) {
         callbacks.add(callback);
       },
+
+      // Optional property used by Scheduling Profiler:
+      displayName: `Inspecting ${element.displayName || 'Unknown'}`,
     };
+
     const wake = () => {
       // This assumes they won't throw.
       callbacks.forEach(callback => callback());

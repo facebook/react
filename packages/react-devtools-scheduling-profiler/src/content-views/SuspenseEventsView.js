@@ -80,6 +80,7 @@ export class SuspenseEventsView extends View {
     this._intrinsicSize = {
       width: duration,
       height: (this._maxDepth + 1) * ROW_WITH_BORDER_HEIGHT,
+      hideScrollBarIfLessThanHeight: ROW_WITH_BORDER_HEIGHT,
       maxInitialHeight: ROW_WITH_BORDER_HEIGHT * MAX_ROWS_TO_SHOW_INITIALLY,
     };
   }
@@ -113,6 +114,7 @@ export class SuspenseEventsView extends View {
       depth,
       duration,
       phase,
+      promiseName,
       resolution,
       timestamp,
       warning,
@@ -208,7 +210,9 @@ export class SuspenseEventsView extends View {
       );
 
       let label = 'suspended';
-      if (componentName != null) {
+      if (promiseName != null) {
+        label = promiseName;
+      } else if (componentName != null) {
         label = `${componentName} ${label}`;
       }
       if (phase !== null) {
