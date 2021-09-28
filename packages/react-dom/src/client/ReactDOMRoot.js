@@ -190,6 +190,16 @@ export function createRoot(
   return new ReactDOMRoot(root);
 }
 
+function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
+  ReactDOMRoot.call(this, internalRoot);
+}
+Object.assign(ReactDOMHydrationRoot.prototype, ReactDOMRoot.prototype);
+export function setUnstableScheduleHydration(
+  unstable_scheduleHydration: (target: Node) => void,
+) {
+  ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = unstable_scheduleHydration;
+}
+
 export function hydrateRoot(
   container: Container,
   initialChildren: ReactNodeList,
@@ -237,7 +247,7 @@ export function hydrateRoot(
   // Render the initial children
   updateContainer(initialChildren, root, null, null);
 
-  return new ReactDOMRoot(root);
+  return new ReactDOMHydrationRoot(root);
 }
 
 export function isValidContainer(node: any): boolean {

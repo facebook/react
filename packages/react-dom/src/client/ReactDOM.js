@@ -17,7 +17,12 @@ import {
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
-import {createRoot, hydrateRoot, isValidContainer} from './ReactDOMRoot';
+import {
+  createRoot,
+  hydrateRoot,
+  isValidContainer,
+  setUnstableScheduleHydration,
+} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
 
 import {
@@ -122,6 +127,7 @@ function scheduleHydration(target: Node) {
     queueExplicitHydrationTarget(target);
   }
 }
+setUnstableScheduleHydration(scheduleHydration);
 
 function renderSubtreeIntoContainer(
   parentComponent: React$Component<any, any>,
@@ -197,7 +203,6 @@ export {
   createRoot,
   hydrateRoot,
   flushControlled as unstable_flushControlled,
-  scheduleHydration as unstable_scheduleHydration,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI
