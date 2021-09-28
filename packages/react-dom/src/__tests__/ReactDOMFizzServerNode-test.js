@@ -61,9 +61,8 @@ describe('ReactDOMFizzServer', () => {
     const {writable, output} = getTestWritable();
     const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>hello world</div>,
-      writable,
     );
-    startWriting();
+    startWriting(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
@@ -75,9 +74,8 @@ describe('ReactDOMFizzServer', () => {
       <html>
         <body>hello world</body>
       </html>,
-      writable,
     );
-    startWriting();
+    startWriting(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(
       `"<!DOCTYPE html><html><body>hello world</body></html>"`,
@@ -89,14 +87,13 @@ describe('ReactDOMFizzServer', () => {
     const {writable, output} = getTestWritable();
     const {startWriting} = ReactDOMFizzServer.renderToNodePipe(
       <div>hello world</div>,
-      writable,
     );
     jest.runAllTimers();
     // First we write our header.
     output.result +=
       '<!doctype html><html><head><title>test</title><head><body>';
     // Then React starts writing.
-    startWriting();
+    startWriting(writable);
     expect(output.result).toMatchInlineSnapshot(
       `"<!doctype html><html><head><title>test</title><head><body><div>hello world</div>"`,
     );
@@ -121,7 +118,7 @@ describe('ReactDOMFizzServer', () => {
           <Wait />
         </Suspense>
       </div>,
-      writable,
+
       {
         onCompleteAll() {
           isCompleteCalls++;
@@ -144,7 +141,7 @@ describe('ReactDOMFizzServer', () => {
     output.result +=
       '<!doctype html><html><head><title>test</title><head><body>';
     // Then React starts writing.
-    startWriting();
+    startWriting(writable);
     expect(output.result).toMatchInlineSnapshot(
       `"<!doctype html><html><head><title>test</title><head><body><div><!--$-->Done<!-- --><!--/$--></div>"`,
     );
@@ -158,7 +155,7 @@ describe('ReactDOMFizzServer', () => {
       <div>
         <Throw />
       </div>,
-      writable,
+
       {
         onError(x) {
           reportedErrors.push(x);
@@ -167,7 +164,7 @@ describe('ReactDOMFizzServer', () => {
     );
 
     // The stream is errored once we start writing.
-    startWriting();
+    startWriting(writable);
 
     await completed;
 
@@ -187,14 +184,14 @@ describe('ReactDOMFizzServer', () => {
           <InfiniteSuspend />
         </Suspense>
       </div>,
-      writable,
+
       {
         onError(x) {
           reportedErrors.push(x);
         },
       },
     );
-    startWriting();
+    startWriting(writable);
 
     await completed;
 
@@ -213,14 +210,14 @@ describe('ReactDOMFizzServer', () => {
           <Throw />
         </Suspense>
       </div>,
-      writable,
+
       {
         onError(x) {
           reportedErrors.push(x);
         },
       },
     );
-    startWriting();
+    startWriting(writable);
 
     await completed;
 
@@ -246,9 +243,8 @@ describe('ReactDOMFizzServer', () => {
       <Suspense fallback={<Fallback />}>
         <Content />
       </Suspense>,
-      writable,
     );
-    startWriting();
+    startWriting(writable);
 
     await completed;
 
@@ -267,14 +263,14 @@ describe('ReactDOMFizzServer', () => {
           <InfiniteSuspend />
         </Suspense>
       </div>,
-      writable,
+
       {
         onCompleteAll() {
           isCompleteCalls++;
         },
       },
     );
-    startWriting();
+    startWriting(writable);
 
     jest.runAllTimers();
 
@@ -302,14 +298,14 @@ describe('ReactDOMFizzServer', () => {
           </Suspense>
         </Suspense>
       </div>,
-      writable,
+
       {
         onCompleteAll() {
           isCompleteCalls++;
         },
       },
     );
-    startWriting();
+    startWriting(writable);
 
     jest.runAllTimers();
 

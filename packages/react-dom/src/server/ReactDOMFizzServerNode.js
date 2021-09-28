@@ -41,7 +41,7 @@ type Controls = {|
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(): void,
-  startWriting(): void,
+  startWriting(destination: Writable): void,
 |};
 
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
@@ -58,14 +58,13 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
 
 function renderToNodePipe(
   children: ReactNodeList,
-  destination: Writable,
   options?: Options,
 ): Controls {
   const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {
-    startWriting() {
+    startWriting(destination) {
       if (hasStartedFlowing) {
         return;
       }

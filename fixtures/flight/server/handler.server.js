@@ -22,10 +22,9 @@ module.exports = function(req, res) {
         const moduleMap = JSON.parse(data);
         const {startWriting} = renderToNodePipe(
           React.createElement(App),
-          res,
           moduleMap
         );
-        startWriting();
+        startWriting(res);
       }
     );
   });

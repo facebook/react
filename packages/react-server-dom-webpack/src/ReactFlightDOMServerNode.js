@@ -26,12 +26,11 @@ type Options = {
 };
 
 type Controls = {|
-  startWriting(): void,
+  startWriting(destination: Writable): void,
 |};
 
 function renderToNodePipe(
   model: ReactModel,
-  destination: Writable,
   webpackMap: BundlerConfig,
   options?: Options,
 ): Controls {
@@ -40,11 +39,16 @@ function renderToNodePipe(
     webpackMap,
     options ? options.onError : undefined,
   );
+  let hasStartedFlowing = false;
   startWork(request);
-  destination.on('drain', createDrainHandler(destination, request));
   return {
-    startWriting() {
+    startWriting(destination) {
+      if (hasStartedFlowing) {
+        return;
+      }
+      hasStartedFlowing = true;
       startFlowing(request, destination);
+      destination.on('drain', createDrainHandler(destination, request));
     },
   };
 }
