@@ -11,6 +11,8 @@ import type {Container} from './ReactDOMHostConfig';
 import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
+import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
+
 export type RootType = {
   render(children: ReactNodeList): void,
   unmount(): void,
@@ -193,12 +195,13 @@ export function createRoot(
 function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
   ReactDOMRoot.call(this, internalRoot);
 }
-Object.assign(ReactDOMHydrationRoot.prototype, ReactDOMRoot.prototype);
-export function setUnstableScheduleHydration(
-  unstable_scheduleHydration: (target: Node) => void,
-) {
-  ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = unstable_scheduleHydration;
-}
+Object.assign(ReactDOMHydrationRoot.prototype, ReactDOMRoot.prototype, {
+  unstable_scheduleHydration: function(target: Node) {
+    if (target) {
+      queueExplicitHydrationTarget(target);
+    }
+  },
+});
 
 export function hydrateRoot(
   container: Container,

@@ -62,7 +62,6 @@ import {
   setAttemptDiscreteHydration,
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
-  queueExplicitHydrationTarget,
   setGetCurrentUpdatePriority,
   setAttemptHydrationAtPriority,
 } from '../events/ReactDOMEventReplaying';
@@ -121,13 +120,6 @@ function createPortal(
   // $FlowFixMe The Flow type is opaque but there's no way to actually create it.
   return createPortalImpl(children, container, null, key);
 }
-
-function scheduleHydration(target: Node) {
-  if (target) {
-    queueExplicitHydrationTarget(target);
-  }
-}
-setUnstableScheduleHydration(scheduleHydration);
 
 function renderSubtreeIntoContainer(
   parentComponent: React$Component<any, any>,
