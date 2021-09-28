@@ -20,7 +20,12 @@ module.exports = function(req, res) {
         const App = m.default.default || m.default;
         res.setHeader('Access-Control-Allow-Origin', '*');
         const moduleMap = JSON.parse(data);
-        renderToNodePipe(React.createElement(App), res, moduleMap);
+        const {startWriting} = renderToNodePipe(
+          React.createElement(App),
+          res,
+          moduleMap
+        );
+        startWriting();
       }
     );
   });

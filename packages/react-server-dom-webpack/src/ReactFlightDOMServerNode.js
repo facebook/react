@@ -25,20 +25,28 @@ type Options = {
   onError?: (error: mixed) => void,
 };
 
+type Controls = {|
+  startWriting(): void,
+|};
+
 function renderToNodePipe(
   model: ReactModel,
   destination: Writable,
   webpackMap: BundlerConfig,
   options?: Options,
-): void {
+): Controls {
   const request = createRequest(
     model,
     webpackMap,
     options ? options.onError : undefined,
   );
   startWork(request);
-  startFlowing(request, destination);
   destination.on('drain', createDrainHandler(destination, request));
+  return {
+    startWriting() {
+      startFlowing(request, destination);
+    },
+  };
 }
 
 export {renderToNodePipe};
