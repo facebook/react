@@ -29,6 +29,8 @@ export const useSyncExternalStore =
     ? ((builtInAPI: any): typeof useSyncExternalStore_client)
     : useSyncExternalStore_client;
 
+export const isShim = builtInAPI === undefined;
+
 let didWarnOld18Alpha = false;
 let didWarnUncachedGetSnapshot = false;
 

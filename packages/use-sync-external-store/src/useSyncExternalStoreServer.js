@@ -8,12 +8,16 @@
  */
 
 import invariant from 'shared/invariant';
+import {isShim} from './useSyncExternalStoreClient';
 
 export function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
   getServerSnapshot?: () => T,
 ): T {
+  if (isShim) {
+    return getSnapshot();
+  }
   if (getServerSnapshot === undefined) {
     invariant(
       false,
