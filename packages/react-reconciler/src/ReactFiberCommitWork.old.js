@@ -24,6 +24,7 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
+import type {Cache} from './ReactFiberCacheComponent.old';
 
 import {
   enableCreateEventHandleAPI,
@@ -39,6 +40,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
   warnAboutCallbackRefReturningFunction,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -58,6 +60,7 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
@@ -153,6 +156,7 @@ import {
   markComponentLayoutEffectUnmountStarted,
   markComponentLayoutEffectUnmountStopped,
 } from './SchedulingProfiler';
+import {releaseCache, retainCache} from './ReactFiberCacheComponent.old';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -2665,6 +2669,82 @@ function commitPassiveMountOnFiber(
       }
       break;
     }
+    case HostRoot: {
+      if (enableCache) {
+        let previousCache: Cache | null = null;
+        if (finishedWork.alternate !== null) {
+          previousCache = finishedWork.alternate.memoizedState.cache;
+        }
+        const nextCache = finishedWork.memoizedState.cache;
+        // Retain/release the root cache.
+        // Note that on initial mount, previousCache and nextCache will be the same
+        // and this retain won't occur. To counter this, we instead retain the HostRoot's
+        // initial cache when creating the root itself (see createFiberRoot() in
+        // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
+        // here, such that previous/next caches are retained correctly.
+        if (nextCache !== previousCache) {
+          retainCache(nextCache);
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
+        }
+      }
+      break;
+    }
+    case LegacyHiddenComponent:
+    case OffscreenComponent: {
+      if (enableCache) {
+        let previousCache: Cache | null = null;
+        if (
+          finishedWork.alternate !== null &&
+          finishedWork.alternate.memoizedState !== null &&
+          finishedWork.alternate.memoizedState.cachePool !== null
+        ) {
+          previousCache = finishedWork.alternate.memoizedState.cachePool.pool;
+        }
+        let nextCache: Cache | null = null;
+        if (
+          finishedWork.memoizedState !== null &&
+          finishedWork.memoizedState.cachePool !== null
+        ) {
+          nextCache = finishedWork.memoizedState.cachePool.pool;
+        }
+        // Retain/release the cache used for pending (suspended) nodes.
+        // Note that this is only reached in the non-suspended/visible case:
+        // when the content is suspended/hidden, the retain/release occurs
+        // via the parent Suspense component (see case above).
+        if (nextCache !== previousCache) {
+          if (nextCache != null) {
+            retainCache(nextCache);
+          }
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
+        }
+      }
+      break;
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        let previousCache: Cache | null = null;
+        if (finishedWork.alternate !== null) {
+          previousCache = finishedWork.alternate.memoizedState.cache;
+        }
+        const nextCache = finishedWork.memoizedState.cache;
+        // Retain/release the cache. In theory the cache component
+        // could be "borrowing" a cache instance owned by some parent,
+        // in which case we could avoid retaining/releasing. But it
+        // is non-trivial to determine when that is the case, so we
+        // always retain/release.
+        if (nextCache !== previousCache) {
+          retainCache(nextCache);
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
+        }
+      }
+      break;
+    }
   }
 }
 
@@ -2868,6 +2948,43 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
           current,
           nearestMountedAncestor,
         );
+      }
+      break;
+    }
+    // TODO: run passive unmount effects when unmounting a root.
+    // Because passive unmount effects are not currently run,
+    // the cache instance owned by the root will never be freed.
+    // When effects are run, the cache should be freed here:
+    // case HostRoot: {
+    //   if (enableCache) {
+    //     const cache = current.memoizedState.cache;
+    //     releaseCache(cache);
+    //   }
+    //   break;
+    // }
+    case LegacyHiddenComponent:
+    case OffscreenComponent: {
+      if (enableCache) {
+        if (
+          current.memoizedState !== null &&
+          current.memoizedState.cachePool !== null
+        ) {
+          const cache: Cache = current.memoizedState.cachePool.pool;
+          // Retain/release the cache used for pending (suspended) nodes.
+          // Note that this is only reached in the non-suspended/visible case:
+          // when the content is suspended/hidden, the retain/release occurs
+          // via the parent Suspense component (see case above).
+          if (cache != null) {
+            retainCache(cache);
+          }
+        }
+      }
+      break;
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        const cache = current.memoizedState.cache;
+        releaseCache(cache);
       }
       break;
     }

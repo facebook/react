@@ -409,30 +409,30 @@ describe('SchedulingProfiler', () => {
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
       expect(getMarks()).toMatchInlineSnapshot(`
-              Array [
-                "--render-start-16",
-                "--component-render-start-Example",
-                "--component-render-stop",
-                "--render-stop",
-                "--commit-start-16",
-                "--react-version-17.0.3",
-                "--profiler-version-1",
-                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-                "--layout-effects-start-16",
-                "--schedule-state-update-1-Example",
-                "--layout-effects-stop",
-                "--render-start-1",
-                "--component-render-start-Example",
-                "--component-render-stop",
-                "--render-stop",
-                "--commit-start-1",
-                "--react-version-17.0.3",
-                "--profiler-version-1",
-                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-                "--commit-stop",
-                "--commit-stop",
-              ]
-          `);
+        Array [
+          "--render-start-16",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-16",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--layout-effects-start-16",
+          "--schedule-state-update-1-Example",
+          "--layout-effects-stop",
+          "--render-start-1",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-1",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--commit-stop",
+          "--commit-stop",
+        ]
+      `);
     }
   });
 
@@ -462,30 +462,30 @@ describe('SchedulingProfiler', () => {
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
       expect(getMarks()).toMatchInlineSnapshot(`
-              Array [
-                "--render-start-16",
-                "--component-render-start-Example",
-                "--component-render-stop",
-                "--render-stop",
-                "--commit-start-16",
-                "--react-version-17.0.3",
-                "--profiler-version-1",
-                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-                "--layout-effects-start-16",
-                "--schedule-forced-update-1-Example",
-                "--layout-effects-stop",
-                "--render-start-1",
-                "--component-render-start-Example",
-                "--component-render-stop",
-                "--render-stop",
-                "--commit-start-1",
-                "--react-version-17.0.3",
-                "--profiler-version-1",
-                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-                "--commit-stop",
-                "--commit-stop",
-              ]
-          `);
+        Array [
+          "--render-start-16",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-16",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--layout-effects-start-16",
+          "--schedule-forced-update-1-Example",
+          "--layout-effects-stop",
+          "--render-start-1",
+          "--component-render-start-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-1",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--commit-stop",
+          "--commit-stop",
+        ]
+      `);
     }
   });
 
@@ -618,9 +618,7 @@ describe('SchedulingProfiler', () => {
           "--profiler-version-1",
           "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
           "--layout-effects-start-16",
-          "--component-layout-effect-mount-start-Example",
           "--schedule-state-update-1-Example",
-          "--component-layout-effect-mount-stop",
           "--layout-effects-stop",
           "--render-start-1",
           "--component-render-start-Example",
@@ -668,9 +666,7 @@ describe('SchedulingProfiler', () => {
           "--layout-effects-stop",
           "--commit-stop",
           "--passive-effects-start-16",
-          "--component-passive-effect-mount-start-Example",
           "--schedule-state-update-16-Example",
-          "--component-passive-effect-mount-stop",
           "--passive-effects-stop",
           "--render-start-16",
           "--component-render-start-Example",
@@ -701,22 +697,22 @@ describe('SchedulingProfiler', () => {
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
       expect(getMarks()).toMatchInlineSnapshot(`
-              Array [
-                "--schedule-render-16",
-                "--render-start-16",
-                "--component-render-start-Example",
-                "--schedule-state-update-16-Example",
-                "--component-render-stop",
-                "--render-stop",
-                "--commit-start-16",
-                "--react-version-17.0.3",
-                "--profiler-version-1",
-                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-                "--layout-effects-start-16",
-                "--layout-effects-stop",
-                "--commit-stop",
-              ]
-          `);
+        Array [
+          "--schedule-render-16",
+          "--render-start-16",
+          "--component-render-start-Example",
+          "--schedule-state-update-16-Example",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-16",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--layout-effects-start-16",
+          "--layout-effects-stop",
+          "--commit-stop",
+        ]
+      `);
     }
   });
 
@@ -746,35 +742,35 @@ describe('SchedulingProfiler', () => {
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
       expect(getMarks()).toMatchInlineSnapshot(`
-              Array [
-                "--schedule-render-1",
-                "--render-start-1",
-                "--component-render-start-ErrorBoundary",
-                "--component-render-stop",
-                "--component-render-start-ExampleThatThrows",
-                "--component-render-start-ExampleThatThrows",
-                "--component-render-stop",
-                "--error-ExampleThatThrows-mount-Expected error",
-                "--render-stop",
-                "--commit-start-1",
-                "--react-version-17.0.3",
-                "--profiler-version-1",
-                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-                "--layout-effects-start-1",
-                "--schedule-state-update-1-ErrorBoundary",
-                "--layout-effects-stop",
-                "--commit-stop",
-                "--render-start-1",
-                "--component-render-start-ErrorBoundary",
-                "--component-render-stop",
-                "--render-stop",
-                "--commit-start-1",
-                "--react-version-17.0.3",
-                "--profiler-version-1",
-                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-                "--commit-stop",
-              ]
-          `);
+        Array [
+          "--schedule-render-1",
+          "--render-start-1",
+          "--component-render-start-ErrorBoundary",
+          "--component-render-stop",
+          "--component-render-start-ExampleThatThrows",
+          "--component-render-start-ExampleThatThrows",
+          "--component-render-stop",
+          "--error-ExampleThatThrows-mount-Expected error",
+          "--render-stop",
+          "--commit-start-1",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--layout-effects-start-1",
+          "--schedule-state-update-1-ErrorBoundary",
+          "--layout-effects-stop",
+          "--commit-stop",
+          "--render-start-1",
+          "--component-render-start-ErrorBoundary",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-1",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--commit-stop",
+        ]
+      `);
     }
   });
 

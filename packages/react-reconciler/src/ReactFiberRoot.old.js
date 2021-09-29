@@ -28,6 +28,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
+import {createCache, retainCache} from './ReactFiberCacheComponent.old';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
@@ -117,8 +118,18 @@ export function createFiberRoot(
   uninitializedFiber.stateNode = root;
 
   if (enableCache) {
-    const initialCache = new Map();
+    const initialCache = createCache();
+    retainCache(initialCache);
+
+    // The pooledCache is a fresh cache instance that is used temporarily
+    // for newly mounted boundaries during a render. In general, the
+    // pooledCache is always cleared from the root at the end of a render:
+    // it is either released when render commits, or moved to an Offscreen
+    // component if rendering suspends. Because the lifetime of the pooled
+    // cache is distinct from the main memoizedState.cache, it must be
+    // retained separately.
     root.pooledCache = initialCache;
+    retainCache(initialCache);
     const initialState = {
       element: null,
       cache: initialCache,

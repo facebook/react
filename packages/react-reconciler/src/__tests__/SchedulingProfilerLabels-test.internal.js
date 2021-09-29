@@ -89,20 +89,20 @@ describe('SchedulingProfiler labels', () => {
 
     if (gate(flags => flags.enableSchedulingProfiler)) {
       expect(clearedMarks).toMatchInlineSnapshot(`
-      Array [
-        "__v3",
-        "--schedule-render-1",
-        "--render-start-1",
-        "--render-stop",
-        "--commit-start-1",
-        "--react-version-17.0.3",
-        "--profiler-version-1",
-        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-        "--layout-effects-start-1",
-        "--layout-effects-stop",
-        "--commit-stop",
-      ]
-    `);
+              Array [
+                "__v3",
+                "--schedule-render-1",
+                "--render-start-1",
+                "--render-stop",
+                "--commit-start-1",
+                "--react-version-17.0.3",
+                "--profiler-version-1",
+                "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+                "--layout-effects-start-1",
+                "--layout-effects-stop",
+                "--commit-stop",
+              ]
+          `);
     }
   });
 
@@ -114,11 +114,11 @@ describe('SchedulingProfiler labels', () => {
 
         root.render(<div />);
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "__v3",
-          "--schedule-render-16",
-        ]
-      `);
+                  Array [
+                    "__v3",
+                    "--schedule-render-16",
+                  ]
+              `);
       });
     }
   });
@@ -152,21 +152,21 @@ describe('SchedulingProfiler labels', () => {
       });
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-      Array [
-        "--schedule-state-update-1-App",
-        "--render-start-1",
-        "--component-render-start-App",
-        "--component-render-stop",
-        "--render-stop",
-        "--commit-start-1",
-        "--react-version-17.0.3",
-        "--profiler-version-1",
-        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-        "--layout-effects-start-1",
-        "--layout-effects-stop",
-        "--commit-stop",
-      ]
-    `);
+        Array [
+          "--schedule-state-update-1-App",
+          "--render-start-1",
+          "--component-render-start-App",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-1",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--layout-effects-start-1",
+          "--layout-effects-stop",
+          "--commit-stop",
+        ]
+      `);
     }
   });
 
@@ -196,21 +196,21 @@ describe('SchedulingProfiler labels', () => {
       });
 
       expect(clearedMarks).toMatchInlineSnapshot(`
-      Array [
-        "--schedule-state-update-4-App",
-        "--render-start-4",
-        "--component-render-start-App",
-        "--component-render-stop",
-        "--render-stop",
-        "--commit-start-4",
-        "--react-version-17.0.3",
-        "--profiler-version-1",
-        "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-        "--layout-effects-start-4",
-        "--layout-effects-stop",
-        "--commit-stop",
-      ]
-    `);
+        Array [
+          "--schedule-state-update-4-App",
+          "--render-start-4",
+          "--component-render-start-App",
+          "--component-render-stop",
+          "--render-stop",
+          "--commit-start-4",
+          "--react-version-17.0.3",
+          "--profiler-version-1",
+          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+          "--layout-effects-start-4",
+          "--layout-effects-stop",
+          "--commit-stop",
+        ]
+      `);
     }
   });
 });
