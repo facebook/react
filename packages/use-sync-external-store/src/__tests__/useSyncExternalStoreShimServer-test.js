@@ -92,7 +92,9 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     }
 
     const html = ReactDOMServer.renderToString(<App />);
-    expect(Scheduler).toHaveYielded(['server']);
-    expect(html).toEqual('server');
+
+    // We don't call getServerSnapshot in the shim
+    expect(Scheduler).toHaveYielded(['client']);
+    expect(html).toEqual('client');
   });
 });

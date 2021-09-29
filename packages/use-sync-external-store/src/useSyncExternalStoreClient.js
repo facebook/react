@@ -12,22 +12,7 @@ import is from 'shared/objectIs';
 
 // Intentionally not using named imports because Rollup uses dynamic
 // dispatch for CommonJS interop named imports.
-const {
-  useState,
-  useEffect,
-  useLayoutEffect,
-  useDebugValue,
-  // The built-in API is still prefixed.
-  unstable_useSyncExternalStore: builtInAPI,
-} = React;
-
-// Prefer the built-in API, if it exists. If it doesn't exist, then we assume
-// we're in version 16 or 17, so rendering is always synchronous. The shim
-// does not support concurrent rendering, only the built-in API.
-export const useSyncExternalStore =
-  builtInAPI !== undefined
-    ? ((builtInAPI: any): typeof useSyncExternalStore_client)
-    : useSyncExternalStore_client;
+const {useState, useEffect, useLayoutEffect, useDebugValue} = React;
 
 let didWarnOld18Alpha = false;
 let didWarnUncachedGetSnapshot = false;
@@ -42,7 +27,7 @@ let didWarnUncachedGetSnapshot = false;
 //
 // Do not assume that the clever hacks used by this hook also work in general.
 // The point of this shim is to replace the need for hacks by other libraries.
-function useSyncExternalStore_client<T>(
+export function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
   // Note: The client shim does not use getServerSnapshot, because pre-18

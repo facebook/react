@@ -10,5 +10,13 @@
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {useSyncExternalStore as client} from './useSyncExternalStoreClient';
 import {useSyncExternalStore as server} from './useSyncExternalStoreServer';
+import * as React from 'react';
 
-export const useSyncExternalStore = canUseDOM ? client : server;
+const {unstable_useSyncExternalStore: builtInAPI} = React;
+
+export const useSyncExternalStore =
+  builtInAPI !== undefined
+    ? ((builtInAPI: any): typeof client)
+    : canUseDOM
+    ? client
+    : server;
