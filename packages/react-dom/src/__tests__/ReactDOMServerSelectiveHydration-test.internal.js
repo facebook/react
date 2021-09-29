@@ -779,7 +779,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     suspend = true;
 
     // A and D will be suspended.
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
