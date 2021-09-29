@@ -778,10 +778,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     suspend = true;
 
-    // A and D will be suspended. We'll click on D which should take
-    // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    // A and D will be suspended.
+    const root = ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -790,22 +788,18 @@ describe('ReactDOMServerSelectiveHydration', () => {
     dispatchMouseHoverEvent(spanB, spanD);
     dispatchMouseHoverEvent(spanC, spanB);
 
+    // C renders before B since its the current hover target
+    // B renders because its priority was increased when it was hovered over
+    expect(Scheduler).toHaveYielded(['App', 'C', 'B', 'Hover C']);
+
     await act(async () => {
       suspend = false;
       resolve();
       await promise;
     });
 
-    // C renders before B since its the current hover target
-    // B renders because its priority was increased when it was hovered over
-    expect(Scheduler).toHaveYielded(['App', 'C', 'B', 'Hover C', 'D', 'A']);
-
-    // We should prioritize hydrating D first because we clicked it.
-    // Next we should hydrate C since that's the current hover target.
-    // Next it doesn't matter if we hydrate A or B first but as an
-    // implementation detail we're currently hydrating B first since
-    // we at one point hovered over it and we never deprioritized it.
-    expect(Scheduler).toFlushAndYield([]);
+    // Finally D and A render
+    expect(Scheduler).toHaveYielded(['D', 'A']);
 
     document.body.removeChild(container);
   });
