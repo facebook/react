@@ -17,12 +17,7 @@ import {
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
-import {
-  createRoot,
-  hydrateRoot,
-  isValidContainer,
-  setUnstableScheduleHydration,
-} from './ReactDOMRoot';
+import {createRoot, hydrateRoot, isValidContainer} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
 
 import {

@@ -195,12 +195,13 @@ export function createRoot(
 function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
   ReactDOMRoot.call(this, internalRoot);
 }
+function scheduleHydration(target: Node) {
+  if (target) {
+    queueExplicitHydrationTarget(target);
+  }
+}
 Object.assign(ReactDOMHydrationRoot.prototype, ReactDOMRoot.prototype, {
-  unstable_scheduleHydration: function(target: Node) {
-    if (target) {
-      queueExplicitHydrationTarget(target);
-    }
-  },
+  unstable_scheduleHydration: scheduleHydration,
 });
 
 export function hydrateRoot(
