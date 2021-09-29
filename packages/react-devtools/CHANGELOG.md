@@ -2,6 +2,27 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.19.0 (September 29, 2021)
+
+#### Features
+* Scheduling Profiler: Show Suspense resource .displayName ([bvaughn](https://github.com/bvaughn) in [#22451](https://github.com/facebook/react/pull/22451))
+* Scheduling Profiler marks should include thrown Errors ([bvaughn](https://github.com/bvaughn) in [#22419](https://github.com/facebook/react/pull/22419))
+* Don't patch console during first render in strict mode ([lunaruan](https://github.com/lunaruan) in [#22308](https://github.com/facebook/react/pull/22308))
+* Show which hook indicies changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
+* Display actual ReactDOM API name in root type ([eps1lon](https://github.com/eps1lon) in [#22363](https://github.com/facebook/react/pull/22363))
+* Add named hooks support to standalone and inline DevTools ([jstejada](https://github.com/jstejada) in [#22320](https://github.com/facebook/react/pull/22320) and [bvaughn](https://github.com/bvaughn) in [#22263](https://github.com/facebook/react/pull/22263))
+#### Bugfix
+* DevTools encoding supports multibyte characters (e.g. "🟩") ([bvaughn](https://github.com/bvaughn) in [#22424](https://github.com/facebook/react/pull/22424))
+* Improve DEV errors if string coercion throws (Temporal.*, Symbol, etc.) ([justingrant](https://github.com/justingrant) in [#22064](https://github.com/facebook/react/pull/22064))
+* Fix memory leak caused by not storing alternate Fiber pointer ([bvaughn](https://github.com/bvaughn) in [#22346](https://github.com/facebook/react/pull/22346))
+* Fix call stack exceeded error in `utfDecodeString()` ([bvaughn](https://github.com/bvaughn) in [#22330](https://github.com/facebook/react/pull/22330))
+* Fix runtime error when inspecting an element times out ([jstejada](https://github.com/jstejada) in [#22329](https://github.com/facebook/react/pull/22329))
+
+#### Performance
+* DevTools: Lazily parse indexed map sections ([bvaughn](https://github.com/bvaughn) in [#22415](https://github.com/facebook/react/pull/22415))
+* DevTools: Hook names optimizations ([bvaughn](https://github.com/bvaughn) in [#22403](https://github.com/facebook/react/pull/22403))
+* Replaced `network.onRequestFinished()` caching with `network.getHAR()` ([bvaughn](https://github.com/bvaughn) in [#22285](https://github.com/facebook/react/pull/22285))
+
 ## 4.18.0 (September 1, 2021)
 
 #### Features
