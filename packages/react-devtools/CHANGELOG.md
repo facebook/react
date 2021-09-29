@@ -2,6 +2,19 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.19.0 (September 28, 2021)
+
+#### Features
+* Don't patch console during first render in strict mode ([lunaruan](https://github.com/lunaruan) in [#22308](https://github.com/facebook/react/pull/22308))
+* Show which hook indicies changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
+* Display actual ReactDOM API name in root type ([eps1lon](https://github.com/eps1lon) in [#22363](https://github.com/facebook/react/pull/22363))
+* Add named hooks support to standalone and inline DevTools ([jstejada](https://github.com/jstejada) in [#22320](https://github.com/facebook/react/pull/22320) and [bvaughn](https://github.com/bvaughn) in [#22263](https://github.com/facebook/react/pull/22263))
+#### Bugfix
+* Fix memory leak caused by not storing alternate Fiber pointer ([bvaughn](https://github.com/bvaughn) in [#22346](https://github.com/facebook/react/pull/22346))
+* Fix call stack exceeded error in utfDecodeString() ([bvaughn](https://github.com/bvaughn) in [#22330](https://github.com/facebook/react/pull/22330))
+* Fix runtime error when inspecting an element times out ([jstejada](https://github.com/jstejada) in [#22329](https://github.com/facebook/react/pull/22329))
+
+
 ## 4.18.0 (September 1, 2021)
 
 #### Features
