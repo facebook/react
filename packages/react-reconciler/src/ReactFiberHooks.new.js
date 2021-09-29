@@ -111,7 +111,7 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
-import {CacheContext} from './ReactFiberCacheComponent.new';
+import {createCache, CacheContext} from './ReactFiberCacheComponent.new';
 import {
   createUpdate as createLegacyQueueUpdate,
   enqueueUpdate as enqueueLegacyQueueUpdate,
@@ -2128,11 +2128,11 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
-        const seededCache = new Map();
+        const seededCache = createCache();
         if (seedKey !== null && seedKey !== undefined && root !== null) {
           // Seed the cache with the value passed by the caller. This could be
           // from a server mutation, or it could be a streaming response.
-          seededCache.set(seedKey, seedValue);
+          seededCache.data.set(seedKey, seedValue);
         }
 
         // Schedule an update on the cache boundary to trigger a refresh.
@@ -2386,10 +2386,10 @@ function getCacheForType<T>(resourceType: () => T): T {
     invariant(false, 'Not implemented.');
   }
   const cache: Cache = readContext(CacheContext);
-  let cacheForType: T | void = (cache.get(resourceType): any);
+  let cacheForType: T | void = (cache.data.get(resourceType): any);
   if (cacheForType === undefined) {
     cacheForType = resourceType();
-    cache.set(resourceType, cacheForType);
+    cache.data.set(resourceType, cacheForType);
   }
   return cacheForType;
 }

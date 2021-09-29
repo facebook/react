@@ -28,6 +28,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
+import {createCache} from './ReactFiberCacheComponent.new';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
@@ -117,7 +118,7 @@ export function createFiberRoot(
   uninitializedFiber.stateNode = root;
 
   if (enableCache) {
-    const initialCache = new Map();
+    const initialCache = createCache();
     root.pooledCache = initialCache;
     const initialState = {
       element: null,

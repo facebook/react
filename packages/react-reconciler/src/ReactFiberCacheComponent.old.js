@@ -19,7 +19,10 @@ import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.old';
 import {pushProvider, popProvider} from './ReactFiberNewContext.old';
 
-export type Cache = Map<() => mixed, mixed>;
+export type Cache = {|
+  data: Map<() => mixed, mixed>,
+  refCount: number,
+|};
 
 export type CacheComponentState = {|
   +parent: Cache,
@@ -57,6 +60,40 @@ let pooledCache: Cache | null = null;
 // cache from the render that suspended.
 const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 
+// Creates a new empty Cache instance with a ref-count of 1: the caller is
+// the implicit "owner". Note that retain/release must be called to ensure
+// that the ref count is accurate:
+// * Call retainCache() when a new reference to the cache instance is created.
+//   This *excludes* the original reference created w createCache().
+// * Call releaseCache() when any reference to the cache is "released" (ie
+//   when the reference is no longer reachable). This *includes* the original
+//   reference created w createCache().
+export function createCache(): Cache {
+  return {
+    data: new Map(),
+    refCount: 1,
+  };
+}
+
+export function retainCache(cache: Cache) {
+  cache.refCount++;
+}
+
+export function releaseCache(cache: Cache) {
+  cache.refCount--;
+  if (__DEV__) {
+    if (cache.refCount < 0) {
+      throw new Error(
+        'Error in React: cache reference count should not be negative',
+      );
+    }
+  }
+  if (cache.refCount === 0) {
+    // TODO: cleanup the cache, considering scheduling and error handling for any
+    // event listeners that get triggered.
+  }
+}
+
 export function pushCacheProvider(workInProgress: Fiber, cache: Cache) {
   if (!enableCache) {
     return;
@@ -79,7 +116,7 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
     return pooledCache;
   }
   // Create a fresh cache.
-  pooledCache = new Map();
+  pooledCache = createCache();
   return pooledCache;
 }
 
