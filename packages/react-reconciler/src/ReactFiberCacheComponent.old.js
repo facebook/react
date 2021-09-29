@@ -20,6 +20,7 @@ import {createCursor, push, pop} from './ReactFiberStack.old';
 import {pushProvider, popProvider} from './ReactFiberNewContext.old';
 
 export type Cache = {|
+  controller: AbortController,
   data: Map<() => mixed, mixed>,
   refCount: number,
 |};
@@ -70,6 +71,7 @@ const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 //   reference created w createCache().
 export function createCache(): Cache {
   return {
+    controller: new AbortController(),
     data: new Map(),
     refCount: 1,
   };
@@ -89,8 +91,9 @@ export function releaseCache(cache: Cache) {
     }
   }
   if (cache.refCount === 0) {
-    // TODO: cleanup the cache, considering scheduling and error handling for any
+    // TODO: considering scheduling and error handling for any
     // event listeners that get triggered.
+    cache.controller.abort();
   }
 }
 
