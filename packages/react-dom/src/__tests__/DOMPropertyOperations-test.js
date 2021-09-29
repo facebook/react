@@ -289,28 +289,6 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('textContent')).toBe(null);
       expect(customElement.hasChildNodes()).toBe(false);
     });
-
-    // @gate enableCustomElementPropertySupport
-    it('Assigning to read-only properties should emit warnings for custom elements', () => {
-      const readOnlyProperties = [
-        'isContentEditable',
-        'offsetParent',
-        'offsetTop',
-        'offsetLeft',
-        'offsetWidth',
-        'offsetHeight'
-      ];
-      for (const readOnlyProperty of readOnlyProperties) {
-        const container = document.createElement('div');
-        const props = {};
-        props[readOnlyProperty] = 'foo';
-        expect(() => {
-          ReactDOM.render(React.createElement('my-custom-element', props), container);
-        }).toErrorDev(
-          `Assigning to the read-only property \`${readOnlyProperty}\` won't have any effect on the element.`
-        );
-      }
-    });
   });
 
   describe('deleteValueForProperty', () => {

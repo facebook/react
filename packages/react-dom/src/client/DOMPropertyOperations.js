@@ -176,20 +176,6 @@ export function setValueForProperty(
     }
   }
 
-  if (__DEV__ && enableCustomElementPropertySupport && isCustomComponentTag) {
-    const readOnlyProperties = [
-      'isContentEditable',
-      'offsetParent',
-      'offsetTop',
-      'offsetLeft',
-      'offsetWidth',
-      'offsetHeight'
-    ];
-    if (readOnlyProperties.includes(name)) {
-      console.error("Assigning to the read-only property `%s` won't have any effect on the element.", name);
-    }
-  }
-
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
