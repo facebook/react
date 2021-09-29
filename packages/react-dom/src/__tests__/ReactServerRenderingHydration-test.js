@@ -531,4 +531,27 @@ describe('ReactDOMServerHydration', () => {
       'Warning: Did not expect server HTML to contain a <p> in <div>',
     );
   });
+
+  it('should warn when hydrating read-only properties', () => {
+    const readOnlyProperties = [
+      'offsetParent',
+      'offsetTop',
+      'offsetLeft',
+      'offsetWidth',
+      'offsetHeight',
+      'isContentEditable'
+    ];
+    readOnlyProperties.forEach(readOnlyProperty => {
+      const props = {};
+      props[readOnlyProperty] = 'hello';
+      const jsx = React.createElement('my-custom-element', props);
+      const element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(jsx);
+      expect(() =>
+        ReactDOM.hydrate(jsx, element)
+      ).toErrorDev(
+        `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``
+      );
+    });
+  });
 });

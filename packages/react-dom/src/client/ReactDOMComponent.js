@@ -1040,6 +1040,18 @@ export function diffHydratedProperties(
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
         }
+      } else if (enableCustomElementPropertySupport && isCustomComponentTag &&
+        (propKey === 'offsetParent' ||
+          propKey === 'offsetTop' ||
+          propKey === 'offsetLeft' ||
+          propKey === 'offsetWidth' ||
+          propKey === 'offsetHeight' ||
+          propKey === 'isContentEditable')) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey.toLowerCase());
+        if (__DEV__) {
+          console.error('Assignment to read-only property will result in a no-op: `%s`', propKey)
+        };
       } else if (isCustomComponentTag && !enableCustomElementPropertySupport) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey.toLowerCase());
