@@ -146,7 +146,12 @@ export function setValueForProperty(
     return;
   }
 
-  if (enableCustomElementPropertySupport && isCustomComponentTag && name[0] === 'o' && name[1] === 'n') {
+  if (
+    enableCustomElementPropertySupport &&
+    isCustomComponentTag &&
+    name[0] === 'o' &&
+    name[1] === 'n'
+  ) {
     let eventName = name.replace(/Capture$/, '');
     const useCapture = name !== eventName;
     const nameLower = eventName.toLowerCase();
@@ -156,7 +161,8 @@ export function setValueForProperty(
     eventName = eventName.slice(2);
 
     const listenersObjName = eventName + (useCapture ? 'true' : 'false');
-    const alreadyHadListener = (node: any)._listeners && (node: any)._listeners[listenersObjName];
+    const alreadyHadListener =
+      (node: any)._listeners && (node: any)._listeners[listenersObjName];
 
     if (typeof value === 'function' || alreadyHadListener) {
       if (!(node: any)._listeners) {
@@ -183,7 +189,10 @@ export function setValueForProperty(
     propertyInfo = getCustomElementPropertyInfo(name, node);
   }
   // If the prop isn't in the special list, treat it as a simple attribute.
-  if (propertyInfo === null || (isCustomComponentTag && !enableCustomElementPropertySupport)) {
+  if (
+    propertyInfo === null ||
+    (isCustomComponentTag && !enableCustomElementPropertySupport)
+  ) {
     if (isAttributeNameSafe(name)) {
       const attributeName = name;
       if (value === null) {

@@ -30,14 +30,33 @@ import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
  * @param {*} value
  * @return {?string} Markup string, or null if the property was invalid.
  */
-export function createMarkupForProperty(name: string, value: mixed, isCustomComponent: boolean): string {
-  const propertyInfo = enableCustomElementPropertySupport && isCustomComponent
-    ? null
-    : getPropertyInfo(name);
-  if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, isCustomComponent && enableCustomElementPropertySupport)) {
+export function createMarkupForProperty(
+  name: string,
+  value: mixed,
+  isCustomComponent: boolean,
+): string {
+  const propertyInfo =
+    enableCustomElementPropertySupport && isCustomComponent
+      ? null
+      : getPropertyInfo(name);
+  if (
+    name !== 'style' &&
+    shouldIgnoreAttribute(
+      name,
+      propertyInfo,
+      isCustomComponent && enableCustomElementPropertySupport,
+    )
+  ) {
     return '';
   }
-  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponent && enableCustomElementPropertySupport)) {
+  if (
+    shouldRemoveAttribute(
+      name,
+      value,
+      propertyInfo,
+      isCustomComponent && enableCustomElementPropertySupport,
+    )
+  ) {
     return '';
   }
   if (propertyInfo !== null) {

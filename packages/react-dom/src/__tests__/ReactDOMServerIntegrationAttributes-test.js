@@ -660,8 +660,10 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('className for custom elements', async render => {
       if (ReactFeatureFlags.enableCustomElementPropertySupport) {
-        const e = await render(<div is="custom-element" className="test" />,
-          render === clientRenderOnServerString ? 1 : 0);
+        const e = await render(
+          <div is="custom-element" className="test" />,
+          render === clientRenderOnServerString ? 1 : 0,
+        );
         expect(e.getAttribute('className')).toBe(null);
         expect(e.getAttribute('class')).toBe('test');
       } else {

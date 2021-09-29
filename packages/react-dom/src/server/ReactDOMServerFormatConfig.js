@@ -11,7 +11,10 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {Children} from 'react';
 
-import {enableFilterEmptyStringAttributesDOM, enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
+import {
+  enableFilterEmptyStringAttributesDOM,
+  enableCustomElementPropertySupport,
+} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,

@@ -539,7 +539,7 @@ describe('ReactDOMServerHydration', () => {
       'offsetLeft',
       'offsetWidth',
       'offsetHeight',
-      'isContentEditable'
+      'isContentEditable',
     ];
     readOnlyProperties.forEach(readOnlyProperty => {
       const props = {};
@@ -547,10 +547,8 @@ describe('ReactDOMServerHydration', () => {
       const jsx = React.createElement('my-custom-element', props);
       const element = document.createElement('div');
       element.innerHTML = ReactDOMServer.renderToString(jsx);
-      expect(() =>
-        ReactDOM.hydrate(jsx, element)
-      ).toErrorDev(
-        `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``
+      expect(() => ReactDOM.hydrate(jsx, element)).toErrorDev(
+        `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
       );
     });
   });

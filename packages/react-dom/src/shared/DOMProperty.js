@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {enableFilterEmptyStringAttributesDOM, enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
+import {
+  enableFilterEmptyStringAttributesDOM,
+  enableCustomElementPropertySupport,
+} from 'shared/ReactFeatureFlags';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -206,11 +209,9 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
-export function getCustomElementPropertyInfo(
-  name: string,
-  node: Element) {
+export function getCustomElementPropertyInfo(name: string, node: Element) {
   if (name in (node: any)) {
-    const acceptsBooleans = (typeof (node: any)[name]) === 'boolean';
+    const acceptsBooleans = typeof (node: any)[name] === 'boolean';
     return {
       acceptsBooleans,
       type: acceptsBooleans ? BOOLEAN : STRING,

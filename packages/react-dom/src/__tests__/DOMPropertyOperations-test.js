@@ -164,7 +164,9 @@ describe('DOMPropertyOperations', () => {
       }
       const container = document.createElement('div');
       ReactDOM.render(<Test />, container);
-      container.querySelector('my-custom-element').dispatchEvent(new Event('customevent'));
+      container
+        .querySelector('my-custom-element')
+        .dispatchEvent(new Event('customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
 
@@ -176,7 +178,9 @@ describe('DOMPropertyOperations', () => {
       }
       const container = document.createElement('div');
       ReactDOM.render(<Test />, container);
-      container.querySelector('my-custom-element').dispatchEvent(new Event('Customevent'));
+      container
+        .querySelector('my-custom-element')
+        .dispatchEvent(new Event('Customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
 
@@ -188,7 +192,9 @@ describe('DOMPropertyOperations', () => {
       }
       const container = document.createElement('div');
       ReactDOM.render(<Test />, container);
-      container.querySelector('my-custom-element').dispatchEvent(new Event('custom-event'));
+      container
+        .querySelector('my-custom-element')
+        .dispatchEvent(new Event('custom-event'));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
 
@@ -215,12 +221,16 @@ describe('DOMPropertyOperations', () => {
 
     it('custom elements shouldnt have non-functions for on* attributes treated as event listeners', () => {
       const container = document.createElement('div');
-      ReactDOM.render(<my-custom-element
-        onstring={'hello'}
-        onobj={{hello: 'world'}}
-        onarray={['one', 'two']}
-        ontrue={true}
-        onfalse={false} />, container);
+      ReactDOM.render(
+        <my-custom-element
+          onstring={'hello'}
+          onobj={{hello: 'world'}}
+          onarray={['one', 'two']}
+          ontrue={true}
+          onfalse={false}
+        />,
+        container,
+      );
       const customElement = container.querySelector('my-custom-element');
       expect(customElement.getAttribute('onstring')).toBe('hello');
       expect(customElement.getAttribute('onobj')).toBe('[object Object]');
@@ -231,9 +241,11 @@ describe('DOMPropertyOperations', () => {
 
     it('custom elements should still have onClick treated like regular elements', () => {
       let syntheticClickEvent = null;
-      const syntheticEventHandler = jest.fn(event => syntheticClickEvent = event);
+      const syntheticEventHandler = jest.fn(
+        event => (syntheticClickEvent = event),
+      );
       let nativeClickEvent = null;
-      const nativeEventHandler = jest.fn(event => nativeClickEvent = event);
+      const nativeEventHandler = jest.fn(event => (nativeClickEvent = event));
       function Test() {
         return <span onClick={syntheticEventHandler} />;
       }
@@ -259,7 +271,8 @@ describe('DOMPropertyOperations', () => {
       }
       const container = document.createElement('div');
       ReactDOM.render(<Test />, container);
-      container.querySelector('my-custom-element')
+      container
+        .querySelector('my-custom-element')
         .dispatchEvent(new Event('customevent', {bubbles: false}));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
