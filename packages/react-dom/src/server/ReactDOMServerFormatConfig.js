@@ -919,12 +919,7 @@ function pushStartTextArea(
         children.length <= 1,
         '<textarea> can only have at most one child.',
       );
-      // TODO: remove the coercion and the DEV check below because it will
-      // always be overwritten by the coercion several lines below it. #22309
-      if (__DEV__) {
-        checkHtmlStringCoercion(children[0]);
-      }
-      value = '' + children[0];
+      // Fall through, as `'' + children === '' + children[0]` for 1-element arrays.
     }
     if (__DEV__) {
       checkHtmlStringCoercion(children);
