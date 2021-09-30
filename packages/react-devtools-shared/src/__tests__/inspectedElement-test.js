@@ -384,6 +384,67 @@ describe('InspectedElement', () => {
     `);
   });
 
+  // See github.com/facebook/react/issues/22241#issuecomment-931299972
+  it('should properly recover from a cache miss on the frontend', async () => {
+    let targetRenderCount = 0;
+
+    const Wrapper = ({children}) => children;
+    const Target = React.memo(props => {
+      targetRenderCount++;
+      // Even though his hook isn't referenced, it's used to observe backend rendering.
+      React.useState(0);
+      return null;
+    });
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      legacyRender(
+        <Wrapper>
+          <Target a={1} b="abc" />
+        </Wrapper>,
+        container,
+      ),
+    );
+
+    targetRenderCount = 0;
+
+    let inspectedElement = await inspectElementAtIndex(1);
+    expect(targetRenderCount).toBe(1);
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "a": 1,
+        "b": "abc",
+      }
+    `);
+
+    const prevInspectedElement = inspectedElement;
+
+    // This test causes an intermediate error to be logged but we can ignore it.
+    console.error = () => {};
+
+    // Wait for our check-for-updates poll to get the new data.
+    jest.runOnlyPendingTimers();
+    await Promise.resolve();
+
+    // Clear the frontend cache to simulate DevTools being closed and re-opened.
+    // The backend still thinks the most recently-inspected element is still cached,
+    // so the frontend needs to tell it to resend a full value.
+    // We can verify this by asserting that the component is re-rendered again.
+    testRendererInstance = TestRenderer.create(null, {
+      unstable_isConcurrent: true,
+    });
+
+    const {
+      clearCacheForTests,
+    } = require('react-devtools-shared/src/inspectedElementMutableSource');
+    clearCacheForTests();
+
+    targetRenderCount = 0;
+    inspectedElement = await inspectElementAtIndex(1);
+    expect(targetRenderCount).toBe(1);
+    expect(inspectedElement).toEqual(prevInspectedElement);
+  });
+
   it('should temporarily disable console logging when re-running a component to inspect its hooks', async () => {
     let targetRenderCount = 0;
 

@@ -86,11 +86,13 @@ export function copyInspectedElementPath({
 
 export function inspectElement({
   bridge,
+  forceFullData,
   id,
   path,
   rendererID,
 }: {|
   bridge: FrontendBridge,
+  forceFullData: boolean,
   id: number,
   path: Array<string | number> | null,
   rendererID: number,
@@ -103,6 +105,7 @@ export function inspectElement({
   );
 
   bridge.send('inspectElement', {
+    forceFullData,
     id,
     path,
     rendererID,
