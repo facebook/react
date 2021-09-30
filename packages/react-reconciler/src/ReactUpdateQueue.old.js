@@ -112,8 +112,6 @@ import {
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
-import invariant from 'shared/invariant';
-
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> event time on the root.
@@ -656,12 +654,13 @@ export function processUpdateQueue<State>(
 }
 
 function callCallback(callback, context) {
-  invariant(
-    typeof callback === 'function',
-    'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: %s',
-    callback,
-  );
+  if (typeof callback !== 'function') {
+    throw new Error(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        `received: ${callback}`,
+    );
+  }
+
   callback.call(context);
 }
 

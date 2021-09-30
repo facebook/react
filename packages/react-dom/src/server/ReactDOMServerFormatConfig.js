@@ -49,7 +49,6 @@ import warnValidStyle from '../shared/warnValidStyle';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
-import invariant from 'shared/invariant';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
@@ -192,10 +191,12 @@ export type OpaqueIDType = string;
 export function makeServerID(
   responseState: null | ResponseState,
 ): OpaqueIDType {
-  invariant(
-    responseState !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
-  );
+  if (responseState === null) {
+    throw new Error(
+      'Invalid hook call. Hooks can only be called inside of the body of a function component.',
+    );
+  }
+
   // TODO: This is not deterministic since it's created during render.
   return (
     responseState.opaqueIdentifierPrefix +
@@ -244,12 +245,13 @@ function pushStyle(
   responseState: ResponseState,
   style: Object,
 ): void {
-  invariant(
-    typeof style === 'object',
-    'The `style` prop expects a mapping from style properties to values, ' +
-      "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-      'using JSX.',
-  );
+  if (typeof style !== 'object') {
+    throw new Error(
+      'The `style` prop expects a mapping from style properties to values, ' +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        'using JSX.',
+    );
+  }
 
   let isFirst = true;
   for (const styleName in style) {
@@ -498,17 +500,20 @@ function pushInnerHTML(
   children,
 ) {
   if (innerHTML != null) {
-    invariant(
-      children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-    );
+    if (children != null) {
+      throw new Error(
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
+    }
 
-    invariant(
-      typeof innerHTML === 'object' && '__html' in innerHTML,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
-        'for more information.',
-    );
+    if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
+      throw new Error(
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'for more information.',
+      );
+    }
+
     const html = innerHTML.__html;
     if (html !== null && html !== undefined) {
       if (__DEV__) {
@@ -799,11 +804,9 @@ function pushInput(
       switch (propKey) {
         case 'children':
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
-            '%s is a self-closing tag and must neither have `children` nor ' +
+          throw new Error(
+            `${'input'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
-            'input',
           );
         // eslint-disable-next-line-no-fallthrough
         case 'defaultChecked':
@@ -885,8 +888,7 @@ function pushStartTextArea(
           defaultValue = propValue;
           break;
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
+          throw new Error(
             '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
           );
         // eslint-disable-next-line-no-fallthrough
@@ -910,15 +912,18 @@ function pushStartTextArea(
           'children on <textarea>.',
       );
     }
-    invariant(
-      value == null,
-      'If you supply `defaultValue` on a <textarea>, do not pass children.',
-    );
-    if (isArray(children)) {
-      invariant(
-        children.length <= 1,
-        '<textarea> can only have at most one child.',
+
+    if (value != null) {
+      throw new Error(
+        'If you supply `defaultValue` on a <textarea>, do not pass children.',
       );
+    }
+
+    if (isArray(children)) {
+      if (children.length > 1) {
+        throw new Error('<textarea> can only have at most one child.');
+      }
+
       // TODO: remove the coercion and the DEV check below because it will
       // always be overwritten by the coercion several lines below it. #22309
       if (__DEV__) {
@@ -966,11 +971,9 @@ function pushSelfClosing(
       switch (propKey) {
         case 'children':
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
-            '%s is a self-closing tag and must neither have `children` nor ' +
+          throw new Error(
+            `${tag} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
-            tag,
           );
         // eslint-disable-next-line-no-fallthrough
         default:
@@ -1000,8 +1003,7 @@ function pushStartMenuItem(
       switch (propKey) {
         case 'children':
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
+          throw new Error(
             'menuitems cannot have `children` nor `dangerouslySetInnerHTML`.',
           );
         // eslint-disable-next-line-no-fallthrough
@@ -1158,17 +1160,20 @@ function pushStartPreformattedElement(
   // TODO: This doesn't deal with the case where the child is an array
   // or component that returns a string.
   if (innerHTML != null) {
-    invariant(
-      children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-    );
+    if (children != null) {
+      throw new Error(
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
+    }
 
-    invariant(
-      typeof innerHTML === 'object' && '__html' in innerHTML,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
-        'for more information.',
-    );
+    if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
+      throw new Error(
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'for more information.',
+      );
+    }
+
     const html = innerHTML.__html;
     if (html !== null && html !== undefined) {
       if (typeof html === 'string' && html.length > 0 && html[0] === '\n') {
@@ -1195,7 +1200,10 @@ const validatedTagCache = new Map();
 function startChunkForTag(tag: string): PrecomputedChunk {
   let tagStartChunk = validatedTagCache.get(tag);
   if (tagStartChunk === undefined) {
-    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    if (!VALID_TAG_REGEX.test(tag)) {
+      throw new Error(`Invalid tag: ${tag}`);
+    }
+
     tagStartChunk = stringToPrecomputedChunk('<' + tag);
     validatedTagCache.set(tag, tagStartChunk);
   }
@@ -1405,10 +1413,13 @@ export function writeStartPendingSuspenseBoundary(
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, startPendingSuspenseBoundary1);
-  invariant(
-    id !== null,
-    'An ID must have been assigned before we can complete the boundary.',
-  );
+
+  if (id === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
   writeChunk(destination, id);
   return writeChunk(destination, startPendingSuspenseBoundary2);
 }
@@ -1528,7 +1539,7 @@ export function writeStartSegment(
       return writeChunk(destination, startSegmentColGroup2);
     }
     default: {
-      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+      throw new Error('Unknown insertion mode. This is a bug in React.');
     }
   }
 }
@@ -1560,7 +1571,7 @@ export function writeEndSegment(
       return writeChunk(destination, endSegmentColGroup);
     }
     default: {
-      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+      throw new Error('Unknown insertion mode. This is a bug in React.');
     }
   }
 }
@@ -1729,10 +1740,13 @@ export function writeCompletedBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, completeBoundaryScript1Partial);
   }
-  invariant(
-    boundaryID !== null,
-    'An ID must have been assigned before we can complete the boundary.',
-  );
+
+  if (boundaryID === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, boundaryID);
   writeChunk(destination, completeBoundaryScript2);
@@ -1760,10 +1774,13 @@ export function writeClientRenderBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, clientRenderScript1Partial);
   }
-  invariant(
-    boundaryID !== null,
-    'An ID must have been assigned before we can complete the boundary.',
-  );
+
+  if (boundaryID === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
   writeChunk(destination, boundaryID);
   return writeChunk(destination, clientRenderScript2);
 }

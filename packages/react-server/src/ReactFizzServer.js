@@ -113,7 +113,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -984,7 +983,7 @@ function renderElement(
         renderNodeDestructive(request, task, props.children);
         return;
       }
-      invariant(false, 'ReactDOMServer does not yet support scope components.');
+      throw new Error('ReactDOMServer does not yet support scope components.');
     }
     // eslint-disable-next-line-no-fallthrough
     case REACT_SUSPENSE_TYPE: {
@@ -1039,13 +1038,11 @@ function renderElement(
         'named imports.';
     }
   }
-  invariant(
-    false,
+
+  throw new Error(
     'Element type is invalid: expected a string (for built-in ' +
       'components) or a class/function (for composite components) ' +
-      'but got: %s.%s',
-    type == null ? type : typeof type,
-    info,
+      `but got: ${type == null ? type : typeof type}.${info}`,
   );
 }
 
@@ -1106,8 +1103,7 @@ function renderNodeDestructive(
         return;
       }
       case REACT_PORTAL_TYPE:
-        invariant(
-          false,
+        throw new Error(
           'Portals are not currently supported by the server renderer. ' +
             'Render them conditionally so that they only appear on the client render.',
         );
@@ -1157,14 +1153,15 @@ function renderNodeDestructive(
     }
 
     const childString = Object.prototype.toString.call(node);
-    invariant(
-      false,
-      'Objects are not valid as a React child (found: %s). ' +
+
+    throw new Error(
+      `Objects are not valid as a React child (found: ${
+        childString === '[object Object]'
+          ? 'object with keys {' + Object.keys(node).join(', ') + '}'
+          : childString
+      }). ` +
         'If you meant to render a collection of children, use an array ' +
         'instead.',
-      childString === '[object Object]'
-        ? 'object with keys {' + Object.keys(node).join(', ') + '}'
-        : childString,
     );
   }
 
@@ -1370,10 +1367,12 @@ function finishedTask(
 ) {
   if (boundary === null) {
     if (segment.parentFlushed) {
-      invariant(
-        request.completedRootSegment === null,
-        'There can only be one root segment. This is a bug in React.',
-      );
+      if (request.completedRootSegment !== null) {
+        throw new Error(
+          'There can only be one root segment. This is a bug in React.',
+        );
+      }
+
       request.completedRootSegment = segment;
     }
     request.pendingRootTasks--;
@@ -1557,8 +1556,7 @@ function flushSubtree(
       return r;
     }
     default: {
-      invariant(
-        false,
+      throw new Error(
         'Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React.',
       );
     }
@@ -1640,10 +1638,13 @@ function flushSegment(
     writeStartCompletedSuspenseBoundary(destination, request.responseState);
 
     const completedSegments = boundary.completedSegments;
-    invariant(
-      completedSegments.length === 1,
-      'A previously unvisited boundary must have exactly one root segment. This is a bug in React.',
-    );
+
+    if (completedSegments.length !== 1) {
+      throw new Error(
+        'A previously unvisited boundary must have exactly one root segment. This is a bug in React.',
+      );
+    }
+
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment);
 
@@ -1741,10 +1742,13 @@ function flushPartiallyCompletedSegment(
     // This segment wasn't previously referred to. This happens at the root of
     // a boundary. We make kind of a leap here and assume this is the root.
     const rootSegmentID = (segment.id = boundary.rootSegmentID);
-    invariant(
-      rootSegmentID !== -1,
-      'A root segment ID must have been assigned by now. This is a bug in React.',
-    );
+
+    if (rootSegmentID === -1) {
+      throw new Error(
+        'A root segment ID must have been assigned by now. This is a bug in React.',
+      );
+    }
+
     return flushSegmentContainer(request, destination, segment);
   } else {
     flushSegmentContainer(request, destination, segment);

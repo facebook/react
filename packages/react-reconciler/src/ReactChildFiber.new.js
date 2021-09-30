@@ -22,7 +22,6 @@ import {
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
@@ -69,11 +68,14 @@ if (__DEV__) {
     if (!child._store || child._store.validated || child.key != null) {
       return;
     }
-    invariant(
-      typeof child._store === 'object',
-      'React Component in warnForMissingKey should have a _store. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+
+    if (typeof child._store !== 'object') {
+      throw new Error(
+        'React Component in warnForMissingKey should have a _store. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
+
     child._store.validated = true;
 
     const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
@@ -149,21 +151,28 @@ function coerceRef(
       let inst;
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
-        invariant(
-          ownerFiber.tag === ClassComponent,
-          'Function components cannot have string refs. ' +
-            'We recommend using useRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref',
-        );
+
+        if (ownerFiber.tag !== ClassComponent) {
+          throw new Error(
+            'Function components cannot have string refs. ' +
+              'We recommend using useRef() instead. ' +
+              'Learn more about using refs safely here: ' +
+              'https://reactjs.org/link/strict-mode-string-ref',
+          );
+        }
+
         inst = ownerFiber.stateNode;
       }
-      invariant(
-        inst,
-        'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
-        mixedRef,
-      );
+
+      if (!inst) {
+        throw new Error(
+          `Missing owner for string ref ${mixedRef}. This error is likely caused by a ` +
+            'bug in React. Please file an issue.',
+        );
+      }
+      // Assigning this to a const so Flow knows it won't change in the closure
+      const resolvedInst = inst;
+
       if (__DEV__) {
         checkPropStringCoercion(mixedRef, 'ref');
       }
@@ -178,10 +187,10 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        let refs = inst.refs;
+        let refs = resolvedInst.refs;
         if (refs === emptyRefsObject) {
           // This is a lazy pooled frozen object, so we need to initialize.
-          refs = inst.refs = {};
+          refs = resolvedInst.refs = {};
         }
         if (value === null) {
           delete refs[stringRef];
@@ -192,20 +201,22 @@ function coerceRef(
       ref._stringRef = stringRef;
       return ref;
     } else {
-      invariant(
-        typeof mixedRef === 'string',
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-      );
-      invariant(
-        element._owner,
-        'Element ref was specified as a string (%s) but no owner was set. This could happen for one of' +
-          ' the following reasons:\n' +
-          '1. You may be adding a ref to a function component\n' +
-          "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-          '3. You have multiple copies of React loaded\n' +
-          'See https://reactjs.org/link/refs-must-have-owner for more information.',
-        mixedRef,
-      );
+      if (typeof mixedRef !== 'string') {
+        throw new Error(
+          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+        );
+      }
+
+      if (!element._owner) {
+        throw new Error(
+          `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
+            ' the following reasons:\n' +
+            '1. You may be adding a ref to a function component\n' +
+            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+            '3. You have multiple copies of React loaded\n' +
+            'See https://reactjs.org/link/refs-must-have-owner for more information.',
+        );
+      }
     }
   }
   return mixedRef;
@@ -213,14 +224,15 @@ function coerceRef(
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   const childString = Object.prototype.toString.call(newChild);
-  invariant(
-    false,
-    'Objects are not valid as a React child (found: %s). ' +
+
+  throw new Error(
+    `Objects are not valid as a React child (found: ${
+      childString === '[object Object]'
+        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+        : childString
+    }). ` +
       'If you meant to render a collection of children, use an array ' +
       'instead.',
-    childString === '[object Object]'
-      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-      : childString,
   );
 }
 
@@ -887,11 +899,13 @@ function ChildReconciler(shouldTrackSideEffects) {
     // but using the iterator instead.
 
     const iteratorFn = getIteratorFn(newChildrenIterable);
-    invariant(
-      typeof iteratorFn === 'function',
-      'An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
-    );
+
+    if (typeof iteratorFn !== 'function') {
+      throw new Error(
+        'An object is not an iterable. This error is likely caused by a bug in ' +
+          'React. Please file an issue.',
+      );
+    }
 
     if (__DEV__) {
       // We don't support rendering Generators because it's a mutation.
@@ -938,7 +952,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     const newChildren = iteratorFn.call(newChildrenIterable);
-    invariant(newChildren != null, 'An iterable object provided no iterator.');
+
+    if (newChildren == null) {
+      throw new Error('An iterable object provided no iterator.');
+    }
 
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
@@ -1313,10 +1330,9 @@ export function cloneChildFibers(
   current: Fiber | null,
   workInProgress: Fiber,
 ): void {
-  invariant(
-    current === null || workInProgress.child === current.child,
-    'Resuming work not yet implemented.',
-  );
+  if (current !== null && workInProgress.child !== current.child) {
+    throw new Error('Resuming work not yet implemented.');
+  }
 
   if (workInProgress.child === null) {
     return;

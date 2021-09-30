@@ -7,7 +7,6 @@
 
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
-import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
@@ -248,8 +247,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
     // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
-    invariant(false, 'Text children should already be flattened.');
-    return;
+    throw new Error('Text children should already be flattened.');
   }
 
   child.inject(parentInstance);
@@ -282,7 +280,9 @@ export function createInstance(type, props, internalInstanceHandle) {
       break;
   }
 
-  invariant(instance, 'ReactART does not support the type "%s"', type);
+  if (!instance) {
+    throw new Error(`ReactART does not support the type "${type}"`);
+  }
 
   instance._applyProps(instance, props);
 
@@ -367,18 +367,18 @@ export function appendChildToContainer(parentInstance, child) {
 }
 
 export function insertBefore(parentInstance, child, beforeChild) {
-  invariant(
-    child !== beforeChild,
-    'ReactART: Can not insert node before itself',
-  );
+  if (child === beforeChild) {
+    throw new Error('ReactART: Can not insert node before itself');
+  }
+
   child.injectBefore(beforeChild);
 }
 
 export function insertInContainerBefore(parentInstance, child, beforeChild) {
-  invariant(
-    child !== beforeChild,
-    'ReactART: Can not insert node before itself',
-  );
+  if (child === beforeChild) {
+    throw new Error('ReactART: Can not insert node before itself');
+  }
+
   child.injectBefore(beforeChild);
 }
 
@@ -433,25 +433,25 @@ export function clearContainer(container) {
 }
 
 export function getInstanceFromNode(node) {
-  throw new Error('Not yet implemented.');
+  throw new Error('Not implemented.');
 }
 
 export function isOpaqueHydratingObject(value: mixed): boolean {
-  throw new Error('Not yet implemented');
+  throw new Error('Not implemented.');
 }
 
 export function makeOpaqueHydratingObject(
   attemptToReadValue: () => void,
 ): OpaqueIDType {
-  throw new Error('Not yet implemented.');
+  throw new Error('Not implemented.');
 }
 
 export function makeClientId(): OpaqueIDType {
-  throw new Error('Not yet implemented');
+  throw new Error('Not implemented.');
 }
 
 export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
-  throw new Error('Not yet implemented');
+  throw new Error('Not implemented.');
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {

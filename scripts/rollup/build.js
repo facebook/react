@@ -149,7 +149,8 @@ function getBabelConfig(
   bundleType,
   packageName,
   externals,
-  isDevelopment
+  isDevelopment,
+  bundle
 ) {
   const canAccessReactObject =
     packageName === 'react' || externals.indexOf('react') !== -1;
@@ -179,12 +180,6 @@ function getBabelConfig(
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
-      return Object.assign({}, options, {
-        plugins: options.plugins.concat([
-          // Minify invariant messages
-          require('../error-codes/transform-error-messages'),
-        ]),
-      });
     case RN_OSS_DEV:
     case RN_OSS_PROD:
     case RN_OSS_PROFILING:
@@ -195,8 +190,9 @@ function getBabelConfig(
         plugins: options.plugins.concat([
           [
             require('../error-codes/transform-error-messages'),
-            // Preserve full error messages in React Native build
-            {noMinify: true},
+            // Controls whether to replace error messages with error codes
+            // in production. By default, error messages are replaced.
+            {noMinify: bundle.minifyWithProdErrorCodes === false},
           ],
         ]),
       });
@@ -390,7 +386,8 @@ function getPlugins(
         bundleType,
         packageName,
         externals,
-        !isProduction
+        !isProduction,
+        bundle
       )
     ),
     // Remove 'use strict' from individual source files.

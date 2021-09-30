@@ -88,7 +88,6 @@ import {
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
 
-import invariant from 'shared/invariant';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
@@ -310,8 +309,7 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
 }
 
 function throwInvalidHookError() {
-  invariant(
-    false,
+  throw new Error(
     'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
       ' one of the following reasons:\n' +
       '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
@@ -436,11 +434,13 @@ export function renderWithHooks<Props, SecondArg>(
     let numberOfReRenders: number = 0;
     do {
       didScheduleRenderPhaseUpdateDuringThisPass = false;
-      invariant(
-        numberOfReRenders < RE_RENDER_LIMIT,
-        'Too many re-renders. React limits the number of renders to prevent ' +
-          'an infinite loop.',
-      );
+
+      if (numberOfReRenders >= RE_RENDER_LIMIT) {
+        throw new Error(
+          'Too many re-renders. React limits the number of renders to prevent ' +
+            'an infinite loop.',
+        );
+      }
 
       numberOfReRenders += 1;
       if (__DEV__) {
@@ -516,11 +516,12 @@ export function renderWithHooks<Props, SecondArg>(
 
   didScheduleRenderPhaseUpdate = false;
 
-  invariant(
-    !didRenderTooFewHooks,
-    'Rendered fewer hooks than expected. This may be caused by an accidental ' +
-      'early return statement.',
-  );
+  if (didRenderTooFewHooks) {
+    throw new Error(
+      'Rendered fewer hooks than expected. This may be caused by an accidental ' +
+        'early return statement.',
+    );
+  }
 
   if (enableLazyContextPropagation) {
     if (current !== null) {
@@ -669,10 +670,10 @@ function updateWorkInProgressHook(): Hook {
   } else {
     // Clone from the current hook.
 
-    invariant(
-      nextCurrentHook !== null,
-      'Rendered more hooks than during the previous render.',
-    );
+    if (nextCurrentHook === null) {
+      throw new Error('Rendered more hooks than during the previous render.');
+    }
+
     currentHook = nextCurrentHook;
 
     const newHook: Hook = {
@@ -745,10 +746,12 @@ function updateReducer<S, I, A>(
 ): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
-  invariant(
-    queue !== null,
-    'Should have a queue. This is likely a bug in React. Please file an issue.',
-  );
+
+  if (queue === null) {
+    throw new Error(
+      'Should have a queue. This is likely a bug in React. Please file an issue.',
+    );
+  }
 
   queue.lastRenderedReducer = reducer;
 
@@ -900,10 +903,12 @@ function rerenderReducer<S, I, A>(
 ): [S, Dispatch<A>] {
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
-  invariant(
-    queue !== null,
-    'Should have a queue. This is likely a bug in React. Please file an issue.',
-  );
+
+  if (queue === null) {
+    throw new Error(
+      'Should have a queue. This is likely a bug in React. Please file an issue.',
+    );
+  }
 
   queue.lastRenderedReducer = reducer;
 
@@ -1037,8 +1042,7 @@ function readFromUnsubscribedMutableSource<Source, Snapshot>(
 
     // We expect this error not to be thrown during the synchronous retry,
     // because we blocked interleaved mutations.
-    invariant(
-      false,
+    throw new Error(
       'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
     );
   }
@@ -1051,10 +1055,12 @@ function useMutableSource<Source, Snapshot>(
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
-  invariant(
-    root !== null,
-    'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-  );
+
+  if (root === null) {
+    throw new Error(
+      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+    );
+  }
 
   const getVersion = source._getVersion;
   const version = getVersion(source._source);
@@ -1242,8 +1248,7 @@ function mountSyncExternalStore<T>(
   const isHydrating = getIsHydrating();
   if (isHydrating) {
     if (getServerSnapshot === undefined) {
-      invariant(
-        false,
+      throw new Error(
         'Missing getServerSnapshot, which is required for ' +
           'server-rendered content. Will revert to client rendering.',
       );
@@ -1279,10 +1284,13 @@ function mountSyncExternalStore<T>(
     // the content is stale, it's already visible anyway. Instead we'll patch
     // it up in a passive effect.
     const root: FiberRoot | null = getWorkInProgressRoot();
-    invariant(
-      root !== null,
-      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-    );
+
+    if (root === null) {
+      throw new Error(
+        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+      );
+    }
+
     if (!includesBlockingLane(root, renderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
@@ -1376,10 +1384,13 @@ function updateSyncExternalStore<T>(
     // Right before committing, we will walk the tree and check if any of the
     // stores were mutated.
     const root: FiberRoot | null = getWorkInProgressRoot();
-    invariant(
-      root !== null,
-      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-    );
+
+    if (root === null) {
+      throw new Error(
+        'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
+      );
+    }
+
     if (!includesBlockingLane(root, renderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
@@ -1532,6 +1543,7 @@ function pushEffect(tag, create, destroy, deps) {
 let stackContainsErrorMessage: boolean | null = null;
 
 function getCallerStackFrame(): string {
+  // eslint-disable-next-line react-internal/prod-error-codes
   const stackFrames = new Error('Error message').stack.split('\n');
 
   // Some browsers (e.g. Chrome) include the error message in the stack
@@ -2051,8 +2063,8 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
           setId(makeId());
         }
       }
-      invariant(
-        false,
+
+      throw new Error(
         'The object passed back from useOpaqueIdentifier is meant to be ' +
           'passed through to attributes only. Do not read the value directly.',
       );
@@ -2383,7 +2395,7 @@ function markUpdateInDevTools(fiber, lane, action) {
 
 function getCacheForType<T>(resourceType: () => T): T {
   if (!enableCache) {
-    invariant(false, 'Not implemented.');
+    throw new Error('Not implemented.');
   }
   const cache: Cache = readContext(CacheContext);
   let cacheForType: T | void = (cache.get(resourceType): any);

@@ -9,7 +9,6 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import invariant from 'shared/invariant';
 
 import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
@@ -383,11 +382,13 @@ function updateNamedCousins(rootNode, props) {
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
       const otherProps = getFiberCurrentPropsFromNode(otherNode);
-      invariant(
-        otherProps,
-        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.',
-      );
+
+      if (!otherProps) {
+        throw new Error(
+          'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+            'same `name` is not supported.',
+        );
+      }
 
       // We need update the tracked value on the named cousin since the value
       // was changed but the input saw no event or value set

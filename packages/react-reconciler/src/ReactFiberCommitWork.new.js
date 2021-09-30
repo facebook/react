@@ -78,7 +78,6 @@ import {
   Visibility,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import invariant from 'shared/invariant';
 import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
@@ -473,8 +472,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
         // Nothing to do for these component types
         break;
       default: {
-        invariant(
-          false,
+        throw new Error(
           'This unit of work tag should not have side-effects. This error is ' +
             'likely caused by a bug in React. Please file an issue.',
         );
@@ -945,8 +943,7 @@ function commitLayoutEffectOnFiber(
       case LegacyHiddenComponent:
         break;
       default:
-        invariant(
-          false,
+        throw new Error(
           'This unit of work tag should not have side-effects. This error is ' +
             'likely caused by a bug in React. Please file an issue.',
         );
@@ -1432,8 +1429,8 @@ function commitContainer(finishedWork: Fiber) {
       return;
     }
   }
-  invariant(
-    false,
+
+  throw new Error(
     'This unit of work tag should not have side-effects. This error is ' +
       'likely caused by a bug in React. Please file an issue.',
   );
@@ -1447,8 +1444,8 @@ function getHostParentFiber(fiber: Fiber): Fiber {
     }
     parent = parent.return;
   }
-  invariant(
-    false,
+
+  throw new Error(
     'Expected to find a host parent. This error is likely caused by a bug ' +
       'in React. Please file an issue.',
   );
@@ -1535,8 +1532,7 @@ function commitPlacement(finishedWork: Fiber): void {
       break;
     // eslint-disable-next-line-no-fallthrough
     default:
-      invariant(
-        false,
+      throw new Error(
         'Invalid host parent fiber. This error is likely caused by a bug ' +
           'in React. Please file an issue.',
       );
@@ -1641,11 +1637,13 @@ function unmountHostComponents(
     if (!currentParentIsValid) {
       let parent = node.return;
       findParent: while (true) {
-        invariant(
-          parent !== null,
-          'Expected to find a host parent. This error is likely caused by ' +
-            'a bug in React. Please file an issue.',
-        );
+        if (parent === null) {
+          throw new Error(
+            'Expected to find a host parent. This error is likely caused by ' +
+              'a bug in React. Please file an issue.',
+          );
+        }
+
         const parentStateNode = parent.stateNode;
         switch (parent.tag) {
           case HostComponent:
@@ -1915,11 +1913,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case HostText: {
-      invariant(
-        finishedWork.stateNode !== null,
-        'This should have a text node initialized. This error is likely ' +
-          'caused by a bug in React. Please file an issue.',
-      );
+      if (finishedWork.stateNode === null) {
+        throw new Error(
+          'This should have a text node initialized. This error is likely ' +
+            'caused by a bug in React. Please file an issue.',
+        );
+      }
+
       const textInstance: TextInstance = finishedWork.stateNode;
       const newText: string = finishedWork.memoizedProps;
       // For hydration we reuse the update path but we treat the oldProps
@@ -1965,8 +1965,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       break;
     }
   }
-  invariant(
-    false,
+
+  throw new Error(
     'This unit of work tag should not have side-effects. This error is ' +
       'likely caused by a bug in React. Please file an issue.',
   );

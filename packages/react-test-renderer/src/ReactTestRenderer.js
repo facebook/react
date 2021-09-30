@@ -40,7 +40,6 @@ import {
   IncompleteClassComponent,
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
@@ -219,10 +218,8 @@ function toTree(node: ?Fiber) {
     case ScopeComponent:
       return childrenToTree(node.child);
     default:
-      invariant(
-        false,
-        'toTree() does not yet know how to handle nodes with tag=%s',
-        node.tag,
+      throw new Error(
+        `toTree() does not yet know how to handle nodes with tag=${node.tag}`,
       );
   }
 }
@@ -282,21 +279,25 @@ class ReactTestInstance {
   _currentFiber(): Fiber {
     // Throws if this component has been unmounted.
     const fiber = findCurrentFiberUsingSlowPath(this._fiber);
-    invariant(
-      fiber !== null,
-      "Can't read from currently-mounting component. This error is likely " +
-        'caused by a bug in React. Please file an issue.',
-    );
+
+    if (fiber === null) {
+      throw new Error(
+        "Can't read from currently-mounting component. This error is likely " +
+          'caused by a bug in React. Please file an issue.',
+      );
+    }
+
     return fiber;
   }
 
   constructor(fiber: Fiber) {
-    invariant(
-      validWrapperTypes.has(fiber.tag),
-      'Unexpected object passed to ReactTestInstance constructor (tag: %s). ' +
-        'This is probably a bug in React.',
-      fiber.tag,
-    );
+    if (!validWrapperTypes.has(fiber.tag)) {
+      throw new Error(
+        `Unexpected object passed to ReactTestInstance constructor (tag: ${fiber.tag}). ` +
+          'This is probably a bug in React.',
+      );
+    }
+
     this._fiber = fiber;
   }
 
@@ -471,7 +472,11 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     isStrictMode,
     concurrentUpdatesByDefault,
   );
-  invariant(root != null, 'something went wrong');
+
+  if (root == null) {
+    throw new Error('something went wrong');
+  }
+
   updateContainer(element, root, null, null);
 
   const entry = {

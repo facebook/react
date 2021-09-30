@@ -15,12 +15,11 @@ import {ClassComponent} from '../ReactWorkTags';
 // Module provided by RN:
 import {ReactFiberErrorDialog as RNImpl} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-import invariant from 'shared/invariant';
-
-invariant(
-  typeof RNImpl.showErrorDialog === 'function',
-  'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
-);
+if (typeof RNImpl.showErrorDialog !== 'function') {
+  throw new Error(
+    'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
+  );
+}
 
 export function showErrorDialog(
   boundary: Fiber,
