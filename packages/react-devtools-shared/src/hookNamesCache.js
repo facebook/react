@@ -116,7 +116,7 @@ export function loadHookNames(
     const handleLoadComplete = (durationMs: number): void => {
       // Log duration for parsing hook names
       logEvent({
-        event_name: 'loadHookNames',
+        event_name: 'load-hook-names',
         event_status: status,
         duration_ms: durationMs,
         inspected_element_display_name: element.displayName,

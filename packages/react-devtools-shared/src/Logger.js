@@ -9,17 +9,23 @@
 
 import {enableLogger} from 'react-devtools-feature-flags';
 
-type LoadHookNamesEvent = {|
-  +event_name: 'loadHookNames',
-  +event_status: 'success' | 'error' | 'timeout' | 'unknown',
-  +duration_ms: number,
-  +inspected_element_display_name: string | null,
-  +inspected_element_number_of_hooks: number | null,
-|};
-
-// prettier-ignore
 export type LogEvent =
-  | LoadHookNamesEvent;
+  | {|
+      +event_name: 'loaded-dev-tools',
+    |}
+  | {|
+      +event_name: 'selected-components-tab',
+    |}
+  | {|
+      +event_name: 'selected-profiler-tab',
+    |}
+  | {|
+      +event_name: 'load-hook-names',
+      +event_status: 'success' | 'error' | 'timeout' | 'unknown',
+      +duration_ms: number,
+      +inspected_element_display_name: string | null,
+      +inspected_element_number_of_hooks: number | null,
+    |};
 
 export type LogFunction = LogEvent => void;
 
