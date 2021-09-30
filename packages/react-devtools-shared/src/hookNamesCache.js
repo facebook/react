@@ -99,7 +99,7 @@ export function loadHookNames(
 
     let timeoutID;
     let didTimeout = false;
-    let resolution = 'unknown';
+    let status = 'unknown';
     let resolvedHookNames: HookNames | null = null;
 
     const wake = () => {
@@ -116,11 +116,11 @@ export function loadHookNames(
     const handleLoadComplete = (durationMs: number): void => {
       // Log duration for parsing hook names
       logEvent({
-        name: 'loadHookNames',
-        displayName: element.displayName,
-        numberOfHooks: resolvedHookNames?.size ?? null,
-        durationMs,
-        resolution,
+        event_name: 'loadHookNames',
+        event_status: status,
+        duration_ms: durationMs,
+        inspected_element_display_name: element.displayName,
+        inspected_element_number_of_hooks: resolvedHookNames?.size ?? null,
       });
     };
 
@@ -152,7 +152,7 @@ export function loadHookNames(
               notFoundRecord.value = null;
             }
 
-            resolution = 'success';
+            status = 'success';
             resolvedHookNames = hookNames;
             done();
             wake();
@@ -172,7 +172,7 @@ export function loadHookNames(
             thrownRecord.status = Rejected;
             thrownRecord.value = null;
 
-            resolution = 'error';
+            status = 'error';
             done();
             wake();
           },
@@ -192,7 +192,7 @@ export function loadHookNames(
           timedoutRecord.status = Rejected;
           timedoutRecord.value = null;
 
-          resolution = 'timeout';
+          status = 'timeout';
           done();
           wake();
         }, TIMEOUT);
