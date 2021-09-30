@@ -138,6 +138,7 @@ type ViewAttributeSourceParams = {|
 
 type InspectElementParams = {|
   ...ElementAndRendererID,
+  forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
 |};

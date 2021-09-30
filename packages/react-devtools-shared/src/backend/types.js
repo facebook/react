@@ -339,6 +339,7 @@ export type RendererInterface = {
     requestID: number,
     id: number,
     inspectedPaths: Object,
+    forceFullData: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideError: (id: number, forceError: boolean) => void,
