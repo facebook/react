@@ -49,11 +49,15 @@ export function registerExtensionsEventLogger() {
   // If logger is enabled, register a logger that captures logged events
   // and render iframe where the logged events will be reported to
   if (enableLogger) {
-    registerEventLogger(logEvent);
-
     const loggingUrl = process.env.LOGGING_URL;
     const body = document.body;
-    if (loggingUrl != null && body != null) {
+    if (
+      typeof loggingUrl === 'string' &&
+      loggingUrl.length > 0 &&
+      body != null
+    ) {
+      registerEventLogger(logEvent);
+
       const iframe = document.createElement('iframe');
       iframe.src = loggingUrl;
       iframe.onload = function(...args) {
