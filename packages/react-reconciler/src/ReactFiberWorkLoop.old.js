@@ -32,6 +32,7 @@ import {
   skipUnmountedBoundaries,
   enableUpdaterTracking,
   warnOnSubscriptionInsideStartTransition,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -236,6 +237,7 @@ import {
   isDevToolsPresent,
 } from './ReactFiberDevToolsHook.old';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
+import {releaseCache} from './ReactFiberCacheComponent.old';
 
 const ceil = Math.ceil;
 
@@ -2051,6 +2053,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     hasUncaughtError = false;
     const error = firstUncaughtError;
     firstUncaughtError = null;
+    // TODO: how to handle cache cleanup here?
     throw error;
   }
 
@@ -2090,6 +2093,16 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // If layout work was scheduled, flush it now.
   flushSyncCallbacks();
+
+  // Now that effects have run - giving Cache boundaries a chance to retain the
+  // cache instance - release the root's cache in case since the render is complete
+  if (enableCache) {
+    const pooledCache = root.pooledCache;
+    if (pooledCache != null) {
+      releaseCache(pooledCache);
+      root.pooledCache = null;
+    }
+  }
 
   if (__DEV__) {
     if (enableDebugTracing) {

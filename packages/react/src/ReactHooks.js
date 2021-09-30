@@ -41,6 +41,12 @@ function resolveDispatcher() {
   return ((dispatcher: any): Dispatcher);
 }
 
+export function getCacheSignal(): AbortSignal {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.getCacheSignal();
+}
+
 export function getCacheForType<T>(resourceType: () => T): T {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe This is unstable, thus optional

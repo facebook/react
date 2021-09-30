@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Cache;
+let getCacheSignal;
 let getCacheForType;
 let Scheduler;
 let act;
@@ -22,6 +23,7 @@ describe('ReactCache', () => {
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     Suspense = React.Suspense;
+    getCacheSignal = React.unstable_getCacheSignal;
     getCacheForType = React.unstable_getCacheForType;
     useCacheRefresh = React.unstable_useCacheRefresh;
     startTransition = React.startTransition;
@@ -117,6 +119,11 @@ describe('ReactCache', () => {
         value: thenable,
       };
       textCache.data.set(text, newRecord);
+
+      const signal = getCacheSignal();
+      signal.addEventListener('abort', () => {
+        // console.log(`Cache cleanup: [${text}]`);
+      });
 
       throw thenable;
     }

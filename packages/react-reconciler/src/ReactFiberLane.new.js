@@ -17,7 +17,6 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import {
-  enableCache,
   enableSchedulingProfiler,
   enableUpdaterTracking,
   allowConcurrentByDefault,
@@ -634,15 +633,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
-
-  if (enableCache) {
-    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
-    if (pooledCacheLanes === NoLanes) {
-      // None of the remaining work relies on the cache pool. Clear it so
-      // subsequent requests get a new cache.
-      root.pooledCache = null;
-    }
-  }
 
   const entanglements = root.entanglements;
   const eventTimes = root.eventTimes;

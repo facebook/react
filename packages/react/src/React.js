@@ -35,6 +35,7 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {
+  getCacheSignal,
   getCacheForType,
   useCallback,
   useContext,
@@ -119,6 +120,7 @@ export {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   REACT_OFFSCREEN_TYPE as unstable_Offscreen,
+  getCacheSignal as unstable_getCacheSignal,
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   REACT_CACHE_TYPE as unstable_Cache,
