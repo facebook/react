@@ -168,7 +168,7 @@ export default function DevTools({
       }
       setTab(tabId);
     },
-    [tab, setTab, showTabBar],
+    [setTab, showTabBar],
   );
 
   const options = useMemo(
