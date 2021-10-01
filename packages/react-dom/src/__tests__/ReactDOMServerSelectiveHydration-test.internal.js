@@ -984,10 +984,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       Scheduler.unstable_yieldValue(text);
       const ref = React.useRef();
       React.useLayoutEffect(() => {
-        ref.current &&
-          ref.current.addEventListener('click', () => {
-            Scheduler.unstable_yieldValue('Native Click ' + text);
-          });
+        if (!ref.current) {
+          return;
+        }
+        ref.current.addEventListener('click', () => {
+          Scheduler.unstable_yieldValue('Native Click ' + text);
+        });
       }, [text]);
       return (
         <span
@@ -1037,7 +1039,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     const span = container.getElementsByTagName('span')[1];
 
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
