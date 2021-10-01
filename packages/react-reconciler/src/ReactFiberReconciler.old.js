@@ -33,7 +33,6 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -153,12 +152,11 @@ function findHostInstance(component: Object): PublicInstance | null {
   const fiber = getInstance(component);
   if (fiber === undefined) {
     if (typeof component.render === 'function') {
-      invariant(false, 'Unable to find node on an unmounted component.');
+      throw new Error('Unable to find node on an unmounted component.');
     } else {
-      invariant(
-        false,
-        'Argument appears to not be a ReactComponent. Keys: %s',
-        Object.keys(component),
+      const keys = Object.keys(component).join(',');
+      throw new Error(
+        `Argument appears to not be a ReactComponent. Keys: ${keys}`,
       );
     }
   }
@@ -177,12 +175,11 @@ function findHostInstanceWithWarning(
     const fiber = getInstance(component);
     if (fiber === undefined) {
       if (typeof component.render === 'function') {
-        invariant(false, 'Unable to find node on an unmounted component.');
+        throw new Error('Unable to find node on an unmounted component.');
       } else {
-        invariant(
-          false,
-          'Argument appears to not be a ReactComponent. Keys: %s',
-          Object.keys(component),
+        const keys = Object.keys(component).join(',');
+        throw new Error(
+          `Argument appears to not be a ReactComponent. Keys: ${keys}`,
         );
       }
     }
@@ -388,6 +385,20 @@ function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   if (alternate) {
     markRetryLaneImpl(alternate, retryLane);
   }
+}
+
+export function attemptDiscreteHydration(fiber: Fiber): void {
+  if (fiber.tag !== SuspenseComponent) {
+    // We ignore HostRoots here because we can't increase
+    // their priority and they should not suspend on I/O,
+    // since you have to wrap anything that might suspend in
+    // Suspense.
+    return;
+  }
+  const eventTime = requestEventTime();
+  const lane = SyncLane;
+  scheduleUpdateOnFiber(fiber, lane, eventTime);
+  markRetryLaneIfNotHydrated(fiber, lane);
 }
 
 export function attemptContinuousHydration(fiber: Fiber): void {

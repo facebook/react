@@ -28,6 +28,7 @@ import {
   flushControlled,
   injectIntoDevTools,
   attemptSynchronousHydration,
+  attemptDiscreteHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
@@ -38,7 +39,6 @@ import {
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
-import invariant from 'shared/invariant';
 import {
   warnUnstableRenderSubtreeIntoContainer,
   enableNewReconciler,
@@ -53,6 +53,7 @@ import {
 import {restoreControlledState} from './ReactDOMComponent';
 import {
   setAttemptSynchronousHydration,
+  setAttemptDiscreteHydration,
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
@@ -67,6 +68,7 @@ import {
 } from '../events/ReactDOMControlledComponent';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
+setAttemptDiscreteHydration(attemptDiscreteHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 setGetCurrentUpdatePriority(getCurrentUpdatePriority);
@@ -105,10 +107,10 @@ function createPortal(
   container: Container,
   key: ?string = null,
 ): React$Portal {
-  invariant(
-    isValidContainer(container),
-    'Target container is not a DOM element.',
-  );
+  if (!isValidContainer(container)) {
+    throw new Error('Target container is not a DOM element.');
+  }
+
   // TODO: pass ReactDOM portal implementation as third argument
   // $FlowFixMe The Flow type is opaque but there's no way to actually create it.
   return createPortalImpl(children, container, null, key);
