@@ -980,6 +980,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('Fires capture event handlers and native events if content is hydratable during discrete event', async () => {
+    spyOnDev(console, 'error');
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
       const ref = React.useRef();
@@ -1019,15 +1020,16 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    spyOnDev(console, 'error');
     const finalHTML = ReactDOMServer.renderToString(<App />);
-    expect(console.error).toHaveBeenCalledTimes(2);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'useLayoutEffect does nothing on the server',
-    );
-    expect(console.error.calls.argsFor(1)[0]).toContain(
-      'useLayoutEffect does nothing on the server',
-    );
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'useLayoutEffect does nothing on the server',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'useLayoutEffect does nothing on the server',
+      );
+    }
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B']);
 
@@ -1061,6 +1063,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toFlushAndYield(['A']);
 
     document.body.removeChild(container);
-    expect(console.error).toHaveBeenCalledTimes(2);
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+    }
   });
 });

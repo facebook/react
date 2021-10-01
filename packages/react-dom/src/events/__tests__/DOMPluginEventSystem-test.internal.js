@@ -649,7 +649,13 @@ describe('DOMPluginEventSystem', () => {
 
           // We're now full hydrated.
 
-          expect(clicks).toBe(1);
+          if (
+            ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+          ) {
+            expect(clicks).toBe(0);
+          } else {
+            expect(clicks).toBe(1);
+          }
 
           document.body.removeChild(parentContainer);
         });
