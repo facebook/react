@@ -103,6 +103,7 @@ export function inspectElement({
     requestID,
     'inspectedElement',
     bridge,
+    `Timed out while inspecting element ${id}.`,
   );
 
   bridge.send('inspectElement', {
@@ -145,6 +146,7 @@ function getPromiseForRequestID<T>(
   requestID: number,
   eventType: $Keys<BackendEvents>,
   bridge: FrontendBridge,
+  timeoutMessage: string,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
@@ -162,11 +164,7 @@ function getPromiseForRequestID<T>(
 
     const onTimeout = () => {
       cleanup();
-      reject(
-        new TimeoutError(
-          `Timed out waiting for event '${eventType}' from bridge`,
-        ),
-      );
+      reject(new TimeoutError(timeoutMessage));
     };
 
     bridge.addListener(eventType, onInspectedElement);
