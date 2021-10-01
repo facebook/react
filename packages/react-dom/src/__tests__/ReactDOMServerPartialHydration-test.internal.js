@@ -1831,6 +1831,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(newSpan.className).toBe('hi');
   });
 
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke an event on a hydrated node until it commits', async () => {
     let suspend = false;
     let resolve;
@@ -1905,21 +1906,15 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    // Clicks aren't replayed
-    expect(clicks).toBe(0);
-    expect(container.textContent).toBe('Click meHello');
-
-    await act(async () => {
-      a.click();
-    });
-    // Now click went through
     expect(clicks).toBe(1);
+
     expect(container.textContent).toBe('Hello');
 
     document.body.removeChild(container);
   });
 
   // @gate www
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke an event on a hydrated event handle until it commits', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -1998,16 +1993,12 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    // Clicks are not replayed
-    expect(onEvent).toHaveBeenCalledTimes(0);
+    expect(onEvent).toHaveBeenCalledTimes(2);
 
-    await act(async () => {
-      a.click();
-    });
-    expect(onEvent).toHaveBeenCalledTimes(1);
     document.body.removeChild(container);
   });
 
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('invokes discrete events on nested suspense boundaries in a root (legacy system)', async () => {
     let suspend = false;
     let resolve;
@@ -2084,18 +2075,13 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    // clicks are not replayed
-    expect(clicks).toBe(0);
-
-    await act(async () => {
-      a.click();
-    });
-    expect(clicks).toBe(1);
+    expect(clicks).toBe(2);
 
     document.body.removeChild(container);
   });
 
   // @gate www
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('invokes discrete events on nested suspense boundaries in a root (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -2176,20 +2162,12 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-
-    // Stays 0 because we don't replay clicks
-    expect(onEvent).toHaveBeenCalledTimes(0);
-
-    await act(async () => {
-      a.click();
-    });
-
-    // Clicks now go through after resolving
-    expect(onEvent).toHaveBeenCalledTimes(1);
+    expect(onEvent).toHaveBeenCalledTimes(2);
 
     document.body.removeChild(container);
   });
 
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke the parent of dehydrated boundary event', async () => {
     let suspend = false;
     let resolve;
@@ -2258,13 +2236,6 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    // Stays 0 because we don't replay click events
-    expect(clicksOnChild).toBe(0);
-
-    await act(async () => {
-      span.click();
-    });
-    // Now click events go through
     expect(clicksOnChild).toBe(1);
     // This will be zero due to the stopPropagation.
     expect(clicksOnParent).toBe(0);
@@ -2272,6 +2243,7 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
     let suspend = false;
     let resolve;
@@ -2343,17 +2315,14 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    // We're now full hydrated but we don't replay clicks
-    expect(clicks).toBe(0);
+    // We're now full hydrated.
 
-    await act(async () => {
-      a.click();
-    });
     expect(clicks).toBe(1);
 
     document.body.removeChild(parentContainer);
   });
 
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('blocks only on the last continuous event (legacy system)', async () => {
     let suspend1 = false;
     let resolve1;
@@ -2389,7 +2358,7 @@ describe('ReactDOMServerPartialHydration', () => {
               onMouseLeave={() => ops.push('Mouse Leave First')}
             />
             {/* We suspend after to test what happens when we eager
-                 attach the listener. */}
+                attach the listener. */}
             <First />
           </Suspense>
           <Suspense fallback="Loading Second...">
@@ -2434,11 +2403,9 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ops).toEqual([]);
 
     // Resolving the second promise so that rendering can complete.
-    await act(async () => {
-      suspend2 = false;
-      resolve2();
-      await promise2;
-    });
+    suspend2 = false;
+    resolve2();
+    await promise2;
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -2447,12 +2414,10 @@ describe('ReactDOMServerPartialHydration', () => {
     // able to replay it now.
     expect(ops).toEqual(['Mouse Enter Second']);
 
-    await act(async () => {
-      // Resolving the first promise has no effect now.
-      suspend1 = false;
-      resolve1();
-      await promise1;
-    });
+    // Resolving the first promise has no effect now.
+    suspend1 = false;
+    resolve1();
+    await promise1;
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -2543,6 +2508,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
+  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('regression test: does not overfire non-bubbling browser events', async () => {
     let suspend = false;
     let resolve;
@@ -2622,18 +2588,6 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    // Submit event is not replayed
-    expect(submits).toBe(0);
-    expect(container.textContent).toBe('Click meHello');
-
-    await act(async () => {
-      form.dispatchEvent(
-        new Event('submit', {
-          bubbles: true,
-        }),
-      );
-    });
-    // Submit event has now gone through
     expect(submits).toBe(1);
     expect(container.textContent).toBe('Hello');
     document.body.removeChild(container);
@@ -2724,5 +2678,76 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
+  });
+
+  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+  it('Does not replay discrete events', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    let clicks = 0;
+
+    function Button() {
+      if (suspend) {
+        throw promise;
+      }
+      return (
+        <a
+          onClick={() => {
+            clicks++;
+          }}>
+          Click me
+        </a>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Button />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    document.body.appendChild(container);
+
+    const a = container.getElementsByTagName('a')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    const root = ReactDOM.hydrateRoot(container, <App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(container.textContent).toBe('Click me');
+
+    // We're now partially hydrated.
+    await act(async () => {
+      a.click();
+    });
+    expect(clicks).toBe(0);
+
+    // Resolving the promise so that rendering can complete.
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+      jest.runAllTimers();
+      Scheduler.unstable_flushAll();
+    });
+
+    // Event was not replayed
+    expect(clicks).toBe(0);
+
+    expect(container.textContent).toBe('Click me');
+
+    document.body.removeChild(container);
   });
 });

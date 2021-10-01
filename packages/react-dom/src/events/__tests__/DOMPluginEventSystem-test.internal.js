@@ -647,13 +647,8 @@ describe('DOMPluginEventSystem', () => {
             await promise;
           });
 
-          // We're now fully hydrated. But the click isn't replayed.
-          expect(clicks).toBe(0);
+          // We're now full hydrated.
 
-          await act(async () => {
-            a.click();
-          });
-          // Clicks can go through now
           expect(clicks).toBe(1);
 
           document.body.removeChild(parentContainer);
