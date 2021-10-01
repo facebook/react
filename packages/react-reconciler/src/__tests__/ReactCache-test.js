@@ -161,10 +161,43 @@ describe('ReactCache', () => {
   // @gate experimental || www
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
+    function Example(props) {
+      // React.useEffect(() => {
+      //   console.log(
+      //     'effect:\n' +
+      //       new Error().stack
+      //         .split('\n')
+      //         .slice(1)
+      //         .join('\n'),
+      //   );
+      //   return () => {
+      //     console.log(
+      //       'cleanup:\n' +
+      //         new Error().stack
+      //           .split('\n')
+      //           .slice(1)
+      //           .join('\n'),
+      //     );
+      //   };
+      // }, [props.text]);
+      return <Cache>{props.text}</Cache>;
+    }
+    console.log('render: hi');
     await act(async () => {
-      root.render(<Cache>Hi</Cache>);
+      // root.render(<Cache>Hi</Cache>);
+      root.render(<Example text="Hi" />);
     });
     expect(root).toMatchRenderedOutput('Hi');
+    console.log('render: ...');
+    await act(async () => {
+      root.render(<Example key={2} text="..." />);
+    });
+    expect(root).toMatchRenderedOutput('...');
+    console.log('render: bye');
+    await act(async () => {
+      root.render('Bye');
+    });
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
   // @gate experimental || www

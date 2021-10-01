@@ -24,6 +24,7 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
+import type {Cache} from './ReactFiberCacheComponent.new';
 
 import {
   enableCreateEventHandleAPI,
@@ -38,6 +39,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
   warnAboutCallbackRefReturningFunction,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -57,6 +59,7 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
@@ -143,6 +146,7 @@ import {
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {doesFiberContain} from './ReactFiberTreeReflection';
 import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
+import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -2594,6 +2598,8 @@ function commitPassiveMountEffects_complete(
 function commitPassiveMountOnFiber(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
+  // maybe thread through previous fiber or cache from previous fiber
+  //
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -2612,6 +2618,46 @@ function commitPassiveMountOnFiber(
         }
       } else {
         commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
+      }
+      break;
+    }
+    case HostRoot: {
+      if (enableCache) {
+        // todo compare caches here
+        // if caches not same
+        // - retain next cache
+        // - if prev cache non-null: release (or move to unmount phase?)
+        // add comment that retain/release on child is technically not required
+        const previousCache: Cache =
+          finishedWork.alternate?.memoizedState.cache;
+        const nextCache: Cache = finishedWork.memoizedState.cache;
+        if (nextCache !== previousCache) {
+          console.log('retain/release HostRoot cache');
+          // retainCache(nextCache); root is already the owner, no need to retain
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
+        }
+      }
+      break;
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        // todo compare caches here
+        // if caches not same
+        // - retain next cache
+        // - if prev cache non-null: release (or move to unmount phase?)
+        // add comment that retain/release on child is technically not required
+        const previousCache: Cache =
+          finishedWork.alternate?.memoizedState.cache;
+        const nextCache: Cache = finishedWork.memoizedState.cache;
+        if (nextCache !== previousCache) {
+          console.log('retain/release CacheComponent cache');
+          retainCache(nextCache);
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
+        }
       }
       break;
     }
@@ -2818,6 +2864,22 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
           current,
           nearestMountedAncestor,
         );
+      }
+      break;
+    }
+    case HostRoot: {
+      if (enableCache) {
+        const cache = current.memoizedState.cache;
+        console.log('release HostRoot cache');
+        releaseCache(cache);
+      }
+      break;
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        const cache = current.memoizedState.cache;
+        console.log('release CacheComponent cache');
+        releaseCache(cache);
       }
       break;
     }

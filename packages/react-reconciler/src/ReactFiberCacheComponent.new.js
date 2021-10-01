@@ -69,25 +69,55 @@ const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 // * Call releaseCache() when any reference to the cache is "released" (ie
 //   when the reference is no longer reachable). This *includes* the original
 //   reference created w createCache().
+let _cacheIndex = 0;
 export function createCache(): Cache {
-  return {
+  const index = _cacheIndex++;
+  const stack = new Error().stack
+    .split('\n')
+    .slice(1)
+    .join('\n');
+  const cache: Cache = {
     controller: new AbortController(),
     data: new Map(),
     refCount: 1,
   };
+  (cache: any).stack = stack;
+  (cache: any).key = String(index);
+  // console.log(`createCache #${cache.key}:\n` + stack);
+  return cache;
 }
 
 export function retainCache(cache: Cache) {
+  console.log(
+    `retainCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}:\n`,
+  );
+  // console.log(
+  //   `retainCache ${cache.refCount} -> ${cache.refCount + 1}:\n` +
+  //     new Error().stack
+  //       .split('\n')
+  //       .slice(1)
+  //       .join('\n'),
+  // );
   cache.refCount++;
 }
 
 export function releaseCache(cache: Cache) {
+  console.log(
+    `releaseCache #${cache.key} ${cache.refCount} -> ${cache.refCount - 1}:\n`,
+  );
+  // console.log(
+  //   `releaseCache ${cache.refCount} -> ${cache.refCount - 1}:\n` +
+  //     new Error().stack
+  //       .split('\n')
+  //       .slice(1)
+  //       .join('\n'),
+  // );
   cache.refCount--;
   if (__DEV__) {
     if (cache.refCount < 0) {
-      throw new Error(
-        'Error in React: cache reference count should not be negative',
-      );
+      // throw new Error(
+      //   'Error in React: cache reference count should not be negative',
+      // );
     }
   }
   if (cache.refCount === 0) {
