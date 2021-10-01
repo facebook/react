@@ -239,7 +239,9 @@ export function useModalDismissSignal(
       ownerDocument = ((modalRef.current: any): HTMLDivElement).ownerDocument;
       ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
       if (dismissOnClickOutside) {
-        ownerDocument.addEventListener('click', handleDocumentClick, true);
+        ownerDocument.addEventListener('click', handleDocumentClick);
+        ownerDocument.removeEventListener('click', handleDocumentClick,true);
+
       }
     }, 0);
 
