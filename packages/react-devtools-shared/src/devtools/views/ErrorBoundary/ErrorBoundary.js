@@ -13,6 +13,8 @@ import Store from 'react-devtools-shared/src/devtools/store';
 import ErrorView from './ErrorView';
 import SearchingGitHubIssues from './SearchingGitHubIssues';
 import SuspendingErrorView from './SuspendingErrorView';
+import TimeoutView from './TimeoutView';
+import TimeoutError from 'react-devtools-shared/src/TimeoutError';
 
 type Props = {|
   children: React$Node,
@@ -27,6 +29,7 @@ type State = {|
   componentStack: string | null,
   errorMessage: string | null,
   hasError: boolean,
+  isTimeout: boolean,
 |};
 
 const InitialState: State = {
@@ -35,6 +38,7 @@ const InitialState: State = {
   componentStack: null,
   errorMessage: null,
   hasError: false,
+  isTimeout: false,
 };
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -47,6 +51,8 @@ export default class ErrorBoundary extends Component<Props, State> {
       error.hasOwnProperty('message')
         ? error.message
         : String(error);
+
+    const isTimeout = error instanceof TimeoutError;
 
     const callStack =
       typeof error === 'object' &&
@@ -62,6 +68,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       callStack,
       errorMessage,
       hasError: true,
+      isTimeout,
     };
   }
 
@@ -93,26 +100,40 @@ export default class ErrorBoundary extends Component<Props, State> {
       componentStack,
       errorMessage,
       hasError,
+      isTimeout,
     } = this.state;
 
     if (hasError) {
-      return (
-        <ErrorView
-          callStack={callStack}
-          componentStack={componentStack}
-          dismissError={
-            canDismissProp || canDismissState ? this._dismissError : null
-          }
-          errorMessage={errorMessage}>
-          <Suspense fallback={<SearchingGitHubIssues />}>
-            <SuspendingErrorView
-              callStack={callStack}
-              componentStack={componentStack}
-              errorMessage={errorMessage}
-            />
-          </Suspense>
-        </ErrorView>
-      );
+      if (isTimeout) {
+        return (
+          <TimeoutView
+            callStack={callStack}
+            componentStack={componentStack}
+            dismissError={
+              canDismissProp || canDismissState ? this._dismissError : null
+            }
+            errorMessage={errorMessage}
+          />
+        );
+      } else {
+        return (
+          <ErrorView
+            callStack={callStack}
+            componentStack={componentStack}
+            dismissError={
+              canDismissProp || canDismissState ? this._dismissError : null
+            }
+            errorMessage={errorMessage}>
+            <Suspense fallback={<SearchingGitHubIssues />}>
+              <SuspendingErrorView
+                callStack={callStack}
+                componentStack={componentStack}
+                errorMessage={errorMessage}
+              />
+            </Suspense>
+          </ErrorView>
+        );
+      }
     }
 
     return children;

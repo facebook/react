@@ -16,11 +16,11 @@ type Props = {|
   callStack: string | null,
   children: React$Node,
   componentStack: string | null,
-  dismissError: Function | null,
+  dismissError: Function,
   errorMessage: string | null,
 |};
 
-export default function ErrorView({
+export default function TimeoutView({
   callStack,
   children,
   componentStack,
@@ -32,24 +32,17 @@ export default function ErrorView({
       {children}
       <div className={styles.ErrorInfo}>
         <div className={styles.HeaderRow}>
-          <div className={styles.ErrorHeader}>
-            Uncaught Error: {errorMessage || ''}
+          <div className={styles.TimeoutHeader}>
+            {errorMessage || 'Timed out waiting'}
           </div>
-          {dismissError !== null && (
-            <Button className={styles.CloseButton} onClick={dismissError}>
-              Dismiss
-              <ButtonIcon className={styles.CloseButtonIcon} type="close" />
-            </Button>
-          )}
+          <Button className={styles.CloseButton} onClick={dismissError}>
+            Retry
+            <ButtonIcon className={styles.CloseButtonIcon} type="close" />
+          </Button>
         </div>
-        {!!callStack && (
-          <div className={styles.ErrorStack}>
-            The error was thrown {callStack.trim()}
-          </div>
-        )}
         {!!componentStack && (
-          <div className={styles.ErrorStack}>
-            The error occurred {componentStack.trim()}
+          <div className={styles.TimeoutStack}>
+            The timeout occurred {componentStack.trim()}
           </div>
         )}
       </div>

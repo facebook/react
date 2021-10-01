@@ -10,6 +10,7 @@
 import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
 import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
 import Store from 'react-devtools-shared/src/devtools/store';
+import TimeoutError from 'react-devtools-shared/src/TimeoutError';
 
 import type {
   InspectedElement as InspectedElementBackend,
@@ -162,7 +163,9 @@ function getPromiseForRequestID<T>(
     const onTimeout = () => {
       cleanup();
       reject(
-        new Error(`Timed out waiting for event '${eventType}' from bridge`),
+        new TimeoutError(
+          `Timed out waiting for event '${eventType}' from bridge`,
+        ),
       );
     };
 
