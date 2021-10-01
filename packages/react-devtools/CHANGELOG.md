@@ -2,6 +2,11 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.19.1 (October 1, 2021)
+
+#### Bugfix
+* Fixed potential cache miss when insepcting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
+
 ## 4.19.0 (September 29, 2021)
 
 #### Features
