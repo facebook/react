@@ -232,6 +232,7 @@ export function useModalDismissSignal(
     // In that case, we don't want to listen to the pre-existing event.
     let timeoutID = setTimeout(() => {
       timeoutID = null;
+      ``;
 
       // It's important to listen to the ownerDocument to support the browser extension.
       // Here we use portals to render individual tabs (e.g. Profiler),
@@ -240,7 +241,6 @@ export function useModalDismissSignal(
       ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
       if (dismissOnClickOutside) {
         ownerDocument.addEventListener('click', handleDocumentClick, true);
-        ownerDocument.removeEventListener('click', handleDocumentClick, true);
       }
     }, 0);
 
@@ -251,7 +251,7 @@ export function useModalDismissSignal(
 
       if (ownerDocument !== null) {
         ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
-        ownerDocument.removeEventListener('click', handleDocumentClick);
+        ownerDocument.removeEventListener('click', handleDocumentClick, true);
       }
     };
   }, [modalRef, dismissCallback, dismissOnClickOutside]);
