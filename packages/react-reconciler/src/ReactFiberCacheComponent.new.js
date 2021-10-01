@@ -85,8 +85,26 @@ export function createCache(): Cache {
     .join('\n');
   (cache: any).stack = stack;
   (cache: any).key = String(index);
-  // console.log(`createCache #${cache.key}:\n` + stack);
+  console.log(
+    `createCache #${cache.key}:\n` +
+      stack
+        .split('\n')
+        .slice(2, 4)
+        .join('\n'),
+  );
 
+  return cache;
+}
+
+export function cloneCache(cache: Cache): Cache {
+  console.log(
+    `cloneCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}:\n` +
+      new Error().stack
+        .split('\n')
+        .slice(2, 4)
+        .join('\n'),
+  );
+  cache.refCount++;
   return cache;
 }
 
@@ -135,11 +153,11 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
     return (null: any);
   }
   if (pooledCache !== null) {
-    return pooledCache;
+    return cloneCache(pooledCache);
   }
   // Create a fresh cache.
   pooledCache = createCache();
-  return pooledCache;
+  return cloneCache(pooledCache);
 }
 
 export function pushRootCachePool(root: FiberRoot) {
@@ -150,7 +168,12 @@ export function pushRootCachePool(root: FiberRoot) {
   // from `root.pooledCache`. If it's currently `null`, we will lazily
   // initialize it the first type it's requested. However, we only mutate
   // the root itself during the complete/unwind phase of the HostRoot.
-  pooledCache = root.pooledCache;
+  const rootCache = root.pooledCache;
+  if (rootCache != null) {
+    pooledCache = cloneCache(rootCache);
+  } else {
+    pooledCache = null;
+  }
 }
 
 export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {

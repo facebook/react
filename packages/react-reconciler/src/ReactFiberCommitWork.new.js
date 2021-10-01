@@ -2631,12 +2631,9 @@ function commitPassiveMountOnFiber(
         const previousCache: Cache =
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
-        if (nextCache !== previousCache) {
-          console.log('retain/release HostRoot cache');
-          // retainCache(nextCache); root is already the owner, no need to retain
-          if (previousCache != null) {
-            releaseCache(previousCache);
-          }
+        if (nextCache !== previousCache && previousCache != null) {
+          console.log('update HostRoot cache');
+          releaseCache(previousCache);
         }
       }
       break;
@@ -2651,12 +2648,9 @@ function commitPassiveMountOnFiber(
         const previousCache: Cache =
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
-        if (nextCache !== previousCache) {
-          console.log('retain/release CacheComponent cache');
-          retainCache(nextCache);
-          if (previousCache != null) {
-            releaseCache(previousCache);
-          }
+        if (nextCache !== previousCache && previousCache != null) {
+          console.log('update CacheComponent cache');
+          releaseCache(previousCache);
         }
       }
       break;

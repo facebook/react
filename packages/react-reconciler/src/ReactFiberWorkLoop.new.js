@@ -2115,7 +2115,8 @@ function releaseRootPooledCache(root) {
   if (enableCache) {
     const pooledCache = root.pooledCache;
     if (pooledCache != null) {
-      // releaseCache(pooledCache);
+      console.log('releaseRootPooledCache');
+      releaseCache(pooledCache);
       root.pooledCache = null;
     }
   }

@@ -1,3 +1,5 @@
+const {test} = require('jest-snapshot-serializer-raw');
+
 let React;
 let ReactNoop;
 let Cache;
@@ -159,7 +161,7 @@ describe('ReactCache', () => {
   }
 
   // @gate experimental || www
-  test('render Cache component', async () => {
+  test.only('render Cache component', async () => {
     const root = ReactNoop.createRoot();
     function Example(props) {
       // React.useEffect(() => {
