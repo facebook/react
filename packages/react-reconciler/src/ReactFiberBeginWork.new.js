@@ -23,11 +23,9 @@ import type {
   OffscreenProps,
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
-import {
+import type {
   Cache,
   CacheComponentState,
-  releaseCache,
-  retainCache,
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
@@ -77,7 +75,6 @@ import {
   StaticMask,
   ShouldCapture,
   ForceClientRender,
-  Passive,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
