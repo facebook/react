@@ -1831,7 +1831,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(newSpan.className).toBe('hi');
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke an event on a hydrated node until it commits', async () => {
     let suspend = false;
     let resolve;
@@ -1906,15 +1905,20 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(clicks).toBe(1);
 
-    expect(container.textContent).toBe('Hello');
-
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(clicks).toBe(0);
+      expect(container.textContent).toBe('Click meHello');
+    } else {
+      expect(clicks).toBe(1);
+      expect(container.textContent).toBe('Hello');
+    }
     document.body.removeChild(container);
   });
 
   // @gate www
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke an event on a hydrated event handle until it commits', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -1993,12 +1997,17 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    expect(onEvent).toHaveBeenCalledTimes(2);
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(onEvent).toHaveBeenCalledTimes(0);
+    } else {
+      expect(onEvent).toHaveBeenCalledTimes(2);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('invokes discrete events on nested suspense boundaries in a root (legacy system)', async () => {
     let suspend = false;
     let resolve;
@@ -2075,13 +2084,19 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(clicks).toBe(2);
+
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(clicks).toBe(0);
+    } else {
+      expect(clicks).toBe(2);
+    }
 
     document.body.removeChild(container);
   });
 
   // @gate www
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('invokes discrete events on nested suspense boundaries in a root (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -2162,12 +2177,17 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(onEvent).toHaveBeenCalledTimes(2);
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(onEvent).toHaveBeenCalledTimes(0);
+    } else {
+      expect(onEvent).toHaveBeenCalledTimes(2);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke the parent of dehydrated boundary event', async () => {
     let suspend = false;
     let resolve;
@@ -2236,14 +2256,20 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    expect(clicksOnChild).toBe(1);
-    // This will be zero due to the stopPropagation.
-    expect(clicksOnParent).toBe(0);
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(clicksOnChild).toBe(0);
+      expect(clicksOnParent).toBe(0);
+    } else {
+      expect(clicksOnChild).toBe(1);
+      // This will be zero due to the stopPropagation.
+      expect(clicksOnParent).toBe(0);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
     let suspend = false;
     let resolve;
@@ -2316,8 +2342,13 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     // We're now full hydrated.
-
-    expect(clicks).toBe(1);
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(clicks).toBe(0);
+    } else {
+      expect(clicks).toBe(1);
+    }
 
     document.body.removeChild(parentContainer);
   });
@@ -2508,7 +2539,6 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('regression test: does not overfire non-bubbling browser events', async () => {
     let suspend = false;
     let resolve;
@@ -2588,8 +2618,17 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    expect(submits).toBe(1);
-    expect(container.textContent).toBe('Hello');
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      // discrete event not replayed
+      expect(submits).toBe(0);
+      expect(container.textContent).toBe('Click meHello');
+    } else {
+      expect(submits).toBe(1);
+      expect(container.textContent).toBe('Hello');
+    }
+
     document.body.removeChild(container);
   });
 
