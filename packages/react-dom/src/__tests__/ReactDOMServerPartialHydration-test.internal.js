@@ -1907,7 +1907,10 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
     ) {
       expect(clicks).toBe(0);
       expect(container.textContent).toBe('Click meHello');
@@ -1998,7 +2001,10 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
     ) {
       expect(onEvent).toHaveBeenCalledTimes(0);
     } else {
@@ -2086,7 +2092,10 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
     ) {
       expect(clicks).toBe(0);
     } else {
@@ -2178,7 +2187,10 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
     if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
     ) {
       expect(onEvent).toHaveBeenCalledTimes(0);
     } else {
@@ -2257,7 +2269,10 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
     ) {
       expect(clicksOnChild).toBe(0);
       expect(clicksOnParent).toBe(0);
@@ -2343,7 +2358,10 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // We're now full hydrated.
     if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
     ) {
       expect(clicks).toBe(0);
     } else {
@@ -2619,7 +2637,10 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     if (
-      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
     ) {
       // discrete event not replayed
       expect(submits).toBe(0);

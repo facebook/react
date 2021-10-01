@@ -650,7 +650,10 @@ describe('DOMPluginEventSystem', () => {
           // We're now full hydrated.
 
           if (
-            ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+            gate(
+              flags =>
+                flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+            )
           ) {
             expect(clicks).toBe(0);
           } else {
