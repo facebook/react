@@ -146,7 +146,7 @@ import {
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {doesFiberContain} from './ReactFiberTreeReflection';
 import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
-import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
+import {releaseCache} from './ReactFiberCacheComponent.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {

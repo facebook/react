@@ -124,7 +124,9 @@ describe('ReactCache', () => {
 
       const signal = getCacheSignal();
       signal.addEventListener('abort', () => {
-        // console.log(`Cache cleanup: [${text}]`);
+        Scheduler.unstable_yieldValue(
+          `Cache cleanup: ${text} [v${textCache.version}]`,
+        );
       });
 
       throw thenable;
@@ -161,7 +163,7 @@ describe('ReactCache', () => {
   }
 
   // @gate experimental || www
-  test.only('render Cache component', async () => {
+  test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
     function Example(props) {
       // React.useEffect(() => {
@@ -222,6 +224,11 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded(['A']);
     expect(root).toMatchRenderedOutput('A');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
   // @gate experimental || www
@@ -354,7 +361,7 @@ describe('ReactCache', () => {
   });
 
   // @gate experimental || www
-  test('a new Cache boundary uses fresh cache', async () => {
+  test.only('a new Cache boundary uses fresh cache', async () => {
     // The only difference from the previous test is that the "Show More"
     // content is wrapped in a nested <Cache /> boundary
     function App({showMore}) {
@@ -398,6 +405,12 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
+
+    await act(async => {
+      root.render('Bye!');
+    });
+    expect(Scheduler).toHaveYielded(['Cache cleanup: A [v2]']);
+    expect(root).toMatchRenderedOutput('Bye!');
   });
 
   // @gate experimental || www

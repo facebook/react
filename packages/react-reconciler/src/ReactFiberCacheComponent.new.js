@@ -62,13 +62,15 @@ let pooledCache: Cache | null = null;
 const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 
 // Creates a new empty Cache instance with a ref-count of 1: the caller is
-// the implicit "owner". Note that retain/release must be called to ensure
-// that the ref count is accurate:
-// * Call retainCache() when a new reference to the cache instance is created.
-//   This *excludes* the original reference created w createCache().
-// * Call releaseCache() when any reference to the cache is "released" (ie
-//   when the reference is no longer reachable). This *includes* the original
-//   reference created w createCache().
+// the implicit "owner" of the cache instance. The developer is responsible
+// for calling `releaseCache(cache)` when the reference to this cache is no
+// longer reachable.
+//
+// To create additional references to a Cache (ie to share it across the root,
+// multiple <Cache> components, etc), create a new "clone" with
+// eg `clone = cloneCache(cache)`. The developer is then calling
+// `releaseCache(clone)` for each clone created w cloneCache, when that clone
+// is no longer reachable.
 let _cacheIndex = 0;
 export function createCache(): Cache {
   const cache: Cache = {
@@ -78,46 +80,26 @@ export function createCache(): Cache {
   };
 
   // TODO: remove debugging code
-  const index = _cacheIndex++;
-  const stack = new Error().stack
-    .split('\n')
-    .slice(1)
-    .join('\n');
-  (cache: any).stack = stack;
-  (cache: any).key = String(index);
-  console.log(
-    `createCache #${cache.key}:\n` +
-      stack
-        .split('\n')
-        .slice(2, 4)
-        .join('\n'),
-  );
+  const key = _cacheIndex++;
+  (cache: any).key = String(key);
+  trace(`createCache #${cache.key}`);
 
   return cache;
 }
 
+// Creates a lightweight clone of the given Cache instance that *shares the same data*.
+// When the returned cache instance is no longer reference it must be cleaned up by
+// calling `releaseCache(clone)`
 export function cloneCache(cache: Cache): Cache {
-  console.log(
-    `cloneCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}:\n` +
-      new Error().stack
-        .split('\n')
-        .slice(2, 4)
-        .join('\n'),
-  );
+  trace(`cloneCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}`);
   cache.refCount++;
   return cache;
 }
 
-export function retainCache(cache: Cache) {
-  console.log(
-    `retainCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}:\n`,
-  );
-  cache.refCount++;
-}
-
+// Cleanup a cache instance, potentially freeing it if there are no more references
 export function releaseCache(cache: Cache) {
-  console.log(
-    `releaseCache #${cache.key} ${cache.refCount} -> ${cache.refCount - 1}:\n`,
+  trace(
+    `releaseCache #${cache.key} ${cache.refCount} -> ${cache.refCount - 1}`,
   );
   cache.refCount--;
   if (__DEV__) {
@@ -132,6 +114,16 @@ export function releaseCache(cache: Cache) {
     // any event listeners that get triggered.
     cache.controller.abort();
   }
+}
+
+function trace(msg, levels = 2) {
+  console.log(
+    `${msg}:\n` +
+      new Error().stack
+        .split('\n')
+        .slice(3, 3 + Math.min(levels, 1))
+        .join('\n'),
+  );
 }
 
 export function pushCacheProvider(workInProgress: Fiber, cache: Cache) {
