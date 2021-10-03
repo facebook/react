@@ -12,15 +12,15 @@ React is a JavaScript library for building user interfaces.
 
 React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
 
-* Use [Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds) to get a taste of React.
-* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html) as a `<script>` tag in one minute.
+* Use [Our Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds) to get a taste of React.
+* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html) by using a `<script>` tag in just one minute.
 * [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html) if you're looking for a powerful JavaScript toolchain.
 
 You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/package/react).
 
 ## Documentation
 
-You can find the React documentation [on the website](https://reactjs.org/).  
+You can find the React documentation [on this website](https://reactjs.org/).  
 
 Check out the [Getting Started](https://reactjs.org/docs/getting-started.html) page for a quick overview.
 
@@ -72,4 +72,4 @@ To help you get your feet wet and get you familiar with our contribution process
 
 ### License
 
-React is [MIT licensed](./LICENSE).
+React is licensed with [MIT](./LICENSE).
