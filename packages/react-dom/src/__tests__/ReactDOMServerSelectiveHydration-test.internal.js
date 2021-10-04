@@ -1135,7 +1135,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let triggeredParent = false;
     let triggeredChild = false;
     let suspend = false;
-    let promise = new Promise(() => {});
+    const promise = new Promise(() => {});
     function Child() {
       if (suspend) {
         throw promise;
