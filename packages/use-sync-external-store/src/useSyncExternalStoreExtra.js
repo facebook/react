@@ -76,7 +76,6 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
       }
 
       // The snapshot has changed, so we need to compute a new selection.
-      memoizedSnapshot = nextSnapshot;
       const nextSelection = selector(nextSnapshot);
 
       // If a custom isEqual function is provided, use that to check if the data
@@ -87,6 +86,7 @@ export function useSyncExternalStoreExtra<Snapshot, Selection>(
         return prevSelection;
       }
 
+      memoizedSnapshot = nextSnapshot;
       memoizedSelection = nextSelection;
       return nextSelection;
     };
