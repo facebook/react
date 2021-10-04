@@ -251,6 +251,10 @@ export function dispatchEvent(
       }
       blockedOn = nextBlockedOn;
     }
+    if (blockedOn) {
+      nativeEvent.stopPropagation();
+      return;
+    }
   }
 
   // This is not replayable so we'll invoke it but without a target,
