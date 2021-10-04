@@ -187,7 +187,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('hydrates at higher pri if sync did not work first time', async () => {
     let suspend = false;
     let resolve;
@@ -285,7 +284,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('hydrates at higher pri for secondary discrete events', async () => {
     let suspend = false;
     let resolve;
@@ -470,7 +468,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
   });
 
   // @gate www
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('hydrates at higher pri if sync did not work first time (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -569,7 +566,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
   });
 
   // @gate www
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('hydrates at higher pri for secondary discrete events (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -684,7 +680,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('hydrates the hovered targets as higher priority for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -804,7 +799,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -942,7 +936,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
   });
 
   // @gate experimental || www
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('hydrates before an update even if hydration moves away from it', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);

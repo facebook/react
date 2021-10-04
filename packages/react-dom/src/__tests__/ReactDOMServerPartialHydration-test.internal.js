@@ -2371,7 +2371,6 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(parentContainer);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('blocks only on the last continuous event (legacy system)', async () => {
     let suspend1 = false;
     let resolve1;
