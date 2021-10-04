@@ -1057,9 +1057,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
         if (!ref.current) {
           return;
         }
-        ref.current.addEventListener('click', () => {
+        ref.current.onclick = () => {
           Scheduler.unstable_yieldValue('Native Click ' + text);
-        });
+        };
       }, [text]);
       return (
         <span
@@ -1089,16 +1089,13 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
 
-    const finalHTML = ReactDOMServer.renderToString(<App />);
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'useLayoutEffect does nothing on the server',
-      );
-      expect(console.error.calls.argsFor(1)[0]).toContain(
-        'useLayoutEffect does nothing on the server',
-      );
-    }
+    let finalHTML;
+    expect(() => {
+      finalHTML = ReactDOMServer.renderToString(<App />);
+    }).toErrorDev([
+      'useLayoutEffect does nothing on the server',
+      'useLayoutEffect does nothing on the server',
+    ]);
 
     expect(Scheduler).toHaveYielded(['App', 'A', 'B']);
 
@@ -1132,8 +1129,5 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toFlushAndYield(['A']);
 
     document.body.removeChild(container);
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
-    }
   });
 });
