@@ -14,7 +14,10 @@ import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
-import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
+import {
+  enableSelectiveHydration,
+  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+} from 'shared/ReactFeatureFlags';
 import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
@@ -32,10 +35,14 @@ import {
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
-let attemptSynchronousHydration: (fiber: Object) => void;
+let _attemptSynchronousHydration: (fiber: Object) => void;
 
 export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
-  attemptSynchronousHydration = fn;
+  _attemptSynchronousHydration = fn;
+}
+
+export function attemptSynchronousHydration(fiber: Object) {
+  _attemptSynchronousHydration(fiber);
 }
 
 let attemptDiscreteHydration: (fiber: Object) => void;
@@ -180,6 +187,9 @@ export function queueDiscreteEvent(
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    return;
+  }
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
     domEventName,
@@ -288,6 +298,13 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
     targetContainers.push(targetContainer);
   }
   return existingQueuedEvent;
+}
+
+export function isCapturePhaseSynchronouslyHydratableEvent(
+  eventName: DOMEventName,
+) {
+  // TODO: maybe include more events
+  return isReplayableDiscreteEvent(eventName);
 }
 
 export function queueIfContinuousEvent(
@@ -483,39 +500,41 @@ function attemptReplayContinuousQueuedEventInMap(
 
 function replayUnblockedEvents() {
   hasScheduledReplayAttempt = false;
-  // First replay discrete events.
-  while (queuedDiscreteEvents.length > 0) {
-    const nextDiscreteEvent = queuedDiscreteEvents[0];
-    if (nextDiscreteEvent.blockedOn !== null) {
-      // We're still blocked.
-      // Increase the priority of this boundary to unblock
-      // the next discrete event.
-      const fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
-      if (fiber !== null) {
-        attemptDiscreteHydration(fiber);
-      }
-      break;
-    }
-    const targetContainers = nextDiscreteEvent.targetContainers;
-    while (targetContainers.length > 0) {
-      const targetContainer = targetContainers[0];
-      const nextBlockedOn = attemptToDispatchEvent(
-        nextDiscreteEvent.domEventName,
-        nextDiscreteEvent.eventSystemFlags,
-        targetContainer,
-        nextDiscreteEvent.nativeEvent,
-      );
-      if (nextBlockedOn !== null) {
-        // We're still blocked. Try again later.
-        nextDiscreteEvent.blockedOn = nextBlockedOn;
+  if (!enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    // First replay discrete events.
+    while (queuedDiscreteEvents.length > 0) {
+      const nextDiscreteEvent = queuedDiscreteEvents[0];
+      if (nextDiscreteEvent.blockedOn !== null) {
+        // We're still blocked.
+        // Increase the priority of this boundary to unblock
+        // the next discrete event.
+        const fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
+        if (fiber !== null) {
+          attemptDiscreteHydration(fiber);
+        }
         break;
       }
-      // This target container was successfully dispatched. Try the next.
-      targetContainers.shift();
-    }
-    if (nextDiscreteEvent.blockedOn === null) {
-      // We've successfully replayed the first event. Let's try the next one.
-      queuedDiscreteEvents.shift();
+      const targetContainers = nextDiscreteEvent.targetContainers;
+      while (targetContainers.length > 0) {
+        const targetContainer = targetContainers[0];
+        const nextBlockedOn = attemptToDispatchEvent(
+          nextDiscreteEvent.domEventName,
+          nextDiscreteEvent.eventSystemFlags,
+          targetContainer,
+          nextDiscreteEvent.nativeEvent,
+        );
+        if (nextBlockedOn !== null) {
+          // We're still blocked. Try again later.
+          nextDiscreteEvent.blockedOn = nextBlockedOn;
+          break;
+        }
+        // This target container was successfully dispatched. Try the next.
+        targetContainers.shift();
+      }
+      if (nextDiscreteEvent.blockedOn === null) {
+        // We've successfully replayed the first event. Let's try the next one.
+        queuedDiscreteEvents.shift();
+      }
     }
   }
   // Next replay any continuous events.
