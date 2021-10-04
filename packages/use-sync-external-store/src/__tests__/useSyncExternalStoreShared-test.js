@@ -818,4 +818,93 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       'Sibling: 1',
     ]);
   });
+
+  describe('selector and isEqual error handling in extra', () => {
+    let ErrorBoundary;
+    beforeAll(() => {
+      spyOnDev(console, 'warn');
+      ErrorBoundary = class extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error) {
+          return {error};
+        }
+        render() {
+          if (this.state.error) {
+            return <Text text={this.state.error.message} />;
+          }
+          return this.props.children;
+        }
+      };
+    });
+
+    it('selector can throw on update', async () => {
+      const store = createExternalStore({a: 'a'});
+      const selector = state => state.a.toUpperCase();
+
+      function App() {
+        const a = useSyncExternalStoreExtra(
+          store.subscribe,
+          store.getState,
+          null,
+          selector,
+        );
+        return <Text text={a} />;
+      }
+
+      const container = document.createElement('div');
+      const root = createRoot(container);
+      await act(() =>
+        root.render(
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>,
+        ),
+      );
+
+      expect(container.textContent).toEqual('A');
+
+      await act(() => {
+        store.set({});
+      });
+      expect(container.textContent).toEqual(
+        "Cannot read property 'toUpperCase' of undefined",
+      );
+    });
+
+    it('isEqual can throw on update', async () => {
+      const store = createExternalStore({a: 'A'});
+      const selector = state => state.a;
+      const isEqual = (left, right) => left.a.trim() === right.a.trim();
+
+      function App() {
+        const a = useSyncExternalStoreExtra(
+          store.subscribe,
+          store.getState,
+          null,
+          selector,
+          isEqual,
+        );
+        return <Text text={a} />;
+      }
+
+      const container = document.createElement('div');
+      const root = createRoot(container);
+      await act(() =>
+        root.render(
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>,
+        ),
+      );
+
+      expect(container.textContent).toEqual('A');
+
+      await act(() => {
+        store.set({});
+      });
+      expect(container.textContent).toEqual(
+        "Cannot read property 'trim' of undefined",
+      );
+    });
+  });
 });
