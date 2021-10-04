@@ -2371,7 +2371,6 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(parentContainer);
   });
 
-  // @gate !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('blocks only on the last continuous event (legacy system)', async () => {
     let suspend1 = false;
     let resolve1;
@@ -2738,76 +2737,5 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
-  });
-
-  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
-  it('Does not replay discrete events', async () => {
-    let suspend = false;
-    let resolve;
-    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
-
-    let clicks = 0;
-
-    function Button() {
-      if (suspend) {
-        throw promise;
-      }
-      return (
-        <a
-          onClick={() => {
-            clicks++;
-          }}>
-          Click me
-        </a>
-      );
-    }
-
-    function App() {
-      return (
-        <div>
-          <Suspense fallback="Loading...">
-            <Button />
-          </Suspense>
-        </div>
-      );
-    }
-
-    const finalHTML = ReactDOMServer.renderToString(<App />);
-    const container = document.createElement('div');
-    container.innerHTML = finalHTML;
-    document.body.appendChild(container);
-
-    const a = container.getElementsByTagName('a')[0];
-
-    // On the client we don't have all data yet but we want to start
-    // hydrating anyway.
-    suspend = true;
-    ReactDOM.hydrateRoot(container, <App />);
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    expect(container.textContent).toBe('Click me');
-
-    // We're now partially hydrated.
-    await act(async () => {
-      a.click();
-    });
-    expect(clicks).toBe(0);
-
-    // Resolving the promise so that rendering can complete.
-    await act(async () => {
-      suspend = false;
-      resolve();
-      await promise;
-      jest.runAllTimers();
-      Scheduler.unstable_flushAll();
-    });
-
-    // Event was not replayed
-    expect(clicks).toBe(0);
-
-    expect(container.textContent).toBe('Click me');
-
-    document.body.removeChild(container);
   });
 });

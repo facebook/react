@@ -22,6 +22,7 @@ import {
   clearIfContinuousEvent,
   queueIfContinuousEvent,
   attemptSynchronousHydration,
+  isCapturePhaseSynchronouslyHydratableEvent,
 } from './ReactDOMEventReplaying';
 import {
   getNearestMountedFiber,
@@ -231,7 +232,8 @@ export function dispatchEvent(
 
   if (
     enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-    enableSelectiveHydration
+    enableSelectiveHydration &&
+    isCapturePhaseSynchronouslyHydratableEvent(domEventName)
   ) {
     while (blockedOn !== null) {
       const fiber = getInstanceFromNode(blockedOn);

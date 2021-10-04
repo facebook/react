@@ -300,6 +300,13 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   return existingQueuedEvent;
 }
 
+export function isCapturePhaseSynchronouslyHydratableEvent(
+  eventName: DOMEventName,
+) {
+  // TODO: maybe include more events
+  return isReplayableDiscreteEvent(eventName);
+}
+
 export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
   domEventName: DOMEventName,
