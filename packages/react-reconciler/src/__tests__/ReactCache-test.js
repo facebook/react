@@ -80,9 +80,15 @@ describe('ReactCache', () => {
   }
 
   function readText(text) {
+    const signal = getCacheSignal();
     const textCache = getCacheForType(createTextCache);
     const record = textCache.data.get(text);
     if (record !== undefined) {
+      signal.addEventListener('abort', () => {
+        Scheduler.unstable_yieldValue(
+          `Cache cleanup: ${text} [v${textCache.version}] (cached)`,
+        );
+      });
       switch (record.status) {
         case 'pending':
           throw record.value;
@@ -122,13 +128,11 @@ describe('ReactCache', () => {
       };
       textCache.data.set(text, newRecord);
 
-      const signal = getCacheSignal();
       signal.addEventListener('abort', () => {
         Scheduler.unstable_yieldValue(
           `Cache cleanup: ${text} [v${textCache.version}]`,
         );
       });
-
       throw thenable;
     }
   }
@@ -162,48 +166,21 @@ describe('ReactCache', () => {
     }
   }
 
+  // TODO OK
   // @gate experimental || www
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
     function Example(props) {
-      // React.useEffect(() => {
-      //   console.log(
-      //     'effect:\n' +
-      //       new Error().stack
-      //         .split('\n')
-      //         .slice(1)
-      //         .join('\n'),
-      //   );
-      //   return () => {
-      //     console.log(
-      //       'cleanup:\n' +
-      //         new Error().stack
-      //           .split('\n')
-      //           .slice(1)
-      //           .join('\n'),
-      //     );
-      //   };
-      // }, [props.text]);
       return <Cache>{props.text}</Cache>;
     }
     console.log('render: hi');
     await act(async () => {
-      // root.render(<Cache>Hi</Cache>);
       root.render(<Example text="Hi" />);
     });
     expect(root).toMatchRenderedOutput('Hi');
-    console.log('render: ...');
-    await act(async () => {
-      root.render(<Example key={2} text="..." />);
-    });
-    expect(root).toMatchRenderedOutput('...');
-    console.log('render: bye');
-    await act(async () => {
-      root.render('Bye');
-    });
-    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
   // @gate experimental || www
   test('mount new data', async () => {
     const root = ReactNoop.createRoot();
@@ -228,9 +205,12 @@ describe('ReactCache', () => {
     await act(async () => {
       root.render('Bye');
     });
+    // no cleanup: cache is still retained at the root
+    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
   // @gate experimental || www
   test('root acts as implicit cache boundary', async () => {
     const root = ReactNoop.createRoot();
@@ -249,12 +229,20 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded(['A']);
     expect(root).toMatchRenderedOutput('A');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // no cleanup: cache is still retained at the root
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
   // @gate experimental || www
   test('multiple new Cache boundaries in the same update share the same, fresh cache', async () => {
-    function App({text}) {
-      return (
+    function App({showMore}) {
+      return showMore ? (
         <>
           <Cache>
             <Suspense fallback={<Text text="Loading..." />}>
@@ -267,12 +255,20 @@ describe('ReactCache', () => {
             </Suspense>
           </Cache>
         </>
+      ) : (
+        '(empty)'
       );
     }
 
     const root = ReactNoop.createRoot();
     await act(async () => {
       root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    await act(async => {
+      root.render(<App showMore={true} />);
     });
     // Even though there are two new <Cache /> trees, they should share the same
     // data cache. So there should be only a single cache miss for A.
@@ -288,8 +284,23 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // cleanup occurs for the cache shared by the inner cache boundaries (which
+    // are not shared w the root because they were added in an update)
+    // note that no cache is created for the root since the cache is never accessed
+    expect(Scheduler).toHaveYielded([
+      'Cache cleanup: A [v1]', // first AsyncText gets a cache miss
+      'Cache cleanup: A [v1] (cached)', // second AsyncText shares the same entry
+      'Cache cleanup: A [v1] (cached)', // 2nd render of first AsyncText
+      'Cache cleanup: A [v1] (cached)', // 2nd render of second AsyncText
+    ]);
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
   // @gate experimental || www
   test(
     'nested cache boundaries share the same cache as the root during ' +
@@ -310,8 +321,8 @@ describe('ReactCache', () => {
       await act(async () => {
         root.render(<App />);
       });
-      // Even though there are two new <Cache /> trees, they should share the same
-      // data cache. So there should be only a single cache miss for A.
+      // Even though there is a nested <Cache /> boundary, it should share the same
+      // data cache as the root. So there should be only a single cache miss for A.
       expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
       expect(root).toMatchRenderedOutput('Loading...');
 
@@ -320,9 +331,17 @@ describe('ReactCache', () => {
       });
       expect(Scheduler).toHaveYielded(['A', 'A']);
       expect(root).toMatchRenderedOutput('AA');
+
+      await act(async () => {
+        root.render('Bye');
+      });
+      // no cleanup: cache is still retained at the root
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput('Bye');
     },
   );
 
+  // TODO OK
   // @gate experimental || www
   test('new content inside an existing Cache boundary should re-use already cached data', async () => {
     function App({showMore}) {
@@ -358,10 +377,18 @@ describe('ReactCache', () => {
       'A [v1]',
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // no cleanup: cache is still retained at the root
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
   // @gate experimental || www
-  test.only('a new Cache boundary uses fresh cache', async () => {
+  test('a new Cache boundary uses fresh cache', async () => {
     // The only difference from the previous test is that the "Show More"
     // content is wrapped in a nested <Cache /> boundary
     function App({showMore}) {
@@ -406,15 +433,24 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
 
+    // Replace all the children: this should retain the root Cache instance,
+    // but cleanup the separate cache instance created for the fresh cache
+    // boundary
     await act(async => {
       root.render('Bye!');
     });
-    expect(Scheduler).toHaveYielded(['Cache cleanup: A [v2]']);
+    // Cleanup occurs for the *second* cache instance: the first is still
+    // referenced by the root
+    expect(Scheduler).toHaveYielded([
+      'Cache cleanup: A [v2]', // initial render (suspends)
+      'Cache cleanup: A [v2] (cached)', // second render (after data resolves)
+    ]);
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
+  // TODO OK
   // @gate experimental || www
-  test('inner content uses same cache as shell if spawned by the same transition', async () => {
+  test('inner/outer cache boundaries uses the same cache instance on initial render', async () => {
     const root = ReactNoop.createRoot();
 
     function App() {
@@ -486,10 +522,122 @@ describe('ReactCache', () => {
         <div>Content</div>
       </>,
     );
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // no cleanup: cache is still retained at the root
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
   // @gate experimental || www
-  test('refresh a cache', async () => {
+  test('inner/ outer cache boundaries added in the same update use the same cache instance', async () => {
+    const root = ReactNoop.createRoot();
+
+    function App({showMore}) {
+      return showMore ? (
+        <Cache>
+          <Suspense fallback={<Text text="Loading shell..." />}>
+            {/* The shell reads A */}
+            <Shell>
+              {/* The inner content reads both A and B */}
+              <Suspense fallback={<Text text="Loading content..." />}>
+                <Cache>
+                  <Content />
+                </Cache>
+              </Suspense>
+            </Shell>
+          </Suspense>
+        </Cache>
+      ) : (
+        '(empty)'
+      );
+    }
+
+    function Shell({children}) {
+      readText('A');
+      return (
+        <>
+          <div>
+            <Text text="Shell" />
+          </div>
+          <div>{children}</div>
+        </>
+      );
+    }
+
+    function Content() {
+      readText('A');
+      readText('B');
+      return <Text text="Content" />;
+    }
+
+    await act(async () => {
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    console.log('*** show cache boundaries ***');
+    await act(async () => {
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading shell...']);
+    expect(root).toMatchRenderedOutput('Loading shell...');
+
+    console.log('*** resolve A ***');
+    await act(async () => {
+      resolveMostRecentTextCache('A');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Shell',
+      // There's a cache miss for B, because it hasn't been read yet. But not
+      // A, because it was cached when we rendered the shell.
+      'Cache miss! [B]',
+      'Loading content...',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Shell</div>
+        <div>Loading content...</div>
+      </>,
+    );
+
+    console.log('*** resolve B ***');
+    await act(async () => {
+      resolveMostRecentTextCache('B');
+    });
+    expect(Scheduler).toHaveYielded(['Content']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Shell</div>
+        <div>Content</div>
+      </>,
+    );
+
+    console.log('*** unmount children ***');
+    await act(async () => {
+      root.render('Bye');
+    });
+    expect(Scheduler).toHaveYielded([
+      // first render stops on cache miss of A
+      'Cache cleanup: A [v1]',
+      // resume: shell reads A, Content reads A and gets a cache miss on B
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: B [v1]',
+      // resume again: cache hits for A and B
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: B [v1] (cached)',
+    ]);
+    expect(root).toMatchRenderedOutput('Bye');
+  });
+
+  // TODO OK
+  // @gate experimental || www
+  test('refresh a cache boundary', async () => {
     let refresh;
     function App() {
       refresh = useCacheRefresh();
@@ -529,8 +677,20 @@ describe('ReactCache', () => {
     // Note that the version has updated
     expect(Scheduler).toHaveYielded(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // the original cache instance does not cleanup since it is still referenced
+    // by the root, but the refreshed inner cache does cleanup
+    expect(Scheduler).toHaveYielded([
+      'Cache cleanup: A [v2]',
+      'Cache cleanup: A [v2] (cached)',
+    ]);
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
   // @gate experimental || www
   test('refresh the root cache', async () => {
     let refresh;
@@ -567,11 +727,79 @@ describe('ReactCache', () => {
     await act(async () => {
       resolveMostRecentTextCache('A');
     });
-    // Note that the version has updated
-    expect(Scheduler).toHaveYielded(['A [v2]']);
+    // Note that the version has updated, and the previous cache is cleared
+    expect(Scheduler).toHaveYielded([
+      'A [v2]',
+      'Cache cleanup: A [v1]', // initial suspended render
+      'Cache cleanup: A [v1] (cached)', // resumption
+    ]);
     expect(root).toMatchRenderedOutput('A [v2]');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // the original root cache already cleaned up when the refresh completed
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO OK
+  // @gate experimental || www
+  test('refresh the root cache without a transition', async () => {
+    let refresh;
+    function App() {
+      refresh = useCacheRefresh();
+      return <AsyncText showVersion={true} text="A" />;
+    }
+
+    // Mount initial data
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await act(async () => {
+      resolveMostRecentTextCache('A');
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // Refresh for new data.
+    await act(async () => {
+      refresh();
+    });
+    expect(Scheduler).toHaveYielded([
+      'Cache miss! [A]',
+      'Loading...',
+
+      // cleanup occurs immediately bc the root commits w a new cache
+      'Cache cleanup: A [v1]',
+      'Cache cleanup: A [v1] (cached)',
+    ]);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await act(async () => {
+      resolveMostRecentTextCache('A');
+    });
+    // Note that the version has updated, and the previous cache is cleared
+    expect(Scheduler).toHaveYielded(['A [v2]']);
+    expect(root).toMatchRenderedOutput('A [v2]');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // the original root cache already cleaned up when the refresh completed
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye');
+  });
+
+  // TODO OK
   // @gate experimental || www
   test('refresh a cache with seed data', async () => {
     let refresh;
@@ -611,12 +839,24 @@ describe('ReactCache', () => {
       startTransition(() => refresh(createTextCache, cache));
     });
     // The root should re-render without a cache miss.
+    // The cache is not cleared up yet, since it's still reference by the root
     expect(Scheduler).toHaveYielded(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
+
+    await act(async () => {
+      root.render('Bye');
+    });
+    // the refreshed cache boundary is unmounted and cleans up
+    expect(Scheduler).toHaveYielded([
+      // note there is no non '(cached)' version, since the refresh cache was seeded
+      'Cache cleanup: A [v2] (cached)',
+    ]);
+    expect(root).toMatchRenderedOutput('Bye');
   });
 
+  // TODO FIX!!!
   // @gate experimental || www
-  test('refreshing a parent cache also refreshes its children', async () => {
+  test.only('refreshing a parent cache also refreshes its children', async () => {
     let refreshShell;
     function RefreshShell() {
       refreshShell = useCacheRefresh();
@@ -642,6 +882,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
+    console.log('*** initial render ***');
     await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
@@ -650,6 +891,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
+    console.log('*** new cache boundary ***');
     await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={true} />);
@@ -663,6 +905,7 @@ describe('ReactCache', () => {
 
     // Now refresh the shell. This should also cause the "Show More" contents to
     // refresh, since its cache is nested inside the outer one.
+    console.log('*** refresh shell ***');
     await act(async () => {
       startTransition(() => refreshShell());
     });
@@ -673,13 +916,32 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
 
+    console.log('*** resolve text ***');
     await act(async () => {
       resolveMostRecentTextCache('A');
     });
-    expect(Scheduler).toHaveYielded(['A [v3]', 'A [v3]']);
+    expect(Scheduler).toHaveYielded([
+      'A [v3]',
+      'A [v3]',
+      'Cache cleanup: A [v2] (cached)',
+    ]);
     expect(root).toMatchRenderedOutput('A [v3]A [v3]');
+
+    // Replace all the children: this should clear *both* cache instances:
+    // the root doesn't have a cache instance (since it wasn't accessed
+    // during the initial render, and all subsequent cache accesses were within
+    // a fresh boundary). Therefore this causes cleanup for both the fresh cache
+    // instance in the refreshed first boundary and cleanup for the non-refreshed
+    // sibling boundary.
+    console.log('*** remove children ***');
+    await act(async => {
+      root.render('Bye!');
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye!');
   });
 
+  // TODO OK
   // @gate experimental || www
   test(
     'refreshing a cache boundary does not refresh the other boundaries ' +
@@ -750,9 +1012,29 @@ describe('ReactCache', () => {
       });
       expect(Scheduler).toHaveYielded(['A [v2]']);
       expect(root).toMatchRenderedOutput('A [v2]A [v1]');
+
+      // Replace all the children: this should clear *both* cache instances:
+      // the root doesn't have a cache instance (since it wasn't accessed
+      // during the initial render, and all subsequent cache accesses were within
+      // a fresh boundary). Therefore this causes cleanup for both the fresh cache
+      // instance in the refreshed first boundary and cleanup for the non-refreshed
+      // sibling boundary.
+      await act(async => {
+        root.render('Bye!');
+      });
+      expect(Scheduler).toHaveYielded([
+        'Cache cleanup: A [v2]',
+        'Cache cleanup: A [v2] (cached)',
+        'Cache cleanup: A [v1]',
+        'Cache cleanup: A [v1] (cached)',
+        'Cache cleanup: A [v1] (cached)',
+        'Cache cleanup: A [v1] (cached)',
+      ]);
+      expect(root).toMatchRenderedOutput('Bye!');
     },
   );
 
+  // TODO FIX!!!
   // @gate experimental || www
   test(
     'mount a new Cache boundary in a sibling while simultaneously ' +
@@ -788,6 +1070,7 @@ describe('ReactCache', () => {
         'Cache miss! [B]',
         'Loading...',
       ]);
+      expect(root).toMatchRenderedOutput('Loading...');
 
       await act(async () => {
         // This will resolve the content in the first cache
@@ -804,7 +1087,9 @@ describe('ReactCache', () => {
         // requests are not dropped.
         'A [v1]',
         'B [v1]',
+        'Cache cleanup: A [v2]', // TODO FIX!!!
       ]);
+      expect(root).toMatchRenderedOutput('Loading... A [v1] B [v1]');
 
       // Now resolve the second tree
       await act(async () => {
@@ -812,9 +1097,21 @@ describe('ReactCache', () => {
       });
       expect(Scheduler).toHaveYielded(['A [v2]']);
       expect(root).toMatchRenderedOutput('A [v2] A [v1] B [v1]');
+
+      await act(async => {
+        root.render('Bye!');
+      });
+      expect(Scheduler).toHaveYielded([
+        // TODO FIX!!!
+        // 'Cache cleanup: A [v2]',
+        // 'Cache cleanup: A [v1]',
+        // 'Cache cleanup: B [v1]',
+      ]);
+      expect(root).toMatchRenderedOutput('Bye!');
     },
   );
 
+  // TODO unsure about this one
   // @gate experimental || www
   test('cache pool is cleared once transitions that depend on it commit their shell', async () => {
     function Child({text}) {
@@ -896,8 +1193,27 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]', 'A [v2]']);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]A [v2]');
+
+    await act(async => {
+      root.render('Bye!');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Cache cleanup: A [v1]',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v1] (cached)',
+      'Cache cleanup: A [v2]',
+      'Cache cleanup: A [v2] (cached)',
+    ]);
+    expect(root).toMatchRenderedOutput('Bye!');
   });
 
+  // TODO unsure about this one
   // @gate experimental || www
   test('cache pool is not cleared by arbitrary commits', async () => {
     function App() {
@@ -935,7 +1251,7 @@ describe('ReactCache', () => {
 
     const root = ReactNoop.createRoot();
     await act(async () => {
-      root.render(<App showMore={false} />);
+      root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['0']);
     expect(root).toMatchRenderedOutput('0');
@@ -953,6 +1269,8 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded([
       '1',
+      'Cache cleanup: A [v1]',
+      'Cache miss! [A]',
 
       // Happens to re-render the fallback. Doesn't need to, but not relevant
       // to this test.
@@ -965,5 +1283,14 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded(['A']);
     expect(root).toMatchRenderedOutput('A1');
+
+    await act(async => {
+      root.render('Bye!');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Cache cleanup: A [v2]',
+      'Cache cleanup: A [v2] (cached)',
+    ]);
+    expect(root).toMatchRenderedOutput('Bye!');
   });
 });

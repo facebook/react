@@ -121,7 +121,7 @@ function trace(msg, levels = 2) {
     `${msg}:\n` +
       new Error().stack
         .split('\n')
-        .slice(3, 3 + Math.min(levels, 1))
+        .slice(3, 3 + Math.max(levels, 1))
         .join('\n'),
   );
 }
@@ -162,7 +162,9 @@ export function pushRootCachePool(root: FiberRoot) {
   // the root itself during the complete/unwind phase of the HostRoot.
   const rootCache = root.pooledCache;
   if (rootCache != null) {
-    pooledCache = cloneCache(rootCache);
+    trace('pushRootCachePool');
+    pooledCache = rootCache;
+    root.pooledCache = null;
   } else {
     pooledCache = null;
   }
@@ -179,6 +181,7 @@ export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
   // on it (which we track with `pooledCacheLanes`) have committed.
   root.pooledCache = pooledCache;
   if (pooledCache !== null) {
+    trace('popRootCachePool');
     root.pooledCacheLanes |= renderLanes;
   }
   // set to null, conceptually we are moving ownership to the root

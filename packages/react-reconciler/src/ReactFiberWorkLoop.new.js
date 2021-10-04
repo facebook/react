@@ -237,7 +237,7 @@ import {
   isDevToolsPresent,
 } from './ReactFiberDevToolsHook.new';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
-import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
+import {releaseCache} from './ReactFiberCacheComponent.new';
 
 const ceil = Math.ceil;
 
@@ -2115,7 +2115,6 @@ function releaseRootPooledCache(root) {
   if (enableCache) {
     const pooledCache = root.pooledCache;
     if (pooledCache != null) {
-      console.log('releaseRootPooledCache');
       releaseCache(pooledCache);
       root.pooledCache = null;
     }

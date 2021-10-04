@@ -11,7 +11,11 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import {
+  Cache,
+  releaseCache,
+  SpawnedCachePool,
+} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -153,6 +157,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
+        releaseCache(cache);
       }
       return null;
     default:
