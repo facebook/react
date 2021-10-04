@@ -1130,4 +1130,69 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     document.body.removeChild(container);
   });
+
+  it('does not propagate discrete event if it cannot be synchronously hydrated', async () => {
+    let triggeredParent = false;
+    let triggeredChild = false;
+    let suspend = false;
+    let promise = new Promise(() => {});
+    function Child() {
+      if (suspend) {
+        throw promise;
+      }
+      Scheduler.unstable_yieldValue('Child');
+      return (
+        <span
+          onClickCapture={e => {
+            e.stopPropagation();
+            triggeredChild = true;
+          }}>
+          Click me
+        </span>
+      );
+    }
+    function App() {
+      const ref = React.useRef();
+      const onClick = () => {
+        triggeredParent = true;
+      };
+      React.useLayoutEffect(() => {
+        if (!ref.current) {
+          return;
+        }
+        ref.current.onClick = onClick;
+      }, []);
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <div ref={ref} onClick={onClick}>
+          <Suspense fallback={null}>
+            <Child />
+          </Suspense>
+        </div>
+      );
+    }
+    let finalHTML;
+    expect(() => {
+      finalHTML = ReactDOMServer.renderToString(<App />);
+    }).toErrorDev(['useLayoutEffect does nothing on the server']);
+
+    expect(Scheduler).toHaveYielded(['App', 'Child']);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+
+    ReactDOM.hydrateRoot(container, <App />);
+    // Nothing has been hydrated so far.
+    expect(Scheduler).toHaveYielded([]);
+
+    suspend = true;
+
+    const span = container.getElementsByTagName('span')[0];
+    dispatchClickEvent(span);
+
+    expect(Scheduler).toHaveYielded(['App']);
+    expect(triggeredParent).toBe(false);
+    expect(triggeredChild).toBe(false);
+  });
 });
