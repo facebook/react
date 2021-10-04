@@ -16,13 +16,12 @@ import {
   enableSelectiveHydration,
 } from 'shared/ReactFeatureFlags';
 import {
-  isReplayableDiscreteEvent,
+  isDiscreteEvent,
   queueDiscreteEvent,
   hasQueuedDiscreteEvents,
   clearIfContinuousEvent,
   queueIfContinuousEvent,
   attemptSynchronousHydration,
-  isCapturePhaseSynchronouslyHydratableEvent,
 } from './ReactDOMEventReplaying';
 import {
   getNearestMountedFiber,
@@ -169,7 +168,7 @@ export function dispatchEvent(
   if (
     allowReplay &&
     hasQueuedDiscreteEvents() &&
-    isReplayableDiscreteEvent(domEventName)
+    isDiscreteEvent(domEventName)
   ) {
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
@@ -202,7 +201,7 @@ export function dispatchEvent(
   if (allowReplay) {
     if (
       !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-      isReplayableDiscreteEvent(domEventName)
+      isDiscreteEvent(domEventName)
     ) {
       // This this to be replayed later once the target is available.
       queueDiscreteEvent(
@@ -232,8 +231,8 @@ export function dispatchEvent(
 
   if (
     enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-    enableSelectiveHydration &&
-    isCapturePhaseSynchronouslyHydratableEvent(domEventName)
+    eventSystemFlags & IS_CAPTURE_PHASE &&
+    isDiscreteEvent(domEventName)
   ) {
     while (blockedOn !== null) {
       const fiber = getInstanceFromNode(blockedOn);

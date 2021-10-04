@@ -160,7 +160,7 @@ const discreteReplayableEvents: Array<DOMEventName> = [
   'submit',
 ];
 
-export function isReplayableDiscreteEvent(eventType: DOMEventName): boolean {
+export function isDiscreteEvent(eventType: DOMEventName): boolean {
   return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 
@@ -298,13 +298,6 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
     targetContainers.push(targetContainer);
   }
   return existingQueuedEvent;
-}
-
-export function isCapturePhaseSynchronouslyHydratableEvent(
-  eventName: DOMEventName,
-) {
-  // TODO: maybe include more events
-  return isReplayableDiscreteEvent(eventName);
 }
 
 export function queueIfContinuousEvent(
