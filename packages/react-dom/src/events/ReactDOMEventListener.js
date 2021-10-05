@@ -13,7 +13,7 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
 import {
-  isDiscreteEvent,
+  isDiscreteEventThatRequiresHydration,
   queueDiscreteEvent,
   hasQueuedDiscreteEvents,
   clearIfContinuousEvent,
@@ -165,7 +165,7 @@ export function dispatchEvent(
   if (
     allowReplay &&
     hasQueuedDiscreteEvents() &&
-    isDiscreteEvent(domEventName)
+    isDiscreteEventThatRequiresHydration(domEventName)
   ) {
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
@@ -198,7 +198,7 @@ export function dispatchEvent(
   if (allowReplay) {
     if (
       !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-      isDiscreteEvent(domEventName)
+      isDiscreteEventThatRequiresHydration(domEventName)
     ) {
       // This this to be replayed later once the target is available.
       queueDiscreteEvent(
@@ -229,7 +229,7 @@ export function dispatchEvent(
   if (
     enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
     eventSystemFlags & IS_CAPTURE_PHASE &&
-    isDiscreteEvent(domEventName)
+    isDiscreteEventThatRequiresHydration(domEventName)
   ) {
     while (blockedOn !== null) {
       const fiber = getInstanceFromNode(blockedOn);

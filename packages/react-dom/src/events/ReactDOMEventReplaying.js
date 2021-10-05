@@ -160,7 +160,9 @@ const discreteReplayableEvents: Array<DOMEventName> = [
   'submit',
 ];
 
-export function isDiscreteEvent(eventType: DOMEventName): boolean {
+export function isDiscreteEventThatRequiresHydration(
+  eventType: DOMEventName,
+): boolean {
   return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 

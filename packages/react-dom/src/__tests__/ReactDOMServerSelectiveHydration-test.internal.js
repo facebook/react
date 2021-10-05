@@ -1157,25 +1157,20 @@ describe('ReactDOMServerSelectiveHydration', () => {
       const onClick = () => {
         triggeredParent = true;
       };
-      React.useLayoutEffect(() => {
-        if (!ref.current) {
-          return;
-        }
-        ref.current.onclick = onClick;
-      }, []);
       Scheduler.unstable_yieldValue('App');
       return (
-        <div ref={ref} onClick={onClick}>
+        <div
+          ref={n => {
+            if (n) n.onclick = onClick;
+          }}
+          onClick={onClick}>
           <Suspense fallback={null}>
             <Child />
           </Suspense>
         </div>
       );
     }
-    let finalHTML;
-    expect(() => {
-      finalHTML = ReactDOMServer.renderToString(<App />);
-    }).toErrorDev(['useLayoutEffect does nothing on the server']);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
 
     expect(Scheduler).toHaveYielded(['App', 'Child']);
 
@@ -1183,11 +1178,11 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.appendChild(container);
     container.innerHTML = finalHTML;
 
+    suspend = true;
+
     ReactDOM.hydrateRoot(container, <App />);
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
-
-    suspend = true;
 
     const span = container.getElementsByTagName('span')[0];
     dispatchClickEvent(span);
