@@ -18,11 +18,13 @@ import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
 import {pushProvider, popProvider} from './ReactFiberNewContext.new';
+import {string} from 'yargs';
 
 export type Cache = {|
   controller: AbortController,
   data: Map<() => mixed, mixed>,
   refCount: number,
+  key?: string,
 |};
 
 export type CacheComponentState = {|
@@ -76,7 +78,7 @@ export function createCache(): Cache {
   const cache: Cache = {
     controller: new AbortController(),
     data: new Map(),
-    refCount: 1,
+    refCount: 0,
   };
 
   // TODO: remove debugging code
@@ -91,9 +93,14 @@ export function createCache(): Cache {
 // When the returned cache instance is no longer reference it must be cleaned up by
 // calling `releaseCache(clone)`
 export function cloneCache(cache: Cache): Cache {
-  trace(`cloneCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}`);
-  cache.refCount++;
+  // trace(`cloneCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}`);
+  // cache.refCount++;
   return cache;
+}
+
+export function retainCache(cache: Cache) {
+  trace(`retainCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}`);
+  cache.refCount++;
 }
 
 // Cleanup a cache instance, potentially freeing it if there are no more references
@@ -104,9 +111,9 @@ export function releaseCache(cache: Cache) {
   cache.refCount--;
   if (__DEV__) {
     if (cache.refCount < 0) {
-      throw new Error(
-        'Error in React: cache reference count should not be negative',
-      );
+      // throw new Error(
+      //   'Error in React: cache reference count should not be negative',
+      // );
     }
   }
   if (cache.refCount === 0) {
@@ -117,13 +124,13 @@ export function releaseCache(cache: Cache) {
 }
 
 function trace(msg, levels = 2) {
-  console.log(
-    `${msg}:\n` +
-      new Error().stack
-        .split('\n')
-        .slice(3, 3 + Math.max(levels, 1))
-        .join('\n'),
-  );
+  // console.log(
+  //   `${msg}:\n` +
+  //     new Error().stack
+  //       .split('\n')
+  //       .slice(3, 3 + Math.max(levels, 1))
+  //       .join('\n'),
+  // );
 }
 
 export function pushCacheProvider(workInProgress: Fiber, cache: Cache) {

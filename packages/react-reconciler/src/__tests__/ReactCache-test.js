@@ -173,7 +173,6 @@ describe('ReactCache', () => {
     function Example(props) {
       return <Cache>{props.text}</Cache>;
     }
-    console.log('render: hi');
     await act(async () => {
       root.render(<Example text="Hi" />);
     });
@@ -580,14 +579,12 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('(empty)');
 
-    console.log('*** show cache boundaries ***');
     await act(async () => {
       root.render(<App showMore={true} />);
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading shell...']);
     expect(root).toMatchRenderedOutput('Loading shell...');
 
-    console.log('*** resolve A ***');
     await act(async () => {
       resolveMostRecentTextCache('A');
     });
@@ -605,7 +602,6 @@ describe('ReactCache', () => {
       </>,
     );
 
-    console.log('*** resolve B ***');
     await act(async () => {
       resolveMostRecentTextCache('B');
     });
@@ -617,7 +613,6 @@ describe('ReactCache', () => {
       </>,
     );
 
-    console.log('*** unmount children ***');
     await act(async () => {
       root.render('Bye');
     });
@@ -730,8 +725,8 @@ describe('ReactCache', () => {
     // Note that the version has updated, and the previous cache is cleared
     expect(Scheduler).toHaveYielded([
       'A [v2]',
-      'Cache cleanup: A [v1]', // initial suspended render
-      'Cache cleanup: A [v1] (cached)', // resumption
+      'Cache cleanup: A [v1]', // from initial suspended render
+      'Cache cleanup: A [v1] (cached)', // from resumption
     ]);
     expect(root).toMatchRenderedOutput('A [v2]');
 
@@ -854,9 +849,8 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO FIX!!!
   // @gate experimental || www
-  test.only('refreshing a parent cache also refreshes its children', async () => {
+  test('refreshing a parent cache also refreshes its children', async () => {
     let refreshShell;
     function RefreshShell() {
       refreshShell = useCacheRefresh();
@@ -882,7 +876,6 @@ describe('ReactCache', () => {
     }
 
     const root = ReactNoop.createRoot();
-    console.log('*** initial render ***');
     await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={false} />);
@@ -891,7 +884,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     // Add a new cache boundary
-    console.log('*** new cache boundary ***');
     await act(async () => {
       seedNextTextCache('A');
       root.render(<App showMore={true} />);
@@ -905,7 +897,6 @@ describe('ReactCache', () => {
 
     // Now refresh the shell. This should also cause the "Show More" contents to
     // refresh, since its cache is nested inside the outer one.
-    console.log('*** refresh shell ***');
     await act(async () => {
       startTransition(() => refreshShell());
     });
@@ -916,28 +907,30 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
 
-    console.log('*** resolve text ***');
     await act(async () => {
       resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded([
       'A [v3]',
       'A [v3]',
+      // once the refresh completes the inner showMore boundary frees its previous
+      // cache instance, since it is now using the refreshed parent instance.
+      // note that the entry is "(cached)" because the cache was seeded w a value.
       'Cache cleanup: A [v2] (cached)',
     ]);
     expect(root).toMatchRenderedOutput('A [v3]A [v3]');
 
-    // Replace all the children: this should clear *both* cache instances:
-    // the root doesn't have a cache instance (since it wasn't accessed
-    // during the initial render, and all subsequent cache accesses were within
-    // a fresh boundary). Therefore this causes cleanup for both the fresh cache
-    // instance in the refreshed first boundary and cleanup for the non-refreshed
-    // sibling boundary.
-    console.log('*** remove children ***');
     await act(async => {
       root.render('Bye!');
     });
-    expect(Scheduler).toHaveYielded([]);
+    // Unmounting children releases the refreshed cache instance only; the root
+    // still retains the original cache instance used for the first render
+    expect(Scheduler).toHaveYielded([
+      'Cache cleanup: A [v3]',
+      'Cache cleanup: A [v3] (cached)',
+      'Cache cleanup: A [v3] (cached)',
+      'Cache cleanup: A [v3] (cached)',
+    ]);
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
@@ -1034,7 +1027,6 @@ describe('ReactCache', () => {
     },
   );
 
-  // TODO FIX!!!
   // @gate experimental || www
   test(
     'mount a new Cache boundary in a sibling while simultaneously ' +
@@ -1087,7 +1079,6 @@ describe('ReactCache', () => {
         // requests are not dropped.
         'A [v1]',
         'B [v1]',
-        'Cache cleanup: A [v2]', // TODO FIX!!!
       ]);
       expect(root).toMatchRenderedOutput('Loading... A [v1] B [v1]');
 
@@ -1101,11 +1092,12 @@ describe('ReactCache', () => {
       await act(async => {
         root.render('Bye!');
       });
+      // Unmounting children releases both cache boundaries, but the original
+      // cache instance (used by second boundary) is still referenced by the root.
+      // only the second cache instance is freed.
       expect(Scheduler).toHaveYielded([
-        // TODO FIX!!!
-        // 'Cache cleanup: A [v2]',
-        // 'Cache cleanup: A [v1]',
-        // 'Cache cleanup: B [v1]',
+        'Cache cleanup: A [v2]',
+        'Cache cleanup: A [v2] (cached)',
       ]);
       expect(root).toMatchRenderedOutput('Bye!');
     },
@@ -1269,7 +1261,6 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded([
       '1',
-      'Cache cleanup: A [v1]',
       'Cache miss! [A]',
 
       // Happens to re-render the fallback. Doesn't need to, but not relevant
@@ -1287,6 +1278,8 @@ describe('ReactCache', () => {
     await act(async => {
       root.render('Bye!');
     });
+    // the cache boundary's fresh cache is freed, but the original root cache
+    // is still retained by the root
     expect(Scheduler).toHaveYielded([
       'Cache cleanup: A [v2]',
       'Cache cleanup: A [v2] (cached)',

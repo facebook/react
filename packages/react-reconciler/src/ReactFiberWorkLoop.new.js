@@ -237,7 +237,6 @@ import {
   isDevToolsPresent,
 } from './ReactFiberDevToolsHook.new';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
-import {releaseCache} from './ReactFiberCacheComponent.new';
 
 const ceil = Math.ceil;
 
@@ -2115,7 +2114,6 @@ function releaseRootPooledCache(root) {
   if (enableCache) {
     const pooledCache = root.pooledCache;
     if (pooledCache != null) {
-      releaseCache(pooledCache);
       root.pooledCache = null;
     }
   }
@@ -2160,7 +2158,6 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
 
 function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
-    console.log('flushPassiveEffectsImpl bailout');
     return false;
   }
 
