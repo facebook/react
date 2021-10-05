@@ -538,6 +538,7 @@ export type DataType =
   | 'null'
   | 'number'
   | 'object'
+  | 'proxy'
   | 'react_element'
   | 'regexp'
   | 'string'
@@ -594,12 +595,20 @@ export function getDataType(data: Object): DataType {
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
-        const iterator = data[Symbol.iterator]();
-        if (!iterator) {
-          // Proxies might break assumptoins about iterators.
-          // See github.com/facebook/react/issues/21654
-        } else {
-          return iterator === data ? 'opaque_iterator' : 'iterator';
+        try {
+          const iterator = data[Symbol.iterator]();
+
+          if (!iterator) {
+            // Proxies might break assumptions about iterators.
+            // See github.com/facebook/react/issues/21654
+          } else {
+            return iterator === data ? 'opaque_iterator' : 'iterator';
+          }
+        } catch (e) {
+          // as of the information right now it is assumed that accessing
+          // `data[Symbol.iterator]()` will fail because `data` is a proxy
+          // that can't handle the iterator
+          return 'proxy';
         }
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
@@ -778,6 +787,7 @@ export function formatDataForPreview(
         return shortName;
       }
     case 'iterator':
+    case 'proxy':
       const name = data.constructor.name;
 
       if (showFormattedValue) {
@@ -785,7 +795,8 @@ export function formatDataForPreview(
         // Don't use [...spread] syntax for this purpose.
         // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
         // Other types (e.g. typed arrays, Sets) will not spread correctly.
-        const array = Array.from(data);
+        const array =
+          type === 'iterator' ? Array.from(data) : Reflect.keys(data);
 
         let formatted = '';
         for (let i = 0; i < array.length; i++) {
