@@ -1,5 +1,3 @@
-const {test} = require('jest-snapshot-serializer-raw');
-
 let React;
 let ReactNoop;
 let Cache;
@@ -166,7 +164,6 @@ describe('ReactCache', () => {
     }
   }
 
-  // TODO OK
   // @gate experimental || www
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
@@ -179,7 +176,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('mount new data', async () => {
     const root = ReactNoop.createRoot();
@@ -209,7 +205,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('root acts as implicit cache boundary', async () => {
     const root = ReactNoop.createRoot();
@@ -237,7 +232,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('multiple new Cache boundaries in the same update share the same, fresh cache', async () => {
     function App({showMore}) {
@@ -299,7 +293,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test(
     'nested cache boundaries share the same cache as the root during ' +
@@ -340,7 +333,6 @@ describe('ReactCache', () => {
     },
   );
 
-  // TODO OK
   // @gate experimental || www
   test('new content inside an existing Cache boundary should re-use already cached data', async () => {
     function App({showMore}) {
@@ -385,7 +377,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('a new Cache boundary uses fresh cache', async () => {
     // The only difference from the previous test is that the "Show More"
@@ -447,7 +438,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('inner/outer cache boundaries uses the same cache instance on initial render', async () => {
     const root = ReactNoop.createRoot();
@@ -530,7 +520,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('inner/ outer cache boundaries added in the same update use the same cache instance', async () => {
     const root = ReactNoop.createRoot();
@@ -630,7 +619,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('refresh a cache boundary', async () => {
     let refresh;
@@ -685,7 +673,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('refresh the root cache', async () => {
     let refresh;
@@ -738,7 +725,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('refresh the root cache without a transition', async () => {
     let refresh;
@@ -794,7 +780,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // TODO OK
   // @gate experimental || www
   test('refresh a cache with seed data', async () => {
     let refresh;
@@ -934,7 +919,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // TODO OK
   // @gate experimental || www
   test(
     'refreshing a cache boundary does not refresh the other boundaries ' +
@@ -1103,7 +1087,6 @@ describe('ReactCache', () => {
     },
   );
 
-  // TODO unsure about this one
   // @gate experimental || www
   test('cache pool is cleared once transitions that depend on it commit their shell', async () => {
     function Child({text}) {
@@ -1205,7 +1188,6 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // TODO unsure about this one
   // @gate experimental || www
   test('cache pool is not cleared by arbitrary commits', async () => {
     function App() {
