@@ -124,6 +124,7 @@ module.exports = {
         new: [],
       },
     ],
+    'react-internal/no-dynamic-import-in-literal': ERROR,
   },
 
   overrides: [
@@ -198,6 +199,7 @@ module.exports = {
         'jest/no-focused-tests': ERROR,
         'jest/valid-expect': ERROR,
         'jest/valid-expect-in-promise': ERROR,
+        'react-internal/no-dynamic-import-in-literal': OFF,
       },
     },
     {

@@ -11,5 +11,6 @@ module.exports = {
     'no-cross-fork-imports': require('./no-cross-fork-imports'),
     'no-cross-fork-types': require('./no-cross-fork-types'),
     'safe-string-coercion': require('./safe-string-coercion'),
+    'no-dynamic-import-in-literal': require('./no-dynamic-import-in-literal'),
   },
 };
