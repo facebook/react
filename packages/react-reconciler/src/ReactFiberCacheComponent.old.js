@@ -23,6 +23,7 @@ export type Cache = {|
   controller: AbortController,
   data: Map<() => mixed, mixed>,
   refCount: number,
+  key?: string,
 |};
 
 export type CacheComponentState = {|
@@ -61,27 +62,44 @@ let pooledCache: Cache | null = null;
 // cache from the render that suspended.
 const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 
-// Creates a new empty Cache instance with a ref-count of 1: the caller is
-// the implicit "owner". Note that retain/release must be called to ensure
-// that the ref count is accurate:
-// * Call retainCache() when a new reference to the cache instance is created.
-//   This *excludes* the original reference created w createCache().
-// * Call releaseCache() when any reference to the cache is "released" (ie
-//   when the reference is no longer reachable). This *includes* the original
-//   reference created w createCache().
+// Creates a new empty Cache instance with a ref-count of 0. The caller is responsible
+// for retaining the cache once it is in use (retainCache), and releasing the cache
+// once it is no longer needed (releaseCache).
+let _cacheIndex = 0;
 export function createCache(): Cache {
-  return {
+  const cache: Cache = {
     controller: new AbortController(),
     data: new Map(),
-    refCount: 1,
+    refCount: 0,
   };
+
+  // TODO: remove debugging code
+  if (__DEV__) {
+    cache.key = '' + _cacheIndex++;
+    trace(`createCache #${cache.key ?? ''}`);
+  }
+
+  return cache;
 }
 
 export function retainCache(cache: Cache) {
+  if (__DEV__) {
+    trace(
+      `retainCache #${cache.key ?? ''} ${cache.refCount} -> ${cache.refCount +
+        1}`,
+    );
+  }
   cache.refCount++;
 }
 
+// Cleanup a cache instance, potentially freeing it if there are no more references
 export function releaseCache(cache: Cache) {
+  if (__DEV__) {
+    trace(
+      `releaseCache #${cache.key ?? ''} ${cache.refCount} -> ${cache.refCount -
+        1}`,
+    );
+  }
   cache.refCount--;
   if (__DEV__) {
     if (cache.refCount < 0) {
@@ -91,9 +109,21 @@ export function releaseCache(cache: Cache) {
     }
   }
   if (cache.refCount === 0) {
-    // TODO: considering scheduling and error handling for any
-    // event listeners that get triggered.
+    // TODO: considering scheduling this call, and adding error handling for
+    // any event listeners that get triggered.
     cache.controller.abort();
+  }
+}
+
+function trace(msg, levels = 2) {
+  if (__DEV__) {
+    // console.log(
+    //   `${msg}:\n` +
+    //     new Error().stack
+    //       .split('\n')
+    //       .slice(3, 3 + Math.max(levels, 1))
+    //       .join('\n'),
+    // );
   }
 }
 
@@ -131,7 +161,14 @@ export function pushRootCachePool(root: FiberRoot) {
   // from `root.pooledCache`. If it's currently `null`, we will lazily
   // initialize it the first type it's requested. However, we only mutate
   // the root itself during the complete/unwind phase of the HostRoot.
-  pooledCache = root.pooledCache;
+  const rootCache = root.pooledCache;
+  if (rootCache != null) {
+    trace('pushRootCachePool');
+    pooledCache = rootCache;
+    root.pooledCache = null;
+  } else {
+    pooledCache = null;
+  }
 }
 
 export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
@@ -145,6 +182,7 @@ export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
   // on it (which we track with `pooledCacheLanes`) have committed.
   root.pooledCache = pooledCache;
   if (pooledCache !== null) {
+    trace('popRootCachePool');
     root.pooledCacheLanes |= renderLanes;
   }
   // set to null, conceptually we are moving ownership to the root

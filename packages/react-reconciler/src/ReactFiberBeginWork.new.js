@@ -223,7 +223,6 @@ import {
 } from './ReactFiberWorkLoop.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {
-  cloneCache,
   requestCacheFromPool,
   pushCacheProvider,
   pushRootCachePool,
@@ -850,7 +849,7 @@ function updateCacheComponent(
       // Refresh in parent. Update the parent.
       const derivedState: CacheComponentState = {
         parent: parentCache,
-        cache: cloneCache(parentCache),
+        cache: parentCache,
       };
 
       // Copied from getDerivedStateFromProps implementation. Once the update

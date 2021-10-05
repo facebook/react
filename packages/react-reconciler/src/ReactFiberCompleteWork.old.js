@@ -72,6 +72,7 @@ import {
   ChildDeletion,
   StaticMask,
   MutationMask,
+  Passive,
 } from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
@@ -847,6 +848,7 @@ function completeWork(
     case HostRoot: {
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (enableCache) {
+        workInProgress.flags |= Passive;
         popRootCachePool(fiberRoot, renderLanes);
 
         const cache: Cache = workInProgress.memoizedState.cache;
@@ -1472,6 +1474,7 @@ function completeWork(
     case CacheComponent: {
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
+        workInProgress.flags |= Passive;
         popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);
         return null;

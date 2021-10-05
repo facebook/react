@@ -50,7 +50,6 @@ import {
   popCachePool,
 } from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
-import {releaseCache} from './ReactFiberCacheComponent.new';
 
 import invariant from 'shared/invariant';
 
@@ -154,7 +153,6 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
-        // releaseCache(cache);
       }
       return null;
     default:

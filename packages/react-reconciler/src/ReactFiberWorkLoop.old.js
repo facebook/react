@@ -237,7 +237,6 @@ import {
   isDevToolsPresent,
 } from './ReactFiberDevToolsHook.old';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
-import {releaseCache} from './ReactFiberCacheComponent.old';
 
 const ceil = Math.ceil;
 
@@ -2053,7 +2052,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     hasUncaughtError = false;
     const error = firstUncaughtError;
     firstUncaughtError = null;
-    // TODO: how to handle cache cleanup here?
+    releaseRootPooledCache(root);
     throw error;
   }
 
@@ -2096,13 +2095,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // Now that effects have run - giving Cache boundaries a chance to retain the
   // cache instance - release the root's cache in case since the render is complete
-  if (enableCache) {
-    const pooledCache = root.pooledCache;
-    if (pooledCache != null) {
-      releaseCache(pooledCache);
-      root.pooledCache = null;
-    }
-  }
+  releaseRootPooledCache(root);
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -2115,6 +2108,15 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   return null;
+}
+
+function releaseRootPooledCache(root) {
+  if (enableCache) {
+    const pooledCache = root.pooledCache;
+    if (pooledCache != null) {
+      root.pooledCache = null;
+    }
+  }
 }
 
 export function flushPassiveEffects(): boolean {

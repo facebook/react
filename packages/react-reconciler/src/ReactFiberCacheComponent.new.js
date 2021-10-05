@@ -18,7 +18,6 @@ import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
 import {pushProvider, popProvider} from './ReactFiberNewContext.new';
-import {string} from 'yargs';
 
 export type Cache = {|
   controller: AbortController,
@@ -63,16 +62,9 @@ let pooledCache: Cache | null = null;
 // cache from the render that suspended.
 const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 
-// Creates a new empty Cache instance with a ref-count of 1: the caller is
-// the implicit "owner" of the cache instance. The developer is responsible
-// for calling `releaseCache(cache)` when the reference to this cache is no
-// longer reachable.
-//
-// To create additional references to a Cache (ie to share it across the root,
-// multiple <Cache> components, etc), create a new "clone" with
-// eg `clone = cloneCache(cache)`. The developer is then calling
-// `releaseCache(clone)` for each clone created w cloneCache, when that clone
-// is no longer reachable.
+// Creates a new empty Cache instance with a ref-count of 0. The caller is responsible
+// for retaining the cache once it is in use (retainCache), and releasing the cache
+// once it is no longer needed (releaseCache).
 let _cacheIndex = 0;
 export function createCache(): Cache {
   const cache: Cache = {
@@ -82,38 +74,38 @@ export function createCache(): Cache {
   };
 
   // TODO: remove debugging code
-  const key = _cacheIndex++;
-  (cache: any).key = String(key);
-  trace(`createCache #${cache.key}`);
+  if (__DEV__) {
+    cache.key = '' + _cacheIndex++;
+    trace(`createCache #${cache.key ?? ''}`);
+  }
 
-  return cache;
-}
-
-// Creates a lightweight clone of the given Cache instance that *shares the same data*.
-// When the returned cache instance is no longer reference it must be cleaned up by
-// calling `releaseCache(clone)`
-export function cloneCache(cache: Cache): Cache {
-  // trace(`cloneCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}`);
-  // cache.refCount++;
   return cache;
 }
 
 export function retainCache(cache: Cache) {
-  trace(`retainCache #${cache.key} ${cache.refCount} -> ${cache.refCount + 1}`);
+  if (__DEV__) {
+    trace(
+      `retainCache #${cache.key ?? ''} ${cache.refCount} -> ${cache.refCount +
+        1}`,
+    );
+  }
   cache.refCount++;
 }
 
 // Cleanup a cache instance, potentially freeing it if there are no more references
 export function releaseCache(cache: Cache) {
-  trace(
-    `releaseCache #${cache.key} ${cache.refCount} -> ${cache.refCount - 1}`,
-  );
+  if (__DEV__) {
+    trace(
+      `releaseCache #${cache.key ?? ''} ${cache.refCount} -> ${cache.refCount -
+        1}`,
+    );
+  }
   cache.refCount--;
   if (__DEV__) {
     if (cache.refCount < 0) {
-      // throw new Error(
-      //   'Error in React: cache reference count should not be negative',
-      // );
+      throw new Error(
+        'Error in React: cache reference count should not be negative',
+      );
     }
   }
   if (cache.refCount === 0) {
@@ -124,13 +116,15 @@ export function releaseCache(cache: Cache) {
 }
 
 function trace(msg, levels = 2) {
-  // console.log(
-  //   `${msg}:\n` +
-  //     new Error().stack
-  //       .split('\n')
-  //       .slice(3, 3 + Math.max(levels, 1))
-  //       .join('\n'),
-  // );
+  if (__DEV__) {
+    // console.log(
+    //   `${msg}:\n` +
+    //     new Error().stack
+    //       .split('\n')
+    //       .slice(3, 3 + Math.max(levels, 1))
+    //       .join('\n'),
+    // );
+  }
 }
 
 export function pushCacheProvider(workInProgress: Fiber, cache: Cache) {
@@ -152,11 +146,11 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
     return (null: any);
   }
   if (pooledCache !== null) {
-    return cloneCache(pooledCache);
+    return pooledCache;
   }
   // Create a fresh cache.
   pooledCache = createCache();
-  return cloneCache(pooledCache);
+  return pooledCache;
 }
 
 export function pushRootCachePool(root: FiberRoot) {
