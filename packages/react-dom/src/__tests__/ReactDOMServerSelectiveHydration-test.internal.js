@@ -1131,6 +1131,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
   it('does not propagate discrete event if it cannot be synchronously hydrated', async () => {
     let triggeredParent = false;
     let triggeredChild = false;
@@ -1160,7 +1161,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
         if (!ref.current) {
           return;
         }
-        ref.current.onClick = onClick;
+        ref.current.onclick = onClick;
       }, []);
       Scheduler.unstable_yieldValue('App');
       return (
@@ -1192,6 +1193,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
     dispatchClickEvent(span);
 
     expect(Scheduler).toHaveYielded(['App']);
+
+    dispatchClickEvent(span);
+
     expect(triggeredParent).toBe(false);
     expect(triggeredChild).toBe(false);
   });
