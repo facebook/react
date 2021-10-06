@@ -1,6 +1,6 @@
 'use strict';
 
-const {renderToNodePipe} = require('react-server-dom-webpack/writer');
+const {renderToPipeableStream} = require('react-server-dom-webpack/writer');
 const {readFile} = require('fs');
 const {resolve} = require('path');
 const React = require('react');
@@ -20,7 +20,10 @@ module.exports = function(req, res) {
         const App = m.default.default || m.default;
         res.setHeader('Access-Control-Allow-Origin', '*');
         const moduleMap = JSON.parse(data);
-        const {pipe} = renderToNodePipe(React.createElement(App), moduleMap);
+        const {pipe} = renderToPipeableStream(
+          React.createElement(App),
+          moduleMap
+        );
         pipe(res);
       }
     );

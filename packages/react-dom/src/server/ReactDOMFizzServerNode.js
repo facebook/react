@@ -56,7 +56,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
   );
 }
 
-function renderToNodePipe(
+function renderToPipeableStream(
   children: ReactNodeList,
   options?: Options,
 ): Controls {
@@ -81,4 +81,4 @@ function renderToNodePipe(
   };
 }
 
-export {renderToNodePipe, ReactVersion as version};
+export {renderToPipeableStream, ReactVersion as version};

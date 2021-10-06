@@ -1,5 +1,5 @@
 import React from 'react';
-import {renderToNodePipe} from 'react-dom/server';
+import {renderToPipeableStream} from 'react-dom/server';
 
 import App from '../src/components/App';
 
@@ -20,7 +20,7 @@ export default function render(url, res) {
     console.error('Fatal', error);
   });
   let didError = false;
-  const {pipe, abort} = renderToNodePipe(<App assets={assets} />, {
+  const {pipe, abort} = renderToPipeableStream(<App assets={assets} />, {
     onCompleteShell() {
       // If something errored before we started streaming, we set the error code appropriately.
       res.statusCode = didError ? 500 : 200;

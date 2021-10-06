@@ -29,7 +29,7 @@ type Controls = {|
   pipe<T: Writable>(destination: T): T,
 |};
 
-function renderToNodePipe(
+function renderToPipeableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
   options?: Options,
@@ -56,4 +56,4 @@ function renderToNodePipe(
   };
 }
 
-export {renderToNodePipe};
+export {renderToPipeableStream};

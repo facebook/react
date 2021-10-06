@@ -57,9 +57,11 @@ describe('ReactDOMFizzServer', () => {
   }
 
   // @gate experimental
-  it('should call renderToNodePipe', () => {
+  it('should call renderToPipeableStream', () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(<div>hello world</div>);
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      <div>hello world</div>,
+    );
     pipe(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
@@ -68,7 +70,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <html>
         <body>hello world</body>
       </html>,
@@ -83,7 +85,9 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should start writing after pipe', () => {
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(<div>hello world</div>);
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      <div>hello world</div>,
+    );
     jest.runAllTimers();
     // First we write our header.
     output.result +=
@@ -108,7 +112,7 @@ describe('ReactDOMFizzServer', () => {
     }
     let isCompleteCalls = 0;
     const {writable, output} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback="Loading">
           <Wait />
@@ -147,7 +151,7 @@ describe('ReactDOMFizzServer', () => {
   it('should error the stream when an error is thrown at the root', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Throw />
       </div>,
@@ -174,7 +178,7 @@ describe('ReactDOMFizzServer', () => {
   it('should error the stream when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback={<Throw />}>
           <InfiniteSuspend />
@@ -200,7 +204,7 @@ describe('ReactDOMFizzServer', () => {
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
@@ -235,7 +239,7 @@ describe('ReactDOMFizzServer', () => {
     function Content() {
       return 'Hi';
     }
-    const {pipe} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <Suspense fallback={<Fallback />}>
         <Content />
       </Suspense>,
@@ -253,7 +257,7 @@ describe('ReactDOMFizzServer', () => {
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     let isCompleteCalls = 0;
     const {writable, output, completed} = getTestWritable();
-    const {pipe, abort} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -286,7 +290,7 @@ describe('ReactDOMFizzServer', () => {
   it('should be able to complete by abort when the fallback is also suspended', async () => {
     let isCompleteCalls = 0;
     const {writable, output, completed} = getTestWritable();
-    const {pipe, abort} = ReactDOMFizzServer.renderToNodePipe(
+    const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback="Loading">
           <Suspense fallback={<InfiniteSuspend />}>
