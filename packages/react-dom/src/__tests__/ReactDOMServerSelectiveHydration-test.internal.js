@@ -1130,4 +1130,67 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     document.body.removeChild(container);
   });
+
+  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+  it('does not propagate discrete event if it cannot be synchronously hydrated', async () => {
+    let triggeredParent = false;
+    let triggeredChild = false;
+    let suspend = false;
+    const promise = new Promise(() => {});
+    function Child() {
+      if (suspend) {
+        throw promise;
+      }
+      Scheduler.unstable_yieldValue('Child');
+      return (
+        <span
+          onClickCapture={e => {
+            e.stopPropagation();
+            triggeredChild = true;
+          }}>
+          Click me
+        </span>
+      );
+    }
+    function App() {
+      const onClick = () => {
+        triggeredParent = true;
+      };
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <div
+          ref={n => {
+            if (n) n.onclick = onClick;
+          }}
+          onClick={onClick}>
+          <Suspense fallback={null}>
+            <Child />
+          </Suspense>
+        </div>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    expect(Scheduler).toHaveYielded(['App', 'Child']);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+
+    suspend = true;
+
+    ReactDOM.hydrateRoot(container, <App />);
+    // Nothing has been hydrated so far.
+    expect(Scheduler).toHaveYielded([]);
+
+    const span = container.getElementsByTagName('span')[0];
+    dispatchClickEvent(span);
+
+    expect(Scheduler).toHaveYielded(['App']);
+
+    dispatchClickEvent(span);
+
+    expect(triggeredParent).toBe(false);
+    expect(triggeredChild).toBe(false);
+  });
 });
