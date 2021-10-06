@@ -83,11 +83,11 @@ module.exports = function(babel) {
 
       statementParent.addComment(
         'leading',
-        'Add to error code map: ' + errorMsgLiteral
+        '! Add to error code map: ' + errorMsgLiteral
       );
       statementParent.addComment(
         'leading',
-        'FIXME (minify-errors-in-prod): Unminified error message in production build!'
+        '! FIXME (minify-errors-in-prod): Unminified error message in production build!'
       );
       return;
     }
