@@ -1,5 +1,5 @@
 import React from 'react';
-import {pipeToNodeWritable} from 'react-dom/server';
+import {renderToPipeableStream} from 'react-dom/server';
 
 import App from '../src/components/App';
 
@@ -20,22 +20,18 @@ export default function render(url, res) {
     console.error('Fatal', error);
   });
   let didError = false;
-  const {startWriting, abort} = pipeToNodeWritable(
-    <App assets={assets} />,
-    res,
-    {
-      onCompleteShell() {
-        // If something errored before we started streaming, we set the error code appropriately.
-        res.statusCode = didError ? 500 : 200;
-        res.setHeader('Content-type', 'text/html');
-        startWriting();
-      },
-      onError(x) {
-        didError = true;
-        console.error(x);
-      },
-    }
-  );
+  const {pipe, abort} = renderToPipeableStream(<App assets={assets} />, {
+    onCompleteShell() {
+      // If something errored before we started streaming, we set the error code appropriately.
+      res.statusCode = didError ? 500 : 200;
+      res.setHeader('Content-type', 'text/html');
+      pipe(res);
+    },
+    onError(x) {
+      didError = true;
+      console.error(x);
+    },
+  });
   // Abandon and switch to client rendering after 5 seconds.
   // Try lowering this to see the client recover.
   setTimeout(abort, 5000);

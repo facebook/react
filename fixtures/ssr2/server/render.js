@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 // import {renderToString} from 'react-dom/server';
-import {pipeToNodeWritable} from 'react-dom/server';
+import {renderToPipeableStream} from 'react-dom/server';
 import App from '../src/App';
 import {DataProvider} from '../src/data';
 import {API_DELAY, ABORT_DELAY} from './delays';
@@ -37,17 +37,16 @@ module.exports = function render(url, res) {
   });
   let didError = false;
   const data = createServerData();
-  const {startWriting, abort} = pipeToNodeWritable(
+  const {pipe, abort} = renderToPipeableStream(
     <DataProvider data={data}>
       <App assets={assets} />
     </DataProvider>,
-    res,
     {
       onCompleteShell() {
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;
         res.setHeader('Content-type', 'text/html');
-        startWriting();
+        pipe(res);
       },
       onError(x) {
         didError = true;

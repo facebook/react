@@ -41,7 +41,7 @@ type Controls = {|
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(): void,
-  startWriting(): void,
+  pipe<T: Writable>(destination: T): T,
 |};
 
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
@@ -56,22 +56,24 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
   );
 }
 
-function pipeToNodeWritable(
+function renderToPipeableStream(
   children: ReactNodeList,
-  destination: Writable,
   options?: Options,
 ): Controls {
   const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {
-    startWriting() {
+    pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {
-        return;
+        throw new Error(
+          'React currently only supports piping to one writable stream.',
+        );
       }
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      return destination;
     },
     abort() {
       abort(request);
@@ -79,4 +81,4 @@ function pipeToNodeWritable(
   };
 }
 
-export {pipeToNodeWritable, ReactVersion as version};
+export {renderToPipeableStream, ReactVersion as version};

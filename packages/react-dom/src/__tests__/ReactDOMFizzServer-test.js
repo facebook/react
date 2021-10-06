@@ -239,7 +239,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <div>
           <div>
             <Suspense fallback={<Text text="Loading..." />}>
@@ -252,9 +252,8 @@ describe('ReactDOMFizzServer', () => {
             </Suspense>
           </div>
         </div>,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -304,16 +303,16 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
-        writable,
+
         {
           onError(x) {
             loggedErrors.push(x);
           },
         },
       );
-      startWriting();
+      pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
 
@@ -356,15 +355,14 @@ describe('ReactDOMFizzServer', () => {
     });
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
             {lazyElement}
           </Suspense>
         </div>,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
     await act(async () => {
@@ -396,16 +394,16 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
-        writable,
+
         {
           onError(x) {
             loggedErrors.push(x);
           },
         },
       );
-      startWriting();
+      pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
 
@@ -441,15 +439,14 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should asynchronously load the suspense boundary', async () => {
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text="Hello World" />
           </Suspense>
         </div>,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
     await act(async () => {
@@ -475,11 +472,8 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-        <App />,
-        writable,
-      );
-      startWriting();
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
     });
 
     // We're still showing a fallback.
@@ -550,16 +544,16 @@ describe('ReactDOMFizzServer', () => {
 
     // We originally suspend the boundary and start streaming the loading state.
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App />,
-        writable,
+
         {
           onError(x) {
             loggedErrors.push(x);
           },
         },
       );
-      startWriting();
+      pipe(writable);
     });
 
     // We're still showing a fallback.
@@ -633,11 +627,10 @@ describe('ReactDOMFizzServer', () => {
 
     // We originally suspend the boundary and start streaming the loading state.
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App showMore={false} />,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
 
     const root = ReactDOM.createRoot(container, {hydrate: true});
@@ -701,8 +694,8 @@ describe('ReactDOMFizzServer', () => {
 
     let controls;
     await act(async () => {
-      controls = ReactDOMFizzServer.pipeToNodeWritable(<App />, writable);
-      controls.startWriting();
+      controls = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      controls.pipe(writable);
     });
 
     // We're still showing a fallback.
@@ -753,7 +746,7 @@ describe('ReactDOMFizzServer', () => {
     };
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         // We use two nested boundaries to flush out coverage of an old reentrancy bug.
         <Suspense fallback="Loading...">
           <Suspense fallback={<Text text="Loading A..." />}>
@@ -765,12 +758,11 @@ describe('ReactDOMFizzServer', () => {
             </>
           </Suspense>
         </Suspense>,
-        writableA,
         {
           identifierPrefix: 'A_',
           onCompleteShell() {
             writableA.write('<div id="container-A">');
-            startWriting();
+            pipe(writableA);
             writableA.write('</div>');
           },
         },
@@ -778,19 +770,18 @@ describe('ReactDOMFizzServer', () => {
     });
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <Suspense fallback={<Text text="Loading B..." />}>
           <Text text="This will show B: " />
           <div>
             <AsyncText text="B" />
           </div>
         </Suspense>,
-        writableB,
         {
           identifierPrefix: 'B_',
           onCompleteShell() {
             writableB.write('<div id="container-B">');
-            startWriting();
+            pipe(writableB);
             writableB.write('</div>');
           },
         },
@@ -876,11 +867,8 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-        <App />,
-        writable,
-      );
-      startWriting();
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
     });
 
     expect(getVisibleChildren(container)).toEqual(
@@ -967,11 +955,8 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-        <App />,
-        writable,
-      );
-      startWriting();
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
     });
 
     expect(getVisibleChildren(container)).toEqual(
@@ -1024,14 +1009,14 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App />,
-        writable,
+
         {
           namespaceURI: 'http://www.w3.org/2000/svg',
           onCompleteShell() {
             writable.write('<svg>');
-            startWriting();
+            pipe(writable);
             writable.write('</svg>');
           },
         },
@@ -1111,11 +1096,8 @@ describe('ReactDOMFizzServer', () => {
 
     try {
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-          <A />,
-          writable,
-        );
-        startWriting();
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<A />);
+        pipe(writable);
       });
 
       expect(getVisibleChildren(container)).toEqual(
@@ -1213,7 +1195,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <TestProvider ctx="A">
           <div>
             <Suspense fallback={[<Text text="Loading: " />, <TestConsumer />]}>
@@ -1224,9 +1206,8 @@ describe('ReactDOMFizzServer', () => {
             </Suspense>
           </div>
         </TestProvider>,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -1272,7 +1253,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <div>
           <PrintA />
           <div>
@@ -1287,9 +1268,8 @@ describe('ReactDOMFizzServer', () => {
           </div>
           <PrintA />
         </div>,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual(
       <div>
@@ -1335,7 +1315,7 @@ describe('ReactDOMFizzServer', () => {
 
     const loggedErrors = [];
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <div>
           <PrintA />
           <div>
@@ -1355,14 +1335,14 @@ describe('ReactDOMFizzServer', () => {
           </div>
           <PrintA />
         </div>,
-        writable,
+
         {
           onError(x) {
             loggedErrors.push(x);
           },
         },
       );
-      startWriting();
+      pipe(writable);
     });
     expect(loggedErrors.length).toBe(1);
     expect(loggedErrors[0].message).toEqual('A0.1.1');
@@ -1396,16 +1376,16 @@ describe('ReactDOMFizzServer', () => {
     const loggedErrors = [];
     let controls;
     await act(async () => {
-      controls = ReactDOMFizzServer.pipeToNodeWritable(
+      controls = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
-        writable,
+
         {
           onError(x) {
             loggedErrors.push(x);
           },
         },
       );
-      controls.startWriting();
+      controls.pipe(writable);
     });
 
     // We're still showing a fallback.
@@ -1456,7 +1436,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should be able to abort the fallback if the main content finishes first', async () => {
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <Suspense fallback={<Text text="Loading Outer" />}>
           <div>
             <Suspense
@@ -1470,9 +1450,8 @@ describe('ReactDOMFizzServer', () => {
             </Suspense>
           </div>
         </Suspense>,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
     expect(getVisibleChildren(container)).toEqual('Loading Outer');
     // We should have received a partial segment containing the a partial of the fallback.
@@ -1554,11 +1533,10 @@ describe('ReactDOMFizzServer', () => {
     await jest.runAllTimers();
 
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
-        writable,
       );
-      startWriting();
+      pipe(writable);
     });
 
     // Nothing is output since root has a suspense with avoidedThisFallback that hasn't resolved
@@ -1669,18 +1647,18 @@ describe('ReactDOMFizzServer', () => {
 
     const loggedErrors = [];
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
-        writable,
+
         {
           onError(x) {
             loggedErrors.push(x);
           },
         },
       );
-      startWriting();
+      pipe(writable);
     });
     expect(Scheduler).toHaveYielded(['server']);
 
@@ -1752,18 +1730,18 @@ describe('ReactDOMFizzServer', () => {
 
     const loggedErrors = [];
     await act(async () => {
-      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
-        writable,
+
         {
           onError(x) {
             loggedErrors.push(x);
           },
         },
       );
-      startWriting();
+      pipe(writable);
     });
     expect(Scheduler).toHaveYielded(['server']);
 
@@ -1838,11 +1816,8 @@ describe('ReactDOMFizzServer', () => {
       }
 
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-          <App />,
-          writable,
-        );
-        startWriting();
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
       });
       expect(Scheduler).toHaveYielded(['Yay!']);
 
@@ -1922,11 +1897,8 @@ describe('ReactDOMFizzServer', () => {
       }
 
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-          <App />,
-          writable,
-        );
-        startWriting();
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
       });
       expect(Scheduler).toHaveYielded(['Yay!']);
 
@@ -1997,11 +1969,8 @@ describe('ReactDOMFizzServer', () => {
       }
 
       await act(async () => {
-        const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-          <App />,
-          writable,
-        );
-        startWriting();
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
       });
       expect(Scheduler).toHaveYielded(['Yay!']);
 
