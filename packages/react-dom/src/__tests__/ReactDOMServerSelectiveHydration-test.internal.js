@@ -1153,7 +1153,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
       );
     }
     function App() {
-      const ref = React.useRef();
       const onClick = () => {
         triggeredParent = true;
       };
