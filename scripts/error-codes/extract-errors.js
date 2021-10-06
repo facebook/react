@@ -10,7 +10,7 @@ const parser = require('@babel/parser');
 const fs = require('fs');
 const path = require('path');
 const traverse = require('@babel/traverse').default;
-const {evalStringConcat} = require('../shared/evalToString');
+const {evalStringAndTemplateConcat} = require('../shared/evalToString');
 const invertObject = require('./invertObject');
 
 const babylonOptions = {
@@ -67,27 +67,36 @@ module.exports = function(opts) {
   function transform(source) {
     const ast = parser.parse(source, babylonOptions);
 
+    function ErrorCallExpression(node) {
+      const errorMessageNode = node.arguments[0];
+      if (errorMessageNode === undefined) {
+        return;
+      }
+      const errorMsgLiteral = evalStringAndTemplateConcat(errorMessageNode, []);
+      if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
+        return;
+      }
+      existingErrorMap[errorMsgLiteral] = '' + currentID++;
+    }
+
     traverse(ast, {
       CallExpression: {
         exit(astPath) {
-          if (astPath.get('callee').isIdentifier({name: 'invariant'})) {
+          if (astPath.get('callee').isIdentifier({name: 'Error'})) {
             const node = astPath.node;
-
-            // error messages can be concatenated (`+`) at runtime, so here's a
-            // trivial partial evaluator that interprets the literal value
-            const errorMsgLiteral = evalStringConcat(node.arguments[1]);
-            addToErrorMap(errorMsgLiteral);
+            ErrorCallExpression(node);
+          }
+        },
+      },
+      NewExpression: {
+        exit(astPath) {
+          if (astPath.get('callee').isIdentifier({name: 'Error'})) {
+            const node = astPath.node;
+            ErrorCallExpression(node);
           }
         },
       },
     });
-  }
-
-  function addToErrorMap(errorMsgLiteral) {
-    if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
-      return;
-    }
-    existingErrorMap[errorMsgLiteral] = '' + currentID++;
   }
 
   function flush(cb) {
