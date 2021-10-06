@@ -558,7 +558,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     externals: ['react', 'scheduler', 'scheduler/unstable_mock', 'expect'],
   },
 
@@ -568,7 +568,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/persistent',
     global: 'ReactNoopRendererPersistent',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     externals: ['react', 'scheduler', 'expect'],
   },
 
@@ -578,7 +578,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/server',
     global: 'ReactNoopRendererServer',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     externals: ['react', 'scheduler', 'expect'],
   },
 
