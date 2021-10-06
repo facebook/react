@@ -19,7 +19,6 @@ const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
-const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
@@ -94,10 +93,6 @@ const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
-const shouldExtractErrors = argv['extract-errors'];
-const errorCodeOpts = {
-  errorMapFilePath: 'scripts/error-codes/codes.json',
-};
 
 const closureOptions = {
   compilation_level: 'SIMPLE',
@@ -324,7 +319,6 @@ function getPlugins(
   pureExternalModules,
   bundle
 ) {
-  const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
   const isProduction = isProductionBundleType(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
@@ -345,13 +339,6 @@ function getPlugins(
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
-    // Extract error codes from invariant() messages into a file.
-    shouldExtractErrors && {
-      transform(source) {
-        findAndRecordErrorCodes(source);
-        return source;
-      },
-    },
     // Shim any modules that need forking in this environment.
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
@@ -747,7 +734,7 @@ async function buildEverything() {
     );
   }
 
-  if (!shouldExtractErrors && process.env.CIRCLE_NODE_TOTAL) {
+  if (process.env.CIRCLE_NODE_TOTAL) {
     // In CI, parallelize bundles across multiple tasks.
     const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
     const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
@@ -771,14 +758,6 @@ async function buildEverything() {
   console.log(Stats.printResults());
   if (!forcePrettyOutput) {
     Stats.saveResults();
-  }
-
-  if (shouldExtractErrors) {
-    console.warn(
-      '\nWarning: this build was created with --extract-errors enabled.\n' +
-        'this will result in extremely slow builds and should only be\n' +
-        'used when the error map needs to be rebuilt.\n'
-    );
   }
 }
 
