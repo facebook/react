@@ -57,7 +57,7 @@ module.exports = function(babel) {
       //
       // Outputs:
       //   /* FIXME (minify-errors-in-prod): Unminified error message in production build! */
-      //   /* Add to error code map: "A % message that contains %" */
+      //   /* <expected-error-format>"A % message that contains %"</expected-error-format> */
       //   if (!condition) {
       //     throw Error(`A ${adj} message that contains ${noun}`);
       //   }
@@ -83,7 +83,7 @@ module.exports = function(babel) {
 
       statementParent.addComment(
         'leading',
-        '! Add to error code map: ' + errorMsgLiteral
+        `! <expected-error-format>"${errorMsgLiteral}"</expected-error-format>`
       );
       statementParent.addComment(
         'leading',

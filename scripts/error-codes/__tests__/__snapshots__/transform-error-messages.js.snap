@@ -13,7 +13,7 @@ NotAnError();"
 exports[`error transform should output FIXME for errors that don't have a matching error code 1`] = `
 "/*! FIXME (minify-errors-in-prod): Unminified error message in production build!*/
 
-/*! Add to error code map: This is not a real error message.*/
+/*! <expected-error-format>\\"This is not a real error message.\\"</expected-error-format>*/
 Error('This is not a real error message.');"
 `;
 
