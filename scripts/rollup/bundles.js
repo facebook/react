@@ -137,7 +137,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-fetch/index.browser',
     global: 'ReactFetch',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     externals: ['react'],
   },
 
@@ -157,7 +157,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-fs/index.browser.server',
     global: 'ReactFilesystem',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     externals: [],
   },
 
@@ -177,7 +177,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-pg/index.browser.server',
     global: 'ReactPostgres',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     externals: [],
   },
 
