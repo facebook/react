@@ -361,12 +361,13 @@ function getPlugins(
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
-    shouldExtractErrors && {
-      transform(source) {
-        findAndRecordErrorCodes(source);
-        return source;
+    shouldExtractErrors &&
+      bundle.minifyWithProdErrorCodes !== false && {
+        transform(source) {
+          findAndRecordErrorCodes(source);
+          return source;
+        },
       },
-    },
     // Shim any modules that need forking in this environment.
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
