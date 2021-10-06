@@ -176,26 +176,13 @@ function getBabelConfig(
   if (updateBabelOptions) {
     options = updateBabelOptions(options);
   }
+  // Controls whether to replace error messages with error codes in production.
+  // By default, error messages are replaced in production.
+  if (!isDevelopment && bundle.minifyWithProdErrorCodes !== false) {
+    options.plugins.push(require('../error-codes/transform-error-messages'));
+  }
+
   switch (bundleType) {
-    case FB_WWW_DEV:
-    case FB_WWW_PROD:
-    case FB_WWW_PROFILING:
-    case RN_OSS_DEV:
-    case RN_OSS_PROD:
-    case RN_OSS_PROFILING:
-    case RN_FB_DEV:
-    case RN_FB_PROD:
-    case RN_FB_PROFILING:
-      return Object.assign({}, options, {
-        plugins: options.plugins.concat([
-          [
-            require('../error-codes/transform-error-messages'),
-            // Controls whether to replace error messages with error codes
-            // in production. By default, error messages are replaced.
-            {noMinify: bundle.minifyWithProdErrorCodes === false},
-          ],
-        ]),
-      });
     case UMD_DEV:
     case UMD_PROD:
     case UMD_PROFILING:
@@ -206,8 +193,6 @@ function getBabelConfig(
         plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
           path.resolve('./scripts/babel/transform-object-assign-require'),
-          // Minify invariant messages
-          require('../error-codes/transform-error-messages'),
         ]),
       });
     default:
