@@ -110,6 +110,31 @@ Error('Do not override existing functions.');
     ).toMatchSnapshot();
   });
 
+  it("should output FIXME for errors that don't have a matching error code", () => {
+    expect(
+      transform(`
+Error('This is not a real error message.');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it(
+    "should output FIXME for errors that don't have a matching error " +
+      'code, unless opted out with a comment',
+    () => {
+      // TODO: Since this only detects one of many ways to disable a lint
+      // rule, we should instead search for a custom directive (like
+      // no-minify-errors) instead of ESLint. Will need to update our lint
+      // rule to recognize the same directive.
+      expect(
+        transform(`
+// eslint-disable-next-line react-internal/prod-error-codes
+Error('This is not a real error message.');
+`)
+      ).toMatchSnapshot();
+    }
+  );
+
   it('should not touch other calls or new expressions', () => {
     expect(
       transform(`

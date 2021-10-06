@@ -62,9 +62,39 @@ module.exports = function(babel) {
 
     let prodErrorId = errorMap[errorMsgLiteral];
     if (prodErrorId === undefined) {
-      // There is no error code for this message. We use a lint rule to
-      // enforce that messages can be minified, so assume this is
-      // intentional and exit gracefully.
+      // There is no error code for this message. Add an inline comment
+      // that flags this as an unminified error. This allows the build
+      // to proceed, while also allowing a post-build linter to detect it.
+      //
+      // Outputs:
+      //   /* FIXME (minify-errors-in-prod): Unminified error message in production build! */
+      //   if (!condition) {
+      //     throw Error(`A ${adj} message that contains ${noun}`);
+      //   }
+
+      const statementParent = path.getStatementParent();
+      const leadingComments = statementParent.node.leadingComments;
+      if (leadingComments !== undefined) {
+        for (let i = 0; i < leadingComments.length; i++) {
+          // TODO: Since this only detects one of many ways to disable a lint
+          // rule, we should instead search for a custom directive (like
+          // no-minify-errors) instead of ESLint. Will need to update our lint
+          // rule to recognize the same directive.
+          const commentText = leadingComments[i].value;
+          if (
+            commentText.includes(
+              'eslint-disable-next-line react-internal/prod-error-codes'
+            )
+          ) {
+            return;
+          }
+        }
+      }
+
+      statementParent.addComment(
+        'leading',
+        'FIXME (minify-errors-in-prod): Unminified error message in production build!'
+      );
       return;
     }
     prodErrorId = parseInt(prodErrorId, 10);
@@ -89,12 +119,11 @@ module.exports = function(babel) {
     //     ? `A ${adj} message that contains ${noun}`
     //     : formatProdErrorMessage(ERR_CODE, adj, noun)
     // );
-    path.replaceWith(t.callExpression(t.identifier('Error'), [prodMessage]));
-    path.replaceWith(
-      t.callExpression(t.identifier('Error'), [
-        t.conditionalExpression(DEV_EXPRESSION, errorMsgNode, prodMessage),
-      ])
-    );
+    const newErrorCall = t.callExpression(t.identifier('Error'), [
+      t.conditionalExpression(DEV_EXPRESSION, errorMsgNode, prodMessage),
+    ]);
+    newErrorCall[SEEN_SYMBOL] = true;
+    path.replaceWith(newErrorCall);
   }
 
   return {
@@ -162,16 +191,17 @@ module.exports = function(babel) {
             //   if (!condition) {
             //     throw Error(`A ${adj} message that contains ${noun}`);
             //   }
+            const errorCallNode = t.callExpression(t.identifier('Error'), [
+              devMessage,
+            ]);
+            errorCallNode[SEEN_SYMBOL] = true;
             parentStatementPath.replaceWith(
               t.ifStatement(
                 t.unaryExpression('!', condition),
-                t.blockStatement([
-                  t.throwStatement(
-                    t.callExpression(t.identifier('Error'), [devMessage])
-                  ),
-                ])
+                t.blockStatement([t.throwStatement(errorCallNode)])
               )
             );
+
             return;
           }
 
@@ -187,14 +217,14 @@ module.exports = function(babel) {
             //   if (!condition) {
             //     throw Error(`A ${adj} message that contains ${noun}`);
             //   }
+            const errorCall = t.callExpression(t.identifier('Error'), [
+              devMessage,
+            ]);
+            errorCall[SEEN_SYMBOL] = true;
             parentStatementPath.replaceWith(
               t.ifStatement(
                 t.unaryExpression('!', condition),
-                t.blockStatement([
-                  t.throwStatement(
-                    t.callExpression(t.identifier('Error'), [devMessage])
-                  ),
-                ])
+                t.blockStatement([t.throwStatement(errorCall)])
               )
             );
             parentStatementPath.addComment(
@@ -219,6 +249,11 @@ module.exports = function(babel) {
             [t.numericLiteral(prodErrorId), ...errorMsgExpressions]
           );
 
+          const errorCall = t.callExpression(t.identifier('Error'), [
+            t.conditionalExpression(DEV_EXPRESSION, devMessage, prodMessage),
+          ]);
+          errorCall[SEEN_SYMBOL] = true;
+
           // Outputs:
           // if (!condition) {
           //   throw Error(
@@ -231,17 +266,7 @@ module.exports = function(babel) {
             t.ifStatement(
               t.unaryExpression('!', condition),
               t.blockStatement([
-                t.blockStatement([
-                  t.throwStatement(
-                    t.callExpression(t.identifier('Error'), [
-                      t.conditionalExpression(
-                        DEV_EXPRESSION,
-                        devMessage,
-                        prodMessage
-                      ),
-                    ])
-                  ),
-                ]),
+                t.blockStatement([t.throwStatement(errorCall)]),
               ])
             )
           );
