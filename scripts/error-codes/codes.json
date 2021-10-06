@@ -396,7 +396,6 @@
   "407": "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering.",
   "408": "Missing getServerSnapshot, which is required for server-rendered content.",
   "409": "Cannot update an unmounted root.",
-  "410": "%s suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display.",
   "411": "%s suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display.",
   "412": "Connection closed.",
   "413": "Expected finished root and lanes to be set. This is a bug in React.",
