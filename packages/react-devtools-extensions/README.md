@@ -5,6 +5,7 @@ This is the source code for the React DevTools browser extension.
 The easiest way to install this extension is as a browser add-on:
 * [Chrome web store](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en)
 * [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/)
+* [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/react-developer-tools/gpphkfbcpidddadnkolkpfckpihlkkil)
 
 ## Local development
 You can also build and install this extension from source.
