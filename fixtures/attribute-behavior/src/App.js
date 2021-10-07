@@ -528,7 +528,7 @@ function ResultPopover(props) {
     <pre
       css={{
         padding: '1em',
-        width: '25em',
+        minWidth: '25em',
       }}>
       {JSON.stringify(
         {
