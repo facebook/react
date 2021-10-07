@@ -937,6 +937,7 @@ const attributes = [
     tagName: 'svg',
     read: getSVGAttribute('image-rendering'),
   },
+  {name: 'imageSrcSet', tagName: 'link', read: getProperty('imageSrcset')},
   {
     name: 'in',
     read: getSVGAttribute('in'),
