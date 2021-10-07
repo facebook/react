@@ -213,6 +213,9 @@ function getCanonicalizedValue(value) {
 
 let _didWarn = false;
 function warn(str) {
+  if (str.includes('ReactDOM.render is no longer supported')) {
+    return;
+  }
   _didWarn = true;
 }
 const UNKNOWN_HTML_TAGS = new Set(['keygen', 'time', 'command']);
