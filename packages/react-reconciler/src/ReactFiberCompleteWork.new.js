@@ -1005,6 +1005,13 @@ function completeWork(
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
+      if (enableCache) {
+        // Suspense components may need to retain/release the cache stored on their child
+        // Offscreen component during the passive effects stage (running passive effects
+        // on behalf of that offscreen component).
+        workInProgress.flags |= Passive;
+      }
+
       if (enableSuspenseServerRenderer) {
         if (nextState !== null && nextState.dehydrated !== null) {
           if (current === null) {
@@ -1463,6 +1470,8 @@ function completeWork(
       }
 
       if (enableCache) {
+        // Run passive effects to retain/release the cache.
+        workInProgress.flags |= Passive;
         const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
         if (spawnedCachePool !== null) {
           popCachePool(workInProgress);
@@ -1474,6 +1483,7 @@ function completeWork(
     case CacheComponent: {
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
+        // Run passive effects to retain/release the cache.
         workInProgress.flags |= Passive;
         popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);

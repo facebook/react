@@ -26,6 +26,7 @@ import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 
+import {trace} from './ReactFiberCacheComponent.new';
 import {
   enableCreateEventHandleAPI,
   enableProfilerTimer,
@@ -2623,34 +2624,63 @@ function commitPassiveMountOnFiber(
     }
     case HostRoot: {
       if (enableCache) {
-        // todo compare caches here
-        // if caches not same
-        // - retain next cache
-        // - if prev cache non-null: release (or move to unmount phase?)
-        // add comment that retain/release on child is technically not required
         const previousCache: ?Cache =
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
-        const nextCacheRetained = (nextCache: any).retained;
+        // Retain/release the root cache.
+        // Note that on initial mount, previousCache and nextCache will be the same,
+        // this retain won't occur. To counter this, we instead retain the HostRoot's
+        // initial cache when creating the root itself (see createFiberRoot() in
+        // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
+        // here, such that previous/next caches are retained correctly.
         if (nextCache !== previousCache) {
           retainCache(nextCache);
           if (previousCache != null) {
             releaseCache(previousCache);
           }
-        } else if (!nextCacheRetained) {
+        }
+      }
+      break;
+    }
+    case SuspenseComponent: {
+      if (enableCache) {
+        const isHidden = finishedWork.memoizedState !== null;
+        if (isHidden) {
+          const offscreen = finishedWork.child;
+          if (offscreen != null && offscreen.tag === OffscreenComponent) {
+            const previousCache: ?Cache =
+              offscreen.alternate?.memoizedState?.cachePool?.pool;
+            const nextCache: Cache = offscreen.memoizedState?.cachePool?.pool;
+            if (nextCache !== previousCache) {
+              if (nextCache != null) {
+                retainCache(nextCache);
+              }
+              if (previousCache != null) {
+                releaseCache(previousCache);
+              }
+            }
+          }
+        }
+      }
+      break;
+    }
+    case LegacyHiddenComponent:
+    case OffscreenComponent: {
+      const previousCache: ?Cache =
+        finishedWork.alternate?.memoizedState?.cachePool?.pool;
+      const nextCache: Cache = finishedWork.memoizedState?.cachePool?.pool;
+      if (nextCache !== previousCache) {
+        if (nextCache != null) {
           retainCache(nextCache);
-          (nextCache: any).retained = true;
+        }
+        if (previousCache != null) {
+          releaseCache(previousCache);
         }
       }
       break;
     }
     case CacheComponent: {
       if (enableCache) {
-        // todo compare caches here
-        // if caches not same
-        // - retain next cache
-        // - if prev cache non-null: release (or move to unmount phase?)
-        // add comment that retain/release on child is technically not required
         const previousCache: ?Cache =
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
