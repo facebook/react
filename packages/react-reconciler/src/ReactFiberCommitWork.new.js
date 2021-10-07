@@ -26,7 +26,6 @@ import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 
-import {trace} from './ReactFiberCacheComponent.new';
 import {
   enableCreateEventHandleAPI,
   enableProfilerTimer,
@@ -2645,6 +2644,15 @@ function commitPassiveMountOnFiber(
     case SuspenseComponent: {
       if (enableCache) {
         const isHidden = finishedWork.memoizedState !== null;
+        // Retain/release the cache used for pending (suspended) children.
+        // When a tree is suspended we don't want to throw away the fresh
+        // cache instance being used for any new cache boundaries within it.
+        // This cache instance is stored on the OffscreenComponent that is
+        // a child of a Suspense component. However, passive effects don't
+        // run for children of a hidden suspense component. So for hidden
+        // suspense components we retain/release the next/previous cache
+        // on behalf of the hidden offscreen child here. For the non-hidden
+        // case, the component is handled normally (see below).
         if (isHidden) {
           const offscreen = finishedWork.child;
           if (offscreen != null && offscreen.tag === OffscreenComponent) {
@@ -2669,6 +2677,10 @@ function commitPassiveMountOnFiber(
       const previousCache: ?Cache =
         finishedWork.alternate?.memoizedState?.cachePool?.pool;
       const nextCache: Cache = finishedWork.memoizedState?.cachePool?.pool;
+      // Retain/release the cache used for pending (suspended) nodes.
+      // Note that this is only reached in the non-suspended/visible case:
+      // when the content is suspended/hidden, the retain/release occurs
+      // via the parent Suspense component (see case above).
       if (nextCache !== previousCache) {
         if (nextCache != null) {
           retainCache(nextCache);
@@ -2684,6 +2696,11 @@ function commitPassiveMountOnFiber(
         const previousCache: ?Cache =
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
+        // Retain/release the cache. In theory the cache component
+        // could be "borrowing" a cache instance owned by some parent,
+        // in which case we could avoid retaining/releasing. But it
+        // is non-trivial to determine when that is the case, so we
+        // always retain/release.
         if (nextCache !== previousCache) {
           retainCache(nextCache);
           if (previousCache != null) {

@@ -115,13 +115,13 @@ export function releaseCache(cache: Cache) {
   }
 }
 
-function trace(msg, levels = 2) {
+export function trace(msg: string, levels: number = 2) {
   if (__DEV__) {
     // console.log(
     //   `${msg}:\n` +
     //     new Error().stack
     //       .split('\n')
-    //       .slice(3, 3 + Math.max(levels, 1))
+    //       .slice(3, 3 + Math.max(levels, 0))
     //       .join('\n'),
     // );
   }
@@ -202,6 +202,7 @@ export function restoreSpawnedCachePool(
   if (nextParentCache !== prevCachePool.parent) {
     // There was a refresh. Don't bother restoring anything since the refresh
     // will override it.
+    trace('restoreSpawnedCachePool refresh');
     return null;
   } else {
     // No refresh. Resume with the previous cache. This will override the cache
@@ -212,6 +213,7 @@ export function restoreSpawnedCachePool(
 
     // Return the cache pool to signal that we did in fact push it. We will
     // assign this to the field on the fiber so we know to pop the context.
+    trace('restoreSpawnedCachePool hasCache=' + (pooledCache != null));
     return prevCachePool;
   }
 }
@@ -226,6 +228,7 @@ export function popCachePool(workInProgress: Fiber) {
   if (!enableCache) {
     return;
   }
+  trace('popCachePool');
   _suspendedPooledCache = pooledCache;
   pooledCache = prevFreshCacheOnStack.current;
   pop(prevFreshCacheOnStack, workInProgress);
@@ -235,6 +238,10 @@ export function getSuspendedCachePool(): SpawnedCachePool | null {
   if (!enableCache) {
     return null;
   }
+  trace(
+    'getSuspendedCachePool hasCache=' +
+      ((pooledCache ?? _suspendedPooledCache) != null),
+  );
 
   // We check the cache on the stack first, since that's the one any new Caches
   // would have accessed.
@@ -271,6 +278,7 @@ export function getOffscreenDeferredCachePool(): SpawnedCachePool | null {
     // There's no deferred cache pool.
     return null;
   }
+  trace('getOffscreenDeferredCachePool');
 
   return {
     // We must also store the parent, so that when we resume we can detect

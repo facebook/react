@@ -2052,7 +2052,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     hasUncaughtError = false;
     const error = firstUncaughtError;
     firstUncaughtError = null;
-    releaseRootPooledCache(root);
+    releaseRootPooledCache(root, remainingLanes);
     throw error;
   }
 
@@ -2095,7 +2095,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // Now that effects have run - giving Cache boundaries a chance to retain the
   // cache instance - release the root's cache in case since the render is complete
-  releaseRootPooledCache(root);
+  releaseRootPooledCache(root, remainingLanes);
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -2110,10 +2110,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   return null;
 }
 
-function releaseRootPooledCache(root) {
+function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
   if (enableCache) {
-    const pooledCache = root.pooledCache;
-    if (pooledCache != null) {
+    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
+    if (pooledCacheLanes === NoLanes) {
+      // None of the remaining work relies on the cache pool. Clear it so
+      // subsequent requests get a new cache
       root.pooledCache = null;
     }
   }

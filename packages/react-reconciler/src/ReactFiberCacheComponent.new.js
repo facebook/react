@@ -116,14 +116,14 @@ export function releaseCache(cache: Cache) {
 }
 
 export function trace(msg: string, levels: number = 2) {
-  if (__DEV__ && false) {
-    console.log(
-      `${msg}:\n` +
-        new Error().stack
-          .split('\n')
-          .slice(3, 3 + Math.max(levels, 0))
-          .join('\n'),
-    );
+  if (__DEV__) {
+    // console.log(
+    //   `${msg}:\n` +
+    //     new Error().stack
+    //       .split('\n')
+    //       .slice(3, 3 + Math.max(levels, 0))
+    //       .join('\n'),
+    // );
   }
 }
 

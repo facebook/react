@@ -2623,37 +2623,84 @@ function commitPassiveMountOnFiber(
     }
     case HostRoot: {
       if (enableCache) {
-        // todo compare caches here
-        // if caches not same
-        // - retain next cache
-        // - if prev cache non-null: release (or move to unmount phase?)
-        // add comment that retain/release on child is technically not required
         const previousCache: ?Cache =
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
-        const nextCacheRetained = (nextCache: any).retained;
+        // Retain/release the root cache.
+        // Note that on initial mount, previousCache and nextCache will be the same,
+        // this retain won't occur. To counter this, we instead retain the HostRoot's
+        // initial cache when creating the root itself (see createFiberRoot() in
+        // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
+        // here, such that previous/next caches are retained correctly.
         if (nextCache !== previousCache) {
           retainCache(nextCache);
           if (previousCache != null) {
             releaseCache(previousCache);
           }
-        } else if (!nextCacheRetained) {
+        }
+      }
+      break;
+    }
+    case SuspenseComponent: {
+      if (enableCache) {
+        const isHidden = finishedWork.memoizedState !== null;
+        // Retain/release the cache used for pending (suspended) children.
+        // When a tree is suspended we don't want to throw away the fresh
+        // cache instance being used for any new cache boundaries within it.
+        // This cache instance is stored on the OffscreenComponent that is
+        // a child of a Suspense component. However, passive effects don't
+        // run for children of a hidden suspense component. So for hidden
+        // suspense components we retain/release the next/previous cache
+        // on behalf of the hidden offscreen child here. For the non-hidden
+        // case, the component is handled normally (see below).
+        if (isHidden) {
+          const offscreen = finishedWork.child;
+          if (offscreen != null && offscreen.tag === OffscreenComponent) {
+            const previousCache: ?Cache =
+              offscreen.alternate?.memoizedState?.cachePool?.pool;
+            const nextCache: Cache = offscreen.memoizedState?.cachePool?.pool;
+            if (nextCache !== previousCache) {
+              if (nextCache != null) {
+                retainCache(nextCache);
+              }
+              if (previousCache != null) {
+                releaseCache(previousCache);
+              }
+            }
+          }
+        }
+      }
+      break;
+    }
+    case LegacyHiddenComponent:
+    case OffscreenComponent: {
+      const previousCache: ?Cache =
+        finishedWork.alternate?.memoizedState?.cachePool?.pool;
+      const nextCache: Cache = finishedWork.memoizedState?.cachePool?.pool;
+      // Retain/release the cache used for pending (suspended) nodes.
+      // Note that this is only reached in the non-suspended/visible case:
+      // when the content is suspended/hidden, the retain/release occurs
+      // via the parent Suspense component (see case above).
+      if (nextCache !== previousCache) {
+        if (nextCache != null) {
           retainCache(nextCache);
-          (nextCache: any).retained = true;
+        }
+        if (previousCache != null) {
+          releaseCache(previousCache);
         }
       }
       break;
     }
     case CacheComponent: {
       if (enableCache) {
-        // todo compare caches here
-        // if caches not same
-        // - retain next cache
-        // - if prev cache non-null: release (or move to unmount phase?)
-        // add comment that retain/release on child is technically not required
         const previousCache: ?Cache =
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
+        // Retain/release the cache. In theory the cache component
+        // could be "borrowing" a cache instance owned by some parent,
+        // in which case we could avoid retaining/releasing. But it
+        // is non-trivial to determine when that is the case, so we
+        // always retain/release.
         if (nextCache !== previousCache) {
           retainCache(nextCache);
           if (previousCache != null) {
