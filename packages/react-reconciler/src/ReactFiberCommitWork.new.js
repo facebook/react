@@ -2672,19 +2672,21 @@ function commitPassiveMountOnFiber(
     }
     case LegacyHiddenComponent:
     case OffscreenComponent: {
-      const previousCache: ?Cache =
-        finishedWork.alternate?.memoizedState?.cachePool?.pool;
-      const nextCache: Cache = finishedWork.memoizedState?.cachePool?.pool;
-      // Retain/release the cache used for pending (suspended) nodes.
-      // Note that this is only reached in the non-suspended/visible case:
-      // when the content is suspended/hidden, the retain/release occurs
-      // via the parent Suspense component (see case above).
-      if (nextCache !== previousCache) {
-        if (nextCache != null) {
-          retainCache(nextCache);
-        }
-        if (previousCache != null) {
-          releaseCache(previousCache);
+      if (enableCache) {
+        const previousCache: ?Cache =
+          finishedWork.alternate?.memoizedState?.cachePool?.pool;
+        const nextCache: Cache = finishedWork.memoizedState?.cachePool?.pool;
+        // Retain/release the cache used for pending (suspended) nodes.
+        // Note that this is only reached in the non-suspended/visible case:
+        // when the content is suspended/hidden, the retain/release occurs
+        // via the parent Suspense component (see case above).
+        if (nextCache !== previousCache) {
+          if (nextCache != null) {
+            retainCache(nextCache);
+          }
+          if (previousCache != null) {
+            releaseCache(previousCache);
+          }
         }
       }
       break;
@@ -2914,15 +2916,29 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       }
       break;
     }
-    case HostRoot: {
-      // TODO: run passive unmount effects when unmounting a root.
-      // Because passive unmount effects are not currently run,
-      // the cache instance owned by the root will never be freed.
-      // When effects are run, the cache should be freed here:
-      // if (enableCache) {
-      //   const cache = current.memoizedState.cache;
-      //   releaseCache(cache);
-      // }
+    // TODO: run passive unmount effects when unmounting a root.
+    // Because passive unmount effects are not currently run,
+    // the cache instance owned by the root will never be freed.
+    // When effects are run, the cache should be freed here:
+    // case HostRoot: {
+    //   if (enableCache) {
+    //     const cache = current.memoizedState.cache;
+    //     releaseCache(cache);
+    //   }
+    //   break;
+    // }
+    case LegacyHiddenComponent:
+    case OffscreenComponent: {
+      if (enableCache) {
+        const cache: Cache = current.memoizedState?.cachePool?.pool;
+        // Retain/release the cache used for pending (suspended) nodes.
+        // Note that this is only reached in the non-suspended/visible case:
+        // when the content is suspended/hidden, the retain/release occurs
+        // via the parent Suspense component (see case above).
+        if (cache != null) {
+          retainCache(cache);
+        }
+      }
       break;
     }
     case CacheComponent: {

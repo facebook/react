@@ -1453,4 +1453,62 @@ describe('ReactCache', () => {
     ]);
     expect(root).toMatchRenderedOutput('Bye!');
   });
+
+  // @gate experimental || www
+  test.only('cleans up cache only used in an aborted transition', async () => {
+    const root = ReactNoop.createRoot();
+    seedNextTextCache('A');
+    console.log('render A');
+    await act(async () => {
+      root.render(
+        <Suspense fallback="Loading...">
+          <Cache key="A">
+            <AsyncText showVersion={true} text="A" />
+          </Cache>
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // Start a transition from A -> B..., which should create a fresh cache
+    // for the new cache boundary (bc of the different key)
+    console.log('A -> B');
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback="Loading...">
+            <Cache key="B">
+              <AsyncText showVersion={true} text="B" />
+            </Cache>
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [B]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // ...but cancel by transitioning "back" to A (which we never really left)
+    console.log('B -> A');
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback="Loading...">
+            <Cache key="A">
+              <AsyncText showVersion={true} text="A" />
+            </Cache>
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]', 'Cache cleanup: B [v2]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // Unmount children: ...
+    await act(async () => {
+      root.render('Bye!');
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('Bye!');
+  });
 });

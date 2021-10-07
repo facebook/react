@@ -72,6 +72,7 @@ const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 // Creates a new empty Cache instance with a ref-count of 0. The caller is responsible
 // for retaining the cache once it is in use (retainCache), and releasing the cache
 // once it is no longer needed (releaseCache).
+let _cacheIndex = 0;
 export function createCache(): Cache {
   const cache: Cache = {
     controller: new AbortController(),
@@ -79,10 +80,14 @@ export function createCache(): Cache {
     refCount: 0,
   };
 
+  (cache: any).key = String(_cacheIndex++);
+  console.log(`create ${cache.key}`);
+
   return cache;
 }
 
 export function retainCache(cache: Cache) {
+  console.log(`retain ${cache.key} ${cache.refCount} -> ${cache.refCount + 1}`);
   if (__DEV__) {
     if (cache.controller.signal.aborted) {
       console.warn(
@@ -96,6 +101,7 @@ export function retainCache(cache: Cache) {
 
 // Cleanup a cache instance, potentially freeing it if there are no more references
 export function releaseCache(cache: Cache) {
+  console.log(`retain ${cache.key} ${cache.refCount} -> ${cache.refCount - 1}`);
   cache.refCount--;
   if (__DEV__) {
     if (cache.refCount < 0) {
