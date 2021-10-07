@@ -167,11 +167,8 @@ describe('ReactCache', () => {
   // @gate experimental || www
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
-    function Example(props) {
-      return <Cache>{props.text}</Cache>;
-    }
     await act(async () => {
-      root.render(<Example text="Hi" />);
+      root.render(<Cache>Hi</Cache>);
     });
     expect(root).toMatchRenderedOutput('Hi');
   });
@@ -994,7 +991,7 @@ describe('ReactCache', () => {
       expect(Scheduler).toHaveYielded(['A [v2]']);
       expect(root).toMatchRenderedOutput('A [v2]A [v1]');
 
-      // Replace all the children: this should clear *both* cache instances:
+      // Unmount children: this should clear *both* cache instances:
       // the root doesn't have a cache instance (since it wasn't accessed
       // during the initial render, and all subsequent cache accesses were within
       // a fresh boundary). Therefore this causes cleanup for both the fresh cache
@@ -1173,6 +1170,10 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]', 'A [v2]']);
     expect(root).toMatchRenderedOutput('A [v1]A [v1]A [v2]');
 
+    // Unmount children: the first text cache instance is created only after the root
+    // commits, so both fresh cache instances are released by their cache boundaries,
+    // cleaning up v1 (used for the first two children which render togeether) and
+    // v2 (used for the third boundary added later).
     await act(async () => {
       root.render('Bye!');
     });
@@ -1260,11 +1261,13 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]1');
 
+    // Unmount children: the first text cache instance is created only after initial
+    // render after calling showMore(). This instance is cleaned up when that boundary
+    // is unmounted. Bc root cache instance is never accessed, the inner cache
+    // boundary ends up at v1.
     await act(async () => {
       root.render('Bye!');
     });
-    // The root's cache is never accessed, so the v1 cache is for the fresh Cache boundary
-    // added during the transition. This is freed when children are unmounted
     expect(Scheduler).toHaveYielded([
       'Cache cleanup: A [v1]',
       'Cache cleanup: A [v1] (cached)',
@@ -1299,72 +1302,16 @@ describe('ReactCache', () => {
         </Suspense>,
       );
     });
-    // the v1 cache (with A) does not cleanup bc its still retained by the root
     expect(Scheduler).toHaveYielded(['B [v2]']);
     expect(root).toMatchRenderedOutput('B [v2]');
 
+    // Unmount children: the fresh cache instance for B cleans up since the cache boundary
+    // is the only owner, while the original cache instance (for A) is still retained by
+    // the root.
     await act(async () => {
       root.render('Bye!');
     });
     expect(Scheduler).toHaveYielded(['Cache cleanup: B [v2] (cached)']);
-    expect(root).toMatchRenderedOutput('Bye!');
-  });
-
-  // @gate experimental || www
-  test('overlapping transitions share the same cache', async () => {
-    const root = ReactNoop.createRoot();
-    await act(async () => {
-      root.render(
-        <Suspense fallback="Loading...">
-          <Cache key="A">
-            <AsyncText showVersion={true} text="A" />
-          </Cache>
-        </Suspense>,
-      );
-    });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
-    expect(root).toMatchRenderedOutput('Loading...');
-
-    await act(async () => {
-      startTransition(() => {
-        root.render(
-          <Suspense fallback="Loading...">
-            <Cache key="B">
-              <AsyncText showVersion={true} text="B" />
-            </Cache>
-          </Suspense>,
-        );
-      });
-    });
-    expect(Scheduler).toHaveYielded(['Cache miss! [B]']);
-    expect(root).toMatchRenderedOutput('Loading...');
-
-    await act(async () => {
-      startTransition(() => {
-        root.render(
-          <Suspense fallback="Loading...">
-            <Cache key="C">
-              <AsyncText showVersion={true} text="C" />
-            </Cache>
-          </Suspense>,
-        );
-      });
-    });
-    expect(Scheduler).toHaveYielded(['Cache miss! [C]']);
-    expect(root).toMatchRenderedOutput('Loading...');
-
-    await act(async () => {
-      resolveMostRecentTextCache('C');
-    });
-    expect(Scheduler).toHaveYielded(['C [v1]']);
-    expect(root).toMatchRenderedOutput('C [v1]');
-
-    await act(async () => {
-      root.render('Bye!');
-    });
-    // The root's cache is never accessed, so the v1 cache is for the fresh Cache boundary
-    // added during the transition. This is freed when children are unmounted
-    expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
@@ -1389,6 +1336,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
+    // After a mount, subsequent transitions use a fresh cache
     await act(async () => {
       startTransition(() => {
         root.render(
@@ -1403,6 +1351,9 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [B]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
+    // Update to a different text and with a different key for the cache
+    // boundary: this should still use the fresh cache instance created
+    // for the earlier transition
     await act(async () => {
       startTransition(() => {
         root.render(
@@ -1423,39 +1374,15 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['C [v2]']);
     expect(root).toMatchRenderedOutput('C [v2]');
 
-    await act(async () => {
-      startTransition(() => {
-        root.render(
-          <Suspense fallback="Loading...">
-            <Cache key="D">
-              <AsyncText showVersion={true} text="D" />
-            </Cache>
-          </Suspense>,
-        );
-      });
-    });
-    expect(Scheduler).toHaveYielded(['Cache miss! [D]']);
-    expect(root).toMatchRenderedOutput('C [v2]');
-
-    await act(async () => {
-      resolveMostRecentTextCache('D');
-    });
-    expect(Scheduler).toHaveYielded([
-      'D [v3]',
-      'Cache cleanup: B [v2]',
-      'Cache cleanup: C [v2]',
-      'Cache cleanup: C [v2] (cached)',
-    ]);
-    expect(root).toMatchRenderedOutput('D [v3]');
-
+    // Unmount children: the fresh cache used for the updates is freed, while the
+    // original cache (with A) is still retained at the root.
     await act(async () => {
       root.render('Bye!');
     });
-    // The root's cache is never accessed, so the v1 cache is for the fresh Cache boundary
-    // added during the transition. This is freed when children are unmounted
     expect(Scheduler).toHaveYielded([
-      'Cache cleanup: D [v3]',
-      'Cache cleanup: D [v3] (cached)',
+      'Cache cleanup: B [v2]',
+      'Cache cleanup: C [v2]',
+      'Cache cleanup: C [v2] (cached)',
     ]);
     expect(root).toMatchRenderedOutput('Bye!');
   });
@@ -1481,6 +1408,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
+    // After a mount, subsequent updates use a fresh cache
     await act(async () => {
       root.render(
         <Suspense fallback="Loading...">
@@ -1493,6 +1421,8 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [B]']);
     expect(root).toMatchRenderedOutput('Loading...');
 
+    // A second update uses the same fresh cache: even though this is a new
+    // Cache boundary, the render uses the fresh cache from the pending update.
     await act(async () => {
       root.render(
         <Suspense fallback="Loading...">
@@ -1511,37 +1441,15 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['C [v2]']);
     expect(root).toMatchRenderedOutput('C [v2]');
 
-    await act(async () => {
-      root.render(
-        <Suspense fallback="Loading...">
-          <Cache key="D">
-            <AsyncText showVersion={true} text="D" />
-          </Cache>
-        </Suspense>,
-      );
-    });
-    expect(Scheduler).toHaveYielded(['Cache miss! [D]']);
-    expect(root).toMatchRenderedOutput('Loading...');
-
-    await act(async () => {
-      resolveMostRecentTextCache('D');
-    });
-    expect(Scheduler).toHaveYielded([
-      'D [v3]',
-      'Cache cleanup: B [v2]',
-      'Cache cleanup: C [v2]',
-      'Cache cleanup: C [v2] (cached)',
-    ]);
-    expect(root).toMatchRenderedOutput('D [v3]');
-
+    // Unmount children: the fresh cache used for the updates is freed, while the
+    // original cache (with A) is still retained at the root.
     await act(async () => {
       root.render('Bye!');
     });
-    // The root's cache is never accessed, so the v1 cache is for the fresh Cache boundary
-    // added during the transition. This is freed when children are unmounted
     expect(Scheduler).toHaveYielded([
-      'Cache cleanup: D [v3]',
-      'Cache cleanup: D [v3] (cached)',
+      'Cache cleanup: B [v2]',
+      'Cache cleanup: C [v2]',
+      'Cache cleanup: C [v2] (cached)',
     ]);
     expect(root).toMatchRenderedOutput('Bye!');
   });
