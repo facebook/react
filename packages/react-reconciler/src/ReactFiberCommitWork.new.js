@@ -2598,8 +2598,6 @@ function commitPassiveMountEffects_complete(
 function commitPassiveMountOnFiber(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
-  // maybe thread through previous fiber or cache from previous fiber
-  //
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -2627,8 +2625,8 @@ function commitPassiveMountOnFiber(
           finishedWork.alternate?.memoizedState.cache;
         const nextCache: Cache = finishedWork.memoizedState.cache;
         // Retain/release the root cache.
-        // Note that on initial mount, previousCache and nextCache will be the same,
-        // this retain won't occur. To counter this, we instead retain the HostRoot's
+        // Note that on initial mount, previousCache and nextCache will be the same
+        // and this retain won't occur. To counter this, we instead retain the HostRoot's
         // initial cache when creating the root itself (see createFiberRoot() in
         // ReactFiberRoot.js). Subsequent updates that change the cache are reflected
         // here, such that previous/next caches are retained correctly.
@@ -2917,10 +2915,14 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
       break;
     }
     case HostRoot: {
-      if (enableCache) {
-        const cache = current.memoizedState.cache;
-        releaseCache(cache);
-      }
+      // TODO: run passive unmount effects when unmounting a root.
+      // Because passive unmount effects are not currently run,
+      // the cache instance owned by the root will never be freed.
+      // When effects are run, the cache should be freed here:
+      // if (enableCache) {
+      //   const cache = current.memoizedState.cache;
+      //   releaseCache(cache);
+      // }
       break;
     }
     case CacheComponent: {
