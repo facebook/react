@@ -30,6 +30,8 @@ const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
 
+const LOGGING_URL = process.env.LOGGING_URL || null;
+
 const featureFlagTarget =
   process.env.FEATURE_FLAG_TARGET || 'core/standalone-oss';
 
@@ -82,6 +84,7 @@ module.exports = {
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-core"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
+      'process.env.LOGGING_URL': `"${LOGGING_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,
       'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,

@@ -23,6 +23,7 @@ import {
   getShowInlineWarningsAndErrors,
   getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
+import {registerDevToolsEventLogger} from 'react-devtools-shared/src/registerDevToolsEventLogger';
 import {Server} from 'ws';
 import {join} from 'path';
 import {readFileSync} from 'fs';
@@ -255,16 +256,23 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-type ServerOptions = {
+type ServerOptions = {|
   key?: string,
   cert?: string,
-};
+|};
+
+type LoggerOptions = {|
+  surface?: ?string,
+|};
 
 function startServer(
   port?: number = 8097,
   host?: string = 'localhost',
   httpsOptions?: ServerOptions,
+  loggerOptions?: LoggerOptions,
 ) {
+  registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
+
   const useHttps = !!httpsOptions;
   const httpServer = useHttps
     ? require('https').createServer(httpsOptions)
