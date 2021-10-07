@@ -8,7 +8,7 @@
 
 ## Instructions
 
-`cd fixtures/attribute-behavior && yarn install && yarn start`
+`yarn build --type=UMD_DEV react/index,react-dom && cd fixtures/attribute-behavior && yarn install && yarn start`
 
 ## Interpretation
 
