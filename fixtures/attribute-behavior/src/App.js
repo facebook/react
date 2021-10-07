@@ -723,9 +723,9 @@ class App extends React.Component {
     rowPatternHashes: null,
   };
 
-  renderCell = props => {
+  renderCell = ({key, ...props}) => {
     return (
-      <div style={props.style}>
+      <div key={key} style={props.style}>
         <CellContent
           toggleAttribute={this.toggleAttribute}
           completedHashes={this.state.completedHashes}
