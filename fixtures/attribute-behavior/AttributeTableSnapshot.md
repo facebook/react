@@ -5248,6 +5248,31 @@
 | `imageRendering=(null)`| (initial)| `<null>` |
 | `imageRendering=(undefined)`| (initial)| `<null>` |
 
+## `imageSizes` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `imageSizes=(string)`| (changed)| `"a string"` |
+| `imageSizes=(empty string)`| (initial)| `<empty string>` |
+| `imageSizes=(array with string)`| (changed)| `"string"` |
+| `imageSizes=(empty array)`| (initial)| `<empty string>` |
+| `imageSizes=(object)`| (changed)| `"result of toString()"` |
+| `imageSizes=(numeric string)`| (changed)| `"42"` |
+| `imageSizes=(-1)`| (changed)| `"-1"` |
+| `imageSizes=(0)`| (changed)| `"0"` |
+| `imageSizes=(integer)`| (changed)| `"1"` |
+| `imageSizes=(NaN)`| (changed, warning)| `"NaN"` |
+| `imageSizes=(float)`| (changed)| `"99.99"` |
+| `imageSizes=(true)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(false)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(string 'true')`| (changed)| `"true"` |
+| `imageSizes=(string 'false')`| (changed)| `"false"` |
+| `imageSizes=(string 'on')`| (changed)| `"on"` |
+| `imageSizes=(string 'off')`| (changed)| `"off"` |
+| `imageSizes=(symbol)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(function)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(null)`| (initial)| `<empty string>` |
+| `imageSizes=(undefined)`| (initial)| `<empty string>` |
+
 ## `imageSrcSet` (on `<link>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |

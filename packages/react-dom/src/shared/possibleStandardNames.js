@@ -79,6 +79,7 @@ const possibleStandardNames = {
   'http-equiv': 'httpEquiv',
   icon: 'icon',
   id: 'id',
+  imagesizes: 'imageSizes',
   imagesrcset: 'imageSrcSet',
   innerhtml: 'innerHTML',
   inputmode: 'inputMode',
