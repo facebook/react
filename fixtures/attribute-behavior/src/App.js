@@ -767,7 +767,7 @@ class App extends React.Component {
         'https://unpkg.com/react-dom@latest/umd/react-dom-server.browser.development.js',
       ReactNext: '/react.development.js',
       ReactDOMNext: '/react-dom.development.js',
-      ReactDOMServerNext: '/react-dom-server.browser.development.js',
+      ReactDOMServerNext: '/react-dom-server-legacy.browser.development.js',
     };
     const codePromises = Object.values(sources).map(src =>
       fetch(src).then(res => res.text())
