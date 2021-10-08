@@ -157,7 +157,7 @@ export function getInternalReactConstants(
     PerformedWork: 0b01,
     Placement: 0b10,
     Incomplete: 0b10000000000000,
-    Hydrating: 0b0000000000001000000000000,
+    Hydrating: 0b1000000000000,
   };
 
   // **********************************************************
@@ -2709,8 +2709,13 @@ export function attach(
     return null;
   }
 
-  const MOUNTED = 2;
-  const UNMOUNTED = 3;
+  // This function is copied from React and should be kept in sync:
+  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  function assertIsMounted(fiber) {
+    if (getNearestMountedFiber(fiber) !== fiber) {
+      throw new Error('Unable to find node on an unmounted component.');
+    }
+  }
 
   // This function is copied from React and should be kept in sync:
   // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
@@ -2745,9 +2750,6 @@ export function attach(
     // that has been unmounted.
     return null;
   }
-  function isFiberMountedImpl(fiber: Fiber): number {
-    return getNearestMountedFiber(fiber) === fiber ? MOUNTED : UNMOUNTED;
-  }
 
   // This function is copied from React and should be kept in sync:
   // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
@@ -2763,9 +2765,14 @@ export function attach(
     const alternate = fiber.alternate;
     if (!alternate) {
       // If there is no alternate, then we only need to check if it is mounted.
-      const state = isFiberMountedImpl(fiber);
-      if (state === UNMOUNTED) {
-        throw Error('Unable to find node on an unmounted component.');
+      const nearestMounted = getNearestMountedFiber(fiber);
+
+      if (nearestMounted === null) {
+        throw new Error('Unable to find node on an unmounted component.');
+      }
+
+      if (nearestMounted !== fiber) {
+        return null;
       }
       return fiber;
     }
@@ -2803,23 +2810,20 @@ export function attach(
         while (child) {
           if (child === a) {
             // We've determined that A is the current branch.
-            if (isFiberMountedImpl(parentA) !== MOUNTED) {
-              throw Error('Unable to find node on an unmounted component.');
-            }
+            assertIsMounted(parentA);
             return fiber;
           }
           if (child === b) {
             // We've determined that B is the current branch.
-            if (isFiberMountedImpl(parentA) !== MOUNTED) {
-              throw Error('Unable to find node on an unmounted component.');
-            }
+            assertIsMounted(parentA);
             return alternate;
           }
           child = child.sibling;
         }
+
         // We should never have an alternate for any mounting node. So the only
         // way this could possibly happen is if this was unmounted, if at all.
-        throw Error('Unable to find node on an unmounted component.');
+        throw new Error('Unable to find node on an unmounted component.');
       }
 
       if (a.return !== b.return) {
@@ -2870,8 +2874,9 @@ export function attach(
             }
             child = child.sibling;
           }
+
           if (!didFindChild) {
-            throw Error(
+            throw new Error(
               'Child was not found in either parent set. This indicates a bug ' +
                 'in React related to the return pointer. Please file an issue.',
             );
@@ -2880,17 +2885,19 @@ export function attach(
       }
 
       if (a.alternate !== b) {
-        throw Error(
+        throw new Error(
           "Return fibers should always be each others' alternates. " +
             'This error is likely caused by a bug in React. Please file an issue.',
         );
       }
     }
+
     // If the root is not a host container, we're in a disconnected tree. I.e.
     // unmounted.
     if (a.tag !== HostRoot) {
-      throw Error('Unable to find node on an unmounted component.');
+      throw new Error('Unable to find node on an unmounted component.');
     }
+
     if (a.stateNode.current === a) {
       // We've determined that A is the current branch.
       return fiber;
