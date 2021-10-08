@@ -121,6 +121,7 @@ export function createFiberRoot(
     const initialCache = createCache();
     retainCache(initialCache);
     root.pooledCache = initialCache;
+    retainCache(initialCache); // retain twice
     const initialState = {
       element: null,
       cache: initialCache,

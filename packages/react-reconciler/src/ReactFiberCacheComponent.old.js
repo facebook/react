@@ -133,8 +133,12 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
   if (pooledCache !== null) {
     return pooledCache;
   }
-  // Create a fresh cache.
+  // Create a fresh cache. The pooled cache must be owned - it is freed
+  // in releaseRootPooledCache() - but the cache instance handed out
+  // is retained/released in the commit phase of the component that
+  // references is (ie the host root, cache boundary, suspense component)
   pooledCache = createCache();
+  retainCache(pooledCache);
   return pooledCache;
 }
 

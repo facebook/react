@@ -237,6 +237,7 @@ import {
   isDevToolsPresent,
 } from './ReactFiberDevToolsHook.new';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
+import {releaseCache} from './ReactFiberCacheComponent.new';
 
 const ceil = Math.ceil;
 
@@ -1880,6 +1881,10 @@ function commitRootImpl(root, renderPriorityLevel) {
       rootDoesHavePassiveEffects = true;
       scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
+        // This render triggered passive effects: release the root cache pool
+        // *after* passive effects fire to avoid freeing a cache pool that may
+        // be referenced by a node in the tree (HostRoot, Cache boundary etc)
+        releaseRootPooledCache(root, remainingLanes);
         return null;
       });
     }
@@ -2052,7 +2057,11 @@ function commitRootImpl(root, renderPriorityLevel) {
     hasUncaughtError = false;
     const error = firstUncaughtError;
     firstUncaughtError = null;
-    releaseRootPooledCache(root, remainingLanes);
+    if (!rootDidHavePassiveEffects) {
+      // There were no passive effects, so we can immediately release the cache
+      // pool for this render.
+      releaseRootPooledCache(root, remainingLanes);
+    }
     throw error;
   }
 
@@ -2090,12 +2099,14 @@ function commitRootImpl(root, renderPriorityLevel) {
     nestedUpdateCount = 0;
   }
 
+  if (!rootDidHavePassiveEffects) {
+    // There were no passive effects, so we can immediately release the cache
+    // pool for this render.
+    releaseRootPooledCache(root, remainingLanes);
+  }
+
   // If layout work was scheduled, flush it now.
   flushSyncCallbacks();
-
-  // Now that effects have run - giving Cache boundaries a chance to retain the
-  // cache instance - release the root's cache in case since the render is complete
-  releaseRootPooledCache(root, remainingLanes);
 
   if (__DEV__) {
     if (enableDebugTracing) {
@@ -2116,6 +2127,9 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
     if (pooledCacheLanes === NoLanes) {
       // None of the remaining work relies on the cache pool. Clear it so
       // subsequent requests get a new cache
+      if (root.pooledCache != null) {
+        releaseCache(root.pooledCache);
+      }
       root.pooledCache = null;
     }
   }
