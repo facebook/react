@@ -1508,4 +1508,86 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded([]);
     expect(root).toMatchRenderedOutput('Bye!');
   });
+
+  // @gate experimental || www
+  test.skip('fresh cache for root refresh is released if the refresh never commits', async () => {
+    const root = ReactNoop.createRoot();
+    let refresh;
+    function Example({text}) {
+      refresh = useCacheRefresh();
+      return <AsyncText showVersion={true} text={text} />;
+    }
+    seedNextTextCache('A');
+    await act(async () => {
+      root.render(
+        <Suspense fallback="Loading...">
+          <Example text="A" />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    await act(async () => {
+      startTransition(() => {
+        refresh();
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    await act(async () => {
+      root.render('Bye!');
+    });
+    expect(Scheduler).toHaveYielded([
+      // TODO: the v1 cache should *not* be cleaned up, it is still retained by the root
+      // The following line is presently yielded but should not be:
+      // 'Cache cleanup: A [v1] (cached)',
+
+      // TODO: the v2 cache *should* be cleaned up, it was created for the abandoned refresh
+      // The following line is presently not yielded but should be:
+      'Cache cleanup: A [v2]',
+    ]);
+    expect(root).toMatchRenderedOutput('Bye!');
+  });
+
+  // @gate experimental || www
+  test.skip('fresh cache for cache boundary refresh is released if the refresh never commits', async () => {
+    const root = ReactNoop.createRoot();
+    let refresh;
+    function Example({text}) {
+      refresh = useCacheRefresh();
+      return <AsyncText showVersion={true} text={text} />;
+    }
+    seedNextTextCache('A');
+    await act(async () => {
+      root.render(
+        <Suspense fallback="Loading...">
+          <Cache>
+            <Example text="A" />
+          </Cache>
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    await act(async () => {
+      startTransition(() => {
+        refresh();
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    await act(async () => {
+      root.render('Bye!');
+    });
+    expect(Scheduler).toHaveYielded([
+      // TODO: the v2 cache *should* be cleaned up, it was created for the abandoned refresh
+      // The following line is presently not yielded but should be:
+      'Cache cleanup: A [v2]',
+    ]);
+    expect(root).toMatchRenderedOutput('Bye!');
+  });
 });

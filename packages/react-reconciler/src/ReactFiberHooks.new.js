@@ -2128,6 +2128,9 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
+        // TODO: If a refresh never commits, the new cache created here must be
+        // released. A simple case is start refreshing a cache boundary, but then
+        // unmount that boundary before the refresh completes.
         const seededCache = createCache();
         if (seedKey !== null && seedKey !== undefined && root !== null) {
           // Seed the cache with the value passed by the caller. This could be

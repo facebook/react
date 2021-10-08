@@ -137,6 +137,8 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
   // in releaseRootPooledCache() - but the cache instance handed out
   // is retained/released in the commit phase of the component that
   // references is (ie the host root, cache boundary, suspense component)
+  // Ie, pooledCache is conceptually an Option<Arc<Cache>> (owned),
+  // whereas the return value of this function is a &Arc<Cache> (borrowed).
   pooledCache = createCache();
   retainCache(pooledCache);
   return pooledCache;

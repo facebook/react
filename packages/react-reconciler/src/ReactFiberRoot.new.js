@@ -120,8 +120,16 @@ export function createFiberRoot(
   if (enableCache) {
     const initialCache = createCache();
     retainCache(initialCache);
+
+    // The pooledCache is a fresh cache instance is being used for newly
+    // mounted boundaries during a render. In general, the pooledCache is
+    // always cleared from the root at the end of a render: it is either
+    // released when render commits, or moved to an Offscreen component
+    // if rendering suspends. Because the lifetime of the pooled cache
+    // is distinct from the main memoizedState.cache, it must be retained
+    // separately.
     root.pooledCache = initialCache;
-    retainCache(initialCache); // retain twice
+    retainCache(initialCache);
     const initialState = {
       element: null,
       cache: initialCache,
