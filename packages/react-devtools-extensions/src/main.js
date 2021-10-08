@@ -6,6 +6,7 @@ import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {getBrowserName, getBrowserTheme} from './utils';
 import {LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY} from 'react-devtools-shared/src/constants';
+import {registerDevToolsEventLogger} from 'react-devtools-shared/src/registerDevToolsEventLogger';
 import {
   getAppendComponentStack,
   getBreakOnConsoleErrors,
@@ -20,7 +21,6 @@ import {
 } from 'react-devtools-shared/src/storage';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
-import {registerExtensionsEventLogger} from './registerExtensionsEventLogger';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
@@ -89,7 +89,7 @@ function createPanelIfReactLoaded() {
 
       const tabId = chrome.devtools.inspectedWindow.tabId;
 
-      registerExtensionsEventLogger();
+      registerDevToolsEventLogger('extension');
 
       function initBridgeAndStore() {
         const port = chrome.runtime.connect({

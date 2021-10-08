@@ -14,38 +14,39 @@ import {enableLogger} from 'react-devtools-feature-flags';
 
 let loggingIFrame = null;
 let missedEvents = [];
-function logEvent(event: LogEvent) {
-  if (enableLogger) {
-    if (loggingIFrame != null) {
-      loggingIFrame.contentWindow.postMessage(
-        {
-          source: 'react-devtools-logging',
-          event: event,
-          context: {
-            surface: 'extension',
+
+export function registerDevToolsEventLogger(surface: string) {
+  function logEvent(event: LogEvent) {
+    if (enableLogger) {
+      if (loggingIFrame != null) {
+        loggingIFrame.contentWindow.postMessage(
+          {
+            source: 'react-devtools-logging',
+            event: event,
+            context: {
+              surface,
+            },
           },
-        },
-        '*',
-      );
-    } else {
-      missedEvents.push(event);
+          '*',
+        );
+      } else {
+        missedEvents.push(event);
+      }
     }
   }
-}
 
-function handleLoggingIFrameLoaded(iframe) {
-  if (loggingIFrame != null) {
-    return;
+  function handleLoggingIFrameLoaded(iframe) {
+    if (loggingIFrame != null) {
+      return;
+    }
+
+    loggingIFrame = iframe;
+    if (missedEvents.length > 0) {
+      missedEvents.forEach(logEvent);
+      missedEvents = [];
+    }
   }
 
-  loggingIFrame = iframe;
-  if (missedEvents.length > 0) {
-    missedEvents.forEach(logEvent);
-    missedEvents = [];
-  }
-}
-
-export function registerExtensionsEventLogger() {
   // If logger is enabled, register a logger that captures logged events
   // and render iframe where the logged events will be reported to
   if (enableLogger) {
