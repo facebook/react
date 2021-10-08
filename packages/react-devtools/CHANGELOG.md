@@ -2,6 +2,12 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.19.2 (October 8, 2021)
+
+#### Bugfix
+* Show different error boundary UI for timeouts than normal errors ([bvaughn](https://github.com/bvaughn) in [#22483](https://github.com/facebook/react/pull/22483))
+* Fixed bug where deleting a component filter would also close the settings modal ([Biki-das](https://github.com/Biki-das) in [#22484](https://github.com/facebook/react/pull/22484))
+
 ## 4.19.1 (October 1, 2021)
 
 #### Bugfix
