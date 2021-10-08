@@ -144,6 +144,33 @@ export function markComponentRenderStopped(): void {
   }
 }
 
+export function markComponentErrored(
+  fiber: Fiber,
+  thrownValue: mixed,
+  lanes: Lanes,
+): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      const phase = fiber.alternate === null ? 'mount' : 'update';
+
+      let message = '';
+      if (
+        thrownValue !== null &&
+        typeof thrownValue === 'object' &&
+        typeof thrownValue.message === 'string'
+      ) {
+        message = thrownValue.message;
+      } else if (typeof thrownValue === 'string') {
+        message = thrownValue;
+      }
+
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--error-${componentName}-${phase}-${message}`);
+    }
+  }
+}
+
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
 // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
@@ -167,9 +194,16 @@ export function markComponentSuspended(
       const id = getWakeableID(wakeable);
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
       const phase = fiber.alternate === null ? 'mount' : 'update';
+
+      // Following the non-standard fn.displayName convention,
+      // frameworks like Relay may also annotate Promises with a displayName,
+      // describing what operation/data the thrown Promise is related to.
+      // When this is available we should pass it along to the Scheduling Profiler.
+      const displayName = (wakeable: any).displayName || '';
+
       // TODO (scheduling profiler) Add component stack id
       markAndClear(
-        `--suspense-${eventType}-${id}-${componentName}-${phase}-${lanes}`,
+        `--suspense-${eventType}-${id}-${componentName}-${phase}-${lanes}-${displayName}`,
       );
       wakeable.then(
         () => markAndClear(`--suspense-resolved-${id}-${componentName}`),

@@ -39,7 +39,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.timeoutHandle = noTimeout;
   this.context = null;
   this.pendingContext = null;
-  this.hydrate = hydrate;
+  this.isDehydrated = hydrate;
   this.callbackNode = null;
   this.callbackPriority = NoLane;
   this.eventTimes = createLaneMap(NoLanes);
@@ -84,10 +84,10 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (__DEV__) {
     switch (tag) {
       case ConcurrentRoot:
-        this._debugRootType = 'createRoot()';
+        this._debugRootType = hydrate ? 'hydrateRoot()' : 'createRoot()';
         break;
       case LegacyRoot:
-        this._debugRootType = 'createLegacyRoot()';
+        this._debugRootType = hydrate ? 'hydrate()' : 'render()';
         break;
     }
   }

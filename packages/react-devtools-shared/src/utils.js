@@ -48,6 +48,7 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
+import isArray from './isArray';
 
 import type {ComponentFilter, ElementType} from './types';
 import type {LRUCache} from 'react-devtools-shared/src/types';
@@ -138,17 +139,37 @@ export function utfDecodeString(array: Array<number>): string {
   return string;
 }
 
+function surrogatePairToCodePoint(
+  charCode1: number,
+  charCode2: number,
+): number {
+  return ((charCode1 & 0x3ff) << 10) + (charCode2 & 0x3ff) + 0x10000;
+}
+
+// Credit for this encoding approach goes to Tim Down:
+// https://stackoverflow.com/questions/4877326/how-can-i-tell-if-a-string-contains-multibyte-characters-in-javascript
 export function utfEncodeString(string: string): Array<number> {
   const cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
 
-  const encoded = new Array(string.length);
-  for (let i = 0; i < string.length; i++) {
-    encoded[i] = string.codePointAt(i);
+  const encoded = [];
+  let i = 0;
+  let charCode;
+  while (i < string.length) {
+    charCode = string.charCodeAt(i);
+    // Handle multibyte unicode characters (like emoji).
+    if ((charCode & 0xf800) === 0xd800) {
+      encoded.push(surrogatePairToCodePoint(charCode, string.charCodeAt(++i)));
+    } else {
+      encoded.push(charCode);
+    }
+    ++i;
   }
+
   encodedStringCache.set(string, encoded);
+
   return encoded;
 }
 
@@ -455,7 +476,7 @@ export function deletePathInObject(
   if (object != null) {
     const parent = getInObject(object, path.slice(0, length - 1));
     if (parent) {
-      if (Array.isArray(parent)) {
+      if (isArray(parent)) {
         parent.splice(((last: any): number), 1);
       } else {
         delete parent[last];
@@ -476,7 +497,7 @@ export function renamePathInObject(
       const lastOld = oldPath[length - 1];
       const lastNew = newPath[length - 1];
       parent[lastNew] = parent[lastOld];
-      if (Array.isArray(parent)) {
+      if (isArray(parent)) {
         parent.splice(((lastOld: any): number), 1);
       } else {
         delete parent[lastOld];
@@ -560,7 +581,7 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
-      if (Array.isArray(data)) {
+      if (isArray(data)) {
         return 'array';
       } else if (ArrayBuffer.isView(data)) {
         return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
@@ -779,7 +800,7 @@ export function formatDataForPreview(
           // To mimic their behavior, detect if we've been given an entries tuple.
           //   Map(2) {"abc" => 123, "def" => 123}
           //   Set(2) {"abc", 123}
-          if (Array.isArray(entryOrEntries)) {
+          if (isArray(entryOrEntries)) {
             const key = formatDataForPreview(entryOrEntries[0], true);
             const value = formatDataForPreview(entryOrEntries[1], false);
             formatted += `${key} => ${value}`;
@@ -834,7 +855,7 @@ export function formatDataForPreview(
       return data;
     default:
       try {
-        return truncateForDisplay('' + data);
+        return truncateForDisplay(String(data));
       } catch (error) {
         return 'unserializable';
       }

@@ -30,6 +30,7 @@
   background-color: var(--color-background);
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--color-border);
 }
 
 .ErrorInfo {
@@ -42,10 +43,10 @@
   flex-direction: row;
   font-size: var(--font-size-sans-large);
   font-weight: bold;
-  color: var(--color-error-text);
 }
 
-.Header {
+.ErrorHeader,
+.TimeoutHeader {
   flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -53,17 +54,35 @@
   min-width: 0;
 }
 
-.Stack {
+.ErrorHeader {
+  color: var(--color-error-text);
+}
+.TimeoutHeader {
+  color: var(--color-text);
+}
+
+.ErrorStack,
+.TimeoutStack {
   margin-top: 0.5rem;
   white-space: pre-wrap;
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   -webkit-font-smoothing: initial;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  overflow: auto;
+}
+
+.ErrorStack {
   background-color: var(--color-error-background);
   border: 1px solid var(--color-error-border);
   color: var(--color-error-text);
-  border-radius: 0.25rem;
-  padding: 0.5rem;
+}
+
+.TimeoutStack {
+  background-color: var(--color-console-warning-background);
+  color: var(--color-console-warning-text);
+  border: var(--color-console-warning-border)
 }
 
 .LoadingIcon {

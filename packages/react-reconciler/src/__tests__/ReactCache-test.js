@@ -461,7 +461,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    // Fefresh for new data.
+    // Refresh for new data.
     await act(async () => {
       startTransition(() => refresh());
     });
@@ -875,7 +875,7 @@ describe('ReactCache', () => {
     function Unrelated() {
       const [count, _updateUnrelated] = useState(0);
       updateUnrelated = _updateUnrelated;
-      return <Text text={count + ''} />;
+      return <Text text={String(count)} />;
     }
 
     const root = ReactNoop.createRoot();

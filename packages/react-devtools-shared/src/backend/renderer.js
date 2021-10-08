@@ -59,6 +59,8 @@ import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
+  patchForStrictMode as patchConsoleForStrictMode,
+  unpatchForStrictMode as unpatchConsoleForStrictMode,
 } from './console';
 import {
   CONCURRENT_MODE_NUMBER,
@@ -83,6 +85,7 @@ import {format} from './utils';
 import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -1378,13 +1381,13 @@ export function attach(
       return false;
     }
     const {deps} = memoizedState;
-    const hasOwnProperty = Object.prototype.hasOwnProperty.bind(memoizedState);
+    const boundHasOwnProperty = hasOwnProperty.bind(memoizedState);
     return (
-      hasOwnProperty('create') &&
-      hasOwnProperty('destroy') &&
-      hasOwnProperty('deps') &&
-      hasOwnProperty('next') &&
-      hasOwnProperty('tag') &&
+      boundHasOwnProperty('create') &&
+      boundHasOwnProperty('destroy') &&
+      boundHasOwnProperty('deps') &&
+      boundHasOwnProperty('next') &&
+      boundHasOwnProperty('tag') &&
       (deps === null || isArray(deps))
     );
   }
@@ -1511,11 +1514,16 @@ export function attach(
 
   type OperationsArray = Array<number>;
 
+  type StringTableEntry = {|
+    encodedString: Array<number>,
+    id: number,
+  |};
+
   const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
   const pendingSimulatedUnmountedIDs: Array<number> = [];
   let pendingOperationsQueue: Array<OperationsArray> | null = [];
-  const pendingStringTable: Map<string, number> = new Map();
+  const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
   let pendingUnmountedRootID: number | null = null;
 
@@ -1733,13 +1741,19 @@ export function attach(
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
     operations[i++] = pendingStringTableLength;
-    pendingStringTable.forEach((value, key) => {
-      operations[i++] = key.length;
-      const encodedKey = utfEncodeString(key);
-      for (let j = 0; j < encodedKey.length; j++) {
-        operations[i + j] = encodedKey[j];
+    pendingStringTable.forEach((entry, stringKey) => {
+      const encodedString = entry.encodedString;
+
+      // Don't use the string length.
+      // It won't work for multibyte characters (like emoji).
+      const length = encodedString.length;
+
+      operations[i++] = length;
+      for (let j = 0; j < length; j++) {
+        operations[i + j] = encodedString[j];
       }
-      i += key.length;
+
+      i += length;
     });
 
     if (numUnmountIDs > 0) {
@@ -1786,21 +1800,31 @@ export function attach(
     pendingStringTableLength = 0;
   }
 
-  function getStringID(str: string | null): number {
-    if (str === null) {
+  function getStringID(string: string | null): number {
+    if (string === null) {
       return 0;
     }
-    const existingID = pendingStringTable.get(str);
-    if (existingID !== undefined) {
-      return existingID;
+    const existingEntry = pendingStringTable.get(string);
+    if (existingEntry !== undefined) {
+      return existingEntry.id;
     }
-    const stringID = pendingStringTable.size + 1;
-    pendingStringTable.set(str, stringID);
-    // The string table total length needs to account
-    // both for the string length, and for the array item
-    // that contains the length itself. Hence + 1.
-    pendingStringTableLength += str.length + 1;
-    return stringID;
+
+    const id = pendingStringTable.size + 1;
+    const encodedString = utfEncodeString(string);
+
+    pendingStringTable.set(string, {
+      encodedString,
+      id,
+    });
+
+    // The string table total length needs to account both for the string length,
+    // and for the array item that contains the length itself.
+    //
+    // Don't use string length for this table.
+    // It won't work for multibyte characters (like emoji).
+    pendingStringTableLength += encodedString.length + 1;
+
+    return id;
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
@@ -1845,7 +1869,7 @@ export function attach(
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      const keyString = key === null ? null : '' + key;
+      const keyString = key === null ? null : String(key);
       const keyStringID = getStringID(keyString);
 
       pushOperation(TREE_OPERATION_ADD);
@@ -3415,12 +3439,13 @@ export function attach(
     requestID: number,
     id: number,
     path: Array<string | number> | null,
+    forceFullData: boolean,
   ): InspectedElementPayload {
     if (path !== null) {
       mergeInspectedPaths(path);
     }
 
-    if (isMostRecentlyInspectedElement(id)) {
+    if (isMostRecentlyInspectedElement(id) && !forceFullData) {
       if (!hasElementUpdatedSinceLastInspected) {
         if (path !== null) {
           let secondaryCategory = null;
@@ -4249,6 +4274,7 @@ export function attach(
     handlePostCommitFiberRoot,
     inspectElement,
     logElementToConsole,
+    patchConsoleForStrictMode,
     prepareViewAttributeSource,
     prepareViewElementSource,
     overrideError,
@@ -4261,6 +4287,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    unpatchConsoleForStrictMode,
     updateComponentFilters,
   };
 }

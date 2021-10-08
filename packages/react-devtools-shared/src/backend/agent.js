@@ -72,6 +72,7 @@ type CopyElementParams = {|
 |};
 
 type InspectElementParams = {|
+  forceFullData: boolean,
   id: number,
   path: Array<string | number> | null,
   rendererID: number,
@@ -346,6 +347,7 @@ export default class Agent extends EventEmitter<{|
   };
 
   inspectElement = ({
+    forceFullData,
     id,
     path,
     rendererID,
@@ -357,7 +359,7 @@ export default class Agent extends EventEmitter<{|
     } else {
       this._bridge.send(
         'inspectedElement',
-        renderer.inspectElement(requestID, id, path),
+        renderer.inspectElement(requestID, id, path, forceFullData),
       );
 
       // When user selects an element, stop trying to restore the selection,

@@ -84,6 +84,8 @@ export let COLORS = {
   REACT_SUSPENSE_RESOLVED_EVENT_HOVER: '',
   REACT_SUSPENSE_UNRESOLVED_EVENT: '',
   REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER: '',
+  REACT_THROWN_ERROR: '',
+  REACT_THROWN_ERROR_HOVER: '',
   REACT_WORK_BORDER: '',
   SCROLL_CARET: '',
   TEXT_COLOR: '',
@@ -217,6 +219,12 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-suspense-unresolved-hover',
+    ),
+    REACT_THROWN_ERROR: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-thrown-error',
+    ),
+    REACT_THROWN_ERROR_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-thrown-error-hover',
     ),
     REACT_WORK_BORDER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-work-border',

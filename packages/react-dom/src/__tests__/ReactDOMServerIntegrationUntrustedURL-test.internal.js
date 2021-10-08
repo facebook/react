@@ -242,6 +242,11 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
       // consistency but the code structure makes that hard right now.
       expectedToStringCalls = 2;
     }
+    if (__DEV__) {
+      // Checking for string coercion problems results in double the
+      // toString calls in DEV
+      expectedToStringCalls *= 2;
+    }
 
     let toStringCalls = 0;
     const firstIsSafe = {

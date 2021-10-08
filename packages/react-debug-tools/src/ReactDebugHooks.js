@@ -23,7 +23,6 @@ import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
-import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
@@ -107,7 +106,7 @@ function nextHook(): null | Hook {
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
 
 function readContext<T>(context: ReactContext<T>): T {
@@ -281,6 +280,7 @@ function useMutableSource<Source, Snapshot>(
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
+  getServerSnapshot?: () => T,
 ): T {
   // useSyncExternalStore() composes multiple hooks internally.
   // Advance the current hook index the same number of times

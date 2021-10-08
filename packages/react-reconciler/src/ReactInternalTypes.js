@@ -212,7 +212,7 @@ type BaseFiberRootProperties = {|
   context: Object | null,
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
-  +hydrate: boolean,
+  +isDehydrated: boolean,
 
   // Used by useMutableSource hook to avoid tearing during hydration.
   mutableSourceEagerHydrationData?: Array<
@@ -313,6 +313,7 @@ export type Dispatcher = {|
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,
+    getServerSnapshot?: () => T,
   ): T,
   useOpaqueIdentifier(): any,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,

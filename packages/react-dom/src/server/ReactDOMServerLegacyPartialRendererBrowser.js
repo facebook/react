@@ -6,21 +6,18 @@
  */
 
 import ReactVersion from 'shared/ReactVersion';
-import invariant from 'shared/invariant';
 
 import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
 
 function renderToNodeStream() {
-  invariant(
-    false,
+  throw new Error(
     'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
       'in the browser. Use ReactDOMServer.renderToString() instead.',
   );
 }
 
 function renderToStaticNodeStream() {
-  invariant(
-    false,
+  throw new Error(
     'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
       'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
   );

@@ -136,15 +136,23 @@ export class ReactMeasuresView extends View {
         // Commit phase rects are overlapped by layout and passive rects,
         // and it looks bad if text flows underneath/behind these overlayed rects.
         if (nextMeasure != null) {
-          textRect = {
-            ...measureRect,
-            size: {
-              width:
-                timestampToPosition(nextMeasure.timestamp, scaleFactor, frame) -
-                x,
-              height: REACT_MEASURE_HEIGHT,
-            },
-          };
+          // This clipping shouldn't apply for measures that don't overlap though,
+          // like passive effects that are processed after a delay,
+          // or if there are now layout or passive effects and the next measure is render or idle.
+          if (nextMeasure.timestamp < measure.timestamp + measure.duration) {
+            textRect = {
+              ...measureRect,
+              size: {
+                width:
+                  timestampToPosition(
+                    nextMeasure.timestamp,
+                    scaleFactor,
+                    frame,
+                  ) - x,
+                height: REACT_MEASURE_HEIGHT,
+              },
+            };
+          }
         }
         break;
       case 'render-idle':

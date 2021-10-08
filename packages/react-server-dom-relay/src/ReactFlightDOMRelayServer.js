@@ -13,7 +13,11 @@ import type {
   Destination,
 } from './ReactFlightDOMRelayServerHostConfig';
 
-import {createRequest, startWork} from 'react-server/src/ReactFlightServer';
+import {
+  createRequest,
+  startWork,
+  startFlowing,
+} from 'react-server/src/ReactFlightServer';
 
 type Options = {
   onError?: (error: mixed) => void,
@@ -27,11 +31,11 @@ function render(
 ): void {
   const request = createRequest(
     model,
-    destination,
     config,
     options ? options.onError : undefined,
   );
   startWork(request);
+  startFlowing(request, destination);
 }
 
 export {render};

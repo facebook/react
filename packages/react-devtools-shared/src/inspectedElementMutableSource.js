@@ -62,8 +62,15 @@ export function inspectElement({
   rendererID: number,
 |}): Promise<InspectElementReturnType> {
   const {id} = element;
+
+  // This could indicate that the DevTools UI has been closed and reopened.
+  // The in-memory cache will be clear but the backend still thinks we have cached data.
+  // In this case, we need to tell it to resend the full data.
+  const forceFullData = !inspectedElementCache.has(id);
+
   return inspectElementAPI({
     bridge,
+    forceFullData,
     id,
     path,
     rendererID,
@@ -74,7 +81,7 @@ export function inspectElement({
     switch (type) {
       case 'no-change':
         // This is a no-op for the purposes of our cache.
-        inspectedElement = inspectedElementCache.get(element.id);
+        inspectedElement = inspectedElementCache.get(id);
         if (inspectedElement != null) {
           return [inspectedElement, type];
         }
@@ -85,7 +92,7 @@ export function inspectElement({
       case 'not-found':
         // This is effectively a no-op.
         // If the Element is still in the Store, we can eagerly remove it from the Map.
-        inspectedElementCache.remove(element.id);
+        inspectedElementCache.remove(id);
 
         throw Error(`Element "${id}" not found`);
 
@@ -98,7 +105,7 @@ export function inspectElement({
           fullData.value,
         );
 
-        inspectedElementCache.set(element.id, inspectedElement);
+        inspectedElementCache.set(id, inspectedElement);
 
         return [inspectedElement, type];
 
@@ -108,7 +115,7 @@ export function inspectElement({
 
         // A path has been hydrated.
         // Merge it with the latest copy we have locally and resolve with the merged value.
-        inspectedElement = inspectedElementCache.get(element.id) || null;
+        inspectedElement = inspectedElementCache.get(id) || null;
         if (inspectedElement !== null) {
           // Clone element
           inspectedElement = {...inspectedElement};
@@ -121,7 +128,7 @@ export function inspectElement({
             hydrateHelper(value, ((path: any): Path)),
           );
 
-          inspectedElementCache.set(element.id, inspectedElement);
+          inspectedElementCache.set(id, inspectedElement);
 
           return [inspectedElement, type];
         }
@@ -139,4 +146,8 @@ export function inspectElement({
 
     throw Error(`Unable to inspect element with id "${id}"`);
   });
+}
+
+export function clearCacheForTests(): void {
+  inspectedElementCache.reset();
 }

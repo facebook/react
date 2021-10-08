@@ -10,7 +10,7 @@ const parser = require('@babel/parser');
 const fs = require('fs');
 const path = require('path');
 const traverse = require('@babel/traverse').default;
-const evalToString = require('../shared/evalToString');
+const {evalStringConcat} = require('../shared/evalToString');
 const invertObject = require('./invertObject');
 
 const babylonOptions = {
@@ -75,7 +75,7 @@ module.exports = function(opts) {
 
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
-            const errorMsgLiteral = evalToString(node.arguments[1]);
+            const errorMsgLiteral = evalStringConcat(node.arguments[1]);
             addToErrorMap(errorMsgLiteral);
           }
         },

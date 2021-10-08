@@ -550,13 +550,27 @@ function processTimelineEvent(
         }
 
         currentProfilerData.schedulingEvents.push(stateUpdateEvent);
+      } else if (name.startsWith('--error-')) {
+        const [componentName, phase, message] = name.substr(8).split('-');
+
+        currentProfilerData.thrownErrors.push({
+          componentName,
+          message,
+          phase: ((phase: any): Phase),
+          timestamp: startTime,
+          type: 'thrown-error',
+        });
       } // eslint-disable-line brace-style
 
       // React Events - suspense
       else if (name.startsWith('--suspense-suspend-')) {
-        const [id, componentName, phase, laneBitmaskString] = name
-          .substr(19)
-          .split('-');
+        const [
+          id,
+          componentName,
+          phase,
+          laneBitmaskString,
+          promiseName,
+        ] = name.substr(19).split('-');
         const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
 
         const availableDepths = new Array(
@@ -585,6 +599,7 @@ function processTimelineEvent(
           duration: null,
           id,
           phase: ((phase: any): Phase),
+          promiseName: promiseName || null,
           resolution: 'unresolved',
           resuspendTimestamps: null,
           timestamp: startTime,
@@ -865,6 +880,7 @@ export default async function preprocessData(
     snapshots: [],
     startTime: 0,
     suspenseEvents: [],
+    thrownErrors: [],
   };
 
   // Sort `timeline`. JSON Array Format trace events need not be ordered. See:

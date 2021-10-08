@@ -13,7 +13,7 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef} from 'react';
 import Store from '../store';
 import {
   BridgeContext,
@@ -47,6 +47,7 @@ import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Co
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import {logEvent} from '../../Logger';
 
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
@@ -152,6 +153,24 @@ export default function DevTools({
     tab = overrideTab;
   }
 
+  const selectTab = useCallback(
+    (tabId: TabID) => {
+      // We show the TabBar when DevTools is NOT rendered as a browser extension.
+      // In this case, we want to capture when people select tabs with the TabBar.
+      // When DevTools is rendered as an extension, we capture this event when
+      // the browser devtools panel changes.
+      if (showTabBar === true) {
+        if (tabId === 'components') {
+          logEvent({event_name: 'selected-components-tab'});
+        } else {
+          logEvent({event_name: 'selected-profiler-tab'});
+        }
+      }
+      setTab(tabId);
+    },
+    [setTab, showTabBar],
+  );
+
   const options = useMemo(
     () => ({
       readOnly: readOnly || false,
@@ -204,12 +223,12 @@ export default function DevTools({
       if (event.ctrlKey || event.metaKey) {
         switch (event.key) {
           case '1':
-            setTab(tabs[0].id);
+            selectTab(tabs[0].id);
             event.preventDefault();
             event.stopPropagation();
             break;
           case '2':
-            setTab(tabs[1].id);
+            selectTab(tabs[1].id);
             event.preventDefault();
             event.stopPropagation();
             break;
@@ -232,6 +251,10 @@ export default function DevTools({
       }
     };
   }, [bridge]);
+
+  useEffect(() => {
+    logEvent({event_name: 'loaded-dev-tools'});
+  }, []);
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
@@ -265,7 +288,7 @@ export default function DevTools({
                                     <TabBar
                                       currentTab={tab}
                                       id="DevTools"
-                                      selectTab={setTab}
+                                      selectTab={selectTab}
                                       tabs={tabs}
                                       type="navigation"
                                     />

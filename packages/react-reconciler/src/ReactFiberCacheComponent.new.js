@@ -99,14 +99,16 @@ export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
     return;
   }
   // The `pooledCache` variable points to the cache that was used for new
-  // cache boundaries during this render, if any. Stash it on the root so that
-  // parallel transitions may share the same cache. We will clear this field
-  // once all the transitions that depend on it (which we track with
-  // `pooledCacheLanes`) have committed.
+  // cache boundaries during this render, if any. Move ownership of the
+  // cache to the root so that parallel transitions may share the same
+  // cache. We will clear this field once all the transitions that depend
+  // on it (which we track with `pooledCacheLanes`) have committed.
   root.pooledCache = pooledCache;
   if (pooledCache !== null) {
     root.pooledCacheLanes |= renderLanes;
   }
+  // set to null, conceptually we are moving ownership to the root
+  pooledCache = null;
 }
 
 export function restoreSpawnedCachePool(

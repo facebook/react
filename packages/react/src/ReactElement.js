@@ -6,9 +6,9 @@
  */
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -222,10 +222,16 @@ export function jsx(type, config, maybeKey) {
   // <div {...props} key="Hi" />, because we aren't currently able to tell if
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
+    if (__DEV__) {
+      checkKeyStringCoercion(maybeKey);
+    }
     key = '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
+    if (__DEV__) {
+      checkKeyStringCoercion(config.key);
+    }
     key = '' + config.key;
   }
 
@@ -286,10 +292,16 @@ export function jsxDEV(type, config, maybeKey, source, self) {
   // <div {...props} key="Hi" />, because we aren't currently able to tell if
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
+    if (__DEV__) {
+      checkKeyStringCoercion(maybeKey);
+    }
     key = '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
+    if (__DEV__) {
+      checkKeyStringCoercion(config.key);
+    }
     key = '' + config.key;
   }
 
@@ -366,6 +378,9 @@ export function createElement(type, config, children) {
       }
     }
     if (hasValidKey(config)) {
+      if (__DEV__) {
+        checkKeyStringCoercion(config.key);
+      }
       key = '' + config.key;
     }
 
@@ -468,11 +483,11 @@ export function cloneAndReplaceKey(oldElement, newKey) {
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 export function cloneElement(element, config, children) {
-  invariant(
-    !(element === null || element === undefined),
-    'React.cloneElement(...): The argument must be a React element, but you passed %s.',
-    element,
-  );
+  if (element === null || element === undefined) {
+    throw new Error(
+      `React.cloneElement(...): The argument must be a React element, but you passed ${element}.`,
+    );
+  }
 
   let propName;
 
@@ -499,6 +514,9 @@ export function cloneElement(element, config, children) {
       owner = ReactCurrentOwner.current;
     }
     if (hasValidKey(config)) {
+      if (__DEV__) {
+        checkKeyStringCoercion(config.key);
+      }
       key = '' + config.key;
     }
 

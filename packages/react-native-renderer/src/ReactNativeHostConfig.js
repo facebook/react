@@ -9,8 +9,6 @@
 
 import type {TouchedViewDataAtPoint} from './ReactNativeTypes';
 
-import invariant from 'shared/invariant';
-
 // Modules provided by RN:
 import {
   ReactNativeViewConfigRegistry,
@@ -147,10 +145,9 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  invariant(
-    hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
-  );
+  if (!hostContext.isInAParentText) {
+    throw new Error('Text strings must be rendered within a <Text> component.');
+  }
 
   const tag = allocateTag();
 
@@ -411,10 +408,9 @@ export function insertInContainerBefore(
   // We create a wrapper object for the container in ReactNative render()
   // Or we refactor to remove wrapper objects entirely.
   // For more info on pros/cons see PR #8560 description.
-  invariant(
-    typeof parentInstance !== 'number',
-    'Container does not support insertBefore operation',
-  );
+  if (typeof parentInstance === 'number') {
+    throw new Error('Container does not support insertBefore operation');
+  }
 }
 
 export function removeChild(

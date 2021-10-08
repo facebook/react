@@ -93,4 +93,61 @@ invariant(condition, 'Do not override existing functions.');
       )
     ).toMatchSnapshot();
   });
+
+  it('should replace error constructors', () => {
+    expect(
+      transform(`
+new Error('Do not override existing functions.');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should replace error constructors (no new)', () => {
+    expect(
+      transform(`
+Error('Do not override existing functions.');
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should not touch other calls or new expressions', () => {
+    expect(
+      transform(`
+new NotAnError();
+NotAnError();
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should support interpolating arguments with template strings', () => {
+    expect(
+      transform(`
+new Error(\`Expected \${foo} target to be an array; got \${bar}\`);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should support interpolating arguments with concatenation', () => {
+    expect(
+      transform(`
+new Error('Expected ' + foo + ' target to be an array; got ' + bar);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should support error constructors with concatenated messages', () => {
+    expect(
+      transform(`
+new Error(\`Expected \${foo} target to \` + \`be an array; got \${bar}\`);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('handles escaped backticks in template string', () => {
+    expect(
+      transform(`
+new Error(\`Expected \\\`\$\{listener\}\\\` listener to be a function, instead got a value of \\\`\$\{type\}\\\` type.\`);
+`)
+    ).toMatchSnapshot();
+  });
 });

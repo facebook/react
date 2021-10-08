@@ -354,6 +354,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 1,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -570,6 +571,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 1,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -761,6 +763,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 4,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -1107,6 +1110,7 @@ describe('preprocessData', () => {
           "snapshots": Array [],
           "startTime": 4,
           "suspenseEvents": Array [],
+          "thrownErrors": Array [],
         }
       `);
     }
@@ -1189,6 +1193,46 @@ describe('preprocessData', () => {
         },
       ]
     `);
+  });
+
+  it('should include a suspended resource "displayName" if one is set', async () => {
+    let promise = null;
+    let resolvedValue = null;
+    function readValue(value) {
+      if (resolvedValue !== null) {
+        return resolvedValue;
+      } else if (promise === null) {
+        promise = Promise.resolve(true).then(() => {
+          resolvedValue = value;
+        });
+        promise.displayName = 'Testing displayName';
+      }
+      throw promise;
+    }
+
+    function Component() {
+      const value = readValue(123);
+      return value;
+    }
+
+    if (gate(flags => flags.enableSchedulingProfiler)) {
+      const testMarks = [creactCpuProfilerSample()];
+
+      const root = ReactDOM.createRoot(document.createElement('div'));
+      act(() =>
+        root.render(
+          <React.Suspense fallback="Loading...">
+            <Component />
+          </React.Suspense>,
+        ),
+      );
+
+      testMarks.push(...createUserTimingData(clearedMarks));
+
+      const data = await preprocessData(testMarks);
+      expect(data.suspenseEvents).toHaveLength(1);
+      expect(data.suspenseEvents[0].promiseName).toBe('Testing displayName');
+    }
   });
 
   describe('warnings', () => {
@@ -1532,6 +1576,52 @@ describe('preprocessData', () => {
           );
           expect(event.warning).toMatchInlineSnapshot(
             `"A big nested update was scheduled during layout. Nested updates require React to re-render synchronously before the browser can paint. Consider delaying this update by moving it to a passive effect (useEffect)."`,
+          );
+        }
+      });
+    });
+
+    describe('errors thrown while rendering', () => {
+      it('shoult parse Errors thrown during render', async () => {
+        spyOnDev(console, 'error');
+        spyOnProd(console, 'error');
+
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            if (this.state.error) {
+              return null;
+            }
+            return this.props.children;
+          }
+        }
+
+        function ExampleThatThrows() {
+          throw Error('Expected error');
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const testMarks = [creactCpuProfilerSample()];
+
+          // Mount and commit the app
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() =>
+            root.render(
+              <ErrorBoundary>
+                <ExampleThatThrows />
+              </ErrorBoundary>,
+            ),
+          );
+
+          testMarks.push(...createUserTimingData(clearedMarks));
+
+          const data = await preprocessData(testMarks);
+          expect(data.thrownErrors).toHaveLength(2);
+          expect(data.thrownErrors[0].message).toMatchInlineSnapshot(
+            '"Expected error"',
           );
         }
       });

@@ -19,6 +19,7 @@ import type {
   SchedulingEvent,
   Snapshot,
   SuspenseEvent,
+  ThrownError,
   UserTimingMark,
 } from './types';
 
@@ -92,6 +93,7 @@ export default function EventTooltip({
     schedulingEvent,
     snapshot,
     suspenseEvent,
+    thrownError,
     userTimingMark,
   } = hoveredEvent;
 
@@ -118,6 +120,8 @@ export default function EventTooltip({
     content = <TooltipFlamechartNode stackFrame={flamechartStackFrame} />;
   } else if (userTimingMark !== null) {
     content = <TooltipUserTimingMark mark={userTimingMark} />;
+  } else if (thrownError !== null) {
+    content = <TooltipThrownError thrownError={thrownError} />;
   }
 
   if (content !== null) {
@@ -331,6 +335,7 @@ const TooltipSuspenseEvent = ({
     componentName,
     duration,
     phase,
+    promiseName,
     resolution,
     timestamp,
     warning,
@@ -352,6 +357,12 @@ const TooltipSuspenseEvent = ({
         {label}
         <div className={styles.Divider} />
         <div className={styles.DetailsGrid}>
+          {promiseName !== null && (
+            <>
+              <div className={styles.DetailsGridLabel}>Resource:</div>
+              <div className={styles.DetailsGridLongValue}>{promiseName}</div>
+            </>
+          )}
           <div className={styles.DetailsGridLabel}>Status:</div>
           <div>{resolution}</div>
           <div className={styles.DetailsGridLabel}>Timestamp:</div>
@@ -432,6 +443,32 @@ const TooltipUserTimingMark = ({mark}: {|mark: UserTimingMark|}) => {
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
         <div>{formatTimestamp(timestamp)}</div>
+      </div>
+    </div>
+  );
+};
+
+const TooltipThrownError = ({thrownError}: {|thrownError: ThrownError|}) => {
+  const {componentName, message, phase, timestamp} = thrownError;
+  const label = `threw an error during ${phase}`;
+  return (
+    <div className={styles.TooltipSection}>
+      {componentName && (
+        <span className={styles.ComponentName}>
+          {trimString(componentName, 100)}
+        </span>
+      )}
+      <span className={styles.UserTimingLabel}>{label}</span>
+      <div className={styles.Divider} />
+      <div className={styles.DetailsGrid}>
+        <div className={styles.DetailsGridLabel}>Timestamp:</div>
+        <div>{formatTimestamp(timestamp)}</div>
+        {message !== '' && (
+          <>
+            <div className={styles.DetailsGridLabel}>Error:</div>
+            <div>{message}</div>
+          </>
+        )}
       </div>
     </div>
   );

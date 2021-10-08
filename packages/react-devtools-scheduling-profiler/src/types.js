@@ -60,9 +60,18 @@ export type SuspenseEvent = {|
   duration: number | null,
   +id: string,
   +phase: Phase | null,
+  promiseName: string | null,
   resolution: 'rejected' | 'resolved' | 'unresolved',
   resuspendTimestamps: Array<number> | null,
   +type: 'suspense',
+|};
+
+export type ThrownError = {|
+  +componentName?: string,
+  +message: string,
+  +phase: Phase,
+  +timestamp: Milliseconds,
+  +type: 'thrown-error',
 |};
 
 export type SchedulingEvent =
@@ -175,6 +184,7 @@ export type ReactProfilerData = {|
   snapshots: Snapshot[],
   startTime: number,
   suspenseEvents: SuspenseEvent[],
+  thrownErrors: ThrownError[],
 |};
 
 export type ReactHoverContextInfo = {|
@@ -186,5 +196,6 @@ export type ReactHoverContextInfo = {|
   schedulingEvent: SchedulingEvent | null,
   suspenseEvent: SuspenseEvent | null,
   snapshot: Snapshot | null,
+  thrownError: ThrownError | null,
   userTimingMark: UserTimingMark | null,
 |};

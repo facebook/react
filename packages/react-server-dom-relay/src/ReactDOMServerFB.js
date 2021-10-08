@@ -46,7 +46,6 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
   };
   const request = createRequest(
     children,
-    destination,
     createResponseState(options ? options.identifierPrefix : undefined),
     createRootFormatContext(undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -71,7 +70,7 @@ function abortStream(stream: Stream): void {
 function renderNextChunk(stream: Stream): string {
   const {request, destination} = stream;
   performWork(request);
-  startFlowing(request);
+  startFlowing(request, destination);
   if (destination.fatal) {
     throw destination.error;
   }

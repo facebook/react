@@ -1905,10 +1905,19 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(clicks).toBe(1);
 
-    expect(container.textContent).toBe('Hello');
-
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(clicks).toBe(0);
+      expect(container.textContent).toBe('Click meHello');
+    } else {
+      expect(clicks).toBe(1);
+      expect(container.textContent).toBe('Hello');
+    }
     document.body.removeChild(container);
   });
 
@@ -1991,7 +2000,16 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    expect(onEvent).toHaveBeenCalledTimes(2);
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(onEvent).toHaveBeenCalledTimes(0);
+    } else {
+      expect(onEvent).toHaveBeenCalledTimes(2);
+    }
 
     document.body.removeChild(container);
   });
@@ -2072,7 +2090,17 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(clicks).toBe(2);
+
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(clicks).toBe(0);
+    } else {
+      expect(clicks).toBe(2);
+    }
 
     document.body.removeChild(container);
   });
@@ -2158,7 +2186,16 @@ describe('ReactDOMServerPartialHydration', () => {
       resolve();
       await promise;
     });
-    expect(onEvent).toHaveBeenCalledTimes(2);
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(onEvent).toHaveBeenCalledTimes(0);
+    } else {
+      expect(onEvent).toHaveBeenCalledTimes(2);
+    }
 
     document.body.removeChild(container);
   });
@@ -2231,9 +2268,19 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    expect(clicksOnChild).toBe(1);
-    // This will be zero due to the stopPropagation.
-    expect(clicksOnParent).toBe(0);
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(clicksOnChild).toBe(0);
+      expect(clicksOnParent).toBe(0);
+    } else {
+      expect(clicksOnChild).toBe(1);
+      // This will be zero due to the stopPropagation.
+      expect(clicksOnParent).toBe(0);
+    }
 
     document.body.removeChild(container);
   });
@@ -2310,8 +2357,16 @@ describe('ReactDOMServerPartialHydration', () => {
     });
 
     // We're now full hydrated.
-
-    expect(clicks).toBe(1);
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(clicks).toBe(0);
+    } else {
+      expect(clicks).toBe(1);
+    }
 
     document.body.removeChild(parentContainer);
   });
@@ -2580,8 +2635,20 @@ describe('ReactDOMServerPartialHydration', () => {
       await promise;
     });
 
-    expect(submits).toBe(1);
-    expect(container.textContent).toBe('Hello');
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      // discrete event not replayed
+      expect(submits).toBe(0);
+      expect(container.textContent).toBe('Click meHello');
+    } else {
+      expect(submits).toBe(1);
+      expect(container.textContent).toBe('Hello');
+    }
+
     document.body.removeChild(container);
   });
 

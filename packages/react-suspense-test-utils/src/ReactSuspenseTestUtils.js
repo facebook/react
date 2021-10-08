@@ -9,12 +9,11 @@
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import invariant from 'shared/invariant';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 function unsupported() {
-  invariant(false, 'This feature is not supported by ReactSuspenseTestUtils.');
+  throw new Error('This feature is not supported by ReactSuspenseTestUtils.');
 }
 
 export function waitForSuspense<T>(fn: () => T): Promise<T> {
