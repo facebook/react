@@ -2127,10 +2127,11 @@ function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
     if (pooledCacheLanes === NoLanes) {
       // None of the remaining work relies on the cache pool. Clear it so
       // subsequent requests get a new cache
-      if (root.pooledCache != null) {
-        releaseCache(root.pooledCache);
+      const pooledCache = root.pooledCache;
+      if (pooledCache != null) {
+        root.pooledCache = null;
+        releaseCache(pooledCache);
       }
-      root.pooledCache = null;
     }
   }
 }
