@@ -210,10 +210,10 @@ async function parseExportNamesInto(
             addExportNames(names, node.declaration.id);
           }
         }
-        if (node.specificers) {
-          const specificers = node.specificers;
-          for (let j = 0; j < specificers.length; j++) {
-            addExportNames(names, specificers[j].exported);
+        if (node.specifiers) {
+          const specifiers = node.specifiers;
+          for (let j = 0; j < specifiers.length; j++) {
+            addExportNames(names, specifiers[j].exported);
           }
         }
         continue;
