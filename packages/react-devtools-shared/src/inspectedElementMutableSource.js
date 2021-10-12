@@ -18,6 +18,7 @@ import {fillInPath} from 'react-devtools-shared/src/hydration';
 import type {LRUCache} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {
+  InspectElementError,
   InspectElementFullData,
   InspectElementHydratedPath,
 } from 'react-devtools-shared/src/backend/types';
@@ -79,6 +80,11 @@ export function inspectElement({
 
     let inspectedElement;
     switch (type) {
+      case 'error':
+        const error = ((data: any): InspectElementError);
+
+        throw new Error(error.value);
+
       case 'no-change':
         // This is a no-op for the purposes of our cache.
         inspectedElement = inspectedElementCache.get(id);

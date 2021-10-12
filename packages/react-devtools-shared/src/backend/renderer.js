@@ -3471,7 +3471,19 @@ export function attach(
 
     hasElementUpdatedSinceLastInspected = false;
 
-    mostRecentlyInspectedElement = inspectElementRaw(id);
+    try {
+      mostRecentlyInspectedElement = inspectElementRaw(id);
+    } catch (error) {
+      console.error('Error inspecting element.\n\n', error);
+
+      return {
+        type: 'error',
+        id,
+        responseID: requestID,
+        value: error.message,
+      };
+    }
+
     if (mostRecentlyInspectedElement === null) {
       return {
         id,
