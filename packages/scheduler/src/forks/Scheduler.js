@@ -138,6 +138,7 @@ function handleTimeout(currentTime) {
     } else {
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
+        isHostTimeoutScheduled = true;
         requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
       }
     }
