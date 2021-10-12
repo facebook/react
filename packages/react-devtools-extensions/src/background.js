@@ -7,8 +7,8 @@ const ports = {};
 const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
 
 import {
-  IS_CHROME_WEBSTORE_EXTENSION,
   EXTENSION_INSTALL_CHECK_MESSAGE,
+  EXTENSION_INSTALLATION_TYPE,
 } from './constants';
 
 chrome.runtime.onConnect.addListener(function(port) {
@@ -121,7 +121,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-if (IS_CHROME_WEBSTORE_EXTENSION) {
+if (EXTENSION_INSTALLATION_TYPE === 'internal') {
   chrome.runtime.onMessageExternal.addListener(
     (request, sender, sendResponse) => {
       if (request === EXTENSION_INSTALL_CHECK_MESSAGE) {

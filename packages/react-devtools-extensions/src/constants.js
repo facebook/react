@@ -9,8 +9,20 @@
 
 declare var chrome: any;
 
-export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
 export const CURRENT_EXTENSION_ID = chrome.runtime.id;
-export const IS_CHROME_WEBSTORE_EXTENSION =
-  CURRENT_EXTENSION_ID === CHROME_WEBSTORE_EXTENSION_ID;
+
+export const EXTENSION_NAME = 'React Developer Tools';
 export const EXTENSION_INSTALL_CHECK_MESSAGE = 'extension-install-check';
+
+export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
+export const INTERNAL_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
+
+export const EXTENSION_INSTALLATION_TYPE:
+  | 'chrome-web-store'
+  | 'internal'
+  | 'unknown' =
+  CURRENT_EXTENSION_ID === CHROME_WEBSTORE_EXTENSION_ID
+    ? 'chrome-web-store'
+    : CURRENT_EXTENSION_ID === INTERNAL_EXTENSION_ID
+    ? 'internal'
+    : 'unknown';

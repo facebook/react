@@ -6,7 +6,7 @@ import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
 } from 'react-devtools-shared/src/constants';
-import {CURRENT_EXTENSION_ID, IS_CHROME_WEBSTORE_EXTENSION} from './constants';
+import {CURRENT_EXTENSION_ID, EXTENSION_INSTALLATION_TYPE} from './constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
 function injectCode(code) {
@@ -36,7 +36,7 @@ window.addEventListener('message', function onMessage({data, source}) {
       console.log(
         `[injectGlobalHook] Received message '${data.source}' from different extension instance. Skipping message.`,
         {
-          currentIsChromeWebstoreExtension: IS_CHROME_WEBSTORE_EXTENSION,
+          currentExtension: EXTENSION_INSTALLATION_TYPE,
         },
       );
     }

@@ -22,12 +22,8 @@ import {
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {logEvent} from 'react-devtools-shared/src/Logger';
-import {
-  IS_CHROME_WEBSTORE_EXTENSION,
-  CHROME_WEBSTORE_EXTENSION_ID,
-  CURRENT_EXTENSION_ID,
-  EXTENSION_INSTALL_CHECK_MESSAGE,
-} from './constants';
+import {CURRENT_EXTENSION_ID, EXTENSION_INSTALLATION_TYPE} from './constants';
+import {checkForDuplicateInstallations} from './checkForDuplicateInstallations';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
@@ -35,44 +31,6 @@ const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
 const isChrome = getBrowserName() === 'Chrome';
 
 let panelCreated = false;
-
-function checkForDuplicateInstallation(callback) {
-  if (IS_CHROME_WEBSTORE_EXTENSION) {
-    if (__DEBUG__) {
-      console.log(
-        '[main] checkForDuplicateExtension: Skipping duplicate extension check from current webstore extension.\n' +
-          'We only check for duplicate extension installations from extension instances that are not the Chrome Web Store instance.',
-        {
-          currentIsChromeWebstoreExtension: IS_CHROME_WEBSTORE_EXTENSION,
-        },
-      );
-    }
-    callback(false);
-    return;
-  }
-
-  chrome.runtime.sendMessage(
-    CHROME_WEBSTORE_EXTENSION_ID,
-    EXTENSION_INSTALL_CHECK_MESSAGE,
-    response => {
-      if (__DEBUG__) {
-        console.log(
-          '[main] checkForDuplicateInstallation: Duplicate installation check responded with',
-          {
-            response,
-            error: chrome.runtime.lastError?.message,
-            currentIsChromeWebstoreExtension: IS_CHROME_WEBSTORE_EXTENSION,
-          },
-        );
-      }
-      if (chrome.runtime.lastError != null) {
-        callback(false);
-      } else {
-        callback(response === true);
-      }
-    },
-  );
-}
 
 // The renderer interface can't read saved component filters directly,
 // because they are stored in localStorage within the context of the extension.
@@ -107,23 +65,23 @@ function createPanelIfReactLoaded() {
     return;
   }
 
-  checkForDuplicateInstallation(hasDuplicateInstallation => {
-    if (hasDuplicateInstallation) {
-      if (__DEBUG__) {
-        console.log(
-          '[main] createPanelIfReactLoaded: Duplicate installation detected, skipping initialization of extension.',
-          {currentIsChromeWebstoreExtension: IS_CHROME_WEBSTORE_EXTENSION},
-        );
+  chrome.devtools.inspectedWindow.eval(
+    'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
+    function(pageHasReact, error) {
+      if (!pageHasReact || panelCreated) {
+        return;
       }
-      panelCreated = true;
-      clearInterval(loadCheckInterval);
-      return;
-    }
 
-    chrome.devtools.inspectedWindow.eval(
-      'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
-      function(pageHasReact, error) {
-        if (!pageHasReact || panelCreated) {
+      checkForDuplicateInstallations(hasDuplicateInstallation => {
+        if (hasDuplicateInstallation) {
+          if (__DEBUG__) {
+            console.log(
+              '[main] createPanelIfReactLoaded: Duplicate installation detected, skipping initialization of extension.',
+              {currentExtension: EXTENSION_INSTALLATION_TYPE},
+            );
+          }
+          panelCreated = true;
+          clearInterval(loadCheckInterval);
           return;
         }
 
@@ -560,9 +518,9 @@ function createPanelIfReactLoaded() {
 
           initBridgeAndStore();
         });
-      },
-    );
-  });
+      });
+    },
+  );
 }
 
 // Load (or reload) the DevTools extension when the user navigates to a new page.

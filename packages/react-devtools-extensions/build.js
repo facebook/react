@@ -102,6 +102,12 @@ const build = async (tempPath, manifestPath) => {
   }
   manifest.description += `\n\nCreated from revision ${commit} on ${dateString}.`;
 
+  if (process.env.NODE_ENV === 'development') {
+    if (Array.isArray(manifest.permissions)) {
+      manifest.permissions.push('management');
+    }
+  }
+
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
