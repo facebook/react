@@ -3480,7 +3480,8 @@ export function attach(
         type: 'error',
         id,
         responseID: requestID,
-        value: error.message,
+        message: error.message,
+        stack: error.stack,
       };
     }
 

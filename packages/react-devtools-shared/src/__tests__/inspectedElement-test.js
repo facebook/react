@@ -2122,7 +2122,10 @@ describe('InspectedElement', () => {
     const value = await inspectElementAtIndex(0, noop, true);
 
     expect(value).toBe(null);
-    expect(errorBoundaryInstance.state.error.message).toBe('Expected');
+
+    const error = errorBoundaryInstance.state.error;
+    expect(error.message).toBe('Expected');
+    expect(error.stack).toContain('inspectHooksOfFiber');
   });
 
   describe('$r', () => {

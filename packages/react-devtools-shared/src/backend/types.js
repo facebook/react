@@ -276,7 +276,8 @@ export type InspectElementError = {|
   id: number,
   responseID: number,
   type: 'error',
-  value: string,
+  message: string,
+  stack: string,
 |};
 
 export type InspectElementFullData = {|
