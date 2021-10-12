@@ -217,7 +217,10 @@ function createPanelIfReactLoaded() {
           // Initialize the backend only once the Store has been initialized.
           // Otherwise the Store may miss important initial tree op codes.
           chrome.devtools.inspectedWindow.eval(
-            `window.postMessage({ source: 'react-devtools-inject-backend', extensionId: "${CURRENT_EXTENSION_ID}" }, '*');`,
+            `window.postMessage({
+               source: 'react-devtools-inject-backend',
+               extensionId: "${CURRENT_EXTENSION_ID}"
+             }, '*');`,
             function(response, evalError) {
               if (evalError) {
                 console.error(evalError);
@@ -363,6 +366,7 @@ function createPanelIfReactLoaded() {
               chrome.devtools.inspectedWindow.eval(`
               window.postMessage({
                 source: 'react-devtools-extension',
+                extensionId: "${CURRENT_EXTENSION_ID}"
                 payload: {
                   type: 'fetch-file-with-cache',
                   url: "${url}",

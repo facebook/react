@@ -116,6 +116,7 @@ window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function({reactBuildType}) 
   window.postMessage({
     source: 'react-devtools-detector',
     reactBuildType,
+    extensionId: "${CURRENT_EXTENSION_ID}",
   }, '*');
 });
 `;
