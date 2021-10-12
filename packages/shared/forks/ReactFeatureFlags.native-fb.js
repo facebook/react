@@ -20,7 +20,7 @@ export const {enablePersistentOffscreenHostContainer} = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
 export const enableDebugTracing = false;
-export const enableSchedulingProfiler = false;
+export const enableSchedulingProfiler = true;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
