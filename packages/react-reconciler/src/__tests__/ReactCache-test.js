@@ -1510,7 +1510,7 @@ describe('ReactCache', () => {
   });
 
   // @gate experimental || www
-  test.skip('fresh cache for root refresh is released if the refresh never commits', async () => {
+  test.skip('if a root cache refresh never commits its fresh cache is released', async () => {
     const root = ReactNoop.createRoot();
     let refresh;
     function Example({text}) {
@@ -1552,7 +1552,7 @@ describe('ReactCache', () => {
   });
 
   // @gate experimental || www
-  test.skip('fresh cache for cache boundary refresh is released if the refresh never commits', async () => {
+  test.skip('if a cache boundary refresh never commits its fresh cache is released', async () => {
     const root = ReactNoop.createRoot();
     let refresh;
     function Example({text}) {
@@ -1580,6 +1580,7 @@ describe('ReactCache', () => {
     expect(Scheduler).toHaveYielded(['Cache miss! [A]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
+    // Unmount the boundary before the refresh can complete
     await act(async () => {
       root.render('Bye!');
     });

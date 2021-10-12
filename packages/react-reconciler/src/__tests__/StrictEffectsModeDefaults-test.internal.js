@@ -100,8 +100,6 @@ describe('StrictEffectsMode defaults', () => {
 
         expect(Scheduler).toFlushUntilNextPaint([
           'useLayoutEffect mount "one"',
-          'useLayoutEffect unmount "one"',
-          'useLayoutEffect mount "one"',
         ]);
       });
 
@@ -113,14 +111,15 @@ describe('StrictEffectsMode defaults', () => {
           </>,
         );
 
+        expect(Scheduler).toHaveYielded([
+          // Since "two" is new, it should be double-invoked.
+          'useLayoutEffect unmount "one"',
+          'useLayoutEffect mount "one"',
+        ]);
         expect(Scheduler).toFlushUntilNextPaint([
           // Cleanup and re-run "one" (and "two") since there is no dependencies array.
           'useLayoutEffect unmount "one"',
           'useLayoutEffect mount "one"',
-          'useLayoutEffect mount "two"',
-
-          // Since "two" is new, it should be double-invoked.
-          'useLayoutEffect unmount "two"',
           'useLayoutEffect mount "two"',
         ]);
       });
