@@ -1086,6 +1086,38 @@ describe('ReactHooks', () => {
     ]);
   });
 
+  it('warns when rendering more hooks than previous render', () => {
+    const {useReducer, useState} = React;
+
+    function Component({value}) {
+      if (value !== 0) {
+        useState();
+      }
+      return value;
+    }
+
+    function App() {
+      const [value, dispatch] = useReducer((state, action) => {
+        return state + 1;
+      }, 0);
+      if (value === 0) {
+        setTimeout(() => {
+          act(() => {
+            dispatch('foo');
+          });
+        }, 1);
+      }
+      return <Component value={value} />;
+    }
+
+    expect(() => {
+      ReactTestRenderer.create(<App />);
+      Scheduler.unstable_flushAll();
+      jest.runAllTimers();
+      Scheduler.unstable_flushAll();
+    }).toErrorDev('Rendered more hooks than during the previous render (0).');
+  });
+
   it("warns when calling hooks inside useState's initialize function", () => {
     const {useState, useRef} = React;
     function App() {

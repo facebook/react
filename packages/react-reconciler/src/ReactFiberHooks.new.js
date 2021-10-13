@@ -226,6 +226,11 @@ function mountHookTypesDev() {
     const hookName = ((currentHookNameInDev: any): HookType);
 
     if (hookTypesDev === null) {
+      if (hasCurrentRenderedDev) {
+        console.error(
+          'Rendered more hooks than during the previous render (0).',
+        );
+      }
       hookTypesDev = [hookName];
     } else {
       hookTypesDev.push(hookName);
@@ -366,6 +371,7 @@ function areHookInputsEqual(
   return true;
 }
 
+let hasCurrentRenderedDev = false;
 export function renderWithHooks<Props, SecondArg>(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -406,6 +412,7 @@ export function renderWithHooks<Props, SecondArg>(
   // Non-stateful hooks (e.g. context) don't get added to memoizedState,
   // so memoizedState would be null during updates and mounts.
   if (__DEV__) {
+    hasCurrentRenderedDev = !!(current && current.memoizedProps);
     if (current !== null && current.memoizedState !== null) {
       ReactCurrentDispatcher.current = HooksDispatcherOnUpdateInDEV;
     } else if (hookTypesDev !== null) {
