@@ -19,9 +19,9 @@ import {
 
 export function checkForDuplicateInstallations(callback: boolean => void) {
   switch (EXTENSION_INSTALLATION_TYPE) {
-    case 'chrome-web-store': {
-      // If this is the Chrome Web Store extension, check if an internal build of the
-      // extension is also installed, and if so, disable this extension.
+    case 'public': {
+      // If this is the public extension (e.g. from Chrome Web Store), check if an internal
+      // build of the extension is also installed, and if so, disable this extension.
       chrome.runtime.sendMessage(
         INTERNAL_EXTENSION_ID,
         EXTENSION_INSTALL_CHECK_MESSAGE,
@@ -39,7 +39,7 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
           if (chrome.runtime.lastError != null) {
             callback(false);
           } else {
-            callback(response === true);
+            callback(true);
           }
         },
       );
@@ -66,8 +66,8 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
         chrome.management.getAll(extensions => {
           if (chrome.runtime.lastError != null) {
             const errorMessage =
-              'React Developer Tools: Unable to access `chrome.management` to check for duplicate extensions. This extension will be disabled.' +
-              'If you are developing this extension locally, make sure to build the extension using the `yarn build:<browser>:dev` command.';
+              'React Developer Tools: Unable to access `chrome.management` to check for duplicate extensions. This extension will be disabled. ' +
+              'If you are developing this extension locally, make sure to build the extension using the `yarn build:<browser>:local` command.';
             console.error(errorMessage);
             chrome.devtools.inspectedWindow.eval(
               `console.error("${errorMessage}")`,
@@ -81,7 +81,7 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
           if (devToolsExtensions.length > 1) {
             // TODO: Show warning in UI of extension that remains enabled
             const errorMessage =
-              'React Developer Tools: You are running multiple installations of the React Developer Tools extension, which will conflict with this development build of the extension.' +
+              'React Developer Tools: You are running multiple installations of the React Developer Tools extension, which will conflict with this development build of the extension. ' +
               'In order to prevent conflicts, this development build of the extension will be disabled. In order to continue local development, please disable or uninstall ' +
               'any other installations of the extension in your browser.';
             chrome.devtools.inspectedWindow.eval(
@@ -101,9 +101,9 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
       // In this case, assume there are no duplicate exensions and show a warning about
       // potential conflicts.
       const warnMessage =
-        'React Developer Tools: You are running an unrecognized installation of the React Developer Tools extension, which might conflict with other versions of the extension installed in your browser.' +
-        'Please make sure you only have a single version of the extension installed or enabled.' +
-        'If you are developing this extension locally, make sure to build the extension using the `yarn build:<browser>:dev` command.';
+        'React Developer Tools: You are running an unrecognized installation of the React Developer Tools extension, which might conflict with other versions of the extension installed in your browser. ' +
+        'Please make sure you only have a single version of the extension installed or enabled. ' +
+        'If you are developing this extension locally, make sure to build the extension using the `yarn build:<browser>:local` command.';
       console.warn(warnMessage);
       chrome.devtools.inspectedWindow.eval(`console.warn("${warnMessage}")`);
       callback(false);

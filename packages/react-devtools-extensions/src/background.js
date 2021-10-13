@@ -6,10 +6,7 @@ const ports = {};
 
 const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
 
-import {
-  EXTENSION_INSTALL_CHECK_MESSAGE,
-  EXTENSION_INSTALLATION_TYPE,
-} from './constants';
+import {EXTENSION_INSTALL_CHECK_MESSAGE} from './constants';
 
 chrome.runtime.onConnect.addListener(function(port) {
   let tab = null;
@@ -121,15 +118,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-if (EXTENSION_INSTALLATION_TYPE === 'internal') {
-  chrome.runtime.onMessageExternal.addListener(
-    (request, sender, sendResponse) => {
-      if (request === EXTENSION_INSTALL_CHECK_MESSAGE) {
-        sendResponse(true);
-      }
-    },
-  );
-}
+chrome.runtime.onMessageExternal.addListener(
+  (request, sender, sendResponse) => {
+    if (request === EXTENSION_INSTALL_CHECK_MESSAGE) {
+      sendResponse(true);
+    }
+  },
+);
 
 chrome.runtime.onMessage.addListener((request, sender) => {
   const tab = sender.tab;

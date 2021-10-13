@@ -17,12 +17,9 @@ export const EXTENSION_INSTALL_CHECK_MESSAGE = 'extension-install-check';
 export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
 export const INTERNAL_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
 
-export const EXTENSION_INSTALLATION_TYPE:
-  | 'chrome-web-store'
-  | 'internal'
-  | 'unknown' =
+export const EXTENSION_INSTALLATION_TYPE: 'public' | 'internal' | 'unknown' =
   CURRENT_EXTENSION_ID === CHROME_WEBSTORE_EXTENSION_ID
-    ? 'chrome-web-store'
+    ? 'public'
     : CURRENT_EXTENSION_ID === INTERNAL_EXTENSION_ID
     ? 'internal'
     : 'unknown';
