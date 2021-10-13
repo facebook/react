@@ -43,6 +43,7 @@ let node: HTMLElement = ((null: any): HTMLElement);
 let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
 let statusListener: StatusListener = (message: string) => {};
+let overrideTab: string | null = null;
 
 // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
 function hookNamesModuleLoaderFunction() {
@@ -113,6 +114,7 @@ function reload() {
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
+        overrideTab,
       }),
     );
   }, 100);
@@ -179,6 +181,16 @@ function onError({code, message}) {
   }
 }
 
+function openProfiler() {
+  // Mocked up bridge and store to allow the DevTools to be rendered
+  bridge = new Bridge({listen: () => {}, send: () => {}});
+  store = new Store(bridge, {});
+
+  overrideTab = 'profiler';
+
+  reload();
+}
+
 function initialize(socket: WebSocket) {
   const listeners = [];
   socket.onmessage = event => {
@@ -231,6 +243,8 @@ function initialize(socket: WebSocket) {
     checkBridgeProtocolCompatibility: true,
     supportsNativeInspection: false,
   });
+
+  overrideTab = null;
 
   log('Connected');
   reload();
@@ -372,6 +386,7 @@ const DevtoolsUI = {
   setProjectRoots,
   setStatusListener,
   startServer,
+  openProfiler,
 };
 
 export default DevtoolsUI;
