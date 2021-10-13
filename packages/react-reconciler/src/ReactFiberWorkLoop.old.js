@@ -294,7 +294,9 @@ let workInProgressRootIncludedLanes: Lanes = NoLanes;
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootSkippedLanes: Lanes = NoLanes;
 // Lanes that were updated (in an interleaved event) during this render.
-let workInProgressRootUpdatedLanes: Lanes = NoLanes;
+let workInProgressRootInterleavedUpdatedLanes: Lanes = NoLanes;
+// Lanes that were updated during the render phase (*not* an interleaved event).
+let workInProgressRootRenderPhaseUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
 
@@ -454,86 +456,105 @@ export function scheduleUpdateOnFiber(
   eventTime: number,
 ): FiberRoot | null {
   checkForNestedUpdates();
-  warnAboutRenderPhaseUpdatesInDEV(fiber);
 
   const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root === null) {
     return null;
   }
 
-  if (enableUpdaterTracking) {
-    if (isDevToolsPresent) {
-      addFiberToLanesMap(root, fiber, lane);
-    }
-  }
-
   // Mark that the root has a pending update.
   markRootUpdated(root, lane, eventTime);
 
-  if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
-    if (
-      (executionContext & CommitContext) !== NoContext &&
-      root === rootCommittingMutationOrLayoutEffects
-    ) {
-      if (fiber.mode & ProfileMode) {
-        let current = fiber;
-        while (current !== null) {
-          if (current.tag === Profiler) {
-            const {id, onNestedUpdateScheduled} = current.memoizedProps;
-            if (typeof onNestedUpdateScheduled === 'function') {
-              onNestedUpdateScheduled(id);
+  if (
+    (executionContext & RenderContext) !== NoLanes &&
+    root === workInProgressRoot
+  ) {
+    // This update was dispatched during the render phase. This is a mistake
+    // if the update originates from user space (with the exception of local
+    // hook updates, which are handled differently and don't reach this
+    // function), but there are some internal React features that use this as
+    // an implementation detail, like selective hydration
+    // and useOpaqueIdentifier.
+    warnAboutRenderPhaseUpdatesInDEV(fiber);
+
+    // Track lanes that were updated during the render phase
+    workInProgressRootRenderPhaseUpdatedLanes = mergeLanes(
+      workInProgressRootRenderPhaseUpdatedLanes,
+      lane,
+    );
+  } else {
+    // This is a normal update, scheduled from outside the render phase. For
+    // example, during an input event.
+    if (enableUpdaterTracking) {
+      if (isDevToolsPresent) {
+        addFiberToLanesMap(root, fiber, lane);
+      }
+    }
+
+    if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
+      if (
+        (executionContext & CommitContext) !== NoContext &&
+        root === rootCommittingMutationOrLayoutEffects
+      ) {
+        if (fiber.mode & ProfileMode) {
+          let current = fiber;
+          while (current !== null) {
+            if (current.tag === Profiler) {
+              const {id, onNestedUpdateScheduled} = current.memoizedProps;
+              if (typeof onNestedUpdateScheduled === 'function') {
+                onNestedUpdateScheduled(id);
+              }
             }
+            current = current.return;
           }
-          current = current.return;
         }
       }
     }
-  }
 
-  // TODO: Consolidate with `isInterleavedUpdate` check
-  if (root === workInProgressRoot) {
-    // Received an update to a tree that's in the middle of rendering. Mark
-    // that there was an interleaved update work on this root. Unless the
-    // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
-    // phase update. In that case, we don't treat render phase updates as if
-    // they were interleaved, for backwards compat reasons.
+    // TODO: Consolidate with `isInterleavedUpdate` check
+    if (root === workInProgressRoot) {
+      // Received an update to a tree that's in the middle of rendering. Mark
+      // that there was an interleaved update work on this root. Unless the
+      // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
+      // phase update. In that case, we don't treat render phase updates as if
+      // they were interleaved, for backwards compat reasons.
+      if (
+        deferRenderPhaseUpdateToNextBatch ||
+        (executionContext & RenderContext) === NoContext
+      ) {
+        workInProgressRootInterleavedUpdatedLanes = mergeLanes(
+          workInProgressRootInterleavedUpdatedLanes,
+          lane,
+        );
+      }
+      if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
+        // The root already suspended with a delay, which means this render
+        // definitely won't finish. Since we have a new update, let's mark it as
+        // suspended now, right before marking the incoming update. This has the
+        // effect of interrupting the current render and switching to the update.
+        // TODO: Make sure this doesn't override pings that happen while we've
+        // already started rendering.
+        markRootSuspended(root, workInProgressRootRenderLanes);
+      }
+    }
+
+    ensureRootIsScheduled(root, eventTime);
     if (
-      deferRenderPhaseUpdateToNextBatch ||
-      (executionContext & RenderContext) === NoContext
+      lane === SyncLane &&
+      executionContext === NoContext &&
+      (fiber.mode & ConcurrentMode) === NoMode &&
+      // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
+      !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
     ) {
-      workInProgressRootUpdatedLanes = mergeLanes(
-        workInProgressRootUpdatedLanes,
-        lane,
-      );
-    }
-    if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
-      // The root already suspended with a delay, which means this render
-      // definitely won't finish. Since we have a new update, let's mark it as
-      // suspended now, right before marking the incoming update. This has the
-      // effect of interrupting the current render and switching to the update.
-      // TODO: Make sure this doesn't override pings that happen while we've
-      // already started rendering.
-      markRootSuspended(root, workInProgressRootRenderLanes);
+      // Flush the synchronous work now, unless we're already working or inside
+      // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
+      // scheduleCallbackForFiber to preserve the ability to schedule a callback
+      // without immediately flushing it. We only do this for user-initiated
+      // updates, to preserve historical behavior of legacy mode.
+      resetRenderTimer();
+      flushSyncCallbacksOnlyInLegacyMode();
     }
   }
-
-  ensureRootIsScheduled(root, eventTime);
-  if (
-    lane === SyncLane &&
-    executionContext === NoContext &&
-    (fiber.mode & ConcurrentMode) === NoMode &&
-    // Treat `act` as if it's inside `batchedUpdates`, even in legacy mode.
-    !(__DEV__ && ReactCurrentActQueue.isBatchingLegacy)
-  ) {
-    // Flush the synchronous work now, unless we're already working or inside
-    // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
-    // scheduleCallbackForFiber to preserve the ability to schedule a callback
-    // without immediately flushing it. We only do this for user-initiated
-    // updates, to preserve historical behavior of legacy mode.
-    resetRenderTimer();
-    flushSyncCallbacksOnlyInLegacyMode();
-  }
-
   return root;
 }
 
@@ -865,7 +886,25 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
     clearContainer(root.containerInfo);
   }
 
-  const exitStatus = renderRootSync(root, errorRetryLanes);
+  let exitStatus;
+
+  const MAX_ERROR_RETRY_ATTEMPTS = 50;
+  for (let i = 0; i < MAX_ERROR_RETRY_ATTEMPTS; i++) {
+    exitStatus = renderRootSync(root, errorRetryLanes);
+    if (
+      exitStatus === RootErrored &&
+      workInProgressRootRenderPhaseUpdatedLanes !== NoLanes
+    ) {
+      // There was a render phase update during this render. This was likely a
+      // useOpaqueIdentifier hook upgrading itself to a client ID. Try rendering
+      // again. This time, the component will use a client ID and will proceed
+      // without throwing. If multiple IDs upgrade as a result of the same
+      // update, we will have to do multiple render passes. To protect against
+      // an inifinite loop, eventually we'll give up.
+      continue;
+    }
+    break;
+  }
 
   executionContext = prevExecutionContext;
 
@@ -1042,7 +1081,10 @@ function markRootSuspended(root, suspendedLanes) {
   // TODO: Lol maybe there's a better way to factor this besides this
   // obnoxiously named function :)
   suspendedLanes = removeLanes(suspendedLanes, workInProgressRootPingedLanes);
-  suspendedLanes = removeLanes(suspendedLanes, workInProgressRootUpdatedLanes);
+  suspendedLanes = removeLanes(
+    suspendedLanes,
+    workInProgressRootInterleavedUpdatedLanes,
+  );
   markRootSuspended_dontCallThisOneDirectly(root, suspendedLanes);
 }
 
@@ -1068,19 +1110,6 @@ function performSyncWorkOnRoot(root) {
 
   let exitStatus = renderRootSync(root, lanes);
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
-    const prevExecutionContext = executionContext;
-    executionContext |= RetryAfterError;
-
-    // If an error occurred during hydration,
-    // discard server response and fall back to client side render.
-    if (root.isDehydrated) {
-      root.isDehydrated = false;
-      if (__DEV__) {
-        errorHydratingContainer(root.containerInfo);
-      }
-      clearContainer(root.containerInfo);
-    }
-
     // If something threw an error, try rendering one more time. We'll render
     // synchronously to block concurrent data mutations, and we'll includes
     // all pending updates are included. If it still fails after the second
@@ -1088,10 +1117,8 @@ function performSyncWorkOnRoot(root) {
     const errorRetryLanes = getLanesToRetrySynchronouslyOnError(root);
     if (errorRetryLanes !== NoLanes) {
       lanes = errorRetryLanes;
-      exitStatus = renderRootSync(root, lanes);
+      exitStatus = recoverFromConcurrentError(root, errorRetryLanes);
     }
-
-    executionContext = prevExecutionContext;
   }
 
   if (exitStatus === RootFatalErrored) {
@@ -1300,7 +1327,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
-  workInProgressRootUpdatedLanes = NoLanes;
+  workInProgressRootInterleavedUpdatedLanes = NoLanes;
+  workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
 
   enqueueInterleavedUpdates();
@@ -1443,7 +1471,7 @@ export function renderDidSuspendDelayIfPossible(): void {
   if (
     workInProgressRoot !== null &&
     (includesNonIdleWork(workInProgressRootSkippedLanes) ||
-      includesNonIdleWork(workInProgressRootUpdatedLanes))
+      includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes))
   ) {
     // Mark the current render as suspended so that we switch to working on
     // the updates that were skipped. Usually we only suspend at the end of
@@ -2697,7 +2725,6 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
   if (__DEV__) {
     if (
       ReactCurrentDebugFiberIsRenderingInDEV &&
-      (executionContext & RenderContext) !== NoContext &&
       !getIsUpdatingOpaqueValueInRenderPhaseInDEV()
     ) {
       switch (fiber.tag) {

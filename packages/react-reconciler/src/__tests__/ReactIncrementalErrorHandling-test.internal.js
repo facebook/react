@@ -1915,6 +1915,65 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(root).toMatchRenderedOutput('Everything is fine.');
   });
 
+  it("does not infinite loop if there's a render phase update in the same render as an error", async () => {
+    // useOpaqueIdentifier uses an render phase update as an implementation
+    // detail. When an error is accompanied by a render phase update, we assume
+    // that it comes from useOpaqueIdentifier, because render phase updates
+    // triggered from userspace are not allowed (we log a warning). So we keep
+    // attempting to recover until no more opaque identifiers need to be
+    // upgraded. However, we should give up after some point to prevent an
+    // infinite loop in the case where there is (by accident) a render phase
+    // triggered from userspace.
+
+    spyOnDev(console, 'error');
+
+    let numberOfThrows = 0;
+
+    let setStateInRenderPhase;
+    function Child() {
+      const [, setState] = React.useState(0);
+      setStateInRenderPhase = setState;
+      return 'All good';
+    }
+
+    function App({shouldThrow}) {
+      if (shouldThrow) {
+        setStateInRenderPhase();
+        numberOfThrows++;
+        throw new Error('Oops!');
+      }
+      return <Child />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App shouldThrow={false} />);
+    });
+    expect(root).toMatchRenderedOutput('All good');
+
+    let error;
+    try {
+      await act(async () => {
+        root.render(<App shouldThrow={true} />);
+      });
+    } catch (e) {
+      error = e;
+    }
+
+    expect(error.message).toBe('Oops!');
+    expect(numberOfThrows < 100).toBe(true);
+
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Cannot update a component (`%s`) while rendering a different component',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'The above error occurred in the <App> component',
+      );
+    }
+  });
+
   if (global.__PERSISTENT__) {
     it('regression test: should fatal if error is thrown at the root', () => {
       const root = ReactNoop.createRoot();
