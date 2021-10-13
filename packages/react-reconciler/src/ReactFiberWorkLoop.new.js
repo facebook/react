@@ -294,7 +294,9 @@ let workInProgressRootIncludedLanes: Lanes = NoLanes;
 // includes unprocessed updates, not work in bailed out children.
 let workInProgressRootSkippedLanes: Lanes = NoLanes;
 // Lanes that were updated (in an interleaved event) during this render.
-let workInProgressRootUpdatedLanes: Lanes = NoLanes;
+let workInProgressRootInterleavedUpdatedLanes: Lanes = NoLanes;
+// Lanes that were updated during the render phase (*not* an interleaved event).
+let workInProgressRootRenderPhaseUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
 
@@ -474,6 +476,12 @@ export function scheduleUpdateOnFiber(
     // an implementation detail, like selective hydration
     // and useOpaqueIdentifier.
     warnAboutRenderPhaseUpdatesInDEV(fiber);
+
+    // Track lanes that were updated during the render phase
+    workInProgressRootRenderPhaseUpdatedLanes = mergeLanes(
+      workInProgressRootRenderPhaseUpdatedLanes,
+      lane,
+    );
   } else {
     // This is a normal update, scheduled from outside the render phase. For
     // example, during an input event.
@@ -514,8 +522,8 @@ export function scheduleUpdateOnFiber(
         deferRenderPhaseUpdateToNextBatch ||
         (executionContext & RenderContext) === NoContext
       ) {
-        workInProgressRootUpdatedLanes = mergeLanes(
-          workInProgressRootUpdatedLanes,
+        workInProgressRootInterleavedUpdatedLanes = mergeLanes(
+          workInProgressRootInterleavedUpdatedLanes,
           lane,
         );
       }
@@ -878,7 +886,25 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
     clearContainer(root.containerInfo);
   }
 
-  const exitStatus = renderRootSync(root, errorRetryLanes);
+  let exitStatus;
+
+  const MAX_ERROR_RETRY_ATTEMPTS = 50;
+  for (let i = 0; i < MAX_ERROR_RETRY_ATTEMPTS; i++) {
+    exitStatus = renderRootSync(root, errorRetryLanes);
+    if (
+      exitStatus === RootErrored &&
+      workInProgressRootRenderPhaseUpdatedLanes !== NoLanes
+    ) {
+      // There was a render phase update during this render. This was likely a
+      // useOpaqueIdentifier hook upgrading itself to a client ID. Try rendering
+      // again. This time, the component will use a client ID and will proceed
+      // without throwing. If multiple IDs upgrade as a result of the same
+      // update, we will have to do multiple render passes. To protect against
+      // an inifinite loop, eventually we'll give up.
+      continue;
+    }
+    break;
+  }
 
   executionContext = prevExecutionContext;
 
@@ -1055,7 +1081,10 @@ function markRootSuspended(root, suspendedLanes) {
   // TODO: Lol maybe there's a better way to factor this besides this
   // obnoxiously named function :)
   suspendedLanes = removeLanes(suspendedLanes, workInProgressRootPingedLanes);
-  suspendedLanes = removeLanes(suspendedLanes, workInProgressRootUpdatedLanes);
+  suspendedLanes = removeLanes(
+    suspendedLanes,
+    workInProgressRootInterleavedUpdatedLanes,
+  );
   markRootSuspended_dontCallThisOneDirectly(root, suspendedLanes);
 }
 
@@ -1081,19 +1110,6 @@ function performSyncWorkOnRoot(root) {
 
   let exitStatus = renderRootSync(root, lanes);
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
-    const prevExecutionContext = executionContext;
-    executionContext |= RetryAfterError;
-
-    // If an error occurred during hydration,
-    // discard server response and fall back to client side render.
-    if (root.isDehydrated) {
-      root.isDehydrated = false;
-      if (__DEV__) {
-        errorHydratingContainer(root.containerInfo);
-      }
-      clearContainer(root.containerInfo);
-    }
-
     // If something threw an error, try rendering one more time. We'll render
     // synchronously to block concurrent data mutations, and we'll includes
     // all pending updates are included. If it still fails after the second
@@ -1101,10 +1117,8 @@ function performSyncWorkOnRoot(root) {
     const errorRetryLanes = getLanesToRetrySynchronouslyOnError(root);
     if (errorRetryLanes !== NoLanes) {
       lanes = errorRetryLanes;
-      exitStatus = renderRootSync(root, lanes);
+      exitStatus = recoverFromConcurrentError(root, errorRetryLanes);
     }
-
-    executionContext = prevExecutionContext;
   }
 
   if (exitStatus === RootFatalErrored) {
@@ -1313,7 +1327,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
-  workInProgressRootUpdatedLanes = NoLanes;
+  workInProgressRootInterleavedUpdatedLanes = NoLanes;
+  workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
 
   enqueueInterleavedUpdates();
@@ -1456,7 +1471,7 @@ export function renderDidSuspendDelayIfPossible(): void {
   if (
     workInProgressRoot !== null &&
     (includesNonIdleWork(workInProgressRootSkippedLanes) ||
-      includesNonIdleWork(workInProgressRootUpdatedLanes))
+      includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes))
   ) {
     // Mark the current render as suspended so that we switch to working on
     // the updates that were skipped. Usually we only suspend at the end of

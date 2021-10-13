@@ -1975,5 +1975,40 @@ describe('ReactDOMServerHooks', () => {
         container.getElementsByTagName('span')[0].getAttribute('id'),
       ).not.toBeNull();
     });
+
+    it('useOpaqueIdentifier with multiple ids in nested components', async () => {
+      function DivWithId({id, children}) {
+        return <div id={id}>{children}</div>;
+      }
+
+      let setShowMore;
+      function App() {
+        const outerId = useOpaqueIdentifier();
+        const innerId = useOpaqueIdentifier();
+        const [showMore, _setShowMore] = useState(false);
+        setShowMore = _setShowMore;
+        return showMore ? (
+          <DivWithId id={outerId}>
+            <DivWithId id={innerId} />
+          </DivWithId>
+        ) : null;
+      }
+
+      const container = document.createElement('div');
+      container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+      await act(async () => {
+        ReactDOM.hydrateRoot(container, <App />);
+      });
+
+      // Show additional content that wasn't part of the initial server-
+      // rendered repsonse.
+      await act(async () => {
+        setShowMore(true);
+      });
+      const [div1, div2] = container.getElementsByTagName('div');
+      expect(typeof div1.getAttribute('id')).toBe('string');
+      expect(typeof div2.getAttribute('id')).toBe('string');
+    });
   });
 });
