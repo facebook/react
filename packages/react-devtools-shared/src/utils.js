@@ -787,7 +787,6 @@ export function formatDataForPreview(
         return shortName;
       }
     case 'iterator':
-    case 'proxy':
       const name = data.constructor.name;
 
       if (showFormattedValue) {
@@ -795,8 +794,7 @@ export function formatDataForPreview(
         // Don't use [...spread] syntax for this purpose.
         // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
         // Other types (e.g. typed arrays, Sets) will not spread correctly.
-        const array =
-          type === 'iterator' ? Array.from(data) : Reflect.keys(data);
+        const array = Array.from(data);
 
         let formatted = '';
         for (let i = 0; i < array.length; i++) {
@@ -835,8 +833,12 @@ export function formatDataForPreview(
     case 'date':
       return data.toString();
     case 'object':
+    case 'proxy':
       if (showFormattedValue) {
-        const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
+        const keys = (type === 'object'
+          ? Array.from(getAllEnumerableKeys(data))
+          : Reflect.keys(data)
+        ).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {
