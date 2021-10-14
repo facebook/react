@@ -160,7 +160,7 @@ function onDisconnected() {
   safeUnmount();
 
   node.innerHTML = nodeWaitingToConnectHTML;
-  
+
   disconnectedCallback();
 }
 
