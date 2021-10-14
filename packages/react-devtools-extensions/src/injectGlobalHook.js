@@ -2,7 +2,11 @@
 
 import nullthrows from 'nullthrows';
 import {installHook} from 'react-devtools-shared/src/hook';
-import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
+import {
+  __DEBUG__,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+} from 'react-devtools-shared/src/constants';
+import {CURRENT_EXTENSION_ID, EXTENSION_INSTALLATION_TYPE} from './constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
 function injectCode(code) {
@@ -27,7 +31,17 @@ window.addEventListener('message', function onMessage({data, source}) {
   if (source !== window || !data) {
     return;
   }
-
+  if (data.extensionId !== CURRENT_EXTENSION_ID) {
+    if (__DEBUG__) {
+      console.log(
+        `[injectGlobalHook] Received message '${data.source}' from different extension instance. Skipping message.`,
+        {
+          currentExtension: EXTENSION_INSTALLATION_TYPE,
+        },
+      );
+    }
+    return;
+  }
   switch (data.source) {
     case 'react-devtools-detector':
       lastDetectionResult = {
@@ -102,6 +116,7 @@ window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function({reactBuildType}) 
   window.postMessage({
     source: 'react-devtools-detector',
     reactBuildType,
+    extensionId: "${CURRENT_EXTENSION_ID}",
   }, '*');
 });
 `;
