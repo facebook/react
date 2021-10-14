@@ -8,8 +8,13 @@
  */
 
 import type {Fiber} from './ReactFiber.old';
+
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
 import {warnsIfNotActing} from './ReactFiberHostConfig';
 import {ConcurrentMode} from './ReactTypeOfMode';
+
+const {ReactCurrentActQueue} = ReactSharedInternals;
 
 export function isActEnvironment(fiber: Fiber) {
   if (__DEV__) {
@@ -20,6 +25,16 @@ export function isActEnvironment(fiber: Fiber) {
         : undefined;
 
     if (fiber.mode & ConcurrentMode) {
+      if (
+        !isReactActEnvironmentGlobal &&
+        ReactCurrentActQueue.current !== null
+      ) {
+        // TODO: Include link to relevant documentation page.
+        console.error(
+          'The current testing environment is not configured to support ' +
+            'act(...)',
+        );
+      }
       return isReactActEnvironmentGlobal;
     } else {
       // Legacy mode. We preserve the behavior of React 17's act. It assumes an

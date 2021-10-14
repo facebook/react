@@ -11,15 +11,18 @@ let React;
 let Scheduler;
 let ReactNoop;
 let useState;
+let act;
 
 // These tests are mostly concerned with concurrent roots. The legacy root
 // behavior is covered by other older test suites and is unchanged from
 // React 17.
 describe('act warnings', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     Scheduler = require('scheduler');
     ReactNoop = require('react-noop-renderer');
+    act = React.unstable_act;
     useState = React.useState;
   });
 
@@ -71,6 +74,57 @@ describe('act warnings', () => {
       setState(3);
       expect(Scheduler).toFlushAndYield([3]);
       expect(root).toMatchRenderedOutput('3');
+    });
+  });
+
+  // @gate __DEV__
+  test('act warns if the environment flag is not enabled', () => {
+    let setState;
+    function App() {
+      const [state, _setState] = useState(0);
+      setState = _setState;
+      return <Text text={state} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    root.render(<App />);
+    expect(Scheduler).toFlushAndYield([0]);
+    expect(root).toMatchRenderedOutput('0');
+
+    // Default behavior. Flag is undefined. Warn.
+    expect(global.IS_REACT_ACT_ENVIRONMENT).toBe(undefined);
+    expect(() => {
+      act(() => {
+        setState(1);
+      });
+    }).toErrorDev(
+      'The current testing environment is not configured to support act(...)',
+      {withoutStack: true},
+    );
+    expect(Scheduler).toHaveYielded([1]);
+    expect(root).toMatchRenderedOutput('1');
+
+    // Flag is true. Don't warn.
+    withActEnvironment(true, () => {
+      act(() => {
+        setState(2);
+      });
+      expect(Scheduler).toHaveYielded([2]);
+      expect(root).toMatchRenderedOutput('2');
+    });
+
+    // Flag is false. Warn.
+    withActEnvironment(false, () => {
+      expect(() => {
+        act(() => {
+          setState(1);
+        });
+      }).toErrorDev(
+        'The current testing environment is not configured to support act(...)',
+        {withoutStack: true},
+      );
+      expect(Scheduler).toHaveYielded([1]);
+      expect(root).toMatchRenderedOutput('1');
     });
   });
 });
