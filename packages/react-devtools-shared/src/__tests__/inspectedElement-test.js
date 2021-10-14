@@ -1989,14 +1989,15 @@ describe('InspectedElement', () => {
   it('should only access ownKeys() of Proxies', async () => {
     const Example = () => null;
 
+    const supportedKeys = ['key1', 'key2'];
     const proxy = new Proxy(
       {},
       {
         get: (_target, prop) => {
-          if (this.ownKeys().includes(prop)) return true;
+          if (supportedKeys.includes(prop)) return true;
           throw Error(`This Proxy can't handle '${prop}'`);
         },
-        ownKeys: () => ['key1', 'key2'],
+        ownKeys: () => supportedKeys,
       },
     );
 
