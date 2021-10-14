@@ -10,16 +10,26 @@
 import type {Fiber} from './ReactFiber.new';
 import {warnsIfNotActing} from './ReactFiberHostConfig';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-const {ReactCurrentActQueue} = ReactSharedInternals;
-
 export function isActEnvironment(fiber: Fiber) {
   if (__DEV__) {
-    const disableActWarning = ReactCurrentActQueue.disableActWarning;
+    const isReactActEnvironmentGlobal =
+      // $FlowExpectedError – Flow doesn't know about IS_REACT_ACT_ENVIRONMENT global
+      typeof IS_REACT_ACT_ENVIRONMENT !== 'undefined'
+        ? IS_REACT_ACT_ENVIRONMENT
+        : undefined;
+
+    // TODO: Only check `jest` in legacy mode. In concurrent mode, this
+    // heuristic is replaced by IS_REACT_ACT_ENVIRONMENT.
     // $FlowExpectedError - Flow doesn't know about jest
     const jestIsDefined = typeof jest !== 'undefined';
-    return warnsIfNotActing && jestIsDefined && !disableActWarning;
+    return (
+      warnsIfNotActing &&
+      jestIsDefined &&
+      // Legacy mode assumes an act environment whenever `jest` is defined, but
+      // you can still turn off spurious warnings by setting
+      // IS_REACT_ACT_ENVIRONMENT explicitly to false.
+      isReactActEnvironmentGlobal !== false
+    );
   }
   return false;
 }

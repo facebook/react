@@ -273,6 +273,40 @@ function runActTests(label, render, unmount, rerender) {
         ]);
       });
 
+      // @gate __DEV__
+      it('does not warn if IS_REACT_ACT_ENVIRONMENT is set to false', () => {
+        let setState;
+        function App() {
+          const [state, _setState] = React.useState(0);
+          setState = _setState;
+          return state;
+        }
+
+        act(() => {
+          render(<App />, container);
+        });
+
+        // First show that it does warn
+        expect(() => setState(1)).toErrorDev(
+          'An update to App inside a test was not wrapped in act(...)',
+        );
+
+        // Now do the same thing again, but disable with the environment flag
+        const prevIsActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
+        global.IS_REACT_ACT_ENVIRONMENT = false;
+        try {
+          setState(2);
+        } finally {
+          global.IS_REACT_ACT_ENVIRONMENT = prevIsActEnvironment;
+        }
+
+        // When the flag is restored to its previous value, it should start
+        // warning again. This shows that React reads the flag each time.
+        expect(() => setState(3)).toErrorDev(
+          'An update to App inside a test was not wrapped in act(...)',
+        );
+      });
+
       describe('fake timers', () => {
         beforeEach(() => {
           jest.useFakeTimers();

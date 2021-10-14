@@ -279,5 +279,6 @@ module.exports = {
     __VARIANT__: true,
     gate: true,
     trustedTypes: true,
+    IS_REACT_ACT_ENVIRONMENT: true,
   },
 };
