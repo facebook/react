@@ -84,7 +84,6 @@ import {
   scheduleTimeout,
   cancelTimeout,
   noTimeout,
-  warnsIfNotActing,
   afterActiveInstanceBlur,
   clearContainer,
   getCurrentEventPriority,
@@ -2816,15 +2815,8 @@ function shouldForceFlushFallbacksInDEV() {
 export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      warnsIfNotActing === true &&
       (fiber.mode & StrictLegacyMode) !== NoMode &&
-      ReactCurrentActQueue.current === null &&
-      // Our internal tests use a custom implementation of `act` that works by
-      // mocking the Scheduler package. Disable the `act` warning.
-      // TODO: Maybe the warning should be disabled by default, and then turned
-      // on at the testing frameworks layer? Instead of what we do now, which
-      // is check if a `jest` global is defined.
-      ReactCurrentActQueue.disableActWarning === false
+      ReactCurrentActQueue.current === null
     ) {
       console.error(
         'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
@@ -2846,15 +2838,8 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      warnsIfNotActing === true &&
       executionContext === NoContext &&
-      ReactCurrentActQueue.current === null &&
-      // Our internal tests use a custom implementation of `act` that works by
-      // mocking the Scheduler package. Disable the `act` warning.
-      // TODO: Maybe the warning should be disabled by default, and then turned
-      // on at the testing frameworks layer? Instead of what we do now, which
-      // is check if a `jest` global is defined.
-      ReactCurrentActQueue.disableActWarning === false
+      ReactCurrentActQueue.current === null
     ) {
       const previousFiber = ReactCurrentFiberCurrent;
       try {

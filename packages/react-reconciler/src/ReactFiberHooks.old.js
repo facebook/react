@@ -118,6 +118,7 @@ import {
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
+import {isActEnvironment} from './ReactFiberAct.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1678,8 +1679,7 @@ function mountEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if ('undefined' !== typeof jest) {
+    if (isActEnvironment(currentlyRenderingFiber)) {
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
@@ -1709,8 +1709,7 @@ function updateEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if ('undefined' !== typeof jest) {
+    if (isActEnvironment(currentlyRenderingFiber)) {
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
@@ -2193,8 +2192,7 @@ function dispatchReducerAction<S, A>(
     enqueueUpdate(fiber, queue, update, lane);
 
     if (__DEV__) {
-      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-      if ('undefined' !== typeof jest) {
+      if (isActEnvironment(fiber)) {
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
@@ -2279,8 +2277,7 @@ function dispatchSetState<S, A>(
       }
     }
     if (__DEV__) {
-      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-      if ('undefined' !== typeof jest) {
+      if (isActEnvironment(fiber)) {
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
