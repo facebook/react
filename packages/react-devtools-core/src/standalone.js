@@ -48,7 +48,7 @@ let node: HTMLElement = ((null: any): HTMLElement);
 let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
 let statusListener: StatusListener = (message: string) => {};
-let disconnectedCallback: OnShutdownCallback = () => {};
+let disconnectedCallback: OnDisconnectedCallback = () => {};
 
 // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
 function hookNamesModuleLoaderFunction() {
