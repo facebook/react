@@ -38,6 +38,7 @@ import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
 import ThemeProvider from './ThemeProvider';
+import {LOCAL_STORAGE_DEFAULT_TAB_KEY} from '../../constants';
 
 import styles from './DevTools.css';
 
@@ -143,7 +144,7 @@ export default function DevTools({
   hideViewSourceAction,
 }: Props) {
   const [currentTab, setTab] = useLocalStorage<TabID>(
-    'React::DevTools::defaultTab',
+    LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,
   );
 

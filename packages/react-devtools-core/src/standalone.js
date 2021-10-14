@@ -30,7 +30,11 @@ import {readFileSync} from 'fs';
 import {installHook} from 'react-devtools-shared/src/hook';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {doesFilePathExist, launchEditor} from './editor';
-import {__DEBUG__} from 'react-devtools-shared/src/constants';
+import {
+  __DEBUG__,
+  LOCAL_STORAGE_DEFAULT_TAB_KEY,
+} from 'react-devtools-shared/src/constants';
+import {localStorageSetItem} from '../../react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
@@ -177,6 +181,20 @@ function onError({code, message}) {
       </div>
     `;
   }
+}
+
+function openProfiler() {
+  // Mocked up bridge and store to allow the DevTools to be rendered
+  bridge = new Bridge({listen: () => {}, send: () => {}});
+  store = new Store(bridge, {});
+
+  // Ensure the Profiler tab is shown initially.
+  localStorageSetItem(
+    LOCAL_STORAGE_DEFAULT_TAB_KEY,
+    JSON.stringify('profiler'),
+  );
+
+  reload();
 }
 
 function initialize(socket: WebSocket) {
@@ -372,6 +390,7 @@ const DevtoolsUI = {
   setProjectRoots,
   setStatusListener,
   startServer,
+  openProfiler,
 };
 
 export default DevtoolsUI;

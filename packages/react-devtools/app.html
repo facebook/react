@@ -142,6 +142,16 @@
             <strong>before</strong> importing React DOM.
           </div>
         </div>
+        <div class="box">
+          <div class="box-header">Profiler</div>
+          <div class="box-content">
+            Open the <a
+              id="profiler"
+              class="link"
+              href="#"
+            >Profiler tab</a> to inspect saved profiles.
+          </div>
+        </div>
         <div id="loading-status">Starting the server…</div>
       </div>
     </div>
@@ -201,6 +211,12 @@
         }
       }
 
+      function openProfiler() {
+        window.devtools
+          .setContentDOMNode(document.getElementById("container"))
+          .openProfiler();
+      }
+
       const link = $('#rn-help-link');
       link.addEventListener('click', event => {
         event.preventDefault();
@@ -216,6 +232,9 @@
       $byIp.innerText = `<script src="${serverIp}"></` + 'script>';
       $byIp.addEventListener('click', selectAllAndCopy);
       $byIp.addEventListener('focus', selectAllAndCopy);
+
+      const $profiler = $("#profiler");
+      $profiler.addEventListener('click', openProfiler);
 
       let devtools;
       try {
