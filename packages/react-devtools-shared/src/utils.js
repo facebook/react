@@ -837,7 +837,7 @@ export function formatDataForPreview(
       if (showFormattedValue) {
         const keys = (type === 'object'
           ? Array.from(getAllEnumerableKeys(data))
-          : Reflect.keys(data)
+          : Object.getOwnPropertyNames(data)
         ).sort(alphaSortKeys);
 
         let formatted = '';

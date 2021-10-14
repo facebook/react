@@ -2009,8 +2009,10 @@ describe('InspectedElement', () => {
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
-        "key1": true,
-        "key2": true,
+        "proxy": Object {
+          "key1": true,
+          "key2": true,
+        }
       }
     `);
   });
