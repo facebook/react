@@ -42,13 +42,13 @@ import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Co
 installHook(window);
 
 export type StatusListener = (message: string) => void;
-export type OnShutdownCallback = () => void;
+export type OnDisconnectedCallback = () => void;
 
 let node: HTMLElement = ((null: any): HTMLElement);
 let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
 let statusListener: StatusListener = (message: string) => {};
-let shutdownCallback: OnShutdownCallback = () => {};
+let disconnectedCallback: OnShutdownCallback = () => {};
 
 // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
 function hookNamesModuleLoaderFunction() {
@@ -75,8 +75,8 @@ function setStatusListener(value: StatusListener) {
   return DevtoolsUI;
 }
 
-function setDisconnectedCallback(value: OnShutdownCallback) {
-  shutdownCallback = value;
+function setDisconnectedCallback(value: OnDisconnectedCallback) {
+  disconnectedCallback = value;
   return DevtoolsUI;
 }
 
@@ -161,7 +161,7 @@ function onDisconnected() {
 
   node.innerHTML = nodeWaitingToConnectHTML;
   
-  shutdownCallback();
+  disconnectedCallback();
 }
 
 function onError({code, message}) {
