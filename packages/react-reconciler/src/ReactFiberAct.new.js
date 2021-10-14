@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber.new';
 import {warnsIfNotActing} from './ReactFiberHostConfig';
+import {ConcurrentMode} from './ReactTypeOfMode';
 
 export function isActEnvironment(fiber: Fiber) {
   if (__DEV__) {
@@ -18,18 +19,21 @@ export function isActEnvironment(fiber: Fiber) {
         ? IS_REACT_ACT_ENVIRONMENT
         : undefined;
 
-    // TODO: Only check `jest` in legacy mode. In concurrent mode, this
-    // heuristic is replaced by IS_REACT_ACT_ENVIRONMENT.
-    // $FlowExpectedError - Flow doesn't know about jest
-    const jestIsDefined = typeof jest !== 'undefined';
-    return (
-      warnsIfNotActing &&
-      jestIsDefined &&
-      // Legacy mode assumes an act environment whenever `jest` is defined, but
-      // you can still turn off spurious warnings by setting
-      // IS_REACT_ACT_ENVIRONMENT explicitly to false.
-      isReactActEnvironmentGlobal !== false
-    );
+    if (fiber.mode & ConcurrentMode) {
+      return isReactActEnvironmentGlobal;
+    } else {
+      // Legacy mode. We preserve the behavior of React 17's act. It assumes an
+      // act environment whenever `jest` is defined, but you can still turn off
+      // spurious warnings by setting IS_REACT_ACT_ENVIRONMENT explicitly
+      // to false.
+      // $FlowExpectedError - Flow doesn't know about jest
+      const jestIsDefined = typeof jest !== 'undefined';
+      return (
+        warnsIfNotActing &&
+        jestIsDefined &&
+        isReactActEnvironmentGlobal !== false
+      );
+    }
   }
   return false;
 }

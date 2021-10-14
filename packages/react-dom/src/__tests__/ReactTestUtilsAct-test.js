@@ -16,6 +16,8 @@ let container;
 
 jest.useRealTimers();
 
+global.IS_REACT_ACT_ENVIRONMENT = true;
+
 function sleep(period) {
   return new Promise(resolve => {
     setTimeout(() => {
