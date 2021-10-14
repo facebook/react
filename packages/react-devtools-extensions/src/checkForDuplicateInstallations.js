@@ -27,6 +27,7 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
     case 'public': {
       // If this is the public extension (e.g. from Chrome Web Store), check if an internal
       // or local build of the extension is also installed, and if so, disable this extension.
+      // TODO show warning if other installations are present.
       checkForInstalledExtensions([
         INTERNAL_EXTENSION_ID,
         LOCAL_EXTENSION_ID,
