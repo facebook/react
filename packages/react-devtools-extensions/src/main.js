@@ -85,6 +85,13 @@ function createPanelIfReactLoaded() {
           return;
         }
 
+        if (__DEBUG__) {
+          console.log(
+            '[main] createPanelIfReactLoaded: No duplicate installations detected, continuing with initialization.',
+            {currentExtension: EXTENSION_INSTALLATION_TYPE},
+          );
+        }
+
         panelCreated = true;
 
         clearInterval(loadCheckInterval);
