@@ -22,7 +22,11 @@ import {
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import {logEvent} from 'react-devtools-shared/src/Logger';
-import {CURRENT_EXTENSION_ID, EXTENSION_INSTALLATION_TYPE} from './constants';
+import {
+  CURRENT_EXTENSION_ID,
+  EXTENSION_INSTALLATION_TYPE,
+  SHOW_DUPLICATE_EXTENSION_WARNING,
+} from './constants';
 import {checkForDuplicateInstallations} from './checkForDuplicateInstallations';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
@@ -108,10 +112,38 @@ function createPanelIfReactLoaded() {
         let mostRecentOverrideTab = null;
         let render = null;
         let root = null;
+        let warnIfDuplicateInstallation = false;
 
         const tabId = chrome.devtools.inspectedWindow.tabId;
 
         registerDevToolsEventLogger('extension');
+
+        function onDuplicateExtensionMessage(message) {
+          if (message === SHOW_DUPLICATE_EXTENSION_WARNING) {
+            chrome.runtime.onMessage.removeListener(
+              onDuplicateExtensionMessage,
+            );
+
+            if (warnIfDuplicateInstallation === true) {
+              return;
+            }
+            warnIfDuplicateInstallation = true;
+            const errorMessage =
+              'React Developer Tools: We detected that there are multiple versions of React Developer Tools ' +
+              'installed and enabled in your browser at the same time, which will cause ' +
+              'issues while using the extension. ' +
+              'Please ensure that you have installed and enabled only a single ' +
+              'version of React Developer Tools before proceeding.';
+            console.error(errorMessage);
+            chrome.devtools.inspectedWindow.eval(
+              `console.error("${errorMessage}")`,
+            );
+            if (render != null) {
+              render();
+            }
+          }
+        }
+        chrome.runtime.onMessage.addListener(onDuplicateExtensionMessage);
 
         function initBridgeAndStore() {
           const port = chrome.runtime.connect({
@@ -374,6 +406,7 @@ function createPanelIfReactLoaded() {
                 hookNamesModuleLoaderFunction,
                 overrideTab,
                 profilerPortalContainer,
+                warnIfDuplicateInstallation,
                 showTabBar: false,
                 store,
                 warnIfUnsupportedVersionDetected: true,
