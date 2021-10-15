@@ -2,6 +2,21 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.20.0 (October 15, 2021)
+
+#### Features
+* Allow to use the Profiler when no client is connected in standalone DevTools ([@gabrieltrompiz](https://github.com/gabrieltrompiz) in [#22551](https://github.com/facebook/react/pull/22551))
+
+#### Bugfix
+* Surface backend errors during inspection in the frontend UI ([@bvaughn](https://github.com/bvaughn) in [#22546](https://github.com/facebook/react/pull/22546))
+* Prevent splash page in standalone app from becoming unresponsive after the disconnection of a client  (#22558) ([@gabrieltrompiz](https://github.com/gabrieltrompiz) in [#22560](https://github.com/facebook/react/pull/22560))
+* Prevent errors/crashing when multiple installs of DevTools are present ([@jstejada](https://github.com/jstejada) in [#22517](https://github.com/facebook/react/pull/22517))
+* Update Fiber logic in backend renderer to match implementation in React ([@jstejada](https://github.com/jstejada) in [#22527](https://github.com/facebook/react/pull/22527))
+
+#### Misc
+* Show warning in UI when duplicate installations of DevTools extension are detected ([@jstejada](https://github.com/jstejada) in [#22563](https://github.com/facebook/react/pull/22563))
+* Improved filenames of built worker files ([@akgupta0777](https://github.com/akgupta0777) in [#22559](https://github.com/facebook/react/pull/22559))
+
 ## 4.19.2 (October 8, 2021)
 
 #### Bugfix
