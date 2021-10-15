@@ -14,6 +14,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Flags} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
+import {getIsHydrating} from './ReactFiberHydrationContext.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -1311,6 +1312,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
 }
 
 function handleError(root, thrownValue): void {
+  debugger;
   do {
     let erroredWork = workInProgress;
     try {
@@ -1746,7 +1748,11 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     }
 
     const siblingFiber = completedWork.sibling;
-    if (siblingFiber !== null) {
+    const isHydrating = getIsHydrating();
+    if (
+      siblingFiber !== null &&
+      (!isHydrating || (completedWork.flags & Incomplete) === NoFlags)
+    ) {
       // If there is more work to do in this returnFiber, do that next.
       workInProgress = siblingFiber;
       return;

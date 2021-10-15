@@ -991,7 +991,7 @@ describe('ReactDOMServerPartialHydration', () => {
       );
 
       // This will throw it away and rerender.
-      expect(Scheduler).toFlushAndYield(['Child', 'Sibling']);
+      expect(Scheduler).toFlushAndYield(['Child']);
 
       expect(container.textContent).toBe('Hello');
 
@@ -2737,5 +2737,58 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
+  });
+
+  it('can hydrate siblings of a suspended component without errors', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+          <Suspense fallback="Loading...">
+            <div>Hello</div>
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    expect(container.textContent).toBe('HelloHello');
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    const root = ReactDOM.hydrateRoot(container, <App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // Expect the server-generated HTML to stay intact.
+    expect(container.textContent).toBe('HelloHello');
+
+    // Resolving the promise should continue hydration
+    suspend = false;
+    resolve();
+    await promise;
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+    // Hydration should not change anything.
+    expect(container.textContent).toBe('HelloHello');
   });
 });
