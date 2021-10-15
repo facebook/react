@@ -1312,7 +1312,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
 }
 
 function handleError(root, thrownValue): void {
-  debugger;
   do {
     let erroredWork = workInProgress;
     try {
