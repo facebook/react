@@ -72,7 +72,6 @@ export type Props = {|
   canViewElementSourceFunction?: ?CanViewElementSource,
   defaultTab?: TabID,
   enabledInspectedElementContextMenu?: boolean,
-  isInternalBuild?: boolean,
   showTabBar?: boolean,
   store: Store,
   warnIfDuplicateInstallation?: boolean,
@@ -129,7 +128,6 @@ export default function DevTools({
   componentsPortalContainer,
   defaultTab = 'components',
   enabledInspectedElementContextMenu = false,
-  isInternalBuild = false,
   fetchFileWithCaching,
   hookNamesModuleLoaderFunction,
   overrideTab,
@@ -324,11 +322,7 @@ export default function DevTools({
                 </ViewElementSourceContext.Provider>
               </SettingsContextController>
               <UnsupportedBridgeProtocolDialog />
-              {warnIfDuplicateInstallation && (
-                <DuplicateInstallationDialog
-                  isInternalBuild={isInternalBuild}
-                />
-              )}
+              {warnIfDuplicateInstallation && <DuplicateInstallationDialog />}
               {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
               {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
             </ModalDialogContextController>

@@ -120,6 +120,10 @@ function createPanelIfReactLoaded() {
 
         function onDuplicateExtensionMessage(message) {
           if (message === SHOW_DUPLICATE_EXTENSION_WARNING) {
+            chrome.runtime.onMessage.removeListener(
+              onDuplicateExtensionMessage,
+            );
+
             if (warnIfDuplicateInstallation === true) {
               return;
             }
@@ -134,14 +138,14 @@ function createPanelIfReactLoaded() {
             chrome.devtools.inspectedWindow.eval(
               `console.error("${errorMessage}")`,
             );
-            render();
+            if (render != null) {
+              render();
+            }
           }
         }
+        chrome.runtime.onMessage.addListener(onDuplicateExtensionMessage);
 
         function initBridgeAndStore() {
-          chrome.runtime.onMessage.removeListener(onDuplicateExtensionMessage);
-          chrome.runtime.onMessage.addListener(onDuplicateExtensionMessage);
-
           const port = chrome.runtime.connect({
             name: String(tabId),
           });
@@ -398,7 +402,6 @@ function createPanelIfReactLoaded() {
                 browserTheme: getBrowserTheme(),
                 componentsPortalContainer,
                 enabledInspectedElementContextMenu: true,
-                isInternalBuild: EXTENSION_INSTALLATION_TYPE === 'internal',
                 fetchFileWithCaching,
                 hookNamesModuleLoaderFunction,
                 overrideTab,

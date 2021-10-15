@@ -9,11 +9,10 @@
 
 import * as React from 'react';
 import {Fragment, useContext, useEffect} from 'react';
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 import {ModalDialogContext} from './ModalDialog';
 
-type Props = {|isInternalBuild: boolean|};
-
-export default function DuplicateInstallationDialog(props: Props) {
+export default function DuplicateInstallationDialog(_: {||}) {
   const {dispatch} = useContext(ModalDialogContext);
 
   useEffect(() => {
@@ -22,13 +21,13 @@ export default function DuplicateInstallationDialog(props: Props) {
       id: 'DuplicateInstallationDialog',
       type: 'SHOW',
       title: 'Duplicate Installations of DevTools Detected',
-      content: <DialogContent isInternalBuild={props.isInternalBuild} />,
+      content: <DialogContent />,
     });
   }, []);
   return null;
 }
 
-function DialogContent(props: Props) {
+function DialogContent(_: {||}) {
   return (
     <Fragment>
       <p>
@@ -36,7 +35,7 @@ function DialogContent(props: Props) {
         installed and enabled in your browser at the same time, which will cause
         issues while using the extension.
       </p>
-      {props.isInternalBuild ? (
+      {isInternalFacebookBuild ? (
         <p>
           Before proceeding, please ensure that the only enabled version of
           React Developer Tools is the internal (Chef-installed) version. To
