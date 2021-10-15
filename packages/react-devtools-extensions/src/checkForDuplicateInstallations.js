@@ -10,12 +10,15 @@
 declare var chrome: any;
 
 import {__DEBUG__} from 'react-devtools-shared/src/constants';
+import {getBrowserName} from './utils';
 import {
   EXTENSION_INSTALL_CHECK,
   EXTENSION_INSTALLATION_TYPE,
   INTERNAL_EXTENSION_ID,
   LOCAL_EXTENSION_ID,
 } from './constants';
+
+const IS_CHROME = getBrowserName() === 'Chrome';
 
 const UNRECOGNIZED_EXTENSION_ERROR =
   'React Developer Tools: You are running an unrecognized installation of the React Developer Tools extension, which might conflict with other versions of the extension installed in your browser. ' +
@@ -76,14 +79,17 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
       break;
     }
     case 'unknown': {
-      // If we don't know how this extension was built, we can't reliably detect if there
-      // are other installations of DevTools present.
-      // In this case, assume there are no duplicate exensions and show a warning about
-      // potential conflicts.
-      console.error(UNRECOGNIZED_EXTENSION_ERROR);
-      chrome.devtools.inspectedWindow.eval(
-        `console.error("${UNRECOGNIZED_EXTENSION_ERROR}")`,
-      );
+      // TODO: Support duplicate extension detection in other browsers
+      if (IS_CHROME) {
+        // If we don't know how this extension was built, we can't reliably detect if there
+        // are other installations of DevTools present.
+        // In this case, assume there are no duplicate exensions and show a warning about
+        // potential conflicts.
+        console.error(UNRECOGNIZED_EXTENSION_ERROR);
+        chrome.devtools.inspectedWindow.eval(
+          `console.error("${UNRECOGNIZED_EXTENSION_ERROR}")`,
+        );
+      }
       callback(false);
       break;
     }
