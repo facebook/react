@@ -3644,9 +3644,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       let _setText;
       function App() {
         const [text, setText] = useState('A');
-        const deferredText = useDeferredValue(text, {
-          timeoutMs: 500,
-        });
+        const deferredText = useDeferredValue(text);
         _setText = setText;
         return (
           <>

@@ -572,9 +572,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
   it('should support composite useDeferredValue hook', () => {
     function Foo(props) {
-      React.useDeferredValue('abc', {
-        timeoutMs: 500,
-      });
+      React.useDeferredValue('abc');
       const [state] = React.useState(() => 'hello', []);
       return <div>{state}</div>;
     }

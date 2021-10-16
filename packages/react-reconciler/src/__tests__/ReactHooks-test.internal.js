@@ -1474,8 +1474,7 @@ describe('ReactHooks', () => {
 
     if (__EXPERIMENTAL__) {
       const useTransitionHelper = () => React.useTransition();
-      const useDeferredValueHelper = () =>
-        React.useDeferredValue(0, {timeoutMs: 1000});
+      const useDeferredValueHelper = () => React.useDeferredValue(0);
 
       orderedHooks.push(useTransitionHelper);
       orderedHooks.push(useDeferredValueHelper);

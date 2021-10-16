@@ -49,9 +49,7 @@ function reducer(state, action) {
 
 function Router() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [startTransition, isPending] = useTransition({
-    timeoutMs: 1500,
-  });
+  const [startTransition, isPending] = useTransition();
 
   useEffect(() => {
     document.body.style.cursor = isPending ? 'wait' : '';
