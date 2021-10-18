@@ -18,9 +18,7 @@ import type {Thenable} from 'shared/ReactTypes';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
-const {ReactCurrentActQueue} = ReactSharedInternals;
 
 let actingUpdatesScopeDepth = 0;
 
@@ -37,15 +35,18 @@ export function act(scope: () => Thenable<mixed> | void) {
     );
   }
 
+  const previousIsActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
   const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   actingUpdatesScopeDepth++;
   if (__DEV__ && actingUpdatesScopeDepth === 1) {
-    ReactCurrentActQueue.disableActWarning = true;
+    // Because this is not the "real" `act`, we set this to `false` so React
+    // knows not to fire `act` warnings.
+    global.IS_REACT_ACT_ENVIRONMENT = false;
   }
 
   const unwind = () => {
     if (__DEV__ && actingUpdatesScopeDepth === 1) {
-      ReactCurrentActQueue.disableActWarning = false;
+      global.IS_REACT_ACT_ENVIRONMENT = previousIsActEnvironment;
     }
     actingUpdatesScopeDepth--;
 
