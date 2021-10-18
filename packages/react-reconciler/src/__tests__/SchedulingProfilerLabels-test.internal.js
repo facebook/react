@@ -21,6 +21,8 @@ describe('SchedulingProfiler labels', () => {
   let featureDetectionMarkName = null;
   let marks;
 
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+
   function polyfillJSDomUserTiming() {
     featureDetectionMarkName = null;
 

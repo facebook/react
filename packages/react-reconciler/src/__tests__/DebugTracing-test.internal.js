@@ -19,6 +19,8 @@ describe('DebugTracing', () => {
   const DEFAULT_LANE_STRING = '0b0000000000000000000000000010000';
   const RETRY_LANE_STRING = '0b0000000010000000000000000000000';
 
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+
   beforeEach(() => {
     jest.resetModules();
 

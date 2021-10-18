@@ -17,6 +17,8 @@ import {
 } from '../../constants';
 import REACT_VERSION from 'shared/ReactVersion';
 
+global.IS_REACT_ACT_ENVIRONMENT = true;
+
 describe('getLanesFromTransportDecimalBitmask', () => {
   it('should return array of lane numbers from bitmask string', () => {
     expect(getLanesFromTransportDecimalBitmask('1')).toEqual([0]);

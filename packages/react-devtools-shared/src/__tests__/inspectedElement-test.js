@@ -38,6 +38,8 @@ describe('InspectedElement', () => {
   let ErrorBoundary;
   let errorBoundaryInstance;
 
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
