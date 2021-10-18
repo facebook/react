@@ -177,7 +177,7 @@ describe('ReactDOMServerPartialHydration', () => {
         <Suspense fallback="Loading...">
           <Child />
           <Suspense fallback="Loading...">
-            <Child />
+            <div>Hello</div>
           </Suspense>
         </Suspense>
       );
@@ -196,10 +196,10 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
+
     // Expect the server-generated HTML to stay intact.
     expect(container.textContent).toBe('HelloHello');
 
