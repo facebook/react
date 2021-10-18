@@ -45,11 +45,15 @@ import {
   shouldDeleteUnhydratedTailInstances,
   didNotMatchHydratedContainerTextInstance,
   didNotMatchHydratedTextInstance,
-  didNotHydrateContainerInstance,
+  didNotHydrateInstanceWithinContainer,
+  didNotHydrateInstanceWithinSuspenseInstance,
   didNotHydrateInstance,
-  didNotFindHydratableContainerInstance,
-  didNotFindHydratableContainerTextInstance,
-  didNotFindHydratableContainerSuspenseInstance,
+  didNotFindHydratableInstanceWithinContainer,
+  didNotFindHydratableTextInstanceWithinContainer,
+  didNotFindHydratableSuspenseInstanceWithinContainer,
+  didNotFindHydratableInstanceWithinSuspenseInstance,
+  didNotFindHydratableTextInstanceWithinSuspenseInstance,
+  didNotFindHydratableSuspenseInstanceWithinSuspenseInstance,
   didNotFindHydratableInstance,
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
@@ -105,7 +109,7 @@ function deleteHydratableInstance(
   if (__DEV__) {
     switch (returnFiber.tag) {
       case HostRoot:
-        didNotHydrateContainerInstance(
+        didNotHydrateInstanceWithinContainer(
           returnFiber.stateNode.containerInfo,
           instance,
         );
@@ -117,6 +121,14 @@ function deleteHydratableInstance(
           returnFiber.stateNode,
           instance,
         );
+        break;
+      case SuspenseComponent:
+        const suspenseState: SuspenseState = returnFiber.memoizedState;
+        if (suspenseState.dehydrated !== null)
+          didNotHydrateInstanceWithinSuspenseInstance(
+            suspenseState.dehydrated,
+            instance,
+          );
         break;
     }
   }
@@ -144,14 +156,23 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
           case HostComponent:
             const type = fiber.type;
             const props = fiber.pendingProps;
-            didNotFindHydratableContainerInstance(parentContainer, type, props);
+            didNotFindHydratableInstanceWithinContainer(
+              parentContainer,
+              type,
+              props,
+            );
             break;
           case HostText:
             const text = fiber.pendingProps;
-            didNotFindHydratableContainerTextInstance(parentContainer, text);
+            didNotFindHydratableTextInstanceWithinContainer(
+              parentContainer,
+              text,
+            );
             break;
           case SuspenseComponent:
-            didNotFindHydratableContainerSuspenseInstance(parentContainer);
+            didNotFindHydratableSuspenseInstanceWithinContainer(
+              parentContainer,
+            );
             break;
         }
         break;
@@ -189,6 +210,35 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
             );
             break;
         }
+        break;
+      }
+      case SuspenseComponent: {
+        const suspenseState: SuspenseState = returnFiber.memoizedState;
+        const parentInstance = suspenseState.dehydrated;
+        if (parentInstance !== null)
+          switch (fiber.tag) {
+            case HostComponent:
+              const type = fiber.type;
+              const props = fiber.pendingProps;
+              didNotFindHydratableInstanceWithinSuspenseInstance(
+                parentInstance,
+                type,
+                props,
+              );
+              break;
+            case HostText:
+              const text = fiber.pendingProps;
+              didNotFindHydratableTextInstanceWithinSuspenseInstance(
+                parentInstance,
+                text,
+              );
+              break;
+            case SuspenseComponent:
+              didNotFindHydratableSuspenseInstanceWithinSuspenseInstance(
+                parentInstance,
+              );
+              break;
+          }
         break;
       }
       default:
