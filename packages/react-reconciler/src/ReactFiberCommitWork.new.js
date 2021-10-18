@@ -30,6 +30,7 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
+  enableSchedulingProfiler,
   enableSuspenseServerRenderer,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -142,6 +143,16 @@ import {
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {doesFiberContain} from './ReactFiberTreeReflection';
 import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
+import {
+  markComponentPassiveEffectMountStarted,
+  markComponentPassiveEffectMountStopped,
+  markComponentPassiveEffectUnmountStarted,
+  markComponentPassiveEffectUnmountStopped,
+  markComponentLayoutEffectMountStarted,
+  markComponentLayoutEffectMountStopped,
+  markComponentLayoutEffectUnmountStarted,
+  markComponentLayoutEffectUnmountStopped,
+} from './SchedulingProfiler';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -512,7 +523,23 @@ function commitHookEffectListUnmount(
         const destroy = effect.destroy;
         effect.destroy = undefined;
         if (destroy !== undefined) {
+          if (enableSchedulingProfiler) {
+            if ((flags & HookPassive) !== NoHookEffect) {
+              markComponentPassiveEffectUnmountStarted(finishedWork);
+            } else if ((flags & HookLayout) !== NoHookEffect) {
+              markComponentLayoutEffectUnmountStarted(finishedWork);
+            }
+          }
+
           safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
+
+          if (enableSchedulingProfiler) {
+            if ((flags & HookPassive) !== NoHookEffect) {
+              markComponentPassiveEffectUnmountStopped();
+            } else if ((flags & HookLayout) !== NoHookEffect) {
+              markComponentLayoutEffectUnmountStopped();
+            }
+          }
         }
       }
       effect = effect.next;
@@ -520,17 +547,33 @@ function commitHookEffectListUnmount(
   }
 }
 
-function commitHookEffectListMount(tag: HookFlags, finishedWork: Fiber) {
+function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
     do {
-      if ((effect.tag & tag) === tag) {
+      if ((effect.tag & flags) === flags) {
+        if (enableSchedulingProfiler) {
+          if ((flags & HookPassive) !== NoHookEffect) {
+            markComponentPassiveEffectMountStarted(finishedWork);
+          } else if ((flags & HookLayout) !== NoHookEffect) {
+            markComponentLayoutEffectMountStarted(finishedWork);
+          }
+        }
+
         // Mount
         const create = effect.create;
         effect.destroy = create();
+
+        if (enableSchedulingProfiler) {
+          if ((flags & HookPassive) !== NoHookEffect) {
+            markComponentPassiveEffectMountStopped();
+          } else if ((flags & HookLayout) !== NoHookEffect) {
+            markComponentLayoutEffectMountStopped();
+          }
+        }
 
         if (__DEV__) {
           const destroy = effect.destroy;
@@ -1180,10 +1223,13 @@ function commitUnmount(
           do {
             const {destroy, tag} = effect;
             if (destroy !== undefined) {
-              if (
-                (tag & HookInsertion) !== NoHookEffect ||
-                (tag & HookLayout) !== NoHookEffect
-              ) {
+              if ((tag & HookInsertion) !== NoHookEffect) {
+                safelyCallDestroy(current, nearestMountedAncestor, destroy);
+              } else if ((tag & HookLayout) !== NoHookEffect) {
+                if (enableSchedulingProfiler) {
+                  markComponentLayoutEffectUnmountStarted(current);
+                }
+
                 if (
                   enableProfilerTimer &&
                   enableProfilerCommitHooks &&
@@ -1194,6 +1240,10 @@ function commitUnmount(
                   recordLayoutEffectDuration(current);
                 } else {
                   safelyCallDestroy(current, nearestMountedAncestor, destroy);
+                }
+
+                if (enableSchedulingProfiler) {
+                  markComponentLayoutEffectUnmountStopped();
                 }
               }
             }

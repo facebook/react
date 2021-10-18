@@ -835,7 +835,7 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 0,
                 "depth": 0,
-                "duration": 0.0019999999999999983,
+                "duration": 0.004,
                 "lanes": Array [
                   4,
                 ],
@@ -847,11 +847,11 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.010000000000000002,
+                "duration": 0.009999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render-idle",
               },
               Object {
@@ -861,37 +861,37 @@ describe('preprocessData', () => {
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.006000000000000002,
+                "duration": 0.005999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.023,
+                "timestamp": 0.025,
                 "type": "commit",
               },
               Object {
                 "batchUID": 1,
                 "depth": 1,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0009999999999999974,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.027,
+                "timestamp": 0.029,
                 "type": "layout-effects",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0030000000000000027,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.03,
+                "timestamp": 0.032,
                 "type": "passive-effects",
               },
             ],
@@ -901,16 +901,32 @@ describe('preprocessData', () => {
               "componentName": "App",
               "duration": 0.001,
               "timestamp": 0.006,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "App",
+              "duration": 0.0019999999999999983,
+              "timestamp": 0.017,
+              "type": "passive-effect-mount",
               "warning": null,
             },
             Object {
               "componentName": "App",
               "duration": 0.0010000000000000009,
-              "timestamp": 0.02,
+              "timestamp": 0.022,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "App",
+              "duration": 0.0010000000000000009,
+              "timestamp": 0.033,
+              "type": "passive-effect-mount",
               "warning": null,
             },
           ],
-          "duration": 0.031,
+          "duration": 0.035,
           "flamechart": Array [],
           "laneToLabelMap": Map {
             0 => "Sync",
@@ -994,7 +1010,7 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 0,
                 "depth": 0,
-                "duration": 0.0019999999999999983,
+                "duration": 0.004,
                 "lanes": Array [
                   4,
                 ],
@@ -1004,11 +1020,11 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.010000000000000002,
+                "duration": 0.009999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render-idle",
               },
               Object {
@@ -1018,37 +1034,37 @@ describe('preprocessData', () => {
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.006000000000000002,
+                "duration": 0.005999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.023,
+                "timestamp": 0.025,
                 "type": "commit",
               },
               Object {
                 "batchUID": 1,
                 "depth": 1,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0009999999999999974,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.027,
+                "timestamp": 0.029,
                 "type": "layout-effects",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0030000000000000027,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.03,
+                "timestamp": 0.032,
                 "type": "passive-effects",
               },
             ],
@@ -1102,7 +1118,7 @@ describe('preprocessData', () => {
               "lanes": Array [
                 4,
               ],
-              "timestamp": 0.017,
+              "timestamp": 0.018,
               "type": "schedule-state-update",
               "warning": null,
             },
