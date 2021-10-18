@@ -93,7 +93,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
     return false;
   }
   nextHydratableInstance = getNextHydratableSibling(suspenseInstance);
-  popToNextHostParent(fiber);
+  hydrationParentFiber = fiber;
   isHydrating = true;
   return true;
 }
