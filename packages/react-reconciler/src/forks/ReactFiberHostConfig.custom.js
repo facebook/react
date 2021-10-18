@@ -150,6 +150,10 @@ export const registerSuspenseInstanceRetry =
   $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
+export const getFirstHydratableChildWithinContainer =
+  $$$hostConfig.getFirstHydratableChildWithinContainer;
+export const getFirstHydratableChildWithinSuspenseInstance =
+  $$$hostConfig.getFirstHydratableChildWithinSuspenseInstance;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
 export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;

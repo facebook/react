@@ -38,6 +38,8 @@ import {
   canHydrateSuspenseInstance,
   getNextHydratableSibling,
   getFirstHydratableChild,
+  getFirstHydratableChildWithinContainer,
+  getFirstHydratableChildWithinSuspenseInstance,
   hydrateInstance,
   hydrateTextInstance,
   hydrateSuspenseInstance,
@@ -82,8 +84,10 @@ function enterHydrationState(fiber: Fiber): boolean {
     return false;
   }
 
-  const parentInstance = fiber.stateNode.containerInfo;
-  nextHydratableInstance = getFirstHydratableChild(parentInstance);
+  const parentInstance: Container = fiber.stateNode.containerInfo;
+  nextHydratableInstance = getFirstHydratableChildWithinContainer(
+    parentInstance,
+  );
   hydrationParentFiber = fiber;
   isHydrating = true;
   return true;
@@ -96,7 +100,9 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   if (!supportsHydration) {
     return false;
   }
-  nextHydratableInstance = getNextHydratableSibling(suspenseInstance);
+  nextHydratableInstance = getFirstHydratableChildWithinSuspenseInstance(
+    suspenseInstance,
+  );
   hydrationParentFiber = fiber;
   isHydrating = true;
   return true;
