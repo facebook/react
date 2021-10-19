@@ -31,12 +31,14 @@ window.addEventListener('message', function onMessage({data, source}) {
   if (source !== window || !data) {
     return;
   }
-  if (data.extensionId !== CURRENT_EXTENSION_ID) {
+  if (data.extensionId != null && data.extensionId !== CURRENT_EXTENSION_ID) {
     if (__DEBUG__) {
       console.log(
         `[injectGlobalHook] Received message '${data.source}' from different extension instance. Skipping message.`,
         {
           currentExtension: EXTENSION_INSTALLATION_TYPE,
+          currentExtensionId: CURRENT_EXTENSION_ID,
+          providedExtensionId: data.extensionId,
         },
       );
     }
