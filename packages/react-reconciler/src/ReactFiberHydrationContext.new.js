@@ -114,7 +114,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   return true;
 }
 
-function shouldWarnOnFailedHydration(returnFiber: Fiber) {
+function shouldWarnOnFailedHydrationDEV(returnFiber: Fiber) {
   let parent = returnFiber;
   while (parent !== null) {
     if (parent.tag === SuspenseComponent || parent.tag === HostRoot) {
@@ -134,30 +134,32 @@ function deleteHydratableInstance(
   returnFiber: Fiber,
   instance: HydratableInstance,
 ) {
-  if (__DEV__ && shouldWarnOnFailedHydration(returnFiber)) {
-    switch (returnFiber.tag) {
-      case HostRoot:
-        didNotHydrateInstanceWithinContainer(
-          returnFiber.stateNode.containerInfo,
-          instance,
-        );
-        break;
-      case HostComponent:
-        didNotHydrateInstance(
-          returnFiber.type,
-          returnFiber.memoizedProps,
-          returnFiber.stateNode,
-          instance,
-        );
-        break;
-      case SuspenseComponent:
-        const suspenseState: SuspenseState = returnFiber.memoizedState;
-        if (suspenseState.dehydrated !== null)
-          didNotHydrateInstanceWithinSuspenseInstance(
-            suspenseState.dehydrated,
+  if (__DEV__) {
+    if (shouldWarnOnFailedHydrationDEV(returnFiber)) {
+      switch (returnFiber.tag) {
+        case HostRoot:
+          didNotHydrateInstanceWithinContainer(
+            returnFiber.stateNode.containerInfo,
             instance,
           );
-        break;
+          break;
+        case HostComponent:
+          didNotHydrateInstance(
+            returnFiber.type,
+            returnFiber.memoizedProps,
+            returnFiber.stateNode,
+            instance,
+          );
+          break;
+        case SuspenseComponent:
+          const suspenseState: SuspenseState = returnFiber.memoizedState;
+          if (suspenseState.dehydrated !== null)
+            didNotHydrateInstanceWithinSuspenseInstance(
+              suspenseState.dehydrated,
+              instance,
+            );
+          break;
+      }
     }
   }
 
@@ -176,79 +178,47 @@ function deleteHydratableInstance(
 
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-  if (__DEV__ && shouldWarnOnFailedHydration(returnFiber)) {
-    switch (returnFiber.tag) {
-      case HostRoot: {
-        const parentContainer = returnFiber.stateNode.containerInfo;
-        switch (fiber.tag) {
-          case HostComponent:
-            const type = fiber.type;
-            const props = fiber.pendingProps;
-            didNotFindHydratableInstanceWithinContainer(
-              parentContainer,
-              type,
-              props,
-            );
-            break;
-          case HostText:
-            const text = fiber.pendingProps;
-            didNotFindHydratableTextInstanceWithinContainer(
-              parentContainer,
-              text,
-            );
-            break;
-          case SuspenseComponent:
-            didNotFindHydratableSuspenseInstanceWithinContainer(
-              parentContainer,
-            );
-            break;
-        }
-        break;
-      }
-      case HostComponent: {
-        const parentType = returnFiber.type;
-        const parentProps = returnFiber.memoizedProps;
-        const parentInstance = returnFiber.stateNode;
-        switch (fiber.tag) {
-          case HostComponent:
-            const type = fiber.type;
-            const props = fiber.pendingProps;
-            didNotFindHydratableInstance(
-              parentType,
-              parentProps,
-              parentInstance,
-              type,
-              props,
-            );
-            break;
-          case HostText:
-            const text = fiber.pendingProps;
-            didNotFindHydratableTextInstance(
-              parentType,
-              parentProps,
-              parentInstance,
-              text,
-            );
-            break;
-          case SuspenseComponent:
-            didNotFindHydratableSuspenseInstance(
-              parentType,
-              parentProps,
-              parentInstance,
-            );
-            break;
-        }
-        break;
-      }
-      case SuspenseComponent: {
-        const suspenseState: SuspenseState = returnFiber.memoizedState;
-        const parentInstance = suspenseState.dehydrated;
-        if (parentInstance !== null)
+  if (__DEV__) {
+    if (shouldWarnOnFailedHydrationDEV(returnFiber)) {
+      switch (returnFiber.tag) {
+        case HostRoot: {
+          const parentContainer = returnFiber.stateNode.containerInfo;
           switch (fiber.tag) {
             case HostComponent:
               const type = fiber.type;
               const props = fiber.pendingProps;
-              didNotFindHydratableInstanceWithinSuspenseInstance(
+              didNotFindHydratableInstanceWithinContainer(
+                parentContainer,
+                type,
+                props,
+              );
+              break;
+            case HostText:
+              const text = fiber.pendingProps;
+              didNotFindHydratableTextInstanceWithinContainer(
+                parentContainer,
+                text,
+              );
+              break;
+            case SuspenseComponent:
+              didNotFindHydratableSuspenseInstanceWithinContainer(
+                parentContainer,
+              );
+              break;
+          }
+          break;
+        }
+        case HostComponent: {
+          const parentType = returnFiber.type;
+          const parentProps = returnFiber.memoizedProps;
+          const parentInstance = returnFiber.stateNode;
+          switch (fiber.tag) {
+            case HostComponent:
+              const type = fiber.type;
+              const props = fiber.pendingProps;
+              didNotFindHydratableInstance(
+                parentType,
+                parentProps,
                 parentInstance,
                 type,
                 props,
@@ -256,21 +226,55 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               break;
             case HostText:
               const text = fiber.pendingProps;
-              didNotFindHydratableTextInstanceWithinSuspenseInstance(
+              didNotFindHydratableTextInstance(
+                parentType,
+                parentProps,
                 parentInstance,
                 text,
               );
               break;
             case SuspenseComponent:
-              didNotFindHydratableSuspenseInstanceWithinSuspenseInstance(
+              didNotFindHydratableSuspenseInstance(
+                parentType,
+                parentProps,
                 parentInstance,
               );
               break;
           }
-        break;
+          break;
+        }
+        case SuspenseComponent: {
+          const suspenseState: SuspenseState = returnFiber.memoizedState;
+          const parentInstance = suspenseState.dehydrated;
+          if (parentInstance !== null)
+            switch (fiber.tag) {
+              case HostComponent:
+                const type = fiber.type;
+                const props = fiber.pendingProps;
+                didNotFindHydratableInstanceWithinSuspenseInstance(
+                  parentInstance,
+                  type,
+                  props,
+                );
+                break;
+              case HostText:
+                const text = fiber.pendingProps;
+                didNotFindHydratableTextInstanceWithinSuspenseInstance(
+                  parentInstance,
+                  text,
+                );
+                break;
+              case SuspenseComponent:
+                didNotFindHydratableSuspenseInstanceWithinSuspenseInstance(
+                  parentInstance,
+                );
+                break;
+            }
+          break;
+        }
+        default:
+          return;
       }
-      default:
-        return;
     }
   }
 }
@@ -407,7 +411,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   const textContent: string = fiber.memoizedProps;
   const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
   if (__DEV__) {
-    if (shouldUpdate && shouldWarnOnFailedHydration(fiber)) {
+    if (shouldUpdate && shouldWarnOnFailedHydrationDEV(fiber)) {
       // We assume that prepareToHydrateHostTextInstance is called in a context where the
       // hydration parent is the parent host component of this host text.
       const returnFiber = hydrationParentFiber;
