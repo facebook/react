@@ -216,7 +216,7 @@ function createPanelIfReactLoaded() {
           chrome.devtools.inspectedWindow.eval(
             `window.postMessage({
                source: 'react-devtools-inject-backend',
-               extensionId: "${CURRENT_EXTENSION_ID}"
+               extensionId: "${CURRENT_EXTENSION_ID}",
              }, '*');`,
             function(response, evalError) {
               if (evalError) {
@@ -361,15 +361,15 @@ function createPanelIfReactLoaded() {
               chrome.runtime.onMessage.addListener(onPortMessage);
 
               chrome.devtools.inspectedWindow.eval(`
-              window.postMessage({
-                source: 'react-devtools-extension',
-                extensionId: "${CURRENT_EXTENSION_ID}"
-                payload: {
-                  type: 'fetch-file-with-cache',
-                  url: "${url}",
-                },
-              });
-            `);
+                window.postMessage({
+                  source: 'react-devtools-extension',
+                  extensionId: "${CURRENT_EXTENSION_ID}",
+                  payload: {
+                    type: 'fetch-file-with-cache',
+                    url: "${url}",
+                  },
+                }, '*');
+              `);
             };
 
             // Fetching files from the extension won't make use of the network cache
