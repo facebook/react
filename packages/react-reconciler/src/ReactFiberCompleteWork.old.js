@@ -1007,16 +1007,16 @@ function completeWork(
 
       if (enableSuspenseServerRenderer) {
         if (nextState !== null && nextState.dehydrated !== null) {
+          // We might be inside a hydration state the first time we're picking up this
+          // Suspense boundary, and also after we've reentered it for further hydration.
+          const wasHydrated = popHydrationState(workInProgress);
           if (current === null) {
-            const wasHydrated = popHydrationState(workInProgress);
-
             if (!wasHydrated) {
               throw new Error(
                 'A dehydrated suspense component was completed without a hydrated node. ' +
                   'This is probably a bug in React.',
               );
             }
-
             prepareToHydrateHostSuspenseInstance(workInProgress);
             bubbleProperties(workInProgress);
             if (enableProfilerTimer) {
@@ -1034,9 +1034,8 @@ function completeWork(
             }
             return null;
           } else {
-            // We should never have been in a hydration state if we didn't have a current.
-            // However, in some of those paths, we might have reentered a hydration state
-            // and then we might be inside a hydration state. In that case, we'll need to exit out of it.
+            // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
+            // state since we're now exiting out of it. popHydrationState doesn't do that for us.
             resetHydrationState();
             if ((workInProgress.flags & DidCapture) === NoFlags) {
               // This boundary did not suspend so it's now hydrated and unsuspended.

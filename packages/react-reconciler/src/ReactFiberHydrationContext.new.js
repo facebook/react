@@ -261,6 +261,8 @@ function tryHydrate(fiber, nextInstance) {
       const instance = canHydrateInstance(nextInstance, type, props);
       if (instance !== null) {
         fiber.stateNode = (instance: Instance);
+        hydrationParentFiber = fiber;
+        nextHydratableInstance = getFirstHydratableChild(instance);
         return true;
       }
       return false;
@@ -270,6 +272,9 @@ function tryHydrate(fiber, nextInstance) {
       const textInstance = canHydrateTextInstance(nextInstance, text);
       if (textInstance !== null) {
         fiber.stateNode = (textInstance: TextInstance);
+        hydrationParentFiber = fiber;
+        // Text Instances don't have children so there's nothing to hydrate.
+        nextHydratableInstance = null;
         return true;
       }
       return false;
@@ -294,6 +299,10 @@ function tryHydrate(fiber, nextInstance) {
           );
           dehydratedFragment.return = fiber;
           fiber.child = dehydratedFragment;
+          hydrationParentFiber = fiber;
+          // While a Suspense Instance does have children, we won't step into
+          // it during the first pass. Instead, we'll reenter it later.
+          nextHydratableInstance = null;
           return true;
         }
       }
@@ -322,6 +331,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     // We use this as a heuristic. It's based on intuition and not data so it
     // might be flawed or unnecessary.
     nextInstance = getNextHydratableSibling(firstAttemptedInstance);
+    const prevHydrationParentFiber: Fiber = (hydrationParentFiber: any);
     if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
@@ -333,13 +343,8 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     // superfluous and we'll delete it. Since we can't eagerly delete it
     // we'll have to schedule a deletion. To do that, this node needs a dummy
     // fiber associated with it.
-    deleteHydratableInstance(
-      (hydrationParentFiber: any),
-      firstAttemptedInstance,
-    );
+    deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
   }
-  hydrationParentFiber = fiber;
-  nextHydratableInstance = getFirstHydratableChild((nextInstance: any));
 }
 
 function prepareToHydrateHostInstance(
