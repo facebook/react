@@ -308,7 +308,7 @@ export default function(babel, opts = {}) {
       // We also need it for www that has transforms like cx()
       // that don't understand if something is part of a string.
       finalKey = require('crypto')
-        .createHash('sha1')
+        .createHash('sha256')
         .update(key)
         .digest('base64');
     }
