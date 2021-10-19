@@ -33,16 +33,14 @@ export async function importFile(file: File): Promise<ImportWorkerOutputData> {
       processedData,
     };
   } catch (error) {
-    if (error instanceof InvalidProfileError) {
-      return {
-        status: 'INVALID_PROFILE_ERROR',
-        error,
-      };
-    } else {
-      return {
-        status: 'UNEXPECTED_ERROR',
-        error,
-      };
-    }
+    return error instanceof InvalidProfileError
+      ? {
+          status: 'INVALID_PROFILE_ERROR',
+          error,
+        }
+      : {
+          status: 'UNEXPECTED_ERROR',
+          error,
+        };
   }
 }

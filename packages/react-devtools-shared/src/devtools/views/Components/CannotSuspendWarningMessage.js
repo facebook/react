@@ -26,19 +26,15 @@ export default function CannotSuspendWarningMessage() {
 
   // Has the user filtered out Suspense nodes from the tree?
   // If so, the selected element might actually be in a Suspense tree after all.
-  if (areSuspenseElementsHidden) {
-    return (
-      <div>
-        Suspended state cannot be toggled while Suspense components are hidden.
-        Disable the filter and try again.
-      </div>
-    );
-  } else {
-    return (
-      <div>
-        The selected element is not within a Suspense container. Suspending it
-        would cause an error.
-      </div>
-    );
-  }
+  return areSuspenseElementsHidden ? (
+    <div>
+      Suspended state cannot be toggled while Suspense components are hidden.
+      Disable the filter and try again.
+    </div>
+  ) : (
+    <div>
+      The selected element is not within a Suspense container. Suspending it
+      would cause an error.
+    </div>
+  );
 }

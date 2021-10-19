@@ -792,11 +792,7 @@ function jsxWithValidation(type, props, key, isStaticChildren, source, self) {
 
       var sourceInfo = getSourceInfoErrorAddendum(source);
 
-      if (sourceInfo) {
-        info += sourceInfo;
-      } else {
-        info += getDeclarationErrorAddendum();
-      }
+      info += sourceInfo ? sourceInfo : getDeclarationErrorAddendum();
 
       var typeString;
 

@@ -56,21 +56,19 @@ function getTooltipPosition(element, mousePosition) {
   let left = 0;
 
   if (mouseY + TOOLTIP_OFFSET + element.offsetHeight >= height) {
-    if (mouseY - TOOLTIP_OFFSET - element.offsetHeight > 0) {
-      top = `${mouseY - element.offsetHeight - TOOLTIP_OFFSET}px`;
-    } else {
-      top = '0px';
-    }
+    top =
+      mouseY - TOOLTIP_OFFSET - element.offsetHeight > 0
+        ? `${mouseY - element.offsetHeight - TOOLTIP_OFFSET}px`
+        : '0px';
   } else {
     top = `${mouseY + TOOLTIP_OFFSET}px`;
   }
 
   if (mouseX + TOOLTIP_OFFSET + element.offsetWidth >= width) {
-    if (mouseX - TOOLTIP_OFFSET - element.offsetWidth > 0) {
-      left = `${mouseX - element.offsetWidth - TOOLTIP_OFFSET}px`;
-    } else {
-      left = '0px';
-    }
+    left =
+      mouseX - TOOLTIP_OFFSET - element.offsetWidth > 0
+        ? `${mouseX - element.offsetWidth - TOOLTIP_OFFSET}px`
+        : '0px';
   } else {
     left = `${mouseX + TOOLTIP_OFFSET * 2}px`;
   }

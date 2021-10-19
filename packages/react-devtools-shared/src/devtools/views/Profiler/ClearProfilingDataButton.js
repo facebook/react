@@ -26,11 +26,10 @@ export default function ClearProfilingDataButton() {
   const {profilerStore} = store;
 
   let doesHaveData = false;
-  if (selectedTabID === 'scheduling-profiler') {
-    doesHaveData = schedulingProfilerData !== null;
-  } else {
-    doesHaveData = didRecordCommits;
-  }
+  doesHaveData =
+    selectedTabID === 'scheduling-profiler'
+      ? schedulingProfilerData !== null
+      : didRecordCommits;
 
   const clear = () => {
     if (selectedTabID === 'scheduling-profiler') {

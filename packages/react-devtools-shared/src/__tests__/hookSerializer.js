@@ -1,10 +1,8 @@
 function hasAbsoluteFileName(hook) {
   const fileName = hook.hookSource ? hook.hookSource.fileName : null;
-  if (fileName == null) {
-    return false;
-  } else {
-    return fileName.indexOf('/react-devtools-shared/') > 0;
-  }
+  return fileName == null
+    ? false
+    : fileName.indexOf('/react-devtools-shared/') > 0;
 }
 
 function serializeHook(hook) {

@@ -39,17 +39,15 @@ class SwitchDateTestCase extends React.Component {
   }
 
   inputAttrs() {
-    if (this.state.fullDate) {
-      return {
-        type: 'datetime-local',
-        value: this.state.date.toISOString().replace(/\..*Z/, ''),
-      };
-    } else {
-      return {
-        type: 'date',
-        value: this.state.date.toISOString().replace(/T.*/, ''),
-      };
-    }
+    return this.state.fullDate
+      ? {
+          type: 'datetime-local',
+          value: this.state.date.toISOString().replace(/\..*Z/, ''),
+        }
+      : {
+          type: 'date',
+          value: this.state.date.toISOString().replace(/T.*/, ''),
+        };
   }
 
   onInputChange = ({target: {value}}) => {

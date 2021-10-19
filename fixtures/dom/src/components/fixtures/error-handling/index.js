@@ -38,11 +38,11 @@ class ErrorBoundary extends React.Component {
   };
   render() {
     if (this.state.didThrow) {
-      if (this.state.error) {
-        return <p>Captured an error: {this.state.error.message}</p>;
-      } else {
-        return <p>Captured an error: {String(this.state.error)}</p>;
-      }
+      return this.state.error ? (
+        <p>Captured an error: {this.state.error.message}</p>
+      ) : (
+        <p>Captured an error: {String(this.state.error)}</p>
+      );
     }
     if (this.state.shouldThrow) {
       const BadChild = this.props.badChildType;

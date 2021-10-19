@@ -1143,29 +1143,25 @@ describe('ReactCompositeComponent', () => {
 
     class Component extends React.Component {
       render() {
-        if (this.props.flipped) {
-          return (
-            <div>
-              <Static ref="static0" key="B">
-                B (ignored)
-              </Static>
-              <Static ref="static1" key="A">
-                A (ignored)
-              </Static>
-            </div>
-          );
-        } else {
-          return (
-            <div>
-              <Static ref="static0" key="A">
-                A
-              </Static>
-              <Static ref="static1" key="B">
-                B
-              </Static>
-            </div>
-          );
-        }
+        return this.props.flipped ? (
+          <div>
+            <Static ref="static0" key="B">
+              B (ignored)
+            </Static>
+            <Static ref="static1" key="A">
+              A (ignored)
+            </Static>
+          </div>
+        ) : (
+          <div>
+            <Static ref="static0" key="A">
+              A
+            </Static>
+            <Static ref="static1" key="B">
+              B
+            </Static>
+          </div>
+        );
       }
     }
 
@@ -1369,11 +1365,7 @@ describe('ReactCompositeComponent', () => {
 
     class App extends React.Component {
       render() {
-        if (this.props.stage === 1) {
-          return <UnunmountableComponent />;
-        } else {
-          return null;
-        }
+        return this.props.stage === 1 ? <UnunmountableComponent /> : null;
       }
     }
 

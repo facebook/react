@@ -119,11 +119,9 @@ describe('ReactDOMServerIntegration', () => {
           let i = 0;
           return {
             next: function() {
-              if (i++ < 3) {
-                return {value: <div key={i} />, done: false};
-              } else {
-                return {value: undefined, done: true};
-              }
+              return i++ < 3
+                ? {value: <div key={i} />, done: false}
+                : {value: undefined, done: true};
             },
           };
         },

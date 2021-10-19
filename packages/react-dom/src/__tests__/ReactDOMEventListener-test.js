@@ -110,13 +110,11 @@ describe('ReactDOMEventListener', () => {
             expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
           }
           render() {
-            if (this.state.clicked) {
-              return <span>clicked!</span>;
-            } else {
-              return (
-                <button onClick={this.handleClick}>not yet clicked</button>
-              );
-            }
+            return this.state.clicked ? (
+              <span>clicked!</span>
+            ) : (
+              <button onClick={this.handleClick}>not yet clicked</button>
+            );
           }
         }
         ReactDOM.render(<MyComponent />, container);

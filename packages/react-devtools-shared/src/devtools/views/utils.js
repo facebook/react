@@ -93,11 +93,9 @@ export function createRegExp(string: string): RegExp {
 }
 
 export function getMetaValueLabel(data: Object): string | null {
-  if (hasOwnProperty.call(data, meta.preview_long)) {
-    return data[meta.preview_long];
-  } else {
-    return formatDataForPreview(data, true);
-  }
+  return hasOwnProperty.call(data, meta.preview_long)
+    ? data[meta.preview_long]
+    : formatDataForPreview(data, true);
 }
 
 function sanitize(data: Object): void {
@@ -180,13 +178,9 @@ export function downloadFile(
 
 export function truncateText(text: string, maxLength: number): string {
   const {length} = text;
-  if (length > maxLength) {
-    return (
-      text.substr(0, Math.floor(maxLength / 2)) +
-      '…' +
-      text.substr(length - Math.ceil(maxLength / 2) - 1)
-    );
-  } else {
-    return text;
-  }
+  return length > maxLength
+    ? text.substr(0, Math.floor(maxLength / 2)) +
+        '…' +
+        text.substr(length - Math.ceil(maxLength / 2) - 1)
+    : text;
 }

@@ -175,12 +175,10 @@ var Wedge = createReactClass({
     var or = Math.max(innerRadius, outerRadius);
 
     var path;
-    if (endAngle >= startAngle + 360) {
-      path = this._createCirclePath(or, ir);
-    } else {
-      path = this._createArcPath(startAngle, endAngle, or, ir);
-    }
-
+    path =
+      endAngle >= startAngle + 360
+        ? this._createCirclePath(or, ir)
+        : this._createArcPath(startAngle, endAngle, or, ir);
     return React.createElement(Shape, assign({}, this.props, {d: path}));
   },
 });

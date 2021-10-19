@@ -18,11 +18,9 @@ function expectHookNamesToEqual(map, expectedNamesArray) {
 
 function requireText(path, encoding) {
   const {existsSync, readFileSync} = require('fs');
-  if (existsSync(path)) {
-    return Promise.resolve(readFileSync(path, encoding));
-  } else {
-    return Promise.reject(`File not found "${path}"`);
-  }
+  return existsSync(path)
+    ? Promise.resolve(readFileSync(path, encoding))
+    : Promise.reject(`File not found "${path}"`);
 }
 
 function initFetchMock() {

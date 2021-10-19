@@ -52,21 +52,20 @@ export function unstable_toMatchRenderedOutput(root, expectedJSX) {
       actualJSX = jsonChildToJSXChild(actualJSON[0]);
     } else {
       const actualJSXChildren = jsonChildrenToJSXChildren(actualJSON);
-      if (actualJSXChildren === null || typeof actualJSXChildren === 'string') {
-        actualJSX = actualJSXChildren;
-      } else {
-        actualJSX = {
-          $$typeof: REACT_ELEMENT_TYPE,
-          type: REACT_FRAGMENT_TYPE,
-          key: null,
-          ref: null,
-          props: {
-            children: actualJSXChildren,
-          },
-          _owner: null,
-          _store: __DEV__ ? {} : undefined,
-        };
-      }
+      actualJSX =
+        actualJSXChildren === null || typeof actualJSXChildren === 'string'
+          ? actualJSXChildren
+          : {
+              $$typeof: REACT_ELEMENT_TYPE,
+              type: REACT_FRAGMENT_TYPE,
+              key: null,
+              ref: null,
+              props: {
+                children: actualJSXChildren,
+              },
+              _owner: null,
+              _store: __DEV__ ? {} : undefined,
+            };
     }
   } else {
     actualJSX = jsonChildToJSXChild(actualJSON);
