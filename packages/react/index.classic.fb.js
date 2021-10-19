@@ -48,7 +48,7 @@ export {
   useEffect,
   useImperativeHandle,
   useLayoutEffect,
-  unstable_useInsertionEffect,
+  useInsertionEffect,
   useMemo,
   useMutableSource,
   useMutableSource as unstable_useMutableSource,
