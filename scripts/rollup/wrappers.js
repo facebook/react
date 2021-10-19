@@ -1,5 +1,7 @@
 'use strict';
 
+const {resolve} = require('path');
+const {readFileSync} = require('fs');
 const {bundleTypes, moduleTypes} = require('./bundles');
 const reactVersion = require('../../package.json').version;
 
@@ -24,6 +26,26 @@ const {
 } = bundleTypes;
 
 const {RECONCILER} = moduleTypes;
+
+function registerInternalModuleStart(globalName) {
+  const path = resolve(
+    __dirname,
+    '..',
+    '..',
+    'packages/shared/registerInternalModuleStart.js'
+  );
+  return String(readFileSync(path)).trim();
+}
+
+function registerInternalModuleStop(globalName) {
+  const path = resolve(
+    __dirname,
+    '..',
+    '..',
+    'packages/shared/registerInternalModuleStop.js'
+  );
+  return String(readFileSync(path)).trim();
+}
 
 const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -320,6 +342,25 @@ ${source}
 };
 
 function wrapBundle(source, bundleType, globalName, filename, moduleType) {
+  switch (bundleType) {
+    case NODE_DEV:
+    case NODE_PROFILING:
+    case FB_WWW_DEV:
+    case FB_WWW_PROFILING:
+    case RN_OSS_DEV:
+    case RN_OSS_PROFILING:
+    case RN_FB_DEV:
+    case RN_FB_PROFILING:
+      // Profiling builds should self-register internal module boundaries with DevTools.
+      // This allows the Scheduling Profiler to de-emphasize (dim) internal stack frames.
+      source = `
+        ${registerInternalModuleStart(globalName)}
+        ${source}
+        ${registerInternalModuleStop(globalName)}
+      `;
+      break;
+  }
+
   if (moduleType === RECONCILER) {
     // Standalone reconciler is only used by third-party renderers.
     // It is handled separately.

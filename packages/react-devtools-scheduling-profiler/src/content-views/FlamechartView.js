@@ -11,6 +11,7 @@ import type {
   Flamechart,
   FlamechartStackFrame,
   FlamechartStackLayer,
+  InternalModuleSourceToRanges,
 } from '../types';
 import type {
   Interaction,
@@ -20,6 +21,11 @@ import type {
   ViewRefs,
 } from '../view-base';
 
+import {
+  CHROME_WEBSTORE_EXTENSION_ID,
+  INTERNAL_EXTENSION_ID,
+  LOCAL_EXTENSION_ID,
+} from 'react-devtools-shared/src/constants';
 import {
   BackgroundColorView,
   Surface,
@@ -69,12 +75,64 @@ function hoverColorForStackFrame(stackFrame: FlamechartStackFrame): string {
   return hslaColorToString(color);
 }
 
+function isInternalModule(
+  internalModuleSourceToRanges: InternalModuleSourceToRanges,
+  flamechartStackFrame: FlamechartStackFrame,
+): boolean {
+  const {locationColumn, locationLine, scriptUrl} = flamechartStackFrame;
+
+  if (scriptUrl == null || locationColumn == null || locationLine == null) {
+    return true;
+  }
+
+  // Internal modules are only registered if DevTools was running when the profile was captured,
+  // but DevTools should also hide its own frames to avoid over-emphasizing them.
+  if (
+    // Handle webpack-internal:// sources
+    scriptUrl.includes('/react-devtools') ||
+    scriptUrl.includes('/react_devtools') ||
+    // Filter out known extension IDs
+    scriptUrl.includes(CHROME_WEBSTORE_EXTENSION_ID) ||
+    scriptUrl.includes(INTERNAL_EXTENSION_ID) ||
+    scriptUrl.includes(LOCAL_EXTENSION_ID)
+
+    // Unfortunately this won't get everything, like relatively loaded chunks or Web Worker files.
+  ) {
+    return true;
+  }
+
+  // Filter out React internal packages.
+  const ranges = internalModuleSourceToRanges.get(scriptUrl);
+  if (ranges != null) {
+    for (let i = 0; i < ranges.length; i++) {
+      const [startStackFrame, stopStackFrame] = ranges[i];
+
+      const isAfterStart =
+        locationLine > startStackFrame.lineNumber ||
+        (locationLine === startStackFrame.lineNumber &&
+          locationColumn >= startStackFrame.columnNumber);
+      const isBeforeStop =
+        locationLine < stopStackFrame.lineNumber ||
+        (locationLine === stopStackFrame.lineNumber &&
+          locationColumn <= stopStackFrame.columnNumber);
+
+      if (isAfterStart && isBeforeStop) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 class FlamechartStackLayerView extends View {
   /** Layer to display */
   _stackLayer: FlamechartStackLayer;
 
   /** A set of `stackLayer`'s frames, for efficient lookup. */
   _stackFrameSet: Set<FlamechartStackFrame>;
+
+  _internalModuleSourceToRanges: InternalModuleSourceToRanges;
 
   _intrinsicSize: Size;
 
@@ -85,11 +143,13 @@ class FlamechartStackLayerView extends View {
     surface: Surface,
     frame: Rect,
     stackLayer: FlamechartStackLayer,
+    internalModuleSourceToRanges: InternalModuleSourceToRanges,
     duration: number,
   ) {
     super(surface, frame);
     this._stackLayer = stackLayer;
     this._stackFrameSet = new Set(stackLayer);
+    this._internalModuleSourceToRanges = internalModuleSourceToRanges;
     this._intrinsicSize = {
       width: duration,
       height: FLAMECHART_FRAME_HEIGHT,
@@ -160,9 +220,19 @@ class FlamechartStackLayerView extends View {
       }
 
       const showHoverHighlight = _hoveredStackFrame === _stackLayer[i];
-      context.fillStyle = showHoverHighlight
-        ? hoverColorForStackFrame(stackFrame)
-        : defaultColorForStackFrame(stackFrame);
+
+      let textFillStyle;
+      if (isInternalModule(this._internalModuleSourceToRanges, stackFrame)) {
+        context.fillStyle = showHoverHighlight
+          ? COLORS.INTERNAL_MODULE_FRAME_HOVER
+          : COLORS.INTERNAL_MODULE_FRAME;
+        textFillStyle = COLORS.INTERNAL_MODULE_FRAME_TEXT;
+      } else {
+        context.fillStyle = showHoverHighlight
+          ? hoverColorForStackFrame(stackFrame)
+          : defaultColorForStackFrame(stackFrame);
+        textFillStyle = COLORS.TEXT_COLOR;
+      }
 
       const drawableRect = intersectionOfRects(nodeRect, visibleArea);
       context.fillRect(
@@ -172,7 +242,9 @@ class FlamechartStackLayerView extends View {
         drawableRect.size.height,
       );
 
-      drawText(name, context, nodeRect, drawableRect);
+      drawText(name, context, nodeRect, drawableRect, {
+        fillStyle: textFillStyle,
+      });
     }
 
     // Render bottom border.
@@ -264,13 +336,22 @@ export class FlamechartView extends View {
     surface: Surface,
     frame: Rect,
     flamechart: Flamechart,
+    internalModuleSourceToRanges: InternalModuleSourceToRanges,
     duration: number,
   ) {
     super(surface, frame, layeredLayout);
-    this.setDataAndUpdateSubviews(flamechart, duration);
+    this.setDataAndUpdateSubviews(
+      flamechart,
+      internalModuleSourceToRanges,
+      duration,
+    );
   }
 
-  setDataAndUpdateSubviews(flamechart: Flamechart, duration: number) {
+  setDataAndUpdateSubviews(
+    flamechart: Flamechart,
+    internalModuleSourceToRanges: InternalModuleSourceToRanges,
+    duration: number,
+  ) {
     const {surface, frame, _onHover, _hoveredStackFrame} = this;
 
     // Clear existing rows on data update
@@ -285,6 +366,7 @@ export class FlamechartView extends View {
         surface,
         frame,
         stackLayer,
+        internalModuleSourceToRanges,
         duration,
       );
       this._verticalStackView.addSubview(rowView);

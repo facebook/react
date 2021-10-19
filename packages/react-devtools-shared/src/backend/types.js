@@ -420,6 +420,11 @@ export type DevToolsHook = {
     didError?: boolean,
   ) => void,
 
+  // Scheduling Profiler internal module filtering
+  getInternalModuleRanges: () => Array<[Error, Error]>,
+  registerInternalModuleStart: (moduleStartError: Error) => void,
+  registerInternalModuleStop: (moduleStopError: Error) => void,
+
   // Testing
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
   ...

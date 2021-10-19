@@ -490,6 +490,24 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
+  const openModuleRangesStack: Array<Error> = [];
+  const moduleRanges: Array<[Error, Error]> = [];
+
+  function getInternalModuleRanges(): Array<[Error, Error]> {
+    return moduleRanges;
+  }
+
+  function registerInternalModuleStart(moduleStartError: Error) {
+    openModuleRangesStack.push(moduleStartError);
+  }
+
+  function registerInternalModuleStop(moduleStopError: Error) {
+    const moduleStartError = openModuleRangesStack.pop();
+    if (moduleStartError) {
+      moduleRanges.push([moduleStartError, moduleStopError]);
+    }
+  }
+
   // TODO: More meaningful names for "rendererInterfaces" and "renderers".
   const fiberRoots = {};
   const rendererInterfaces = new Map();
@@ -520,6 +538,13 @@ export function installHook(target: any): DevToolsHook | null {
     onCommitFiberRoot,
     onPostCommitFiberRoot,
     setStrictMode,
+
+    // Schedule Profiler runtime helpers.
+    // These internal React modules to report their own boundaries
+    // which in turn enables the profiler to dim or filter internal frames.
+    getInternalModuleRanges,
+    registerInternalModuleStart,
+    registerInternalModuleStop,
   };
 
   if (__TEST__) {

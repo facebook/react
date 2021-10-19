@@ -7,6 +7,12 @@
  * @flow strict-local
  */
 
+import {
+  CHROME_WEBSTORE_EXTENSION_ID,
+  INTERNAL_EXTENSION_ID,
+  LOCAL_EXTENSION_ID,
+} from 'react-devtools-shared/src/constants';
+
 declare var chrome: any;
 
 export const CURRENT_EXTENSION_ID = chrome.runtime.id;
@@ -14,10 +20,6 @@ export const CURRENT_EXTENSION_ID = chrome.runtime.id;
 export const EXTENSION_INSTALL_CHECK = 'extension-install-check';
 export const SHOW_DUPLICATE_EXTENSION_WARNING =
   'show-duplicate-extension-warning';
-
-export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
-export const INTERNAL_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
-export const LOCAL_EXTENSION_ID = 'ikiahnapldjmdmpkmfhjdjilojjhgcbf';
 
 export const EXTENSION_INSTALLATION_TYPE:
   | 'public'

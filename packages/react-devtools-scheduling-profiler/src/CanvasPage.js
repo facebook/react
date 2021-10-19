@@ -374,6 +374,7 @@ function AutoSizedCanvas({
       surface,
       defaultFrame,
       data.flamechart,
+      data.internalModuleSourceToRanges,
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
