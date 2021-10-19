@@ -11,6 +11,10 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 type BatchConfig = {
   transition: number,
+  transitionInfo: ?{
+    name: string,
+    startTime: number,
+  },
   _updatedFibers?: Set<Fiber>,
 };
 /**
@@ -19,6 +23,7 @@ type BatchConfig = {
  */
 const ReactCurrentBatchConfig: BatchConfig = {
   transition: 0,
+  transitionInfo: null,
 };
 
 if (__DEV__) {

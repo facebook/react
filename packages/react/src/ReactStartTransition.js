@@ -9,14 +9,32 @@
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
+import {getInteractionID} from 'shared/getInteractionID';
 
-export function startTransition(scope: () => void) {
+// Intentionally not named imports because Rollup would use dynamic dispatch for
+// CommonJS interop named imports.
+import * as Scheduler from 'scheduler';
+
+const {unstable_now: now} = Scheduler;
+
+export function startTransition(scope: () => void, name?: string) {
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
   ReactCurrentBatchConfig.transition = 1;
+  if (name) {
+    ReactCurrentBatchConfig.transitionInfo = {
+      id: getInteractionID(),
+      name,
+      startTime: now(),
+    };
+  } else {
+    ReactCurrentBatchConfig.transitionInfo = null;
+  }
   try {
     scope();
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
     if (__DEV__) {
       if (
         prevTransition !== 1 &&

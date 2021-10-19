@@ -111,6 +111,7 @@ import {
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 import {getTreeId} from './ReactFiberTreeContext.new';
+import {getInteractionID} from 'shared/getInteractionID';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1966,7 +1967,7 @@ function rerenderDeferredValue<T>(value: T): T {
   return prevValue;
 }
 
-function startTransition(setPending, callback) {
+function startTransition(setPending, callback, name) {
   const previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority),
@@ -1975,13 +1976,20 @@ function startTransition(setPending, callback) {
   setPending(true);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
   ReactCurrentBatchConfig.transition = 1;
+  ReactCurrentBatchConfig.transitionInfo = {
+    id: getInteractionID(),
+    name,
+    startTime: now(),
+  };
   try {
     setPending(false);
     callback();
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
     if (__DEV__) {
       if (
         prevTransition !== 1 &&

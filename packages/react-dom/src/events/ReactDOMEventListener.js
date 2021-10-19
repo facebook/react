@@ -117,13 +117,16 @@ function dispatchDiscreteEvent(
 ) {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
   ReactCurrentBatchConfig.transition = 0;
+  ReactCurrentBatchConfig.transitionInfo = null;
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
   }
 }
 
@@ -135,13 +138,17 @@ function dispatchContinuousEvent(
 ) {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
   ReactCurrentBatchConfig.transition = 0;
+  ReactCurrentBatchConfig.transitionInfo = null;
+
   try {
     setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
   }
 }
 
