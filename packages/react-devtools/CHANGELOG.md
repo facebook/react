@@ -2,6 +2,12 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.20.1 (October 19, 2021)
+
+#### Bugfix
+* Only show DevTools warning about unrecognized build in Chrome ([@jstejada](https://github.com/jstejada) in [#22571](https://github.com/facebook/react/pull/22571))
+* DevTools: Include Edge in browser name detection ([@jstejada](https://github.com/jstejada) in [#22584](https://github.com/facebook/react/pull/22584))
+
 ## 4.20.0 (October 15, 2021)
 
 #### Features
