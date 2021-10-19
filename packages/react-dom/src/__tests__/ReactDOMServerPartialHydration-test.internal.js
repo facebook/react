@@ -308,6 +308,64 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(deleted.length).toBe(1);
   });
 
+  it('hydrates an empty suspense boundary', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading..." />
+          <div>Sibling</div>
+        </div>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    ReactDOM.hydrateRoot(container, <App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(container.innerHTML).toContain('<div>Sibling</div>');
+  });
+
+  it('recovers when server rendered additional nodes', async () => {
+    const ref = React.createRef();
+    function App({hasB}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref}>A</span>
+            {hasB ? <span>B</span> : null}
+          </Suspense>
+          <div>Sibling</div>
+        </div>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App hasB={true} />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+
+    expect(container.innerHTML).toContain('<span>A</span>');
+    expect(container.innerHTML).toContain('<span>B</span>');
+    expect(ref.current).toBe(null);
+
+    ReactDOM.hydrateRoot(container, <App hasB={false} />);
+    expect(() => {
+      Scheduler.unstable_flushAll();
+    }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
+    jest.runAllTimers();
+
+    expect(container.innerHTML).toContain('<span>A</span>');
+    expect(container.innerHTML).not.toContain('<span>B</span>');
+    expect(ref.current).toBe(span);
+  });
+
   it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
     let suspend = false;
     const promise = new Promise(() => {});

@@ -751,6 +751,9 @@ function getNextHydratable(node) {
         ) {
           break;
         }
+        if (nodeData === SUSPENSE_END_DATA) {
+          return null;
+        }
       }
     }
   }
