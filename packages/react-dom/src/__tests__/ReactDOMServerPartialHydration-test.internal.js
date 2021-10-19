@@ -197,12 +197,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     ReactDOM.hydrateRoot(container, <App />);
-    expect(() => {
-      Scheduler.unstable_flushAll();
-    }).toErrorDev(
-      // TODO: This error should not be logged in this case. It's a false positive.
-      'Did not expect server HTML to contain the text node "Hello" in <div>.',
-    );
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Expect the server-generated HTML to stay intact.

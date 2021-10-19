@@ -24,7 +24,13 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {ChildDeletion, Placement, Hydrating} from './ReactFiberFlags';
+import {
+  ChildDeletion,
+  Placement,
+  Hydrating,
+  DidCapture,
+  ShouldCapture,
+} from './ReactFiberFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -108,11 +114,27 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   return true;
 }
 
+function shouldWarnOnFailedHydration(returnFiber: Fiber) {
+  let parent = returnFiber;
+  while (parent !== null) {
+    if (parent.tag === SuspenseComponent || parent.tag === HostRoot) {
+      if (parent.flags & DidCapture || parent.flags & ShouldCapture) {
+        // Suspended. Don't warn.
+        return false;
+      } else {
+        return true;
+      }
+    }
+    parent = parent.return;
+  }
+  return true;
+}
+
 function deleteHydratableInstance(
   returnFiber: Fiber,
   instance: HydratableInstance,
 ) {
-  if (__DEV__) {
+  if (__DEV__ && shouldWarnOnFailedHydration(returnFiber)) {
     switch (returnFiber.tag) {
       case HostRoot:
         didNotHydrateInstanceWithinContainer(
@@ -154,7 +176,7 @@ function deleteHydratableInstance(
 
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-  if (__DEV__) {
+  if (__DEV__ && shouldWarnOnFailedHydration(returnFiber)) {
     switch (returnFiber.tag) {
       case HostRoot: {
         const parentContainer = returnFiber.stateNode.containerInfo;
@@ -385,7 +407,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   const textContent: string = fiber.memoizedProps;
   const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
   if (__DEV__) {
-    if (shouldUpdate) {
+    if (shouldUpdate && shouldWarnOnFailedHydration(fiber)) {
       // We assume that prepareToHydrateHostTextInstance is called in a context where the
       // hydration parent is the parent host component of this host text.
       const returnFiber = hydrationParentFiber;
