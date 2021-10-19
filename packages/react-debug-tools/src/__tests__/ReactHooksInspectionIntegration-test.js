@@ -268,9 +268,8 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental || www
   it('should inspect the current state of all stateful hooks, including useInsertionEffect', () => {
-    const useInsertionEffect = React.unstable_useInsertionEffect;
+    const useInsertionEffect = React.useInsertionEffect;
     const outsideRef = React.createRef();
     function effect() {}
     function Foo(props) {

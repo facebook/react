@@ -47,7 +47,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
-    useInsertionEffect = React.unstable_useInsertionEffect;
+    useInsertionEffect = React.useInsertionEffect;
     useLayoutEffect = React.useLayoutEffect;
     useCallback = React.useCallback;
     useMemo = React.useMemo;
@@ -2685,7 +2685,6 @@ describe('ReactHooksWithNoopRenderer', () => {
   });
 
   describe('useInsertionEffect', () => {
-    // @gate experimental || www
     it('fires insertion effects after snapshots on update', () => {
       function CounterA(props) {
         useInsertionEffect(() => {
@@ -2745,7 +2744,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || www
     it('fires insertion effects before layout effects', () => {
       let committedText = '(empty)';
 
@@ -2808,7 +2806,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['Destroy passive [current: 0]']);
     });
 
-    // @gate experimental || www
     it('force flushes passive effects before firing new insertion effects', () => {
       let committedText = '(empty)';
 
@@ -2876,7 +2873,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    // @gate experimental || www
     it('fires all insertion effects (interleaved) before firing any layout effects', () => {
       let committedA = '(empty)';
       let committedB = '(empty)';
@@ -3043,7 +3039,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || www
     it('assumes insertion effect destroy function is either a function or undefined', () => {
       function App(props) {
         useInsertionEffect(() => {

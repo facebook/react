@@ -55,7 +55,7 @@ function initModules() {
   useRef = React.useRef;
   useDebugValue = React.useDebugValue;
   useImperativeHandle = React.useImperativeHandle;
-  useInsertionEffect = React.unstable_useInsertionEffect;
+  useInsertionEffect = React.useInsertionEffect;
   useLayoutEffect = React.useLayoutEffect;
   useOpaqueIdentifier = React.unstable_useOpaqueIdentifier;
   forwardRef = React.forwardRef;
@@ -641,7 +641,6 @@ describe('ReactDOMServerHooks', () => {
     });
   });
   describe('useInsertionEffect', () => {
-    // @gate experimental || www
     it('should warn when invoked during render', async () => {
       function Counter() {
         useInsertionEffect(() => {

@@ -92,7 +92,7 @@ export {
   useEffect,
   useImperativeHandle,
   useDebugValue,
-  useInsertionEffect as unstable_useInsertionEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useMutableSource,
