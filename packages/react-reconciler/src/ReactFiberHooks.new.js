@@ -83,7 +83,7 @@ import {
   requestUpdateLane,
   requestEventTime,
   warnIfNotCurrentlyActingEffectsInDEV,
-  warnIfNotCurrentlyActingUpdatesInDev,
+  warnIfNotCurrentlyActingUpdatesInDEV,
   markSkippedUpdateLanes,
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.new';
@@ -118,7 +118,6 @@ import {
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
-import {isActEnvironment} from './ReactFiberAct.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1679,9 +1678,7 @@ function mountEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    if (isActEnvironment(currentlyRenderingFiber)) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-    }
+    warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
   }
   if (
     __DEV__ &&
@@ -1709,9 +1706,7 @@ function updateEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    if (isActEnvironment(currentlyRenderingFiber)) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-    }
+    warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
   }
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
@@ -2198,9 +2193,7 @@ function dispatchReducerAction<S, A>(
     enqueueUpdate(fiber, queue, update, lane);
 
     if (__DEV__) {
-      if (isActEnvironment(fiber)) {
-        warnIfNotCurrentlyActingUpdatesInDev(fiber);
-      }
+      warnIfNotCurrentlyActingUpdatesInDEV(fiber);
     }
     const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
@@ -2283,9 +2276,7 @@ function dispatchSetState<S, A>(
       }
     }
     if (__DEV__) {
-      if (isActEnvironment(fiber)) {
-        warnIfNotCurrentlyActingUpdatesInDev(fiber);
-      }
+      warnIfNotCurrentlyActingUpdatesInDEV(fiber);
     }
     const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
