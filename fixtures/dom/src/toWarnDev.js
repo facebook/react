@@ -20,7 +20,7 @@ function shouldIgnoreConsoleError(format, args) {
     }
   } else {
     if (
-      format != null &&
+      format !== null &&
       typeof format.message === 'string' &&
       typeof format.stack === 'string' &&
       args.length === 0
@@ -51,7 +51,7 @@ const createMatcherFor = consoleMethod =>
         );
       }
       if (
-        options != null &&
+        options !== null &&
         (typeof options !== 'object' || Array.isArray(options))
       ) {
         throw new Error(
