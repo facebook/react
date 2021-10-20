@@ -490,21 +490,37 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
-  const openModuleRangesStack: Array<Error> = [];
-  const moduleRanges: Array<[Error, Error]> = [];
+  type StackFrameString = string;
 
-  function getInternalModuleRanges(): Array<[Error, Error]> {
+  const openModuleRangesStack: Array<StackFrameString> = [];
+  const moduleRanges: Array<[StackFrameString, StackFrameString]> = [];
+
+  function getTopStackFrameString(error: Error): StackFrameString | null {
+    const frames = error.stack.split('\n');
+    const frame = frames.length > 1 ? frames[1] : null;
+    return frame;
+  }
+
+  function getInternalModuleRanges(): Array<
+    [StackFrameString, StackFrameString],
+  > {
     return moduleRanges;
   }
 
-  function registerInternalModuleStart(moduleStartError: Error) {
-    openModuleRangesStack.push(moduleStartError);
+  function registerInternalModuleStart(error: Error) {
+    const startStackFrame = getTopStackFrameString(error);
+    if (startStackFrame !== null) {
+      openModuleRangesStack.push(startStackFrame);
+    }
   }
 
-  function registerInternalModuleStop(moduleStopError: Error) {
-    const moduleStartError = openModuleRangesStack.pop();
-    if (moduleStartError) {
-      moduleRanges.push([moduleStartError, moduleStopError]);
+  function registerInternalModuleStop(error: Error) {
+    if (openModuleRangesStack.length > 0) {
+      const startStackFrame = openModuleRangesStack.pop();
+      const stopStackFrame = getTopStackFrameString(error);
+      if (stopStackFrame !== null) {
+        moduleRanges.push([startStackFrame, stopStackFrame]);
+      }
     }
   }
 

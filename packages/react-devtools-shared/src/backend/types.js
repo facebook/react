@@ -421,7 +421,7 @@ export type DevToolsHook = {
   ) => void,
 
   // Scheduling Profiler internal module filtering
-  getInternalModuleRanges: () => Array<[Error, Error]>,
+  getInternalModuleRanges: () => Array<[string, string]>,
   registerInternalModuleStart: (moduleStartError: Error) => void,
   registerInternalModuleStop: (moduleStopError: Error) => void,
 

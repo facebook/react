@@ -106,17 +106,10 @@ function markInternalModuleRanges() {
   ) {
     const ranges = __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges();
     for (let i = 0; i < ranges.length; i++) {
-      const [startError, stopError] = ranges[i];
+      const [startStackFrame, stopStackFrame] = ranges[i];
 
-      // Don't embed Error stack parsing logic into the reconciler.
-      // Just serialize the top stack frame and let the profiler parse it.
-      const startFrames = startError.stack.split('\n');
-      const startFrame = startFrames.length > 1 ? startFrames[1] : '';
-      const stopFrames = stopError.stack.split('\n');
-      const stopFrame = stopFrames.length > 1 ? stopFrames[1] : '';
-
-      markAndClear(`--react-internal-module-start-${startFrame}`);
-      markAndClear(`--react-internal-module-stop-${stopFrame}`);
+      markAndClear(`--react-internal-module-start-${startStackFrame}`);
+      markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
     }
   }
 }
