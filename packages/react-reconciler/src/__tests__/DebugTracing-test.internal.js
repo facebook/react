@@ -140,9 +140,20 @@ describe('DebugTracing', () => {
 
   // @gate experimental && build === 'development' && enableDebugTracing
   it('should log concurrent render with suspense', async () => {
-    const fakeSuspensePromise = Promise.resolve(true);
+    let isResolved = false;
+    let resolveFakeSuspensePromise;
+    const fakeSuspensePromise = new Promise(resolve => {
+      resolveFakeSuspensePromise = () => {
+        resolve();
+        isResolved = true;
+      };
+    });
+
     function Example() {
-      throw fakeSuspensePromise;
+      if (!isResolved) {
+        throw fakeSuspensePromise;
+      }
+      return null;
     }
 
     ReactTestRenderer.act(() =>
@@ -164,7 +175,7 @@ describe('DebugTracing', () => {
 
     logs.splice(0);
 
-    await fakeSuspensePromise;
+    await ReactTestRenderer.act(async () => await resolveFakeSuspensePromise());
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 

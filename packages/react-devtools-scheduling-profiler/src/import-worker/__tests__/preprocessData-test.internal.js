@@ -1251,7 +1251,7 @@ describe('preprocessData', () => {
 
       testMarks.push(...createUserTimingData(clearedMarks));
 
-      const data = await preprocessData(testMarks);
+      const data = await act(() => preprocessData(testMarks));
       expect(data.suspenseEvents).toHaveLength(1);
       expect(data.suspenseEvents[0].promiseName).toBe('Testing displayName');
     }
@@ -1839,7 +1839,7 @@ describe('preprocessData', () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = await preprocessData(testMarks);
+          const data = await act(() => preprocessData(testMarks));
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toMatchInlineSnapshot(
             `"A component suspended during an update which caused a fallback to be shown. Consider using the Transition API to avoid hiding components after they've been mounted."`,
@@ -1897,7 +1897,7 @@ describe('preprocessData', () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = await preprocessData(testMarks);
+          const data = await act(() => preprocessData(testMarks));
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toBe(null);
         }

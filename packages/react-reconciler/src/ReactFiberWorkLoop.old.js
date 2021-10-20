@@ -2408,6 +2408,8 @@ export function pingSuspendedRoot(
   const eventTime = requestEventTime();
   markRootPinged(root, pingedLanes, eventTime);
 
+  warnIfSuspenseResolutionNotWrappedWithActDEV(root);
+
   if (
     workInProgressRoot === root &&
     isSubsetOfLanes(workInProgressRootRenderLanes, pingedLanes)
@@ -2939,6 +2941,30 @@ function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
           resetCurrentDebugFiberInDEV();
         }
       }
+    }
+  }
+}
+
+function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
+  if (__DEV__) {
+    if (
+      root.tag !== LegacyRoot &&
+      isConcurrentActEnvironment() &&
+      ReactCurrentActQueue.current === null
+    ) {
+      console.error(
+        'A suspended resource finished loading inside a test, but the event ' +
+          'was not wrapped in act(...).\n\n' +
+          'When testing, code that resolves suspended data should be wrapped ' +
+          'into act(...):\n\n' +
+          'act(() => {\n' +
+          '  /* finish loading suspended data */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see " +
+          'in the browser.' +
+          ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
+      );
     }
   }
 }
