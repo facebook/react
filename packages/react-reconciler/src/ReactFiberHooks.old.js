@@ -82,7 +82,6 @@ import {
   scheduleUpdateOnFiber,
   requestUpdateLane,
   requestEventTime,
-  warnIfNotCurrentlyActingEffectsInDEV,
   markSkippedUpdateLanes,
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
@@ -1676,9 +1675,6 @@ function mountEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-  }
   if (
     __DEV__ &&
     enableStrictEffects &&
@@ -1704,9 +1700,6 @@ function updateEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-  }
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
