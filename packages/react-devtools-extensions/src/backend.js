@@ -2,7 +2,7 @@
 // Running module factories is intentionally delayed until we know the hook exists.
 // This is to avoid issues like: https://github.com/facebook/react-devtools/issues/1039
 
-/** @flow */
+// @flow strict-local
 
 'use strict';
 
@@ -13,15 +13,16 @@ function welcome(event) {
   ) {
     return;
   }
+  const extensionId = event.data.extensionId;
 
   window.removeEventListener('message', welcome);
 
-  setup(window.__REACT_DEVTOOLS_GLOBAL_HOOK__);
+  setup(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, extensionId);
 }
 
 window.addEventListener('message', welcome);
 
-function setup(hook) {
+function setup(hook, extensionId) {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return;
@@ -55,6 +56,7 @@ function setup(hook) {
         {
           source: 'react-devtools-bridge',
           payload: {event, payload},
+          extensionId,
         },
         '*',
         transferable,
