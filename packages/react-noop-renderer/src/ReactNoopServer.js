@@ -126,6 +126,13 @@ const ReactNoopServer = ReactFizzServer({
     target.push(POP);
   },
 
+  writeCompletedRoot(
+    destination: Destination,
+    responseState: ResponseState,
+  ): boolean {
+    return true;
+  },
+
   writePlaceholder(
     destination: Destination,
     responseState: ResponseState,

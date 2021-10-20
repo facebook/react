@@ -44,6 +44,7 @@ export const pushStartCompletedSuspenseBoundary =
   $$$hostConfig.pushStartCompletedSuspenseBoundary;
 export const pushEndCompletedSuspenseBoundary =
   $$$hostConfig.pushEndCompletedSuspenseBoundary;
+export const writeCompletedRoot = $$$hostConfig.writeCompletedRoot;
 export const writePlaceholder = $$$hostConfig.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =
   $$$hostConfig.writeStartCompletedSuspenseBoundary;

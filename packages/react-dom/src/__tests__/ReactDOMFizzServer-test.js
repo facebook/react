@@ -21,6 +21,7 @@ let useSyncExternalStore;
 let useSyncExternalStoreExtra;
 let PropTypes;
 let textCache;
+let window;
 let document;
 let writable;
 let CSPnonce = null;
@@ -56,6 +57,7 @@ describe('ReactDOMFizzServer', () => {
         runScripts: 'dangerously',
       },
     );
+    window = jsdom.window;
     document = jsdom.window.document;
     container = document.getElementById('container');
 
@@ -338,11 +340,18 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    let bootstrapped = false;
+    window.__INIT__ = function() {
+      bootstrapped = true;
+      // Attempt to hydrate the content.
+      ReactDOM.hydrateRoot(container, <App isClient={true} />);
+    };
+
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
-
         {
+          bootstrapScriptContent: '__INIT__();',
           onError(x) {
             loggedErrors.push(x);
           },
@@ -351,10 +360,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
+    expect(bootstrapped).toBe(true);
 
-    // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App isClient={true} />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -507,17 +514,27 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    let bootstrapped = false;
+    window.__INIT__ = function() {
+      bootstrapped = true;
+      // Attempt to hydrate the content.
+      ReactDOM.hydrateRoot(container, <App />);
+    };
+
     await act(async () => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        bootstrapScriptContent: '__INIT__();',
+      });
       pipe(writable);
     });
 
     // We're still showing a fallback.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
+    // We already bootstrapped.
+    expect(bootstrapped).toBe(true);
+
     // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.

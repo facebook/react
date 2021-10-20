@@ -36,6 +36,7 @@ import {
   closeWithError,
 } from './ReactServerStreamConfig';
 import {
+  writeCompletedRoot,
   writePlaceholder,
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
@@ -1779,6 +1780,7 @@ function flushCompletedQueues(
     if (completedRootSegment !== null && request.pendingRootTasks === 0) {
       flushSegment(request, destination, completedRootSegment);
       request.completedRootSegment = null;
+      writeCompletedRoot(destination, request.responseState);
     }
 
     // We emit client rendering instructions for already emitted boundaries first.
