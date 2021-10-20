@@ -216,7 +216,7 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
     // Hydration should not change anything.
-    expect(container.textContent).toBe('HelloClient');
+    expect(container.textContent).toBe('HelloHelloHello');
   });
 
   it('calls the hydration callbacks after hydration or deletion', async () => {
