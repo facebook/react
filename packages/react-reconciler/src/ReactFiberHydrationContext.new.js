@@ -90,6 +90,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  debugger;
   return true;
 }
 
@@ -105,6 +106,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  debugger;
   return true;
 }
 
@@ -314,7 +316,9 @@ function tryHydrate(fiber, nextInstance) {
 }
 
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
+  debugger;
   if (!isHydrating) {
+    debugger;
     return;
   }
   let nextInstance = nextHydratableInstance;
@@ -322,6 +326,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
     isHydrating = false;
+    debugger;
     hydrationParentFiber = fiber;
     return;
   }
@@ -336,6 +341,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
       isHydrating = false;
+      debugger;
       hydrationParentFiber = fiber;
       return;
     }
@@ -498,6 +504,7 @@ function popHydrationState(fiber: Fiber): boolean {
     // siblings.
     popToNextHostParent(fiber);
     isHydrating = true;
+    debugger;
     return false;
   }
 
@@ -537,6 +544,7 @@ function resetHydrationState(): void {
   hydrationParentFiber = null;
   nextHydratableInstance = null;
   isHydrating = false;
+  debugger;
 }
 
 function getIsHydrating(): boolean {

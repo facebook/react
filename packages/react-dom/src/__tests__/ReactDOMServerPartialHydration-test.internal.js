@@ -176,6 +176,7 @@ describe('ReactDOMServerPartialHydration', () => {
       return (
         <Suspense fallback="Loading...">
           <Child />
+          <Child />
           <Suspense fallback="Loading...">
             <div>Hello</div>
           </Suspense>
@@ -191,7 +192,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    expect(container.textContent).toBe('HelloHello');
+    expect(container.textContent).toBe('HelloHelloHello');
 
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
@@ -206,7 +207,7 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
 
     // Expect the server-generated HTML to stay intact.
-    expect(container.textContent).toBe('HelloHello');
+    expect(container.textContent).toBe('HelloHelloHello');
 
     // Resolving the promise should continue hydration
     suspend = false;
@@ -215,7 +216,7 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
     // Hydration should not change anything.
-    expect(container.textContent).toBe('HelloHello');
+    expect(container.textContent).toBe('HelloClient');
   });
 
   it('calls the hydration callbacks after hydration or deletion', async () => {
