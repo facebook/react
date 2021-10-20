@@ -341,24 +341,33 @@ ${source}
   },
 };
 
-function wrapBundle(source, bundleType, globalName, filename, moduleType) {
-  switch (bundleType) {
-    case NODE_DEV:
-    case NODE_PROFILING:
-    case FB_WWW_DEV:
-    case FB_WWW_PROFILING:
-    case RN_OSS_DEV:
-    case RN_OSS_PROFILING:
-    case RN_FB_DEV:
-    case RN_FB_PROFILING:
-      // Profiling builds should self-register internal module boundaries with DevTools.
-      // This allows the Scheduling Profiler to de-emphasize (dim) internal stack frames.
-      source = `
-        ${registerInternalModuleStart(globalName)}
-        ${source}
-        ${registerInternalModuleStop(globalName)}
-      `;
-      break;
+function wrapBundle(
+  source,
+  bundleType,
+  globalName,
+  filename,
+  moduleType,
+  wrapWithModuleBoundaries
+) {
+  if (wrapWithModuleBoundaries) {
+    switch (bundleType) {
+      case NODE_DEV:
+      case NODE_PROFILING:
+      case FB_WWW_DEV:
+      case FB_WWW_PROFILING:
+      case RN_OSS_DEV:
+      case RN_OSS_PROFILING:
+      case RN_FB_DEV:
+      case RN_FB_PROFILING:
+        // Certain DEV and Profiling bundles should self-register their own module boundaries with DevTools.
+        // This allows the Scheduling Profiler to de-emphasize (dim) internal stack frames.
+        source = `
+          ${registerInternalModuleStart(globalName)}
+          ${source}
+          ${registerInternalModuleStop(globalName)}
+        `;
+        break;
+    }
   }
 
   if (moduleType === RECONCILER) {
