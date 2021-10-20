@@ -44,7 +44,7 @@ Object {
   "timestamp": 16,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -91,7 +91,7 @@ Object {
   "timestamp": 15,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -127,7 +127,7 @@ Object {
   "timestamp": 18,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -190,7 +190,7 @@ Object {
   "timestamp": 12,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -258,7 +258,7 @@ Object {
   "timestamp": 25,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -307,7 +307,7 @@ Object {
   "timestamp": 35,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -346,7 +346,7 @@ Object {
   "timestamp": 45,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -455,7 +455,7 @@ Object {
           "timestamp": 12,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -562,7 +562,7 @@ Object {
           "timestamp": 25,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -632,7 +632,7 @@ Object {
           "timestamp": 35,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -683,7 +683,7 @@ Object {
           "timestamp": 45,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -954,7 +954,7 @@ Object {
           "timestamp": 11,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1042,7 +1042,7 @@ Object {
           "timestamp": 22,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1149,7 +1149,7 @@ Object {
           "timestamp": 35,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1359,7 +1359,7 @@ Object {
       "timestamp": 13,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -1405,7 +1405,7 @@ Object {
       "timestamp": 34,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -1441,7 +1441,7 @@ Object {
       "timestamp": 44,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -1624,7 +1624,7 @@ Object {
       "timestamp": 24,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 13,
           "key": null,
@@ -1714,7 +1714,7 @@ Object {
       "timestamp": 34,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 7,
           "key": null,
@@ -1892,7 +1892,7 @@ Object {
           "timestamp": 13,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1962,7 +1962,7 @@ Object {
           "timestamp": 34,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -2013,7 +2013,7 @@ Object {
           "timestamp": 44,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -2256,7 +2256,7 @@ Object {
           "timestamp": 24,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 13,
               "key": null,
@@ -2343,7 +2343,7 @@ Object {
           "timestamp": 34,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 7,
               "key": null,
@@ -2464,7 +2464,7 @@ Object {
       "timestamp": 0,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -2541,7 +2541,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -2584,7 +2584,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -2699,7 +2699,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -2740,7 +2740,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -2811,7 +2811,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -2878,7 +2878,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -3029,7 +3029,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -3094,7 +3094,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -3271,7 +3271,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3441,7 +3441,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3523,7 +3523,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3604,7 +3604,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3739,7 +3739,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -4011,7 +4011,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -4147,7 +4147,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -4282,7 +4282,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
