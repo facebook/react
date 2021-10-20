@@ -59,6 +59,7 @@ export const isPrimaryRenderer = true;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
+  startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
@@ -71,12 +72,22 @@ export type ResponseState = {
   ...
 };
 
+const startInlineScript = stringToPrecomputedChunk('<script>');
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
+  nonce: string | void,
 ): ResponseState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
+  const inlineScriptWithNonce =
+    nonce === undefined
+      ? startInlineScript
+      : stringToPrecomputedChunk(
+          '<script nonce="' + escapeTextForBrowser(nonce) + '">',
+        );
   return {
+    startInlineScript: inlineScriptWithNonce,
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
@@ -1689,9 +1700,9 @@ const clientRenderFunction =
   'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
-  '<script>' + completeSegmentFunction + ';$RS("',
+  completeSegmentFunction + ';$RS("',
 );
-const completeSegmentScript1Partial = stringToPrecomputedChunk('<script>$RS("');
+const completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 const completeSegmentScript2 = stringToPrecomputedChunk('","');
 const completeSegmentScript3 = stringToPrecomputedChunk('")</script>');
 
@@ -1700,6 +1711,7 @@ export function writeCompletedSegmentInstruction(
   responseState: ResponseState,
   contentSegmentID: number,
 ): boolean {
+  writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentCompleteSegmentFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentCompleteSegmentFunction = true;
@@ -1718,11 +1730,9 @@ export function writeCompletedSegmentInstruction(
 }
 
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
-  '<script>' + completeBoundaryFunction + ';$RC("',
+  completeBoundaryFunction + ';$RC("',
 );
-const completeBoundaryScript1Partial = stringToPrecomputedChunk(
-  '<script>$RC("',
-);
+const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3 = stringToPrecomputedChunk('")</script>');
 
@@ -1732,6 +1742,7 @@ export function writeCompletedBoundaryInstruction(
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
 ): boolean {
+  writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentCompleteBoundaryFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentCompleteBoundaryFunction = true;
@@ -1756,9 +1767,9 @@ export function writeCompletedBoundaryInstruction(
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
-  '<script>' + clientRenderFunction + ';$RX("',
+  clientRenderFunction + ';$RX("',
 );
-const clientRenderScript1Partial = stringToPrecomputedChunk('<script>$RX("');
+const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
 const clientRenderScript2 = stringToPrecomputedChunk('")</script>');
 
 export function writeClientRenderBoundaryInstruction(
@@ -1766,6 +1777,7 @@ export function writeClientRenderBoundaryInstruction(
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
 ): boolean {
+  writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentClientRenderFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentClientRenderFunction = true;

@@ -26,6 +26,7 @@ import {
 type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
+  nonce?: string,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onCompleteShell?: () => void,
@@ -39,7 +40,10 @@ function renderToReadableStream(
 ): ReadableStream {
   const request = createRequest(
     children,
-    createResponseState(options ? options.identifierPrefix : undefined),
+    createResponseState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+    ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,

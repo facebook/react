@@ -23,6 +23,7 @@ let PropTypes;
 let textCache;
 let document;
 let writable;
+let CSPnonce = null;
 let container;
 let buffer = '';
 let hasErrored = false;
@@ -91,7 +92,10 @@ describe('ReactDOMFizzServer', () => {
     fakeBody.innerHTML = bufferedContent;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
-      if (node.nodeName === 'SCRIPT') {
+      if (
+        node.nodeName === 'SCRIPT' &&
+        (CSPnonce === null || node.getAttribute('nonce') === CSPnonce)
+      ) {
         const script = document.createElement('script');
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
@@ -279,6 +283,38 @@ describe('ReactDOMFizzServer', () => {
         <div>world!</div>
       </div>,
     );
+  });
+
+  // @gate experimental
+  it('should support nonce scripts', async () => {
+    CSPnonce = 'R4nd0m';
+    try {
+      let resolve;
+      const Lazy = React.lazy(() => {
+        return new Promise(r => {
+          resolve = r;
+        });
+      });
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <div>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Lazy text="Hello" />
+            </Suspense>
+          </div>,
+          {nonce: 'R4nd0m'},
+        );
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+      await act(async () => {
+        resolve({default: Text});
+      });
+      expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    } finally {
+      CSPnonce = null;
+    }
   });
 
   // @gate experimental
