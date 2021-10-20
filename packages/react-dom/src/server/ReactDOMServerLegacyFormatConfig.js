@@ -29,6 +29,7 @@ export const isPrimaryRenderer = false;
 
 export type ResponseState = {
   // Keep this in sync with ReactDOMServerFormatConfig
+  startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
@@ -46,9 +47,10 @@ export function createResponseState(
   generateStaticMarkup: boolean,
   identifierPrefix: string | void,
 ): ResponseState {
-  const responseState = createResponseStateImpl(identifierPrefix);
+  const responseState = createResponseStateImpl(identifierPrefix, undefined);
   return {
     // Keep this in sync with ReactDOMServerFormatConfig
+    startInlineScript: responseState.startInlineScript,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
