@@ -162,6 +162,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
   it('can hydrate siblings of a suspended component without errors', async () => {
     let suspend = false;
+    let client = false;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
     function Child() {
@@ -172,12 +173,22 @@ describe('ReactDOMServerPartialHydration', () => {
       }
     }
 
+    function RealDifference() {
+      if (client) {
+        return <article>Hello</article>;
+      } else {
+        return <section>Hello</section>;
+      }
+    }
+
     function App() {
       return (
         <Suspense fallback="Loading...">
           <Child />
+          <Child />
+          <Suspense fallback="Loading...">Hello</Suspense>
           <Suspense fallback="Loading...">
-            <div>Hello</div>
+            <RealDifference />
           </Suspense>
         </Suspense>
       );
@@ -191,31 +202,32 @@ describe('ReactDOMServerPartialHydration', () => {
 
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    expect(container.textContent).toBe('HelloHello');
+    expect(container.textContent).toBe('HelloHelloHelloHello');
 
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
+    client = true;
     ReactDOM.hydrateRoot(container, <App />);
-    expect(() => {
-      Scheduler.unstable_flushAll();
-    }).toErrorDev(
-      // TODO: This error should not be logged in this case. It's a false positive.
-      'Did not expect server HTML to contain the text node "Hello" in <div>.',
-    );
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Expect the server-generated HTML to stay intact.
-    expect(container.textContent).toBe('HelloHello');
+    expect(container.textContent).toBe('HelloHelloHelloHello');
 
     // Resolving the promise should continue hydration
     suspend = false;
     resolve();
     await promise;
-    Scheduler.unstable_flushAll();
+
+    expect(() => {
+      Scheduler.unstable_flushAll();
+    }).toErrorDev(
+      'Warning: Expected server HTML to contain a matching <article> in <div>',
+    );
     jest.runAllTimers();
     // Hydration should not change anything.
-    expect(container.textContent).toBe('HelloHello');
+    expect(container.textContent).toBe('HelloHelloHelloHello');
   });
 
   it('calls the hydration callbacks after hydration or deletion', async () => {

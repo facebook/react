@@ -1003,13 +1003,13 @@ function completeWork(
     }
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
+      const wasHydrated = popHydrationState(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
 
       if (enableSuspenseServerRenderer) {
         if (nextState !== null && nextState.dehydrated !== null) {
           // We might be inside a hydration state the first time we're picking up this
           // Suspense boundary, and also after we've reentered it for further hydration.
-          const wasHydrated = popHydrationState(workInProgress);
           if (current === null) {
             if (!wasHydrated) {
               throw new Error(
