@@ -756,8 +756,8 @@ export default function(babel, opts = {}) {
           path.traverse(HookCallsVisitor);
         },
         exit(path) {
-          const registrations = registrationsByProgramPath.get(path);
-          if (registrations === undefined) {
+          const registrations = Array.from(registrationsByProgramPath.values()).flatMap(p => p);
+          if (registrations === undefined || registrations.length === 0) {
             return;
           }
 
