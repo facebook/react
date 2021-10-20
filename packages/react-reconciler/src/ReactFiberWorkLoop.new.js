@@ -236,7 +236,10 @@ import {
 } from './ReactFiberDevToolsHook.new';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 import {releaseCache} from './ReactFiberCacheComponent.new';
-import {isActEnvironment} from './ReactFiberAct.new';
+import {
+  isLegacyActEnvironment,
+  isConcurrentActEnvironment,
+} from './ReactFiberAct.new';
 
 const ceil = Math.ceil;
 
@@ -2855,8 +2858,12 @@ function shouldForceFlushFallbacksInDEV() {
 
 export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
+    const isActEnvironment =
+      fiber.mode & ConcurrentMode
+        ? isConcurrentActEnvironment()
+        : isLegacyActEnvironment(fiber);
     if (
-      isActEnvironment(fiber) &&
+      isActEnvironment &&
       (fiber.mode & StrictLegacyMode) !== NoMode &&
       ReactCurrentActQueue.current === null
     ) {
@@ -2879,8 +2886,12 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
 
 export function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
+    const isActEnvironment =
+      fiber.mode & ConcurrentMode
+        ? isConcurrentActEnvironment()
+        : isLegacyActEnvironment(fiber);
     if (
-      isActEnvironment(fiber) &&
+      isActEnvironment &&
       executionContext === NoContext &&
       ReactCurrentActQueue.current === null
     ) {
