@@ -2,6 +2,12 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.20.2 (October 20, 2021)
+
+#### Bugfix
+* Dev Tools: Relax constraint on passing extensionId for backend init ([@jstejada](https://github.com/jstejada) in [#22597](https://github.com/facebook/react/pull/22597))
+* DevTools: Fix passing extensionId in evaled postMessage calls ([@jstejada](https://github.com/jstejada) in [#22590](https://github.com/facebook/react/pull/22590))
+
 ## 4.20.1 (October 19, 2021)
 
 #### Bugfix
