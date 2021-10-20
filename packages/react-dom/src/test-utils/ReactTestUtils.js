@@ -178,7 +178,7 @@ function findAllInRenderedTree(inst, test) {
 }
 
 /**
- * Finds all instance of components in the rendered tree that are DOM
+ * Finds all instances of components in the rendered tree that are DOM
  * components with the class name matching `className`.
  * @return {array} an array of all the matches.
  */
@@ -233,7 +233,7 @@ function findRenderedDOMComponentWithClass(root, className) {
 }
 
 /**
- * Finds all instance of components in the rendered tree that are DOM
+ * Finds all instances of components in the rendered tree that are DOM
  * components with the tag name matching `tagName`.
  * @return {array} an array of all the matches.
  */
