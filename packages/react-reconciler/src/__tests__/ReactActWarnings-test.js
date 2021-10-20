@@ -127,4 +127,64 @@ describe('act warnings', () => {
       expect(root).toMatchRenderedOutput('1');
     });
   });
+
+  test('warns if root update is not wrapped', () => {
+    withActEnvironment(true, () => {
+      const root = ReactNoop.createRoot();
+      expect(() => root.render('Hi')).toErrorDev(
+        // TODO: Better error message that doesn't make it look like "Root" is
+        // the name of a custom component
+        'An update to Root inside a test was not wrapped in act(...)',
+        {withoutStack: true},
+      );
+    });
+  });
+
+  // @gate __DEV__
+  test('warns if class update is not wrapped', () => {
+    let app;
+    class App extends React.Component {
+      state = {count: 0};
+      render() {
+        app = this;
+        return <Text text={this.state.count} />;
+      }
+    }
+
+    withActEnvironment(true, () => {
+      const root = ReactNoop.createRoot();
+      act(() => {
+        root.render(<App />);
+      });
+      expect(() => app.setState({count: 1})).toErrorDev(
+        'An update to App inside a test was not wrapped in act(...)',
+      );
+    });
+  });
+
+  // @gate __DEV__
+  test('warns even if update is synchronous', () => {
+    let setState;
+    function App() {
+      const [state, _setState] = useState(0);
+      setState = _setState;
+      return <Text text={state} />;
+    }
+
+    withActEnvironment(true, () => {
+      const root = ReactNoop.createRoot();
+      act(() => root.render(<App />));
+      expect(Scheduler).toHaveYielded([0]);
+      expect(root).toMatchRenderedOutput('0');
+
+      // Even though this update is synchronous, we should still fire a warning,
+      // because it could have spawned additional asynchronous work
+      expect(() => ReactNoop.flushSync(() => setState(1))).toErrorDev(
+        'An update to App inside a test was not wrapped in act(...)',
+      );
+
+      expect(Scheduler).toHaveYielded([1]);
+      expect(root).toMatchRenderedOutput('1');
+    });
+  });
 });

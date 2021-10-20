@@ -83,7 +83,6 @@ import {
   requestUpdateLane,
   requestEventTime,
   warnIfNotCurrentlyActingEffectsInDEV,
-  warnIfNotCurrentlyActingUpdatesInDEV,
   markSkippedUpdateLanes,
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
@@ -2191,10 +2190,6 @@ function dispatchReducerAction<S, A>(
     enqueueRenderPhaseUpdate(queue, update);
   } else {
     enqueueUpdate(fiber, queue, update, lane);
-
-    if (__DEV__) {
-      warnIfNotCurrentlyActingUpdatesInDEV(fiber);
-    }
     const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
     if (root !== null) {
@@ -2274,9 +2269,6 @@ function dispatchSetState<S, A>(
           }
         }
       }
-    }
-    if (__DEV__) {
-      warnIfNotCurrentlyActingUpdatesInDEV(fiber);
     }
     const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);

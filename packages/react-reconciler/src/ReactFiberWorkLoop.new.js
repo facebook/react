@@ -497,6 +497,8 @@ export function scheduleUpdateOnFiber(
       }
     }
 
+    warnIfUpdatesNotWrappedWithActDEV(fiber);
+
     if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
       if (
         (executionContext & CommitContext) !== NoContext &&
@@ -2884,17 +2886,36 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   }
 }
 
-export function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
+function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
   if (__DEV__) {
-    const isActEnvironment =
-      fiber.mode & ConcurrentMode
-        ? isConcurrentActEnvironment()
-        : isLegacyActEnvironment(fiber);
-    if (
-      isActEnvironment &&
-      executionContext === NoContext &&
-      ReactCurrentActQueue.current === null
-    ) {
+    if (fiber.mode & ConcurrentMode) {
+      if (!isConcurrentActEnvironment()) {
+        // Not in an act environment. No need to warn.
+        return;
+      }
+    } else {
+      // Legacy mode has additional cases where we suppress a warning.
+      if (!isLegacyActEnvironment(fiber)) {
+        // Not in an act environment. No need to warn.
+        return;
+      }
+      if (executionContext !== NoContext) {
+        // Legacy mode doesn't warn if the update is batched, i.e.
+        // batchedUpdates or flushSync.
+        return;
+      }
+      if (
+        fiber.tag !== FunctionComponent &&
+        fiber.tag !== ForwardRef &&
+        fiber.tag !== SimpleMemoComponent
+      ) {
+        // For backwards compatibility with pre-hooks code, legacy mode only
+        // warns for updates that originate from a hook.
+        return;
+      }
+    }
+
+    if (ReactCurrentActQueue.current === null) {
       const previousFiber = ReactCurrentFiberCurrent;
       try {
         setCurrentDebugFiberInDEV(fiber);

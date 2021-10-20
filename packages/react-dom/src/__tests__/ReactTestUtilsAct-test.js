@@ -32,18 +32,31 @@ describe('ReactTestUtils.act()', () => {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
       concurrentRoot = ReactDOM.createRoot(dom);
-      concurrentRoot.render(el);
+      if (__DEV__) {
+        act(() => concurrentRoot.render(el));
+      } else {
+        concurrentRoot.render(el);
+      }
     };
 
     const unmountConcurrent = _dom => {
-      if (concurrentRoot !== null) {
-        concurrentRoot.unmount();
-        concurrentRoot = null;
+      if (__DEV__) {
+        act(() => {
+          if (concurrentRoot !== null) {
+            concurrentRoot.unmount();
+            concurrentRoot = null;
+          }
+        });
+      } else {
+        if (concurrentRoot !== null) {
+          concurrentRoot.unmount();
+          concurrentRoot = null;
+        }
       }
     };
 
     const rerenderConcurrent = el => {
-      concurrentRoot.render(el);
+      act(() => concurrentRoot.render(el));
     };
 
     runActTests(
@@ -98,22 +111,29 @@ describe('ReactTestUtils.act()', () => {
       ]);
     });
 
+    // @gate __DEV__
     it('does not warn in concurrent mode', () => {
       const root = ReactDOM.createRoot(document.createElement('div'));
-      root.render(<App />);
+      act(() => root.render(<App />));
       Scheduler.unstable_flushAll();
     });
 
     it('warns in concurrent mode if root is strict', () => {
+      // TODO: We don't need this error anymore in concurrent mode because
+      // effects can only be scheduled as the result of an update, and we now
+      // enforce all updates must be wrapped with act, not just hook updates.
       expect(() => {
         const root = ReactDOM.createRoot(document.createElement('div'), {
           unstable_strictMode: true,
         });
         root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toErrorDev([
+      }).toErrorDev(
+        'An update to Root inside a test was not wrapped in act(...)',
+        {withoutStack: true},
+      );
+      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
+      );
     });
   });
 });

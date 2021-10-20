@@ -23,12 +23,17 @@ describe('isomorphic act()', () => {
     act = React.unstable_act;
   });
 
+  beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
   // @gate __DEV__
   test('bypasses queueMicrotask', async () => {
     const root = ReactNoop.createRoot();
 
     // First test what happens without wrapping in act. This update would
     // normally be queued in a microtask.
+    global.IS_REACT_ACT_ENVIRONMENT = false;
     ReactNoop.unstable_runWithPriority(DiscreteEventPriority, () => {
       root.render('A');
     });
@@ -40,6 +45,7 @@ describe('isomorphic act()', () => {
 
     // Now do the same thing but wrap the update with `act`. No
     // `await` necessary.
+    global.IS_REACT_ACT_ENVIRONMENT = true;
     act(() => {
       ReactNoop.unstable_runWithPriority(DiscreteEventPriority, () => {
         root.render('B');
