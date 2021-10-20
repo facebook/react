@@ -14,6 +14,7 @@ import * as React from 'react';
 import {useContext} from 'react';
 import {ProfilerContext} from './ProfilerContext';
 import styles from './Updaters.css';
+import {ElementTypeRoot} from '../../../types';
 
 export type Props = {|
   commitTree: CommitTree,
@@ -26,8 +27,9 @@ export default function Updaters({commitTree, updaters}: Props) {
   const children =
     updaters.length > 0 ? (
       updaters.map<React$Node>((serializedElement: SerializedElement) => {
-        const {displayName, id, key} = serializedElement;
-        const isVisibleInTree = commitTree.nodes.has(id);
+        const {displayName, id, key, type} = serializedElement;
+        const isVisibleInTree =
+          commitTree.nodes.has(id) && type !== ElementTypeRoot;
         if (isVisibleInTree) {
           return (
             <button
