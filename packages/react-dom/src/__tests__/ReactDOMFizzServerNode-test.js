@@ -83,6 +83,24 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should emit bootstrap script src at the end', () => {
+    const {writable, output} = getTestWritable();
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      <div>hello world</div>,
+      {
+        bootstrapScriptContent: 'INIT();',
+        bootstrapScripts: ['init.js'],
+        bootstrapModules: ['init.mjs'],
+      },
+    );
+    pipe(writable);
+    jest.runAllTimers();
+    expect(output.result).toMatchInlineSnapshot(
+      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+    );
+  });
+
+  // @gate experimental
   it('should start writing after pipe', () => {
     const {writable, output} = getTestWritable();
     const {pipe} = ReactDOMFizzServer.renderToPipeableStream(

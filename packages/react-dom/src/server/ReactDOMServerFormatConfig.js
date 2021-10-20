@@ -59,6 +59,7 @@ export const isPrimaryRenderer = true;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
+  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
@@ -73,11 +74,19 @@ export type ResponseState = {
 };
 
 const startInlineScript = stringToPrecomputedChunk('<script>');
+const endInlineScript = stringToPrecomputedChunk('</script>');
+
+const startScriptSrc = stringToPrecomputedChunk('<script src="');
+const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
+const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
   nonce: string | void,
+  bootstrapScriptContent: string | void,
+  bootstrapScripts: Array<string> | void,
+  bootstrapModules: Array<string> | void,
 ): ResponseState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   const inlineScriptWithNonce =
@@ -86,7 +95,34 @@ export function createResponseState(
       : stringToPrecomputedChunk(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
+  const bootstrapChunks = [];
+  if (bootstrapScriptContent !== undefined) {
+    bootstrapChunks.push(
+      inlineScriptWithNonce,
+      stringToChunk(escapeTextForBrowser(bootstrapScriptContent)),
+      endInlineScript,
+    );
+  }
+  if (bootstrapScripts !== undefined) {
+    for (let i = 0; i < bootstrapScripts.length; i++) {
+      bootstrapChunks.push(
+        startScriptSrc,
+        stringToChunk(escapeTextForBrowser(bootstrapScripts[i])),
+        endAsyncScript,
+      );
+    }
+  }
+  if (bootstrapModules !== undefined) {
+    for (let i = 0; i < bootstrapModules.length; i++) {
+      bootstrapChunks.push(
+        startModuleSrc,
+        stringToChunk(escapeTextForBrowser(bootstrapModules[i])),
+        endAsyncScript,
+      );
+    }
+  }
   return {
+    bootstrapChunks: bootstrapChunks,
     startInlineScript: inlineScriptWithNonce,
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
@@ -1368,6 +1404,18 @@ export function pushEndInstance(
       target.push(endTag1, stringToChunk(type), endTag2);
     }
   }
+}
+
+export function writeCompletedRoot(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  const bootstrapChunks = responseState.bootstrapChunks;
+  let result = true;
+  for (let i = 0; i < bootstrapChunks.length; i++) {
+    result = writeChunk(destination, bootstrapChunks[i]);
+  }
+  return result;
 }
 
 // Structural Nodes

@@ -164,6 +164,13 @@ export function pushEndInstance(
   target.push(END);
 }
 
+export function writeCompletedRoot(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return true;
+}
+
 // IDs are formatted as little endian Uint16
 function formatID(id: number): Uint8Array {
   if (id > 0xffff) {

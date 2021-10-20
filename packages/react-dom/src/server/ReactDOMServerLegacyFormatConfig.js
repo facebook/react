@@ -29,6 +29,7 @@ export const isPrimaryRenderer = false;
 
 export type ResponseState = {
   // Keep this in sync with ReactDOMServerFormatConfig
+  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
@@ -50,6 +51,7 @@ export function createResponseState(
   const responseState = createResponseStateImpl(identifierPrefix, undefined);
   return {
     // Keep this in sync with ReactDOMServerFormatConfig
+    bootstrapChunks: responseState.bootstrapChunks,
     startInlineScript: responseState.startInlineScript,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
@@ -95,6 +97,7 @@ export {
   writeStartPendingSuspenseBoundary,
   writeEndPendingSuspenseBoundary,
   writePlaceholder,
+  writeCompletedRoot,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
