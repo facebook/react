@@ -17,8 +17,6 @@ import {
 } from '../../constants';
 import REACT_VERSION from 'shared/ReactVersion';
 
-global.IS_REACT_ACT_ENVIRONMENT = true;
-
 describe('getLanesFromTransportDecimalBitmask', () => {
   it('should return array of lane numbers from bitmask string', () => {
     expect(getLanesFromTransportDecimalBitmask('1')).toEqual([0]);
@@ -210,6 +208,8 @@ describe('preprocessData', () => {
     tid = 0;
     pid = 0;
     startTime = 0;
+
+    global.IS_REACT_ACT_ENVIRONMENT = true;
   });
 
   afterEach(() => {
@@ -1251,7 +1251,7 @@ describe('preprocessData', () => {
 
       testMarks.push(...createUserTimingData(clearedMarks));
 
-      const data = await preprocessData(testMarks);
+      const data = await act(() => preprocessData(testMarks));
       expect(data.suspenseEvents).toHaveLength(1);
       expect(data.suspenseEvents[0].promiseName).toBe('Testing displayName');
     }
@@ -1367,6 +1367,8 @@ describe('preprocessData', () => {
 
           const root = ReactDOM.createRoot(document.createElement('div'));
 
+          // Temporarily turn off the act environment, since we're intentionally using Scheduler instead.
+          global.IS_REACT_ACT_ENVIRONMENT = false;
           React.startTransition(() => {
             // Start rendering an async update (but don't finish).
             root.render(
@@ -1837,7 +1839,7 @@ describe('preprocessData', () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = await preprocessData(testMarks);
+          const data = await act(() => preprocessData(testMarks));
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toMatchInlineSnapshot(
             `"A component suspended during an update which caused a fallback to be shown. Consider using the Transition API to avoid hiding components after they've been mounted."`,
@@ -1895,7 +1897,7 @@ describe('preprocessData', () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = await preprocessData(testMarks);
+          const data = await act(() => preprocessData(testMarks));
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toBe(null);
         }

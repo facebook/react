@@ -236,6 +236,10 @@ import {
 } from './ReactFiberDevToolsHook.new';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 import {releaseCache} from './ReactFiberCacheComponent.new';
+import {
+  isLegacyActEnvironment,
+  isConcurrentActEnvironment,
+} from './ReactFiberAct.new';
 
 const ceil = Math.ceil;
 
@@ -492,6 +496,8 @@ export function scheduleUpdateOnFiber(
         addFiberToLanesMap(root, fiber, lane);
       }
     }
+
+    warnIfUpdatesNotWrappedWithActDEV(fiber);
 
     if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
       if (
@@ -2402,6 +2408,8 @@ export function pingSuspendedRoot(
   const eventTime = requestEventTime();
   markRootPinged(root, pingedLanes, eventTime);
 
+  warnIfSuspenseResolutionNotWrappedWithActDEV(root);
+
   if (
     workInProgressRoot === root &&
     isSubsetOfLanes(workInProgressRootRenderLanes, pingedLanes)
@@ -2854,7 +2862,12 @@ function shouldForceFlushFallbacksInDEV() {
 
 export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
+    const isActEnvironment =
+      fiber.mode & ConcurrentMode
+        ? isConcurrentActEnvironment()
+        : isLegacyActEnvironment(fiber);
     if (
+      isActEnvironment &&
       (fiber.mode & StrictLegacyMode) !== NoMode &&
       ReactCurrentActQueue.current === null
     ) {
@@ -2875,12 +2888,36 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   }
 }
 
-function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
+function warnIfUpdatesNotWrappedWithActDEV(fiber: Fiber): void {
   if (__DEV__) {
-    if (
-      executionContext === NoContext &&
-      ReactCurrentActQueue.current === null
-    ) {
+    if (fiber.mode & ConcurrentMode) {
+      if (!isConcurrentActEnvironment()) {
+        // Not in an act environment. No need to warn.
+        return;
+      }
+    } else {
+      // Legacy mode has additional cases where we suppress a warning.
+      if (!isLegacyActEnvironment(fiber)) {
+        // Not in an act environment. No need to warn.
+        return;
+      }
+      if (executionContext !== NoContext) {
+        // Legacy mode doesn't warn if the update is batched, i.e.
+        // batchedUpdates or flushSync.
+        return;
+      }
+      if (
+        fiber.tag !== FunctionComponent &&
+        fiber.tag !== ForwardRef &&
+        fiber.tag !== SimpleMemoComponent
+      ) {
+        // For backwards compatibility with pre-hooks code, legacy mode only
+        // warns for updates that originate from a hook.
+        return;
+      }
+    }
+
+    if (ReactCurrentActQueue.current === null) {
       const previousFiber = ReactCurrentFiberCurrent;
       try {
         setCurrentDebugFiberInDEV(fiber);
@@ -2908,4 +2945,26 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   }
 }
 
-export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
+function warnIfSuspenseResolutionNotWrappedWithActDEV(root: FiberRoot): void {
+  if (__DEV__) {
+    if (
+      root.tag !== LegacyRoot &&
+      isConcurrentActEnvironment() &&
+      ReactCurrentActQueue.current === null
+    ) {
+      console.error(
+        'A suspended resource finished loading inside a test, but the event ' +
+          'was not wrapped in act(...).\n\n' +
+          'When testing, code that resolves suspended data should be wrapped ' +
+          'into act(...):\n\n' +
+          'act(() => {\n' +
+          '  /* finish loading suspended data */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see " +
+          'in the browser.' +
+          ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
+      );
+    }
+  }
+}

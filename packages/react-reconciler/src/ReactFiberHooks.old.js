@@ -83,7 +83,6 @@ import {
   requestUpdateLane,
   requestEventTime,
   warnIfNotCurrentlyActingEffectsInDEV,
-  warnIfNotCurrentlyActingUpdatesInDev,
   markSkippedUpdateLanes,
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
@@ -118,7 +117,6 @@ import {
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
-import {isActEnvironment} from './ReactFiberAct.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1679,9 +1677,7 @@ function mountEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    if (isActEnvironment(currentlyRenderingFiber)) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-    }
+    warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
   }
   if (
     __DEV__ &&
@@ -1709,9 +1705,7 @@ function updateEffect(
   deps: Array<mixed> | void | null,
 ): void {
   if (__DEV__) {
-    if (isActEnvironment(currentlyRenderingFiber)) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-    }
+    warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
   }
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
@@ -2196,12 +2190,6 @@ function dispatchReducerAction<S, A>(
     enqueueRenderPhaseUpdate(queue, update);
   } else {
     enqueueUpdate(fiber, queue, update, lane);
-
-    if (__DEV__) {
-      if (isActEnvironment(fiber)) {
-        warnIfNotCurrentlyActingUpdatesInDev(fiber);
-      }
-    }
     const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
     if (root !== null) {
@@ -2280,11 +2268,6 @@ function dispatchSetState<S, A>(
             ReactCurrentDispatcher.current = prevDispatcher;
           }
         }
-      }
-    }
-    if (__DEV__) {
-      if (isActEnvironment(fiber)) {
-        warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
     const eventTime = requestEventTime();
