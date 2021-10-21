@@ -73,6 +73,9 @@ const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 // for retaining the cache once it is in use (retainCache), and releasing the cache
 // once it is no longer needed (releaseCache).
 export function createCache(): Cache {
+  if (!enableCache) {
+    return (null: any);
+  }
   const cache: Cache = {
     controller: new AbortController(),
     data: new Map(),
@@ -83,6 +86,9 @@ export function createCache(): Cache {
 }
 
 export function retainCache(cache: Cache) {
+  if (!enableCache) {
+    return;
+  }
   if (__DEV__) {
     if (cache.controller.signal.aborted) {
       console.warn(
@@ -96,6 +102,9 @@ export function retainCache(cache: Cache) {
 
 // Cleanup a cache instance, potentially freeing it if there are no more references
 export function releaseCache(cache: Cache) {
+  if (!enableCache) {
+    return;
+  }
   cache.refCount--;
   if (__DEV__) {
     if (cache.refCount < 0) {

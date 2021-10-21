@@ -2124,6 +2124,9 @@ function updateRefresh() {
 }
 
 function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
+  if (!enableCache) {
+    return;
+  }
   // TODO: Does Cache work in legacy mode? Should decide and write a test.
   // TODO: Consider warning if the refresh is at discrete priority, or if we
   // otherwise suspect that it wasn't batched properly.
