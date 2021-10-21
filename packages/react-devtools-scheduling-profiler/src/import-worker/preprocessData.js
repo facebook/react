@@ -1160,7 +1160,16 @@ export default async function preprocessData(
     // See how long the subsequent batch of React work was.
     const [startTime, stopTime] = getBatchRange(batchUID, profilerData);
     if (stopTime - startTime > NESTED_UPDATE_DURATION_THRESHOLD) {
-      schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
+      // Don't warn about transition updates scheduled during the commit phase.
+      // e.g. useTransition, useDeferredValue
+      // These are allowed to be long-running.
+      if (
+        !schedulingEvent.lanes.some(
+          lane => profilerData.laneToLabelMap.get(lane) === 'Transition',
+        )
+      ) {
+        schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
+      }
     }
   });
   state.potentialSuspenseEventsOutsideOfTransition.forEach(

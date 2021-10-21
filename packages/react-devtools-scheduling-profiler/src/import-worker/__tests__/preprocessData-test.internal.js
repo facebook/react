@@ -1601,6 +1601,143 @@ describe('preprocessData', () => {
           );
         }
       });
+
+      it('should not warn about transition updates scheduled during commit phase', async () => {
+        function Component() {
+          const [value, setValue] = React.useState(0);
+          // eslint-disable-next-line no-unused-vars
+          const [isPending, startTransition] = React.useTransition();
+
+          Scheduler.unstable_yieldValue(
+            `Component rendered with value ${value}`,
+          );
+
+          // Fake a long render
+          if (value !== 0) {
+            Scheduler.unstable_yieldValue('Long render');
+            startTime += 20000;
+          }
+
+          React.useLayoutEffect(() => {
+            startTransition(() => {
+              setValue(1);
+            });
+          }, []);
+
+          return value;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const cpuProfilerSample = creactCpuProfilerSample();
+
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component rendered with value 0',
+            'Component rendered with value 0',
+            'Component rendered with value 1',
+            'Long render',
+          ]);
+
+          const testMarks = [];
+          clearedMarks.forEach(markName => {
+            if (markName === '--component-render-start-Component') {
+              // Fake a long running render
+              startTime += 20000;
+            }
+
+            testMarks.push({
+              pid: ++pid,
+              tid: ++tid,
+              ts: ++startTime,
+              args: {data: {}},
+              cat: 'blink.user_timing',
+              name: markName,
+              ph: 'R',
+            });
+          });
+
+          const data = await preprocessData([
+            cpuProfilerSample,
+            ...createBoilerplateEntries(),
+            ...testMarks,
+          ]);
+
+          data.schedulingEvents.forEach(event => {
+            expect(event.warning).toBeNull();
+          });
+        }
+      });
+
+      it('should not warn about deferred value updates scheduled during commit phase', async () => {
+        function Component() {
+          const [value, setValue] = React.useState(0);
+          const deferredValue = React.useDeferredValue(value);
+
+          Scheduler.unstable_yieldValue(
+            `Component rendered with value ${value} and deferredValue ${deferredValue}`,
+          );
+
+          // Fake a long render
+          if (deferredValue !== 0) {
+            Scheduler.unstable_yieldValue('Long render');
+            startTime += 20000;
+          }
+
+          React.useLayoutEffect(() => {
+            setValue(1);
+          }, []);
+
+          return value + deferredValue;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const cpuProfilerSample = creactCpuProfilerSample();
+
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component rendered with value 0 and deferredValue 0',
+            'Component rendered with value 1 and deferredValue 0',
+            'Component rendered with value 1 and deferredValue 1',
+            'Long render',
+          ]);
+
+          const testMarks = [];
+          clearedMarks.forEach(markName => {
+            if (markName === '--component-render-start-Component') {
+              // Fake a long running render
+              startTime += 20000;
+            }
+
+            testMarks.push({
+              pid: ++pid,
+              tid: ++tid,
+              ts: ++startTime,
+              args: {data: {}},
+              cat: 'blink.user_timing',
+              name: markName,
+              ph: 'R',
+            });
+          });
+
+          const data = await preprocessData([
+            cpuProfilerSample,
+            ...createBoilerplateEntries(),
+            ...testMarks,
+          ]);
+
+          data.schedulingEvents.forEach(event => {
+            expect(event.warning).toBeNull();
+          });
+        }
+      });
     });
 
     describe('errors thrown while rendering', () => {
