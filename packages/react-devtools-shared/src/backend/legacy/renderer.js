@@ -716,7 +716,7 @@ export function attach(
 
     // Any time an inspected element has an update,
     // we should update the selected $r value as wel.
-    // Do this before dehyration (cleanForBridge).
+    // Do this before dehydration (cleanForBridge).
     updateSelectedElement(id);
 
     inspectedElement.context = cleanForBridge(
