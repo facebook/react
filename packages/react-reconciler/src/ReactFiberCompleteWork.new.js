@@ -72,6 +72,7 @@ import {
   ChildDeletion,
   StaticMask,
   MutationMask,
+  Passive,
 } from './ReactFiberFlags';
 
 import {
@@ -848,7 +849,15 @@ function completeWork(
       if (enableCache) {
         popRootCachePool(fiberRoot, renderLanes);
 
+        let previousCache: Cache | null = null;
+        if (workInProgress.alternate !== null) {
+          previousCache = workInProgress.alternate.memoizedState.cache;
+        }
         const cache: Cache = workInProgress.memoizedState.cache;
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          workInProgress.flags |= Passive;
+        }
         popCacheProvider(workInProgress, cache);
       }
       popHostContainer(workInProgress);
@@ -1087,6 +1096,29 @@ function completeWork(
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;
+      }
+
+      if (enableCache && nextDidTimeout) {
+        const offscreenFiber: Fiber = (workInProgress.child: any);
+        let previousCache: Cache | null = null;
+        if (
+          offscreenFiber.alternate !== null &&
+          offscreenFiber.alternate.memoizedState !== null &&
+          offscreenFiber.alternate.memoizedState.cachePool !== null
+        ) {
+          previousCache = offscreenFiber.alternate.memoizedState.cachePool.pool;
+        }
+        let cache: Cache | null = null;
+        if (
+          offscreenFiber.memoizedState !== null &&
+          offscreenFiber.memoizedState.cachePool !== null
+        ) {
+          cache = offscreenFiber.memoizedState.cachePool.pool;
+        }
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          offscreenFiber.flags |= Passive;
+        }
       }
 
       // If the suspended state of the boundary changes, we need to schedule
@@ -1465,6 +1497,25 @@ function completeWork(
       }
 
       if (enableCache) {
+        let previousCache: Cache | null = null;
+        if (
+          workInProgress.alternate !== null &&
+          workInProgress.alternate.memoizedState !== null &&
+          workInProgress.alternate.memoizedState.cachePool !== null
+        ) {
+          previousCache = workInProgress.alternate.memoizedState.cachePool.pool;
+        }
+        let cache: Cache | null = null;
+        if (
+          workInProgress.memoizedState !== null &&
+          workInProgress.memoizedState.cachePool !== null
+        ) {
+          cache = workInProgress.memoizedState.cachePool.pool;
+        }
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          workInProgress.flags |= Passive;
+        }
         const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
         if (spawnedCachePool !== null) {
           popCachePool(workInProgress);
@@ -1475,7 +1526,15 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
+        let previousCache: Cache | null = null;
+        if (workInProgress.alternate !== null) {
+          previousCache = workInProgress.alternate.memoizedState.cache;
+        }
         const cache: Cache = workInProgress.memoizedState.cache;
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          workInProgress.flags |= Passive;
+        }
         popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);
         return null;

@@ -73,7 +73,7 @@ Object {
     },
   },
   "duration": 15,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     1 => 15,
     2 => 15,
@@ -86,7 +86,7 @@ Object {
     3 => 3,
     4 => 2,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 15,
   "updaters": Array [

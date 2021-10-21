@@ -216,6 +216,10 @@ export function resetHooksState(): void {
   workInProgressHook = null;
 }
 
+function getCacheSignal() {
+  throw new Error('Not implemented.');
+}
+
 function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
@@ -551,6 +555,7 @@ export const Dispatcher: DispatcherType = {
 };
 
 if (enableCache) {
+  Dispatcher.getCacheSignal = getCacheSignal;
   Dispatcher.getCacheForType = getCacheForType;
   Dispatcher.useCacheRefresh = useCacheRefresh;
 }

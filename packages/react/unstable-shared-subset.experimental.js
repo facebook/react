@@ -25,6 +25,7 @@ export {
   memo,
   startTransition,
   unstable_DebugTracingMode,
+  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useOpaqueIdentifier,
   useCallback,

@@ -32,6 +32,7 @@ import {
   skipUnmountedBoundaries,
   enableUpdaterTracking,
   warnOnSubscriptionInsideStartTransition,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -234,6 +235,7 @@ import {
   isDevToolsPresent,
 } from './ReactFiberDevToolsHook.new';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
+import {releaseCache} from './ReactFiberCacheComponent.new';
 
 const ceil = Math.ceil;
 
@@ -331,6 +333,7 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
+let pendingPassiveEffectsRemainingLanes: Lanes = NoLanes;
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
@@ -1900,8 +1903,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   ) {
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
+      pendingPassiveEffectsRemainingLanes = remainingLanes;
       scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
+        // This render triggered passive effects: release the root cache pool
+        // *after* passive effects fire to avoid freeing a cache pool that may
+        // be referenced by a node in the tree (HostRoot, Cache boundary etc)
         return null;
       });
     }
@@ -2027,6 +2034,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
+  } else {
+    // There were no passive effects, so we can immediately release the cache
+    // pool for this render.
+    releaseRootPooledCache(root, remainingLanes);
   }
 
   // Read this again, since an effect might have updated it
@@ -2127,6 +2138,21 @@ function commitRootImpl(root, renderPriorityLevel) {
   return null;
 }
 
+function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {
+  if (enableCache) {
+    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
+    if (pooledCacheLanes === NoLanes) {
+      // None of the remaining work relies on the cache pool. Clear it so
+      // subsequent requests get a new cache
+      const pooledCache = root.pooledCache;
+      if (pooledCache != null) {
+        root.pooledCache = null;
+        releaseCache(pooledCache);
+      }
+    }
+  }
+}
+
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
   // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
@@ -2135,6 +2161,15 @@ export function flushPassiveEffects(): boolean {
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
   // priority within React itself, so we can mutate the variable directly.
   if (rootWithPendingPassiveEffects !== null) {
+    // Cache the root since rootWithPendingPassiveEffects is cleared in
+    // flushPassiveEffectsImpl
+    const root = rootWithPendingPassiveEffects;
+    // Cache and clear the remaining lanes flag; it must be reset since this
+    // method can be called from various places, not always from commitRoot
+    // where the remaining lanes are known
+    const remainingLanes = pendingPassiveEffectsRemainingLanes;
+    pendingPassiveEffectsRemainingLanes = NoLanes;
+
     const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
@@ -2146,6 +2181,11 @@ export function flushPassiveEffects(): boolean {
     } finally {
       setCurrentUpdatePriority(previousPriority);
       ReactCurrentBatchConfig.transition = prevTransition;
+
+      // Once passive effects have run for the tree - giving components a
+      // chance to retain cache instances they use - release the pooled
+      // cache at the root (if there is one)
+      releaseRootPooledCache(root, remainingLanes);
     }
   }
   return false;
