@@ -79,7 +79,10 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane.old';
-import {getIsHydrating} from './ReactFiberHydrationContext.old';
+import {
+  setHydrationDidSuspendOrErrror,
+  getIsHydrating,
+} from './ReactFiberHydrationContext.old';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -438,7 +441,7 @@ function throwException(
       restorePendingUpdaters(root, rootRenderLanes);
     }
   }
-
+  setHydrationDidSuspendOrErrror();
   if (
     value !== null &&
     typeof value === 'object' &&

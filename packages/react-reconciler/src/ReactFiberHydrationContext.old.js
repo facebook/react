@@ -68,6 +68,15 @@ import {OffscreenLane} from './ReactFiberLane.old';
 let hydrationParentFiber: null | Fiber = null;
 let nextHydratableInstance: null | HydratableInstance = null;
 let isHydrating: boolean = false;
+let hydrationDidSuspendOrErrorDEV: boolean = false;
+
+function setHydrationDidSuspendOrErrror() {
+  if (__DEV__) {
+    if (isHydrating) {
+      hydrationDidSuspendOrErrorDEV = true;
+    }
+  }
+}
 
 function warnIfHydrating() {
   if (__DEV__) {
@@ -90,6 +99,9 @@ function enterHydrationState(fiber: Fiber): boolean {
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  if (__DEV__) {
+    hydrationDidSuspendOrErrorDEV = false;
+  }
   return true;
 }
 
@@ -105,6 +117,9 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  if (__DEV__) {
+    hydrationDidSuspendOrErrorDEV = false;
+  }
   return true;
 }
 
@@ -112,7 +127,7 @@ function deleteHydratableInstance(
   returnFiber: Fiber,
   instance: HydratableInstance,
 ) {
-  if (__DEV__) {
+  if (__DEV__ && !hydrationDidSuspendOrErrorDEV) {
     switch (returnFiber.tag) {
       case HostRoot:
         didNotHydrateInstanceWithinContainer(
@@ -154,7 +169,7 @@ function deleteHydratableInstance(
 
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   fiber.flags = (fiber.flags & ~Hydrating) | Placement;
-  if (__DEV__) {
+  if (__DEV__ && !hydrationDidSuspendOrErrorDEV) {
     switch (returnFiber.tag) {
       case HostRoot: {
         const parentContainer = returnFiber.stateNode.containerInfo;
@@ -390,7 +405,7 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   const textContent: string = fiber.memoizedProps;
   const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
   if (__DEV__) {
-    if (shouldUpdate) {
+    if (shouldUpdate && !hydrationDidSuspendOrErrorDEV) {
       // We assume that prepareToHydrateHostTextInstance is called in a context where the
       // hydration parent is the parent host component of this host text.
       const returnFiber = hydrationParentFiber;
@@ -537,6 +552,9 @@ function resetHydrationState(): void {
   hydrationParentFiber = null;
   nextHydratableInstance = null;
   isHydrating = false;
+  if (__DEV__) {
+    hydrationDidSuspendOrErrorDEV = false;
+  }
 }
 
 function getIsHydrating(): boolean {
@@ -544,6 +562,7 @@ function getIsHydrating(): boolean {
 }
 
 export {
+  setHydrationDidSuspendOrErrror,
   warnIfHydrating,
   enterHydrationState,
   getIsHydrating,
