@@ -161,6 +161,78 @@ export function markComponentRenderStopped(): void {
   }
 }
 
+export function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-passive-effect-mount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentPassiveEffectMountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-passive-effect-mount-stop');
+    }
+  }
+}
+
+export function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-passive-effect-unmount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentPassiveEffectUnmountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-passive-effect-unmount-stop');
+    }
+  }
+}
+
+export function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-layout-effect-mount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentLayoutEffectMountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-layout-effect-mount-stop');
+    }
+  }
+}
+
+export function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-layout-effect-unmount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentLayoutEffectUnmountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-layout-effect-unmount-stop');
+    }
+  }
+}
+
 export function markComponentErrored(
   fiber: Fiber,
   thrownValue: mixed,

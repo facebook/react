@@ -119,10 +119,18 @@ export type NetworkMeasure = {|
   url: string,
 |};
 
+export type ReactComponentMeasureType =
+  | 'render'
+  | 'layout-effect-mount'
+  | 'layout-effect-unmount'
+  | 'passive-effect-mount'
+  | 'passive-effect-unmount';
+
 export type ReactComponentMeasure = {|
   +componentName: string,
   duration: Milliseconds,
   +timestamp: Milliseconds,
+  +type: ReactComponentMeasureType,
   warning: string | null,
 |};
 

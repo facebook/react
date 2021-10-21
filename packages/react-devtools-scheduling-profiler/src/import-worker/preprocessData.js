@@ -22,6 +22,7 @@ import type {
   Phase,
   ReactLane,
   ReactComponentMeasure,
+  ReactComponentMeasureType,
   ReactMeasure,
   ReactMeasureType,
   ReactProfilerData,
@@ -484,31 +485,13 @@ function processTimelineEvent(
       } else if (name.startsWith('--react-lane-labels-')) {
         const [laneLabelTuplesString] = name.substr(20).split('-');
         updateLaneToLabelMap(currentProfilerData, laneLabelTuplesString);
-      } else if (name.startsWith('--component-render-start-')) {
-        const [componentName] = name.substr(25).split('-');
-
-        if (state.currentReactComponentMeasure !== null) {
-          console.error(
-            'Render started while another render in progress:',
-            state.currentReactComponentMeasure,
-          );
-        }
-
-        state.currentReactComponentMeasure = {
-          componentName,
-          timestamp: startTime,
-          duration: 0,
-          warning: null,
-        };
-      } else if (name === '--component-render-stop') {
-        if (state.currentReactComponentMeasure !== null) {
-          const componentMeasure = state.currentReactComponentMeasure;
-          componentMeasure.duration = startTime - componentMeasure.timestamp;
-
-          state.currentReactComponentMeasure = null;
-
-          currentProfilerData.componentMeasures.push(componentMeasure);
-        }
+      } else if (name.startsWith('--component-')) {
+        processReactComponentMeasure(
+          name,
+          startTime,
+          currentProfilerData,
+          state,
+        );
       } else if (name.startsWith('--schedule-render-')) {
         const [laneBitmaskString] = name.substr(18).split('-');
 
@@ -865,6 +848,154 @@ function processTimelineEvent(
         );
       }
       break;
+  }
+}
+
+function assertNoOverlappingComponentMeasure(state: ProcessorState) {
+  if (state.currentReactComponentMeasure !== null) {
+    console.error(
+      'Component measure started while another measure in progress:',
+      state.currentReactComponentMeasure,
+    );
+  }
+}
+
+function assertCurrentComponentMeasureType(
+  state: ProcessorState,
+  type: ReactComponentMeasureType,
+): void {
+  if (state.currentReactComponentMeasure === null) {
+    console.error(
+      `Component measure type "${type}" stopped while no measure was in progress`,
+    );
+  } else if (state.currentReactComponentMeasure.type !== type) {
+    console.error(
+      `Component measure type "${type}" stopped while type ${state.currentReactComponentMeasure.type} in progress`,
+    );
+  }
+}
+
+function processReactComponentMeasure(
+  name: string,
+  startTime: Milliseconds,
+  currentProfilerData: ReactProfilerData,
+  state: ProcessorState,
+): void {
+  if (name.startsWith('--component-render-start-')) {
+    const [componentName] = name.substr(25).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'render',
+      warning: null,
+    };
+  } else if (name === '--component-render-stop') {
+    assertCurrentComponentMeasureType(state, 'render');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-layout-effect-mount-start-')) {
+    const [componentName] = name.substr(38).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'layout-effect-mount',
+      warning: null,
+    };
+  } else if (name === '--component-layout-effect-mount-stop') {
+    assertCurrentComponentMeasureType(state, 'layout-effect-mount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-layout-effect-unmount-start-')) {
+    const [componentName] = name.substr(40).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'layout-effect-unmount',
+      warning: null,
+    };
+  } else if (name === '--component-layout-effect-unmount-stop') {
+    assertCurrentComponentMeasureType(state, 'layout-effect-unmount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-passive-effect-mount-start-')) {
+    const [componentName] = name.substr(39).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'passive-effect-mount',
+      warning: null,
+    };
+  } else if (name === '--component-passive-effect-mount-stop') {
+    assertCurrentComponentMeasureType(state, 'passive-effect-mount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-passive-effect-unmount-start-')) {
+    const [componentName] = name.substr(41).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'passive-effect-unmount',
+      warning: null,
+    };
+  } else if (name === '--component-passive-effect-unmount-stop') {
+    assertCurrentComponentMeasureType(state, 'passive-effect-unmount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
   }
 }
 
