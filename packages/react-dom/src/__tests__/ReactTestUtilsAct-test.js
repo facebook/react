@@ -98,42 +98,11 @@ describe('ReactTestUtils.act()', () => {
       }).toErrorDev([]);
     });
 
-    it('warns in strict mode', () => {
-      expect(() => {
-        ReactDOM.render(
-          <React.StrictMode>
-            <App />
-          </React.StrictMode>,
-          document.createElement('div'),
-        );
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
-
     // @gate __DEV__
     it('does not warn in concurrent mode', () => {
       const root = ReactDOM.createRoot(document.createElement('div'));
       act(() => root.render(<App />));
       Scheduler.unstable_flushAll();
-    });
-
-    it('warns in concurrent mode if root is strict', () => {
-      // TODO: We don't need this error anymore in concurrent mode because
-      // effects can only be scheduled as the result of an update, and we now
-      // enforce all updates must be wrapped with act, not just hook updates.
-      expect(() => {
-        const root = ReactDOM.createRoot(document.createElement('div'), {
-          unstable_strictMode: true,
-        });
-        root.render(<App />);
-      }).toErrorDev(
-        'An update to Root inside a test was not wrapped in act(...)',
-        {withoutStack: true},
-      );
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      );
     });
   });
 });
