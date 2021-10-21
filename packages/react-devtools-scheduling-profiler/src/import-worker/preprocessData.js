@@ -13,6 +13,7 @@ import {
 } from '@elg/speedscope';
 import type {TimelineEvent} from '@elg/speedscope';
 import type {
+  ErrorStackFrame,
   BatchUID,
   Flamechart,
   Milliseconds,
@@ -30,6 +31,7 @@ import type {
 import {REACT_TOTAL_NUM_LANES, SCHEDULING_PROFILER_VERSION} from '../constants';
 import InvalidProfileError from './InvalidProfileError';
 import {getBatchRange} from '../utils/getBatchRange';
+import ErrorStackParser from 'error-stack-parser';
 
 type MeasureStackElement = {|
   type: ReactMeasureType,
@@ -43,6 +45,8 @@ type ProcessorState = {|
   asyncProcessingPromises: Promise<any>[],
   batchUID: BatchUID,
   currentReactComponentMeasure: ReactComponentMeasure | null,
+  internalModuleCurrentStackFrame: ErrorStackFrame | null,
+  internalModuleStackStringSet: Set<string>,
   measureStack: MeasureStackElement[],
   nativeEventStack: NativeEvent[],
   nextRenderShouldGenerateNewBatchID: boolean,
@@ -793,6 +797,49 @@ function processTimelineEvent(
         );
       } // eslint-disable-line brace-style
 
+      // Internal module ranges
+      else if (name.startsWith('--react-internal-module-start-')) {
+        const stackFrameStart = name.substr(30);
+
+        if (!state.internalModuleStackStringSet.has(stackFrameStart)) {
+          state.internalModuleStackStringSet.add(stackFrameStart);
+
+          const parsedStackFrameStart = parseStackFrame(stackFrameStart);
+
+          state.internalModuleCurrentStackFrame = parsedStackFrameStart;
+        }
+      } else if (name.startsWith('--react-internal-module-stop-')) {
+        const stackFrameStop = name.substr(19);
+
+        if (!state.internalModuleStackStringSet.has(stackFrameStop)) {
+          state.internalModuleStackStringSet.add(stackFrameStop);
+
+          const parsedStackFrameStop = parseStackFrame(stackFrameStop);
+
+          if (
+            parsedStackFrameStop !== null &&
+            state.internalModuleCurrentStackFrame !== null
+          ) {
+            const parsedStackFrameStart = state.internalModuleCurrentStackFrame;
+
+            state.internalModuleCurrentStackFrame = null;
+
+            const range = [parsedStackFrameStart, parsedStackFrameStop];
+            const ranges = currentProfilerData.internalModuleSourceToRanges.get(
+              parsedStackFrameStart.fileName,
+            );
+            if (ranges == null) {
+              currentProfilerData.internalModuleSourceToRanges.set(
+                parsedStackFrameStart.fileName,
+                [range],
+              );
+            } else {
+              ranges.push(range);
+            }
+          }
+        }
+      } // eslint-disable-line brace-style
+
       // Other user timing marks/measures
       else if (ph === 'R' || ph === 'n') {
         // User Timing mark
@@ -855,6 +902,15 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   return flamechart;
 }
 
+function parseStackFrame(stackFrame: string): ErrorStackFrame | null {
+  const error = new Error();
+  error.stack = stackFrame;
+
+  const frames = ErrorStackParser.parse(error);
+
+  return frames.length === 1 ? frames[0] : null;
+}
+
 export default async function preprocessData(
   timeline: TimelineEvent[],
 ): Promise<ReactProfilerData> {
@@ -870,6 +926,7 @@ export default async function preprocessData(
     componentMeasures: [],
     duration: 0,
     flamechart,
+    internalModuleSourceToRanges: new Map(),
     laneToLabelMap: new Map(),
     laneToReactMeasureMap,
     nativeEvents: [],
@@ -913,6 +970,8 @@ export default async function preprocessData(
     asyncProcessingPromises: [],
     batchUID: 0,
     currentReactComponentMeasure: null,
+    internalModuleCurrentStackFrame: null,
+    internalModuleStackStringSet: new Set(),
     measureStack: [],
     nativeEventStack: [],
     nextRenderShouldGenerateNewBatchID: true,

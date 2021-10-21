@@ -9,13 +9,15 @@
 
 declare var chrome: any;
 
-import {__DEBUG__} from 'react-devtools-shared/src/constants';
+import {
+  INTERNAL_EXTENSION_ID,
+  LOCAL_EXTENSION_ID,
+  __DEBUG__,
+} from 'react-devtools-shared/src/constants';
 import {getBrowserName} from './utils';
 import {
   EXTENSION_INSTALL_CHECK,
   EXTENSION_INSTALLATION_TYPE,
-  INTERNAL_EXTENSION_ID,
-  LOCAL_EXTENSION_ID,
 } from './constants';
 
 const IS_CHROME = getBrowserName() === 'Chrome';

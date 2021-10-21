@@ -98,6 +98,22 @@ function markVersionMetadata() {
   markAndClear(`--profiler-version-${SCHEDULING_PROFILER_VERSION}`);
 }
 
+function markInternalModuleRanges() {
+  /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges === 'function'
+  ) {
+    const ranges = __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges();
+    for (let i = 0; i < ranges.length; i++) {
+      const [startStackFrame, stopStackFrame] = ranges[i];
+
+      markAndClear(`--react-internal-module-start-${startStackFrame}`);
+      markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
+    }
+  }
+}
+
 export function markCommitStarted(lanes: Lanes): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
@@ -114,6 +130,7 @@ export function markCommitStarted(lanes: Lanes): void {
       // we can log this data only once (when started) and remove the per-commit logging.
       markVersionMetadata();
       markLaneToLabelMetadata();
+      markInternalModuleRanges();
     }
   }
 }

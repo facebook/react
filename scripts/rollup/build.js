@@ -440,7 +440,8 @@ function getPlugins(
           bundleType,
           globalName,
           filename,
-          moduleType
+          moduleType,
+          bundle.wrapWithModuleBoundaries
         );
       },
     },

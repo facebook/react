@@ -17,6 +17,12 @@ export type Return<T> = Return_<*, T>;
 
 // Project types
 
+export type ErrorStackFrame = {
+  fileName: string,
+  lineNumber: number,
+  columnNumber: number,
+};
+
 export type Milliseconds = number;
 
 export type ReactLane = number;
@@ -169,11 +175,17 @@ export type ViewState = {|
   viewToMutableViewStateMap: Map<string, mixed>,
 |};
 
+export type InternalModuleSourceToRanges = Map<
+  string,
+  Array<[ErrorStackFrame, ErrorStackFrame]>,
+>;
+
 export type ReactProfilerData = {|
   batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
+  internalModuleSourceToRanges: InternalModuleSourceToRanges,
   laneToLabelMap: Map<ReactLane, string>,
   laneToReactMeasureMap: Map<ReactLane, ReactMeasure[]>,
   nativeEvents: NativeEvent[],

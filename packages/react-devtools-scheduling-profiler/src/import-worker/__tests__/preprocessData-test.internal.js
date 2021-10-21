@@ -282,6 +282,7 @@ describe('preprocessData', () => {
           "componentMeasures": Array [],
           "duration": 0.005,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",
@@ -449,6 +450,7 @@ describe('preprocessData', () => {
           "componentMeasures": Array [],
           "duration": 0.011,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",
@@ -636,6 +638,7 @@ describe('preprocessData', () => {
           "componentMeasures": Array [],
           "duration": 0.013,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",
@@ -914,6 +917,7 @@ describe('preprocessData', () => {
           ],
           "duration": 0.031,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",

@@ -45,6 +45,9 @@ export const MIN_INTERVAL_SIZE_PX = 70;
 // TODO Replace this with "export let" vars
 export let COLORS = {
   BACKGROUND: '',
+  INTERNAL_MODULE_FRAME: '',
+  INTERNAL_MODULE_FRAME_HOVER: '',
+  INTERNAL_MODULE_FRAME_TEXT: '',
   NATIVE_EVENT: '',
   NATIVE_EVENT_HOVER: '',
   NETWORK_PRIMARY: '',
@@ -107,6 +110,15 @@ export function updateColorsToMatchTheme(element: Element): boolean {
 
   COLORS = {
     BACKGROUND: computedStyle.getPropertyValue('--color-background'),
+    INTERNAL_MODULE_FRAME: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-internal-module',
+    ),
+    INTERNAL_MODULE_FRAME_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-internal-module-hover',
+    ),
+    INTERNAL_MODULE_FRAME_TEXT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-internal-module-text',
+    ),
     NATIVE_EVENT: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-native-event',
     ),

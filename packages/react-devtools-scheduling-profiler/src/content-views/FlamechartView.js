@@ -11,6 +11,7 @@ import type {
   Flamechart,
   FlamechartStackFrame,
   FlamechartStackLayer,
+  InternalModuleSourceToRanges,
 } from '../types';
 import type {
   Interaction,
@@ -30,6 +31,7 @@ import {
   rectIntersectsRect,
   verticallyStackedLayout,
 } from '../view-base';
+import {isInternalModule} from './utils/moduleFilters';
 import {
   durationToWidth,
   positioningScaleFactor,
@@ -76,6 +78,8 @@ class FlamechartStackLayerView extends View {
   /** A set of `stackLayer`'s frames, for efficient lookup. */
   _stackFrameSet: Set<FlamechartStackFrame>;
 
+  _internalModuleSourceToRanges: InternalModuleSourceToRanges;
+
   _intrinsicSize: Size;
 
   _hoveredStackFrame: FlamechartStackFrame | null = null;
@@ -85,11 +89,13 @@ class FlamechartStackLayerView extends View {
     surface: Surface,
     frame: Rect,
     stackLayer: FlamechartStackLayer,
+    internalModuleSourceToRanges: InternalModuleSourceToRanges,
     duration: number,
   ) {
     super(surface, frame);
     this._stackLayer = stackLayer;
     this._stackFrameSet = new Set(stackLayer);
+    this._internalModuleSourceToRanges = internalModuleSourceToRanges;
     this._intrinsicSize = {
       width: duration,
       height: FLAMECHART_FRAME_HEIGHT,
@@ -160,9 +166,19 @@ class FlamechartStackLayerView extends View {
       }
 
       const showHoverHighlight = _hoveredStackFrame === _stackLayer[i];
-      context.fillStyle = showHoverHighlight
-        ? hoverColorForStackFrame(stackFrame)
-        : defaultColorForStackFrame(stackFrame);
+
+      let textFillStyle;
+      if (isInternalModule(this._internalModuleSourceToRanges, stackFrame)) {
+        context.fillStyle = showHoverHighlight
+          ? COLORS.INTERNAL_MODULE_FRAME_HOVER
+          : COLORS.INTERNAL_MODULE_FRAME;
+        textFillStyle = COLORS.INTERNAL_MODULE_FRAME_TEXT;
+      } else {
+        context.fillStyle = showHoverHighlight
+          ? hoverColorForStackFrame(stackFrame)
+          : defaultColorForStackFrame(stackFrame);
+        textFillStyle = COLORS.TEXT_COLOR;
+      }
 
       const drawableRect = intersectionOfRects(nodeRect, visibleArea);
       context.fillRect(
@@ -172,7 +188,9 @@ class FlamechartStackLayerView extends View {
         drawableRect.size.height,
       );
 
-      drawText(name, context, nodeRect, drawableRect);
+      drawText(name, context, nodeRect, drawableRect, {
+        fillStyle: textFillStyle,
+      });
     }
 
     // Render bottom border.
@@ -264,13 +282,22 @@ export class FlamechartView extends View {
     surface: Surface,
     frame: Rect,
     flamechart: Flamechart,
+    internalModuleSourceToRanges: InternalModuleSourceToRanges,
     duration: number,
   ) {
     super(surface, frame, layeredLayout);
-    this.setDataAndUpdateSubviews(flamechart, duration);
+    this.setDataAndUpdateSubviews(
+      flamechart,
+      internalModuleSourceToRanges,
+      duration,
+    );
   }
 
-  setDataAndUpdateSubviews(flamechart: Flamechart, duration: number) {
+  setDataAndUpdateSubviews(
+    flamechart: Flamechart,
+    internalModuleSourceToRanges: InternalModuleSourceToRanges,
+    duration: number,
+  ) {
     const {surface, frame, _onHover, _hoveredStackFrame} = this;
 
     // Clear existing rows on data update
@@ -285,6 +312,7 @@ export class FlamechartView extends View {
         surface,
         frame,
         stackLayer,
+        internalModuleSourceToRanges,
         duration,
       );
       this._verticalStackView.addSubview(rowView);
