@@ -32,7 +32,7 @@ import {
   skipUnmountedBoundaries,
   enableUpdaterTracking,
   warnOnSubscriptionInsideStartTransition,
-  enableCache,
+  enableInteractionTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -153,6 +153,7 @@ import {
   markRootFinished,
   getHighestPriorityLane,
   addFiberToLanesMap,
+  addInteractionToLaneMap,
   movePendingFibersToMemoized,
 } from './ReactFiberLane.new';
 import {
@@ -510,6 +511,13 @@ export function scheduleUpdateOnFiber(
             current = current.return;
           }
         }
+      }
+    }
+
+    if (enableInteractionTracing) {
+      const interaction = ReactCurrentBatchConfig.transitionInfo;
+      if (interaction !== null) {
+        addInteractionToLaneMap(root, interaction, lane);
       }
     }
 

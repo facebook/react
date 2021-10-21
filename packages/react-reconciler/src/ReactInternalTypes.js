@@ -59,6 +59,11 @@ export type Dependencies = {
   ...
 };
 
+export type Interaction = {
+  name: string,
+  startTime: number,
+};
+
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {|
@@ -239,6 +244,8 @@ type BaseFiberRootProperties = {|
 
   pooledCache: Cache | null,
   pooledCacheLanes: Lanes,
+
+  interactions: LaneMap<Set<Interaction>>,
 |};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

@@ -25,6 +25,7 @@ import {
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableUpdaterTracking,
+  enableInteractionTracing,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -79,6 +80,13 @@ function FiberRootNode(containerInfo, tag, hydrate) {
     const pendingUpdatersLaneMap = (this.pendingUpdatersLaneMap = []);
     for (let i = 0; i < TotalLanes; i++) {
       pendingUpdatersLaneMap.push(new Set());
+    }
+  }
+
+  if (enableInteractionTracing) {
+    const interactionsMap = (this.interactions = []);
+    for (let i = 0; i < TotalLanes; i++) {
+      interactionsMap.push(new Set());
     }
   }
 

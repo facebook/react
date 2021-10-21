@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {FiberRoot} from './ReactInternalTypes';
+import type {FiberRoot, Interaction} from './ReactInternalTypes';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -20,6 +20,7 @@ import {
   enableSchedulingProfiler,
   enableUpdaterTracking,
   allowConcurrentByDefault,
+  enableInteractionTracing,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -790,5 +791,17 @@ export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
     }
 
     lanes &= ~lane;
+  }
+}
+
+export function addInteractionToLaneMap(
+  root: FiberRoot,
+  interaction: Interaction,
+  lane: Lane,
+) {
+  if (enableInteractionTracing) {
+    const interactionsMap = root.interactions;
+    const index = laneToIndex(lane);
+    interactionsMap[index].add(interaction);
   }
 }
