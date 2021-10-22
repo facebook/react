@@ -232,7 +232,6 @@ describe('ReactDOMServerPartialHydration', () => {
 
   it('can handle suspense boundaries emitted by server that are missing on the client', async () => {
     let client = false;
-    let resolve;
 
     function MissingSuspenseBoundary() {
       return (
@@ -243,7 +242,7 @@ describe('ReactDOMServerPartialHydration', () => {
               <span>Hello</span>
               <Suspense>
                 <Suspense>
-                  <Suspense></Suspense>
+                  <Suspense />
                 </Suspense>
               </Suspense>
               <div>Hello</div>

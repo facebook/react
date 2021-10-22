@@ -767,7 +767,7 @@ export function getNextHydratableSibling(
 }
 
 export function getTailSiblingsForDeletion(node: ?Node) {
-  let nodes = [];
+  const nodes = [];
   let depth = 0;
   for (; node != null; node = node.nextSibling) {
     const nodeType = node.nodeType;

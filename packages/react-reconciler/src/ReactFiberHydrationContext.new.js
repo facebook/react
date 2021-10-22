@@ -527,7 +527,7 @@ function popHydrationState(fiber: Fiber): boolean {
       (shouldDeleteUnhydratedTailInstances(fiber.type) &&
         !shouldSetTextContent(fiber.type, fiber.memoizedProps)))
   ) {
-    let nextInstance = nextHydratableInstance;
+    const nextInstance = nextHydratableInstance;
     if (nextInstance) {
       const instancesToDelete = getTailSiblingsForDeletion(nextInstance);
       instancesToDelete.forEach(instance => {
