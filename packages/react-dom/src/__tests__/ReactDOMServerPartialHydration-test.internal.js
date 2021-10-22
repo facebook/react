@@ -230,7 +230,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('HelloHelloHelloHello');
   });
 
-  it('can remove suspense boundaries emitted by server that are missing on the client', async () => {
+  it('can handle suspense boundaries emitted by server that are missing on the client', async () => {
     let client = false;
     let resolve;
 
@@ -241,7 +241,11 @@ describe('ReactDOMServerPartialHydration', () => {
             <>
               <span>Hello</span>
               <span>Hello</span>
-              <Suspense />
+              <Suspense>
+                <Suspense>
+                  <Suspense></Suspense>
+                </Suspense>
+              </Suspense>
               <div>Hello</div>
             </>
           )}
