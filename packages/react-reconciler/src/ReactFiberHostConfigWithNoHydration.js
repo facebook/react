@@ -28,6 +28,7 @@ export const isSuspenseInstancePending = shim;
 export const isSuspenseInstanceFallback = shim;
 export const registerSuspenseInstanceRetry = shim;
 export const getNextHydratableSibling = shim;
+export const getTailSiblingsForDeletion = shim;
 export const getFirstHydratableChild = shim;
 export const getFirstHydratableChildWithinContainer = shim;
 export const getFirstHydratableChildWithinSuspenseInstance = shim;

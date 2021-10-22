@@ -149,6 +149,8 @@ export const isSuspenseInstanceFallback =
 export const registerSuspenseInstanceRetry =
   $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
+export const getTailSiblingsForDeletion =
+  $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
 export const getFirstHydratableChildWithinContainer =
   $$$hostConfig.getFirstHydratableChildWithinContainer;
