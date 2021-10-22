@@ -37,6 +37,7 @@ import {
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
   getNextHydratableSibling,
+  getTailSiblingsForDeletion,
   getFirstHydratableChild,
   getFirstHydratableChildWithinContainer,
   getFirstHydratableChildWithinSuspenseInstance,
@@ -527,9 +528,11 @@ function popHydrationState(fiber: Fiber): boolean {
         !shouldSetTextContent(fiber.type, fiber.memoizedProps)))
   ) {
     let nextInstance = nextHydratableInstance;
-    while (nextInstance) {
-      deleteHydratableInstance(fiber, nextInstance);
-      nextInstance = getNextHydratableSibling(nextInstance);
+    if (nextInstance) {
+      const instancesToDelete = getTailSiblingsForDeletion(nextInstance);
+      instancesToDelete.forEach(instance => {
+        deleteHydratableInstance(fiber, (instance: any));
+      });
     }
   }
 

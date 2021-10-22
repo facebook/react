@@ -766,6 +766,35 @@ export function getNextHydratableSibling(
   return getNextHydratable(instance.nextSibling);
 }
 
+export function getTailSiblingsForDeletion(node: ?Node) {
+  let nodes = [];
+  let depth = 0;
+  for (; node != null; node = node.nextSibling) {
+    const nodeType = node.nodeType;
+    if (enableSuspenseServerRenderer) {
+      if (nodeType === COMMENT_NODE) {
+        const nodeData = (node: any).data;
+        if (
+          nodeData === SUSPENSE_START_DATA ||
+          nodeData === SUSPENSE_FALLBACK_START_DATA ||
+          nodeData === SUSPENSE_PENDING_START_DATA
+        ) {
+          depth++;
+        }
+        if (nodeData === SUSPENSE_END_DATA) {
+          if (depth === 0) {
+            break;
+          } else {
+            depth--;
+          }
+        }
+      }
+      nodes.push(node);
+    }
+  }
+  return nodes;
+}
+
 export function getFirstHydratableChild(
   parentInstance: Instance,
 ): null | HydratableInstance {

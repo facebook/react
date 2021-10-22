@@ -230,6 +230,57 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('HelloHelloHelloHello');
   });
 
+  it('can remove suspense boundaries emitted by server that are missing on the client', async () => {
+    let client = false;
+    let resolve;
+
+    function MissingSuspenseBoundary() {
+      return (
+        <>
+          {client ? null : (
+            <>
+              <span>Hello</span>
+              <span>Hello</span>
+              <Suspense />
+              <div>Hello</div>
+            </>
+          )}
+          <div>Hello</div>
+        </>
+      );
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <MissingSuspenseBoundary />
+        </Suspense>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    expect(container.textContent).toBe('HelloHelloHelloHello');
+
+    // On the client we drop the suspend boundaries and some other nodes
+    client = true;
+    ReactDOM.hydrateRoot(container, <App />);
+    expect(() => {
+      Scheduler.unstable_flushAll();
+    }).toErrorDev(
+      'Warning: Expected server HTML to contain a matching <div> in <div>.',
+    );
+    jest.runAllTimers();
+
+    // Expect client rendering on mismatch to trigger and delete extra tail nodes.
+    expect(container.textContent).toBe('Hello');
+  });
+
   it('calls the hydration callbacks after hydration or deletion', async () => {
     let suspend = false;
     let resolve;
