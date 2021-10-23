@@ -40,7 +40,7 @@ function insertSubviewAtIndex(parent, child, index) {
     );
   }
 
-  if (0 > index || index > parentInfo.children.length) {
+  if (index < 0 || index > parentInfo.children.length) {
     throw new Error(
       `Invalid index ${index} for children ${parentInfo.children}`,
     );
