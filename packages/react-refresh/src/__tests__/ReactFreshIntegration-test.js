@@ -1945,6 +1945,56 @@ describe('ReactFreshIntegration', () => {
           expect(el.textContent).toBe('CXY');
         }
       });
+
+      it('does not crash with typescript namespaces', () => {
+        if (__DEV__) {
+          const twoStepTransform = function(source) {
+            const firstStep = babel.transformSync(source, {
+              configFile: false,
+              parserOpts: {
+                plugins: ['jsx', 'typescript'],
+              },
+              plugins: ['react-refresh/babel.js'],
+            }).code;
+            const secondStep = babel.transformSync(firstStep, {
+              presets: ['@babel/preset-typescript'],
+              filename: 'file.tsx',
+            }).code;
+            return secondStep;
+          };
+
+          const code = twoStepTransform(`
+            namespace NS {
+              export const Comp = () => {
+                return <div>A</div>
+              };
+            }
+
+            function App() {
+              return <NS.Comp />
+            }
+
+            export default App;
+          `);
+          render(code);
+          expect(container.firstChild.textContent).toBe('A');
+          const patchCode = twoStepTransform(`
+            namespace NS {
+              export const Comp = () => {
+                return <div>B</div>
+              };
+            }
+
+            function App() {
+              return <NS.Comp />
+            }
+
+            export default App;
+          `);
+          patch(patchCode);
+          expect(container.firstChild.textContent).toBe('B');
+        }
+      });
     });
   }
 });
