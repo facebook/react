@@ -108,9 +108,9 @@ export function isConcurrentMode(object: any) {
 }
 function safelyAccessProperty(object, property) {
   try {
-    return object[property]
+    return object[property];
   } catch (ignore) {
-    return undefined
+    return undefined;
   }
 }
 export function isContextConsumer(object: any) {
