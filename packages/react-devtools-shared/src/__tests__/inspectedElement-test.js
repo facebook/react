@@ -1897,6 +1897,38 @@ describe('InspectedElement', () => {
     `);
   });
 
+  it('should only access ownKeys() of Proxies', async () => {
+    const Example = () => null;
+
+    const supportedKeys = ['key1', 'key2'];
+    const proxy = new Proxy(
+      {},
+      {
+        get: (_target, prop) => {
+          if (supportedKeys.includes(prop)) return true;
+          throw Error(`This Proxy can't handle '${prop}'`);
+        },
+        ownKeys: () => supportedKeys,
+      },
+    );
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      legacyRender(<Example proxy={proxy} />, container),
+    );
+
+    const inspectedElement = await inspectElementAtIndex(0);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "proxy": Dehydrated {
+          "preview_short": undefined,
+          "preview_long": undefined,
+        },
+      }
+    `);
+  });
+
   // Regression test for github.com/facebook/react/issues/22099
   it('should not error when an unchanged component is re-inspected after component filters changed', async () => {
     const Example = () => <div />;

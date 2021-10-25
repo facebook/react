@@ -322,6 +322,7 @@ export function dehydrate(
     case 'infinity':
     case 'nan':
     case 'undefined':
+    case 'error':
       // Some values are lossy when sent through a WebSocket.
       // We dehydrate+rehydrate them to preserve their type.
       cleaned.push(path);

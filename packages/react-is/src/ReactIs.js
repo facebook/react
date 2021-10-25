@@ -106,6 +106,13 @@ export function isConcurrentMode(object: any) {
   }
   return false;
 }
+function safelyAccessProperty(object, property) {
+  try {
+    return object[property]
+  } catch (ignore) {
+    return undefined
+  }
+}
 export function isContextConsumer(object: any) {
   return typeOf(object) === REACT_CONTEXT_TYPE;
 }
@@ -116,7 +123,7 @@ export function isElement(object: any) {
   return (
     typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_ELEMENT_TYPE
+    safelyAccessProperty(object, '$$typeof') === REACT_ELEMENT_TYPE
   );
 }
 export function isForwardRef(object: any) {
