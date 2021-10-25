@@ -218,7 +218,7 @@ export function resetHooksState(): void {
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  // TODO: This should silently mark this as client rendered since it's not necessarily
+  // TODO: This should silently mark this as client rendered since it's not necesssarily
   // considered an error. It needs to work for things like Flight though.
   throw new Error('Not implemented.');
 }
