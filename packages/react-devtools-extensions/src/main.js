@@ -33,6 +33,7 @@ const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
 const isChrome = getBrowserName() === 'Chrome';
+const isEdge = getBrowserName() === 'Edge';
 
 let panelCreated = false;
 
@@ -203,7 +204,7 @@ function createPanelIfReactLoaded() {
 
           store = new Store(bridge, {
             isProfiling,
-            supportsReloadAndProfile: isChrome,
+            supportsReloadAndProfile: isChrome || isEdge,
             supportsProfiling,
             // At this time, the scheduling profiler can only parse Chrome performance profiles.
             supportsSchedulingProfiler: isChrome,
