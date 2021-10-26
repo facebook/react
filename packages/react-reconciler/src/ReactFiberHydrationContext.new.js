@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import type {
   Instance,
   TextInstance,
@@ -313,12 +314,19 @@ function tryHydrate(fiber, nextInstance) {
   }
 }
 
+function throwOnHydrationMismatchIfConcurrentMode(fiber) {
+  if ((fiber.mode & ConcurrentMode) !== NoMode) {
+    throw new Error('Hydration mismatch');
+  }
+}
+
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
+    throwOnHydrationMismatchIfConcurrentMode(fiber);
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
     isHydrating = false;
@@ -327,6 +335,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   }
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrate(fiber, nextInstance)) {
+    throwOnHydrationMismatchIfConcurrentMode(fiber);
     // If we can't hydrate this instance let's try the next one.
     // We use this as a heuristic. It's based on intuition and not data so it
     // might be flawed or unnecessary.
