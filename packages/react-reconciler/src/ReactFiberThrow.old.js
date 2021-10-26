@@ -288,22 +288,15 @@ function getNearestSuspenseBoundaryToCapture(returnFiber: Fiber) {
   return null;
 }
 
-function markNearestSuspenseBoundaryShouldCapture(
+function markSuspenseBoundaryShouldCapture(
+  suspenseBoundary: Fiber,
   returnFiber: Fiber,
   sourceFiber: Fiber,
   root: FiberRoot,
   rootRenderLanes: Lanes,
 ): Fiber | null {
-  const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
-
-  if (!suspenseBoundary) {
-    // Could not find a Suspense boundary capable of capturing.
-    return null;
-  }
-
   // This marks a Suspense boundary so that when we're unwinding the stack,
   // it captures the suspended "exception" and does a second (fallback) pass.
-
   if ((suspenseBoundary.mode & ConcurrentMode) === NoMode) {
     // Legacy Mode Suspense
     //
@@ -464,13 +457,15 @@ function throwException(
     }
 
     // Schedule the nearest Suspense to re-render the timed out view.
-    const suspenseBoundary = markNearestSuspenseBoundaryShouldCapture(
-      returnFiber,
-      sourceFiber,
-      root,
-      rootRenderLanes,
-    );
+    const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
     if (suspenseBoundary !== null) {
+      markSuspenseBoundaryShouldCapture(
+        suspenseBoundary,
+        returnFiber,
+        sourceFiber,
+        root,
+        rootRenderLanes,
+      );
       attachWakeableListeners(
         suspenseBoundary,
         root,
@@ -494,25 +489,23 @@ function throwException(
     // This is a regular error, not a Suspense wakeable.
     if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
       const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
-      const hasShouldCapture =
-        suspenseBoundary !== null &&
-        (suspenseBoundary.flags & ShouldCapture) !== NoFlags;
       // If the error was thrown during hydration, we may be able to recover by
       // discarding the dehydrated content and switching to a client render.
       // Instead of surfacing the error, find the nearest Suspense boundary
       // and render it again without hydration.
-      markNearestSuspenseBoundaryShouldCapture(
-        returnFiber,
-        sourceFiber,
-        root,
-        rootRenderLanes,
-      );
       if (suspenseBoundary !== null) {
-        if (!hasShouldCapture) {
+        if ((suspenseBoundary.flags & ShouldCapture) === NoFlags) {
           // Set a flag to indicate that we should try rendering the normal
           // children again, not the fallback.
           suspenseBoundary.flags |= ForceClientRender;
         }
+        markSuspenseBoundaryShouldCapture(
+          suspenseBoundary,
+          returnFiber,
+          sourceFiber,
+          root,
+          rootRenderLanes,
+        );
         return;
       }
     } else {
