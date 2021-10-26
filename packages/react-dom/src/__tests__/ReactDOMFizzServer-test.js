@@ -1732,6 +1732,8 @@ describe('ReactDOMFizzServer', () => {
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
     // Same as previous test, but with a selector that returns a complex object
     // that is memoized with a custom `isEqual` function.
+    const ref = React.createRef();
+
     function getServerSnapshot() {
       return {env: 'server', other: 'unrelated'};
     }
@@ -1787,12 +1789,19 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
+    console.log(container.innerHTML);
     expect(Scheduler).toHaveYielded(['server']);
 
     ReactDOM.hydrateRoot(container, <App />);
 
     // The first paint uses the client due to mismatch forcing client render
-    expect(Scheduler).toFlushUntilNextPaint(['client']);
+    expect(() => {
+      // The first paint switches to client rendering due to mismatch
+      expect(Scheduler).toFlushUntilNextPaint(['client']);
+    }).toErrorDev(
+      'Warning: An error occurred during hydration. The server HTML was replaced with client content',
+      {withoutStack: true},
+    );
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
   });
 
