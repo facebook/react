@@ -903,7 +903,7 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
       // again. This time, the component will use a client ID and will proceed
       // without throwing. If multiple IDs upgrade as a result of the same
       // update, we will have to do multiple render passes. To protect against
-      // an inifinite loop, eventually we'll give up.
+      // an infinite loop, eventually we'll give up.
       continue;
     }
     break;

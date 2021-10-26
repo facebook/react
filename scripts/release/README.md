@@ -34,7 +34,7 @@ The high level process of creating releases is [documented below](#process). Ind
 
 ## Trigger an Automated Prerelease
 
-If your code lands in the main branch, it will be automaticaly published to the prerelease channels within the next weekday. However, if you want to immediately publish a prerelease, you can trigger the job to run immediately:
+If your code lands in the main branch, it will be automatically published to the prerelease channels within the next weekday. However, if you want to immediately publish a prerelease, you can trigger the job to run immediately:
 
 ```sh
 yarn publish-prereleases
