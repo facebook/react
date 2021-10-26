@@ -1726,7 +1726,6 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // The selector implementation uses the lazy ref initialization pattern
-  // @gate !(enableUseRefAccessWarning && __DEV__)
   // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
@@ -1789,7 +1788,6 @@ describe('ReactDOMFizzServer', () => {
       );
       pipe(writable);
     });
-    console.log(container.innerHTML);
     expect(Scheduler).toHaveYielded(['server']);
 
     ReactDOM.hydrateRoot(container, <App />);
