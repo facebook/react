@@ -513,7 +513,12 @@ function throwException(
         suspenseBoundary.flags |= ForceClientRender;
         return;
       }
-      if (hasShouldCapture && value && value.message === 'Hydration mismatch') {
+      if (
+        hasShouldCapture &&
+        value &&
+        value.message ===
+          'An error occurred during hydration. The server HTML was replaced with client content'
+      ) {
         // swallow mismatch error
         return;
       }
