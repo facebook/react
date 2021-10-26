@@ -618,6 +618,26 @@ $RefreshReg$(_c, "Hello");
 $RefreshReg$(_c2, "Bar");
 `;
 
+exports[`ReactFreshBabelPlugin supports typescript namespace syntax 1`] = `
+namespace Foo {
+  export namespace Bar {
+    export const A = () => {};
+    _c = A;
+    export function B() {}
+    _c2 = B;
+    ;
+  }
+  export const C = () => {};
+  _c3 = C;
+}
+
+var _c, _c2, _c3;
+
+$RefreshReg$(_c, "Foo$Bar$A");
+$RefreshReg$(_c2, "Foo$Bar$B");
+$RefreshReg$(_c3, "Foo$C");
+`;
+
 exports[`ReactFreshBabelPlugin uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
 var _s = import.meta.refreshSig();
 

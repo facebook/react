@@ -536,4 +536,22 @@ describe('ReactFreshBabelPlugin', () => {
       `),
     ).toMatchSnapshot();
   });
+
+  it('supports typescript namespace syntax', () => {
+    expect(
+      transform(
+        `
+        namespace Foo {
+          export namespace Bar {
+            export const A = () => {};
+            export function B() {};
+          }
+
+          export const C = () => {};
+        }
+      `,
+        {plugins: [['@babel/plugin-syntax-typescript', {isTSX: true}]]},
+      ),
+    ).toMatchSnapshot();
+  });
 });

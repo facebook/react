@@ -478,6 +478,7 @@ export default function(babel, opts = {}) {
           const node = path.node;
           let programPath;
           let insertAfterPath;
+          let modulePrefix = '';
           switch (path.parent.type) {
             case 'Program':
               insertAfterPath = path;
@@ -486,6 +487,13 @@ export default function(babel, opts = {}) {
             case 'ExportNamedDeclaration':
               insertAfterPath = path.parentPath;
               programPath = insertAfterPath.parentPath;
+              while (programPath.type !== 'Program') {
+                if (programPath.type === 'TSModuleDeclaration') {
+                  // ExportNamedDeclaration can be nested in TSModules in typescript
+                  modulePrefix = programPath.node.id.name + '$' + modulePrefix;
+                }
+                programPath = programPath.parentPath;
+              }
               break;
             case 'ExportDefaultDeclaration':
               insertAfterPath = path.parentPath;
@@ -512,20 +520,17 @@ export default function(babel, opts = {}) {
           seenForRegistration.add(node);
           // Don't mutate the tree above this point.
 
+          const innerName = modulePrefix + inferredName;
           // export function Named() {}
           // function Named() {}
-          findInnerComponents(
-            inferredName,
-            path,
-            (persistentID, targetExpr) => {
-              const handle = createRegistration(programPath, persistentID);
-              insertAfterPath.insertAfter(
-                t.expressionStatement(
-                  t.assignmentExpression('=', handle, targetExpr),
-                ),
-              );
-            },
-          );
+          findInnerComponents(innerName, path, (persistentID, targetExpr) => {
+            const handle = createRegistration(programPath, persistentID);
+            insertAfterPath.insertAfter(
+              t.expressionStatement(
+                t.assignmentExpression('=', handle, targetExpr),
+              ),
+            );
+          });
         },
         exit(path) {
           const node = path.node;
@@ -679,6 +684,7 @@ export default function(babel, opts = {}) {
         const node = path.node;
         let programPath;
         let insertAfterPath;
+        let modulePrefix = '';
         switch (path.parent.type) {
           case 'Program':
             insertAfterPath = path;
@@ -687,6 +693,13 @@ export default function(babel, opts = {}) {
           case 'ExportNamedDeclaration':
             insertAfterPath = path.parentPath;
             programPath = insertAfterPath.parentPath;
+            while (programPath.type !== 'Program') {
+              if (programPath.type === 'TSModuleDeclaration') {
+                // ExportNamedDeclaration can be nested in TSModules in typescript
+                modulePrefix = programPath.node.id.name + '$' + modulePrefix;
+              }
+              programPath = programPath.parentPath;
+            }
             break;
           case 'ExportDefaultDeclaration':
             insertAfterPath = path.parentPath;
@@ -710,8 +723,9 @@ export default function(babel, opts = {}) {
         }
         const declPath = declPaths[0];
         const inferredName = declPath.node.id.name;
+        const innerName = modulePrefix + inferredName;
         findInnerComponents(
-          inferredName,
+          innerName,
           declPath,
           (persistentID, targetExpr, targetPath) => {
             if (targetPath === null) {
