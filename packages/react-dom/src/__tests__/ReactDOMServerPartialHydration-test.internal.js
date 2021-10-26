@@ -261,6 +261,10 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
     ]);
 
+    expect(container.innerHTML).toBe(
+      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+    );
+
     suspend = true;
     client = true;
 
@@ -273,6 +277,11 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
     ]);
     jest.runAllTimers();
+
+    // Unchanged
+    expect(container.innerHTML).toBe(
+      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+    );
 
     suspend = false;
     resolve();
@@ -292,6 +301,8 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       'Component',
     ]);
+
+    // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe(
       'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
     );
