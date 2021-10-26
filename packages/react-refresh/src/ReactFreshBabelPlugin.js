@@ -484,16 +484,13 @@ export default function(babel, opts = {}) {
               insertAfterPath = path;
               programPath = path.parentPath;
               break;
+            case 'TSModuleBlock':
+              insertAfterPath = path;
+              programPath = insertAfterPath.parentPath.parentPath;
+              break;
             case 'ExportNamedDeclaration':
               insertAfterPath = path.parentPath;
               programPath = insertAfterPath.parentPath;
-              while (programPath.type !== 'Program') {
-                if (programPath.type === 'TSModuleDeclaration') {
-                  // ExportNamedDeclaration can be nested in TSModules in typescript
-                  modulePrefix = programPath.node.id.name + '$' + modulePrefix;
-                }
-                programPath = programPath.parentPath;
-              }
               break;
             case 'ExportDefaultDeclaration':
               insertAfterPath = path.parentPath;
@@ -502,6 +499,28 @@ export default function(babel, opts = {}) {
             default:
               return;
           }
+
+          // These types can be nested in typescript namespace
+          // We need to find the export chain
+          // Or return if it stays local
+          if (
+            path.parent.type === 'TSModuleBlock' ||
+            path.parent.type === 'ExportNamedDeclaration'
+          ) {
+            while (programPath.type !== 'Program') {
+              if (programPath.type === 'TSModuleDeclaration') {
+                if (
+                  programPath.parentPath.type !== 'Program' &&
+                  programPath.parentPath.type !== 'ExportNamedDeclaration'
+                ) {
+                  return;
+                }
+                modulePrefix = programPath.node.id.name + '$' + modulePrefix;
+              }
+              programPath = programPath.parentPath;
+            }
+          }
+
           const id = node.id;
           if (id === null) {
             // We don't currently handle anonymous default exports.
@@ -690,16 +709,13 @@ export default function(babel, opts = {}) {
             insertAfterPath = path;
             programPath = path.parentPath;
             break;
+          case 'TSModuleBlock':
+            insertAfterPath = path;
+            programPath = insertAfterPath.parentPath.parentPath;
+            break;
           case 'ExportNamedDeclaration':
             insertAfterPath = path.parentPath;
             programPath = insertAfterPath.parentPath;
-            while (programPath.type !== 'Program') {
-              if (programPath.type === 'TSModuleDeclaration') {
-                // ExportNamedDeclaration can be nested in TSModules in typescript
-                modulePrefix = programPath.node.id.name + '$' + modulePrefix;
-              }
-              programPath = programPath.parentPath;
-            }
             break;
           case 'ExportDefaultDeclaration':
             insertAfterPath = path.parentPath;
@@ -707,6 +723,27 @@ export default function(babel, opts = {}) {
             break;
           default:
             return;
+        }
+
+        // These types can be nested in typescript namespace
+        // We need to find the export chain
+        // Or return if it stays local
+        if (
+          path.parent.type === 'TSModuleBlock' ||
+          path.parent.type === 'ExportNamedDeclaration'
+        ) {
+          while (programPath.type !== 'Program') {
+            if (programPath.type === 'TSModuleDeclaration') {
+              if (
+                programPath.parentPath.type !== 'Program' &&
+                programPath.parentPath.type !== 'ExportNamedDeclaration'
+              ) {
+                return;
+              }
+              modulePrefix = programPath.node.id.name + '$' + modulePrefix;
+            }
+            programPath = programPath.parentPath;
+          }
         }
 
         // Make sure we're not mutating the same tree twice.
