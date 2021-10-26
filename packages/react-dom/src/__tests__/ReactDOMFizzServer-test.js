@@ -1732,8 +1732,6 @@ describe('ReactDOMFizzServer', () => {
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
     // Same as previous test, but with a selector that returns a complex object
     // that is memoized with a custom `isEqual` function.
-    const ref = React.createRef();
-
     function getServerSnapshot() {
       return {env: 'server', other: 'unrelated'};
     }
@@ -1791,21 +1789,11 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    const serverRenderedDiv = container.getElementsByTagName('div')[0];
-
     ReactDOM.hydrateRoot(container, <App />);
 
-    // The first paint uses the server snapshot
-    expect(Scheduler).toFlushUntilNextPaint(['server']);
-    expect(getVisibleChildren(container)).toEqual(<div>server</div>);
-    // Hydration succeeded
-    expect(ref.current).toEqual(serverRenderedDiv);
-
-    // Asynchronously we detect that the store has changed on the client,
-    // and patch up the inconsistency
+    // The first paint uses the client due to mismatch forcing client render
     expect(Scheduler).toFlushUntilNextPaint(['client']);
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-    expect(ref.current).toEqual(serverRenderedDiv);
   });
 
   // @gate supportsNativeUseSyncExternalStore
