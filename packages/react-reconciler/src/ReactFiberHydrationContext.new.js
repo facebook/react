@@ -316,7 +316,9 @@ function tryHydrate(fiber, nextInstance) {
 
 function throwOnHydrationMismatchIfConcurrentMode(fiber) {
   if ((fiber.mode & ConcurrentMode) !== NoMode) {
-    throw new Error('Hydration mismatch');
+    throw new Error(
+      'An error occurred during hydration. The server HTML was replaced with client content',
+    );
   }
 }
 

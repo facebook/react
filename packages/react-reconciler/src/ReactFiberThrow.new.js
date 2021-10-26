@@ -494,9 +494,9 @@ function throwException(
     // This is a regular error, not a Suspense wakeable.
     if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
       const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
-      const didCaptureBefore =
-        (suspenseBoundary !== null &&
-          suspenseBoundary.flags & ShouldCapture) !== NoFlags;
+      const hasShouldCapture =
+        suspenseBoundary !== null &&
+        (suspenseBoundary.flags & ShouldCapture) !== NoFlags;
       // If the error was thrown during hydration, we may be able to recover by
       // discarding the dehydrated content and switching to a client render.
       // Instead of surfacing the error, find the nearest Suspense boundary
@@ -507,13 +507,13 @@ function throwException(
         root,
         rootRenderLanes,
       );
-      if (suspenseBoundary !== null && !didCaptureBefore) {
+      if (suspenseBoundary !== null && !hasShouldCapture) {
         // Set a flag to indicate that we should try rendering the normal
         // children again, not the fallback.
         suspenseBoundary.flags |= ForceClientRender;
         return;
       }
-      if (didCaptureBefore && value && value.message === 'Hydration mismatch') {
+      if (hasShouldCapture && value && value.message === 'Hydration mismatch') {
         // swallow mismatch error
         return;
       }

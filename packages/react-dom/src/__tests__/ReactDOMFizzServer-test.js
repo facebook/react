@@ -1666,8 +1666,6 @@ describe('ReactDOMFizzServer', () => {
   // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot', async () => {
-    const ref = React.createRef();
-
     function getServerSnapshot() {
       return 'server';
     }
@@ -1692,7 +1690,7 @@ describe('ReactDOMFizzServer', () => {
         getServerSnapshot,
       );
       return (
-        <div ref={ref}>
+        <div>
           <Child text={value} />
         </div>
       );
@@ -1715,21 +1713,16 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    const serverRenderedDiv = container.getElementsByTagName('div')[0];
-
     ReactDOM.hydrateRoot(container, <App />);
 
-    // The first paint uses the server snapshot
-    expect(Scheduler).toFlushUntilNextPaint(['server']);
-    expect(getVisibleChildren(container)).toEqual(<div>server</div>);
-    // Hydration succeeded
-    expect(ref.current).toEqual(serverRenderedDiv);
-
-    // Asynchronously we detect that the store has changed on the client,
-    // and patch up the inconsistency
-    expect(Scheduler).toFlushUntilNextPaint(['client']);
+    expect(() => {
+      // The first paint switches to client rendering due to mismatch
+      expect(Scheduler).toFlushUntilNextPaint(['client']);
+    }).toErrorDev(
+      'Warning: An error occurred during hydration. The server HTML was replaced with client content',
+      {withoutStack: true},
+    );
     expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-    expect(ref.current).toEqual(serverRenderedDiv);
   });
 
   // The selector implementation uses the lazy ref initialization pattern

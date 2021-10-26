@@ -1644,11 +1644,10 @@ describe('ReactDOMServerHooks', () => {
 
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
-      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
+      ReactDOM.hydrateRoot(container, <App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-          'Warning: Expected server HTML to contain a matching <div> in <div>.',
         ],
         {withoutStack: 1},
       );
@@ -1732,14 +1731,7 @@ describe('ReactDOMServerHooks', () => {
 
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
-      ReactDOM.createRoot(container, {hydrate: true}).render(<App />);
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
-        [
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
-          'Warning: Expected server HTML to contain a matching <div> in <div>.',
-        ],
-        {withoutStack: 1},
-      );
+      ReactDOM.hydrateRoot(container, <App />);
     });
 
     it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
