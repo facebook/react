@@ -2109,6 +2109,14 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
   return id;
 }
 
+function mountId(): string {
+  throw new Error('Not implemented.');
+}
+
+function updateId(): string {
+  throw new Error('Not implemented.');
+}
+
 function mountRefresh() {
   const hook = mountWorkInProgressHook();
   const refresh = (hook.memoizedState = refreshCache.bind(
@@ -2425,6 +2433,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useOpaqueIdentifier: throwInvalidHookError,
+  useId: throwInvalidHookError,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2453,6 +2462,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useMutableSource: mountMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
   useOpaqueIdentifier: mountOpaqueIdentifier,
+  useId: mountId,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2481,6 +2491,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useOpaqueIdentifier: updateOpaqueIdentifier,
+  useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2509,6 +2520,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useMutableSource: updateMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
   useOpaqueIdentifier: rerenderOpaqueIdentifier,
+  useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2680,6 +2692,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      mountHookTypesDev();
+      return mountId();
+    },
 
     unstable_isNewReconciler: enableNewReconciler,
   };
@@ -2821,6 +2838,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useOpaqueIdentifier';
       updateHookTypesDev();
       return mountOpaqueIdentifier();
+    },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      updateHookTypesDev();
+      return mountId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -2964,6 +2986,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateOpaqueIdentifier();
     },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      updateHookTypesDev();
+      return updateId();
+    },
 
     unstable_isNewReconciler: enableNewReconciler,
   };
@@ -3106,6 +3133,11 @@ if (__DEV__) {
       currentHookNameInDev = 'useOpaqueIdentifier';
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
+    },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      updateHookTypesDev();
+      return updateId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -3266,6 +3298,12 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountOpaqueIdentifier();
     },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return mountId();
+    },
 
     unstable_isNewReconciler: enableNewReconciler,
   };
@@ -3424,6 +3462,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateOpaqueIdentifier();
+    },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -3584,6 +3628,12 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return rerenderOpaqueIdentifier();
+    },
+    useId(): string {
+      currentHookNameInDev = 'useId';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return updateId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,

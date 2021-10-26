@@ -341,6 +341,10 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
   return value;
 }
 
+function useId(): string {
+  throw new Error('Not implemented.');
+}
+
 const Dispatcher: DispatcherType = {
   getCacheForType,
   readContext,
@@ -361,6 +365,7 @@ const Dispatcher: DispatcherType = {
   useSyncExternalStore,
   useDeferredValue,
   useOpaqueIdentifier,
+  useId,
 };
 
 // Inspect

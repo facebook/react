@@ -44,6 +44,7 @@ export type HookType =
   | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useOpaqueIdentifier'
+  | 'useId'
   | 'useCacheRefresh';
 
 export type ContextDependency<T> = {
@@ -317,6 +318,7 @@ export type Dispatcher = {|
     getServerSnapshot?: () => T,
   ): T,
   useOpaqueIdentifier(): any,
+  useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
 
   unstable_isNewReconciler?: boolean,

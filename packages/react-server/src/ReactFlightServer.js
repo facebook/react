@@ -846,6 +846,7 @@ const Dispatcher: DispatcherType = {
   useImperativeHandle: (unsupportedHook: any),
   useEffect: (unsupportedHook: any),
   useOpaqueIdentifier: (unsupportedHook: any),
+  useId: (unsupportedHook: any),
   useMutableSource: (unsupportedHook: any),
   useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {

@@ -495,6 +495,10 @@ function useOpaqueIdentifier(): OpaqueIDType {
   return makeServerID(currentResponseState);
 }
 
+function useId(): string {
+  throw new Error('Not implemented.');
+}
+
 function unsupportedRefresh() {
   throw new Error('Cache cannot be refreshed during server rendering.');
 }
@@ -524,6 +528,7 @@ export const Dispatcher: DispatcherType = {
   useDeferredValue,
   useTransition,
   useOpaqueIdentifier,
+  useId,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
   useSyncExternalStore,
