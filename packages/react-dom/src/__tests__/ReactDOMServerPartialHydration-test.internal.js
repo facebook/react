@@ -1561,7 +1561,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const b = container.getElementsByTagName('span')[1];
     expect(b.textContent).toBe('B');
 
-    const root = ReactDOM.hydrateRoot(container);
+    const root = ReactDOM.hydrateRoot(container, <App />);
     // Increase hydration priority to higher than "offscreen".
     root.unstable_scheduleHydration(b);
 
