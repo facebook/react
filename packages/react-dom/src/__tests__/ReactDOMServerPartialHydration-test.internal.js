@@ -278,7 +278,6 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    debugger;
     expect(Scheduler).toFlushAndYield([
       // first pass, mismatches at end
       'Hello',
