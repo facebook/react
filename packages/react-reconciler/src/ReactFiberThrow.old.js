@@ -507,19 +507,12 @@ function throwException(
         root,
         rootRenderLanes,
       );
-      if (suspenseBoundary !== null && !hasShouldCapture) {
-        // Set a flag to indicate that we should try rendering the normal
-        // children again, not the fallback.
-        suspenseBoundary.flags |= ForceClientRender;
-        return;
-      }
-      if (
-        hasShouldCapture &&
-        value &&
-        value.message ===
-          'An error occurred during hydration. The server HTML was replaced with client content'
-      ) {
-        // swallow mismatch error
+      if (suspenseBoundary !== null) {
+        if (!hasShouldCapture) {
+          // Set a flag to indicate that we should try rendering the normal
+          // children again, not the fallback.
+          suspenseBoundary.flags |= ForceClientRender;
+        }
         return;
       }
     } else {
