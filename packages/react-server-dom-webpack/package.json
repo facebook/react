@@ -52,6 +52,11 @@
     "react-dom": "^17.0.0",
     "webpack": "^4.43.0"
   },
+  "peerDependenciesMeta": {
+    "webpack": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "acorn": "^6.2.1",
     "neo-async": "^2.6.1",
