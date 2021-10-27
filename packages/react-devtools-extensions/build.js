@@ -102,6 +102,17 @@ const build = async (tempPath, manifestPath) => {
   }
   manifest.description += `\n\nCreated from revision ${commit} on ${dateString}.`;
 
+  if (process.env.NODE_ENV === 'development') {
+    // When building the local development version of the
+    // extension we want to be able to have a stable extension ID
+    // for the local build (in order to be able to reliably detect
+    // duplicate installations of DevTools).
+    // By specifying a key in the built manifest.json file,
+    // we can make it so the generated extension ID is stable.
+    // For more details see the docs here: https://developer.chrome.com/docs/extensions/mv2/manifest/key/
+    manifest.key = 'reactdevtoolslocalbuilduniquekey';
+  }
+
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
