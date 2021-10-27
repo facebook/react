@@ -2,11 +2,7 @@
 
 import nullthrows from 'nullthrows';
 import {installHook} from 'react-devtools-shared/src/hook';
-import {
-  __DEBUG__,
-  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
-} from 'react-devtools-shared/src/constants';
-import {CURRENT_EXTENSION_ID, EXTENSION_INSTALLATION_TYPE} from './constants';
+import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
 function injectCode(code) {
@@ -29,19 +25,6 @@ let lastDetectionResult;
 // And when this happens, we'll send a message to the "background page".
 window.addEventListener('message', function onMessage({data, source}) {
   if (source !== window || !data) {
-    return;
-  }
-  if (data.extensionId != null && data.extensionId !== CURRENT_EXTENSION_ID) {
-    if (__DEBUG__) {
-      console.log(
-        `[injectGlobalHook] Received message '${data.source}' from different extension instance. Skipping message.`,
-        {
-          currentExtension: EXTENSION_INSTALLATION_TYPE,
-          currentExtensionId: CURRENT_EXTENSION_ID,
-          providedExtensionId: data.extensionId,
-        },
-      );
-    }
     return;
   }
   switch (data.source) {
@@ -118,7 +101,6 @@ window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function({reactBuildType}) 
   window.postMessage({
     source: 'react-devtools-detector',
     reactBuildType,
-    extensionId: "${CURRENT_EXTENSION_ID}",
   }, '*');
 });
 `;
