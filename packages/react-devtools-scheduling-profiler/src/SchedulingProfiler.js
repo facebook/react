@@ -44,7 +44,7 @@ export function SchedulingProfiler(_: {||}) {
   // make sure the theme context in SettingsContext updates before this code.
   const deferredTheme = useDeferredValue(theme);
   // HACK: Schedule a re-render of the Canvas once colors have been updated.
-  // The easiest way to guarangee this happens is to recreate the inner Canvas component.
+  // The easiest way to guarantee this happens is to recreate the inner Canvas component.
   const [key, setKey] = useState<string>(theme);
   useLayoutEffect(() => {
     const pollForTheme = () => {
