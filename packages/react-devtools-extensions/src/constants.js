@@ -17,9 +17,7 @@ declare var chrome: any;
 
 export const CURRENT_EXTENSION_ID = chrome.runtime.id;
 
-export const EXTENSION_INSTALL_CHECK = 'extension-install-check';
-export const SHOW_DUPLICATE_EXTENSION_WARNING =
-  'show-duplicate-extension-warning';
+export const EXTENSION_INSTALL_CHECK_MESSAGE = 'extension-install-check';
 
 export const EXTENSION_INSTALLATION_TYPE:
   | 'public'

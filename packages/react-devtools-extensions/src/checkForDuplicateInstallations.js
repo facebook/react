@@ -15,11 +15,11 @@ import {
   __DEBUG__,
 } from 'react-devtools-shared/src/constants';
 import {
-  EXTENSION_INSTALL_CHECK,
+  EXTENSION_INSTALL_CHECK_MESSAGE,
   EXTENSION_INSTALLATION_TYPE,
 } from './constants';
 
-const UNRECOGNIZED_EXTENSION_ERROR =
+const UNRECOGNIZED_EXTENSION_WARNING =
   'React Developer Tools: You are running an unrecognized installation of the React Developer Tools extension, which might conflict with other versions of the extension installed in your browser. ' +
   'Please make sure you only have a single version of the extension installed or enabled. ' +
   'If you are developing this extension locally, make sure to build the extension using the `yarn build:<browser>:local` command.';
@@ -70,9 +70,9 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
       // detect if there are other installations of DevTools present.
       // In this case, assume there are no duplicate exensions and show a warning about
       // potential conflicts.
-      console.error(UNRECOGNIZED_EXTENSION_ERROR);
+      console.error(UNRECOGNIZED_EXTENSION_WARNING);
       chrome.devtools.inspectedWindow.eval(
-        `console.error("${UNRECOGNIZED_EXTENSION_ERROR}")`,
+        `console.error("${UNRECOGNIZED_EXTENSION_WARNING}")`,
       );
       callback(false);
       break;
@@ -82,9 +82,9 @@ export function checkForDuplicateInstallations(callback: boolean => void) {
       // are other installations of DevTools present.
       // In this case, assume there are no duplicate exensions and show a warning about
       // potential conflicts.
-      console.error(UNRECOGNIZED_EXTENSION_ERROR);
+      console.error(UNRECOGNIZED_EXTENSION_WARNING);
       chrome.devtools.inspectedWindow.eval(
-        `console.error("${UNRECOGNIZED_EXTENSION_ERROR}")`,
+        `console.error("${UNRECOGNIZED_EXTENSION_WARNING}")`,
       );
       callback(false);
       break;
@@ -107,7 +107,7 @@ function checkForInstalledExtension(extensionId: string): Promise<boolean> {
   return new Promise(resolve => {
     chrome.runtime.sendMessage(
       extensionId,
-      EXTENSION_INSTALL_CHECK,
+      EXTENSION_INSTALL_CHECK_MESSAGE,
       response => {
         if (__DEBUG__) {
           console.log(
