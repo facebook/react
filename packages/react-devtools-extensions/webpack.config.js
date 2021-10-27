@@ -30,7 +30,7 @@ const builtModulesDir = resolve(
 
 const __DEV__ = NODE_ENV === 'development';
 
-const DEVTOOLS_VERSION = getVersionString();
+const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
 
 const LOGGING_URL = process.env.LOGGING_URL || null;
 
