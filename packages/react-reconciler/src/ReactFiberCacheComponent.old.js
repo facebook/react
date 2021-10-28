@@ -18,8 +18,13 @@ import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.old';
 import {pushProvider, popProvider} from './ReactFiberNewContext.old';
+import * as Scheduler from 'scheduler';
 
-export type Cache = Map<() => mixed, mixed>;
+export type Cache = {|
+  controller: AbortController,
+  data: Map<() => mixed, mixed>,
+  refCount: number,
+|};
 
 export type CacheComponentState = {|
   +parent: Cache,
@@ -30,6 +35,13 @@ export type SpawnedCachePool = {|
   +parent: Cache,
   +pool: Cache,
 |};
+
+// Intentionally not named imports because Rollup would
+// use dynamic dispatch for CommonJS interop named imports.
+const {
+  unstable_scheduleCallback: scheduleCallback,
+  unstable_NormalPriority: NormalPriority,
+} = Scheduler;
 
 export const CacheContext: ReactContext<Cache> = enableCache
   ? {
@@ -57,6 +69,58 @@ let pooledCache: Cache | null = null;
 // cache from the render that suspended.
 const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 
+// Creates a new empty Cache instance with a ref-count of 0. The caller is responsible
+// for retaining the cache once it is in use (retainCache), and releasing the cache
+// once it is no longer needed (releaseCache).
+export function createCache(): Cache {
+  if (!enableCache) {
+    return (null: any);
+  }
+  const cache: Cache = {
+    controller: new AbortController(),
+    data: new Map(),
+    refCount: 0,
+  };
+
+  return cache;
+}
+
+export function retainCache(cache: Cache) {
+  if (!enableCache) {
+    return;
+  }
+  if (__DEV__) {
+    if (cache.controller.signal.aborted) {
+      console.warn(
+        'A cache instance was retained after it was already freed. ' +
+          'This likely indicates a bug in React.',
+      );
+    }
+  }
+  cache.refCount++;
+}
+
+// Cleanup a cache instance, potentially freeing it if there are no more references
+export function releaseCache(cache: Cache) {
+  if (!enableCache) {
+    return;
+  }
+  cache.refCount--;
+  if (__DEV__) {
+    if (cache.refCount < 0) {
+      console.warn(
+        'A cache instance was released after it was already freed. ' +
+          'This likely indicates a bug in React.',
+      );
+    }
+  }
+  if (cache.refCount === 0) {
+    scheduleCallback(NormalPriority, () => {
+      cache.controller.abort();
+    });
+  }
+}
+
 export function pushCacheProvider(workInProgress: Fiber, cache: Cache) {
   if (!enableCache) {
     return;
@@ -78,8 +142,14 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
   if (pooledCache !== null) {
     return pooledCache;
   }
-  // Create a fresh cache.
-  pooledCache = new Map();
+  // Create a fresh cache. The pooled cache must be owned - it is freed
+  // in releaseRootPooledCache() - but the cache instance handed out
+  // is retained/released in the commit phase of the component that
+  // references is (ie the host root, cache boundary, suspense component)
+  // Ie, pooledCache is conceptually an Option<Arc<Cache>> (owned),
+  // whereas the return value of this function is a &Arc<Cache> (borrowed).
+  pooledCache = createCache();
+  retainCache(pooledCache);
   return pooledCache;
 }
 
@@ -91,7 +161,13 @@ export function pushRootCachePool(root: FiberRoot) {
   // from `root.pooledCache`. If it's currently `null`, we will lazily
   // initialize it the first type it's requested. However, we only mutate
   // the root itself during the complete/unwind phase of the HostRoot.
-  pooledCache = root.pooledCache;
+  const rootCache = root.pooledCache;
+  if (rootCache != null) {
+    pooledCache = rootCache;
+    root.pooledCache = null;
+  } else {
+    pooledCache = null;
+  }
 }
 
 export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
@@ -157,7 +233,6 @@ export function getSuspendedCachePool(): SpawnedCachePool | null {
   if (!enableCache) {
     return null;
   }
-
   // We check the cache on the stack first, since that's the one any new Caches
   // would have accessed.
   let pool = pooledCache;

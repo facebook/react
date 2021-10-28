@@ -98,6 +98,22 @@ function markVersionMetadata() {
   markAndClear(`--profiler-version-${SCHEDULING_PROFILER_VERSION}`);
 }
 
+function markInternalModuleRanges() {
+  /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges === 'function'
+  ) {
+    const ranges = __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges();
+    for (let i = 0; i < ranges.length; i++) {
+      const [startStackFrame, stopStackFrame] = ranges[i];
+
+      markAndClear(`--react-internal-module-start-${startStackFrame}`);
+      markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
+    }
+  }
+}
+
 export function markCommitStarted(lanes: Lanes): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
@@ -114,6 +130,7 @@ export function markCommitStarted(lanes: Lanes): void {
       // we can log this data only once (when started) and remove the per-commit logging.
       markVersionMetadata();
       markLaneToLabelMetadata();
+      markInternalModuleRanges();
     }
   }
 }
@@ -140,6 +157,78 @@ export function markComponentRenderStopped(): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       markAndClear('--component-render-stop');
+    }
+  }
+}
+
+export function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-passive-effect-mount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentPassiveEffectMountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-passive-effect-mount-stop');
+    }
+  }
+}
+
+export function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-passive-effect-unmount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentPassiveEffectUnmountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-passive-effect-unmount-stop');
+    }
+  }
+}
+
+export function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-layout-effect-mount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentLayoutEffectMountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-layout-effect-mount-stop');
+    }
+  }
+}
+
+export function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
+      // TODO (scheduling profiler) Add component stack id
+      markAndClear(`--component-layout-effect-unmount-start-${componentName}`);
+    }
+  }
+}
+
+export function markComponentLayoutEffectUnmountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (supportsUserTimingV3) {
+      markAndClear('--component-layout-effect-unmount-stop');
     }
   }
 }

@@ -82,8 +82,6 @@ import {
   scheduleUpdateOnFiber,
   requestUpdateLane,
   requestEventTime,
-  warnIfNotCurrentlyActingEffectsInDEV,
-  warnIfNotCurrentlyActingUpdatesInDev,
   markSkippedUpdateLanes,
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
@@ -110,7 +108,7 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
-import {CacheContext} from './ReactFiberCacheComponent.old';
+import {createCache, CacheContext} from './ReactFiberCacheComponent.old';
 import {
   createUpdate as createLegacyQueueUpdate,
   enqueueUpdate as enqueueLegacyQueueUpdate,
@@ -118,7 +116,6 @@ import {
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
-import {isActEnvironment} from './ReactFiberAct.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1678,11 +1675,6 @@ function mountEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    if (isActEnvironment(currentlyRenderingFiber)) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-    }
-  }
   if (
     __DEV__ &&
     enableStrictEffects &&
@@ -1708,11 +1700,6 @@ function updateEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    if (isActEnvironment(currentlyRenderingFiber)) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-    }
-  }
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
@@ -2124,6 +2111,9 @@ function updateRefresh() {
 }
 
 function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
+  if (!enableCache) {
+    return;
+  }
   // TODO: Does Cache work in legacy mode? Should decide and write a test.
   // TODO: Consider warning if the refresh is at discrete priority, or if we
   // otherwise suspect that it wasn't batched properly.
@@ -2139,11 +2129,14 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
           entangleLegacyQueueTransitions(root, provider, lane);
         }
 
-        const seededCache = new Map();
+        // TODO: If a refresh never commits, the new cache created here must be
+        // released. A simple case is start refreshing a cache boundary, but then
+        // unmount that boundary before the refresh completes.
+        const seededCache = createCache();
         if (seedKey !== null && seedKey !== undefined && root !== null) {
           // Seed the cache with the value passed by the caller. This could be
           // from a server mutation, or it could be a streaming response.
-          seededCache.set(seedKey, seedValue);
+          seededCache.data.set(seedKey, seedValue);
         }
 
         // Schedule an update on the cache boundary to trigger a refresh.
@@ -2190,12 +2183,6 @@ function dispatchReducerAction<S, A>(
     enqueueRenderPhaseUpdate(queue, update);
   } else {
     enqueueUpdate(fiber, queue, update, lane);
-
-    if (__DEV__) {
-      if (isActEnvironment(fiber)) {
-        warnIfNotCurrentlyActingUpdatesInDev(fiber);
-      }
-    }
     const eventTime = requestEventTime();
     const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
     if (root !== null) {
@@ -2274,11 +2261,6 @@ function dispatchSetState<S, A>(
             ReactCurrentDispatcher.current = prevDispatcher;
           }
         }
-      }
-    }
-    if (__DEV__) {
-      if (isActEnvironment(fiber)) {
-        warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
     const eventTime = requestEventTime();
@@ -2390,15 +2372,23 @@ function markUpdateInDevTools(fiber, lane, action) {
   }
 }
 
+function getCacheSignal(): AbortSignal {
+  if (!enableCache) {
+    throw new Error('Not implemented.');
+  }
+  const cache: Cache = readContext(CacheContext);
+  return cache.controller.signal;
+}
+
 function getCacheForType<T>(resourceType: () => T): T {
   if (!enableCache) {
     throw new Error('Not implemented.');
   }
   const cache: Cache = readContext(CacheContext);
-  let cacheForType: T | void = (cache.get(resourceType): any);
+  let cacheForType: T | void = (cache.data.get(resourceType): any);
   if (cacheForType === undefined) {
     cacheForType = resourceType();
-    cache.set(resourceType, cacheForType);
+    cache.data.set(resourceType, cacheForType);
   }
   return cacheForType;
 }
@@ -2426,6 +2416,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
+  (ContextOnlyDispatcher: Dispatcher).getCacheSignal = getCacheSignal;
   (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
 }
@@ -2453,6 +2444,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
+  (HooksDispatcherOnMount: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
@@ -2480,6 +2472,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
+  (HooksDispatcherOnUpdate: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
 }
@@ -2507,6 +2500,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
+  (HooksDispatcherOnRerender: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
 }
@@ -2677,6 +2671,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).getCacheSignal = getCacheSignal;
     (HooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
     (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
@@ -2818,6 +2813,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheSignal = getCacheSignal;
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheForType = getCacheForType;
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
@@ -2959,6 +2955,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheSignal = getCacheSignal;
     (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
@@ -3101,6 +3098,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheSignal = getCacheSignal;
     (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
@@ -3259,6 +3257,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheSignal = getCacheSignal;
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
@@ -3417,6 +3416,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheSignal = getCacheSignal;
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
@@ -3576,6 +3576,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheSignal = getCacheSignal;
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';

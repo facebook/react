@@ -56,21 +56,17 @@ describe('DebugTracing', () => {
     expect(logs).toEqual([]);
   });
 
+  // @gate build === 'development'
   // @gate experimental || www
   it('should not log anything for concurrent render without suspends or state updates', () => {
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <div />
-      </React.unstable_DebugTracingMode>,
-      {unstable_isConcurrent: true},
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.unstable_DebugTracingMode>
+          <div />
+        </React.unstable_DebugTracingMode>,
+        {unstable_isConcurrent: true},
+      ),
     );
-
-    expect(logs).toEqual([]);
-
-    logs.splice(0);
-
-    expect(Scheduler).toFlushUntilNextPaint([]);
-
     expect(logs).toEqual([]);
   });
 
@@ -81,12 +77,14 @@ describe('DebugTracing', () => {
       throw fakeSuspensePromise;
     }
 
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>
-      </React.unstable_DebugTracingMode>,
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.unstable_DebugTracingMode>
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>
+        </React.unstable_DebugTracingMode>,
+      ),
     );
 
     expect(logs).toEqual([
@@ -142,25 +140,32 @@ describe('DebugTracing', () => {
 
   // @gate experimental && build === 'development' && enableDebugTracing
   it('should log concurrent render with suspense', async () => {
-    const fakeSuspensePromise = Promise.resolve(true);
+    let isResolved = false;
+    let resolveFakeSuspensePromise;
+    const fakeSuspensePromise = new Promise(resolve => {
+      resolveFakeSuspensePromise = () => {
+        resolve();
+        isResolved = true;
+      };
+    });
+
     function Example() {
-      throw fakeSuspensePromise;
+      if (!isResolved) {
+        throw fakeSuspensePromise;
+      }
+      return null;
     }
 
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <React.Suspense fallback={null}>
-          <Example />
-        </React.Suspense>
-      </React.unstable_DebugTracingMode>,
-      {unstable_isConcurrent: true},
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.unstable_DebugTracingMode>
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>
+        </React.unstable_DebugTracingMode>,
+        {unstable_isConcurrent: true},
+      ),
     );
-
-    expect(logs).toEqual([]);
-
-    logs.splice(0);
-
-    expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
@@ -170,7 +175,7 @@ describe('DebugTracing', () => {
 
     logs.splice(0);
 
-    await fakeSuspensePromise;
+    await ReactTestRenderer.act(async () => await resolveFakeSuspensePromise());
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
@@ -186,34 +191,23 @@ describe('DebugTracing', () => {
       return children;
     }
 
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <Wrapper>
-          <React.Suspense fallback={null} unstable_expectedLoadTime={1}>
-            <Example />
-          </React.Suspense>
-        </Wrapper>
-      </React.unstable_DebugTracingMode>,
-      {unstable_isConcurrent: true},
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.unstable_DebugTracingMode>
+          <Wrapper>
+            <React.Suspense fallback={null} unstable_expectedLoadTime={1}>
+              <Example />
+            </React.Suspense>
+          </Wrapper>
+        </React.unstable_DebugTracingMode>,
+        {unstable_isConcurrent: true},
+      ),
     );
-
-    expect(logs).toEqual([]);
-
-    logs.splice(0);
-
-    expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
       'log: <Wrapper/>',
       `groupEnd: ⚛️ render (${DEFAULT_LANE_STRING})`,
-    ]);
-
-    logs.splice(0);
-
-    expect(Scheduler).toFlushUntilNextPaint([]);
-
-    expect(logs).toEqual([
       `group: ⚛️ render (${RETRY_LANE_STRING})`,
       'log: <Example/>',
       `groupEnd: ⚛️ render (${RETRY_LANE_STRING})`,
@@ -232,18 +226,14 @@ describe('DebugTracing', () => {
       }
     }
 
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <Example />
-      </React.unstable_DebugTracingMode>,
-      {unstable_isConcurrent: true},
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.unstable_DebugTracingMode>
+          <Example />
+        </React.unstable_DebugTracingMode>,
+        {unstable_isConcurrent: true},
+      ),
     );
-
-    expect(logs).toEqual([]);
-
-    logs.splice(0);
-
-    expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
       `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
@@ -266,19 +256,15 @@ describe('DebugTracing', () => {
       }
     }
 
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <Example />
-      </React.unstable_DebugTracingMode>,
-      {unstable_isConcurrent: true},
-    );
-
-    expect(logs).toEqual([]);
-
-    logs.splice(0);
-
     expect(() => {
-      expect(Scheduler).toFlushUntilNextPaint([]);
+      ReactTestRenderer.act(() =>
+        ReactTestRenderer.create(
+          <React.unstable_DebugTracingMode>
+            <Example />
+          </React.unstable_DebugTracingMode>,
+          {unstable_isConcurrent: true},
+        ),
+      );
     }).toErrorDev('Cannot update during an existing state transition');
 
     expect(logs).toEqual([
@@ -298,18 +284,14 @@ describe('DebugTracing', () => {
       return didMount;
     }
 
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <Example />
-      </React.unstable_DebugTracingMode>,
-      {unstable_isConcurrent: true},
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.unstable_DebugTracingMode>
+          <Example />
+        </React.unstable_DebugTracingMode>,
+        {unstable_isConcurrent: true},
+      ),
     );
-
-    expect(logs).toEqual([]);
-
-    logs.splice(0);
-
-    expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
       `group: ⚛️ commit (${DEFAULT_LANE_STRING})`,
@@ -378,18 +360,14 @@ describe('DebugTracing', () => {
       return null;
     }
 
-    ReactTestRenderer.create(
-      <React.unstable_DebugTracingMode>
-        <Example />
-      </React.unstable_DebugTracingMode>,
-      {unstable_isConcurrent: true},
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.unstable_DebugTracingMode>
+          <Example />
+        </React.unstable_DebugTracingMode>,
+        {unstable_isConcurrent: true},
+      ),
     );
-
-    expect(logs).toEqual([]);
-
-    logs.splice(0);
-
-    expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
       `group: ⚛️ render (${DEFAULT_LANE_STRING})`,
@@ -398,6 +376,7 @@ describe('DebugTracing', () => {
     ]);
   });
 
+  // @gate build === 'development'
   // @gate experimental || www
   it('should not log anything outside of a unstable_DebugTracingMode subtree', () => {
     function ExampleThatCascades() {
@@ -417,16 +396,18 @@ describe('DebugTracing', () => {
       return null;
     }
 
-    ReactTestRenderer.create(
-      <React.Fragment>
-        <ExampleThatCascades />
-        <React.Suspense fallback={null}>
-          <ExampleThatSuspends />
-        </React.Suspense>
-        <React.unstable_DebugTracingMode>
-          <Example />
-        </React.unstable_DebugTracingMode>
-      </React.Fragment>,
+    ReactTestRenderer.act(() =>
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <ExampleThatCascades />
+          <React.Suspense fallback={null}>
+            <ExampleThatSuspends />
+          </React.Suspense>
+          <React.unstable_DebugTracingMode>
+            <Example />
+          </React.unstable_DebugTracingMode>
+        </React.Fragment>,
+      ),
     );
 
     expect(logs).toEqual([]);

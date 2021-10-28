@@ -76,7 +76,13 @@ export class ComponentMeasuresView extends View {
     showHoverHighlight: boolean,
   ): boolean {
     const {frame} = this;
-    const {componentName, duration, timestamp, warning} = componentMeasure;
+    const {
+      componentName,
+      duration,
+      timestamp,
+      type,
+      warning,
+    } = componentMeasure;
 
     const xStart = timestampToPosition(timestamp, scaleFactor, frame);
     const xStop = timestampToPosition(timestamp + duration, scaleFactor, frame);
@@ -96,6 +102,9 @@ export class ComponentMeasuresView extends View {
       return false; // Too small to render at this zoom level
     }
 
+    let textFillStyle = ((null: any): string);
+    let typeLabel = ((null: any): string);
+
     const drawableRect = intersectionOfRects(componentMeasureRect, rect);
     context.beginPath();
     if (warning !== null) {
@@ -103,9 +112,43 @@ export class ComponentMeasuresView extends View {
         ? COLORS.WARNING_BACKGROUND_HOVER
         : COLORS.WARNING_BACKGROUND;
     } else {
-      context.fillStyle = showHoverHighlight
-        ? COLORS.REACT_COMPONENT_MEASURE_HOVER
-        : COLORS.REACT_COMPONENT_MEASURE;
+      switch (type) {
+        case 'render':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_RENDER_HOVER
+            : COLORS.REACT_RENDER;
+          textFillStyle = COLORS.REACT_RENDER_TEXT;
+          typeLabel = 'rendered';
+          break;
+        case 'layout-effect-mount':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_LAYOUT_EFFECTS_HOVER
+            : COLORS.REACT_LAYOUT_EFFECTS;
+          textFillStyle = COLORS.REACT_LAYOUT_EFFECTS_TEXT;
+          typeLabel = 'mounted layout effect';
+          break;
+        case 'layout-effect-unmount':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_LAYOUT_EFFECTS_HOVER
+            : COLORS.REACT_LAYOUT_EFFECTS;
+          textFillStyle = COLORS.REACT_LAYOUT_EFFECTS_TEXT;
+          typeLabel = 'unmounted layout effect';
+          break;
+        case 'passive-effect-mount':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_PASSIVE_EFFECTS_HOVER
+            : COLORS.REACT_PASSIVE_EFFECTS;
+          textFillStyle = COLORS.REACT_PASSIVE_EFFECTS_TEXT;
+          typeLabel = 'mounted passive effect';
+          break;
+        case 'passive-effect-unmount':
+          context.fillStyle = showHoverHighlight
+            ? COLORS.REACT_PASSIVE_EFFECTS_HOVER
+            : COLORS.REACT_PASSIVE_EFFECTS;
+          textFillStyle = COLORS.REACT_PASSIVE_EFFECTS_TEXT;
+          typeLabel = 'unmounted passive effect';
+          break;
+      }
     }
     context.fillRect(
       drawableRect.origin.x,
@@ -114,9 +157,11 @@ export class ComponentMeasuresView extends View {
       drawableRect.size.height,
     );
 
-    const label = `${componentName} rendered - ${formatDuration(duration)}`;
+    const label = `${componentName} ${typeLabel} - ${formatDuration(duration)}`;
 
-    drawText(label, context, componentMeasureRect, drawableRect);
+    drawText(label, context, componentMeasureRect, drawableRect, {
+      fillStyle: textFillStyle,
+    });
 
     return true;
   }

@@ -7,6 +7,10 @@
  * @flow
  */
 
+export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
+export const INTERNAL_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
+export const LOCAL_EXTENSION_ID = 'ikiahnapldjmdmpkmfhjdjilojjhgcbf';
+
 // Flip this flag to true to enable verbose console debug logging.
 export const __DEBUG__ = false;
 
@@ -147,6 +151,9 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-resize-bar-active': '#dcdcdc',
     '--color-resize-bar-border': '#d1d1d1',
     '--color-resize-bar-dot': '#333333',
+    '--color-scheduling-profiler-internal-module': '#d1d1d1',
+    '--color-scheduling-profiler-internal-module-hover': '#c9c9c9',
+    '--color-scheduling-profiler-internal-module-text': '#444',
     '--color-scheduling-profiler-native-event': '#ccc',
     '--color-scheduling-profiler-native-event-hover': '#aaa',
     '--color-scheduling-profiler-network-primary': '#fcf3dc',
@@ -288,6 +295,9 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-resize-bar-active': '#31363f',
     '--color-resize-bar-border': '#3d424a',
     '--color-resize-bar-dot': '#cfd1d5',
+    '--color-scheduling-profiler-internal-module': '#303542',
+    '--color-scheduling-profiler-internal-module-hover': '#363b4a',
+    '--color-scheduling-profiler-internal-module-text': '#7f8899',
     '--color-scheduling-profiler-native-event': '#b2b2b2',
     '--color-scheduling-profiler-native-event-hover': '#949494',
     '--color-scheduling-profiler-network-primary': '#fcf3dc',

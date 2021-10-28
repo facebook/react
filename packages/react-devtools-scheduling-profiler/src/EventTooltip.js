@@ -140,9 +140,26 @@ const TooltipReactComponentMeasure = ({
 }: {|
   componentMeasure: ReactComponentMeasure,
 |}) => {
-  const {componentName, duration, timestamp, warning} = componentMeasure;
+  const {componentName, duration, timestamp, type, warning} = componentMeasure;
 
-  const label = `${componentName} rendered`;
+  let label = componentName;
+  switch (type) {
+    case 'render':
+      label += ' rendered';
+      break;
+    case 'layout-effect-mount':
+      label += ' mounted layout effect';
+      break;
+    case 'layout-effect-unmount':
+      label += ' unmounted layout effect';
+      break;
+    case 'passive-effect-mount':
+      label += ' mounted passive effect';
+      break;
+    case 'passive-effect-unmount':
+      label += ' unmounted passive effect';
+      break;
+  }
 
   return (
     <>

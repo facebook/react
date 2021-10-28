@@ -17,8 +17,6 @@ import {
 } from '../../constants';
 import REACT_VERSION from 'shared/ReactVersion';
 
-global.IS_REACT_ACT_ENVIRONMENT = true;
-
 describe('getLanesFromTransportDecimalBitmask', () => {
   it('should return array of lane numbers from bitmask string', () => {
     expect(getLanesFromTransportDecimalBitmask('1')).toEqual([0]);
@@ -210,6 +208,8 @@ describe('preprocessData', () => {
     tid = 0;
     pid = 0;
     startTime = 0;
+
+    global.IS_REACT_ACT_ENVIRONMENT = true;
   });
 
   afterEach(() => {
@@ -282,6 +282,7 @@ describe('preprocessData', () => {
           "componentMeasures": Array [],
           "duration": 0.005,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",
@@ -449,6 +450,7 @@ describe('preprocessData', () => {
           "componentMeasures": Array [],
           "duration": 0.011,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",
@@ -636,6 +638,7 @@ describe('preprocessData', () => {
           "componentMeasures": Array [],
           "duration": 0.013,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",
@@ -837,7 +840,7 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 0,
                 "depth": 0,
-                "duration": 0.0019999999999999983,
+                "duration": 0.004,
                 "lanes": Array [
                   4,
                 ],
@@ -849,11 +852,11 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.010000000000000002,
+                "duration": 0.009999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render-idle",
               },
               Object {
@@ -863,37 +866,37 @@ describe('preprocessData', () => {
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.006000000000000002,
+                "duration": 0.005999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.023,
+                "timestamp": 0.025,
                 "type": "commit",
               },
               Object {
                 "batchUID": 1,
                 "depth": 1,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0009999999999999974,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.027,
+                "timestamp": 0.029,
                 "type": "layout-effects",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0030000000000000027,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.03,
+                "timestamp": 0.032,
                 "type": "passive-effects",
               },
             ],
@@ -903,17 +906,34 @@ describe('preprocessData', () => {
               "componentName": "App",
               "duration": 0.001,
               "timestamp": 0.006,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "App",
+              "duration": 0.0019999999999999983,
+              "timestamp": 0.017,
+              "type": "passive-effect-mount",
               "warning": null,
             },
             Object {
               "componentName": "App",
               "duration": 0.0010000000000000009,
-              "timestamp": 0.02,
+              "timestamp": 0.022,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "App",
+              "duration": 0.0010000000000000009,
+              "timestamp": 0.033,
+              "type": "passive-effect-mount",
               "warning": null,
             },
           ],
-          "duration": 0.031,
+          "duration": 0.035,
           "flamechart": Array [],
+          "internalModuleSourceToRanges": Map {},
           "laneToLabelMap": Map {
             0 => "Sync",
             1 => "InputContinuousHydration",
@@ -996,7 +1016,7 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 0,
                 "depth": 0,
-                "duration": 0.0019999999999999983,
+                "duration": 0.004,
                 "lanes": Array [
                   4,
                 ],
@@ -1006,11 +1026,11 @@ describe('preprocessData', () => {
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.010000000000000002,
+                "duration": 0.009999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render-idle",
               },
               Object {
@@ -1020,37 +1040,37 @@ describe('preprocessData', () => {
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.019,
+                "timestamp": 0.021,
                 "type": "render",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.006000000000000002,
+                "duration": 0.005999999999999998,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.023,
+                "timestamp": 0.025,
                 "type": "commit",
               },
               Object {
                 "batchUID": 1,
                 "depth": 1,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0009999999999999974,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.027,
+                "timestamp": 0.029,
                 "type": "layout-effects",
               },
               Object {
                 "batchUID": 1,
                 "depth": 0,
-                "duration": 0.0010000000000000009,
+                "duration": 0.0030000000000000027,
                 "lanes": Array [
                   4,
                 ],
-                "timestamp": 0.03,
+                "timestamp": 0.032,
                 "type": "passive-effects",
               },
             ],
@@ -1104,7 +1124,7 @@ describe('preprocessData', () => {
               "lanes": Array [
                 4,
               ],
-              "timestamp": 0.017,
+              "timestamp": 0.018,
               "type": "schedule-state-update",
               "warning": null,
             },
@@ -1231,7 +1251,7 @@ describe('preprocessData', () => {
 
       testMarks.push(...createUserTimingData(clearedMarks));
 
-      const data = await preprocessData(testMarks);
+      const data = await act(() => preprocessData(testMarks));
       expect(data.suspenseEvents).toHaveLength(1);
       expect(data.suspenseEvents[0].promiseName).toBe('Testing displayName');
     }
@@ -1347,6 +1367,8 @@ describe('preprocessData', () => {
 
           const root = ReactDOM.createRoot(document.createElement('div'));
 
+          // Temporarily turn off the act environment, since we're intentionally using Scheduler instead.
+          global.IS_REACT_ACT_ENVIRONMENT = false;
           React.startTransition(() => {
             // Start rendering an async update (but don't finish).
             root.render(
@@ -1581,6 +1603,143 @@ describe('preprocessData', () => {
           );
         }
       });
+
+      it('should not warn about transition updates scheduled during commit phase', async () => {
+        function Component() {
+          const [value, setValue] = React.useState(0);
+          // eslint-disable-next-line no-unused-vars
+          const [isPending, startTransition] = React.useTransition();
+
+          Scheduler.unstable_yieldValue(
+            `Component rendered with value ${value}`,
+          );
+
+          // Fake a long render
+          if (value !== 0) {
+            Scheduler.unstable_yieldValue('Long render');
+            startTime += 20000;
+          }
+
+          React.useLayoutEffect(() => {
+            startTransition(() => {
+              setValue(1);
+            });
+          }, []);
+
+          return value;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const cpuProfilerSample = creactCpuProfilerSample();
+
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component rendered with value 0',
+            'Component rendered with value 0',
+            'Component rendered with value 1',
+            'Long render',
+          ]);
+
+          const testMarks = [];
+          clearedMarks.forEach(markName => {
+            if (markName === '--component-render-start-Component') {
+              // Fake a long running render
+              startTime += 20000;
+            }
+
+            testMarks.push({
+              pid: ++pid,
+              tid: ++tid,
+              ts: ++startTime,
+              args: {data: {}},
+              cat: 'blink.user_timing',
+              name: markName,
+              ph: 'R',
+            });
+          });
+
+          const data = await preprocessData([
+            cpuProfilerSample,
+            ...createBoilerplateEntries(),
+            ...testMarks,
+          ]);
+
+          data.schedulingEvents.forEach(event => {
+            expect(event.warning).toBeNull();
+          });
+        }
+      });
+
+      it('should not warn about deferred value updates scheduled during commit phase', async () => {
+        function Component() {
+          const [value, setValue] = React.useState(0);
+          const deferredValue = React.useDeferredValue(value);
+
+          Scheduler.unstable_yieldValue(
+            `Component rendered with value ${value} and deferredValue ${deferredValue}`,
+          );
+
+          // Fake a long render
+          if (deferredValue !== 0) {
+            Scheduler.unstable_yieldValue('Long render');
+            startTime += 20000;
+          }
+
+          React.useLayoutEffect(() => {
+            setValue(1);
+          }, []);
+
+          return value + deferredValue;
+        }
+
+        if (gate(flags => flags.enableSchedulingProfiler)) {
+          const cpuProfilerSample = creactCpuProfilerSample();
+
+          const root = ReactDOM.createRoot(document.createElement('div'));
+          act(() => {
+            root.render(<Component />);
+          });
+
+          expect(Scheduler).toHaveYielded([
+            'Component rendered with value 0 and deferredValue 0',
+            'Component rendered with value 1 and deferredValue 0',
+            'Component rendered with value 1 and deferredValue 1',
+            'Long render',
+          ]);
+
+          const testMarks = [];
+          clearedMarks.forEach(markName => {
+            if (markName === '--component-render-start-Component') {
+              // Fake a long running render
+              startTime += 20000;
+            }
+
+            testMarks.push({
+              pid: ++pid,
+              tid: ++tid,
+              ts: ++startTime,
+              args: {data: {}},
+              cat: 'blink.user_timing',
+              name: markName,
+              ph: 'R',
+            });
+          });
+
+          const data = await preprocessData([
+            cpuProfilerSample,
+            ...createBoilerplateEntries(),
+            ...testMarks,
+          ]);
+
+          data.schedulingEvents.forEach(event => {
+            expect(event.warning).toBeNull();
+          });
+        }
+      });
     });
 
     describe('errors thrown while rendering', () => {
@@ -1680,7 +1839,7 @@ describe('preprocessData', () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = await preprocessData(testMarks);
+          const data = await act(() => preprocessData(testMarks));
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toMatchInlineSnapshot(
             `"A component suspended during an update which caused a fallback to be shown. Consider using the Transition API to avoid hiding components after they've been mounted."`,
@@ -1738,7 +1897,7 @@ describe('preprocessData', () => {
 
           testMarks.push(...createUserTimingData(clearedMarks));
 
-          const data = await preprocessData(testMarks);
+          const data = await act(() => preprocessData(testMarks));
           expect(data.suspenseEvents).toHaveLength(1);
           expect(data.suspenseEvents[0].warning).toBe(null);
         }

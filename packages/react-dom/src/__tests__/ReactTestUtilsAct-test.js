@@ -32,18 +32,31 @@ describe('ReactTestUtils.act()', () => {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
       concurrentRoot = ReactDOM.createRoot(dom);
-      concurrentRoot.render(el);
+      if (__DEV__) {
+        act(() => concurrentRoot.render(el));
+      } else {
+        concurrentRoot.render(el);
+      }
     };
 
     const unmountConcurrent = _dom => {
-      if (concurrentRoot !== null) {
-        concurrentRoot.unmount();
-        concurrentRoot = null;
+      if (__DEV__) {
+        act(() => {
+          if (concurrentRoot !== null) {
+            concurrentRoot.unmount();
+            concurrentRoot = null;
+          }
+        });
+      } else {
+        if (concurrentRoot !== null) {
+          concurrentRoot.unmount();
+          concurrentRoot = null;
+        }
       }
     };
 
     const rerenderConcurrent = el => {
-      concurrentRoot.render(el);
+      act(() => concurrentRoot.render(el));
     };
 
     runActTests(
@@ -85,35 +98,11 @@ describe('ReactTestUtils.act()', () => {
       }).toErrorDev([]);
     });
 
-    it('warns in strict mode', () => {
-      expect(() => {
-        ReactDOM.render(
-          <React.StrictMode>
-            <App />
-          </React.StrictMode>,
-          document.createElement('div'),
-        );
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
-
+    // @gate __DEV__
     it('does not warn in concurrent mode', () => {
       const root = ReactDOM.createRoot(document.createElement('div'));
-      root.render(<App />);
+      act(() => root.render(<App />));
       Scheduler.unstable_flushAll();
-    });
-
-    it('warns in concurrent mode if root is strict', () => {
-      expect(() => {
-        const root = ReactDOM.createRoot(document.createElement('div'), {
-          unstable_strictMode: true,
-        });
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
     });
   });
 });

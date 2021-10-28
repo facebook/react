@@ -13,6 +13,7 @@ import {
 } from '@elg/speedscope';
 import type {TimelineEvent} from '@elg/speedscope';
 import type {
+  ErrorStackFrame,
   BatchUID,
   Flamechart,
   Milliseconds,
@@ -21,6 +22,7 @@ import type {
   Phase,
   ReactLane,
   ReactComponentMeasure,
+  ReactComponentMeasureType,
   ReactMeasure,
   ReactMeasureType,
   ReactProfilerData,
@@ -30,6 +32,7 @@ import type {
 import {REACT_TOTAL_NUM_LANES, SCHEDULING_PROFILER_VERSION} from '../constants';
 import InvalidProfileError from './InvalidProfileError';
 import {getBatchRange} from '../utils/getBatchRange';
+import ErrorStackParser from 'error-stack-parser';
 
 type MeasureStackElement = {|
   type: ReactMeasureType,
@@ -43,6 +46,8 @@ type ProcessorState = {|
   asyncProcessingPromises: Promise<any>[],
   batchUID: BatchUID,
   currentReactComponentMeasure: ReactComponentMeasure | null,
+  internalModuleCurrentStackFrame: ErrorStackFrame | null,
+  internalModuleStackStringSet: Set<string>,
   measureStack: MeasureStackElement[],
   nativeEventStack: NativeEvent[],
   nextRenderShouldGenerateNewBatchID: boolean,
@@ -480,31 +485,13 @@ function processTimelineEvent(
       } else if (name.startsWith('--react-lane-labels-')) {
         const [laneLabelTuplesString] = name.substr(20).split('-');
         updateLaneToLabelMap(currentProfilerData, laneLabelTuplesString);
-      } else if (name.startsWith('--component-render-start-')) {
-        const [componentName] = name.substr(25).split('-');
-
-        if (state.currentReactComponentMeasure !== null) {
-          console.error(
-            'Render started while another render in progress:',
-            state.currentReactComponentMeasure,
-          );
-        }
-
-        state.currentReactComponentMeasure = {
-          componentName,
-          timestamp: startTime,
-          duration: 0,
-          warning: null,
-        };
-      } else if (name === '--component-render-stop') {
-        if (state.currentReactComponentMeasure !== null) {
-          const componentMeasure = state.currentReactComponentMeasure;
-          componentMeasure.duration = startTime - componentMeasure.timestamp;
-
-          state.currentReactComponentMeasure = null;
-
-          currentProfilerData.componentMeasures.push(componentMeasure);
-        }
+      } else if (name.startsWith('--component-')) {
+        processReactComponentMeasure(
+          name,
+          startTime,
+          currentProfilerData,
+          state,
+        );
       } else if (name.startsWith('--schedule-render-')) {
         const [laneBitmaskString] = name.substr(18).split('-');
 
@@ -793,6 +780,49 @@ function processTimelineEvent(
         );
       } // eslint-disable-line brace-style
 
+      // Internal module ranges
+      else if (name.startsWith('--react-internal-module-start-')) {
+        const stackFrameStart = name.substr(30);
+
+        if (!state.internalModuleStackStringSet.has(stackFrameStart)) {
+          state.internalModuleStackStringSet.add(stackFrameStart);
+
+          const parsedStackFrameStart = parseStackFrame(stackFrameStart);
+
+          state.internalModuleCurrentStackFrame = parsedStackFrameStart;
+        }
+      } else if (name.startsWith('--react-internal-module-stop-')) {
+        const stackFrameStop = name.substr(19);
+
+        if (!state.internalModuleStackStringSet.has(stackFrameStop)) {
+          state.internalModuleStackStringSet.add(stackFrameStop);
+
+          const parsedStackFrameStop = parseStackFrame(stackFrameStop);
+
+          if (
+            parsedStackFrameStop !== null &&
+            state.internalModuleCurrentStackFrame !== null
+          ) {
+            const parsedStackFrameStart = state.internalModuleCurrentStackFrame;
+
+            state.internalModuleCurrentStackFrame = null;
+
+            const range = [parsedStackFrameStart, parsedStackFrameStop];
+            const ranges = currentProfilerData.internalModuleSourceToRanges.get(
+              parsedStackFrameStart.fileName,
+            );
+            if (ranges == null) {
+              currentProfilerData.internalModuleSourceToRanges.set(
+                parsedStackFrameStart.fileName,
+                [range],
+              );
+            } else {
+              ranges.push(range);
+            }
+          }
+        }
+      } // eslint-disable-line brace-style
+
       // Other user timing marks/measures
       else if (ph === 'R' || ph === 'n') {
         // User Timing mark
@@ -818,6 +848,154 @@ function processTimelineEvent(
         );
       }
       break;
+  }
+}
+
+function assertNoOverlappingComponentMeasure(state: ProcessorState) {
+  if (state.currentReactComponentMeasure !== null) {
+    console.error(
+      'Component measure started while another measure in progress:',
+      state.currentReactComponentMeasure,
+    );
+  }
+}
+
+function assertCurrentComponentMeasureType(
+  state: ProcessorState,
+  type: ReactComponentMeasureType,
+): void {
+  if (state.currentReactComponentMeasure === null) {
+    console.error(
+      `Component measure type "${type}" stopped while no measure was in progress`,
+    );
+  } else if (state.currentReactComponentMeasure.type !== type) {
+    console.error(
+      `Component measure type "${type}" stopped while type ${state.currentReactComponentMeasure.type} in progress`,
+    );
+  }
+}
+
+function processReactComponentMeasure(
+  name: string,
+  startTime: Milliseconds,
+  currentProfilerData: ReactProfilerData,
+  state: ProcessorState,
+): void {
+  if (name.startsWith('--component-render-start-')) {
+    const [componentName] = name.substr(25).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'render',
+      warning: null,
+    };
+  } else if (name === '--component-render-stop') {
+    assertCurrentComponentMeasureType(state, 'render');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-layout-effect-mount-start-')) {
+    const [componentName] = name.substr(38).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'layout-effect-mount',
+      warning: null,
+    };
+  } else if (name === '--component-layout-effect-mount-stop') {
+    assertCurrentComponentMeasureType(state, 'layout-effect-mount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-layout-effect-unmount-start-')) {
+    const [componentName] = name.substr(40).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'layout-effect-unmount',
+      warning: null,
+    };
+  } else if (name === '--component-layout-effect-unmount-stop') {
+    assertCurrentComponentMeasureType(state, 'layout-effect-unmount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-passive-effect-mount-start-')) {
+    const [componentName] = name.substr(39).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'passive-effect-mount',
+      warning: null,
+    };
+  } else if (name === '--component-passive-effect-mount-stop') {
+    assertCurrentComponentMeasureType(state, 'passive-effect-mount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
+  } else if (name.startsWith('--component-passive-effect-unmount-start-')) {
+    const [componentName] = name.substr(41).split('-');
+
+    assertNoOverlappingComponentMeasure(state);
+
+    state.currentReactComponentMeasure = {
+      componentName,
+      timestamp: startTime,
+      duration: 0,
+      type: 'passive-effect-unmount',
+      warning: null,
+    };
+  } else if (name === '--component-passive-effect-unmount-stop') {
+    assertCurrentComponentMeasureType(state, 'passive-effect-unmount');
+
+    if (state.currentReactComponentMeasure !== null) {
+      const componentMeasure = state.currentReactComponentMeasure;
+      componentMeasure.duration = startTime - componentMeasure.timestamp;
+
+      state.currentReactComponentMeasure = null;
+
+      currentProfilerData.componentMeasures.push(componentMeasure);
+    }
   }
 }
 
@@ -855,6 +1033,15 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   return flamechart;
 }
 
+function parseStackFrame(stackFrame: string): ErrorStackFrame | null {
+  const error = new Error();
+  error.stack = stackFrame;
+
+  const frames = ErrorStackParser.parse(error);
+
+  return frames.length === 1 ? frames[0] : null;
+}
+
 export default async function preprocessData(
   timeline: TimelineEvent[],
 ): Promise<ReactProfilerData> {
@@ -870,6 +1057,7 @@ export default async function preprocessData(
     componentMeasures: [],
     duration: 0,
     flamechart,
+    internalModuleSourceToRanges: new Map(),
     laneToLabelMap: new Map(),
     laneToReactMeasureMap,
     nativeEvents: [],
@@ -913,6 +1101,8 @@ export default async function preprocessData(
     asyncProcessingPromises: [],
     batchUID: 0,
     currentReactComponentMeasure: null,
+    internalModuleCurrentStackFrame: null,
+    internalModuleStackStringSet: new Set(),
     measureStack: [],
     nativeEventStack: [],
     nextRenderShouldGenerateNewBatchID: true,
@@ -970,7 +1160,16 @@ export default async function preprocessData(
     // See how long the subsequent batch of React work was.
     const [startTime, stopTime] = getBatchRange(batchUID, profilerData);
     if (stopTime - startTime > NESTED_UPDATE_DURATION_THRESHOLD) {
-      schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
+      // Don't warn about transition updates scheduled during the commit phase.
+      // e.g. useTransition, useDeferredValue
+      // These are allowed to be long-running.
+      if (
+        !schedulingEvent.lanes.some(
+          lane => profilerData.laneToLabelMap.get(lane) === 'Transition',
+        )
+      ) {
+        schedulingEvent.warning = WARNING_STRINGS.NESTED_UPDATE;
+      }
     }
   });
   state.potentialSuspenseEventsOutsideOfTransition.forEach(

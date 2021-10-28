@@ -37,6 +37,7 @@ export {
   unstable_LegacyHidden,
   unstable_Offscreen,
   unstable_Scope,
+  unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
   unstable_useOpaqueIdentifier,

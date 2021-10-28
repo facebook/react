@@ -471,7 +471,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -482,7 +482,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -493,7 +493,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -510,7 +510,7 @@ function pushAttribute(
           attributeSeparator,
           attributeNameChunk,
           attributeAssign,
-          escapeTextForBrowser(value),
+          stringToChunk(escapeTextForBrowser(value)),
           attributeEnd,
         );
     }
@@ -532,7 +532,7 @@ function pushAttribute(
       attributeSeparator,
       stringToChunk(name),
       attributeAssign,
-      escapeTextForBrowser(value),
+      stringToChunk(escapeTextForBrowser(value)),
       attributeEnd,
     );
   }
@@ -1146,7 +1146,7 @@ function pushStartCustomElement(
               attributeSeparator,
               stringToChunk(propKey),
               attributeAssign,
-              escapeTextForBrowser(propValue),
+              stringToChunk(escapeTextForBrowser(propValue)),
               attributeEnd,
             );
           }
