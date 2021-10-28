@@ -19,6 +19,7 @@ export type IconType =
   | 'copy'
   | 'delete'
   | 'down'
+  | 'editor'
   | 'expanded'
   | 'export'
   | 'filter'
@@ -71,6 +72,9 @@ export default function ButtonIcon({className = '', type}: Props) {
       break;
     case 'down':
       pathData = PATH_DOWN;
+      break;
+    case 'editor':
+      pathData = PATH_VS_CODE;
       break;
     case 'expanded':
       pathData = PATH_EXPANDED;
@@ -268,3 +272,7 @@ const PATH_VIEW_DOM = `
 const PATH_VIEW_SOURCE = `
   M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z
   `;
+
+const PATH_VS_CODE = `
+  M 17.488281 2.394531 L 9.058594 10.148438 L 4.34375 6.597656 L 2.394531 7.730469 L 7.042969 12 L 2.394531 16.269531 L 4.34375 17.40625 L 9.058594 13.851562 L 17.488281 21.605469 L 21.605469 19.605469 L 21.605469 4.394531 Z M 17.488281 7.496094 L 17.488281 16.503906 L 11.511719 12 Z M 17.488281 7.496094
+`;

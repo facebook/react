@@ -20,6 +20,7 @@ import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 
 import styles from './InspectedElement.css';
 
@@ -198,6 +199,22 @@ export default function InspectedElementWrapper(_: Props) {
     }
   }, [bridge, dispatch, element, isSuspended, modalDialogDispatch, store]);
 
+  const onOpenInEditor = useCallback(() => {
+    const source = inspectedElement?.source;
+    if (source == null) {
+      return;
+    }
+    const editorURL = process.env.EDITOR_URL;
+    if (typeof editorURL !== 'string') {
+      return;
+    }
+    const url = new URL(editorURL);
+    url.searchParams.set('project', 'facebook-www');
+    url.searchParams.append('paths[0]', source.fileName);
+    url.searchParams.append('lines[0]', String(source.lineNumber));
+    window.open(url);
+  }, [inspectedElement]);
+
   if (element === null) {
     return (
       <div className={styles.InspectedElement}>
@@ -223,7 +240,14 @@ export default function InspectedElementWrapper(_: Props) {
             {element.displayName}
           </div>
         </div>
-
+        {isInternalFacebookBuild && (
+          <Button
+            className={styles.IconButton}
+            onClick={onOpenInEditor}
+            title="Open in editor">
+            <ButtonIcon type="editor" />
+          </Button>
+        )}
         {canToggleError && (
           <Toggle
             className={styles.IconButton}
