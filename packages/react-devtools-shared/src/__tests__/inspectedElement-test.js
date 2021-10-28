@@ -1897,7 +1897,7 @@ describe('InspectedElement', () => {
     `);
   });
 
-  it('should only access ownKeys() of Proxies', async () => {
+  it('should not error if Proxy is inspected', async () => {
     const Example = () => null;
 
     const supportedKeys = ['key1', 'key2'];
