@@ -13,7 +13,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {Placement, ChildDeletion} from './ReactFiberFlags';
+import {Placement, ChildDeletion, Forked} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -40,6 +40,8 @@ import {
 import {emptyRefsObject} from './ReactFiberClassComponent.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
 import {StrictLegacyMode} from './ReactTypeOfMode';
+import {getIsHydrating} from './ReactFiberHydrationContext.new';
+import {pushTreeFork} from './ReactFiberTreeContext.new';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -334,7 +336,9 @@ function ChildReconciler(shouldTrackSideEffects) {
   ): number {
     newFiber.index = newIndex;
     if (!shouldTrackSideEffects) {
-      // Noop.
+      // During hydration, the useId algorithm needs to know which fibers are
+      // part of a list of children (arrays, iterators).
+      newFiber.flags |= Forked;
       return lastPlacedIndex;
     }
     const current = newFiber.alternate;
@@ -823,6 +827,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (newIdx === newChildren.length) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
+      }
       return resultingFirstChild;
     }
 
@@ -842,6 +850,10 @@ function ChildReconciler(shouldTrackSideEffects) {
           previousNewFiber.sibling = newFiber;
         }
         previousNewFiber = newFiber;
+      }
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
       }
       return resultingFirstChild;
     }
@@ -886,6 +898,10 @@ function ChildReconciler(shouldTrackSideEffects) {
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
 
+    if (getIsHydrating()) {
+      const numberOfForks = newIdx;
+      pushTreeFork(returnFiber, numberOfForks);
+    }
     return resultingFirstChild;
   }
 
@@ -1013,6 +1029,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (step.done) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
+      }
       return resultingFirstChild;
     }
 
@@ -1032,6 +1052,10 @@ function ChildReconciler(shouldTrackSideEffects) {
           previousNewFiber.sibling = newFiber;
         }
         previousNewFiber = newFiber;
+      }
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
       }
       return resultingFirstChild;
     }
@@ -1076,6 +1100,10 @@ function ChildReconciler(shouldTrackSideEffects) {
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
 
+    if (getIsHydrating()) {
+      const numberOfForks = newIdx;
+      pushTreeFork(returnFiber, numberOfForks);
+    }
     return resultingFirstChild;
   }
 

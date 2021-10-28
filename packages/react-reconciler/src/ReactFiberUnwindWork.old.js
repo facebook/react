@@ -50,8 +50,14 @@ import {
   popCachePool,
 } from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
+import {popTreeContext} from './ReactFiberTreeContext.old';
 
 function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
+  // Note: This intentionally doesn't check if we're hydrating because comparing
+  // to the current tree provider fiber is just as fast and less error-prone.
+  // Ideally we would have a special version of the work loop only
+  // for hydration.
+  popTreeContext(workInProgress);
   switch (workInProgress.tag) {
     case ClassComponent: {
       const Component = workInProgress.type;
@@ -164,6 +170,11 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
 }
 
 function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
+  // Note: This intentionally doesn't check if we're hydrating because comparing
+  // to the current tree provider fiber is just as fast and less error-prone.
+  // Ideally we would have a special version of the work loop only
+  // for hydration.
+  popTreeContext(interruptedWork);
   switch (interruptedWork.tag) {
     case ClassComponent: {
       const childContextTypes = interruptedWork.type.childContextTypes;

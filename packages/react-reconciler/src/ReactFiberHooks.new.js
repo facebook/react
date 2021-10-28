@@ -117,6 +117,7 @@ import {
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
+import {getTreeId, pushTreeFork, pushTreeId} from './ReactFiberTreeContext.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -203,6 +204,12 @@ let didScheduleRenderPhaseUpdate: boolean = false;
 // TODO: Maybe there's some way to consolidate this with
 // `didScheduleRenderPhaseUpdate`. Or with `numberOfReRenders`.
 let didScheduleRenderPhaseUpdateDuringThisPass: boolean = false;
+// Counts the number of useId hooks in this component.
+let localIdCounter: number = 0;
+// Used for ids that are generated completely client-side (i.e. not during
+// hydration). This counter is global, so client ids are not stable across
+// render attempts.
+let globalClientIdCounter: number = 0;
 
 const RE_RENDER_LIMIT = 25;
 
@@ -396,6 +403,7 @@ export function renderWithHooks<Props, SecondArg>(
   // workInProgressHook = null;
 
   // didScheduleRenderPhaseUpdate = false;
+  // localIdCounter = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because memoizedState === null.
@@ -543,6 +551,21 @@ export function renderWithHooks<Props, SecondArg>(
     }
   }
 
+  if (localIdCounter !== 0) {
+    localIdCounter = 0;
+    if (getIsHydrating()) {
+      // This component materialized an id. This will affect any ids that appear
+      // in its children.
+      const returnFiber = workInProgress.return;
+      if (returnFiber !== null) {
+        const numberOfForks = 1;
+        const slotIndex = 0;
+        pushTreeFork(workInProgress, numberOfForks);
+        pushTreeId(workInProgress, numberOfForks, slotIndex);
+      }
+    }
+  }
+
   return children;
 }
 
@@ -612,6 +635,7 @@ export function resetHooksAfterThrow(): void {
   }
 
   didScheduleRenderPhaseUpdateDuringThisPass = false;
+  localIdCounter = 0;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -2110,11 +2134,36 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 function mountId(): string {
-  throw new Error('Not implemented.');
+  const hook = mountWorkInProgressHook();
+
+  let id;
+  if (getIsHydrating()) {
+    const treeId = getTreeId();
+
+    // Use a captial R prefix for server-generated ids.
+    id = 'R:' + treeId;
+
+    // Unless this is the first id at this level, append a number at the end
+    // that represents the position of this useId hook among all the useId
+    // hooks for this fiber.
+    const localId = localIdCounter++;
+    if (localId > 0) {
+      id += ':' + localId.toString(32);
+    }
+  } else {
+    // Use a lowercase r prefix for client-generated ids.
+    const globalClientId = globalClientIdCounter++;
+    id = 'r:' + globalClientId.toString(32);
+  }
+
+  hook.memoizedState = id;
+  return id;
 }
 
 function updateId(): string {
-  throw new Error('Not implemented.');
+  const hook = updateWorkInProgressHook();
+  const id: string = hook.memoizedState;
+  return id;
 }
 
 function mountRefresh() {
