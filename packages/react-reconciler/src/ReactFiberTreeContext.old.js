@@ -64,6 +64,11 @@ import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {clz32} from './clz32';
 import {Forked, NoFlags} from './ReactFiberFlags';
 
+export type TreeContext = {
+  id: number,
+  overflow: string,
+};
+
 // TODO: Use the unified fiber stack module instead of this local one?
 // Intentionally not using it yet to derisk the initial implementation, because
 // the way we push/pop these values is a bit unusual. If there's a mistake, I'd
@@ -227,6 +232,33 @@ export function popTreeContext(workInProgress: Fiber) {
     treeContextId = idStack[--idStackIndex];
     idStack[idStackIndex] = null;
   }
+}
+
+export function getSuspendedTreeContext(): TreeContext | null {
+  warnIfNotHydrating();
+  if (treeContextProvider !== null) {
+    return {
+      id: treeContextId,
+      overflow: treeContextOverflow,
+    };
+  } else {
+    return null;
+  }
+}
+
+export function restoreSuspendedTreeContext(
+  workInProgress: Fiber,
+  suspendedContext: TreeContext,
+) {
+  warnIfNotHydrating();
+
+  idStack[idStackIndex++] = treeContextId;
+  idStack[idStackIndex++] = treeContextOverflow;
+  idStack[idStackIndex++] = treeContextProvider;
+
+  treeContextId = suspendedContext.id;
+  treeContextOverflow = suspendedContext.overflow;
+  treeContextProvider = workInProgress;
 }
 
 function warnIfNotHydrating() {

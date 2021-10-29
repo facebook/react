@@ -1852,6 +1852,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
 const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
+  treeContext: null,
   retryLane: NoLane,
 };
 
@@ -2700,6 +2701,7 @@ function updateDehydratedSuspenseComponent(
     reenterHydrationStateFromDehydratedSuspenseInstance(
       workInProgress,
       suspenseInstance,
+      suspenseState.treeContext,
     );
     const nextProps = workInProgress.pendingProps;
     const primaryChildren = nextProps.children;

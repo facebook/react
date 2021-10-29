@@ -10,9 +10,11 @@
 let JSDOM;
 let React;
 let ReactDOM;
+let Scheduler;
 let clientAct;
 let ReactDOMFizzServer;
 let Stream;
+let Suspense;
 let useId;
 let document;
 let writable;
@@ -27,9 +29,11 @@ describe('useId', () => {
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOM = require('react-dom');
+    Scheduler = require('scheduler');
     clientAct = require('jest-react').act;
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
+    Suspense = React.Suspense;
     useId = React.unstable_useId;
 
     // Test Environment
@@ -84,6 +88,11 @@ describe('useId', () => {
         container.appendChild(node);
       }
     }
+  }
+
+  function Text({text}) {
+    Scheduler.unstable_yieldValue(text);
+    return text;
   }
 
   function normalizeTreeIdForTesting(id) {
@@ -307,5 +316,142 @@ describe('useId', () => {
         <!-- -->
       </div>
     `);
+  });
+
+  test('basic incremental hydration', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <DivWithId label="A" />
+            <DivWithId label="B" />
+          </Suspense>
+          <DivWithId label="C" />
+        </div>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    await clientAct(async () => {
+      ReactDOM.hydrateRoot(container, <App />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          <!--$-->
+          <div
+            id="101"
+          />
+          <div
+            id="1001"
+          />
+          <!--/$-->
+          <div
+            id="10"
+          />
+        </div>
+      </div>
+    `);
+  });
+
+  test('inserting a sibling before a dehydrated Suspense boundary', async () => {
+    const span = React.createRef(null);
+    function App({showMore}) {
+      // Note: Using a dynamic array so this is treated as an insertion instead
+      // of an update, because Fiber currently allocates a node even for
+      // empty children.
+      const children = [<Text key="A" text="A" />];
+      if (showMore) {
+        // These are client-only nodes. They aren't not included in the initial
+        // server render.
+        children.push(<Text key="B" text="B" />, <DivWithId key="C" />);
+      }
+      children.push(
+        <Suspense key="boundary" fallback="Loading...">
+          <DivWithId />
+          <DivWithId />
+          <span ref={span} />
+        </Suspense>,
+        <DivWithId key="after" />,
+      );
+
+      return children;
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+    const dehydratedSpan = container.getElementsByTagName('span')[0];
+    await clientAct(async () => {
+      const root = ReactDOM.hydrateRoot(container, <App />);
+      expect(Scheduler).toFlushUntilNextPaint(['A']);
+      expect(container).toMatchInlineSnapshot(`
+        <div
+          id="container"
+        >
+          A
+          <!-- -->
+          <!--$-->
+          <div
+            id="110"
+          />
+          <div
+            id="1010"
+          />
+          <span />
+          <!--/$-->
+          <div
+            id="11"
+          />
+        </div>
+      `);
+
+      // The inner boundary hasn't hydrated yet
+      expect(span.current).toBe(null);
+
+      // Insert another sibling before the Suspense boundary
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'A',
+      'B',
+      // The update triggers selective hydration so we render again
+      'A',
+      'B',
+    ]);
+    // The insertions should not cause a mismatch.
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        A
+        <!-- -->
+        <!--$-->
+        B
+        <div
+          id="CLIENT_GENERATED_ID"
+        />
+        <div
+          id="110"
+        />
+        <div
+          id="1010"
+        />
+        <span />
+        <!--/$-->
+        <div
+          id="11"
+        />
+      </div>
+    `);
+    // Should have hydrated successfully
+    expect(span.current).toBe(dehydratedSpan);
   });
 });
