@@ -45,8 +45,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   }
 
   expect.extend({
-    ...require('./matchers/toWarnDev'),
     ...require('./matchers/reactTestMatchers'),
+    ...require('./matchers/toThrow'),
+    ...require('./matchers/toWarnDev'),
   });
 
   // We have a Babel transform that inserts guards against infinite loops.

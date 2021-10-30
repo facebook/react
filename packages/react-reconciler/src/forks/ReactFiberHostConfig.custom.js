@@ -150,6 +150,10 @@ export const registerSuspenseInstanceRetry =
   $$$hostConfig.registerSuspenseInstanceRetry;
 export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
+export const getFirstHydratableChildWithinContainer =
+  $$$hostConfig.getFirstHydratableChildWithinContainer;
+export const getFirstHydratableChildWithinSuspenseInstance =
+  $$$hostConfig.getFirstHydratableChildWithinSuspenseInstance;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
 export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;
@@ -167,15 +171,23 @@ export const didNotMatchHydratedContainerTextInstance =
   $$$hostConfig.didNotMatchHydratedContainerTextInstance;
 export const didNotMatchHydratedTextInstance =
   $$$hostConfig.didNotMatchHydratedTextInstance;
-export const didNotHydrateContainerInstance =
-  $$$hostConfig.didNotHydrateContainerInstance;
+export const didNotHydrateInstanceWithinContainer =
+  $$$hostConfig.didNotHydrateInstanceWithinContainer;
+export const didNotHydrateInstanceWithinSuspenseInstance =
+  $$$hostConfig.didNotHydrateInstanceWithinSuspenseInstance;
 export const didNotHydrateInstance = $$$hostConfig.didNotHydrateInstance;
-export const didNotFindHydratableContainerInstance =
-  $$$hostConfig.didNotFindHydratableContainerInstance;
-export const didNotFindHydratableContainerTextInstance =
-  $$$hostConfig.didNotFindHydratableContainerTextInstance;
-export const didNotFindHydratableContainerSuspenseInstance =
-  $$$hostConfig.didNotFindHydratableContainerSuspenseInstance;
+export const didNotFindHydratableInstanceWithinContainer =
+  $$$hostConfig.didNotFindHydratableInstanceWithinContainer;
+export const didNotFindHydratableTextInstanceWithinContainer =
+  $$$hostConfig.didNotFindHydratableTextInstanceWithinContainer;
+export const didNotFindHydratableSuspenseInstanceWithinContainer =
+  $$$hostConfig.didNotFindHydratableSuspenseInstanceWithinContainer;
+export const didNotFindHydratableInstanceWithinSuspenseInstance =
+  $$$hostConfig.didNotFindHydratableInstanceWithinSuspenseInstance;
+export const didNotFindHydratableTextInstanceWithinSuspenseInstance =
+  $$$hostConfig.didNotFindHydratableTextInstanceWithinSuspenseInstance;
+export const didNotFindHydratableSuspenseInstanceWithinSuspenseInstance =
+  $$$hostConfig.didNotFindHydratableSuspenseInstanceWithinSuspenseInstance;
 export const didNotFindHydratableInstance =
   $$$hostConfig.didNotFindHydratableInstance;
 export const didNotFindHydratableTextInstance =

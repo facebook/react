@@ -41,6 +41,12 @@ function resolveDispatcher() {
   return ((dispatcher: any): Dispatcher);
 }
 
+export function getCacheSignal(): AbortSignal {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.getCacheSignal();
+}
+
 export function getCacheForType<T>(resourceType: () => T): T {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe This is unstable, thus optional
@@ -98,6 +104,14 @@ export function useEffect(
 ): void {
   const dispatcher = resolveDispatcher();
   return dispatcher.useEffect(create, deps);
+}
+
+export function useInsertionEffect(
+  create: () => (() => void) | void,
+  deps: Array<mixed> | void | null,
+): void {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useInsertionEffect(create, deps);
 }
 
 export function useLayoutEffect(
@@ -167,6 +181,19 @@ export function useMutableSource<Source, Snapshot>(
 ): Snapshot {
   const dispatcher = resolveDispatcher();
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
+}
+
+export function useSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 }
 
 export function useCacheRefresh(): <T>(?() => T, ?T) => void {

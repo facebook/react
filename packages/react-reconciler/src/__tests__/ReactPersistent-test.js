@@ -27,7 +27,7 @@ describe('ReactPersistent', () => {
   function createPortal(children, containerInfo, implementation, key) {
     return {
       $$typeof: Symbol.for('react.portal'),
-      key: key == null ? null : '' + key,
+      key: key == null ? null : String(key),
       children,
       containerInfo,
       implementation,

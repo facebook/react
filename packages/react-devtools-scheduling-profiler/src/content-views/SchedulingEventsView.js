@@ -195,7 +195,7 @@ export class SchedulingEventsView extends View {
     };
     if (rectIntersectsRect(borderFrame, visibleArea)) {
       const borderDrawableRect = intersectionOfRects(borderFrame, visibleArea);
-      context.fillStyle = COLORS.PRIORITY_BORDER;
+      context.fillStyle = COLORS.REACT_WORK_BORDER;
       context.fillRect(
         borderDrawableRect.origin.x,
         borderDrawableRect.origin.y,

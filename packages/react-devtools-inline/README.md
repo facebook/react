@@ -64,6 +64,23 @@ const DevTools = initialize(contentWindow);
 
 ## Examples
 
+### Supporting named hooks
+
+DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and infering the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
+
+To configure this package to support this functionality, you'll need to provide a prop that dynamically imports the extra functionality:
+```js
+// Follow code examples above to configure the backend and frontend.
+// When rendering DevTools, the important part is to pass a 'hookNamesModuleLoaderFunction' prop.
+const hookNamesModuleLoaderFunction = () => import('react-devtools-inline/hookNames');
+
+// Render:
+<DevTools
+  hookNamesModuleLoaderFunction={hookNamesModuleLoaderFunction}
+  {...otherProps}
+/>;
+```
+
 ### Configuring a same-origin `iframe`
 
 The simplest way to use this package is to install the hook from the parent `window`. This is possible if the `iframe` is not sandboxed and there are no cross-origin restrictions.

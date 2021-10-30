@@ -544,6 +544,102 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('foobar');
   });
 
+  it('should throw for date inputs if `defaultValue` is an object where valueOf() throws', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+    const test = () =>
+      ReactDOM.render(
+        <input defaultValue={new TemporalLike()} type="date" />,
+        container,
+      );
+    expect(() =>
+      expect(test).toThrowError(new TypeError('prod message')),
+    ).toErrorDev(
+      'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
+        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+    );
+  });
+
+  it('should throw for text inputs if `defaultValue` is an object where valueOf() throws', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+    const test = () =>
+      ReactDOM.render(
+        <input defaultValue={new TemporalLike()} type="text" />,
+        container,
+      );
+    expect(() =>
+      expect(test).toThrowError(new TypeError('prod message')),
+    ).toErrorDev(
+      'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
+        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+    );
+  });
+
+  it('should throw for date inputs if `value` is an object where valueOf() throws', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+    const test = () =>
+      ReactDOM.render(
+        <input value={new TemporalLike()} type="date" onChange={() => {}} />,
+        container,
+      );
+    expect(() =>
+      expect(test).toThrowError(new TypeError('prod message')),
+    ).toErrorDev(
+      'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
+        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+    );
+  });
+
+  it('should throw for text inputs if `value` is an object where valueOf() throws', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+    const test = () =>
+      ReactDOM.render(
+        <input value={new TemporalLike()} type="text" onChange={() => {}} />,
+        container,
+      );
+    expect(() =>
+      expect(test).toThrowError(new TypeError('prod message')),
+    ).toErrorDev(
+      'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
+        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+    );
+  });
+
   it('should display `value` of number 0', () => {
     const stub = <input type="text" value={0} onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
@@ -1575,7 +1671,7 @@ describe('ReactDOMInput', () => {
             return value;
           },
           set: function(val) {
-            value = '' + val;
+            value = String(val);
             log.push('set property value');
           },
         });

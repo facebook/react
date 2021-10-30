@@ -29,13 +29,12 @@ module.exports = {
           );
           break;
         case 'String':
-          report(
-            node,
-            name,
-            'To cast a value to a string, concat it with the empty string ' +
-              "(unless it's a symbol, which has different semantics): " +
-              "'' + value"
-          );
+          if (node.type === 'NewExpression') {
+            context.report(
+              node,
+              "Do not use `new String()`. Use String() without new (or '' + value for perf-sensitive code)."
+            );
+          }
           break;
         case 'Number':
           report(

@@ -10,7 +10,7 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.AbortController = require('abort-controller');
 
@@ -68,6 +68,22 @@ describe('ReactDOMFizzServer', () => {
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
       `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+    );
+  });
+
+  // @gate experimental
+  it('should emit bootstrap script src at the end', async () => {
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <div>hello world</div>,
+      {
+        bootstrapScriptContent: 'INIT();',
+        bootstrapScripts: ['init.js'],
+        bootstrapModules: ['init.mjs'],
+      },
+    );
+    const result = await readResult(stream);
+    expect(result).toMatchInlineSnapshot(
+      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
     );
   });
 

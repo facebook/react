@@ -22,8 +22,11 @@ import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
-import HookNamesContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesContext';
+import {
+  enableNamedHooksFeature,
+  enableProfilerChangedHookIndices,
+} from 'react-devtools-feature-flags';
+import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -53,8 +56,6 @@ export function InspectedElementHooksTree({
 }: HooksTreeViewProps) {
   const {hooks, id} = inspectedElement;
 
-  const {loadHookNames: loadHookNamesFunction} = useContext(HookNamesContext);
-
   // Changing parseHookNames is done in a transition, because it suspends.
   // This value is done outside of the transition, so the UI toggle feels responsive.
   const [parseHookNamesOptimistic, setParseHookNamesOptimistic] = useState(
@@ -64,6 +65,8 @@ export function InspectedElementHooksTree({
     setParseHookNamesOptimistic(!parseHookNames);
     toggleParseHookNames();
   };
+
+  const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
 
   const hookParsingFailed = parseHookNames && hookNames === null;
 
@@ -85,7 +88,8 @@ export function InspectedElementHooksTree({
       <div className={styles.HooksTreeView}>
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
-          {loadHookNamesFunction !== null &&
+          {enableNamedHooksFeature &&
+            typeof hookNamesModuleLoader === 'function' &&
             (!parseHookNames || hookParsingFailed) && (
               <Toggle
                 className={hookParsingFailed ? styles.ToggleError : null}

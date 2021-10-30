@@ -45,6 +45,9 @@ export const MIN_INTERVAL_SIZE_PX = 70;
 // TODO Replace this with "export let" vars
 export let COLORS = {
   BACKGROUND: '',
+  INTERNAL_MODULE_FRAME: '',
+  INTERNAL_MODULE_FRAME_HOVER: '',
+  INTERNAL_MODULE_FRAME_TEXT: '',
   NATIVE_EVENT: '',
   NATIVE_EVENT_HOVER: '',
   NETWORK_PRIMARY: '',
@@ -56,8 +59,6 @@ export let COLORS = {
   PRIORITY_LABEL: '',
   USER_TIMING: '',
   USER_TIMING_HOVER: '',
-  REACT_COMPONENT_MEASURE: '',
-  REACT_COMPONENT_MEASURE_HOVER: '',
   REACT_IDLE: '',
   REACT_IDLE_HOVER: '',
   REACT_RENDER: '',
@@ -84,6 +85,8 @@ export let COLORS = {
   REACT_SUSPENSE_RESOLVED_EVENT_HOVER: '',
   REACT_SUSPENSE_UNRESOLVED_EVENT: '',
   REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER: '',
+  REACT_THROWN_ERROR: '',
+  REACT_THROWN_ERROR_HOVER: '',
   REACT_WORK_BORDER: '',
   SCROLL_CARET: '',
   TEXT_COLOR: '',
@@ -105,6 +108,15 @@ export function updateColorsToMatchTheme(element: Element): boolean {
 
   COLORS = {
     BACKGROUND: computedStyle.getPropertyValue('--color-background'),
+    INTERNAL_MODULE_FRAME: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-internal-module',
+    ),
+    INTERNAL_MODULE_FRAME_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-internal-module-hover',
+    ),
+    INTERNAL_MODULE_FRAME_TEXT: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-internal-module-text',
+    ),
     NATIVE_EVENT: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-native-event',
     ),
@@ -135,12 +147,6 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     USER_TIMING_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-user-timing-hover',
-    ),
-    REACT_COMPONENT_MEASURE: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-render',
-    ),
-    REACT_COMPONENT_MEASURE_HOVER: computedStyle.getPropertyValue(
-      '--color-scheduling-profiler-react-render-hover',
     ),
     REACT_IDLE: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-idle',
@@ -217,6 +223,12 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     REACT_SUSPENSE_UNRESOLVED_EVENT_HOVER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-suspense-unresolved-hover',
+    ),
+    REACT_THROWN_ERROR: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-thrown-error',
+    ),
+    REACT_THROWN_ERROR_HOVER: computedStyle.getPropertyValue(
+      '--color-scheduling-profiler-thrown-error-hover',
     ),
     REACT_WORK_BORDER: computedStyle.getPropertyValue(
       '--color-scheduling-profiler-react-work-border',

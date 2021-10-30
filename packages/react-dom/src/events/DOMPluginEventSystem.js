@@ -192,6 +192,7 @@ export const mediaEventTypes: Array<DOMEventName> = [
   'playing',
   'progress',
   'ratechange',
+  'resize',
   'seeked',
   'seeking',
   'stalled',

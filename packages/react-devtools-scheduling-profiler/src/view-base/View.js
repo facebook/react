@@ -58,7 +58,7 @@ export class View {
   _needsDisplay = true;
 
   /**
-   * Whether the heirarchy below this view has subviews that need display.
+   * Whether the hierarchy below this view has subviews that need display.
    *
    * NOTE: Do not set directly! Use `setSubviewsNeedDisplay`.
    *

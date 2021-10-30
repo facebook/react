@@ -33,6 +33,7 @@ export type HookType =
   | 'useContext'
   | 'useRef'
   | 'useEffect'
+  | 'useInsertionEffect'
   | 'useLayoutEffect'
   | 'useCallback'
   | 'useMemo'
@@ -41,6 +42,7 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useMutableSource'
+  | 'useSyncExternalStore'
   | 'useOpaqueIdentifier'
   | 'useCacheRefresh';
 
@@ -210,7 +212,7 @@ type BaseFiberRootProperties = {|
   context: Object | null,
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
-  +hydrate: boolean,
+  +isDehydrated: boolean,
 
   // Used by useMutableSource hook to avoid tearing during hydration.
   mutableSourceEagerHydrationData?: Array<
@@ -271,6 +273,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
+  getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
@@ -282,6 +285,10 @@ export type Dispatcher = {|
   useContext<T>(context: ReactContext<T>): T,
   useRef<T>(initialValue: T): {|current: T|},
   useEffect(
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
+  ): void,
+  useInsertionEffect(
     create: () => (() => void) | void,
     deps: Array<mixed> | void | null,
   ): void,
@@ -304,6 +311,11 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
+  useSyncExternalStore<T>(
+    subscribe: (() => void) => () => void,
+    getSnapshot: () => T,
+    getServerSnapshot?: () => T,
+  ): T,
   useOpaqueIdentifier(): any,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
 

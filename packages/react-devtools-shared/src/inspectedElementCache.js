@@ -38,7 +38,7 @@ type ResolvedRecord<T> = {|
 
 type RejectedRecord = {|
   status: 2,
-  value: string,
+  value: Error | string,
 |};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
@@ -94,7 +94,11 @@ export function inspectElement(
       then(callback) {
         callbacks.add(callback);
       },
+
+      // Optional property used by Scheduling Profiler:
+      displayName: `Inspecting ${element.displayName || 'Unknown'}`,
     };
+
     const wake = () => {
       // This assumes they won't throw.
       callbacks.forEach(callback => callback());
@@ -109,7 +113,9 @@ export function inspectElement(
     if (rendererID == null) {
       const rejectedRecord = ((newRecord: any): RejectedRecord);
       rejectedRecord.status = Rejected;
-      rejectedRecord.value = `Could not inspect element with id "${element.id}". No renderer found.`;
+      rejectedRecord.value = new Error(
+        `Could not inspect element with id "${element.id}". No renderer found.`,
+      );
 
       map.set(element, record);
 
@@ -126,16 +132,18 @@ export function inspectElement(
         const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
         resolvedRecord.status = Resolved;
         resolvedRecord.value = inspectedElement;
+
         wake();
       },
 
       error => {
-        if (newRecord.status === Pending) {
-          const rejectedRecord = ((newRecord: any): RejectedRecord);
-          rejectedRecord.status = Rejected;
-          rejectedRecord.value = `Could not inspect element with id "${element.id}". Error thrown:\n${error.message}`;
-          wake();
-        }
+        console.error(error);
+
+        const rejectedRecord = ((newRecord: any): RejectedRecord);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.value = error;
+
+        wake();
       },
     );
     map.set(element, record);
@@ -185,6 +193,12 @@ export function checkForUpdate({
             refresh(key, value);
           });
         }
+      },
+
+      // There isn't much to do about errors in this case,
+      // but we should at least log them so they aren't silent.
+      error => {
+        console.error(error);
       },
     );
   }

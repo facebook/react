@@ -268,6 +268,182 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
+  it('should inspect the current state of all stateful hooks, including useInsertionEffect', () => {
+    const useInsertionEffect = React.useInsertionEffect;
+    const outsideRef = React.createRef();
+    function effect() {}
+    function Foo(props) {
+      const [state1, setState] = React.useState('a');
+      const [state2, dispatch] = React.useReducer((s, a) => a.value, 'b');
+      const ref = React.useRef('c');
+
+      useInsertionEffect(effect);
+      React.useLayoutEffect(effect);
+      React.useEffect(effect);
+
+      React.useImperativeHandle(
+        outsideRef,
+        () => {
+          // Return a function so that jest treats them as non-equal.
+          return function Instance() {};
+        },
+        [],
+      );
+
+      React.useMemo(() => state1 + state2, [state1]);
+
+      function update() {
+        act(() => {
+          setState('A');
+        });
+        act(() => {
+          dispatch({value: 'B'});
+        });
+        ref.current = 'C';
+      }
+      const memoizedUpdate = React.useCallback(update, []);
+      return (
+        <div onClick={memoizedUpdate}>
+          {state1} {state2}
+        </div>
+      );
+    }
+    let renderer;
+    act(() => {
+      renderer = ReactTestRenderer.create(<Foo prop="prop" />);
+    });
+
+    let childFiber = renderer.root.findByType(Foo)._currentFiber();
+
+    const {onClick: updateStates} = renderer.root.findByType('div').props;
+
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        isStateEditable: true,
+        id: 0,
+        name: 'State',
+        value: 'a',
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        id: 1,
+        name: 'Reducer',
+        value: 'b',
+        subHooks: [],
+      },
+      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 3,
+        name: 'InsertionEffect',
+        value: effect,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 4,
+        name: 'LayoutEffect',
+        value: effect,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 5,
+        name: 'Effect',
+        value: effect,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 6,
+        name: 'ImperativeHandle',
+        value: outsideRef.current,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 7,
+        name: 'Memo',
+        value: 'ab',
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 8,
+        name: 'Callback',
+        value: updateStates,
+        subHooks: [],
+      },
+    ]);
+
+    updateStates();
+
+    childFiber = renderer.root.findByType(Foo)._currentFiber();
+    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+
+    expect(tree).toEqual([
+      {
+        isStateEditable: true,
+        id: 0,
+        name: 'State',
+        value: 'A',
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        id: 1,
+        name: 'Reducer',
+        value: 'B',
+        subHooks: [],
+      },
+      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 3,
+        name: 'InsertionEffect',
+        value: effect,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 4,
+        name: 'LayoutEffect',
+        value: effect,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 5,
+        name: 'Effect',
+        value: effect,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 6,
+        name: 'ImperativeHandle',
+        value: outsideRef.current,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 7,
+        name: 'Memo',
+        value: 'Ab',
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 8,
+        name: 'Callback',
+        value: updateStates,
+        subHooks: [],
+      },
+    ]);
+  });
+
   it('should inspect the value of the current provider in useContext', () => {
     const MyContext = React.createContext('default');
     function Foo(props) {
@@ -438,7 +614,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].id).toEqual(0);
     expect(tree[0].isStateEditable).toEqual(false);
     expect(tree[0].name).toEqual('OpaqueIdentifier');
-    expect((tree[0].value + '').startsWith('c_')).toBe(true);
+    expect(String(tree[0].value).startsWith('c_')).toBe(true);
 
     expect(tree[1]).toEqual({
       id: 1,
@@ -469,7 +645,7 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].id).toEqual(0);
     expect(tree[0].isStateEditable).toEqual(false);
     expect(tree[0].name).toEqual('OpaqueIdentifier');
-    expect((tree[0].value + '').startsWith('c_')).toBe(true);
+    expect(String(tree[0].value).startsWith('c_')).toBe(true);
 
     expect(tree[1]).toEqual({
       id: 1,
@@ -866,6 +1042,39 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         isStateEditable: false,
         name: 'MutableSource',
+        value: 'snapshot',
+        subHooks: [],
+      },
+      {
+        id: 1,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'memo',
+        subHooks: [],
+      },
+    ]);
+  });
+
+  // @gate experimental || www
+  it('should support composite useSyncExternalStore hook', () => {
+    const useSyncExternalStore = React.unstable_useSyncExternalStore;
+    function Foo() {
+      const value = useSyncExternalStore(
+        () => () => {},
+        () => 'snapshot',
+      );
+      React.useMemo(() => 'memo', []);
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        id: 0,
+        isStateEditable: false,
+        name: 'SyncExternalStore',
         value: 'snapshot',
         subHooks: [],
       },

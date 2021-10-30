@@ -7,6 +7,10 @@
  * @flow
  */
 
+export const CHROME_WEBSTORE_EXTENSION_ID = 'fmkadmapgofadopljbjfkapdkoienihi';
+export const INTERNAL_EXTENSION_ID = 'dnjnjgbfilfphmojnmhliehogmojhclc';
+export const LOCAL_EXTENSION_ID = 'ikiahnapldjmdmpkmfhjdjilojjhgcbf';
+
 // Flip this flag to true to enable verbose console debug logging.
 export const __DEBUG__ = false;
 
@@ -19,6 +23,8 @@ export const TREE_OPERATION_REORDER_CHILDREN = 3;
 export const TREE_OPERATION_UPDATE_TREE_BASE_DURATION = 4;
 export const TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS = 5;
 export const TREE_OPERATION_REMOVE_ROOT = 6;
+
+export const LOCAL_STORAGE_DEFAULT_TAB_KEY = 'React::DevTools::defaultTab';
 
 export const LOCAL_STORAGE_FILTER_PREFERENCES_KEY =
   'React::DevTools::componentFilters';
@@ -145,6 +151,9 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-resize-bar-active': '#dcdcdc',
     '--color-resize-bar-border': '#d1d1d1',
     '--color-resize-bar-dot': '#333333',
+    '--color-scheduling-profiler-internal-module': '#d1d1d1',
+    '--color-scheduling-profiler-internal-module-hover': '#c9c9c9',
+    '--color-scheduling-profiler-internal-module-text': '#444',
     '--color-scheduling-profiler-native-event': '#ccc',
     '--color-scheduling-profiler-native-event-hover': '#aaa',
     '--color-scheduling-profiler-network-primary': '#fcf3dc',
@@ -177,9 +186,11 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-scheduling-profiler-react-suspense-resolved-hover': '#89d281',
     '--color-scheduling-profiler-react-suspense-unresolved': '#c9cacd',
     '--color-scheduling-profiler-react-suspense-unresolved-hover': '#93959a',
+    '--color-scheduling-profiler-thrown-error': '#ee1638',
+    '--color-scheduling-profiler-thrown-error-hover': '#da1030',
     '--color-scheduling-profiler-text-color': '#000000',
     '--color-scheduling-profiler-text-dim-color': '#ccc',
-    '--color-scheduling-profiler-react-work-border': '#ffffff',
+    '--color-scheduling-profiler-react-work-border': '#eeeeee',
     '--color-search-match': 'yellow',
     '--color-search-match-current': '#f7923b',
     '--color-selected-tree-highlight-active': 'rgba(0, 136, 250, 0.1)',
@@ -284,6 +295,9 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-resize-bar-active': '#31363f',
     '--color-resize-bar-border': '#3d424a',
     '--color-resize-bar-dot': '#cfd1d5',
+    '--color-scheduling-profiler-internal-module': '#303542',
+    '--color-scheduling-profiler-internal-module-hover': '#363b4a',
+    '--color-scheduling-profiler-internal-module-text': '#7f8899',
     '--color-scheduling-profiler-native-event': '#b2b2b2',
     '--color-scheduling-profiler-native-event-hover': '#949494',
     '--color-scheduling-profiler-network-primary': '#fcf3dc',
@@ -316,9 +330,11 @@ export const THEME_STYLES: {[style: Theme | DisplayDensity]: any} = {
     '--color-scheduling-profiler-react-suspense-resolved-hover': '#89d281',
     '--color-scheduling-profiler-react-suspense-unresolved': '#c9cacd',
     '--color-scheduling-profiler-react-suspense-unresolved-hover': '#93959a',
+    '--color-scheduling-profiler-thrown-error': '#fb3655',
+    '--color-scheduling-profiler-thrown-error-hover': '#f82042',
     '--color-scheduling-profiler-text-color': '#282c34',
     '--color-scheduling-profiler-text-dim-color': '#555b66',
-    '--color-scheduling-profiler-react-work-border': '#ffffff',
+    '--color-scheduling-profiler-react-work-border': '#3d424a',
     '--color-search-match': 'yellow',
     '--color-search-match-current': '#f7923b',
     '--color-selected-tree-highlight-active': 'rgba(23, 143, 185, 0.15)',

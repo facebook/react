@@ -7,20 +7,114 @@
 'use strict';
 
 const fs = require('fs');
-const evalToString = require('../shared/evalToString');
+const {
+  evalStringConcat,
+  evalStringAndTemplateConcat,
+} = require('../shared/evalToString');
 const invertObject = require('./invertObject');
 const helperModuleImports = require('@babel/helper-module-imports');
+
+const errorMap = invertObject(
+  JSON.parse(fs.readFileSync(__dirname + '/codes.json', 'utf-8'))
+);
+
+const SEEN_SYMBOL = Symbol('transform-error-messages.seen');
 
 module.exports = function(babel) {
   const t = babel.types;
 
+  // TODO: Instead of outputting __DEV__ conditions, only apply this transform
+  // in production.
   const DEV_EXPRESSION = t.identifier('__DEV__');
+
+  function CallOrNewExpression(path, file) {
+    // Turns this code:
+    //
+    // new Error(`A ${adj} message that contains ${noun}`);
+    //
+    // or this code (no constructor):
+    //
+    // Error(`A ${adj} message that contains ${noun}`);
+    //
+    // into this:
+    //
+    // Error(
+    //   __DEV__
+    //     ? `A ${adj} message that contains ${noun}`
+    //     : formatProdErrorMessage(ERR_CODE, adj, noun)
+    // );
+    const node = path.node;
+    if (node[SEEN_SYMBOL]) {
+      return;
+    }
+    node[SEEN_SYMBOL] = true;
+
+    const errorMsgNode = node.arguments[0];
+    if (errorMsgNode === undefined) {
+      return;
+    }
+
+    const errorMsgExpressions = [];
+    const errorMsgLiteral = evalStringAndTemplateConcat(
+      errorMsgNode,
+      errorMsgExpressions
+    );
+
+    let prodErrorId = errorMap[errorMsgLiteral];
+    if (prodErrorId === undefined) {
+      // There is no error code for this message. We use a lint rule to
+      // enforce that messages can be minified, so assume this is
+      // intentional and exit gracefully.
+      return;
+    }
+    prodErrorId = parseInt(prodErrorId, 10);
+
+    // Import formatProdErrorMessage
+    const formatProdErrorMessageIdentifier = helperModuleImports.addDefault(
+      path,
+      'shared/formatProdErrorMessage',
+      {nameHint: 'formatProdErrorMessage'}
+    );
+
+    // Outputs:
+    //   formatProdErrorMessage(ERR_CODE, adj, noun);
+    const prodMessage = t.callExpression(formatProdErrorMessageIdentifier, [
+      t.numericLiteral(prodErrorId),
+      ...errorMsgExpressions,
+    ]);
+
+    // Outputs:
+    // Error(
+    //   __DEV__
+    //     ? `A ${adj} message that contains ${noun}`
+    //     : formatProdErrorMessage(ERR_CODE, adj, noun)
+    // );
+    path.replaceWith(t.callExpression(t.identifier('Error'), [prodMessage]));
+    path.replaceWith(
+      t.callExpression(t.identifier('Error'), [
+        t.conditionalExpression(DEV_EXPRESSION, errorMsgNode, prodMessage),
+      ])
+    );
+  }
 
   return {
     visitor: {
+      NewExpression(path, file) {
+        const noMinify = file.opts.noMinify;
+        if (!noMinify && path.get('callee').isIdentifier({name: 'Error'})) {
+          CallOrNewExpression(path, file);
+        }
+      },
+
       CallExpression(path, file) {
         const node = path.node;
         const noMinify = file.opts.noMinify;
+
+        if (!noMinify && path.get('callee').isIdentifier({name: 'Error'})) {
+          CallOrNewExpression(path, file);
+          return;
+        }
+
         if (path.get('callee').isIdentifier({name: 'invariant'})) {
           // Turns this code:
           //
@@ -40,7 +134,7 @@ module.exports = function(babel) {
           // string) that references a verbose error message. The mapping is
           // stored in `scripts/error-codes/codes.json`.
           const condition = node.arguments[0];
-          const errorMsgLiteral = evalToString(node.arguments[1]);
+          const errorMsgLiteral = evalStringConcat(node.arguments[1]);
           const errorMsgExpressions = Array.from(node.arguments.slice(2));
           const errorMsgQuasis = errorMsgLiteral
             .split('%s')
@@ -81,12 +175,6 @@ module.exports = function(babel) {
             return;
           }
 
-          // Avoid caching because we write it as we go.
-          const existingErrorMap = JSON.parse(
-            fs.readFileSync(__dirname + '/codes.json', 'utf-8')
-          );
-          const errorMap = invertObject(existingErrorMap);
-
           let prodErrorId = errorMap[errorMsgLiteral];
 
           if (prodErrorId === undefined) {
@@ -117,7 +205,7 @@ module.exports = function(babel) {
           }
           prodErrorId = parseInt(prodErrorId, 10);
 
-          // Import ReactErrorProd
+          // Import formatProdErrorMessage
           const formatProdErrorMessageIdentifier = helperModuleImports.addDefault(
             path,
             'shared/formatProdErrorMessage',

@@ -46,7 +46,7 @@
   white-space: nowrap;
 }
 
-.DetailsGridURL {
+.DetailsGridLongValue {
   word-break: break-all;
   max-height: 50vh;
   overflow: hidden;

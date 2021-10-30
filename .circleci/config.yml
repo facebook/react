@@ -91,61 +91,22 @@ jobs:
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
-  RELEASE_CHANNEL_stable_yarn_build:
+  scrape_warning_messages:
     docker: *docker
     environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: |
-            ./scripts/circleci/add_build_info_json.sh
-            ./scripts/circleci/update_package_versions.sh
-            yarn build
-      - run: echo "stable" >> build/RELEASE_CHANNEL
-      - persist_to_workspace:
-          root: build
-          paths:
-            - RELEASE_CHANNEL
-            - facebook-www
-            - facebook-react-native
-            - facebook-relay
-            - node_modules
-            - react-native
-            - dist
-            - sizes/*.json
 
-  yarn_build:
-    docker: *docker
-    environment: *environment
-    parallelism: 20
     steps:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
-          environment:
-            RELEASE_CHANNEL: experimental
           command: |
-            ./scripts/circleci/add_build_info_json.sh
-            ./scripts/circleci/update_package_versions.sh
-            yarn build
-      - run: echo "experimental" >> build/RELEASE_CHANNEL
+            mkdir -p ./build
+            node ./scripts/print-warnings/print-warnings.js > build/WARNINGS
       - persist_to_workspace:
-          root: build
+          root: .
           paths:
-            - RELEASE_CHANNEL
-            - facebook-www
-            - facebook-react-native
-            - facebook-relay
-            - node_modules
-            - react-native
-            - dist
-            - sizes/*.json
+            - build
 
   yarn_build_combined:
     docker: *docker
@@ -159,7 +120,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - build2
+            - build
 
   get_base_build:
     docker: *docker
@@ -174,7 +135,15 @@ jobs:
               git fetch origin main
               cd ./scripts/release && yarn && cd ../../
               scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/main)
-              mv ./build2 ./base-build
+              mv ./build ./base-build
+      - run:
+          # TODO: The `download-experimental-build` script copies the npm
+          # packages into the `node_modules` directory. This is a historical
+          # quirk of how the release script works. Let's pretend they
+          # don't exist.
+          name: Delete extraneous files
+          command: rm -rf ./base-build/node_modules
+
       - persist_to_workspace:
           root: .
           paths:
@@ -189,11 +158,15 @@ jobs:
           at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
+      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
-      - run: tar -zcvf ./build2.tgz ./build2
+      - run: tar -zcvf ./build.tgz ./build
+        # TODO: Migrate scripts to use `build` directory instead of `build2`
+      - run: cp ./build.tgz ./build2.tgz
       - store_artifacts:
           path: ./build2.tgz
+      - store_artifacts:
+          path: ./build.tgz
 
   sizebot:
     docker: *docker
@@ -202,7 +175,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
+      - run: echo "<< pipeline.git.revision	>>" >> build/COMMIT_SHA
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
@@ -213,9 +186,9 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
+      - attach_workspace:
+          at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_yarn_cache
       - *restore_node_modules
       - run:
           name: Install Packages
@@ -274,7 +247,8 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
+      - attach_workspace:
+          at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
@@ -342,30 +316,6 @@ jobs:
 
 workflows:
   version: 2
-  stable:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - setup
-      - yarn_lint:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_build:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-
-  experimental:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    jobs:
-      - setup
-      - yarn_build:
-          requires:
-            - setup
-      - build_devtools_and_process_artifacts:
-          requires:
-            - yarn_build
 
   # New workflow that will replace "stable" and "experimental"
   build_and_test:
@@ -378,6 +328,9 @@ workflows:
       # NOTE: This job is only enabled when we want the forks to be in sync.
       # When the forks intentionally diverge, comment out the job to disable it.
       - sync_reconciler_forks:
+          requires:
+            - setup
+      - yarn_lint:
           requires:
             - setup
       - yarn_test:
@@ -408,8 +361,12 @@ workflows:
       - yarn_build_combined:
           requires:
             - setup
+      - scrape_warning_messages:
+          requires:
+            - setup
       - process_artifacts_combined:
           requires:
+            - scrape_warning_messages
             - yarn_build_combined
       - yarn_test_build:
           requires:
@@ -457,6 +414,13 @@ workflows:
       - yarn_lint_build:
           requires:
             - yarn_build_combined
+      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+          requires:
+            - yarn_build_combined
+      - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build_combined
+
   fuzz_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     triggers:

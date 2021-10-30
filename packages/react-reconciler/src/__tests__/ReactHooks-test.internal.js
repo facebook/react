@@ -727,42 +727,6 @@ describe('ReactHooks', () => {
     ReactTestRenderer.create(<App deps={undefined} />);
   });
 
-  it('assumes useEffect clean-up function is either a function or undefined', () => {
-    const {useLayoutEffect} = React;
-
-    function App(props) {
-      useLayoutEffect(() => {
-        return props.return;
-      });
-      return null;
-    }
-
-    const root1 = ReactTestRenderer.create(null);
-    expect(() => root1.update(<App return={17} />)).toErrorDev([
-      'Warning: An effect function must not return anything besides a ' +
-        'function, which is used for clean-up. You returned: 17',
-    ]);
-
-    const root2 = ReactTestRenderer.create(null);
-    expect(() => root2.update(<App return={null} />)).toErrorDev([
-      'Warning: An effect function must not return anything besides a ' +
-        'function, which is used for clean-up. You returned null. If your ' +
-        'effect does not require clean up, return undefined (or nothing).',
-    ]);
-
-    const root3 = ReactTestRenderer.create(null);
-    expect(() => root3.update(<App return={Promise.resolve()} />)).toErrorDev([
-      'Warning: An effect function must not return anything besides a ' +
-        'function, which is used for clean-up.\n\n' +
-        'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
-    ]);
-
-    // Error on unmount because React assumes the value is a function
-    expect(() => {
-      root3.update(null);
-    }).toThrow('is not a function');
-  });
-
   it('does not forget render phase useState updates inside an effect', () => {
     const {useState, useEffect} = React;
 

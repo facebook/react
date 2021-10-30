@@ -16,7 +16,6 @@ import {
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
-import invariant from 'shared/invariant';
 // Module provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
@@ -250,8 +249,7 @@ if (__DEV__) {
   };
 } else {
   getInspectorDataForViewTag = () => {
-    invariant(
-      false,
+    throw new Error(
       'getInspectorDataForViewTag() is not available in production',
     );
   };
@@ -263,8 +261,7 @@ if (__DEV__) {
     locationY: number,
     callback: (viewData: TouchedViewDataAtPoint) => mixed,
   ): void => {
-    invariant(
-      false,
+    throw new Error(
       'getInspectorDataForViewAtPoint() is not available in production.',
     );
   };

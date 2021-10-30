@@ -22,8 +22,8 @@ function sleep(ms) {
 
 async function getPublishWorkflowID(pipelineID) {
   // Since we just created the pipeline in a POST request, the server may 404.
-  // Try up to three times before giving up.
-  for (let i = 0; i < 3; i++) {
+  // Try a few times before giving up.
+  for (let i = 0; i < 20; i++) {
     const pipelineWorkflowsResponse = await fetch(
       `https://circleci.com/api/v2/pipeline/${pipelineID}/workflow`
     );
@@ -37,7 +37,7 @@ async function getPublishWorkflowID(pipelineID) {
     // CircleCI server may be stale. Wait a sec and try again.
     await sleep(1000);
   }
-  throw new Error('Failed to create CircleCI workflow.');
+  return null;
 }
 
 async function pollUntilWorkflowFinishes(workflowID) {
@@ -107,6 +107,20 @@ async function main() {
     theme`{header Creating CI workflow}`,
     2 * 1000 // Estimated time: 2 seconds,
   );
+
+  if (workflowID === null) {
+    console.warn(
+      theme.yellow(
+        'Created a CI pipeline to publish the packages, but the script timed ' +
+          "out when requesting the associated workflow ID. It's still " +
+          'possible the workflow was created.\n\n' +
+          'Visit ' +
+          'https://app.circleci.com/pipelines/github/facebook/react?branch=main ' +
+          'for a list of the latest workflows.'
+      )
+    );
+    process.exit(1);
+  }
 
   await logPromise(
     pollUntilWorkflowFinishes(workflowID),

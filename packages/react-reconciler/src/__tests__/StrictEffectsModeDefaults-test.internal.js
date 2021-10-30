@@ -113,6 +113,7 @@ describe('StrictEffectsMode defaults', () => {
           </>,
         );
 
+        expect(Scheduler).toHaveYielded([]);
         expect(Scheduler).toFlushUntilNextPaint([
           // Cleanup and re-run "one" (and "two") since there is no dependencies array.
           'useLayoutEffect unmount "one"',

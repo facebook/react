@@ -239,7 +239,7 @@ export function useModalDismissSignal(
       ownerDocument = ((modalRef.current: any): HTMLDivElement).ownerDocument;
       ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
       if (dismissOnClickOutside) {
-        ownerDocument.addEventListener('click', handleDocumentClick);
+        ownerDocument.addEventListener('click', handleDocumentClick, true);
       }
     }, 0);
 
@@ -250,7 +250,7 @@ export function useModalDismissSignal(
 
       if (ownerDocument !== null) {
         ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
-        ownerDocument.removeEventListener('click', handleDocumentClick);
+        ownerDocument.removeEventListener('click', handleDocumentClick, true);
       }
     };
   }, [modalRef, dismissCallback, dismissOnClickOutside]);
@@ -264,11 +264,11 @@ export function useSubscription<Value>({
   getCurrentValue: () => Value,
   subscribe: (callback: Function) => () => void,
 |}): Value {
-  const [state, setState] = useState({
+  const [state, setState] = useState(() => ({
     getCurrentValue,
     subscribe,
     value: getCurrentValue(),
-  });
+  }));
 
   if (
     state.getCurrentValue !== getCurrentValue ||

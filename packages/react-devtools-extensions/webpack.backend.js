@@ -20,11 +20,17 @@ if (!NODE_ENV) {
   process.exit(1);
 }
 
-const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
+const builtModulesDir = resolve(
+  __dirname,
+  '..',
+  '..',
+  'build',
+  'oss-experimental',
+);
 
 const __DEV__ = NODE_ENV === 'development';
 
-const DEVTOOLS_VERSION = getVersionString();
+const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
 
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 

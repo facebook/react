@@ -79,7 +79,7 @@ async function lint(eslint, filepaths) {
 async function lintEverything() {
   console.log(`Linting build artifacts...`);
 
-  const allFilepaths = await glob('build2/**/*.js');
+  const allFilepaths = await glob('build/**/*.js');
 
   const pathsByFormat = new Map();
   for (const filepath of allFilepaths) {

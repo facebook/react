@@ -32,7 +32,7 @@ export default function ErrorView({
       {children}
       <div className={styles.ErrorInfo}>
         <div className={styles.HeaderRow}>
-          <div className={styles.Header}>
+          <div className={styles.ErrorHeader}>
             Uncaught Error: {errorMessage || ''}
           </div>
           {dismissError !== null && (
@@ -43,12 +43,12 @@ export default function ErrorView({
           )}
         </div>
         {!!callStack && (
-          <div className={styles.Stack}>
+          <div className={styles.ErrorStack}>
             The error was thrown {callStack.trim()}
           </div>
         )}
         {!!componentStack && (
-          <div className={styles.Stack}>
+          <div className={styles.ErrorStack}>
             The error occurred {componentStack.trim()}
           </div>
         )}

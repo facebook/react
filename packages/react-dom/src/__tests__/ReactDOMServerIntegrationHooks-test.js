@@ -27,6 +27,7 @@ let useCallback;
 let useMemo;
 let useRef;
 let useImperativeHandle;
+let useInsertionEffect;
 let useLayoutEffect;
 let useDebugValue;
 let useOpaqueIdentifier;
@@ -54,6 +55,7 @@ function initModules() {
   useRef = React.useRef;
   useDebugValue = React.useDebugValue;
   useImperativeHandle = React.useImperativeHandle;
+  useInsertionEffect = React.useInsertionEffect;
   useLayoutEffect = React.useLayoutEffect;
   useOpaqueIdentifier = React.unstable_useOpaqueIdentifier;
   forwardRef = React.forwardRef;
@@ -633,6 +635,21 @@ describe('ReactDOMServerHooks', () => {
       const domNode = await serverRender(
         <Counter label="Count" ref={counter} />,
       );
+      expect(clearYields()).toEqual(['Count: 0']);
+      expect(domNode.tagName).toEqual('SPAN');
+      expect(domNode.textContent).toEqual('Count: 0');
+    });
+  });
+  describe('useInsertionEffect', () => {
+    it('should warn when invoked during render', async () => {
+      function Counter() {
+        useInsertionEffect(() => {
+          throw new Error('should not be invoked');
+        });
+
+        return <Text text="Count: 0" />;
+      }
+      const domNode = await serverRender(<Counter />, 1);
       expect(clearYields()).toEqual(['Count: 0']);
       expect(domNode.tagName).toEqual('SPAN');
       expect(domNode.textContent).toEqual('Count: 0');
@@ -1727,7 +1744,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();
@@ -1751,7 +1768,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();
@@ -1775,7 +1792,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns if you try to use the result as a string in a child component', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();
@@ -1799,7 +1816,7 @@ describe('ReactDOMServerHooks', () => {
     it('useOpaqueIdentifier warns if you try to use the result as a string', async () => {
       function App() {
         const id = useOpaqueIdentifier();
-        return <div aria-labelledby={id + ''} />;
+        return <div aria-labelledby={String(id)} />;
       }
 
       const container = document.createElement('div');
@@ -1818,7 +1835,7 @@ describe('ReactDOMServerHooks', () => {
 
     it('useOpaqueIdentifier warns if you try to use the result as a string in a child component wrapped in a Suspense', async () => {
       function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
+        return <div aria-labelledby={String(appId)} />;
       }
       function App() {
         const id = useOpaqueIdentifier();
@@ -1956,6 +1973,41 @@ describe('ReactDOMServerHooks', () => {
       expect(
         container.getElementsByTagName('span')[0].getAttribute('id'),
       ).not.toBeNull();
+    });
+
+    it('useOpaqueIdentifier with multiple ids in nested components', async () => {
+      function DivWithId({id, children}) {
+        return <div id={id}>{children}</div>;
+      }
+
+      let setShowMore;
+      function App() {
+        const outerId = useOpaqueIdentifier();
+        const innerId = useOpaqueIdentifier();
+        const [showMore, _setShowMore] = useState(false);
+        setShowMore = _setShowMore;
+        return showMore ? (
+          <DivWithId id={outerId}>
+            <DivWithId id={innerId} />
+          </DivWithId>
+        ) : null;
+      }
+
+      const container = document.createElement('div');
+      container.innerHTML = ReactDOMServer.renderToString(<App />);
+
+      await act(async () => {
+        ReactDOM.hydrateRoot(container, <App />);
+      });
+
+      // Show additional content that wasn't part of the initial server-
+      // rendered repsonse.
+      await act(async () => {
+        setShowMore(true);
+      });
+      const [div1, div2] = container.getElementsByTagName('div');
+      expect(typeof div1.getAttribute('id')).toBe('string');
+      expect(typeof div2.getAttribute('id')).toBe('string');
     });
   });
 });

@@ -23,7 +23,7 @@ export const enableUpdaterTracking = false;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
-export const enableCache = false;
+export const enableCache = true;
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
@@ -39,6 +39,9 @@ export const disableTextareaChildren = false;
 export const disableModulePatternComponents = true;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
+export const warnOnSubscriptionInsideStartTransition = false;
+export const enableSuspenseAvoidThisFallback = false;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
@@ -53,6 +56,7 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableStrictEffects = true;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
+export const warnAboutCallbackRefReturningFunction = false;
 
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
@@ -61,7 +65,7 @@ export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
 
-export const consoleManagedByDevToolsDuringStrictMode = true;
+export const consoleManagedByDevToolsDuringStrictMode = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
