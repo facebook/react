@@ -73,14 +73,14 @@
   background: var(--color-button-background-focus);
 }
 
-.Modal[data-reach-menu-list] {
+.ModalDark[data-reach-menu-list], .ModalLight[data-reach-menu-list] {
   display: inline-flex;
   flex-direction: column;
-  background-color: var(--color-background);
-  color: var(--color-button);
+  background-color: var(--light-color-background);
+  color: var(--light-color-button);
   padding: 0.25rem 0;
   padding-right: 0;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--light-color-border);
   border-radius: 0.25rem;
   max-height: 10rem;
   overflow: auto;
@@ -88,10 +88,15 @@
   /* Make sure this is above the DevTools, which are above the Overlay */
   z-index: 10000002;
   position: relative;
-
   /* Reach UI tries to set its own :( */
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
+}
+
+.ModalDark[data-reach-menu-list] {
+  border: 1px solid var(--dark-color-border);
+  color: var(--dark-color-button);
+  background-color: var(--dark-color-background);
 }
 
 .NotInStore,

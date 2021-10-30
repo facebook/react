@@ -30,6 +30,7 @@ import {StoreContext} from '../context';
 import type {SerializedElement} from './types';
 
 import styles from './OwnersStack.css';
+import { SettingsContext } from '../Settings/SettingsContext';
 
 type SelectOwner = (owner: SerializedElement | null) => void;
 
@@ -208,6 +209,8 @@ function ElementsDropdown({
   selectOwner,
 }: ElementsDropdownProps) {
   const store = useContext(StoreContext);
+  const { theme, browserTheme } = useContext(SettingsContext);
+  const isLightTheme = (theme === 'auto' ? browserTheme : theme) === 'light';
 
   const menuItems = [];
   for (let index = owners.length - 1; index >= 0; index--) {
@@ -233,12 +236,14 @@ function ElementsDropdown({
     <Menu>
       <MenuButton className={styles.MenuButton}>
         <Tooltip label="Open elements dropdown">
-          <span className={styles.MenuButtonContent} tabIndex={-1}>
+          <span className={styles.MenuButtonContent}>
             <ButtonIcon type="more" />
           </span>
         </Tooltip>
       </MenuButton>
-      <MenuList className={styles.Modal}>{menuItems}</MenuList>
+      <MenuList className={isLightTheme ? styles.ModalLight : styles.ModalDark}>
+        {menuItems}
+      </MenuList>
     </Menu>
   );
 }

@@ -10,12 +10,18 @@
   --light-color-scroll-track: #fafafa;
   --light-color-tooltip-background: rgba(0, 0, 0, 0.9);
   --light-color-tooltip-text: #ffffff;
+  --light-color-background: #ffffff;
+  --light-color-border: #eeeeee;
+  --light-color-button: #5f6673;
 
   /* Dark theme */
   --dark-color-scroll-thumb: #afb3b9;
   --dark-color-scroll-track: #313640;
   --dark-color-tooltip-background: rgba(255, 255, 255, 0.95);
   --dark-color-tooltip-text: #000000;
+  --dark-color-background: #282c34;
+  --dark-color-border: #3d424a;
+  --dark-color-button: #afb3b9;
 
   /* Font smoothing */
   --font-smoothing: auto;
