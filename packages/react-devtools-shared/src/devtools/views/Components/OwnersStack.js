@@ -236,7 +236,7 @@ function ElementsDropdown({
     <Menu>
       <MenuButton className={styles.MenuButton}>
         <Tooltip label="Open elements dropdown">
-          <span className={styles.MenuButtonContent}>
+          <span className={styles.MenuButtonContent} tabIndex={-1}>
             <ButtonIcon type="more" />
           </span>
         </Tooltip>
