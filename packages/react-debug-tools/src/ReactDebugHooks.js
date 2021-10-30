@@ -342,7 +342,14 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 function useId(): string {
-  throw new Error('Not implemented.');
+  const hook = nextHook();
+  const id = hook !== null ? hook.memoizedState : '';
+  hookLog.push({
+    primitive: 'Id',
+    stackError: new Error(),
+    value: id,
+  });
+  return id;
 }
 
 const Dispatcher: DispatcherType = {

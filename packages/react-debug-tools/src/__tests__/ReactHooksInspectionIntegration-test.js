@@ -628,7 +628,7 @@ describe('ReactHooksInspectionIntegration', () => {
   it('should support composite useOpaqueIdentifier hook in concurrent mode', () => {
     function Foo(props) {
       const id = React.unstable_useOpaqueIdentifier();
-      const [state] = React.useState(() => 'hello', []);
+      const [state] = React.useState('hello');
       return <div id={id}>{state}</div>;
     }
 
@@ -646,6 +646,33 @@ describe('ReactHooksInspectionIntegration', () => {
     expect(tree[0].isStateEditable).toEqual(false);
     expect(tree[0].name).toEqual('OpaqueIdentifier');
     expect(String(tree[0].value).startsWith('c_')).toBe(true);
+
+    expect(tree[1]).toEqual({
+      id: 1,
+      isStateEditable: true,
+      name: 'State',
+      value: 'hello',
+      subHooks: [],
+    });
+  });
+
+  it('should support useId hook', () => {
+    function Foo(props) {
+      const id = React.unstable_useId();
+      const [state] = React.useState('hello');
+      return <div id={id}>{state}</div>;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+
+    expect(tree.length).toEqual(2);
+
+    expect(tree[0].id).toEqual(0);
+    expect(tree[0].isStateEditable).toEqual(false);
+    expect(tree[0].name).toEqual('Id');
+    expect(String(tree[0].value).startsWith('r:')).toBe(true);
 
     expect(tree[1]).toEqual({
       id: 1,
