@@ -10,7 +10,7 @@
 'use strict';
 
 let useSyncExternalStore;
-let useSyncExternalStoreExtra;
+let useSyncExternalStoreWithSelector;
 let React;
 let ReactDOM;
 let Scheduler;
@@ -25,11 +25,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    // Remove the built-in API from the React exports to force the package to
-    // use the shim.
     if (!gate(flags => flags.supportsNativeUseSyncExternalStore)) {
-      // and the non-variant tests for the shim.
-      //
       // Remove useSyncExternalStore from the React imports so that we use the
       // shim instead. Also removing startTransition, since we use that to
       // detect outdated 18 alphas that don't yet include useSyncExternalStore.
@@ -64,10 +60,21 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     // in both concurrent and legacy mode, I'm adding batching here.
     act = cb => internalAct(() => ReactDOM.unstable_batchedUpdates(cb));
 
-    useSyncExternalStore = require('use-sync-external-store')
+    if (gate(flags => flags.source)) {
+      // The `shim/with-selector` module composes the main
+      // `use-sync-external-store` entrypoint. In the compiled artifacts, this
+      // is resolved to the `shim` implementation by our build config, but when
+      // running the tests against the source files, we need to tell Jest how to
+      // resolve it. Because this is a source module, this mock has no affect on
+      // the build tests.
+      jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
+        jest.requireActual('use-sync-external-store/shim'),
+      );
+    }
+    useSyncExternalStore = require('use-sync-external-store/shim')
       .useSyncExternalStore;
-    useSyncExternalStoreExtra = require('use-sync-external-store/extra')
-      .useSyncExternalStoreExtra;
+    useSyncExternalStoreWithSelector = require('use-sync-external-store/shim/with-selector')
+      .useSyncExternalStoreWithSelector;
   });
 
   function Text({text}) {
@@ -595,7 +602,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
       function App() {
         Scheduler.unstable_yieldValue('App');
-        const a = useSyncExternalStoreExtra(
+        const a = useSyncExternalStoreWithSelector(
           store.subscribe,
           store.getState,
           null,
@@ -632,7 +639,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       const store = createExternalStore({a: 0, b: 0});
 
       function A() {
-        const {a} = useSyncExternalStoreExtra(
+        const {a} = useSyncExternalStoreWithSelector(
           store.subscribe,
           store.getState,
           null,
@@ -642,7 +649,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         return <Text text={'A' + a} />;
       }
       function B() {
-        const {b} = useSyncExternalStoreExtra(
+        const {b} = useSyncExternalStoreWithSelector(
           store.subscribe,
           store.getState,
           null,
@@ -774,7 +781,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
         Scheduler.unstable_yieldValue('Inline selector');
         return [...state.items, 'C'];
       };
-      const items = useSyncExternalStoreExtra(
+      const items = useSyncExternalStoreWithSelector(
         store.subscribe,
         store.getState,
         null,
@@ -842,7 +849,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       const selector = state => state.a.toUpperCase();
 
       function App() {
-        const a = useSyncExternalStoreExtra(
+        const a = useSyncExternalStoreWithSelector(
           store.subscribe,
           store.getState,
           null,
@@ -877,7 +884,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       const isEqual = (left, right) => left.a.trim() === right.a.trim();
 
       function App() {
-        const a = useSyncExternalStoreExtra(
+        const a = useSyncExternalStoreWithSelector(
           store.subscribe,
           store.getState,
           null,

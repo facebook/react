@@ -7,6 +7,6 @@
  * @flow
  */
 
-'use strict';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
-export * from './src/useSyncExternalStoreExtra';
+export const isServerEnvironment = !canUseDOM;
