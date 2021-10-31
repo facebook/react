@@ -25,7 +25,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    if (!gate(flags => flags.supportsNativeUseSyncExternalStore)) {
+    if (gate(flags => flags.enableUseSyncExternalStoreShim)) {
       // Remove useSyncExternalStore from the React imports so that we use the
       // shim instead. Also removing startTransition, since we use that to
       // detect outdated 18 alphas that don't yet include useSyncExternalStore.
@@ -38,8 +38,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           startTransition: _,
           // eslint-disable-next-line no-unused-vars
           useSyncExternalStore: __,
-          // eslint-disable-next-line no-unused-vars
-          unstable_useSyncExternalStore: ___,
           ...otherExports
         } = jest.requireActual('react');
         return otherExports;
@@ -85,7 +83,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   function createRoot(container) {
     // This wrapper function exists so we can test both legacy roots and
     // concurrent roots.
-    if (gate(flags => flags.supportsNativeUseSyncExternalStore)) {
+    if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
       // The native implementation only exists in 18+, so we test using
       // concurrent mode. To test the legacy root behavior in the native
       // implementation (which is supported in the sense that it needs to have
@@ -272,7 +270,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
 
   // In React 18, you can't observe in between a sync render and its
   // passive effects, so this is only relevant to legacy roots
-  // @gate !supportsNativeUseSyncExternalStore
+  // @gate enableUseSyncExternalStoreShim
   test(
     "compares to current state before bailing out, even when there's a " +
       'mutation in between the sync and passive effects',
@@ -554,7 +552,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     await act(() => {
       store.set({value: 1, throwInGetSnapshot: true, throwInIsEqual: false});
     });
-    if (gate(flags => flags.supportsNativeUseSyncExternalStore)) {
+    if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
       expect(Scheduler).toHaveYielded([
         'Error in getSnapshot',
         // In a concurrent root, React renders a second time to attempt to
@@ -718,7 +716,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       container.innerHTML = '<div>server</div>';
       const serverRenderedDiv = container.getElementsByTagName('div')[0];
 
-      if (gate(flags => flags.supportsNativeUseSyncExternalStore)) {
+      if (gate(flags => !flags.enableUseSyncExternalStoreShim)) {
         act(() => {
           ReactDOM.hydrateRoot(container, <App />);
         });

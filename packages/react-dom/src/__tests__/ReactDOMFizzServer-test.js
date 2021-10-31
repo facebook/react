@@ -56,7 +56,7 @@ describe('ReactDOMFizzServer', () => {
         jest.requireActual('react'),
       );
     }
-    useSyncExternalStore = React.unstable_useSyncExternalStore;
+    useSyncExternalStore = React.useSyncExternalStore;
     useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
       .useSyncExternalStoreWithSelector;
 
@@ -1675,7 +1675,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot', async () => {
     const ref = React.createRef();
@@ -1746,7 +1745,6 @@ describe('ReactDOMFizzServer', () => {
 
   // The selector implementation uses the lazy ref initialization pattern
   // @gate !(enableUseRefAccessWarning && __DEV__)
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
     // Same as previous test, but with a selector that returns a complex object
@@ -1827,7 +1825,6 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toEqual(serverRenderedDiv);
   });
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
@@ -1976,7 +1973,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +

@@ -36,8 +36,6 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
         startTransition: _,
         // eslint-disable-next-line no-unused-vars
         useSyncExternalStore: __,
-        // eslint-disable-next-line no-unused-vars
-        unstable_useSyncExternalStore: ___,
         ...otherExports
       } = jest.requireActual('react');
       return otherExports;
@@ -61,6 +59,11 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
       // the build tests.
       jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
         jest.requireActual('use-sync-external-store/shim'),
+      );
+      jest.mock('use-sync-external-store/src/isServerEnvironment', () =>
+        jest.requireActual(
+          'use-sync-external-store/src/forks/isServerEnvironment.native',
+        ),
       );
     }
     useSyncExternalStore = require('use-sync-external-store/shim')
@@ -96,26 +99,6 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
       },
     };
   }
-
-  test('native version', async () => {
-    const store = createExternalStore('client');
-
-    function App() {
-      const text = useSyncExternalStore(
-        store.subscribe,
-        store.getState,
-        () => 'server',
-      );
-      return <Text text={text} />;
-    }
-
-    const root = ReactNoop.createRoot();
-    await act(() => {
-      root.render(<App />);
-    });
-    expect(Scheduler).toHaveYielded(['client']);
-    expect(root).toMatchRenderedOutput('client');
-  });
 
   test('native version', async () => {
     const store = createExternalStore('client');

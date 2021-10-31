@@ -13,4 +13,4 @@
 // dispatch for CommonJS interop named imports.
 import * as React from 'react';
 
-export const useSyncExternalStore = React.unstable_useSyncExternalStore;
+export const useSyncExternalStore = React.useSyncExternalStore;
