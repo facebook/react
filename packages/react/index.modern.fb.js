@@ -53,7 +53,6 @@ export {
   useMutableSource,
   useMutableSource as unstable_useMutableSource,
   useSyncExternalStore,
-  useSyncExternalStore as unstable_useSyncExternalStore,
   useReducer,
   useRef,
   useState,

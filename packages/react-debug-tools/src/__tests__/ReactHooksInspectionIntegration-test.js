@@ -1055,9 +1055,8 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental || www
   it('should support composite useSyncExternalStore hook', () => {
-    const useSyncExternalStore = React.unstable_useSyncExternalStore;
+    const useSyncExternalStore = React.useSyncExternalStore;
     function Foo() {
       const value = useSyncExternalStore(
         () => () => {},

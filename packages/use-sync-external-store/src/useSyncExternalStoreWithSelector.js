@@ -9,14 +9,14 @@
 
 import * as React from 'react';
 import is from 'shared/objectIs';
-import {useSyncExternalStore} from 'use-sync-external-store';
+import {useSyncExternalStore} from 'use-sync-external-store/src/useSyncExternalStore';
 
-// Intentionally not using named imports because Rollup uses dynamic
-// dispatch for CommonJS interop named imports.
+// Intentionally not using named imports because Rollup uses dynamic dispatch
+// for CommonJS interop.
 const {useRef, useEffect, useMemo, useDebugValue} = React;
 
 // Same as useSyncExternalStore, but supports selector and isEqual arguments.
-export function useSyncExternalStoreExtra<Snapshot, Selection>(
+export function useSyncExternalStoreWithSelector<Snapshot, Selection>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => Snapshot,
   getServerSnapshot: void | null | (() => Snapshot),
