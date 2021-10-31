@@ -185,3 +185,6 @@ export const allowConcurrentByDefault = false;
 export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// Only enabled in www builds
+export const enableUseMutableSource = false;

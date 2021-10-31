@@ -39,7 +39,6 @@ export {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useMutableSource as unstable_useMutableSource,
   useSyncExternalStore,
   useReducer,
   useRef,
