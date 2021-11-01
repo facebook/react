@@ -166,8 +166,8 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
 function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
   switch (interruptedWork.tag) {
     case ClassComponent: {
-      const childContextTypes = interruptedWork.type.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
+      const Component = interruptedWork.type;
+      if (isLegacyContextProvider(Component)) {
         popLegacyContext(interruptedWork);
       }
       break;
