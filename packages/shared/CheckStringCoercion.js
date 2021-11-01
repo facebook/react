@@ -7,8 +7,6 @@
  * @flow
  */
 
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
-
 /*
  * The `'' + value` pattern (used in in perf-sensitive code) throws for Symbol
  * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
@@ -35,16 +33,6 @@ function typeName(value: mixed): string {
 // $FlowFixMe only called in DEV, so void return is not possible.
 function willCoercionThrow(value: mixed): boolean {
   if (__DEV__) {
-    if (
-      value !== null &&
-      typeof value === 'object' &&
-      value.$$typeof === REACT_OPAQUE_ID_TYPE
-    ) {
-      // OpaqueID type is expected to throw, so React will handle it. Not sure if
-      // it's expected that string coercion will throw, but we'll assume it's OK.
-      // See https://github.com/facebook/react/issues/20127.
-      return;
-    }
     try {
       testStringCoercion(value);
       return false;

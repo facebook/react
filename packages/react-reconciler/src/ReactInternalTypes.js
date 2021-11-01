@@ -43,7 +43,6 @@ export type HookType =
   | 'useTransition'
   | 'useMutableSource'
   | 'useSyncExternalStore'
-  | 'useOpaqueIdentifier'
   | 'useId'
   | 'useCacheRefresh';
 
@@ -317,7 +316,6 @@ export type Dispatcher = {|
     getSnapshot: () => T,
     getServerSnapshot?: () => T,
   ): T,
-  useOpaqueIdentifier(): any,
   useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
 

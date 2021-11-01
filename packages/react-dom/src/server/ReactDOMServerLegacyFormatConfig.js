@@ -34,9 +34,7 @@ export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  opaqueIdentifierPrefix: string,
   nextSuspenseID: number,
-  nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
@@ -56,9 +54,7 @@ export function createResponseState(
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
-    opaqueIdentifierPrefix: responseState.opaqueIdentifierPrefix,
     nextSuspenseID: responseState.nextSuspenseID,
-    nextOpaqueID: responseState.nextOpaqueID,
     sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
     sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
     sentClientRenderFunction: responseState.sentClientRenderFunction,
@@ -77,14 +73,12 @@ export function createRootFormatContext(): FormatContext {
 export type {
   FormatContext,
   SuspenseBoundaryID,
-  OpaqueIDType,
 } from './ReactDOMServerFormatConfig';
 
 export {
   getChildFormatContext,
   UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
   assignSuspenseBoundaryID,
-  makeServerID,
   pushStartInstance,
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,

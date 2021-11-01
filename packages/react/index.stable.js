@@ -29,7 +29,6 @@ export {
   lazy,
   memo,
   startTransition,
-  unstable_useOpaqueIdentifier,
   unstable_useId,
   useCallback,
   useContext,

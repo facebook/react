@@ -17,7 +17,6 @@ import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {OpaqueIDType} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.new';
 import type {Flags} from './ReactFiberFlags';
 
@@ -96,17 +95,11 @@ import {
 } from './ReactFiberBeginWork.new';
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
 import {
-  makeClientId,
-  makeClientIdInDEV,
-  makeOpaqueHydratingObject,
-} from './ReactFiberHostConfig';
-import {
   getWorkInProgressVersion,
   markSourceAsDirty,
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.new';
-import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
 import {createCache, CacheContext} from './ReactFiberCacheComponent.new';
@@ -139,10 +132,8 @@ export type UpdateQueue<S, A> = {|
 |};
 
 let didWarnAboutMismatchedHooksForComponent;
-let didWarnAboutUseOpaqueIdentifier;
 let didWarnUncachedGetSnapshot;
 if (__DEV__) {
-  didWarnAboutUseOpaqueIdentifier = {};
   didWarnAboutMismatchedHooksForComponent = new Set();
 }
 
@@ -2045,94 +2036,6 @@ export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
   }
 }
 
-function warnOnOpaqueIdentifierAccessInDEV(fiber) {
-  if (__DEV__) {
-    // TODO: Should warn in effects and callbacks, too
-    const name = getComponentNameFromFiber(fiber) || 'Unknown';
-    if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
-      console.error(
-        'The object passed back from useOpaqueIdentifier is meant to be ' +
-          'passed through to attributes only. Do not read the ' +
-          'value directly.',
-      );
-      didWarnAboutUseOpaqueIdentifier[name] = true;
-    }
-  }
-}
-
-function mountOpaqueIdentifier(): OpaqueIDType | void {
-  const makeId = __DEV__
-    ? makeClientIdInDEV.bind(
-        null,
-        warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
-      )
-    : makeClientId;
-
-  if (getIsHydrating()) {
-    let didUpgrade = false;
-    const fiber = currentlyRenderingFiber;
-    const readValue = () => {
-      if (!didUpgrade) {
-        // Only upgrade once. This works even inside the render phase because
-        // the update is added to a shared queue, which outlasts the
-        // in-progress render.
-        didUpgrade = true;
-        if (__DEV__) {
-          isUpdatingOpaqueValueInRenderPhase = true;
-          setId(makeId());
-          isUpdatingOpaqueValueInRenderPhase = false;
-          warnOnOpaqueIdentifierAccessInDEV(fiber);
-        } else {
-          setId(makeId());
-        }
-      }
-
-      throw new Error(
-        'The object passed back from useOpaqueIdentifier is meant to be ' +
-          'passed through to attributes only. Do not read the value directly.',
-      );
-    };
-    const id = makeOpaqueHydratingObject(readValue);
-
-    const setId = mountState(id)[1];
-
-    if ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode) {
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (currentlyRenderingFiber.mode & StrictEffectsMode) === NoMode
-      ) {
-        currentlyRenderingFiber.flags |= MountPassiveDevEffect | PassiveEffect;
-      } else {
-        currentlyRenderingFiber.flags |= PassiveEffect;
-      }
-      pushEffect(
-        HookHasEffect | HookPassive,
-        () => {
-          setId(makeId());
-        },
-        undefined,
-        null,
-      );
-    }
-    return id;
-  } else {
-    const id = makeId();
-    mountState(id);
-    return id;
-  }
-}
-
-function updateOpaqueIdentifier(): OpaqueIDType | void {
-  const id = updateState(undefined)[0];
-  return id;
-}
-
-function rerenderOpaqueIdentifier(): OpaqueIDType | void {
-  const id = rerenderState(undefined)[0];
-  return id;
-}
-
 function mountId(): string {
   const hook = mountWorkInProgressHook();
 
@@ -2481,7 +2384,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
-  useOpaqueIdentifier: throwInvalidHookError,
   useId: throwInvalidHookError,
 
   unstable_isNewReconciler: enableNewReconciler,
@@ -2510,7 +2412,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
-  useOpaqueIdentifier: mountOpaqueIdentifier,
   useId: mountId,
 
   unstable_isNewReconciler: enableNewReconciler,
@@ -2539,7 +2440,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
-  useOpaqueIdentifier: updateOpaqueIdentifier,
   useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,
@@ -2568,7 +2468,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
-  useOpaqueIdentifier: rerenderOpaqueIdentifier,
   useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,
@@ -2736,11 +2635,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
-      mountHookTypesDev();
-      return mountOpaqueIdentifier();
-    },
     useId(): string {
       currentHookNameInDev = 'useId';
       mountHookTypesDev();
@@ -2882,11 +2776,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-    },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
-      updateHookTypesDev();
-      return mountOpaqueIdentifier();
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -3030,11 +2919,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
-      updateHookTypesDev();
-      return updateOpaqueIdentifier();
-    },
     useId(): string {
       currentHookNameInDev = 'useId';
       updateHookTypesDev();
@@ -3177,11 +3061,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useSyncExternalStore';
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-    },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
-      updateHookTypesDev();
-      return rerenderOpaqueIdentifier();
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -3340,12 +3219,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-    },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountOpaqueIdentifier();
     },
     useId(): string {
       currentHookNameInDev = 'useId';
@@ -3506,12 +3379,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateOpaqueIdentifier();
-    },
     useId(): string {
       currentHookNameInDev = 'useId';
       warnInvalidHookAccess();
@@ -3671,12 +3538,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-    },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return rerenderOpaqueIdentifier();
     },
     useId(): string {
       currentHookNameInDev = 'useId';

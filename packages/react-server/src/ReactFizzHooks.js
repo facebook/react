@@ -16,13 +16,11 @@ import type {
   ReactContext,
 } from 'shared/ReactTypes';
 
-import type {ResponseState, OpaqueIDType} from './ReactServerFormatConfig';
+import type {ResponseState} from './ReactServerFormatConfig';
 import type {Task} from './ReactFizzServer';
 
 import {readContext as readContextImpl} from './ReactFizzNewContext';
 import {getTreeId} from './ReactFizzTreeContext';
-
-import {makeServerID} from './ReactServerFormatConfig';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
@@ -509,10 +507,6 @@ function useTransition(): [boolean, (callback: () => void) => void] {
   return [false, unsupportedStartTransition];
 }
 
-function useOpaqueIdentifier(): OpaqueIDType {
-  return makeServerID(currentResponseState);
-}
-
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
@@ -559,7 +553,6 @@ export const Dispatcher: DispatcherType = {
   useDebugValue: noop,
   useDeferredValue,
   useTransition,
-  useOpaqueIdentifier,
   useId,
   // Subscriptions are not setup in a server environment.
   useMutableSource,

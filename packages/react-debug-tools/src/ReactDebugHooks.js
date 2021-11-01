@@ -18,13 +18,9 @@ import type {
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
-
-import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   FunctionComponent,
   SimpleMemoComponent,
@@ -52,8 +48,6 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 let primitiveStackCache: null | Map<string, Array<any>> = null;
-
-let currentFiber: Fiber | null = null;
 
 type Hook = {
   memoizedState: any,
@@ -324,23 +318,6 @@ function useDeferredValue<T>(value: T): T {
   return value;
 }
 
-function useOpaqueIdentifier(): OpaqueIDType | void {
-  const hook = nextHook(); // State
-  if (currentFiber && currentFiber.mode === NoMode) {
-    nextHook(); // Effect
-  }
-  let value = hook === null ? undefined : hook.memoizedState;
-  if (value && value.$$typeof === REACT_OPAQUE_ID_TYPE) {
-    value = undefined;
-  }
-  hookLog.push({
-    primitive: 'OpaqueIdentifier',
-    stackError: new Error(),
-    value,
-  });
-  return value;
-}
-
 function useId(): string {
   const hook = nextHook();
   const id = hook !== null ? hook.memoizedState : '';
@@ -371,7 +348,6 @@ const Dispatcher: DispatcherType = {
   useMutableSource,
   useSyncExternalStore,
   useDeferredValue,
-  useOpaqueIdentifier,
   useId,
 };
 
@@ -766,8 +742,6 @@ export function inspectHooksOfFiber(
   if (currentDispatcher == null) {
     currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
   }
-
-  currentFiber = fiber;
 
   if (
     fiber.tag !== FunctionComponent &&
