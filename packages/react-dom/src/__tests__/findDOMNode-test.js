@@ -99,8 +99,8 @@ describe('findDOMNode', () => {
   });
 
   it('findDOMNode should warn if used to find a host component inside StrictMode', () => {
-    let parent = undefined;
-    let child = undefined;
+    let parent;
+    let child;
 
     class ContainsStrictModeChild extends React.Component {
       render() {
@@ -130,8 +130,8 @@ describe('findDOMNode', () => {
   });
 
   it('findDOMNode should warn if passed a component that is inside StrictMode', () => {
-    let parent = undefined;
-    let child = undefined;
+    let parent;
+    let child;
 
     class IsInStrictMode extends React.Component {
       render() {

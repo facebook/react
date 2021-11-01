@@ -1044,7 +1044,7 @@ describe('ReactDOMServerIntegration', () => {
       itThrowsWhenRendering(
         'undefined',
         async render => {
-          let UndefinedComponent = undefined;
+          let UndefinedComponent;
           expect(() => {
             UndefinedComponent = <UndefinedComponent />;
           }).toErrorDev(

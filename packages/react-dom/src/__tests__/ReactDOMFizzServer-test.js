@@ -28,7 +28,7 @@ let CSPnonce = null;
 let container;
 let buffer = '';
 let hasErrored = false;
-let fatalError = undefined;
+let fatalError;
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {

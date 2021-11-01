@@ -523,8 +523,8 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let parent = undefined;
-    let child = undefined;
+    let parent;
+    let child;
 
     class ContainsStrictModeChild extends React.Component {
       render() {
@@ -559,8 +559,8 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let parent = undefined;
-    let child = undefined;
+    let parent;
+    let child;
 
     class IsInStrictMode extends React.Component {
       render() {
@@ -596,8 +596,8 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let parent = undefined;
-    let child = undefined;
+    let parent;
+    let child;
 
     class ContainsStrictModeChild extends React.Component {
       render() {
@@ -630,8 +630,8 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    let parent = undefined;
-    let child = undefined;
+    let parent;
+    let child;
 
     class IsInStrictMode extends React.Component {
       render() {
