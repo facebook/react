@@ -20,7 +20,7 @@ import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
-import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
+import {getOpenInEditorURL} from '../../../utils';
 
 import styles from './InspectedElement.css';
 
@@ -124,6 +124,9 @@ export default function InspectedElementWrapper(_: Props) {
     inspectedElement != null &&
     inspectedElement.canToggleSuspense;
 
+  const canOpenInEditor =
+    inspectedElement != null && inspectedElement.source != null;
+
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null || targetErrorBoundaryID == null) {
       return;
@@ -204,14 +207,14 @@ export default function InspectedElementWrapper(_: Props) {
     if (source == null) {
       return;
     }
-    const editorURL = process.env.EDITOR_URL;
+
+    const editorURL = getOpenInEditorURL() ?? process.env.EDITOR_URL;
     if (typeof editorURL !== 'string') {
       return;
     }
     const url = new URL(editorURL);
-    url.searchParams.set('project', 'facebook-www');
-    url.searchParams.append('paths[0]', source.fileName);
-    url.searchParams.append('lines[0]', String(source.lineNumber));
+    url.href = url.href.replace('{path}', source.fileName);
+    url.href = url.href.replace('{line}', String(source.lineNumber));
     window.open(url);
   }, [inspectedElement]);
 
@@ -240,7 +243,7 @@ export default function InspectedElementWrapper(_: Props) {
             {element.displayName}
           </div>
         </div>
-        {isInternalFacebookBuild && (
+        {canOpenInEditor && (
           <Button
             className={styles.IconButton}
             onClick={onOpenInEditor}

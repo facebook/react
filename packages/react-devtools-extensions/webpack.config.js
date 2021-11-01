@@ -32,7 +32,7 @@ const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
 
-const EDITOR_URL = process.env.EDITOR_URL || null;
+const EDITOR_URL = process.env.EDITOR_URL || 'vscode://file/{path}:{line}';
 const LOGGING_URL = process.env.LOGGING_URL || null;
 
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
