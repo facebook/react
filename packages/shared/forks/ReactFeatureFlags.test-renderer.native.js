@@ -65,6 +65,7 @@ export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
+export const enableUseMutableSource = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

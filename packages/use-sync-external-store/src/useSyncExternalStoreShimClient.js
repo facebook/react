@@ -30,10 +30,10 @@ let didWarnUncachedGetSnapshot = false;
 export function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
-  // Note: The client shim does not use getServerSnapshot, because pre-18
-  // versions of React do not expose a way to check if we're hydrating. So
-  // users of the shim will need to track that themselves and return the
-  // correct value from `getSnapshot`.
+  // Note: The shim does not use getServerSnapshot, because pre-18 versions of
+  // React do not expose a way to check if we're hydrating. So users of the shim
+  // will need to track that themselves and return the correct value
+  // from `getSnapshot`.
   getServerSnapshot?: () => T,
 ): T {
   if (__DEV__) {

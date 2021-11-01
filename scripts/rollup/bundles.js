@@ -141,7 +141,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-fetch/index.browser',
     global: 'ReactFetch',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react'],
   },
@@ -163,7 +163,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-fs/index.browser.server',
     global: 'ReactFilesystem',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: [],
   },
@@ -185,7 +185,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-pg/index.browser.server',
     global: 'ReactPostgres',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: [],
   },
@@ -349,7 +349,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-server-dom-webpack',
     global: 'ReactServerDOMReader',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react'],
   },
@@ -594,7 +594,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'scheduler', 'scheduler/unstable_mock', 'expect'],
   },
@@ -605,7 +605,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/persistent',
     global: 'ReactNoopRendererPersistent',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'scheduler', 'expect'],
   },
@@ -616,7 +616,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer/server',
     global: 'ReactNoopRendererServer',
-    minifyWithProdErrorCodes: true,
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'scheduler', 'expect'],
   },
@@ -789,7 +789,7 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* Shim for useSyncExternalStore *******/
+  /******* useSyncExternalStore *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
@@ -800,26 +800,48 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* Shim for useSyncExternalStore (+ extra user-space features) *******/
+  /******* useSyncExternalStore (shim) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'use-sync-external-store/extra',
-    global: 'useSyncExternalStoreExtra',
-    minifyWithProdErrorCodes: true,
+    entry: 'use-sync-external-store/shim',
+    global: 'useSyncExternalStore',
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: true,
-    externals: ['react', 'use-sync-external-store'],
+    externals: ['react'],
   },
 
-  /******* Shim for useSyncExternalStore ReactNative *******/
+  /******* useSyncExternalStore (shim, native) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'use-sync-external-store/index.native',
-    global: 'useSyncExternalStoreNative',
-    minifyWithProdErrorCodes: true,
+    entry: 'use-sync-external-store/shim/index.native',
+    global: 'useSyncExternalStore',
+    minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: true,
-    externals: ['react', 'ReactNativeInternalFeatureFlags'],
+    externals: ['react'],
+  },
+
+  /******* useSyncExternalStoreWithSelector *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-sync-external-store/with-selector',
+    global: 'useSyncExternalStoreWithSelector',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: true,
+    externals: ['react'],
+  },
+
+  /******* useSyncExternalStoreWithSelector (shim) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-sync-external-store/shim/with-selector',
+    global: 'useSyncExternalStoreWithSelector',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: true,
+    externals: ['react', 'use-sync-external-store/shim'],
   },
 
   /******* React Scheduler (experimental) *******/

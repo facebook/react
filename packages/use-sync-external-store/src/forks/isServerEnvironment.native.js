@@ -7,10 +7,4 @@
  * @flow
  */
 
-export function useSyncExternalStore<T>(
-  subscribe: (() => void) => () => void,
-  getSnapshot: () => T,
-  getServerSnapshot?: () => T,
-): T {
-  return getSnapshot();
-}
+export const isServerEnvironment = false;

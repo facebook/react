@@ -18,7 +18,7 @@ let ReactDOMFizzServer;
 let Suspense;
 let SuspenseList;
 let useSyncExternalStore;
-let useSyncExternalStoreExtra;
+let useSyncExternalStoreWithSelector;
 let PropTypes;
 let textCache;
 let window;
@@ -43,10 +43,22 @@ describe('ReactDOMFizzServer', () => {
     Stream = require('stream');
     Suspense = React.Suspense;
     SuspenseList = React.SuspenseList;
-    useSyncExternalStore = React.unstable_useSyncExternalStore;
-    useSyncExternalStoreExtra = require('use-sync-external-store/extra')
-      .useSyncExternalStoreExtra;
+
     PropTypes = require('prop-types');
+
+    if (gate(flags => flags.source)) {
+      // The `with-selector` module composes the main `use-sync-external-store`
+      // entrypoint. In the compiled artifacts, this is resolved to the `shim`
+      // implementation by our build config, but when running the tests against
+      // the source files, we need to tell Jest how to resolve it. Because this
+      // is a source module, this mock has no affect on the build tests.
+      jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
+        jest.requireActual('react'),
+      );
+    }
+    useSyncExternalStore = React.useSyncExternalStore;
+    useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
+      .useSyncExternalStoreWithSelector;
 
     textCache = new Map();
 
@@ -1663,7 +1675,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot', async () => {
     const ref = React.createRef();
@@ -1734,7 +1745,6 @@ describe('ReactDOMFizzServer', () => {
 
   // The selector implementation uses the lazy ref initialization pattern
   // @gate !(enableUseRefAccessWarning && __DEV__)
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
     // Same as previous test, but with a selector that returns a complex object
@@ -1767,7 +1777,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     function App() {
-      const {env} = useSyncExternalStoreExtra(
+      const {env} = useSyncExternalStoreWithSelector(
         subscribe,
         getClientSnapshot,
         getServerSnapshot,
@@ -1815,7 +1825,6 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toEqual(serverRenderedDiv);
   });
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
@@ -1964,7 +1973,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +

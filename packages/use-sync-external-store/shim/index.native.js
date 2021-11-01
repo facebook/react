@@ -9,4 +9,4 @@
 
 'use strict';
 
-export {useSyncExternalStore} from './src/useSyncExternalStore';
+export {useSyncExternalStore} from 'use-sync-external-store/src/useSyncExternalStoreShim';
