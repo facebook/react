@@ -73,14 +73,11 @@
   background: var(--color-button-background-focus);
 }
 
-.ModalDark[data-reach-menu-list], .ModalLight[data-reach-menu-list] {
+.Modal[data-reach-menu-list] {
   display: inline-flex;
   flex-direction: column;
-  background-color: var(--light-color-background);
-  color: var(--light-color-button);
   padding: 0.25rem 0;
   padding-right: 0;
-  border: 1px solid var(--light-color-border);
   border-radius: 0.25rem;
   max-height: 10rem;
   overflow: auto;
@@ -93,10 +90,16 @@
   font-size: var(--font-size-monospace-normal);
 }
 
-.ModalDark[data-reach-menu-list] {
+.ModalDark {
+  background-color: var(--dark-color-background);
   border: 1px solid var(--dark-color-border);
   color: var(--dark-color-button);
-  background-color: var(--dark-color-background);
+}
+
+.ModalLight {
+  background-color: var(--light-color-background);
+  border: 1px solid var(--light-color-border);
+  color: var(--light-color-button);
 }
 
 .NotInStore,

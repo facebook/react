@@ -30,7 +30,7 @@ import {StoreContext} from '../context';
 import type {SerializedElement} from './types';
 
 import styles from './OwnersStack.css';
-import { SettingsContext } from '../Settings/SettingsContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 
 type SelectOwner = (owner: SerializedElement | null) => void;
 
@@ -209,7 +209,7 @@ function ElementsDropdown({
   selectOwner,
 }: ElementsDropdownProps) {
   const store = useContext(StoreContext);
-  const { theme, browserTheme } = useContext(SettingsContext);
+  const {theme, browserTheme} = useContext(SettingsContext);
   const isLightTheme = (theme === 'auto' ? browserTheme : theme) === 'light';
 
   const menuItems = [];
@@ -241,7 +241,10 @@ function ElementsDropdown({
           </span>
         </Tooltip>
       </MenuButton>
-      <MenuList className={isLightTheme ? styles.ModalLight : styles.ModalDark}>
+      <MenuList
+        className={`${styles.Modal} ${
+          isLightTheme ? styles.ModalLight : styles.ModalDark
+        }`}>
         {menuItems}
       </MenuList>
     </Menu>
