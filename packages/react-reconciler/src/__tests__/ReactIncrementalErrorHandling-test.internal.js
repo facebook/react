@@ -1916,14 +1916,14 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it("does not infinite loop if there's a render phase update in the same render as an error", async () => {
-    // useOpaqueIdentifier uses an render phase update as an implementation
-    // detail. When an error is accompanied by a render phase update, we assume
-    // that it comes from useOpaqueIdentifier, because render phase updates
-    // triggered from userspace are not allowed (we log a warning). So we keep
-    // attempting to recover until no more opaque identifiers need to be
-    // upgraded. However, we should give up after some point to prevent an
-    // infinite loop in the case where there is (by accident) a render phase
-    // triggered from userspace.
+    // Some React features may schedule a render phase update as an
+    // implementation detail. When an error is accompanied by a render phase
+    // update, we assume that it comes from React internals, because render
+    // phase updates triggered from userspace are not allowed (we log a
+    // warning). So we keep attempting to recover until no more opaque
+    // identifiers need to be upgraded. However, we should give up after some
+    // point to prevent an infinite loop in the case where there is (by
+    // accident) a render phase triggered from userspace.
 
     spyOnDev(console, 'error');
 

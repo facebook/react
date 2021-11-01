@@ -14,7 +14,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 
@@ -167,11 +166,6 @@ export function useTransition(): [boolean, (() => void) => void] {
 export function useDeferredValue<T>(value: T): T {
   const dispatcher = resolveDispatcher();
   return dispatcher.useDeferredValue(value);
-}
-
-export function useOpaqueIdentifier(): OpaqueIDType | void {
-  const dispatcher = resolveDispatcher();
-  return dispatcher.useOpaqueIdentifier();
 }
 
 export function useId(): string {
