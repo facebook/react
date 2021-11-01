@@ -126,6 +126,6 @@ export {
   REACT_CACHE_TYPE as unstable_Cache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
-  useId as unstable_useId,
+  useId,
   act,
 };

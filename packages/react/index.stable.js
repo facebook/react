@@ -29,7 +29,7 @@ export {
   lazy,
   memo,
   startTransition,
-  unstable_useId,
+  useId,
   useCallback,
   useContext,
   useDebugValue,

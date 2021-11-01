@@ -600,7 +600,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
   it('should support useId hook', () => {
     function Foo(props) {
-      const id = React.unstable_useId();
+      const id = React.useId();
       const [state] = React.useState('hello');
       return <div id={id}>{state}</div>;
     }
