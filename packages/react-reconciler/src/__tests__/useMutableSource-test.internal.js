@@ -141,6 +141,7 @@ describe('useMutableSource', () => {
 
   beforeEach(loadModules);
 
+  // @gate enableUseMutableSource
   it('should subscribe to a source and schedule updates when it changes', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -208,6 +209,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should restart work if a new source is mutated during render', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -263,6 +265,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should schedule an update if a new source is mutated between render and commit (subscription)', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -302,6 +305,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should unsubscribe and resubscribe if a new source is used', () => {
     const sourceA = createSource('a-one');
     const mutableSourceA = createMutableSource(
@@ -358,6 +362,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should unsubscribe and resubscribe if a new subscribe function is provided', () => {
     const source = createSource('a-one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -422,6 +427,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should re-use previously read snapshot value when reading is unsafe', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -484,6 +490,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should read from source on newly mounted subtree if no pending updates are scheduled for source', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -523,6 +530,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should throw and restart render if source and snapshot are unavailable during an update', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -586,6 +594,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should throw and restart render if source and snapshot are unavailable during a sync update', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -649,6 +658,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should only update components whose subscriptions fire', () => {
     const source = createComplexSource('a:one', 'b:one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -687,6 +697,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should detect tearing in part of the store not yet subscribed to', () => {
     const source = createComplexSource('a:one', 'b:one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -779,6 +790,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('does not schedule an update for subscriptions that fire with an unchanged snapshot', () => {
     const MockComponent = jest.fn(Component);
 
@@ -805,6 +817,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should throw and restart if getSnapshot changes between scheduled update and re-render', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -845,6 +858,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should recover from a mutation during yield when other work is scheduled', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -899,6 +913,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should not throw if the new getSnapshot returns the same snapshot value', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -953,6 +968,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should not throw if getSnapshot changes but the source can be safely read from anyway', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -992,6 +1008,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should still schedule an update if an eager selector throws after a mutation', () => {
     const source = createSource({
       friends: [
@@ -1058,6 +1075,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should not warn about updates that fire between unmount and passive unsubscribe', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -1094,6 +1112,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should support inline selectors and updates that are processed after selector change', async () => {
     const source = createSource({
       a: 'initial',
@@ -1138,6 +1157,7 @@ describe('useMutableSource', () => {
     expect(root).toMatchRenderedOutput('Another update');
   });
 
+  // @gate enableUseMutableSource
   it('should clear the update queue when getSnapshot changes with pending lower priority updates', async () => {
     const source = createSource({
       a: 'initial',
@@ -1194,6 +1214,7 @@ describe('useMutableSource', () => {
     expect(root).toMatchRenderedOutput('B: Update');
   });
 
+  // @gate enableUseMutableSource
   it('should clear the update queue when source changes with pending lower priority updates', async () => {
     const sourceA = createSource('initial');
     const sourceB = createSource('initial');
@@ -1238,6 +1259,7 @@ describe('useMutableSource', () => {
     expect(root).toMatchRenderedOutput('B: Update');
   });
 
+  // @gate enableUseMutableSource
   it('should always treat reading as potentially unsafe when getSnapshot changes between renders', async () => {
     const source = createSource({
       a: 'foo',
@@ -1327,6 +1349,7 @@ describe('useMutableSource', () => {
     expect(Scheduler).toHaveYielded(['x: bar, y: bar']);
   });
 
+  // @gate enableUseMutableSource
   it('getSnapshot changes and then source is mutated in between paint and passive effect phase', async () => {
     const source = createSource({
       a: 'foo',
@@ -1385,6 +1408,7 @@ describe('useMutableSource', () => {
     expect(root).toMatchRenderedOutput('baz');
   });
 
+  // @gate enableUseMutableSource
   it('getSnapshot changes and then source is mutated in between paint and passive effect phase, case 2', async () => {
     const source = createSource({
       a: 'a0',
@@ -1455,6 +1479,7 @@ describe('useMutableSource', () => {
     expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
   });
 
+  // @gate enableUseMutableSource
   it(
     'if source is mutated after initial read but before subscription is set ' +
       'up, should still entangle all pending mutations even if snapshot of ' +
@@ -1559,6 +1584,7 @@ describe('useMutableSource', () => {
     },
   );
 
+  // @gate enableUseMutableSource
   it('warns about functions being used as snapshot values', async () => {
     const source = createSource(() => 'a');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -1586,6 +1612,7 @@ describe('useMutableSource', () => {
     expect(root).toMatchRenderedOutput('a');
   });
 
+  // @gate enableUseMutableSource
   it('getSnapshot changes and then source is mutated during interleaved event', async () => {
     const {useEffect} = React;
 
@@ -1710,6 +1737,7 @@ describe('useMutableSource', () => {
     });
   });
 
+  // @gate enableUseMutableSource
   it('should not tear with newly mounted component when updates were scheduled at a lower priority', async () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -1789,6 +1817,7 @@ describe('useMutableSource', () => {
 
   if (__DEV__) {
     describe('dev warnings', () => {
+      // @gate enableUseMutableSource
       it('should warn if the subscribe function does not return an unsubscribe function', () => {
         const source = createSource('one');
         const mutableSource = createMutableSource(
@@ -1814,6 +1843,7 @@ describe('useMutableSource', () => {
         );
       });
 
+      // @gate enableUseMutableSource
       it('should error if multiple renderers of the same type use a mutable source at the same time', () => {
         const source = createSource('one');
         const mutableSource = createMutableSource(
@@ -1894,6 +1924,7 @@ describe('useMutableSource', () => {
         });
       });
 
+      // @gate enableUseMutableSource
       it('should error if multiple renderers of the same type use a mutable source at the same time with mutation between', () => {
         const source = createSource('one');
         const mutableSource = createMutableSource(

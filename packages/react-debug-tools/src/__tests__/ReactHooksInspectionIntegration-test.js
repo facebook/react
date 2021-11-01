@@ -1018,6 +1018,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
+  // @gate enableUseMutableSource
   it('should support composite useMutableSource hook', () => {
     const createMutableSource =
       React.createMutableSource || React.unstable_createMutableSource;

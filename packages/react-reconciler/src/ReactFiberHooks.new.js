@@ -31,6 +31,7 @@ import {
   enableStrictEffects,
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
+  enableUseMutableSource,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1052,6 +1053,10 @@ function useMutableSource<Source, Snapshot>(
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
+  if (!enableUseMutableSource) {
+    return (undefined: any);
+  }
+
   const root = ((getWorkInProgressRoot(): any): FiberRoot);
 
   if (root === null) {
@@ -1213,6 +1218,10 @@ function mountMutableSource<Source, Snapshot>(
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
+  if (!enableUseMutableSource) {
+    return (undefined: any);
+  }
+
   const hook = mountWorkInProgressHook();
   hook.memoizedState = ({
     refs: {
@@ -1230,6 +1239,10 @@ function updateMutableSource<Source, Snapshot>(
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
   subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
 ): Snapshot {
+  if (!enableUseMutableSource) {
+    return (undefined: any);
+  }
+
   const hook = updateWorkInProgressHook();
   return useMutableSource(hook, source, getSnapshot, subscribe);
 }
