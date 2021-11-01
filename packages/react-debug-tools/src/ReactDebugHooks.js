@@ -341,6 +341,17 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
   return value;
 }
 
+function useId(): string {
+  const hook = nextHook();
+  const id = hook !== null ? hook.memoizedState : '';
+  hookLog.push({
+    primitive: 'Id',
+    stackError: new Error(),
+    value: id,
+  });
+  return id;
+}
+
 const Dispatcher: DispatcherType = {
   getCacheForType,
   readContext,
@@ -361,6 +372,7 @@ const Dispatcher: DispatcherType = {
   useSyncExternalStore,
   useDeferredValue,
   useOpaqueIdentifier,
+  useId,
 };
 
 // Inspect

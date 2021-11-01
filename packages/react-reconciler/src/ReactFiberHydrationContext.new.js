@@ -17,6 +17,7 @@ import type {
   HostContext,
 } from './ReactFiberHostConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
+import type {TreeContext} from './ReactFiberTreeContext.new';
 
 import {
   HostComponent,
@@ -62,6 +63,10 @@ import {
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 import {OffscreenLane} from './ReactFiberLane.new';
+import {
+  getSuspendedTreeContext,
+  restoreSuspendedTreeContext,
+} from './ReactFiberTreeContext.new';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -96,6 +101,7 @@ function enterHydrationState(fiber: Fiber): boolean {
 function reenterHydrationStateFromDehydratedSuspenseInstance(
   fiber: Fiber,
   suspenseInstance: SuspenseInstance,
+  treeContext: TreeContext | null,
 ): boolean {
   if (!supportsHydration) {
     return false;
@@ -105,6 +111,9 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  if (treeContext !== null) {
+    restoreSuspendedTreeContext(fiber, treeContext);
+  }
   return true;
 }
 
@@ -287,6 +296,7 @@ function tryHydrate(fiber, nextInstance) {
         if (suspenseInstance !== null) {
           const suspenseState: SuspenseState = {
             dehydrated: suspenseInstance,
+            treeContext: getSuspendedTreeContext(),
             retryLane: OffscreenLane,
           };
           fiber.memoizedState = suspenseState;

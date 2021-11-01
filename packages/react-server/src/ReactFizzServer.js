@@ -25,6 +25,7 @@ import type {
 } from './ReactServerFormatConfig';
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
+import type {TreeContext} from './ReactFizzTreeContext';
 
 import {
   scheduleWork,
@@ -78,12 +79,14 @@ import {
 import {
   prepareToUseHooks,
   finishHooks,
+  checkDidRenderIdHook,
   resetHooksState,
   Dispatcher,
   currentResponseState,
   setCurrentResponseState,
 } from './ReactFizzHooks';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
+import {emptyTreeContext, pushTreeContext} from './ReactFizzTreeContext';
 
 import {
   getIteratorFn,
@@ -134,7 +137,7 @@ type SuspenseBoundary = {
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
 };
 
-type Task = {
+export type Task = {
   node: ReactNodeList,
   ping: () => void,
   blockedBoundary: Root | SuspenseBoundary,
@@ -142,6 +145,7 @@ type Task = {
   abortSet: Set<Task>, // the abortable set that this task belongs to
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
+  treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // DEV-only component stack
 };
 
@@ -265,6 +269,7 @@ export function createRequest(
     abortSet,
     emptyContextObject,
     rootContextSnapshot,
+    emptyTreeContext,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -302,6 +307,7 @@ function createTask(
   abortSet: Set<Task>,
   legacyContext: LegacyContext,
   context: ContextSnapshot,
+  treeContext: TreeContext,
 ): Task {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -317,6 +323,7 @@ function createTask(
     abortSet,
     legacyContext,
     context,
+    treeContext,
   }: any);
   if (__DEV__) {
     task.componentStack = null;
@@ -497,6 +504,7 @@ function renderSuspenseBoundary(
     fallbackAbortSet,
     task.legacyContext,
     task.context,
+    task.treeContext,
   );
   if (__DEV__) {
     suspendedFallbackTask.componentStack = task.componentStack;
@@ -564,7 +572,7 @@ function renderWithHooks<Props, SecondArg>(
   secondArg: SecondArg,
 ): any {
   const componentIdentity = {};
-  prepareToUseHooks(componentIdentity);
+  prepareToUseHooks(task, componentIdentity);
   const result = Component(props, secondArg);
   return finishHooks(Component, props, result, secondArg);
 }
@@ -671,6 +679,7 @@ function renderIndeterminateComponent(
   }
 
   const value = renderWithHooks(request, task, Component, props, legacyContext);
+  const hasId = checkDidRenderIdHook();
 
   if (__DEV__) {
     // Support for module components is deprecated and is removed behind a flag.
@@ -742,7 +751,21 @@ function renderIndeterminateComponent(
     }
     // We're now successfully past this task, and we don't have to pop back to
     // the previous task every again, so we can use the destructive recursive form.
-    renderNodeDestructive(request, task, value);
+    if (hasId) {
+      // This component materialized an id. We treat this as its own level, with
+      // a single "child" slot.
+      const prevTreeContext = task.treeContext;
+      const totalChildren = 1;
+      const index = 0;
+      task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+      try {
+        renderNodeDestructive(request, task, value);
+      } finally {
+        task.treeContext = prevTreeContext;
+      }
+    } else {
+      renderNodeDestructive(request, task, value);
+    }
   }
   popComponentStackInDEV(task);
 }
@@ -827,7 +850,22 @@ function renderForwardRef(
 ): void {
   pushFunctionComponentStackInDEV(task, type.render);
   const children = renderWithHooks(request, task, type.render, props, ref);
-  renderNodeDestructive(request, task, children);
+  const hasId = checkDidRenderIdHook();
+  if (hasId) {
+    // This component materialized an id. We treat this as its own level, with
+    // a single "child" slot.
+    const prevTreeContext = task.treeContext;
+    const totalChildren = 1;
+    const index = 0;
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+    try {
+      renderNodeDestructive(request, task, children);
+    } finally {
+      task.treeContext = prevTreeContext;
+    }
+  } else {
+    renderNodeDestructive(request, task, children);
+  }
   popComponentStackInDEV(task);
 }
 
@@ -1122,12 +1160,7 @@ function renderNodeDestructive(
     }
 
     if (isArray(node)) {
-      for (let i = 0; i < node.length; i++) {
-        // Recursively render the rest. We need to use the non-destructive form
-        // so that we can safely pop back up and render the sibling if something
-        // suspends.
-        renderNode(request, task, node[i]);
-      }
+      renderChildrenArray(request, task, node);
       return;
     }
 
@@ -1138,18 +1171,23 @@ function renderNodeDestructive(
       }
       const iterator = iteratorFn.call(node);
       if (iterator) {
+        // We need to know how many total children are in this set, so that we
+        // can allocate enough id slots to acommodate them. So we must exhaust
+        // the iterator before we start recursively rendering the children.
+        // TODO: This is not great but I think it's inherent to the id
+        // generation algorithm.
         let step = iterator.next();
         // If there are not entries, we need to push an empty so we start by checking that.
         if (!step.done) {
+          const children = [];
           do {
-            // Recursively render the rest. We need to use the non-destructive form
-            // so that we can safely pop back up and render the sibling if something
-            // suspends.
-            renderNode(request, task, step.value);
+            children.push(step.value);
             step = iterator.next();
           } while (!step.done);
+          renderChildrenArray(request, task, children);
           return;
         }
+        return;
       }
     }
 
@@ -1191,6 +1229,21 @@ function renderNodeDestructive(
   }
 }
 
+function renderChildrenArray(request, task, children) {
+  const totalChildren = children.length;
+  for (let i = 0; i < totalChildren; i++) {
+    const prevTreeContext = task.treeContext;
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+    try {
+      // We need to use the non-destructive form so that we can safely pop back
+      // up and render the sibling if something suspends.
+      renderNode(request, task, children[i]);
+    } finally {
+      task.treeContext = prevTreeContext;
+    }
+  }
+}
+
 function spawnNewSuspendedTask(
   request: Request,
   task: Task,
@@ -1214,6 +1267,7 @@ function spawnNewSuspendedTask(
     task.abortSet,
     task.legacyContext,
     task.context,
+    task.treeContext,
   );
   if (__DEV__) {
     if (task.componentStack !== null) {
@@ -1257,6 +1311,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       if (__DEV__) {
         task.componentStack = previousComponentStack;
       }
+      return;
     } else {
       // Restore the context. We assume that this will be restored by the inner
       // functions in case nothing throws so we don't use "finally" here.

@@ -186,6 +186,7 @@ import {
   invalidateContextProvider,
 } from './ReactFiberContext.new';
 import {
+  getIsHydrating,
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
@@ -235,6 +236,11 @@ import {createClassErrorUpdate} from './ReactFiberThrow.new';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.new';
 import is from 'shared/objectIs';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
+import {
+  getForksAtLevel,
+  isForkedChild,
+  pushTreeId,
+} from './ReactFiberTreeContext.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -1757,6 +1763,7 @@ function mountIndeterminateComponent(
         }
       }
     }
+
     reconcileChildren(null, workInProgress, value, renderLanes);
     if (__DEV__) {
       validateFunctionComponentInDev(workInProgress, Component);
@@ -1845,6 +1852,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
 const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
+  treeContext: null,
   retryLane: NoLane,
 };
 
@@ -2693,6 +2701,7 @@ function updateDehydratedSuspenseComponent(
     reenterHydrationStateFromDehydratedSuspenseInstance(
       workInProgress,
       suspenseInstance,
+      suspenseState.treeContext,
     );
     const nextProps = workInProgress.pendingProps;
     const primaryChildren = nextProps.children;
@@ -3675,6 +3684,21 @@ function beginWork(
     }
   } else {
     didReceiveUpdate = false;
+
+    if (getIsHydrating() && isForkedChild(workInProgress)) {
+      // Check if this child belongs to a list of muliple children in
+      // its parent.
+      //
+      // In a true multi-threaded implementation, we would render children on
+      // parallel threads. This would represent the beginning of a new render
+      // thread for this subtree.
+      //
+      // We only use this for id generation during hydration, which is why the
+      // logic is located in this special branch.
+      const slotIndex = workInProgress.index;
+      const numberOfForks = getForksAtLevel(workInProgress);
+      pushTreeId(workInProgress, numberOfForks, slotIndex);
+    }
   }
 
   // Before entering the begin phase, clear pending update priority.

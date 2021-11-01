@@ -30,6 +30,7 @@ export {
   memo,
   startTransition,
   unstable_useOpaqueIdentifier,
+  unstable_useId,
   useCallback,
   useContext,
   useDebugValue,

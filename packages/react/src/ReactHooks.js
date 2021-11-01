@@ -174,6 +174,11 @@ export function useOpaqueIdentifier(): OpaqueIDType | void {
   return dispatcher.useOpaqueIdentifier();
 }
 
+export function useId(): string {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useId();
+}
+
 export function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,

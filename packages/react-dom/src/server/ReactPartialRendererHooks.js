@@ -519,6 +519,10 @@ function useOpaqueIdentifier(): OpaqueIDType {
   );
 }
 
+function useId(): OpaqueIDType {
+  throw new Error('Not implemented.');
+}
+
 function useCacheRefresh(): <T>(?() => T, ?T) => void {
   throw new Error('Not implemented.');
 }
@@ -549,6 +553,7 @@ export const Dispatcher: DispatcherType = {
   useDeferredValue,
   useTransition,
   useOpaqueIdentifier,
+  useId,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
   useSyncExternalStore,

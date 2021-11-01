@@ -53,6 +53,7 @@ import {
   useTransition,
   useDeferredValue,
   useOpaqueIdentifier,
+  useId,
   useCacheRefresh,
 } from './ReactHooks';
 import {
@@ -127,5 +128,6 @@ export {
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
   useOpaqueIdentifier as unstable_useOpaqueIdentifier,
+  useId as unstable_useId,
   act,
 };

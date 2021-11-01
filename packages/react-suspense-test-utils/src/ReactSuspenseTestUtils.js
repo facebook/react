@@ -43,6 +43,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     useDeferredValue: unsupported,
     useTransition: unsupported,
     useOpaqueIdentifier: unsupported,
+    useId: unsupported,
     useMutableSource: unsupported,
     useSyncExternalStore: unsupported,
     useCacheRefresh: unsupported,
