@@ -34,7 +34,7 @@ describe('useId', () => {
     ReactDOMFizzServer = require('react-dom/server');
     Stream = require('stream');
     Suspense = React.Suspense;
-    useId = React.unstable_useId;
+    useId = React.useId;
 
     // Test Environment
     const jsdom = new JSDOM(
