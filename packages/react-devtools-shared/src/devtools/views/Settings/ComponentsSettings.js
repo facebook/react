@@ -16,7 +16,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import {useSubscription} from '../hooks';
+import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {useLocalStorage, useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -79,6 +80,14 @@ export default function ComponentsSettings(_: {||}) {
       setParseHookNames(currentTarget.checked);
     },
     [setParseHookNames],
+  );
+
+  const [
+    openInEditorURL,
+    setOpenInEditorURL,
+  ] = useLocalStorage<?string>(
+    LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+    null,
   );
 
   const [componentFilters, setComponentFilters] = useState<
@@ -269,6 +278,21 @@ export default function ComponentsSettings(_: {||}) {
         />{' '}
         Always parse hook names from source{' '}
         <span className={styles.Warning}>(may be slow)</span>
+      </label>
+
+      <label className={styles.Setting}>
+        Open in Editor URL:{' '}
+        <input
+          className={styles.Input}
+          type="text"
+          placeholder={process.env.EDITOR_URL ?? ''}
+          value={openInEditorURL ?? ''}
+          onChange={e => {
+            const value = e.target.value;
+            setOpenInEditorURL(value !== '' ? value : null);
+          }}
+        />
+        <span className={styles.Warning}>(restart to take effect)</span>
       </label>
 
       <div className={styles.Header}>Hide components where...</div>
