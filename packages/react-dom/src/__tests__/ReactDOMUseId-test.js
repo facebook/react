@@ -16,6 +16,7 @@ let ReactDOMFizzServer;
 let Stream;
 let Suspense;
 let useId;
+let useState;
 let document;
 let writable;
 let container;
@@ -35,6 +36,7 @@ describe('useId', () => {
     Stream = require('stream');
     Suspense = React.Suspense;
     useId = React.useId;
+    useState = React.useState;
 
     // Test Environment
     const jsdom = new JSDOM(
@@ -337,6 +339,32 @@ describe('useId', () => {
         id="container"
       >
         R:0, R:0:1, R:0:2
+        <!-- -->
+      </div>
+    `);
+  });
+
+  test('local render phase updates', async () => {
+    function App({swap}) {
+      const [count, setCount] = useState(0);
+      if (count < 3) {
+        setCount(count + 1);
+      }
+      return useId();
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    await clientAct(async () => {
+      ReactDOM.hydrateRoot(container, <App />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        R:0
         <!-- -->
       </div>
     `);
