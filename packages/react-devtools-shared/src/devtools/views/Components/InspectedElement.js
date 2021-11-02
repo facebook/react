@@ -124,8 +124,12 @@ export default function InspectedElementWrapper(_: Props) {
     inspectedElement != null &&
     inspectedElement.canToggleSuspense;
 
+  const editorURL = getOpenInEditorURL();
+
   const canOpenInEditor =
-    inspectedElement != null && inspectedElement.source != null;
+    editorURL &&
+    inspectedElement != null &&
+    inspectedElement.source != null;
 
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null || targetErrorBoundaryID == null) {
@@ -204,19 +208,15 @@ export default function InspectedElementWrapper(_: Props) {
 
   const onOpenInEditor = useCallback(() => {
     const source = inspectedElement?.source;
-    if (source == null) {
+    if (source == null || editorURL == null) {
       return;
     }
-
-    const editorURL = getOpenInEditorURL() ?? process.env.EDITOR_URL;
-    if (typeof editorURL !== 'string') {
-      return;
-    }
+    console.log(editorURL);
     const url = new URL(editorURL);
     url.href = url.href.replace('{path}', source.fileName);
     url.href = url.href.replace('{line}', String(source.lineNumber));
     window.open(url);
-  }, [inspectedElement]);
+  }, [inspectedElement, editorURL]);
 
   if (element === null) {
     return (

@@ -392,6 +392,8 @@ export function getOpenInEditorURL(): ?string {
     const url = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
     if (url != null) {
       return JSON.parse(url);
+    } else if (typeof process.env.EDITOR_URL === 'string') {
+      return process.env.EDITOR_URL;
     }
   } catch (error) {}
   return null;

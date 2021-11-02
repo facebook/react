@@ -82,9 +82,9 @@ export default function ComponentsSettings(_: {||}) {
     [setParseHookNames],
   );
 
-  const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<?string>(
+  const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-    null,
+    typeof process.env.editorURL === 'string' ? process.env.editorURL : '',
   );
 
   const [componentFilters, setComponentFilters] = useState<
@@ -282,11 +282,10 @@ export default function ComponentsSettings(_: {||}) {
         <input
           className={styles.Input}
           type="text"
-          placeholder={process.env.EDITOR_URL ?? ''}
-          value={openInEditorURL ?? ''}
+          placeholder={process.env.EDITOR_URL ?? 'vscode://file/{path}:{line}'}
+          value={openInEditorURL}
           onChange={e => {
-            const value = e.target.value;
-            setOpenInEditorURL(value !== '' ? value : null);
+            setOpenInEditorURL(e.target.value);
           }}
         />
         <span className={styles.Warning}>(restart to take effect)</span>
