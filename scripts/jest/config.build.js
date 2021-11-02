@@ -45,6 +45,13 @@ packages.forEach(name => {
   ] = `<rootDir>/build/${NODE_MODULES_DIR}/${name}/$1`;
 });
 
+moduleNameMapper[
+  'use-sync-external-store/shim/with-selector'
+] = `<rootDir>/build/${NODE_MODULES_DIR}/use-sync-external-store/shim/with-selector`;
+moduleNameMapper[
+  'use-sync-external-store/shim/index.native'
+] = `<rootDir>/build/${NODE_MODULES_DIR}/use-sync-external-store/shim/index.native`;
+
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper,

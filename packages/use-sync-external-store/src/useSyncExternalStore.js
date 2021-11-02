@@ -7,16 +7,24 @@
  * @flow
  */
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
-import {useSyncExternalStore as client} from './useSyncExternalStoreClient';
-import {useSyncExternalStore as server} from './useSyncExternalStoreServer';
+'use strict';
+
+// Intentionally not using named imports because Rollup uses dynamic
+// dispatch for CommonJS interop named imports.
 import * as React from 'react';
 
-const {unstable_useSyncExternalStore: builtInAPI} = React;
+export const useSyncExternalStore = React.useSyncExternalStore;
 
-export const useSyncExternalStore =
-  builtInAPI !== undefined
-    ? ((builtInAPI: any): typeof client)
-    : canUseDOM
-    ? client
-    : server;
+if (__DEV__) {
+  console.error(
+    "The main 'use-sync-external-store' entry point is not supported; all it " +
+      "does is re-export useSyncExternalStore from the 'react' package, so " +
+      'it only works with React 18+.' +
+      '\n\n' +
+      'If you wish to support React 16 and 17, import from ' +
+      "'use-sync-external-store/shim' instead. It will fall back to a shimmed" +
+      'implementation when the native one is not available.' +
+      '\n\n' +
+      "If you only support React 18+, you can import directly from 'react'.",
+  );
+}

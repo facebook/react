@@ -1018,6 +1018,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
+  // @gate enableUseMutableSource
   it('should support composite useMutableSource hook', () => {
     const createMutableSource =
       React.createMutableSource || React.unstable_createMutableSource;
@@ -1055,9 +1056,8 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  // @gate experimental || www
   it('should support composite useSyncExternalStore hook', () => {
-    const useSyncExternalStore = React.unstable_useSyncExternalStore;
+    const useSyncExternalStore = React.useSyncExternalStore;
     function Foo() {
       const value = useSyncExternalStore(
         () => () => {},
