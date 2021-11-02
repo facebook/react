@@ -84,7 +84,7 @@ export default function ComponentsSettings(_: {||}) {
 
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-    typeof process.env.editorURL === 'string' ? process.env.editorURL : '',
+    typeof process.env.EDITOR_URL === 'string' ? process.env.EDITOR_URL : '',
   );
 
   const [componentFilters, setComponentFilters] = useState<
