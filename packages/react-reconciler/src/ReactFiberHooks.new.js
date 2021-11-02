@@ -110,7 +110,7 @@ import {
 } from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
-import {getTreeId, pushTreeFork, pushTreeId} from './ReactFiberTreeContext.new';
+import {getTreeId} from './ReactFiberTreeContext.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -432,6 +432,7 @@ export function renderWithHooks<Props, SecondArg>(
     let numberOfReRenders: number = 0;
     do {
       didScheduleRenderPhaseUpdateDuringThisPass = false;
+      localIdCounter = 0;
 
       if (numberOfReRenders >= RE_RENDER_LIMIT) {
         throw new Error(
@@ -513,6 +514,8 @@ export function renderWithHooks<Props, SecondArg>(
   }
 
   didScheduleRenderPhaseUpdate = false;
+  // This is reset by checkDidRenderIdHook
+  // localIdCounter = 0;
 
   if (didRenderTooFewHooks) {
     throw new Error(
@@ -541,23 +544,16 @@ export function renderWithHooks<Props, SecondArg>(
       }
     }
   }
-
-  if (localIdCounter !== 0) {
-    localIdCounter = 0;
-    if (getIsHydrating()) {
-      // This component materialized an id. This will affect any ids that appear
-      // in its children.
-      const returnFiber = workInProgress.return;
-      if (returnFiber !== null) {
-        const numberOfForks = 1;
-        const slotIndex = 0;
-        pushTreeFork(workInProgress, numberOfForks);
-        pushTreeId(workInProgress, numberOfForks, slotIndex);
-      }
-    }
-  }
-
   return children;
+}
+
+export function checkDidRenderIdHook() {
+  // This should be called immediately after every renderWithHooks call.
+  // Conceptually, it's part of the return value of renderWithHooks; it's only a
+  // separate function to avoid using an array tuple.
+  const didRenderIdHook = localIdCounter !== 0;
+  localIdCounter = 0;
+  return didRenderIdHook;
 }
 
 export function bailoutHooks(

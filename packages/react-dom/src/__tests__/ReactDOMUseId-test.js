@@ -198,6 +198,35 @@ describe('useId', () => {
     `);
   });
 
+  test('StrictMode double rendering', async () => {
+    const {StrictMode} = React;
+
+    function App() {
+      return (
+        <StrictMode>
+          <DivWithId />
+        </StrictMode>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    await clientAct(async () => {
+      ReactDOM.hydrateRoot(container, <App />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div
+          id="0"
+        />
+      </div>
+    `);
+  });
+
   test('empty (null) children', async () => {
     // We don't treat empty children different from non-empty ones, which means
     // they get allocated a slot when generating ids. There's no inherent reason
