@@ -127,9 +127,7 @@ export default function InspectedElementWrapper(_: Props) {
   const editorURL = getOpenInEditorURL();
 
   const canOpenInEditor =
-    editorURL &&
-    inspectedElement != null &&
-    inspectedElement.source != null;
+    editorURL && inspectedElement != null && inspectedElement.source != null;
 
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null || targetErrorBoundaryID == null) {
