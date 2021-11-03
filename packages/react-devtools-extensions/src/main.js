@@ -152,7 +152,7 @@ function createPanelIfReactLoaded() {
           isProfiling,
           supportsReloadAndProfile: isChrome || isEdge,
           supportsProfiling,
-          // At this time, the scheduling profiler can only parse Chrome performance profiles.
+          // At this time, the timeline can only parse Chrome performance profiles.
           supportsSchedulingProfiler: isChrome,
           supportsTraceUpdates: true,
         });

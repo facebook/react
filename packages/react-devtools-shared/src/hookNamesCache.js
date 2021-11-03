@@ -93,7 +93,7 @@ export function loadHookNames(
         callbacks.add(callback);
       },
 
-      // Optional property used by Scheduling Profiler:
+      // Optional property used by Timeline:
       displayName: `Loading hook names for ${element.displayName || 'Unknown'}`,
     };
 

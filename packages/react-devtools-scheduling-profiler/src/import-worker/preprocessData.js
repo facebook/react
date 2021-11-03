@@ -575,7 +575,7 @@ function processTimelineEvent(
           }
         }
 
-        // TODO (scheduling profiler) Maybe we should calculate depth in post,
+        // TODO (timeline) Maybe we should calculate depth in post,
         // so unresolved Suspense requests don't take up space.
         // We can't know if they'll be resolved or not at this point.
         // We'll just give them a default (fake) duration width.

@@ -123,7 +123,7 @@ export default function ProfilingImportExportButtons() {
         className={styles.Input}
         type="file"
         onChange={
-          selectedTabID === 'scheduling-profiler'
+          selectedTabID === 'timeline'
             ? importSchedulingProfilerDataWrapper
             : importProfilerData
         }
@@ -140,7 +140,7 @@ export default function ProfilingImportExportButtons() {
         disabled={
           isProfiling ||
           !profilerStore.didRecordCommits ||
-          selectedTabID === 'scheduling-profiler'
+          selectedTabID === 'timeline'
         }
         onClick={downloadData}
         title="Save profile...">
