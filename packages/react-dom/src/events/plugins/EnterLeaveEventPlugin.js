@@ -21,7 +21,7 @@ import {
 } from '../../client/ReactDOMComponentTree';
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 import type {KnownReactSyntheticEvent} from '../ReactSyntheticEventType';
-import {isReplayingEvent, setEventIsReplaying} from '../replayedEvent';
+import {isReplayingEvent} from '../replayedEvent';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
