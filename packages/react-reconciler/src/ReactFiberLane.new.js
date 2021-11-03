@@ -78,7 +78,7 @@ export const IdleLane: Lanes = /*                       */ 0b0100000000000000000
 
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 
-// This function is used for the experimental scheduling profiler (react-devtools-scheduling-profiler)
+// This function is used for the experimental timeline (react-devtools-scheduling-profiler)
 // It should be kept in sync with the Lanes values above.
 export function getLabelForLane(lane: Lane): string | void {
   if (enableSchedulingProfiler) {

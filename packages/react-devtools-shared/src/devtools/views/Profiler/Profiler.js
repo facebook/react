@@ -48,7 +48,7 @@ function Profiler(_: {||}) {
   let isLegacyProfilerSelected = false;
 
   let view = null;
-  if (didRecordCommits || selectedTabID === 'scheduling-profiler') {
+  if (didRecordCommits || selectedTabID === 'timeline') {
     switch (selectedTabID) {
       case 'flame-chart':
         isLegacyProfilerSelected = true;
@@ -58,7 +58,7 @@ function Profiler(_: {||}) {
         isLegacyProfilerSelected = true;
         view = <CommitRanked />;
         break;
-      case 'scheduling-profiler':
+      case 'timeline':
         view = <SchedulingProfiler />;
         break;
       default:
@@ -104,14 +104,10 @@ function Profiler(_: {||}) {
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
             <RecordToggle
-              disabled={
-                !supportsProfiling || selectedTabID === 'scheduling-profiler'
-              }
+              disabled={!supportsProfiling || selectedTabID === 'timeline'}
             />
             <ReloadAndProfileButton
-              disabled={
-                selectedTabID === 'scheduling-profiler' || !supportsProfiling
-              }
+              disabled={selectedTabID === 'timeline' || !supportsProfiling}
             />
             <ClearProfilingDataButton />
             <ProfilingImportExportButtons />
@@ -168,10 +164,10 @@ const tabsWithSchedulingProfiler = [
   ...tabs,
   null, // Divider/separator
   {
-    id: 'scheduling-profiler',
-    icon: 'scheduling-profiler',
-    label: 'Scheduling',
-    title: 'Scheduling Profiler',
+    id: 'timeline',
+    icon: 'timeline',
+    label: 'Timeline',
+    title: 'Timeline',
   },
 ];
 

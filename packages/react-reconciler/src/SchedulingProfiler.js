@@ -147,7 +147,7 @@ export function markComponentRenderStarted(fiber: Fiber): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--component-render-start-${componentName}`);
     }
   }
@@ -165,7 +165,7 @@ export function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--component-passive-effect-mount-start-${componentName}`);
     }
   }
@@ -183,7 +183,7 @@ export function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--component-passive-effect-unmount-start-${componentName}`);
     }
   }
@@ -201,7 +201,7 @@ export function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--component-layout-effect-mount-start-${componentName}`);
     }
   }
@@ -219,7 +219,7 @@ export function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--component-layout-effect-unmount-start-${componentName}`);
     }
   }
@@ -254,7 +254,7 @@ export function markComponentErrored(
         message = thrownValue;
       }
 
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--error-${componentName}-${phase}-${message}`);
     }
   }
@@ -287,10 +287,10 @@ export function markComponentSuspended(
       // Following the non-standard fn.displayName convention,
       // frameworks like Relay may also annotate Promises with a displayName,
       // describing what operation/data the thrown Promise is related to.
-      // When this is available we should pass it along to the Scheduling Profiler.
+      // When this is available we should pass it along to the Timeline.
       const displayName = (wakeable: any).displayName || '';
 
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(
         `--suspense-${eventType}-${id}-${componentName}-${phase}-${lanes}-${displayName}`,
       );
@@ -370,7 +370,7 @@ export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--schedule-forced-update-${lane}-${componentName}`);
     }
   }
@@ -380,7 +380,7 @@ export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
-      // TODO (scheduling profiler) Add component stack id
+      // TODO (timeline) Add component stack id
       markAndClear(`--schedule-state-update-${lane}-${componentName}`);
     }
   }

@@ -95,7 +95,7 @@ export function inspectElement(
         callbacks.add(callback);
       },
 
-      // Optional property used by Scheduling Profiler:
+      // Optional property used by Timeline:
       displayName: `Inspecting ${element.displayName || 'Unknown'}`,
     };
 

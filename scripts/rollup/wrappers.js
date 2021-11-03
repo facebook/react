@@ -360,7 +360,7 @@ function wrapBundle(
       case RN_FB_DEV:
       case RN_FB_PROFILING:
         // Certain DEV and Profiling bundles should self-register their own module boundaries with DevTools.
-        // This allows the Scheduling Profiler to de-emphasize (dim) internal stack frames.
+        // This allows the Timeline to de-emphasize (dim) internal stack frames.
         source = `
           ${registerInternalModuleStart(globalName)}
           ${source}
