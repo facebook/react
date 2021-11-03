@@ -39,7 +39,7 @@ export {
   unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
-  unstable_useOpaqueIdentifier,
+  useId,
   useCallback,
   useContext,
   useDebugValue,

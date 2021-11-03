@@ -23,6 +23,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
+import {clz32} from './clz32';
 
 // Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-scheduling-profiler.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -790,18 +791,4 @@ export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
 
     lanes &= ~lane;
   }
-}
-
-const clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;
-
-// Count leading zeros. Only used on lanes, so assume input is an integer.
-// Based on:
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
-const log = Math.log;
-const LN2 = Math.LN2;
-function clz32Fallback(lanes: Lanes | Lane) {
-  if (lanes === 0) {
-    return 32;
-  }
-  return (31 - ((log(lanes) / LN2) | 0)) | 0;
 }
