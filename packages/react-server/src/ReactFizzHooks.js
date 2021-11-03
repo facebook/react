@@ -199,6 +199,7 @@ export function finishHooks(
     // work-in-progress hooks and applying the additional updates on top. Keep
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
+    localIdCounter = 0;
     numberOfReRenders += 1;
 
     // Start over from the beginning of the list

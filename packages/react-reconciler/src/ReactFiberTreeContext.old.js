@@ -201,6 +201,20 @@ export function pushTreeId(
   }
 }
 
+export function pushMaterializedTreeId(workInProgress: Fiber) {
+  warnIfNotHydrating();
+
+  // This component materialized an id. This will affect any ids that appear
+  // in its children.
+  const returnFiber = workInProgress.return;
+  if (returnFiber !== null) {
+    const numberOfForks = 1;
+    const slotIndex = 0;
+    pushTreeFork(workInProgress, numberOfForks);
+    pushTreeId(workInProgress, numberOfForks, slotIndex);
+  }
+}
+
 function getBitLength(number: number): number {
   return 32 - clz32(number);
 }
