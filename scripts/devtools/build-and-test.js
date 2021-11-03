@@ -50,7 +50,7 @@ async function archiveGitRevision() {
   console.log(`Creating git archive at ${chalk.dim(archivePath)} \n`);
 
   if (!DRY_RUN) {
-    await exec(`git archive main | gzip > ${archivePath}`, { cwd: ROOT_PATH });
+    await exec(`git archive main | gzip > ${archivePath}`, {cwd: ROOT_PATH});
   }
 
   return archivePath;
@@ -171,7 +171,7 @@ async function downloadLatestReactBuild() {
 
   console.log('');
 
-  const { commit } = await inquirer.prompt([
+  const {commit} = await inquirer.prompt([
     {
       type: 'input',
       name: 'commit',
@@ -192,7 +192,7 @@ async function downloadLatestReactBuild() {
   const output = await logger(
     downloadPromise,
     'Downloading React artifacts from CI.',
-    { estimate: 15000 }
+    {estimate: 15000}
   );
 
   const match = output.match('--build=([0-9]+)');
