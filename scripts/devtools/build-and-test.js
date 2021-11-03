@@ -25,8 +25,10 @@ async function main() {
     const prepareReleaseScriptPath = join(__dirname, 'prepare-release.js');
     const pathToPrint = relative(process.cwd(), prepareReleaseScriptPath);
 
-    console.log('Begin by running the prepare-release script:');
-    console.log(chalk.bold.green('  ' + pathToPrint));
+    console.log(`
+      Begin by running the prepare-release script: \n
+      ${chalk.bold.green('  ' + pathToPrint)}
+    `);
   });
 
   const archivePath = await archiveGitRevision();
@@ -72,8 +74,8 @@ async function buildAndTestExtensions() {
     }
   );
 
-  console.log(
-    `\n Extensions have been build for Chrome, Edge, and Firefox. \n
+  console.log(`
+    \n Extensions have been build for Chrome, Edge, and Firefox. \n
     \n Smoke test each extension before continuing:
     \n  ${chalk.bold.green('cd ' + extensionsPackagePath)}\n
     \n  ${chalk.dim('# Test Chrome extension')}
@@ -81,8 +83,8 @@ async function buildAndTestExtensions() {
     \n  ${chalk.dim('# Test Edge extension')}
     \n  ${chalk.bold.green('yarn test:edge')}\n
     \n  ${chalk.dim('# Firefox Chrome extension')}
-    \n  ${chalk.bold.green('yarn test:firefox')}`
-  );
+    \n  ${chalk.bold.green('yarn test:firefox')}
+  `);
 
   await confirmContinue();
 }
@@ -116,8 +118,8 @@ async function buildAndTestStandalonePackage() {
     \n   ${chalk.bold.green('cd ' + standalonePackagePath)}
     \n   ${chalk.bold.green('yarn start')}\n
     \n The following fixture can be useful for testing Safari integration:
-    \n   ${chalk.dim(safariFixturePath)}`
-  );
+    \n   ${chalk.dim(safariFixturePath)}
+  `);
 
   await confirmContinue();
 }
@@ -143,12 +145,12 @@ async function buildAndTestInlinePackage() {
 
   const shellPackagePath = join(ROOT_PATH, 'packages', 'react-devtools-shell');
 
-  console.log(
-    `\n Built ${chalk.bold('react-devtools-inline')} target.\n
+  console.log(`
+    \n Built ${chalk.bold('react-devtools-inline')} target.\n
     \n Test this build before continuing:
     \n ${chalk.bold.green('cd ' + shellPackagePath)}
-    \n ${chalk.bold.green('yarn start')}`
-  );
+    \n ${chalk.bold.green('yarn start')}
+  `);
 
   await confirmContinue();
 }
