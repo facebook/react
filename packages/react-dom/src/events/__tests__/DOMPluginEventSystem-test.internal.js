@@ -647,8 +647,7 @@ describe('DOMPluginEventSystem', () => {
             await promise;
           });
 
-          // We're now full hydrated.
-
+          // We're now fully hydrated.
           if (
             gate(
               flags =>

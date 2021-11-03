@@ -155,12 +155,37 @@ export function dispatchEvent(
     return;
   }
 
-  // TODO: replaying capture phase events is currently broken
-  // because we used to do it during top-level native bubble handlers
-  // but now we use different bubble and capture handlers.
-  // In eager mode, we attach capture listeners early, so we need
-  // to filter them out until we fix the logic to handle them correctly.
-  const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+  const allowReplay =
+    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay ||
+    (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+
+  let blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent,
+  );
+
+  // We can dispatch the event now
+  if (blockedOn === null) {
+    if (allowReplay) {
+      clearIfContinuousEvent(domEventName, nativeEvent);
+    }
+    if (
+      enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay ||
+      !hasQueuedDiscreteEvents() ||
+      !isDiscreteEventThatRequiresHydration(domEventName)
+    ) {
+      dispatchEventForPluginEventSystem(
+        domEventName,
+        eventSystemFlags,
+        nativeEvent,
+        getClosestInstanceFromNode(getEventTarget(nativeEvent)),
+        targetContainer,
+      );
+      return;
+    }
+  }
 
   if (
     allowReplay &&
@@ -177,21 +202,6 @@ export function dispatchEvent(
       targetContainer,
       nativeEvent,
     );
-    return;
-  }
-
-  let blockedOn = attemptToDispatchEvent(
-    domEventName,
-    eventSystemFlags,
-    targetContainer,
-    nativeEvent,
-  );
-
-  if (blockedOn === null) {
-    // We successfully dispatched this event.
-    if (allowReplay) {
-      clearIfContinuousEvent(domEventName, nativeEvent);
-    }
     return;
   }
 
@@ -219,6 +229,7 @@ export function dispatchEvent(
         nativeEvent,
       )
     ) {
+      nativeEvent.stopPropagation();
       return;
     }
     // We need to clear only if we didn't queue because
@@ -236,7 +247,7 @@ export function dispatchEvent(
       if (fiber !== null) {
         attemptSynchronousHydration(fiber);
       }
-      const nextBlockedOn = attemptToDispatchEvent(
+      const nextBlockedOn = findInstanceBlockingEvent(
         domEventName,
         eventSystemFlags,
         targetContainer,
@@ -251,6 +262,14 @@ export function dispatchEvent(
       nativeEvent.stopPropagation();
       return;
     }
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      getClosestInstanceFromNode(getEventTarget(nativeEvent)),
+      targetContainer,
+    );
+    return;
   }
 
   // This is not replayable so we'll invoke it but without a target,
@@ -265,7 +284,7 @@ export function dispatchEvent(
 }
 
 // Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
-export function attemptToDispatchEvent(
+export function findInstanceBlockingEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -274,14 +293,11 @@ export function attemptToDispatchEvent(
   // TODO: Warn if _enabled is false.
 
   const nativeEventTarget = getEventTarget(nativeEvent);
-  let targetInst = getClosestInstanceFromNode(nativeEventTarget);
+  const targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
   if (targetInst !== null) {
     const nearestMounted = getNearestMountedFiber(targetInst);
-    if (nearestMounted === null) {
-      // This tree has been unmounted already. Dispatch without a target.
-      targetInst = null;
-    } else {
+    if (nearestMounted !== null) {
       const tag = nearestMounted.tag;
       if (tag === SuspenseComponent) {
         const instance = getSuspenseInstanceFromFiber(nearestMounted);
@@ -292,10 +308,6 @@ export function attemptToDispatchEvent(
           // priority for this boundary.
           return instance;
         }
-        // This shouldn't happen, something went wrong but to avoid blocking
-        // the whole system, dispatch the event without a target.
-        // TODO: Warn.
-        targetInst = null;
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
         if (root.isDehydrated) {
@@ -303,23 +315,9 @@ export function attemptToDispatchEvent(
           // the whole system.
           return getContainerFromFiber(nearestMounted);
         }
-        targetInst = null;
-      } else if (nearestMounted !== targetInst) {
-        // If we get an event (ex: img onload) before committing that
-        // component's mount, ignore it for now (that is, treat it as if it was an
-        // event on a non-React tree). We might also consider queueing events and
-        // dispatching them after the mount.
-        targetInst = null;
       }
     }
   }
-  dispatchEventForPluginEventSystem(
-    domEventName,
-    eventSystemFlags,
-    nativeEvent,
-    targetInst,
-    targetContainer,
-  );
   // We're not blocked on anything.
   return null;
 }

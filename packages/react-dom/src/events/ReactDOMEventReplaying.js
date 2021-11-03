@@ -13,6 +13,9 @@ import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
+import getEventTarget from './getEventTarget';
+import {isReplayingEvent, setEventIsReplaying} from './replayedEvent';
 
 import {
   enableSelectiveHydration,
@@ -27,7 +30,7 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {attemptToDispatchEvent} from './ReactDOMEventListener';
+import {findInstanceBlockingEvent} from './ReactDOMEventListener';
 import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
@@ -86,8 +89,6 @@ type PointerEvent = Event & {
   relatedTarget: EventTarget | null,
   ...
 };
-
-import {IS_REPLAYED} from './EventSystemFlags';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -176,7 +177,7 @@ function createQueuedReplayableEvent(
   return {
     blockedOn,
     domEventName,
-    eventSystemFlags: eventSystemFlags | IS_REPLAYED,
+    eventSystemFlags,
     nativeEvent,
     targetContainers: [targetContainer],
   };
@@ -389,9 +390,6 @@ export function queueIfContinuousEvent(
 function attemptExplicitHydrationTarget(
   queuedTarget: QueuedHydrationTarget,
 ): void {
-  // TODO: This function shares a lot of logic with attemptToDispatchEvent.
-  // Try to unify them. It's a bit tricky since it would require two return
-  // values.
   const targetInst = getClosestInstanceFromNode(queuedTarget.target);
   if (targetInst !== null) {
     const nearestMounted = getNearestMountedFiber(targetInst);
@@ -462,7 +460,7 @@ function attemptReplayContinuousQueuedEvent(
   const targetContainers = queuedEvent.targetContainers;
   while (targetContainers.length > 0) {
     const targetContainer = targetContainers[0];
-    const nextBlockedOn = attemptToDispatchEvent(
+    const nextBlockedOn = findInstanceBlockingEvent(
       queuedEvent.domEventName,
       queuedEvent.eventSystemFlags,
       targetContainer,
@@ -477,6 +475,7 @@ function attemptReplayContinuousQueuedEvent(
       queuedEvent.blockedOn = nextBlockedOn;
       return false;
     }
+    replayEvent(queuedEvent, targetContainer);
     // This target container was successfully dispatched. Try the next.
     targetContainers.shift();
   }
@@ -512,7 +511,7 @@ function replayUnblockedEvents() {
       const targetContainers = nextDiscreteEvent.targetContainers;
       while (targetContainers.length > 0) {
         const targetContainer = targetContainers[0];
-        const nextBlockedOn = attemptToDispatchEvent(
+        const nextBlockedOn = findInstanceBlockingEvent(
           nextDiscreteEvent.domEventName,
           nextDiscreteEvent.eventSystemFlags,
           targetContainer,
@@ -523,6 +522,7 @@ function replayUnblockedEvents() {
           nextDiscreteEvent.blockedOn = nextBlockedOn;
           break;
         }
+        replayEvent(nextDiscreteEvent, targetContainer);
         // This target container was successfully dispatched. Try the next.
         targetContainers.shift();
       }
@@ -615,3 +615,41 @@ export function retryIfBlockedOn(
     }
   }
 }
+
+function replayEvent(
+  queuedEvent: QueuedReplayableEvent,
+  targetContainer: EventTarget,
+) {
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    nativeDispatchForReplay(queuedEvent.nativeEvent, targetContainer);
+  } else {
+    setEventIsReplaying(queuedEvent.nativeEvent);
+    dispatchEventForPluginEventSystem(
+      queuedEvent.domEventName,
+      queuedEvent.eventSystemFlags,
+      queuedEvent.nativeEvent,
+      getClosestInstanceFromNode(getEventTarget(queuedEvent.nativeEvent)),
+      targetContainer,
+    );
+  }
+}
+
+export const nativeDispatchForReplay = (
+  event: AnyNativeEvent,
+  targetContainer: EventTarget,
+) => {
+  /**
+   * When we queue continuous events we queue them in both capture and bubble phase
+   * but We only want to dispatch them once though. Some events only have a bubble phase
+   * so gating to queue only in capture phase would cause us to miss those events.
+   * Instead we queue both and use this WeakSet to make sure we don't double dispatch events.
+   * This has the benefit of not needing to hook into the native events stopPropagation() since
+   * the bubble phase will not be fired by the browser if the event has stopPropagation called on it.
+   */
+  if (!isReplayingEvent(event)) {
+    const eventClone = new event.constructor(event.type, (event: any));
+    setEventIsReplaying(event);
+    setEventIsReplaying(eventClone);
+    event.target.dispatchEvent(eventClone);
+  }
+};

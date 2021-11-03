@@ -692,15 +692,44 @@ describe('ReactDOMServerSelectiveHydration', () => {
       Scheduler.unstable_yieldValue(text);
       return (
         <span
+          id={text}
+          onClickCapture={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Capture Clicked ' + text);
+          }}
           onClick={e => {
             e.preventDefault();
             Scheduler.unstable_yieldValue('Clicked ' + text);
           }}
           onMouseEnter={e => {
             e.preventDefault();
-            Scheduler.unstable_yieldValue('Hover ' + text);
+            Scheduler.unstable_yieldValue('Mouse Enter ' + text);
+          }}
+          onMouseOut={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Mouse Out ' + text);
+          }}
+          onMouseOutCapture={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            Scheduler.unstable_yieldValue('Mouse Out Capture ' + text);
+          }}
+          onMouseOverCapture={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            Scheduler.unstable_yieldValue('Mouse Over Capture ' + text);
+          }}
+          onMouseOver={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Mouse Over ' + text);
           }}>
-          {text}
+          <div
+            onMouseOverCapture={e => {
+              e.preventDefault();
+              Scheduler.unstable_yieldValue('Mouse Over Capture Inner ' + text);
+            }}>
+            {text}
+          </div>
         </span>
       );
     }
@@ -708,7 +737,14 @@ describe('ReactDOMServerSelectiveHydration', () => {
     function App() {
       Scheduler.unstable_yieldValue('App');
       return (
-        <div>
+        <div
+          onClickCapture={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Capture Clicked Parent');
+          }}
+          onMouseOverCapture={e => {
+            Scheduler.unstable_yieldValue('Mouse Over Capture Parent');
+          }}>
           <Suspense fallback="Loading...">
             <Child text="A" />
           </Suspense>
@@ -735,16 +771,15 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     container.innerHTML = finalHTML;
 
-    const spanB = container.getElementsByTagName('span')[1];
-    const spanC = container.getElementsByTagName('span')[2];
-    const spanD = container.getElementsByTagName('span')[3];
+    const spanB = document.getElementById('B').firstChild;
+    const spanC = document.getElementById('C').firstChild;
+    const spanD = document.getElementById('D').firstChild;
 
     suspend = true;
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -776,8 +811,30 @@ describe('ReactDOMServerSelectiveHydration', () => {
         'D',
         'B', // Ideally this should be later.
         'C',
-        'Hover C',
+        // Mouse out events aren't replayed
+        // 'Mouse Out Capture B',
+        // stopPropagation stops these
+        // 'Mouse Out B',
+        'Mouse Over Capture Parent',
+        'Mouse Over Capture C',
+        // Stop propagation stops these
+        // 'Mouse Over Capture Inner C',
+        // 'Mouse Over C',
         'A',
+      ]);
+
+      dispatchMouseHoverEvent(spanC, spanB);
+
+      expect(Scheduler).toHaveYielded([
+        'Mouse Out Capture B',
+        // stopPropagation stops these
+        // 'Mouse Out B',
+        // 'Mouse Enter C',
+        'Mouse Over Capture Parent',
+        'Mouse Over Capture C',
+        // Stop propagation stops these
+        // 'Mouse Over Capture Inner C',
+        // 'Mouse Over C',
       ]);
     } else {
       // We should prioritize hydrating D first because we clicked it.
@@ -791,7 +848,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
         'Clicked D',
         'B', // Ideally this should be later.
         'C',
-        'Hover C',
+        'Mouse Over C',
+        'Mouse Enter C',
         'A',
       ]);
     }

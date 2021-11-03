@@ -13,7 +13,6 @@ import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {registerDirectEvent} from '../EventRegistry';
-import {IS_REPLAYED} from 'react-dom/src/events/EventSystemFlags';
 import {SyntheticMouseEvent, SyntheticPointerEvent} from '../SyntheticEvent';
 import {
   getClosestInstanceFromNode,
@@ -22,6 +21,7 @@ import {
 } from '../../client/ReactDOMComponentTree';
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 import type {KnownReactSyntheticEvent} from '../ReactSyntheticEventType';
+import {isReplayingEvent, setEventIsReplaying} from '../replayedEvent';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
@@ -54,11 +54,9 @@ function extractEvents(
   const isOutEvent =
     domEventName === 'mouseout' || domEventName === 'pointerout';
 
-  if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0) {
+  if (isOverEvent && !isReplayingEvent(nativeEvent)) {
     // If this is an over event with a target, we might have already dispatched
-    // the event in the out event of the other target. If this is replayed,
-    // then it's because we couldn't dispatch against this target previously
-    // so we have to do it now instead.
+    // the event in the out event of the other target.
     const related =
       (nativeEvent: any).relatedTarget || (nativeEvent: any).fromElement;
     if (related) {

@@ -70,6 +70,7 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
+import {isReplayingEvent} from './replayedEvent';
 
 type DispatchListener = {|
   instance: null | Fiber,
@@ -557,7 +558,8 @@ export function dispatchEventForPluginEventSystem(
       // for legacy FB support, where the expected behavior was to
       // match React < 16 behavior of delegated clicks to the doc.
       domEventName === 'click' &&
-      (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0
+      (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0 &&
+      !isReplayingEvent(nativeEvent)
     ) {
       deferClickToDocumentForLegacyFBSupport(domEventName, targetContainer);
       return;
