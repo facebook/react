@@ -13,7 +13,7 @@ import {ProfilerContext} from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
-import {SchedulingProfilerContext} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
+import {SchedulingProfilerContext} from 'react-devtools-timeline/src/SchedulingProfilerContext';
 
 export default function ClearProfilingDataButton() {
   const store = useContext(StoreContext);

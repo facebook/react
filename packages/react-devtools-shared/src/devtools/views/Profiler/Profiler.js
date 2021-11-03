@@ -16,7 +16,7 @@ import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import RootSelector from './RootSelector';
-import {SchedulingProfiler} from 'react-devtools-scheduling-profiler/src/SchedulingProfiler';
+import {SchedulingProfiler} from 'react-devtools-timeline/src/SchedulingProfiler';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
