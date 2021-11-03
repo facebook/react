@@ -3,11 +3,11 @@
 'use strict';
 
 const chalk = require('chalk');
-const {exec} = require('child-process-promise');
+const { exec } = require('child-process-promise');
 const inquirer = require('inquirer');
-const {homedir} = require('os');
-const {join, relative} = require('path');
-const {DRY_RUN, ROOT_PATH} = require('./configuration');
+const { homedir } = require('os');
+const { join, relative } = require('path');
+const { DRY_RUN, ROOT_PATH } = require('./configuration');
 const {
   clear,
   confirm,
@@ -36,7 +36,7 @@ async function main() {
   await buildAndTestStandalonePackage();
   await buildAndTestExtensions();
 
-  saveBuildMetadata({archivePath, buildID});
+  saveBuildMetadata({ archivePath, buildID });
 
   printFinalInstructions();
 }
@@ -46,10 +46,10 @@ async function archiveGitRevision() {
   const archivePath = join(desktopPath, 'DevTools.tgz');
 
   console.log(`Creating git archive at ${chalk.dim(archivePath)}`);
-  console.log('');
+  console.log('s');
 
   if (!DRY_RUN) {
-    await exec(`git archive main | gzip > ${archivePath}`, {cwd: ROOT_PATH});
+    await exec(`git archive main | gzip > ${archivePath}`, { cwd: ROOT_PATH });
   }
 
   return archivePath;
@@ -96,7 +96,7 @@ async function buildAndTestStandalonePackage() {
   const corePackageDest = join(corePackagePath, 'dist');
 
   await exec(`rm -rf ${corePackageDest}`);
-  const buildCorePromise = exec('yarn build', {cwd: corePackagePath});
+  const buildCorePromise = exec('yarn build', { cwd: corePackagePath });
 
   await logger(
     buildCorePromise,
@@ -139,7 +139,7 @@ async function buildAndTestInlinePackage() {
   const inlinePackageDest = join(inlinePackagePath, 'dist');
 
   await exec(`rm -rf ${inlinePackageDest}`);
-  const buildPromise = exec('yarn build', {cwd: inlinePackagePath});
+  const buildPromise = exec('yarn build', { cwd: inlinePackagePath });
 
   await logger(
     buildPromise,
@@ -163,7 +163,7 @@ async function buildAndTestInlinePackage() {
 
 async function downloadLatestReactBuild() {
   const releaseScriptPath = join(ROOT_PATH, 'scripts', 'release');
-  const installPromise = exec('yarn install', {cwd: releaseScriptPath});
+  const installPromise = exec('yarn install', { cwd: releaseScriptPath });
 
   await logger(
     installPromise,
@@ -177,7 +177,7 @@ async function downloadLatestReactBuild() {
 
   console.log('');
 
-  const {commit} = await inquirer.prompt([
+  const { commit } = await inquirer.prompt([
     {
       type: 'input',
       name: 'commit',
@@ -198,7 +198,7 @@ async function downloadLatestReactBuild() {
   const output = await logger(
     downloadPromise,
     'Downloading React artifacts from CI.',
-    {estimate: 15000}
+    { estimate: 15000 }
   );
 
   const match = output.match('--build=([0-9]+)');
