@@ -9,8 +9,8 @@
     "memoize-one": "^5.1.1",
     "nullthrows": "^1.1.1",
     "pretty-ms": "^7.0.0",
-    "react-virtualized-auto-sizer": "^1.0.6",
-    "regenerator-runtime": "^0.13.7"
+    "regenerator-runtime": "^0.13.7",
+    "resize-observer-polyfill": "1.5.1"
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.1",

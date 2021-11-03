@@ -18,7 +18,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import useResizeObserver from 'react-devtools-shared/src/devtools/views/useResizeObserver';
 import {FixedSizeList} from 'react-window';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import Icon from '../Icon';
@@ -76,6 +76,20 @@ export default function Tree(props: Props) {
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
   const {lineHeight, showInlineWarningsAndErrors} = useContext(SettingsContext);
+
+  const {
+    ref: treeRefSetterFunction,
+    height: treeHeight,
+    width: treeWidth,
+  } = useResizeObserver();
+
+  const treeWrapperRef = useCallback(
+    element => {
+      treeRefSetterFunction(element);
+      focusTargetRef.current = element;
+    },
+    [treeRefSetterFunction],
+  );
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -393,25 +407,20 @@ export default function Tree(props: Props) {
           onKeyPress={handleKeyPress}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          ref={focusTargetRef}
+          ref={treeWrapperRef}
           tabIndex={0}>
-          <AutoSizer>
-            {({height, width}) => (
-              // $FlowFixMe https://github.com/facebook/flow/issues/7341
-              <FixedSizeList
-                className={styles.List}
-                height={height}
-                innerElementType={InnerElementType}
-                itemCount={numElements}
-                itemData={itemData}
-                itemKey={itemKey}
-                itemSize={lineHeight}
-                ref={listCallbackRef}
-                width={width}>
-                {Element}
-              </FixedSizeList>
-            )}
-          </AutoSizer>
+          <FixedSizeList
+            className={styles.List}
+            height={treeHeight}
+            innerElementType={InnerElementType}
+            itemCount={numElements}
+            itemData={itemData}
+            itemKey={itemKey}
+            itemSize={lineHeight}
+            ref={listCallbackRef}
+            width={treeWidth}>
+            {Element}
+          </FixedSizeList>
         </div>
       </div>
     </TreeFocusedContext.Provider>
@@ -460,7 +469,6 @@ export default function Tree(props: Props) {
 // Then we take the smallest of these indentation sizes...
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
-  cachedChildWidths: WeakMap<HTMLElement, number>,
   indentationSizeRef: {|current: number|},
   prevListWidthRef: {|current: number|},
 ): void {
@@ -473,7 +481,10 @@ function updateIndentationSizeVar(
   }
 
   // Reset the max indentation size if the width of the tree has increased.
-  if (listWidth > prevListWidthRef.current) {
+  if (
+    listWidth > prevListWidthRef.current ||
+    Number.isNaN(indentationSizeRef.current)
+  ) {
     indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
   }
   prevListWidthRef.current = listWidth;
@@ -486,22 +497,19 @@ function updateIndentationSizeVar(
 
     let childWidth: number = 0;
 
-    const cachedChildWidth = cachedChildWidths.get(child);
-    if (cachedChildWidth != null) {
-      childWidth = cachedChildWidth;
-    } else {
-      const {firstElementChild} = child;
+    const {firstElementChild} = child;
 
-      // Skip over e.g. the guideline element
-      if (firstElementChild != null) {
-        childWidth = firstElementChild.clientWidth;
-        cachedChildWidths.set(child, childWidth);
-      }
+    // Skip over e.g. the guideline element
+    if (firstElementChild != null) {
+      childWidth = firstElementChild.clientWidth;
     }
 
     const remainingWidth = Math.max(0, listWidth - childWidth);
 
-    maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
+    maxIndentationSize = Math.min(
+      maxIndentationSize,
+      remainingWidth > 0 ? remainingWidth / depth : 0,
+    );
   }
 
   indentationSizeRef.current = maxIndentationSize;
@@ -511,11 +519,6 @@ function updateIndentationSizeVar(
 
 function InnerElementType({children, style, ...rest}) {
   const {ownerID} = useContext(TreeStateContext);
-
-  const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
-    () => new WeakMap(),
-    [],
-  );
 
   // This ref tracks the current indentation size.
   // We decrease indentation to fit wider/deeper trees.
@@ -545,7 +548,6 @@ function InnerElementType({children, style, ...rest}) {
     if (divRef.current !== null) {
       updateIndentationSizeVar(
         divRef.current,
-        cachedChildWidths,
         indentationSizeRef,
         prevListWidthRef,
       );
@@ -560,7 +562,10 @@ function InnerElementType({children, style, ...rest}) {
     <div
       className={styles.InnerElementType}
       ref={divRef}
-      style={style}
+      style={{
+        ...style,
+        pointerEvents: 'auto',
+      }}
       {...rest}>
       <SelectedTreeHighlight />
       {children}

@@ -27,9 +27,9 @@
 }
 
 .AutoSizerWrapper {
+  flex: 1 1 auto;
   width: 100%;
   overflow: hidden;
-  flex: 1 0 auto;
 }
 .AutoSizerWrapper:focus {
   outline: none;
