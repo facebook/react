@@ -38,6 +38,7 @@ import {
   ElementTypeProfiler,
   ElementTypeSuspense,
 } from 'react-devtools-shared/src/types';
+import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
 
@@ -84,7 +85,7 @@ export default function ComponentsSettings(_: {||}) {
 
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
-    typeof process.env.EDITOR_URL === 'string' ? process.env.EDITOR_URL : '',
+    getDefaultOpenInEditorURL(),
   );
 
   const [componentFilters, setComponentFilters] = useState<
@@ -277,18 +278,17 @@ export default function ComponentsSettings(_: {||}) {
         <span className={styles.Warning}>(may be slow)</span>
       </label>
 
-      <label className={styles.Setting}>
+      <label className={styles.OpenInURLSetting}>
         Open in Editor URL:{' '}
         <input
           className={styles.Input}
           type="text"
           placeholder={process.env.EDITOR_URL ?? 'vscode://file/{path}:{line}'}
           value={openInEditorURL}
-          onChange={e => {
-            setOpenInEditorURL(e.target.value);
+          onChange={event => {
+            setOpenInEditorURL(event.target.value);
           }}
         />
-        <span className={styles.Warning}>(restart to take effect)</span>
       </label>
 
       <div className={styles.Header}>Hide components where...</div>

@@ -387,16 +387,20 @@ export function setShowInlineWarningsAndErrors(value: boolean): void {
   );
 }
 
-export function getOpenInEditorURL(): ?string {
+export function getDefaultOpenInEditorURL(): string {
+  return typeof process.env.EDITOR_URL === 'string'
+    ? process.env.EDITOR_URL
+    : '';
+}
+
+export function getOpenInEditorURL(): string {
   try {
-    const url = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
-    if (url != null) {
-      return JSON.parse(url);
-    } else if (typeof process.env.EDITOR_URL === 'string') {
-      return process.env.EDITOR_URL;
+    const raw = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
+    if (raw != null) {
+      return JSON.parse(raw);
     }
   } catch (error) {}
-  return null;
+  return getDefaultOpenInEditorURL();
 }
 
 export function separateDisplayNameAndHOCs(

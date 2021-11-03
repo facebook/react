@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useCallback, useContext} from 'react';
+import {useCallback, useContext, useSyncExternalStore} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
@@ -21,6 +21,7 @@ import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
 import {getOpenInEditorURL} from '../../../utils';
+import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
 
 import styles from './InspectedElement.css';
 
@@ -124,7 +125,17 @@ export default function InspectedElementWrapper(_: Props) {
     inspectedElement != null &&
     inspectedElement.canToggleSuspense;
 
-  const editorURL = getOpenInEditorURL();
+  const editorURL = useSyncExternalStore(
+    function subscribe(callback) {
+      window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+      return function unsubscribe() {
+        window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+      };
+    },
+    function getState() {
+      return getOpenInEditorURL();
+    },
+  );
 
   const canOpenInEditor =
     editorURL && inspectedElement != null && inspectedElement.source != null;
@@ -209,7 +220,7 @@ export default function InspectedElementWrapper(_: Props) {
     if (source == null || editorURL == null) {
       return;
     }
-    console.log(editorURL);
+
     const url = new URL(editorURL);
     url.href = url.href.replace('{path}', source.fileName);
     url.href = url.href.replace('{line}', String(source.lineNumber));
