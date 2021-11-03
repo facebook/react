@@ -45,8 +45,7 @@ async function archiveGitRevision() {
   const desktopPath = join(homedir(), 'Desktop');
   const archivePath = join(desktopPath, 'DevTools.tgz');
 
-  console.log(`Creating git archive at ${chalk.dim(archivePath)}`);
-  console.log('s');
+  console.log(`Creating git archive at ${chalk.dim(archivePath)} \n`);
 
   if (!DRY_RUN) {
     await exec(`git archive main | gzip > ${archivePath}`, { cwd: ROOT_PATH });
@@ -73,20 +72,17 @@ async function buildAndTestExtensions() {
     }
   );
 
-  console.log('');
-  console.log(`Extensions have been build for Chrome, Edge, and Firefox.`);
-  console.log('');
-  console.log('Smoke test each extension before continuing:');
-  console.log(`  ${chalk.bold.green('cd ' + extensionsPackagePath)}`);
-  console.log('');
-  console.log(`  ${chalk.dim('# Test Chrome extension')}`);
-  console.log(`  ${chalk.bold.green('yarn test:chrome')}`);
-  console.log('');
-  console.log(`  ${chalk.dim('# Test Edge extension')}`);
-  console.log(`  ${chalk.bold.green('yarn test:edge')}`);
-  console.log('');
-  console.log(`  ${chalk.dim('# Firefox Chrome extension')}`);
-  console.log(`  ${chalk.bold.green('yarn test:firefox')}`);
+  console.log(
+    `\n Extensions have been build for Chrome, Edge, and Firefox. \n
+    \n Smoke test each extension before continuing:
+    \n  ${chalk.bold.green('cd ' + extensionsPackagePath)}\n
+    \n  ${chalk.dim('# Test Chrome extension')}
+    \n  ${chalk.bold.green('yarn test:chrome')}\n
+    \n  ${chalk.dim('# Test Edge extension')}
+    \n  ${chalk.bold.green('yarn test:edge')}\n
+    \n  ${chalk.dim('# Firefox Chrome extension')}
+    \n  ${chalk.bold.green('yarn test:firefox')}`
+  );
 
   await confirmContinue();
 }
@@ -115,17 +111,13 @@ async function buildAndTestStandalonePackage() {
     'index.html'
   );
 
-  console.log('');
-  console.log(
-    `Test the ${chalk.bold('react-devtools-core')} target before continuing:`
+  console.log(`
+    \n Test the ${chalk.bold('react-devtools-core')} target before continuing:
+    \n   ${chalk.bold.green('cd ' + standalonePackagePath)}
+    \n   ${chalk.bold.green('yarn start')}\n
+    \n The following fixture can be useful for testing Safari integration:
+    \n   ${chalk.dim(safariFixturePath)}`
   );
-  console.log(`  ${chalk.bold.green('cd ' + standalonePackagePath)}`);
-  console.log(`  ${chalk.bold.green('yarn start')}`);
-  console.log('');
-  console.log(
-    'The following fixture can be useful for testing Safari integration:'
-  );
-  console.log(`  ${chalk.dim(safariFixturePath)}`);
 
   await confirmContinue();
 }
@@ -151,12 +143,12 @@ async function buildAndTestInlinePackage() {
 
   const shellPackagePath = join(ROOT_PATH, 'packages', 'react-devtools-shell');
 
-  console.log('');
-  console.log(`Built ${chalk.bold('react-devtools-inline')} target.`);
-  console.log('');
-  console.log('Test this build before continuing:');
-  console.log(`  ${chalk.bold.green('cd ' + shellPackagePath)}`);
-  console.log(`  ${chalk.bold.green('yarn start')}`);
+  console.log(
+    `\n Built ${chalk.bold('react-devtools-inline')} target.\n
+    \n Test this build before continuing:
+    \n ${chalk.bold.green('cd ' + shellPackagePath)}
+    \n ${chalk.bold.green('yarn start')}`
+  );
 
   await confirmContinue();
 }
@@ -209,8 +201,7 @@ async function downloadLatestReactBuild() {
 
   const buildID = match[1];
 
-  console.log('');
-  console.log(`Downloaded artiacts for CI build ${chalk.bold(buildID)}.`);
+  console.log(`\n Downloaded artiacts for CI build ${chalk.bold(buildID)}.`);
 
   return buildID;
 }
@@ -219,8 +210,7 @@ function printFinalInstructions() {
   const publishReleaseScriptPath = join(__dirname, 'publish-release.js');
   const pathToPrint = relative(process.cwd(), publishReleaseScriptPath);
 
-  console.log('');
-  console.log('Continue by running the publish-release script:');
+  console.log('\n Continue by running the publish-release script:');
   console.log(chalk.bold.green('  ' + pathToPrint));
 }
 
