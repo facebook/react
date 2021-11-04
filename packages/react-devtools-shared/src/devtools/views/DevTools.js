@@ -30,7 +30,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
-import {SchedulingProfilerContextController} from 'react-devtools-timeline/src/SchedulingProfilerContext';
+import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
@@ -273,7 +273,7 @@ export default function DevTools({
                       value={fetchFileWithCaching || null}>
                       <TreeContextController>
                         <ProfilerContextController>
-                          <SchedulingProfilerContextController>
+                          <TimelineContextController>
                             <ThemeProvider>
                               <div
                                 className={styles.DevTools}
@@ -311,7 +311,7 @@ export default function DevTools({
                                 </div>
                               </div>
                             </ThemeProvider>
-                          </SchedulingProfilerContextController>
+                          </TimelineContextController>
                         </ProfilerContextController>
                       </TreeContextController>
                     </FetchFileWithCachingContext.Provider>

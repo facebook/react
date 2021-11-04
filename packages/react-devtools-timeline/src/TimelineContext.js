@@ -15,33 +15,28 @@ import type {HorizontalScrollStateChangeCallback, ViewState} from './types';
 import type {DataResource} from './createDataResourceFromImportedFile';
 
 export type Context = {|
-  clearSchedulingProfilerData: () => void,
-  importSchedulingProfilerData: (file: File) => void,
-  schedulingProfilerData: DataResource | null,
+  clearTimelineData: () => void,
+  importTimelineData: (file: File) => void,
+  timelineData: DataResource | null,
   viewState: ViewState,
 |};
 
-const SchedulingProfilerContext = createContext<Context>(
-  ((null: any): Context),
-);
-SchedulingProfilerContext.displayName = 'SchedulingProfilerContext';
+const TimelineContext = createContext<Context>(((null: any): Context));
+TimelineContext.displayName = 'TimelineContext';
 
 type Props = {|
   children: React$Node,
 |};
 
-function SchedulingProfilerContextController({children}: Props) {
-  const [
-    schedulingProfilerData,
-    setSchedulingProfilerData,
-  ] = useState<DataResource | null>(null);
+function TimelineContextController({children}: Props) {
+  const [timelineData, setTimelineData] = useState<DataResource | null>(null);
 
-  const clearSchedulingProfilerData = useCallback(() => {
-    setSchedulingProfilerData(null);
+  const clearTimelineData = useCallback(() => {
+    setTimelineData(null);
   }, []);
 
-  const importSchedulingProfilerData = useCallback((file: File) => {
-    setSchedulingProfilerData(createDataResourceFromImportedFile(file));
+  const importTimelineData = useCallback((file: File) => {
+    setTimelineData(createDataResourceFromImportedFile(file));
   }, []);
 
   // Recreate view state any time new profiling data is imported.
@@ -75,28 +70,23 @@ function SchedulingProfilerContextController({children}: Props) {
       },
       viewToMutableViewStateMap: new Map(),
     };
-  }, [schedulingProfilerData]);
+  }, [timelineData]);
 
   const value = useMemo(
     () => ({
-      clearSchedulingProfilerData,
-      importSchedulingProfilerData,
-      schedulingProfilerData,
+      clearTimelineData,
+      importTimelineData,
+      timelineData,
       viewState,
     }),
-    [
-      clearSchedulingProfilerData,
-      importSchedulingProfilerData,
-      schedulingProfilerData,
-      viewState,
-    ],
+    [clearTimelineData, importTimelineData, timelineData, viewState],
   );
 
   return (
-    <SchedulingProfilerContext.Provider value={value}>
+    <TimelineContext.Provider value={value}>
       {children}
-    </SchedulingProfilerContext.Provider>
+    </TimelineContext.Provider>
   );
 }
 
-export {SchedulingProfilerContext, SchedulingProfilerContextController};
+export {TimelineContext, TimelineContextController};

@@ -16,7 +16,7 @@ import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import RootSelector from './RootSelector';
-import {SchedulingProfiler} from 'react-devtools-timeline/src/SchedulingProfiler';
+import {Timeline} from 'react-devtools-timeline/src/Timeline';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
@@ -43,7 +43,7 @@ function Profiler(_: {||}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
-  const {supportsSchedulingProfiler} = useContext(StoreContext);
+  const {supportsTimeline} = useContext(StoreContext);
 
   let isLegacyProfilerSelected = false;
 
@@ -59,7 +59,7 @@ function Profiler(_: {||}) {
         view = <CommitRanked />;
         break;
       case 'timeline':
-        view = <SchedulingProfiler />;
+        view = <Timeline />;
         break;
       default:
         break;
@@ -116,9 +116,7 @@ function Profiler(_: {||}) {
               currentTab={selectedTabID}
               id="Profiler"
               selectTab={selectTab}
-              tabs={
-                supportsSchedulingProfiler ? tabsWithSchedulingProfiler : tabs
-              }
+              tabs={supportsTimeline ? tabsWithTimeline : tabs}
               type="profiler"
             />
             <RootSelector />
@@ -160,7 +158,7 @@ const tabs = [
   },
 ];
 
-const tabsWithSchedulingProfiler = [
+const tabsWithTimeline = [
   ...tabs,
   null, // Divider/separator
   {

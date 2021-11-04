@@ -19,7 +19,7 @@ import {
   prepareProfilingDataFrontendFromExport,
 } from './utils';
 import {downloadFile} from '../utils';
-import {SchedulingProfilerContext} from 'react-devtools-timeline/src/SchedulingProfilerContext';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 import styles from './ProfilingImportExportButtons.css';
 
@@ -29,7 +29,7 @@ export default function ProfilingImportExportButtons() {
   const {isProfiling, profilingData, rootID, selectedTabID} = useContext(
     ProfilerContext,
   );
-  const {importSchedulingProfilerData} = useContext(SchedulingProfilerContext);
+  const {importTimelineData} = useContext(TimelineContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;
 
@@ -108,10 +108,10 @@ export default function ProfilingImportExportButtons() {
     }
   }, [modalDialogDispatch, profilerStore]);
 
-  const importSchedulingProfilerDataWrapper = event => {
+  const importTimelineDataWrapper = event => {
     const input = inputRef.current;
     if (input !== null && input.files.length > 0) {
-      importSchedulingProfilerData(input.files[0]);
+      importTimelineData(input.files[0]);
     }
   };
 
@@ -124,7 +124,7 @@ export default function ProfilingImportExportButtons() {
         type="file"
         onChange={
           selectedTabID === 'timeline'
-            ? importSchedulingProfilerDataWrapper
+            ? importTimelineDataWrapper
             : importProfilerData
         }
         tabIndex={-1}

@@ -21,18 +21,16 @@ import {
 } from 'react';
 import {SettingsContext} from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
 import {updateColorsToMatchTheme} from './content-views/constants';
-import {SchedulingProfilerContext} from './SchedulingProfilerContext';
+import {TimelineContext} from './TimelineContext';
 import ImportButton from './ImportButton';
 import CanvasPage from './CanvasPage';
 
-import styles from './SchedulingProfiler.css';
+import styles from './Timeline.css';
 
-export function SchedulingProfiler(_: {||}) {
-  const {
-    importSchedulingProfilerData,
-    schedulingProfilerData,
-    viewState,
-  } = useContext(SchedulingProfilerContext);
+export function Timeline(_: {||}) {
+  const {importTimelineData, timelineData, viewState} = useContext(
+    TimelineContext,
+  );
 
   const ref = useRef(null);
 
@@ -63,17 +61,17 @@ export function SchedulingProfiler(_: {||}) {
 
   return (
     <div className={styles.Content} ref={ref}>
-      {schedulingProfilerData ? (
+      {timelineData ? (
         <Suspense fallback={<ProcessingData />}>
           <DataResourceComponent
-            dataResource={schedulingProfilerData}
+            dataResource={timelineData}
             key={key}
-            onFileSelect={importSchedulingProfilerData}
+            onFileSelect={importTimelineData}
             viewState={viewState}
           />
         </Suspense>
       ) : (
-        <Welcome onFileSelect={importSchedulingProfilerData} />
+        <Welcome onFileSelect={importTimelineData} />
       )}
     </div>
   );
