@@ -177,6 +177,20 @@ let nextEffect: Fiber | null = null;
 let inProgressLanes: Lanes | null = null;
 let inProgressRoot: FiberRoot | null = null;
 
+// Used during the commit phase to track the path before next stable sibling.
+// Allows us to avoid exponential search for the next sibling,
+// if multiple placements or insertions are done in a row.
+let pathBeforeNextStableSibling: Map<Fiber, boolean> = new Map();
+
+let hasNextStableSibling: boolean = true;
+let nextStableStateNode: HTMLElement | null = null;
+
+function resetNextStableSibling() {
+  pathBeforeNextStableSibling = new Map();
+  hasNextStableSibling = true;
+  nextStableStateNode = null;
+}
+
 function reportUncaughtErrorInDEV(error) {
   // Wrapping each small part of the commit phase into a guarded
   // callback is a bit too slow (https://github.com/facebook/react/pull/21666).
@@ -1515,22 +1529,34 @@ function isHostParent(fiber: Fiber): boolean {
 
 function getHostSibling(fiber: Fiber): ?Instance {
   // We're going to search forward into the tree until we find a sibling host
-  // node. Unfortunately, if multiple insertions are done in a row we have to
-  // search past them. This leads to exponential search for the next sibling.
-  // TODO: Find a more efficient way to do this.
+  // node.
+
   let node: Fiber = fiber;
+
+  if (!hasNextStableSibling) {
+    return null;
+  }
+  if (nextStableStateNode) {
+    return nextStableStateNode;
+  }
+
   siblings: while (true) {
     // If we didn't find anything, let's try the next sibling.
     while (node.sibling === null) {
       if (node.return === null || isHostParent(node.return)) {
         // If we pop out of the root or hit the parent the fiber we are the
         // last sibling.
+        hasNextStableSibling = false;
         return null;
       }
       node = node.return;
+      pathBeforeNextStableSibling.set(node, true);
     }
     node.sibling.return = node.return;
     node = node.sibling;
+
+    pathBeforeNextStableSibling.set(node, true);
+
     while (
       node.tag !== HostComponent &&
       node.tag !== HostText &&
@@ -1549,11 +1575,14 @@ function getHostSibling(fiber: Fiber): ?Instance {
       } else {
         node.child.return = node;
         node = node.child;
+        pathBeforeNextStableSibling.set(node, true);
       }
     }
     // Check if this host node is stable or about to be placed.
     if (!(node.flags & Placement)) {
       // Found it!
+      nextStableStateNode = node.stateNode;
+
       return node.stateNode;
     }
   }
@@ -2172,6 +2201,7 @@ function commitMutationEffects_begin(root: FiberRoot) {
     if ((fiber.subtreeFlags & MutationMask) !== NoFlags && child !== null) {
       ensureCorrectReturnPointer(child, fiber);
       nextEffect = child;
+      resetNextStableSibling();
     } else {
       commitMutationEffects_complete(root);
     }
@@ -2180,6 +2210,9 @@ function commitMutationEffects_begin(root: FiberRoot) {
 
 function commitMutationEffects_complete(root: FiberRoot) {
   while (nextEffect !== null) {
+    if (!pathBeforeNextStableSibling.get(nextEffect)) {
+      resetNextStableSibling();
+    }
     const fiber = nextEffect;
     setCurrentDebugFiberInDEV(fiber);
     try {
@@ -2196,7 +2229,7 @@ function commitMutationEffects_complete(root: FiberRoot) {
       nextEffect = sibling;
       return;
     }
-
+    resetNextStableSibling();
     nextEffect = fiber.return;
   }
 }
