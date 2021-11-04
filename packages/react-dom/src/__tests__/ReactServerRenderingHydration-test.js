@@ -532,6 +532,7 @@ describe('ReactDOMServerHydration', () => {
     );
   });
 
+  // @gate enableCustomElementPropertySupport
   it('should warn when hydrating read-only properties', () => {
     const readOnlyProperties = [
       'offsetParent',
