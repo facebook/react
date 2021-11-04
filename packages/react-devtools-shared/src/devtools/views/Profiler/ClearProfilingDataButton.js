@@ -13,7 +13,7 @@ import {ProfilerContext} from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
-import {SchedulingProfilerContext} from 'react-devtools-timeline/src/SchedulingProfilerContext';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 export default function ClearProfilingDataButton() {
   const store = useContext(StoreContext);
@@ -21,7 +21,7 @@ export default function ClearProfilingDataButton() {
     ProfilerContext,
   );
   const {clearSchedulingProfilerData, schedulingProfilerData} = useContext(
-    SchedulingProfilerContext,
+    TimelineContext,
   );
   const {profilerStore} = store;
 

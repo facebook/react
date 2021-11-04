@@ -21,7 +21,7 @@ import {
 } from 'react';
 import {SettingsContext} from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
 import {updateColorsToMatchTheme} from './content-views/constants';
-import {SchedulingProfilerContext} from './SchedulingProfilerContext';
+import {TimelineContext} from './TimelineContext';
 import ImportButton from './ImportButton';
 import CanvasPage from './CanvasPage';
 
@@ -32,7 +32,7 @@ export function SchedulingProfiler(_: {||}) {
     importSchedulingProfilerData,
     schedulingProfilerData,
     viewState,
-  } = useContext(SchedulingProfilerContext);
+  } = useContext(TimelineContext);
 
   const ref = useRef(null);
 

@@ -21,16 +21,14 @@ export type Context = {|
   viewState: ViewState,
 |};
 
-const SchedulingProfilerContext = createContext<Context>(
-  ((null: any): Context),
-);
-SchedulingProfilerContext.displayName = 'SchedulingProfilerContext';
+const TimelineContext = createContext<Context>(((null: any): Context));
+TimelineContext.displayName = 'TimelineContext';
 
 type Props = {|
   children: React$Node,
 |};
 
-function SchedulingProfilerContextController({children}: Props) {
+function TimelineContextController({children}: Props) {
   const [
     schedulingProfilerData,
     setSchedulingProfilerData,
@@ -93,10 +91,10 @@ function SchedulingProfilerContextController({children}: Props) {
   );
 
   return (
-    <SchedulingProfilerContext.Provider value={value}>
+    <TimelineContext.Provider value={value}>
       {children}
-    </SchedulingProfilerContext.Provider>
+    </TimelineContext.Provider>
   );
 }
 
-export {SchedulingProfilerContext, SchedulingProfilerContextController};
+export {TimelineContext, TimelineContextController};

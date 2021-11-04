@@ -19,7 +19,7 @@ import {
   prepareProfilingDataFrontendFromExport,
 } from './utils';
 import {downloadFile} from '../utils';
-import {SchedulingProfilerContext} from 'react-devtools-timeline/src/SchedulingProfilerContext';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 import styles from './ProfilingImportExportButtons.css';
 
@@ -29,7 +29,7 @@ export default function ProfilingImportExportButtons() {
   const {isProfiling, profilingData, rootID, selectedTabID} = useContext(
     ProfilerContext,
   );
-  const {importSchedulingProfilerData} = useContext(SchedulingProfilerContext);
+  const {importSchedulingProfilerData} = useContext(TimelineContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;
 
