@@ -20,21 +20,19 @@ export default function ClearProfilingDataButton() {
   const {didRecordCommits, isProfiling, selectedTabID} = useContext(
     ProfilerContext,
   );
-  const {clearSchedulingProfilerData, schedulingProfilerData} = useContext(
-    TimelineContext,
-  );
+  const {clearTimelineData, timelineData} = useContext(TimelineContext);
   const {profilerStore} = store;
 
   let doesHaveData = false;
   if (selectedTabID === 'timeline') {
-    doesHaveData = schedulingProfilerData !== null;
+    doesHaveData = timelineData !== null;
   } else {
     doesHaveData = didRecordCommits;
   }
 
   const clear = () => {
     if (selectedTabID === 'timeline') {
-      clearSchedulingProfilerData();
+      clearTimelineData();
     } else {
       profilerStore.clear();
     }

@@ -28,11 +28,9 @@ import CanvasPage from './CanvasPage';
 import styles from './Timeline.css';
 
 export function Timeline(_: {||}) {
-  const {
-    importSchedulingProfilerData,
-    schedulingProfilerData,
-    viewState,
-  } = useContext(TimelineContext);
+  const {importTimelineData, timelineData, viewState} = useContext(
+    TimelineContext,
+  );
 
   const ref = useRef(null);
 
@@ -63,17 +61,17 @@ export function Timeline(_: {||}) {
 
   return (
     <div className={styles.Content} ref={ref}>
-      {schedulingProfilerData ? (
+      {timelineData ? (
         <Suspense fallback={<ProcessingData />}>
           <DataResourceComponent
-            dataResource={schedulingProfilerData}
+            dataResource={timelineData}
             key={key}
-            onFileSelect={importSchedulingProfilerData}
+            onFileSelect={importTimelineData}
             viewState={viewState}
           />
         </Suspense>
       ) : (
-        <Welcome onFileSelect={importSchedulingProfilerData} />
+        <Welcome onFileSelect={importTimelineData} />
       )}
     </div>
   );
