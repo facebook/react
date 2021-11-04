@@ -7,7 +7,7 @@
 
 'use strict';
 
-import {getLaneLabels} from 'react-reconciler/src/SchedulingProfiler';
+import {getLaneLabels} from 'react-reconciler/src/Timeline';
 import preprocessData, {
   getLanesFromTransportDecimalBitmask,
 } from '../preprocessData';

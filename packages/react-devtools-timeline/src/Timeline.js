@@ -25,9 +25,9 @@ import {TimelineContext} from './TimelineContext';
 import ImportButton from './ImportButton';
 import CanvasPage from './CanvasPage';
 
-import styles from './SchedulingProfiler.css';
+import styles from './Timeline.css';
 
-export function SchedulingProfiler(_: {||}) {
+export function Timeline(_: {||}) {
   const {
     importSchedulingProfilerData,
     schedulingProfilerData,
