@@ -30,7 +30,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
-import {SchedulingProfilerContextController} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
+import {SchedulingProfilerContextController} from 'react-devtools-timeline/src/SchedulingProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';

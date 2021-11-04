@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "react-devtools-scheduling-profiler",
+  "name": "react-devtools-timeline",
   "version": "4.21.0",
   "license": "MIT",
   "dependencies": {

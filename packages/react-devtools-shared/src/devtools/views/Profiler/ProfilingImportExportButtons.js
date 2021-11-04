@@ -19,7 +19,7 @@ import {
   prepareProfilingDataFrontendFromExport,
 } from './utils';
 import {downloadFile} from '../utils';
-import {SchedulingProfilerContext} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
+import {SchedulingProfilerContext} from 'react-devtools-timeline/src/SchedulingProfilerContext';
 
 import styles from './ProfilingImportExportButtons.css';
 

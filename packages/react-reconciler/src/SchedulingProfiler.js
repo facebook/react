@@ -17,7 +17,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {SCHEDULING_PROFILER_VERSION} from 'react-devtools-scheduling-profiler/src/constants';
+import {SCHEDULING_PROFILER_VERSION} from 'react-devtools-timeline/src/constants';
 
 import {
   getLabelForLane as getLabelForLane_old,
