@@ -43,7 +43,7 @@ function Profiler(_: {||}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
-  const {supportsSchedulingProfiler} = useContext(StoreContext);
+  const {supportsTimeline} = useContext(StoreContext);
 
   let isLegacyProfilerSelected = false;
 
@@ -116,9 +116,7 @@ function Profiler(_: {||}) {
               currentTab={selectedTabID}
               id="Profiler"
               selectTab={selectTab}
-              tabs={
-                supportsSchedulingProfiler ? tabsWithSchedulingProfiler : tabs
-              }
+              tabs={supportsTimeline ? tabsWithSchedulingProfiler : tabs}
               type="profiler"
             />
             <RootSelector />
