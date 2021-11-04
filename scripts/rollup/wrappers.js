@@ -27,24 +27,23 @@ const {
 
 const {RECONCILER} = moduleTypes;
 
+const USE_STRICT_HEADER_REGEX = /'use strict';\n+/;
+
 function registerInternalModuleStart(globalName) {
-  const path = resolve(
-    __dirname,
-    '..',
-    '..',
-    'packages/shared/registerInternalModuleStart.js'
-  );
-  return String(readFileSync(path)).trim();
+  const path = resolve(__dirname, 'wrappers', 'registerInternalModuleBegin.js');
+  const file = readFileSync(path);
+  return String(file).trim();
 }
 
 function registerInternalModuleStop(globalName) {
-  const path = resolve(
-    __dirname,
-    '..',
-    '..',
-    'packages/shared/registerInternalModuleStop.js'
-  );
-  return String(readFileSync(path)).trim();
+  const path = resolve(__dirname, 'wrappers', 'registerInternalModuleEnd.js');
+  const file = readFileSync(path);
+
+  // Remove the 'use strict' directive from the footer.
+  // This directive is only meaningful when it is the first statement in a file or function.
+  return String(file)
+    .replace(USE_STRICT_HEADER_REGEX, '')
+    .trim();
 }
 
 const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
@@ -359,6 +358,11 @@ function wrapBundle(
       case RN_OSS_PROFILING:
       case RN_FB_DEV:
       case RN_FB_PROFILING:
+        // Remove the 'use strict' directive from source.
+        // The module start wrapper will add its own.
+        // This directive is only meaningful when it is the first statement in a file or function.
+        source = source.replace(USE_STRICT_HEADER_REGEX, '');
+
         // Certain DEV and Profiling bundles should self-register their own module boundaries with DevTools.
         // This allows the Timeline to de-emphasize (dim) internal stack frames.
         source = `
