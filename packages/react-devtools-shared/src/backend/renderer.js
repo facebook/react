@@ -425,6 +425,10 @@ export function getInternalReactConstants(
           getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
+        const fiberRoot = fiber.stateNode;
+        if (fiberRoot != null && fiberRoot._debugRootType !== null) {
+          return fiberRoot._debugRootType;
+        }
         return null;
       case HostComponent:
         return type;
