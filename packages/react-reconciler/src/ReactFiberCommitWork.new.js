@@ -183,7 +183,7 @@ let inProgressRoot: FiberRoot | null = null;
 let pathBeforeNextStableSibling: Map<Fiber, boolean> = new Map();
 
 let hasNextStableSibling: boolean = true;
-let nextStableStateNode: HTMLElement | null = null;
+let nextStableStateNode: Instance | null = null;
 
 function resetNextStableSibling() {
   pathBeforeNextStableSibling = new Map();
