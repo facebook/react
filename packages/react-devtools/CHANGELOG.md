@@ -2,6 +2,82 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.21.0 (October 31, 2021)
+
+#### Features
+* Scheduling Profiler: Add marks for component effects (mount and unmount) ([@bvaughn](https://github.com/bvaughn) in [#22578](https://github.com/facebook/react/pull/22578))
+* Scheduling Profiler: De-emphasize React internal frames ([bvaughn](https://github.com/bvaughn) in [#22588](https://github.com/facebook/react/pull/22588))
+
+
+#### Bugfix
+* Revert logic for checking for duplicate installations of DevTools potentially causing issues loading Components tab ([@jstejada](https://github.com/jstejada) in [#22638](https://github.com/facebook/react/pull/22638))
+* Scheduling Profiler does not warn about long transitions ([@bvaughn](https://github.com/bvaughn) in [#22614](https://github.com/facebook/react/pull/22614))
+* Re-enable 'Reload and Start Profiling' for Microsoft Edge ([@eoandersson](https://github.com/eoandersson) in [#22631](https://github.com/facebook/react/pull/22631))
+
+
+#### Misc
+* DevTools supports ENV-injected version for better internal bug reports ([@bvaughn](https://github.com/bvaughn) in [#22635](https://github.com/facebook/react/pull/22635))
+* Fix typos ([@KonstHardy](https://github.com/KonstHardy) in [#22494](https://github.com/facebook/react/pull/22494))
+
+## 4.20.2 (October 20, 2021)
+
+#### Bugfix
+* Dev Tools: Relax constraint on passing extensionId for backend init ([@jstejada](https://github.com/jstejada) in [#22597](https://github.com/facebook/react/pull/22597))
+* DevTools: Fix passing extensionId in evaled postMessage calls ([@jstejada](https://github.com/jstejada) in [#22590](https://github.com/facebook/react/pull/22590))
+
+## 4.20.1 (October 19, 2021)
+
+#### Bugfix
+* Only show DevTools warning about unrecognized build in Chrome ([@jstejada](https://github.com/jstejada) in [#22571](https://github.com/facebook/react/pull/22571))
+* DevTools: Include Edge in browser name detection ([@jstejada](https://github.com/jstejada) in [#22584](https://github.com/facebook/react/pull/22584))
+
+## 4.20.0 (October 15, 2021)
+
+#### Features
+* Allow to use the Profiler when no client is connected in standalone DevTools ([@gabrieltrompiz](https://github.com/gabrieltrompiz) in [#22551](https://github.com/facebook/react/pull/22551))
+
+#### Bugfix
+* Surface backend errors during inspection in the frontend UI ([@bvaughn](https://github.com/bvaughn) in [#22546](https://github.com/facebook/react/pull/22546))
+* Prevent splash page in standalone app from becoming unresponsive after the disconnection of a client  (#22558) ([@gabrieltrompiz](https://github.com/gabrieltrompiz) in [#22560](https://github.com/facebook/react/pull/22560))
+* Prevent errors/crashing when multiple installs of DevTools are present ([@jstejada](https://github.com/jstejada) in [#22517](https://github.com/facebook/react/pull/22517))
+* Update Fiber logic in backend renderer to match implementation in React ([@jstejada](https://github.com/jstejada) in [#22527](https://github.com/facebook/react/pull/22527))
+
+#### Misc
+* Show warning in UI when duplicate installations of DevTools extension are detected ([@jstejada](https://github.com/jstejada) in [#22563](https://github.com/facebook/react/pull/22563))
+* Improved filenames of built worker files ([@akgupta0777](https://github.com/akgupta0777) in [#22559](https://github.com/facebook/react/pull/22559))
+
+## 4.19.2 (October 8, 2021)
+
+#### Bugfix
+* Show different error boundary UI for timeouts than normal errors ([bvaughn](https://github.com/bvaughn) in [#22483](https://github.com/facebook/react/pull/22483))
+* Fixed bug where deleting a component filter would also close the settings modal ([Biki-das](https://github.com/Biki-das) in [#22484](https://github.com/facebook/react/pull/22484))
+
+## 4.19.1 (October 1, 2021)
+
+#### Bugfix
+* Fixed potential cache miss when insepcting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
+
+## 4.19.0 (September 29, 2021)
+
+#### Features
+* Scheduling Profiler: Show Suspense resource .displayName ([bvaughn](https://github.com/bvaughn) in [#22451](https://github.com/facebook/react/pull/22451))
+* Scheduling Profiler marks should include thrown Errors ([bvaughn](https://github.com/bvaughn) in [#22419](https://github.com/facebook/react/pull/22419))
+* Don't patch console during first render in strict mode ([lunaruan](https://github.com/lunaruan) in [#22308](https://github.com/facebook/react/pull/22308))
+* Show which hook indicies changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
+* Display actual ReactDOM API name in root type ([eps1lon](https://github.com/eps1lon) in [#22363](https://github.com/facebook/react/pull/22363))
+* Add named hooks support to standalone and inline DevTools ([jstejada](https://github.com/jstejada) in [#22320](https://github.com/facebook/react/pull/22320) and [bvaughn](https://github.com/bvaughn) in [#22263](https://github.com/facebook/react/pull/22263))
+#### Bugfix
+* DevTools encoding supports multibyte characters (e.g. "🟩") ([bvaughn](https://github.com/bvaughn) in [#22424](https://github.com/facebook/react/pull/22424))
+* Improve DEV errors if string coercion throws (Temporal.*, Symbol, etc.) ([justingrant](https://github.com/justingrant) in [#22064](https://github.com/facebook/react/pull/22064))
+* Fix memory leak caused by not storing alternate Fiber pointer ([bvaughn](https://github.com/bvaughn) in [#22346](https://github.com/facebook/react/pull/22346))
+* Fix call stack exceeded error in `utfDecodeString()` ([bvaughn](https://github.com/bvaughn) in [#22330](https://github.com/facebook/react/pull/22330))
+* Fix runtime error when inspecting an element times out ([jstejada](https://github.com/jstejada) in [#22329](https://github.com/facebook/react/pull/22329))
+
+#### Performance
+* DevTools: Lazily parse indexed map sections ([bvaughn](https://github.com/bvaughn) in [#22415](https://github.com/facebook/react/pull/22415))
+* DevTools: Hook names optimizations ([bvaughn](https://github.com/bvaughn) in [#22403](https://github.com/facebook/react/pull/22403))
+* Replaced `network.onRequestFinished()` caching with `network.getHAR()` ([bvaughn](https://github.com/bvaughn) in [#22285](https://github.com/facebook/react/pull/22285))
+
 ## 4.18.0 (September 1, 2021)
 
 #### Features

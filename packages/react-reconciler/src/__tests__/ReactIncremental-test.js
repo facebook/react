@@ -1110,7 +1110,7 @@ describe('ReactIncremental', () => {
       }
       render() {
         Scheduler.unstable_yieldValue('Bar:' + this.props.x);
-        return <span prop={'' + (this.props.x === this.state.y)} />;
+        return <span prop={String(this.props.x === this.state.y)} />;
       }
     }
 
@@ -1159,7 +1159,7 @@ describe('ReactIncremental', () => {
         Scheduler.unstable_yieldValue(
           'Bar:' + this.props.x + '-' + this.props.step,
         );
-        return <span prop={'' + (this.props.x === this.state.y)} />;
+        return <span prop={String(this.props.x === this.state.y)} />;
       }
     }
 

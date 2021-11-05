@@ -7,6 +7,7 @@
  * @flow
  */
 
+// eslint-disable-next-line react-internal/prod-error-codes
 throw new Error(
   'This entry point is not yet supported outside of experimental channels',
 );

@@ -73,6 +73,9 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
       then(callback) {
         callbacks.add(callback);
       },
+
+      // Optional property used by Timeline:
+      displayName: `Loading module "${moduleLoaderFunction.name}"`,
     };
 
     const wake = () => {

@@ -38,7 +38,7 @@ async function main() {
   const {major, minor, patch} = semver(previousVersion);
   const nextVersion =
     releaseType === 'minor'
-      ? `${major}.${minor + 1}.${patch}`
+      ? `${major}.${minor + 1}.0`
       : `${major}.${minor}.${patch + 1}`;
 
   updatePackageVersions(previousVersion, nextVersion);

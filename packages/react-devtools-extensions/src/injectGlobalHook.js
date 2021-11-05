@@ -27,7 +27,6 @@ window.addEventListener('message', function onMessage({data, source}) {
   if (source !== window || !data) {
     return;
   }
-
   switch (data.source) {
     case 'react-devtools-detector':
       lastDetectionResult = {

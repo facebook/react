@@ -129,6 +129,7 @@ function preloadRecord(url: string, options: mixed): Record {
       if (options.method || options.body || options.signal) {
         // TODO: wire up our own cancellation mechanism.
         // TODO: figure out what to do with POST.
+        // eslint-disable-next-line react-internal/prod-error-codes
         throw Error('Unsupported option');
       }
     }

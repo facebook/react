@@ -11,8 +11,6 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
-import invariant from 'shared/invariant';
-
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -116,10 +114,9 @@ export function isMounted(component: React$Component<any, any>): boolean {
 }
 
 function assertIsMounted(fiber) {
-  invariant(
-    getNearestMountedFiber(fiber) === fiber,
-    'Unable to find node on an unmounted component.',
-  );
+  if (getNearestMountedFiber(fiber) !== fiber) {
+    throw new Error('Unable to find node on an unmounted component.');
+  }
 }
 
 export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
@@ -127,10 +124,11 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   if (!alternate) {
     // If there is no alternate, then we only need to check if it is mounted.
     const nearestMounted = getNearestMountedFiber(fiber);
-    invariant(
-      nearestMounted !== null,
-      'Unable to find node on an unmounted component.',
-    );
+
+    if (nearestMounted === null) {
+      throw new Error('Unable to find node on an unmounted component.');
+    }
+
     if (nearestMounted !== fiber) {
       return null;
     }
@@ -180,9 +178,10 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
         }
         child = child.sibling;
       }
+
       // We should never have an alternate for any mounting node. So the only
       // way this could possibly happen is if this was unmounted, if at all.
-      invariant(false, 'Unable to find node on an unmounted component.');
+      throw new Error('Unable to find node on an unmounted component.');
     }
 
     if (a.return !== b.return) {
@@ -233,26 +232,30 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
           }
           child = child.sibling;
         }
-        invariant(
-          didFindChild,
-          'Child was not found in either parent set. This indicates a bug ' +
-            'in React related to the return pointer. Please file an issue.',
-        );
+
+        if (!didFindChild) {
+          throw new Error(
+            'Child was not found in either parent set. This indicates a bug ' +
+              'in React related to the return pointer. Please file an issue.',
+          );
+        }
       }
     }
 
-    invariant(
-      a.alternate === b,
-      "Return fibers should always be each others' alternates. " +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+    if (a.alternate !== b) {
+      throw new Error(
+        "Return fibers should always be each others' alternates. " +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
   }
+
   // If the root is not a host container, we're in a disconnected tree. I.e.
   // unmounted.
-  invariant(
-    a.tag === HostRoot,
-    'Unable to find node on an unmounted component.',
-  );
+  if (a.tag !== HostRoot) {
+    throw new Error('Unable to find node on an unmounted component.');
+  }
+
   if (a.stateNode.current === a) {
     // We've determined that A is the current branch.
     return fiber;

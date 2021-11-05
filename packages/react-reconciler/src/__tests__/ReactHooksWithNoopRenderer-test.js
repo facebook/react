@@ -47,7 +47,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
-    useInsertionEffect = React.unstable_useInsertionEffect;
+    useInsertionEffect = React.useInsertionEffect;
     useLayoutEffect = React.useLayoutEffect;
     useCallback = React.useCallback;
     useMemo = React.useMemo;
@@ -2685,7 +2685,6 @@ describe('ReactHooksWithNoopRenderer', () => {
   });
 
   describe('useInsertionEffect', () => {
-    // @gate experimental || www
     it('fires insertion effects after snapshots on update', () => {
       function CounterA(props) {
         useInsertionEffect(() => {
@@ -2745,7 +2744,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || www
     it('fires insertion effects before layout effects', () => {
       let committedText = '(empty)';
 
@@ -2754,7 +2752,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create insertion [current: ${committedText}]`,
           );
-          committedText = props.count + '';
+          committedText = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy insertion [current: ${committedText}]`,
@@ -2808,7 +2806,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['Destroy passive [current: 0]']);
     });
 
-    // @gate experimental || www
     it('force flushes passive effects before firing new insertion effects', () => {
       let committedText = '(empty)';
 
@@ -2817,7 +2814,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create insertion [current: ${committedText}]`,
           );
-          committedText = props.count + '';
+          committedText = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy insertion [current: ${committedText}]`,
@@ -2828,7 +2825,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create layout [current: ${committedText}]`,
           );
-          committedText = props.count + '';
+          committedText = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy layout [current: ${committedText}]`,
@@ -2876,7 +2873,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    // @gate experimental || www
     it('fires all insertion effects (interleaved) before firing any layout effects', () => {
       let committedA = '(empty)';
       let committedB = '(empty)';
@@ -2886,7 +2882,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 1 for Component A [A: ${committedA}, B: ${committedB}]`,
           );
-          committedA = props.count + '';
+          committedA = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 1 for Component A [A: ${committedA}, B: ${committedB}]`,
@@ -2897,7 +2893,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 2 for Component A [A: ${committedA}, B: ${committedB}]`,
           );
-          committedA = props.count + '';
+          committedA = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 2 for Component A [A: ${committedA}, B: ${committedB}]`,
@@ -2934,7 +2930,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 1 for Component B [A: ${committedA}, B: ${committedB}]`,
           );
-          committedB = props.count + '';
+          committedB = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 1 for Component B [A: ${committedA}, B: ${committedB}]`,
@@ -2945,7 +2941,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           Scheduler.unstable_yieldValue(
             `Create Insertion 2 for Component B [A: ${committedA}, B: ${committedB}]`,
           );
-          committedB = props.count + '';
+          committedB = String(props.count);
           return () => {
             Scheduler.unstable_yieldValue(
               `Destroy Insertion 2 for Component B [A: ${committedA}, B: ${committedB}]`,
@@ -3043,7 +3039,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || www
     it('assumes insertion effect destroy function is either a function or undefined', () => {
       function App(props) {
         useInsertionEffect(() => {
@@ -3140,7 +3135,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         useLayoutEffect(() => {
           // Normally this would go in a mutation effect, but this test
           // intentionally omits a mutation effect.
-          committedText = props.count + '';
+          committedText = String(props.count);
 
           Scheduler.unstable_yieldValue(
             `Mount layout [current: ${committedText}]`,
@@ -3867,7 +3862,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  it('eager bailout optimization should always compare to latest rendered reducer', () => {
+  it('useReducer does not eagerly bail out of state updates', () => {
     // Edge case based on a bug report
     let setCounter;
     function App() {
@@ -3898,7 +3893,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         'Render: -1',
         'Effect: 1',
         'Reducer: 1',
-        'Reducer: 1',
         'Render: 1',
       ]);
       expect(ReactNoop).toMatchRenderedOutput('1');
@@ -3911,10 +3905,168 @@ describe('ReactHooksWithNoopRenderer', () => {
       'Render: 1',
       'Effect: 2',
       'Reducer: 2',
-      'Reducer: 2',
       'Render: 2',
     ]);
     expect(ReactNoop).toMatchRenderedOutput('2');
+  });
+
+  it('useReducer does not replay previous no-op actions when other state changes', () => {
+    let increment;
+    let setDisabled;
+
+    function Counter() {
+      const [disabled, _setDisabled] = useState(true);
+      const [count, dispatch] = useReducer((state, action) => {
+        if (disabled) {
+          return state;
+        }
+        if (action.type === 'increment') {
+          return state + 1;
+        }
+        return state;
+      }, 0);
+
+      increment = () => dispatch({type: 'increment'});
+      setDisabled = _setDisabled;
+
+      Scheduler.unstable_yieldValue('Render disabled: ' + disabled);
+      Scheduler.unstable_yieldValue('Render count: ' + count);
+      return count;
+    }
+
+    ReactNoop.render(<Counter />);
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      // These increments should have no effect, since disabled=true
+      increment();
+      increment();
+      increment();
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      // Enabling the updater should *not* replay the previous increment() actions
+      setDisabled(false);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render disabled: false',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+  });
+
+  it('useReducer does not replay previous no-op actions when props change', () => {
+    let setDisabled;
+    let increment;
+
+    function Counter({disabled}) {
+      const [count, dispatch] = useReducer((state, action) => {
+        if (disabled) {
+          return state;
+        }
+        if (action.type === 'increment') {
+          return state + 1;
+        }
+        return state;
+      }, 0);
+
+      increment = () => dispatch({type: 'increment'});
+
+      Scheduler.unstable_yieldValue('Render count: ' + count);
+      return count;
+    }
+
+    function App() {
+      const [disabled, _setDisabled] = useState(true);
+      setDisabled = _setDisabled;
+      Scheduler.unstable_yieldValue('Render disabled: ' + disabled);
+      return <Counter disabled={disabled} />;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      // These increments should have no effect, since disabled=true
+      increment();
+      increment();
+      increment();
+    });
+    expect(Scheduler).toHaveYielded(['Render count: 0']);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      // Enabling the updater should *not* replay the previous increment() actions
+      setDisabled(false);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render disabled: false',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+  });
+
+  it('useReducer applies potential no-op changes if made relevant by other updates in the batch', () => {
+    let setDisabled;
+    let increment;
+
+    function Counter({disabled}) {
+      const [count, dispatch] = useReducer((state, action) => {
+        if (disabled) {
+          return state;
+        }
+        if (action.type === 'increment') {
+          return state + 1;
+        }
+        return state;
+      }, 0);
+
+      increment = () => dispatch({type: 'increment'});
+
+      Scheduler.unstable_yieldValue('Render count: ' + count);
+      return count;
+    }
+
+    function App() {
+      const [disabled, _setDisabled] = useState(true);
+      setDisabled = _setDisabled;
+      Scheduler.unstable_yieldValue('Render disabled: ' + disabled);
+      return <Counter disabled={disabled} />;
+    }
+
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield([
+      'Render disabled: true',
+      'Render count: 0',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('0');
+
+    act(() => {
+      // Although the increment happens first (and would seem to do nothing since disabled=true),
+      // because these calls are in a batch the parent updates first. This should cause the child
+      // to re-render with disabled=false and *then* process the increment action, which now
+      // increments the count and causes the component output to change.
+      increment();
+      setDisabled(false);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render disabled: false',
+      'Render count: 1',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput('1');
   });
 
   // Regression test. Covers a case where an internal state variable

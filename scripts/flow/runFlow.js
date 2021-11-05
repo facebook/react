@@ -33,8 +33,8 @@ async function runFlow(renderer, args) {
     const srcStat = fs.statSync(__dirname + '/config/flowconfig');
     const destPath = './.flowconfig';
     if (fs.existsSync(destPath)) {
-      const oldConfig = fs.readFileSync(destPath) + '';
-      const newConfig = fs.readFileSync(srcPath) + '';
+      const oldConfig = String(fs.readFileSync(destPath));
+      const newConfig = String(fs.readFileSync(srcPath));
       if (oldConfig !== newConfig) {
         // Use the mtime to detect if the file was manually edited. If so,
         // log an error.

@@ -57,7 +57,7 @@ Some changes requiring testing in the browser extension (e.g. like "named hooks"
 ```sh
 cd <react-repo>
 cd packages/react-devtools-extensions
-yarn build:chrome && yarn test:chrome
+yarn build:chrome:local && yarn test:chrome
 ```
 This will launch a standalone version of Chrome with the locally built React DevTools pre-installed. If you are testing a specific URL, you can make your testing even faster by passing the `--url` argument to the test script:
 ```sh

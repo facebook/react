@@ -8,8 +8,12 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import type {ReactContext} from 'shared/ReactTypes';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
+import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
+  ReactContext,
+} from 'shared/ReactTypes';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 
@@ -34,6 +38,12 @@ function resolveDispatcher() {
   // intentionally don't throw our own error because this is in a hot path.
   // Also helps ensure this is inlined.
   return ((dispatcher: any): Dispatcher);
+}
+
+export function getCacheSignal(): AbortSignal {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.getCacheSignal();
 }
 
 export function getCacheForType<T>(resourceType: () => T): T {
@@ -158,9 +168,18 @@ export function useDeferredValue<T>(value: T): T {
   return dispatcher.useDeferredValue(value);
 }
 
-export function useOpaqueIdentifier(): OpaqueIDType | void {
+export function useId(): string {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useOpaqueIdentifier();
+  return dispatcher.useId();
+}
+
+export function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }
 
 export function useSyncExternalStore<T>(

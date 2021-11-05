@@ -17,15 +17,15 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import {
-  enableCache,
   enableSchedulingProfiler,
   enableUpdaterTracking,
   allowConcurrentByDefault,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
+import {clz32} from './clz32';
 
-// Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-scheduling-profiler.
+// Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
 
 export const TotalLanes = 31;
@@ -78,7 +78,7 @@ export const IdleLane: Lanes = /*                       */ 0b0100000000000000000
 
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 
-// This function is used for the experimental scheduling profiler (react-devtools-scheduling-profiler)
+// This function is used for the experimental timeline (react-devtools-timeline)
 // It should be kept in sync with the Lanes values above.
 export function getLabelForLane(lane: Lane): string | void {
   if (enableSchedulingProfiler) {
@@ -283,9 +283,9 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // time it takes to show the final state, which is what they are actually
   // waiting for.
   //
-  // For those exceptions where entanglement is semantically important, we
-  // should ensure that there is no partial work at the time we apply the
-  // entanglement.
+  // For those exceptions where entanglement is semantically important, like
+  // useMutableSource, we should ensure that there is no partial work at the
+  // time we apply the entanglement.
   const entangledLanes = root.entangledLanes;
   if (entangledLanes !== NoLanes) {
     const entanglements = root.entanglements;
@@ -617,6 +617,10 @@ export function markRootPinged(
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
+export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
+  root.mutableReadLanes |= updateLane & root.pendingLanes;
+}
+
 export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
@@ -627,17 +631,9 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pingedLanes = 0;
 
   root.expiredLanes &= remainingLanes;
+  root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
-
-  if (enableCache) {
-    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
-    if (pooledCacheLanes === NoLanes) {
-      // None of the remaining work relies on the cache pool. Clear it so
-      // subsequent requests get a new cache.
-      root.pooledCache = null;
-    }
-  }
 
   const entanglements = root.entanglements;
   const eventTimes = root.eventTimes;
@@ -795,18 +791,4 @@ export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
 
     lanes &= ~lane;
   }
-}
-
-const clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;
-
-// Count leading zeros. Only used on lanes, so assume input is an integer.
-// Based on:
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
-const log = Math.log;
-const LN2 = Math.LN2;
-function clz32Fallback(lanes: Lanes | Lane) {
-  if (lanes === 0) {
-    return 32;
-  }
-  return (31 - ((log(lanes) / LN2) | 0)) | 0;
 }

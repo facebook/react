@@ -35,6 +35,7 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {
+  getCacheSignal,
   getCacheForType,
   useCallback,
   useContext,
@@ -44,13 +45,14 @@ import {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
   useSyncExternalStore,
   useReducer,
   useRef,
   useState,
   useTransition,
   useDeferredValue,
-  useOpaqueIdentifier,
+  useId,
   useCacheRefresh,
 } from './ReactHooks';
 import {
@@ -58,6 +60,7 @@ import {
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
+import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
@@ -77,6 +80,7 @@ const Children = {
 
 export {
   Children,
+  createMutableSource,
   createRef,
   Component,
   PureComponent,
@@ -89,9 +93,10 @@ export {
   useEffect,
   useImperativeHandle,
   useDebugValue,
-  useInsertionEffect as unstable_useInsertionEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
+  useMutableSource,
   useSyncExternalStore,
   useReducer,
   useRef,
@@ -115,11 +120,12 @@ export {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   REACT_OFFSCREEN_TYPE as unstable_Offscreen,
+  getCacheSignal as unstable_getCacheSignal,
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
   REACT_CACHE_TYPE as unstable_Cache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
-  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
+  useId,
   act,
 };

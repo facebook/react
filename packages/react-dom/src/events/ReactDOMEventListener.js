@@ -11,13 +11,14 @@ import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
-
+import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
 import {
-  isReplayableDiscreteEvent,
+  isDiscreteEventThatRequiresHydration,
   queueDiscreteEvent,
   hasQueuedDiscreteEvents,
   clearIfContinuousEvent,
   queueIfContinuousEvent,
+  attemptSynchronousHydration,
 } from './ReactDOMEventReplaying';
 import {
   getNearestMountedFiber,
@@ -28,7 +29,10 @@ import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
-import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {
+  getInstanceFromNode,
+  getClosestInstanceFromNode,
+} from '../client/ReactDOMComponentTree';
 
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 
@@ -161,7 +165,7 @@ export function dispatchEvent(
   if (
     allowReplay &&
     hasQueuedDiscreteEvents() &&
-    isReplayableDiscreteEvent(domEventName)
+    isDiscreteEventThatRequiresHydration(domEventName)
   ) {
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
@@ -176,7 +180,7 @@ export function dispatchEvent(
     return;
   }
 
-  const blockedOn = attemptToDispatchEvent(
+  let blockedOn = attemptToDispatchEvent(
     domEventName,
     eventSystemFlags,
     targetContainer,
@@ -192,7 +196,10 @@ export function dispatchEvent(
   }
 
   if (allowReplay) {
-    if (isReplayableDiscreteEvent(domEventName)) {
+    if (
+      !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
+      isDiscreteEventThatRequiresHydration(domEventName)
+    ) {
       // This this to be replayed later once the target is available.
       queueDiscreteEvent(
         blockedOn,
@@ -217,6 +224,33 @@ export function dispatchEvent(
     // We need to clear only if we didn't queue because
     // queueing is accumulative.
     clearIfContinuousEvent(domEventName, nativeEvent);
+  }
+
+  if (
+    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
+    eventSystemFlags & IS_CAPTURE_PHASE &&
+    isDiscreteEventThatRequiresHydration(domEventName)
+  ) {
+    while (blockedOn !== null) {
+      const fiber = getInstanceFromNode(blockedOn);
+      if (fiber !== null) {
+        attemptSynchronousHydration(fiber);
+      }
+      const nextBlockedOn = attemptToDispatchEvent(
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
+      if (nextBlockedOn === blockedOn) {
+        break;
+      }
+      blockedOn = nextBlockedOn;
+    }
+    if (blockedOn) {
+      nativeEvent.stopPropagation();
+      return;
+    }
   }
 
   // This is not replayable so we'll invoke it but without a target,
@@ -264,7 +298,7 @@ export function attemptToDispatchEvent(
         targetInst = null;
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
-        if (root.hydrate) {
+        if (root.isDehydrated) {
           // If this happens during a replay something went wrong and it might block
           // the whole system.
           return getContainerFromFiber(nearestMounted);

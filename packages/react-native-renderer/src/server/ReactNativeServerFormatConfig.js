@@ -21,8 +21,6 @@ import {
   stringToPrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
-import invariant from 'shared/invariant';
-
 export const isPrimaryRenderer = true;
 
 // Every list of children or string is null terminated.
@@ -61,14 +59,12 @@ SUSPENSE_UPDATE_TO_CLIENT_RENDER[0] = SUSPENSE_UPDATE_TO_CLIENT_RENDER_TAG;
 // Per response,
 export type ResponseState = {
   nextSuspenseID: number,
-  nextOpaqueID: number,
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(): ResponseState {
   return {
     nextSuspenseID: 0,
-    nextOpaqueID: 0,
   };
 }
 
@@ -103,41 +99,20 @@ export function getChildFormatContext(
 // This is very specific to DOM where we can't assign an ID to.
 export type SuspenseBoundaryID = number;
 
-export function createSuspenseBoundaryID(
+export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID = -1;
+
+export function assignSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
-  // TODO: This is not deterministic since it's created during render.
   return responseState.nextSuspenseID++;
 }
 
-export type OpaqueIDType = number;
-
-export function makeServerID(
-  responseState: null | ResponseState,
-): OpaqueIDType {
-  invariant(
-    responseState !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
-  );
-  // TODO: This is not deterministic since it's created during render.
-  return responseState.nextOpaqueID++;
-}
-
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
-
-export function pushEmpty(
-  target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
-): void {
-  // This is not used since we don't need to assign any IDs.
-}
 
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): void {
   target.push(
     INSTANCE,
@@ -154,7 +129,6 @@ export function pushStartInstance(
   props: Object,
   responseState: ResponseState,
   formatContext: FormatContext,
-  assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(
     INSTANCE,
@@ -173,11 +147,17 @@ export function pushEndInstance(
   target.push(END);
 }
 
+export function writeCompletedRoot(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  return true;
+}
+
 // IDs are formatted as little endian Uint16
 function formatID(id: number): Uint8Array {
   if (id > 0xffff) {
-    invariant(
-      false,
+    throw new Error(
       'More boundaries or placeholders than we expected to ever emit.',
     );
   }

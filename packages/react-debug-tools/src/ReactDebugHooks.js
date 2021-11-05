@@ -7,19 +7,20 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
+  ReactContext,
+  ReactProviderType,
+} from 'shared/ReactTypes';
 import type {
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
-
-import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
-import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   FunctionComponent,
   SimpleMemoComponent,
@@ -47,8 +48,6 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 let primitiveStackCache: null | Map<string, Array<any>> = null;
-
-let currentFiber: Fiber | null = null;
 
 type Hook = {
   memoizedState: any,
@@ -101,7 +100,7 @@ function nextHook(): null | Hook {
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
 
 function readContext<T>(context: ReactContext<T>): T {
@@ -255,6 +254,23 @@ function useMemo<T>(
   return value;
 }
 
+function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  // useMutableSource() composes multiple hooks internally.
+  // Advance the current hook index the same number of times
+  // so that subsequent hooks have the right memoized state.
+  nextHook(); // MutableSource
+  nextHook(); // State
+  nextHook(); // Effect
+  nextHook(); // Effect
+  const value = getSnapshot(source._source);
+  hookLog.push({primitive: 'MutableSource', stackError: new Error(), value});
+  return value;
+}
+
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
@@ -302,21 +318,15 @@ function useDeferredValue<T>(value: T): T {
   return value;
 }
 
-function useOpaqueIdentifier(): OpaqueIDType | void {
-  const hook = nextHook(); // State
-  if (currentFiber && currentFiber.mode === NoMode) {
-    nextHook(); // Effect
-  }
-  let value = hook === null ? undefined : hook.memoizedState;
-  if (value && value.$$typeof === REACT_OPAQUE_ID_TYPE) {
-    value = undefined;
-  }
+function useId(): string {
+  const hook = nextHook();
+  const id = hook !== null ? hook.memoizedState : '';
   hookLog.push({
-    primitive: 'OpaqueIdentifier',
+    primitive: 'Id',
     stackError: new Error(),
-    value,
+    value: id,
   });
-  return value;
+  return id;
 }
 
 const Dispatcher: DispatcherType = {
@@ -335,9 +345,10 @@ const Dispatcher: DispatcherType = {
   useRef,
   useState,
   useTransition,
+  useMutableSource,
   useSyncExternalStore,
   useDeferredValue,
-  useOpaqueIdentifier,
+  useId,
 };
 
 // Inspect
@@ -731,8 +742,6 @@ export function inspectHooksOfFiber(
   if (currentDispatcher == null) {
     currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
   }
-
-  currentFiber = fiber;
 
   if (
     fiber.tag !== FunctionComponent &&

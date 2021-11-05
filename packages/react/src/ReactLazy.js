@@ -123,7 +123,7 @@ export function lazy<T>(
 ): LazyComponent<T, Payload<T>> {
   const payload: Payload<T> = {
     // We use these fields to store the result.
-    _status: -1,
+    _status: Uninitialized,
     _result: ctor,
   };
 

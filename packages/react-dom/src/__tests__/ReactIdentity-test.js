@@ -262,4 +262,33 @@ describe('ReactIdentity', () => {
       ReactTestUtils.renderIntoDocument(component);
     }).not.toThrow();
   });
+
+  it('should throw if key is a Temporal-like object', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+
+    const el = document.createElement('div');
+    const test = () =>
+      ReactDOM.render(
+        <div>
+          <span key={new TemporalLike()} />
+        </div>,
+        el,
+      );
+    expect(() =>
+      expect(test).toThrowError(new TypeError('prod message')),
+    ).toErrorDev(
+      'The provided key is an unsupported type TemporalLike.' +
+        ' This value must be coerced to a string before before using it here.',
+      {withoutStack: true},
+    );
+  });
 });

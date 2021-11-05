@@ -38,7 +38,6 @@ function normalizeSourcePath(
   const {sourceRoot} = map;
   let source = sourceInput;
 
-  // eslint-disable-next-line react-internal/no-primitive-constructors
   source = String(source);
   // Some source maps produce relative source paths like "./foo.js" instead of
   // "foo.js".  Normalize these first so that future comparisons will succeed.

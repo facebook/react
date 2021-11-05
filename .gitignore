@@ -8,7 +8,6 @@ scripts/flow/*/.flowconfig
 _SpecRunner.html
 __benchmarks__
 build/
-build2/
 remote-repo/
 coverage/
 .module-cache
@@ -36,4 +35,4 @@ packages/react-devtools-extensions/shared/build
 packages/react-devtools-extensions/.tempUserDataDir
 packages/react-devtools-inline/dist
 packages/react-devtools-shell/dist
-packages/react-devtools-scheduling-profiler/dist
+packages/react-devtools-timeline/dist

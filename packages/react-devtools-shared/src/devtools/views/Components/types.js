@@ -58,6 +58,7 @@ export type OwnersList = {|
 |};
 
 export type InspectedElementResponseType =
+  | 'error'
   | 'full-data'
   | 'hydrated-path'
   | 'no-change'

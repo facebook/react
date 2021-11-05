@@ -9,7 +9,10 @@ provide a better debugging support in production. Check out the blog post
   the file will never be changed/removed.
 - [`extract-errors.js`](https://github.com/facebook/react/blob/main/scripts/error-codes/extract-errors.js)
   is an node script that traverses our codebase and updates `codes.json`. You
-  can test it by running `yarn extract-errors`.
+  can test it by running `yarn extract-errors`. It works by crawling the build
+  artifacts directory, so you need to have either run the build script or
+  downloaded pre-built artifacts (e.g. with `yarn download build`). It works
+  with partial builds, too.
 - [`transform-error-messages`](https://github.com/facebook/react/blob/main/scripts/error-codes/transform-error-messages.js)
   is a Babel pass that rewrites error messages to IDs for a production
   (minified) build.

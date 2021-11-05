@@ -33,12 +33,8 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
-import {
-  enableSchedulingProfiler,
-  consoleManagedByDevToolsDuringStrictMode,
-} from 'shared/ReactFeatureFlags';
+import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -56,10 +52,10 @@ import {
   flushRoot,
   batchedUpdates,
   flushSync,
+  isAlreadyRendering,
   flushControlled,
   deferredUpdates,
   discreteUpdates,
-  flushSyncWithoutWarningIfAlreadyRendering,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop.new';
 import {
@@ -93,6 +89,7 @@ import {
 } from './ReactFiberHotReloading.new';
 import {markRenderScheduled} from './SchedulingProfiler';
 import ReactVersion from 'shared/ReactVersion';
+export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
@@ -106,10 +103,6 @@ export {
   focusWithin,
   observeVisibleRects,
 } from './ReactTestSelectors';
-
-import * as Scheduler from './Scheduler';
-import {setSuppressWarning} from 'shared/consoleWithStackDev';
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
 type OpaqueRoot = FiberRoot;
 
@@ -159,12 +152,11 @@ function findHostInstance(component: Object): PublicInstance | null {
   const fiber = getInstance(component);
   if (fiber === undefined) {
     if (typeof component.render === 'function') {
-      invariant(false, 'Unable to find node on an unmounted component.');
+      throw new Error('Unable to find node on an unmounted component.');
     } else {
-      invariant(
-        false,
-        'Argument appears to not be a ReactComponent. Keys: %s',
-        Object.keys(component),
+      const keys = Object.keys(component).join(',');
+      throw new Error(
+        `Argument appears to not be a ReactComponent. Keys: ${keys}`,
       );
     }
   }
@@ -183,12 +175,11 @@ function findHostInstanceWithWarning(
     const fiber = getInstance(component);
     if (fiber === undefined) {
       if (typeof component.render === 'function') {
-        invariant(false, 'Unable to find node on an unmounted component.');
+        throw new Error('Unable to find node on an unmounted component.');
       } else {
-        invariant(
-          false,
-          'Argument appears to not be a ReactComponent. Keys: %s',
-          Object.keys(component),
+        const keys = Object.keys(component).join(',');
+        throw new Error(
+          `Argument appears to not be a ReactComponent. Keys: ${keys}`,
         );
       }
     }
@@ -336,7 +327,7 @@ export {
   discreteUpdates,
   flushControlled,
   flushSync,
-  flushSyncWithoutWarningIfAlreadyRendering,
+  isAlreadyRendering,
   flushPassiveEffects,
 };
 
@@ -359,7 +350,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
   switch (fiber.tag) {
     case HostRoot:
       const root: FiberRoot = fiber.stateNode;
-      if (root.hydrate) {
+      if (root.isDehydrated) {
         // Flush the first scheduled "update".
         const lanes = getHighestPriorityPendingLanes(root);
         flushRoot(root, lanes);
@@ -463,8 +454,6 @@ let shouldSuspendImpl = fiber => false;
 export function shouldSuspend(fiber: Fiber): boolean {
   return shouldSuspendImpl(fiber);
 }
-
-let isStrictMode = false;
 
 let overrideHookState = null;
 let overrideHookStateDeletePath = null;
@@ -715,30 +704,6 @@ function getCurrentFiberForDevTools() {
   return ReactCurrentFiberCurrent;
 }
 
-export function getIsStrictModeForDevtools() {
-  return isStrictMode;
-}
-
-export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
-  isStrictMode = newIsStrictMode;
-
-  if (consoleManagedByDevToolsDuringStrictMode) {
-    // We're in a test because Scheduler.unstable_yieldValue only exists
-    // in SchedulerMock. To reduce the noise in strict mode tests,
-    // suppress warnings and disable scheduler yielding during the double render
-    if (typeof Scheduler.unstable_yieldValue === 'function') {
-      Scheduler.unstable_setDisableYieldValue(newIsStrictMode);
-      setSuppressWarning(newIsStrictMode);
-    }
-  } else {
-    if (newIsStrictMode) {
-      disableLogs();
-    } else {
-      reenableLogs();
-    }
-  }
-}
-
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
   const {ReactCurrentDispatcher} = ReactSharedInternals;
@@ -768,7 +733,6 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
     getCurrentFiber: __DEV__ ? getCurrentFiberForDevTools : null,
-    getIsStrictMode: __DEV__ ? getIsStrictModeForDevtools : null,
     // Enables DevTools to detect reconciler version rather than renderer version
     // which may not match for third party renderers.
     reconcilerVersion: ReactVersion,

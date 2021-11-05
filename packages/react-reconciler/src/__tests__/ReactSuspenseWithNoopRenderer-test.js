@@ -1628,7 +1628,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
       expect(root).toMatchRenderedOutput('Loading...');
 
-      // Unmount everying
+      // Unmount everything
       await act(async () => {
         root.render(null);
       });
@@ -2677,7 +2677,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
-  describe('delays transitions when using React.startTranistion', () => {
+  describe('delays transitions when using React.startTransition', () => {
     // @gate enableCache
     it('top level render', async () => {
       function App({page}) {
@@ -3360,7 +3360,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // In the expiration times model, once the high pri update suspends,
         // we can't be sure if there's additional work at a lower priority
         // that might unblock the tree. We do know that there's a lower
-        // priority update *somehwere* in the entire root, though (the update
+        // priority update *somewhere* in the entire root, though (the update
         // to the fallback). So we try rendering one more time, just in case.
         // TODO: We shouldn't need to do this with lanes, because we always
         // know exactly which lanes have pending work in each tree.
