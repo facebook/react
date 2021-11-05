@@ -91,30 +91,23 @@ export function act<T>(callback: () => T | Thenable<T>): Thenable<T> {
 
       if (__DEV__) {
         if (!didWarnNoAwaitAct && typeof Promise !== 'undefined') {
-          const awaitDetector = () => {
-            if (!wasAwaited) {
-              didWarnNoAwaitAct = true;
-              console.error(
-                'You called act(async () => ...) without await. ' +
-                  'This could lead to unexpected testing behaviour, ' +
-                  'interleaving multiple act calls and mixing their ' +
-                  'scopes. ' +
-                  'You should - await act(async () => ...);',
-              );
-            }
-          };
-          if (result instanceof Promise && 'finally' in result) {
-            // Using finally here is more compatible with native promises
-            // and promise libraries like core.js
-            result
-              .finally(() => {})
-              .catch(() => {})
-              .then(awaitDetector);
-          } else {
-            Promise.resolve()
-              .then(() => {})
-              .then(awaitDetector);
-          }
+          Promise.resolve(result)
+            .then(
+              () => {},
+              () => {},
+            )
+            .then(() => {
+              if (!wasAwaited) {
+                didWarnNoAwaitAct = true;
+                console.error(
+                  'You called act(async () => ...) without await. ' +
+                    'This could lead to unexpected testing behaviour, ' +
+                    'interleaving multiple act calls and mixing their ' +
+                    'scopes. ' +
+                    'You should - await act(async () => ...);',
+                );
+              }
+            });
         }
       }
       return thenable;

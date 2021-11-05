@@ -499,30 +499,9 @@ function runActTests(label, render, unmount, rerender) {
       });
 
       // @gate __DEV__
-      test('warns if you do not await an act call with thenable without finally support', async () => {
-        spyOnDevAndProd(console, 'error');
-        act(() => ({then: cb => cb()}));
-        await sleep(0);
-        if (__DEV__) {
-          expect(console.error.calls.count()).toEqual(1);
-          expect(console.error.calls.argsFor(0)[0]).toMatch(
-            'You called act(async () => ...) without await.',
-          );
-        }
-      });
-
-      // @gate __DEV__
       test('does not warn if you await an act call with Promise', async () => {
         spyOnDevAndProd(console, 'error');
         await act(async () => {});
-        await sleep(0);
-        expect(console.error.calls.count()).toEqual(0);
-      });
-
-      // @gate __DEV__
-      test('does not warn if you await an act call with thenable without finally support', async () => {
-        spyOnDevAndProd(console, 'error');
-        await act(() => ({then: cb => cb()}));
         await sleep(0);
         expect(console.error.calls.count()).toEqual(0);
       });
