@@ -144,6 +144,7 @@ describe('useMutableSourceHydration', () => {
     return <div>{`${label}:${snapshot}`}</div>;
   }
 
+  // @gate enableUseMutableSource
   it('should render and hydrate', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -180,6 +181,7 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(1);
   });
 
+  // @gate enableUseMutableSource
   it('should detect a tear before hydrating a component', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -224,6 +226,7 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(1);
   });
 
+  // @gate enableUseMutableSource
   it('should detect a tear between hydrating components', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -282,6 +285,7 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(2);
   });
 
+  // @gate enableUseMutableSource
   it('should detect a tear between hydrating components reading from different parts of a source', () => {
     const source = createComplexSource('a:one', 'b:one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -371,6 +375,7 @@ describe('useMutableSourceHydration', () => {
   });
 
   // @gate !enableSyncDefaultUpdates
+  // @gate enableUseMutableSource
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);

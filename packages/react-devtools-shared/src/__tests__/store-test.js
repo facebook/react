@@ -101,6 +101,19 @@ describe('Store', () => {
     `);
   });
 
+  it('should handle multibyte character strings', () => {
+    const Component = () => null;
+    Component.displayName = '🟩💜🔵';
+
+    const container = document.createElement('div');
+
+    act(() => legacyRender(<Component />, container));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <🟩💜🔵>
+    `);
+  });
+
   describe('collapseNodesByDefault:false', () => {
     beforeEach(() => {
       store.collapseNodesByDefault = false;

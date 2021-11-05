@@ -8,15 +8,26 @@
 // This refers to a WWW module.
 const warningWWW = require('warning');
 
+let suppressWarning = false;
+export function setSuppressWarning(newSuppressWarning) {
+  if (__DEV__) {
+    suppressWarning = newSuppressWarning;
+  }
+}
+
 export function warn(format, ...args) {
   if (__DEV__) {
-    printWarning('warn', format, args);
+    if (!suppressWarning) {
+      printWarning('warn', format, args);
+    }
   }
 }
 
 export function error(format, ...args) {
   if (__DEV__) {
-    printWarning('error', format, args);
+    if (!suppressWarning) {
+      printWarning('error', format, args);
+    }
   }
 }
 

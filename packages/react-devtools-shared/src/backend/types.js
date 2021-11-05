@@ -267,9 +267,18 @@ export type InspectedElement = {|
   rendererVersion: string | null,
 |};
 
+export const InspectElementErrorType = 'error';
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
+
+export type InspectElementError = {|
+  id: number,
+  responseID: number,
+  type: 'error',
+  message: string,
+  stack: string,
+|};
 
 export type InspectElementFullData = {|
   id: number,
@@ -299,6 +308,7 @@ export type InspectElementNotFound = {|
 |};
 
 export type InspectedElementPayload =
+  | InspectElementError
   | InspectElementFullData
   | InspectElementHydratedPath
   | InspectElementNoChange
@@ -339,6 +349,7 @@ export type RendererInterface = {
     requestID: number,
     id: number,
     inspectedPaths: Object,
+    forceFullData: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideError: (id: number, forceError: boolean) => void,
@@ -350,6 +361,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     value: any,
   ) => void,
+  patchConsoleForStrictMode: () => void,
   prepareViewAttributeSource: (
     id: number,
     path: Array<string | number>,
@@ -372,6 +384,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   ...
 };
@@ -406,5 +419,13 @@ export type DevToolsHook = {
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
   ) => void,
+
+  // Timeline internal module filtering
+  getInternalModuleRanges: () => Array<[string, string]>,
+  registerInternalModuleStart: (moduleStartError: Error) => void,
+  registerInternalModuleStop: (moduleStopError: Error) => void,
+
+  // Testing
+  dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
   ...
 };

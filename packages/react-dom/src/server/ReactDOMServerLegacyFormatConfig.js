@@ -7,10 +7,7 @@
  * @flow
  */
 
-import type {
-  SuspenseBoundaryID,
-  FormatContext,
-} from './ReactDOMServerFormatConfig';
+import type {FormatContext} from './ReactDOMServerFormatConfig';
 
 import {
   createResponseState as createResponseStateImpl,
@@ -32,12 +29,12 @@ export const isPrimaryRenderer = false;
 
 export type ResponseState = {
   // Keep this in sync with ReactDOMServerFormatConfig
+  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  opaqueIdentifierPrefix: string,
   nextSuspenseID: number,
-  nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
@@ -49,15 +46,15 @@ export function createResponseState(
   generateStaticMarkup: boolean,
   identifierPrefix: string | void,
 ): ResponseState {
-  const responseState = createResponseStateImpl(identifierPrefix);
+  const responseState = createResponseStateImpl(identifierPrefix, undefined);
   return {
     // Keep this in sync with ReactDOMServerFormatConfig
+    bootstrapChunks: responseState.bootstrapChunks,
+    startInlineScript: responseState.startInlineScript,
     placeholderPrefix: responseState.placeholderPrefix,
     segmentPrefix: responseState.segmentPrefix,
     boundaryPrefix: responseState.boundaryPrefix,
-    opaqueIdentifierPrefix: responseState.opaqueIdentifierPrefix,
     nextSuspenseID: responseState.nextSuspenseID,
-    nextOpaqueID: responseState.nextOpaqueID,
     sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
     sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
     sentClientRenderFunction: responseState.sentClientRenderFunction,
@@ -76,16 +73,16 @@ export function createRootFormatContext(): FormatContext {
 export type {
   FormatContext,
   SuspenseBoundaryID,
-  OpaqueIDType,
 } from './ReactDOMServerFormatConfig';
 
 export {
   getChildFormatContext,
-  createSuspenseBoundaryID,
-  makeServerID,
-  pushEmpty,
+  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
+  assignSuspenseBoundaryID,
   pushStartInstance,
   pushEndInstance,
+  pushStartCompletedSuspenseBoundary,
+  pushEndCompletedSuspenseBoundary,
   writeStartSegment,
   writeEndSegment,
   writeCompletedSegmentInstruction,
@@ -94,6 +91,7 @@ export {
   writeStartPendingSuspenseBoundary,
   writeEndPendingSuspenseBoundary,
   writePlaceholder,
+  writeCompletedRoot,
 } from './ReactDOMServerFormatConfig';
 
 import {stringToChunk} from 'react-server/src/ReactServerStreamConfig';
@@ -104,35 +102,28 @@ export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
   responseState: ResponseState,
-  assignID: null | SuspenseBoundaryID,
 ): void {
   if (responseState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
   } else {
-    pushTextInstanceImpl(target, text, responseState, assignID);
+    pushTextInstanceImpl(target, text, responseState);
   }
 }
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  id: SuspenseBoundaryID,
 ): boolean {
   if (responseState.generateStaticMarkup) {
     // A completed boundary is done and doesn't need a representation in the HTML
     // if we're not going to be hydrating it.
     return true;
   }
-  return writeStartCompletedSuspenseBoundaryImpl(
-    destination,
-    responseState,
-    id,
-  );
+  return writeStartCompletedSuspenseBoundaryImpl(destination, responseState);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
-  id: SuspenseBoundaryID,
 ): boolean {
   if (responseState.generateStaticMarkup) {
     // A client rendered boundary is done and doesn't need a representation in the HTML
@@ -142,7 +133,6 @@ export function writeStartClientRenderedSuspenseBoundary(
   return writeStartClientRenderedSuspenseBoundaryImpl(
     destination,
     responseState,
-    id,
   );
 }
 export function writeEndCompletedSuspenseBoundary(

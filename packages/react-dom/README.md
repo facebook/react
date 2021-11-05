@@ -16,10 +16,8 @@ npm install react react-dom
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-class MyComponent extends React.Component {
-  render() {
-    return <div>Hello World</div>;
-  }
+function MyComponent() {
+  return <div>Hello World</div>;
 }
 
 ReactDOM.render(<MyComponent />, node);
@@ -31,10 +29,8 @@ ReactDOM.render(<MyComponent />, node);
 var React = require('react');
 var ReactDOMServer = require('react-dom/server');
 
-class MyComponent extends React.Component {
-  render() {
-    return <div>Hello World</div>;
-  }
+function MyComponent() {
+  return <div>Hello World</div>;
 }
 
 ReactDOMServer.renderToString(<MyComponent />);

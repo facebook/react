@@ -38,7 +38,7 @@ async function main() {
   const {major, minor, patch} = semver(previousVersion);
   const nextVersion =
     releaseType === 'minor'
-      ? `${major}.${minor + 1}.${patch}`
+      ? `${major}.${minor + 1}.0`
       : `${major}.${minor}.${patch + 1}`;
 
   updatePackageVersions(previousVersion, nextVersion);
@@ -115,8 +115,12 @@ async function getPreviousCommitSha() {
   const choices = [];
 
   const lines = await execRead(`
-    git log --max-count=5 --topo-order --pretty=format:'%H:::%s:::%as' HEAD -- ${PACKAGE_PATHS[0]}
+    git log --max-count=5 --topo-order --pretty=format:'%H:::%s:::%as' HEAD -- ${join(
+      ROOT_PATH,
+      PACKAGE_PATHS[0]
+    )}
   `);
+
   lines.split('\n').forEach((line, index) => {
     const [hash, message, date] = line.split(':::');
     choices.push({

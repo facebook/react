@@ -16,6 +16,7 @@ import {
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 
@@ -66,6 +67,9 @@ export function createMarkupForProperty(
       return attributeName + '=""';
     } else {
       if (propertyInfo.sanitizeURL) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
         value = '' + (value: any);
         sanitizeURL(value);
       }

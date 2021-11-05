@@ -1019,4 +1019,268 @@ describe('ReactDOMSelect', () => {
       expect(node.value).toBe('');
     });
   });
+
+  describe('When given a Temporal.PlainDate-like value', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+
+    it('throws when given a Temporal.PlainDate-like value (select)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like value (option)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value="2020-01-01">
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like value (both)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like value (select)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value="monkey">
+          <option value="2020-01-01">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like value (option)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value="2020-01-01">
+          <option value="donkey">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value="2020-01-01">
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like value (both)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value="donkey">
+          <option value="donkey">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like defaultValue (select)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like defaultValue (option)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue="2020-01-01">
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like value (both)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like defaultValue (select)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} defaultValue="monkey">
+          <option value="2020-01-01">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like defaultValue (both)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} defaultValue="monkey">
+          <option value="donkey">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+  });
 });

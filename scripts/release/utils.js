@@ -125,7 +125,7 @@ const getCommitFromCurrentBuild = async () => {
   // This is important to make the build reproducible (e.g. by Mozilla reviewers).
   const buildInfoJSON = join(
     cwd,
-    'build2',
+    'build',
     'oss-experimental',
     'react',
     'build-info.json'
@@ -136,7 +136,7 @@ const getCommitFromCurrentBuild = async () => {
   } else {
     const packageJSON = join(
       cwd,
-      'build2',
+      'build',
       'oss-experimental',
       'react',
       'package.json'

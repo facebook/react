@@ -7,8 +7,6 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
-
 import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
 
 /**
@@ -94,7 +92,10 @@ function resetTouchRecord(touchRecord: TouchRecord, touch: Touch): void {
 }
 
 function getTouchIdentifier({identifier}: Touch): number {
-  invariant(identifier != null, 'Touch object is missing identifier.');
+  if (identifier == null) {
+    throw new Error('Touch object is missing identifier.');
+  }
+
   if (__DEV__) {
     if (identifier > MAX_TOUCH_BANK) {
       console.error(

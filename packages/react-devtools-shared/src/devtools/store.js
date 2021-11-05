@@ -63,9 +63,9 @@ type Config = {|
   checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
   supportsNativeInspection?: boolean,
-  supportsReloadAndProfile?: boolean,
-  supportsSchedulingProfiler?: boolean,
   supportsProfiling?: boolean,
+  supportsReloadAndProfile?: boolean,
+  supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
 |};
 
@@ -162,7 +162,7 @@ export default class Store extends EventEmitter<{|
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
-  _supportsSchedulingProfiler: boolean = false;
+  _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
   _unsupportedBridgeProtocol: BridgeProtocol | null = null;
@@ -197,7 +197,7 @@ export default class Store extends EventEmitter<{|
         supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
-        supportsSchedulingProfiler,
+        supportsTimeline,
         supportsTraceUpdates,
       } = config;
       this._supportsNativeInspection = supportsNativeInspection !== false;
@@ -207,8 +207,8 @@ export default class Store extends EventEmitter<{|
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
       }
-      if (supportsSchedulingProfiler) {
-        this._supportsSchedulingProfiler = true;
+      if (supportsTimeline) {
+        this._supportsTimeline = true;
       }
       if (supportsTraceUpdates) {
         this._supportsTraceUpdates = true;
@@ -422,8 +422,8 @@ export default class Store extends EventEmitter<{|
     );
   }
 
-  get supportsSchedulingProfiler(): boolean {
-    return this._supportsSchedulingProfiler;
+  get supportsTimeline(): boolean {
+    return this._supportsTimeline;
   }
 
   get supportsTraceUpdates(): boolean {

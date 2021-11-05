@@ -14,7 +14,7 @@ import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 export type RootType = {
   render(children: ReactNodeList): void,
   unmount(): void,
-  _internalRoot: FiberRoot,
+  _internalRoot: FiberRoot | null,
   ...
 };
 
@@ -62,17 +62,22 @@ import {
   updateContainer,
   findHostInstanceWithNoPortals,
   registerMutableSourceForHydration,
+  flushSync,
+  isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
-import invariant from 'shared/invariant';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
-function ReactDOMRoot(internalRoot) {
+function ReactDOMRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
 
 ReactDOMRoot.prototype.render = function(children: ReactNodeList): void {
   const root = this._internalRoot;
+  if (root === null) {
+    throw new Error('Cannot update an unmounted root.');
+  }
+
   if (__DEV__) {
     if (typeof arguments[1] === 'function') {
       console.error(
@@ -109,20 +114,33 @@ ReactDOMRoot.prototype.unmount = function(): void {
     }
   }
   const root = this._internalRoot;
-  const container = root.containerInfo;
-  updateContainer(null, root, null, () => {
+  if (root !== null) {
+    this._internalRoot = null;
+    const container = root.containerInfo;
+    if (__DEV__) {
+      if (isAlreadyRendering()) {
+        console.error(
+          'Attempted to synchronously unmount a root while React was already ' +
+            'rendering. React cannot finish unmounting the root until the ' +
+            'current render has completed, which may lead to a race condition.',
+        );
+      }
+    }
+    flushSync(() => {
+      updateContainer(null, root, null, null);
+    });
     unmarkContainerAsRoot(container);
-  });
+  }
 };
 
 export function createRoot(
   container: Container,
   options?: CreateRootOptions,
 ): RootType {
-  invariant(
-    isValidContainerLegacy(container),
-    'createRoot(...): Target container is not a DOM element.',
-  );
+  if (!isValidContainerLegacy(container)) {
+    throw new Error('createRoot(...): Target container is not a DOM element.');
+  }
+
   warnIfReactDOMContainerInDEV(container);
 
   // TODO: Delete these options
@@ -176,10 +194,10 @@ export function hydrateRoot(
   initialChildren: ReactNodeList,
   options?: HydrateRootOptions,
 ): RootType {
-  invariant(
-    isValidContainer(container),
-    'hydrateRoot(...): Target container is not a DOM element.',
-  );
+  if (!isValidContainer(container)) {
+    throw new Error('hydrateRoot(...): Target container is not a DOM element.');
+  }
+
   warnIfReactDOMContainerInDEV(container);
 
   // For now we reuse the whole bag of options since they contain

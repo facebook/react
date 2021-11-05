@@ -9,12 +9,11 @@
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import invariant from 'shared/invariant';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 function unsupported() {
-  invariant(false, 'This feature is not supported by ReactSuspenseTestUtils.');
+  throw new Error('This feature is not supported by ReactSuspenseTestUtils.');
 }
 
 export function waitForSuspense<T>(fn: () => T): Promise<T> {
@@ -35,6 +34,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     useReducer: unsupported,
     useRef: unsupported,
     useState: unsupported,
+    useInsertionEffect: unsupported,
     useLayoutEffect: unsupported,
     useCallback: unsupported,
     useImperativeHandle: unsupported,
@@ -42,8 +42,9 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     useDebugValue: unsupported,
     useDeferredValue: unsupported,
     useTransition: unsupported,
-    useOpaqueIdentifier: unsupported,
+    useId: unsupported,
     useMutableSource: unsupported,
+    useSyncExternalStore: unsupported,
     useCacheRefresh: unsupported,
   };
   // Not using async/await because we don't compile it.

@@ -10,11 +10,11 @@
 'use strict';
 
 const rule = require('../no-primitive-constructors');
-const RuleTester = require('eslint').RuleTester;
+const {RuleTester} = require('eslint');
 const ruleTester = new RuleTester();
 
 ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
-  valid: ['!!obj', "'' + obj", '+string'],
+  valid: ['!!obj', '+string'],
   invalid: [
     {
       code: 'Boolean(obj)',
@@ -26,13 +26,11 @@ ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
       ],
     },
     {
-      code: 'String(obj)',
+      code: 'new String(obj)',
       errors: [
         {
           message:
-            'Do not use the String constructor. ' +
-            'To cast a value to a string, concat it with the empty string ' +
-            "(unless it's a symbol, which has different semantics): '' + value",
+            "Do not use `new String()`. Use String() without new (or '' + value for perf-sensitive code).",
         },
       ],
     },

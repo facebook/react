@@ -110,10 +110,7 @@ import {
   isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
-
-import invariant from 'shared/invariant';
-
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of
@@ -394,11 +391,11 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();
@@ -427,11 +424,11 @@ function getStateFromUpdate<State>(
             debugRenderPhaseSideEffectsForStrictMode &&
             workInProgress.mode & StrictLegacyMode
           ) {
-            disableLogs();
+            setIsStrictModeForDevtools(true);
             try {
               payload.call(instance, prevState, nextProps);
             } finally {
-              reenableLogs();
+              setIsStrictModeForDevtools(false);
             }
           }
           exitDisallowedContextReadInDEV();
@@ -657,12 +654,13 @@ export function processUpdateQueue<State>(
 }
 
 function callCallback(callback, context) {
-  invariant(
-    typeof callback === 'function',
-    'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: %s',
-    callback,
-  );
+  if (typeof callback !== 'function') {
+    throw new Error(
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        `received: ${callback}`,
+    );
+  }
+
   callback.call(context);
 }
 

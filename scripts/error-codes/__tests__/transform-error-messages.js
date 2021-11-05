@@ -28,69 +28,85 @@ describe('error transform', () => {
     process.env.NODE_ENV = oldEnv;
   });
 
-  it('should replace simple invariant calls', () => {
+  it('should replace error constructors', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
-invariant(condition, 'Do not override existing functions.');
+new Error('Do not override existing functions.');
 `)
     ).toMatchSnapshot();
   });
 
-  it('should throw if invariant is not in an expression statement', () => {
-    expect(() => {
-      transform(`
-import invariant from 'shared/invariant';
-cond && invariant(condition, 'Do not override existing functions.');
-`);
-    }).toThrow('invariant() cannot be called from expression context');
-  });
-
-  it('should support invariant calls with args', () => {
+  it('should replace error constructors (no new)', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
-invariant(condition, 'Expected %s target to be an array; got %s', foo, bar);
+Error('Do not override existing functions.');
 `)
     ).toMatchSnapshot();
   });
 
-  it('should support invariant calls with a concatenated template string and args', () => {
+  it("should output FIXME for errors that don't have a matching error code", () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
-invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', Foo, Bar);
+Error('This is not a real error message.');
 `)
     ).toMatchSnapshot();
   });
 
-  it('should correctly transform invariants that are not in the error codes map', () => {
+  it(
+    "should output FIXME for errors that don't have a matching error " +
+      'code, unless opted out with a comment',
+    () => {
+      // TODO: Since this only detects one of many ways to disable a lint
+      // rule, we should instead search for a custom directive (like
+      // no-minify-errors) instead of ESLint. Will need to update our lint
+      // rule to recognize the same directive.
+      expect(
+        transform(`
+// eslint-disable-next-line react-internal/prod-error-codes
+Error('This is not a real error message.');
+`)
+      ).toMatchSnapshot();
+    }
+  );
+
+  it('should not touch other calls or new expressions', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
-invariant(condition, 'This is not a real error message.');
+new NotAnError();
+NotAnError();
 `)
     ).toMatchSnapshot();
   });
 
-  it('should handle escaped characters', () => {
+  it('should support interpolating arguments with template strings', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
-invariant(condition, 'What\\'s up?');
+new Error(\`Expected \${foo} target to be an array; got \${bar}\`);
 `)
     ).toMatchSnapshot();
   });
 
-  it('should support noMinify option', () => {
+  it('should support interpolating arguments with concatenation', () => {
     expect(
-      transform(
-        `
-import invariant from 'shared/invariant';
-invariant(condition, 'Do not override existing functions.');
-`,
-        {noMinify: true}
-      )
+      transform(`
+new Error('Expected ' + foo + ' target to be an array; got ' + bar);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('should support error constructors with concatenated messages', () => {
+    expect(
+      transform(`
+new Error(\`Expected \${foo} target to \` + \`be an array; got \${bar}\`);
+`)
+    ).toMatchSnapshot();
+  });
+
+  it('handles escaped backticks in template string', () => {
+    expect(
+      transform(`
+new Error(\`Expected \\\`\$\{listener\}\\\` listener to be a function, instead got a value of \\\`\$\{type\}\\\` type.\`);
+`)
     ).toMatchSnapshot();
   });
 });

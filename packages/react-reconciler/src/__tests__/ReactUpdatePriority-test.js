@@ -54,8 +54,8 @@ describe('ReactUpdatePriority', () => {
     let setDefaultState;
     function App() {
       const [idleState, setIdleState] = useState(1);
-      const [defaultState, _setDetaultState] = useState(1);
-      setDefaultState = _setDetaultState;
+      const [defaultState, _setDefaultState] = useState(1);
+      setDefaultState = _setDefaultState;
       useEffect(() => {
         Scheduler.unstable_yieldValue('Idle update');
         setIdleState(2);
@@ -86,7 +86,7 @@ describe('ReactUpdatePriority', () => {
     expect(Scheduler).toHaveYielded(['Idle: 2, Default: 2']);
   });
 
-  test('continuous updates should interrupt transisions', async () => {
+  test('continuous updates should interrupt transitions', async () => {
     const root = ReactNoop.createRoot();
 
     let setCounter;
@@ -124,7 +124,7 @@ describe('ReactUpdatePriority', () => {
       });
     });
     expect(Scheduler).toHaveYielded([
-      // Because the hide update has continous priority, it should interrupt the
+      // Because the hide update has continuous priority, it should interrupt the
       // in-progress transition
       '(hidden)',
       // When the transition resumes, it's a no-op because the children are

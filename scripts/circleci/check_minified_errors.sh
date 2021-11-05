@@ -2,7 +2,7 @@
 
 # Ensure errors are minified in production
 
-OUT=$(git --no-pager grep -n --untracked --no-exclude-standard 'FIXME (minify-errors-in-prod)' -- './build2/*')
+OUT=$(git --no-pager grep -n --untracked --no-exclude-standard 'FIXME (minify-errors-in-prod)' -- './build/*')
 
 if [ "$OUT" != "" ]; then
   echo "$OUT";

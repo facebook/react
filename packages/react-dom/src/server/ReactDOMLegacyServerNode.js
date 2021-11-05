@@ -54,7 +54,7 @@ class ReactMarkupReadableStream extends Readable {
 
   _read(size) {
     if (this.startedFlowing) {
-      startFlowing(this.request);
+      startFlowing(this.request, this);
     }
   }
 }
@@ -72,12 +72,11 @@ function renderToNodeStreamImpl(
     // We wait until everything has loaded before starting to write.
     // That way we only end up with fully resolved HTML even if we suspend.
     destination.startedFlowing = true;
-    startFlowing(request);
+    startFlowing(request, destination);
   }
   const destination = new ReactMarkupReadableStream();
   const request = createRequest(
     children,
-    destination,
     createResponseState(false, options ? options.identifierPrefix : undefined),
     createRootFormatContext(),
     Infinity,

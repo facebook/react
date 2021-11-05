@@ -108,6 +108,10 @@ module.exports = {
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
     'react-internal/no-primitive-constructors': ERROR,
+    'react-internal/safe-string-coercion': [
+      ERROR,
+      {isProductionUserAppCode: true},
+    ],
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/invariant-args': ERROR,
     'react-internal/warning-args': ERROR,
@@ -123,6 +127,41 @@ module.exports = {
   },
 
   overrides: [
+    {
+      // By default, anything error message that appears the packages directory
+      // must have a corresponding error code. The exceptions are defined
+      // in the next override entry.
+      files: ['packages/**/*.js'],
+      rules: {
+        'react-internal/prod-error-codes': ERROR,
+      },
+    },
+    {
+      // These are files where it's OK to have unminified error messages. These
+      // are environments where bundle size isn't a concern, like tests
+      // or Node.
+      files: [
+        'packages/react-dom/src/test-utils/**/*.js',
+        'packages/react-devtools-shared/**/*.js',
+        'packages/react-noop-renderer/**/*.js',
+        'packages/react-pg/**/*.js',
+        'packages/react-fs/**/*.js',
+        'packages/react-refresh/**/*.js',
+        'packages/react-server-dom-webpack/**/*.js',
+        'packages/react-test-renderer/**/*.js',
+        'packages/react-debug-tools/**/*.js',
+        'packages/react-devtools-extensions/**/*.js',
+        'packages/react-devtools-timeline/**/*.js',
+        'packages/react-native-renderer/**/*.js',
+        'packages/eslint-plugin-react-hooks/**/*.js',
+        'packages/jest-react/**/*.js',
+        'packages/**/__tests__/*.js',
+        'packages/**/npm/*.js',
+      ],
+      rules: {
+        'react-internal/prod-error-codes': OFF,
+      },
+    },
     {
       // We apply these settings to files that we ship through npm.
       // They must be ES5.
@@ -168,10 +207,17 @@ module.exports = {
         'packages/*/npm/**/*.js',
         'packages/dom-event-testing-library/**/*.js',
         'packages/react-devtools*/**/*.js',
+        'dangerfile.js',
+        'fixtures',
+        'packages/react-dom/src/test-utils/*.js',
       ],
       rules: {
         'react-internal/no-production-logging': OFF,
         'react-internal/warning-args': OFF,
+        'react-internal/safe-string-coercion': [
+          ERROR,
+          {isProductionUserAppCode: false},
+        ],
 
         // Disable accessibility checks
         'jsx-a11y/aria-role': OFF,
@@ -180,6 +226,21 @@ module.exports = {
         'jsx-a11y/role-has-required-aria-props': OFF,
         'jsx-a11y/no-noninteractive-tabindex': OFF,
         'jsx-a11y/tabindex-no-positive': OFF,
+      },
+    },
+    {
+      files: [
+        'scripts/eslint-rules/*.js',
+        'packages/eslint-plugin-react-hooks/src/*.js',
+      ],
+      plugins: ['eslint-plugin'],
+      rules: {
+        'eslint-plugin/prefer-object-rule': ERROR,
+        'eslint-plugin/require-meta-fixable': [
+          ERROR,
+          {catchNoFixerButFixableProperty: true},
+        ],
+        'eslint-plugin/require-meta-has-suggestions': ERROR,
       },
     },
     {
@@ -218,5 +279,6 @@ module.exports = {
     __VARIANT__: true,
     gate: true,
     trustedTypes: true,
+    IS_REACT_ACT_ENVIRONMENT: true,
   },
 };

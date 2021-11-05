@@ -1,6 +1,12 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {
+  DARK_MODE_DIMMED_WARNING_COLOR,
+  DARK_MODE_DIMMED_ERROR_COLOR,
+  DARK_MODE_DIMMED_LOG_COLOR,
+  LIGHT_MODE_DIMMED_WARNING_COLOR,
+  LIGHT_MODE_DIMMED_ERROR_COLOR,
+  LIGHT_MODE_DIMMED_LOG_COLOR,
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
@@ -18,7 +24,15 @@ if (!TARGET) {
   process.exit(1);
 }
 
-const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
+const EDITOR_URL = process.env.EDITOR_URL || null;
+
+const builtModulesDir = resolve(
+  __dirname,
+  '..',
+  '..',
+  'build',
+  'oss-experimental',
+);
 
 const __DEV__ = NODE_ENV === 'development';
 
@@ -26,7 +40,7 @@ const DEVTOOLS_VERSION = getVersionString();
 
 const config = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
+  devtool: __DEV__ ? 'cheap-source-map' : 'source-map',
   entry: {
     app: './src/app/index.js',
     devtools: './src/devtools.js',
@@ -57,8 +71,15 @@ const config = {
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
+      'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-shell"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
+      'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_ERROR_COLOR': `"${DARK_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.DARK_MODE_DIMMED_LOG_COLOR': `"${DARK_MODE_DIMMED_LOG_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
+      'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
     }),
   ],
   module: {
@@ -96,6 +117,7 @@ const config = {
 };
 
 if (TARGET === 'local') {
+  // Local dev server build.
   config.devServer = {
     hot: true,
     port: 8080,
@@ -104,6 +126,7 @@ if (TARGET === 'local') {
     stats: 'errors-only',
   };
 } else {
+  // Static build to deploy somewhere else.
   config.output = {
     path: resolve(__dirname, 'dist'),
     filename: '[name].js',

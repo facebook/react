@@ -16,7 +16,7 @@ export const enableFilterEmptyStringAttributesDOM = false;
 export const enableDebugTracing = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
-// for an experimental scheduling profiler tool.
+// for an experimental timeline tool.
 export const enableSchedulingProfiler = __PROFILE__;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState
@@ -99,6 +99,12 @@ export const enableTrustedTypesIntegration = false;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
+export const warnOnSubscriptionInsideStartTransition = false;
+
+export const enableSuspenseAvoidThisFallback = false;
+
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+
 export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
@@ -170,6 +176,8 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableUseRefAccessWarning = false;
 
+export const warnAboutCallbackRefReturningFunction = false;
+
 export const enableRecursiveCommitTraversal = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
@@ -181,3 +189,8 @@ export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = false;
 
 export const enablePersistentOffscreenHostContainer = false;
+
+export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// Only enabled in www builds
+export const enableUseMutableSource = false;

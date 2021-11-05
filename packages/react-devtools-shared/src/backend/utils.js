@@ -159,17 +159,14 @@ export function serializeToString(data: any): string {
 // based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
 // based on https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
 // Implements s, d, i and f placeholders
+// NOTE: KEEP IN SYNC with src/hook.js
 export function format(
   maybeMessage: any,
   ...inputArgs: $ReadOnlyArray<any>
 ): string {
   const args = inputArgs.slice();
 
-  // Symbols cannot be concatenated with Strings.
-  let formatted: string =
-    typeof maybeMessage === 'symbol'
-      ? maybeMessage.toString()
-      : '' + maybeMessage;
+  let formatted: string = String(maybeMessage);
 
   // If the first argument is a string, check for substitutions.
   if (typeof maybeMessage === 'string') {
@@ -202,17 +199,14 @@ export function format(
   // Arguments that remain after formatting.
   if (args.length) {
     for (let i = 0; i < args.length; i++) {
-      const arg = args[i];
-
-      // Symbols cannot be concatenated with Strings.
-      formatted += ' ' + (typeof arg === 'symbol' ? arg.toString() : arg);
+      formatted += ' ' + String(args[i]);
     }
   }
 
   // Update escaped %% values.
   formatted = formatted.replace(/%{2,2}/g, '%');
 
-  return '' + formatted;
+  return String(formatted);
 }
 
 export function isSynchronousXHRSupported(): boolean {

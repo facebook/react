@@ -35,13 +35,11 @@ moduleNameMapper['react-devtools-feature-flags'] =
 // Map packages to bundles
 packages.forEach(name => {
   // Root entry point
-  moduleNameMapper[
-    `^${name}$`
-  ] = `<rootDir>/build2/${NODE_MODULES_DIR}/${name}`;
+  moduleNameMapper[`^${name}$`] = `<rootDir>/build/${NODE_MODULES_DIR}/${name}`;
   // Named entry points
   moduleNameMapper[
     `^${name}\/([^\/]+)$`
-  ] = `<rootDir>/build2/${NODE_MODULES_DIR}/${name}/$1`;
+  ] = `<rootDir>/build/${NODE_MODULES_DIR}/${name}/$1`;
 });
 
 // Allow tests to import shared code (e.g. feature flags, getStackByFiberInDevAndProd)
@@ -57,12 +55,11 @@ module.exports = Object.assign({}, baseConfig, {
   // Exclude the build output from transforms
   transformIgnorePatterns: [
     '/node_modules/',
-    '<rootDir>/build2/',
+    '<rootDir>/build/',
     '/__compiled__/',
     '/__untransformed__/',
   ],
-  testRegex:
-    'packages/react-devtools-(extensions|shared)/src/__tests__/[^]+.test.js$',
+  testRegex: 'packages/react-devtools-shared/.+/__tests__/[^]+.test.js$',
   snapshotSerializers: [
     require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/dehydratedValueSerializer.js'

@@ -57,13 +57,12 @@ describe('ReactDOMFizzServer', () => {
   }
 
   // @gate experimental
-  it('should call pipeToNodeWritable', () => {
+  it('should call renderToPipeableStream', () => {
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>hello world</div>,
-      writable,
     );
-    startWriting();
+    pipe(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
@@ -71,13 +70,12 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', () => {
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <html>
         <body>hello world</body>
       </html>,
-      writable,
     );
-    startWriting();
+    pipe(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(
       `"<!DOCTYPE html><html><body>hello world</body></html>"`,
@@ -85,18 +83,35 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
-  it('should start writing after startWriting', () => {
+  it('should emit bootstrap script src at the end', () => {
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>hello world</div>,
-      writable,
+      {
+        bootstrapScriptContent: 'INIT();',
+        bootstrapScripts: ['init.js'],
+        bootstrapModules: ['init.mjs'],
+      },
+    );
+    pipe(writable);
+    jest.runAllTimers();
+    expect(output.result).toMatchInlineSnapshot(
+      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+    );
+  });
+
+  // @gate experimental
+  it('should start writing after pipe', () => {
+    const {writable, output} = getTestWritable();
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+      <div>hello world</div>,
     );
     jest.runAllTimers();
     // First we write our header.
     output.result +=
       '<!doctype html><html><head><title>test</title><head><body>';
     // Then React starts writing.
-    startWriting();
+    pipe(writable);
     expect(output.result).toMatchInlineSnapshot(
       `"<!doctype html><html><head><title>test</title><head><body><div>hello world</div>"`,
     );
@@ -115,13 +130,13 @@ describe('ReactDOMFizzServer', () => {
     }
     let isCompleteCalls = 0;
     const {writable, output} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback="Loading">
           <Wait />
         </Suspense>
       </div>,
-      writable,
+
       {
         onCompleteAll() {
           isCompleteCalls++;
@@ -144,7 +159,7 @@ describe('ReactDOMFizzServer', () => {
     output.result +=
       '<!doctype html><html><head><title>test</title><head><body>';
     // Then React starts writing.
-    startWriting();
+    pipe(writable);
     expect(output.result).toMatchInlineSnapshot(
       `"<!doctype html><html><head><title>test</title><head><body><div><!--$-->Done<!-- --><!--/$--></div>"`,
     );
@@ -154,11 +169,11 @@ describe('ReactDOMFizzServer', () => {
   it('should error the stream when an error is thrown at the root', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Throw />
       </div>,
-      writable,
+
       {
         onError(x) {
           reportedErrors.push(x);
@@ -166,7 +181,8 @@ describe('ReactDOMFizzServer', () => {
       },
     );
 
-    // The stream is errored even if we haven't started writing.
+    // The stream is errored once we start writing.
+    pipe(writable);
 
     await completed;
 
@@ -180,20 +196,20 @@ describe('ReactDOMFizzServer', () => {
   it('should error the stream when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback={<Throw />}>
           <InfiniteSuspend />
         </Suspense>
       </div>,
-      writable,
+
       {
         onError(x) {
           reportedErrors.push(x);
         },
       },
     );
-    startWriting();
+    pipe(writable);
 
     await completed;
 
@@ -206,20 +222,20 @@ describe('ReactDOMFizzServer', () => {
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
         </Suspense>
       </div>,
-      writable,
+
       {
         onError(x) {
           reportedErrors.push(x);
         },
       },
     );
-    startWriting();
+    pipe(writable);
 
     await completed;
 
@@ -241,13 +257,12 @@ describe('ReactDOMFizzServer', () => {
     function Content() {
       return 'Hi';
     }
-    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <Suspense fallback={<Fallback />}>
         <Content />
       </Suspense>,
-      writable,
     );
-    startWriting();
+    pipe(writable);
 
     await completed;
 
@@ -260,20 +275,20 @@ describe('ReactDOMFizzServer', () => {
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     let isCompleteCalls = 0;
     const {writable, output, completed} = getTestWritable();
-    const {startWriting, abort} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
         </Suspense>
       </div>,
-      writable,
+
       {
         onCompleteAll() {
           isCompleteCalls++;
         },
       },
     );
-    startWriting();
+    pipe(writable);
 
     jest.runAllTimers();
 
@@ -293,7 +308,7 @@ describe('ReactDOMFizzServer', () => {
   it('should be able to complete by abort when the fallback is also suspended', async () => {
     let isCompleteCalls = 0;
     const {writable, output, completed} = getTestWritable();
-    const {startWriting, abort} = ReactDOMFizzServer.pipeToNodeWritable(
+    const {pipe, abort} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
         <Suspense fallback="Loading">
           <Suspense fallback={<InfiniteSuspend />}>
@@ -301,14 +316,14 @@ describe('ReactDOMFizzServer', () => {
           </Suspense>
         </Suspense>
       </div>,
-      writable,
+
       {
         onCompleteAll() {
           isCompleteCalls++;
         },
       },
     );
-    startWriting();
+    pipe(writable);
 
     jest.runAllTimers();
 

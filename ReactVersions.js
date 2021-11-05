@@ -36,6 +36,7 @@ const stablePackages = {
   'react-refresh': '0.11.0',
   'react-test-renderer': ReactVersion,
   'use-subscription': '1.6.0',
+  'use-sync-external-store': '1.0.0',
   scheduler: '0.21.0',
 };
 

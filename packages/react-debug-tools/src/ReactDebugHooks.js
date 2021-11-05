@@ -18,14 +18,9 @@ import type {
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
-
-import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
-import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   FunctionComponent,
   SimpleMemoComponent,
@@ -54,8 +49,6 @@ type Dispatch<A> = A => void;
 
 let primitiveStackCache: null | Map<string, Array<any>> = null;
 
-let currentFiber: Fiber | null = null;
-
 type Hook = {
   memoizedState: any,
   next: Hook | null,
@@ -78,6 +71,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         Dispatcher.useCacheRefresh();
       }
       Dispatcher.useLayoutEffect(() => {});
+      Dispatcher.useInsertionEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useDebugValue(null);
@@ -106,7 +100,7 @@ function nextHook(): null | Hook {
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
 
 function readContext<T>(context: ReactContext<T>): T {
@@ -191,6 +185,18 @@ function useLayoutEffect(
   });
 }
 
+function useInsertionEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+): void {
+  nextHook();
+  hookLog.push({
+    primitive: 'InsertionEffect',
+    stackError: new Error(),
+    value: create,
+  });
+}
+
 function useEffect(
   create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
@@ -265,6 +271,25 @@ function useMutableSource<Source, Snapshot>(
   return value;
 }
 
+function useSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  // useSyncExternalStore() composes multiple hooks internally.
+  // Advance the current hook index the same number of times
+  // so that subsequent hooks have the right memoized state.
+  nextHook(); // SyncExternalStore
+  nextHook(); // Effect
+  const value = getSnapshot();
+  hookLog.push({
+    primitive: 'SyncExternalStore',
+    stackError: new Error(),
+    value,
+  });
+  return value;
+}
+
 function useTransition(): [boolean, (() => void) => void] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
@@ -293,21 +318,15 @@ function useDeferredValue<T>(value: T): T {
   return value;
 }
 
-function useOpaqueIdentifier(): OpaqueIDType | void {
-  const hook = nextHook(); // State
-  if (currentFiber && currentFiber.mode === NoMode) {
-    nextHook(); // Effect
-  }
-  let value = hook === null ? undefined : hook.memoizedState;
-  if (value && value.$$typeof === REACT_OPAQUE_ID_TYPE) {
-    value = undefined;
-  }
+function useId(): string {
+  const hook = nextHook();
+  const id = hook !== null ? hook.memoizedState : '';
   hookLog.push({
-    primitive: 'OpaqueIdentifier',
+    primitive: 'Id',
     stackError: new Error(),
-    value,
+    value: id,
   });
-  return value;
+  return id;
 }
 
 const Dispatcher: DispatcherType = {
@@ -320,14 +339,16 @@ const Dispatcher: DispatcherType = {
   useImperativeHandle,
   useDebugValue,
   useLayoutEffect,
+  useInsertionEffect,
   useMemo,
   useReducer,
   useRef,
   useState,
   useTransition,
   useMutableSource,
+  useSyncExternalStore,
   useDeferredValue,
-  useOpaqueIdentifier,
+  useId,
 };
 
 // Inspect
@@ -721,8 +742,6 @@ export function inspectHooksOfFiber(
   if (currentDispatcher == null) {
     currentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
   }
-
-  currentFiber = fiber;
 
   if (
     fiber.tag !== FunctionComponent &&

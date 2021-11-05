@@ -22,7 +22,7 @@ import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
-import {isOpaqueHydratingObject} from './ReactDOMHostConfig';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -42,10 +42,18 @@ export function getValueForProperty(
       const {propertyName} = propertyInfo;
       return (node: any)[propertyName];
     } else {
+      // This check protects multiple uses of `expected`, which is why the
+      // react-internal/safe-string-coercion rule is disabled in several spots
+      // below.
+      if (__DEV__) {
+        checkAttributeStringCoercion(expected, name);
+      }
+
       if (!disableJavaScriptURLs && propertyInfo.sanitizeURL) {
         // If we haven't fully disabled javascript: URLs, and if
         // the hydration is successful of a javascript: URL, we
         // still want to warn on the client.
+        // eslint-disable-next-line react-internal/safe-string-coercion
         sanitizeURL('' + (expected: any));
       }
 
@@ -62,6 +70,7 @@ export function getValueForProperty(
           if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
             return value;
           }
+          // eslint-disable-next-line react-internal/safe-string-coercion
           if (value === '' + (expected: any)) {
             return expected;
           }
@@ -87,6 +96,7 @@ export function getValueForProperty(
 
       if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
         return stringValue === null ? expected : stringValue;
+        // eslint-disable-next-line react-internal/safe-string-coercion
       } else if (stringValue === '' + (expected: any)) {
         return expected;
       } else {
@@ -110,17 +120,13 @@ export function getValueForAttribute(
     if (!isAttributeNameSafe(name)) {
       return;
     }
-
-    // If the object is an opaque reference ID, it's expected that
-    // the next prop is different than the server value, so just return
-    // expected
-    if (isOpaqueHydratingObject(expected)) {
-      return expected;
-    }
     if (!node.hasAttribute(name)) {
       return expected === undefined ? undefined : null;
     }
     const value = node.getAttribute(name);
+    if (__DEV__) {
+      checkAttributeStringCoercion(expected, name);
+    }
     if (value === '' + (expected: any)) {
       return expected;
     }
@@ -198,6 +204,9 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       } else {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, name);
+        }
         node.setAttribute(
           attributeName,
           enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
@@ -236,6 +245,9 @@ export function setValueForProperty(
       if (enableTrustedTypesIntegration) {
         attributeValue = (value: any);
       } else {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
         attributeValue = '' + (value: any);
       }
       if (propertyInfo.sanitizeURL) {

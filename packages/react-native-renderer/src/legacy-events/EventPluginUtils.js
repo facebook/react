@@ -6,7 +6,6 @@
  */
 
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
 export let getFiberCurrentPropsFromNode = null;
@@ -150,10 +149,11 @@ export function executeDirectDispatch(event) {
   }
   const dispatchListener = event._dispatchListeners;
   const dispatchInstance = event._dispatchInstances;
-  invariant(
-    !isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `event`.',
-  );
+
+  if (isArray(dispatchListener)) {
+    throw new Error('executeDirectDispatch(...): Invalid `event`.');
+  }
+
   event.currentTarget = dispatchListener
     ? getNodeFromInstance(dispatchInstance)
     : null;

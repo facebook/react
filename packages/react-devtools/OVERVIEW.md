@@ -166,7 +166,7 @@ We only send the serialized messages as part of the `inspectElement` event.
 
 #### Removing a root
 
-Special case of unmounting an entire root (include its decsendants). This specialized message replaces what would otherwise be a series of remove-node operations. It is currently only used in one case: updating component filters. The primary motivation for this is actually to preserve fiber ids for components that are re-added to the tree after the updated filters have been applied. This preserves mappings between the Fiber (id) and things like error and warning logs.
+Special case of unmounting an entire root (include its descendants). This specialized message replaces what would otherwise be a series of remove-node operations. It is currently only used in one case: updating component filters. The primary motivation for this is actually to preserve fiber ids for components that are re-added to the tree after the updated filters have been applied. This preserves mappings between the Fiber (id) and things like error and warning logs.
 
 ```js
 [
@@ -253,7 +253,7 @@ Elements can update frequently, especially in response to things like scrolling 
 
 ### Deeply nested properties
 
-Even when dealing with a single component, serializing deeply nested properties can be expensive. Because of this, DevTools uses a technique referred to as "dehyration" to only send a shallow copy of the data on initial inspection. DevTools then fills in the missing data on demand as a user expands nested objects or arrays. Filled in paths are remembered (for the currently inspected element) so they are not "dehyrated" again as part of a polling update.
+Even when dealing with a single component, serializing deeply nested properties can be expensive. Because of this, DevTools uses a technique referred to as "dehydration" to only send a shallow copy of the data on initial inspection. DevTools then fills in the missing data on demand as a user expands nested objects or arrays. Filled in paths are remembered (for the currently inspected element) so they are not "dehydrated" again as part of a polling update.
 
 ### Inspecting hooks
 
@@ -297,3 +297,10 @@ Once profiling is finished, the frontend requests profiling data from the backen
 ### Importing/exporting data
 
 Because all of the data is merged in the frontend after a profiling session is completed, it can be exported and imported (as a single JSON object), enabling profiling sessions to be shared between users.
+
+## Package Specific Details
+
+### Devtools Extension Overview Diagram
+
+![React Devtools Extension](https://user-images.githubusercontent.com/2735514/132768489-6ab85156-b816-442f-9c3f-7af738ee9e49.png)
+

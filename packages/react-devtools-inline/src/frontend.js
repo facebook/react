@@ -10,6 +10,7 @@ import {
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
+  getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
@@ -28,7 +29,7 @@ export function createStore(bridge: FrontendBridge, config?: Config): Store {
   return new Store(bridge, {
     checkBridgeProtocolCompatibility: true,
     supportsTraceUpdates: true,
-    supportsSchedulingProfiler: true,
+    supportsTimeline: true,
     supportsNativeInspection: config?.supportsNativeInspection !== false,
   });
 }
@@ -88,6 +89,7 @@ export function initialize(
             breakOnConsoleErrors: getBreakOnConsoleErrors(),
             componentFilters: getSavedComponentFilters(),
             showInlineWarningsAndErrors: getShowInlineWarningsAndErrors(),
+            hideConsoleLogsInStrictMode: getHideConsoleLogsInStrictMode(),
           },
           '*',
         );

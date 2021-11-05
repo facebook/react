@@ -79,7 +79,7 @@ export type ComponentFilter =
 
 export type HookName = string | null;
 // Map of hook source ("<filename>:<line-number>:<column-number>") to name.
-// Hook source is used instead of the hook itself becuase the latter is not stable between element inspections.
+// Hook source is used instead of the hook itself because the latter is not stable between element inspections.
 // We use a Map rather than an Array because of nested hooks and traversal ordering.
 export type HookSourceLocationKey = string;
 export type HookNames = Map<HookSourceLocationKey, HookName>;

@@ -37,6 +37,7 @@ describe('ReactError', () => {
   });
 
   // @gate build === "production"
+  // @gate !source
   it('should error with minified error code', () => {
     expect(() => ReactDOM.render('Hi', null)).toThrowError(
       'Minified React error #200; visit ' +

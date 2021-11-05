@@ -16,6 +16,8 @@ let container;
 
 jest.useRealTimers();
 
+global.IS_REACT_ACT_ENVIRONMENT = true;
+
 function sleep(period) {
   return new Promise(resolve => {
     setTimeout(() => {
@@ -30,18 +32,31 @@ describe('ReactTestUtils.act()', () => {
     let concurrentRoot = null;
     const renderConcurrent = (el, dom) => {
       concurrentRoot = ReactDOM.createRoot(dom);
-      concurrentRoot.render(el);
+      if (__DEV__) {
+        act(() => concurrentRoot.render(el));
+      } else {
+        concurrentRoot.render(el);
+      }
     };
 
     const unmountConcurrent = _dom => {
-      if (concurrentRoot !== null) {
-        concurrentRoot.unmount();
-        concurrentRoot = null;
+      if (__DEV__) {
+        act(() => {
+          if (concurrentRoot !== null) {
+            concurrentRoot.unmount();
+            concurrentRoot = null;
+          }
+        });
+      } else {
+        if (concurrentRoot !== null) {
+          concurrentRoot.unmount();
+          concurrentRoot = null;
+        }
       }
     };
 
     const rerenderConcurrent = el => {
-      concurrentRoot.render(el);
+      act(() => concurrentRoot.render(el));
     };
 
     runActTests(
@@ -83,35 +98,11 @@ describe('ReactTestUtils.act()', () => {
       }).toErrorDev([]);
     });
 
-    it('warns in strict mode', () => {
-      expect(() => {
-        ReactDOM.render(
-          <React.StrictMode>
-            <App />
-          </React.StrictMode>,
-          document.createElement('div'),
-        );
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
-
+    // @gate __DEV__
     it('does not warn in concurrent mode', () => {
       const root = ReactDOM.createRoot(document.createElement('div'));
-      root.render(<App />);
+      act(() => root.render(<App />));
       Scheduler.unstable_flushAll();
-    });
-
-    it('warns in concurrent mode if root is strict', () => {
-      expect(() => {
-        const root = ReactDOM.createRoot(document.createElement('div'), {
-          unstable_strictMode: true,
-        });
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
     });
   });
 });
@@ -271,6 +262,40 @@ function runActTests(label, render, unmount, rerender) {
         expect(() => setValue(1)).toErrorDev([
           'An update to App inside a test was not wrapped in act(...).',
         ]);
+      });
+
+      // @gate __DEV__
+      it('does not warn if IS_REACT_ACT_ENVIRONMENT is set to false', () => {
+        let setState;
+        function App() {
+          const [state, _setState] = React.useState(0);
+          setState = _setState;
+          return state;
+        }
+
+        act(() => {
+          render(<App />, container);
+        });
+
+        // First show that it does warn
+        expect(() => setState(1)).toErrorDev(
+          'An update to App inside a test was not wrapped in act(...)',
+        );
+
+        // Now do the same thing again, but disable with the environment flag
+        const prevIsActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
+        global.IS_REACT_ACT_ENVIRONMENT = false;
+        try {
+          setState(2);
+        } finally {
+          global.IS_REACT_ACT_ENVIRONMENT = prevIsActEnvironment;
+        }
+
+        // When the flag is restored to its previous value, it should start
+        // warning again. This shows that React reads the flag each time.
+        expect(() => setState(3)).toErrorDev(
+          'An update to App inside a test was not wrapped in act(...)',
+        );
       });
 
       describe('fake timers', () => {
