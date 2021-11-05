@@ -14,6 +14,8 @@ let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
 
+import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
+
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
 describe('ReactDOMServerHydration', () => {
@@ -551,6 +553,11 @@ describe('ReactDOMServerHydration', () => {
       expect(() => ReactDOM.hydrate(jsx, element)).toErrorDev(
         `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
       );
+
+      // Ensure the test fails to satisfy @gate when the flag is turned off and we aren't in development.
+      if (!__DEV__ && !enableCustomElementPropertySupport) {
+        expect(true).toBe(false);
+      }
     });
   });
 });
