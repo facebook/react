@@ -9,7 +9,6 @@
 
 import {
   getPropertyInfo,
-  getCustomElementPropertyInfo,
   shouldIgnoreAttribute,
   shouldRemoveAttribute,
   isAttributeNameSafe,
@@ -147,7 +146,7 @@ export function setValueForProperty(
   value: mixed,
   isCustomComponentTag: boolean,
 ) {
-  let propertyInfo = getPropertyInfo(name);
+  const propertyInfo = getPropertyInfo(name);
   if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
     return;
   }
@@ -191,14 +190,18 @@ export function setValueForProperty(
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
-  if (enableCustomElementPropertySupport && isCustomComponentTag) {
-    propertyInfo = getCustomElementPropertyInfo(name, node);
-  }
-  // If the prop isn't in the special list, treat it as a simple attribute.
+
   if (
-    propertyInfo === null ||
-    (isCustomComponentTag && !enableCustomElementPropertySupport)
+    enableCustomElementPropertySupport &&
+    isCustomComponentTag &&
+    name in (node: any)
   ) {
+    (node: any)[name] = value;
+    return;
+  }
+
+  // If the prop isn't in the special list, treat it as a simple attribute.
+  if (isCustomComponentTag || propertyInfo === null) {
     if (isAttributeNameSafe(name)) {
       const attributeName = name;
       if (value === null) {

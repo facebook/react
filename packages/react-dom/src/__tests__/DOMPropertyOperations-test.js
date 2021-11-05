@@ -302,6 +302,39 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('textContent')).toBe(null);
       expect(customElement.hasChildNodes()).toBe(false);
     });
+
+    // @gate enableCustomElementPropertySupport
+    it('values should not be converted to booleans when assigning into custom elements', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element />, container);
+      const customElement = container.querySelector('my-custom-element');
+      customElement.foo = null;
+
+      // true => string
+      ReactDOM.render(<my-custom-element foo={true} />, container);
+      expect(customElement.foo).toBe(true);
+      ReactDOM.render(<my-custom-element foo="bar" />, container);
+      expect(customElement.foo).toBe('bar');
+
+      // false => string
+      ReactDOM.render(<my-custom-element foo={false} />, container);
+      expect(customElement.foo).toBe(false);
+      ReactDOM.render(<my-custom-element foo="bar" />, container);
+      expect(customElement.foo).toBe('bar');
+
+      // true => null
+      ReactDOM.render(<my-custom-element foo={true} />, container);
+      expect(customElement.foo).toBe(true);
+      ReactDOM.render(<my-custom-element foo={null} />, container);
+      expect(customElement.foo).toBe(null);
+
+      // false => null
+      ReactDOM.render(<my-custom-element foo={false} />, container);
+      expect(customElement.foo).toBe(false);
+      ReactDOM.render(<my-custom-element foo={null} />, container);
+      expect(customElement.foo).toBe(null);
+    });
   });
 
   describe('deleteValueForProperty', () => {

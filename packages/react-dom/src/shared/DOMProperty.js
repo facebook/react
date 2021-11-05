@@ -209,23 +209,6 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
-export function getCustomElementPropertyInfo(name: string, node: Element) {
-  if (name in (node: any)) {
-    const acceptsBooleans = typeof (node: any)[name] === 'boolean';
-    return {
-      acceptsBooleans,
-      type: acceptsBooleans ? BOOLEAN : STRING,
-      mustUseProperty: true,
-      propertyName: name,
-      attributeName: name,
-      attributeNamespace: null,
-      sanitizeURL: false,
-      removeEmptyString: false,
-    };
-  }
-  return null;
-}
-
 function PropertyInfoRecord(
   name: string,
   type: PropertyType,

@@ -58,7 +58,6 @@ import {
 import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
-  getCustomElementPropertyInfo,
   shouldIgnoreAttribute,
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
@@ -1004,7 +1003,7 @@ export function diffHydratedProperties(
       let serverValue;
       const propertyInfo =
         isCustomComponentTag && enableCustomElementPropertySupport
-          ? getCustomElementPropertyInfo(propKey, domElement)
+          ? null
           : getPropertyInfo(propKey);
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
