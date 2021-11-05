@@ -753,8 +753,10 @@ function AutoSizedCanvas({
         <EventTooltip
           canvasRef={canvasRef}
           data={data}
+          height={height}
           hoveredEvent={hoveredEvent}
           origin={mouseLocation}
+          width={width}
         />
       )}
     </Fragment>

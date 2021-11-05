@@ -202,6 +202,7 @@ export type ReactProfilerData = {|
   reactVersion: string | null,
   schedulingEvents: SchedulingEvent[],
   snapshots: Snapshot[],
+  snapshotHeight: number,
   startTime: number,
   suspenseEvents: SuspenseEvent[],
   thrownErrors: ThrownError[],

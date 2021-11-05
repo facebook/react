@@ -29,7 +29,11 @@ import type {
   SchedulingEvent,
   SuspenseEvent,
 } from '../types';
-import {REACT_TOTAL_NUM_LANES, SCHEDULING_PROFILER_VERSION} from '../constants';
+import {
+  REACT_TOTAL_NUM_LANES,
+  SCHEDULING_PROFILER_VERSION,
+  SNAPSHOT_MAX_HEIGHT,
+} from '../constants';
 import InvalidProfileError from './InvalidProfileError';
 import {getBatchRange} from '../utils/getBatchRange';
 import ErrorStackParser from 'error-stack-parser';
@@ -1066,6 +1070,7 @@ export default async function preprocessData(
     reactVersion: null,
     schedulingEvents: [],
     snapshots: [],
+    snapshotHeight: 0,
     startTime: 0,
     suspenseEvents: [],
     thrownErrors: [],
@@ -1188,6 +1193,19 @@ export default async function preprocessData(
   // Wait for any async processing to complete before returning.
   // Since processing is done in a worker, async work must complete before data is serialized and returned.
   await Promise.all(state.asyncProcessingPromises);
+
+  // Now that all images have been loaded, let's figure out the display size we're going to use for our thumbnails:
+  // both the ones rendered to the canvas and the ones shown on hover.
+  if (profilerData.snapshots.length > 0) {
+    // NOTE We assume a static window size here, which is not necessarily true but should be for most cases.
+    // Regardless, Chrome also sets a single size/ratio and stick with it- so we'll do the same.
+    const snapshot = profilerData.snapshots[0];
+
+    profilerData.snapshotHeight = Math.min(
+      snapshot.height,
+      SNAPSHOT_MAX_HEIGHT,
+    );
+  }
 
   return profilerData;
 }

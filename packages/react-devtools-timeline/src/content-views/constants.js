@@ -24,7 +24,7 @@ export const REACT_MEASURE_HEIGHT = 14;
 export const BORDER_SIZE = 1 / DPR;
 export const FLAMECHART_FRAME_HEIGHT = 14;
 export const TEXT_PADDING = 3;
-export const SNAPSHOT_HEIGHT = 35;
+export const SNAPSHOT_SCRUBBER_SIZE = 3;
 
 export const INTERVAL_TIMES = [
   1,
@@ -89,6 +89,8 @@ export let COLORS = {
   REACT_THROWN_ERROR_HOVER: '',
   REACT_WORK_BORDER: '',
   SCROLL_CARET: '',
+  SCRUBBER_BACKGROUND: '',
+  SCRUBBER_BORDER: '',
   TEXT_COLOR: '',
   TEXT_DIM_COLOR: '',
   TIME_MARKER_LABEL: '',
@@ -230,6 +232,12 @@ export function updateColorsToMatchTheme(element: Element): boolean {
       '--color-timeline-react-work-border',
     ),
     SCROLL_CARET: computedStyle.getPropertyValue('--color-scroll-caret'),
+    SCRUBBER_BACKGROUND: computedStyle.getPropertyValue(
+      '--color-timeline-react-suspense-rejected',
+    ),
+    SCRUBBER_BORDER: computedStyle.getPropertyValue(
+      '--color-timeline-text-color',
+    ),
     TEXT_COLOR: computedStyle.getPropertyValue('--color-timeline-text-color'),
     TEXT_DIM_COLOR: computedStyle.getPropertyValue(
       '--color-timeline-text-dim-color',
