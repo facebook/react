@@ -1,0 +1,3 @@
+<style>{'body::before { content: "\</style>"; }'}</style> 
+
+<style>body::before { content: "\</style\>"; }</style>
