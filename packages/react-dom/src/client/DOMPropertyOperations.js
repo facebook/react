@@ -22,6 +22,7 @@ import {
   enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {getCustomElementEventHandlersFromNode} from './ReactDOMComponentTree';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -166,15 +167,11 @@ export function setValueForProperty(
     eventName = eventName.slice(2);
 
     const listenersObjName = eventName + (useCapture ? 'true' : 'false');
-    const alreadyHadListener =
-      (node: any)._listeners && (node: any)._listeners[listenersObjName];
+    const listeners = getCustomElementEventHandlersFromNode(node);
+    const alreadyHadListener = listeners[listenersObjName];
 
     if (typeof value === 'function' || alreadyHadListener) {
-      if (!(node: any)._listeners) {
-        (node: any)._listeners = {};
-      }
-
-      (node: any)._listeners[listenersObjName] = value;
+      listeners[listenersObjName] = value;
       const proxy = useCapture ? fireEventProxyCapture : fireEventProxy;
       if (value) {
         if (!alreadyHadListener) {
@@ -266,9 +263,9 @@ export function setValueForProperty(
 }
 
 function fireEventProxy(e: Event) {
-  this._listeners[e.type + 'false'](e);
+  getCustomElementEventHandlersFromNode(this)[e.type + 'false'](e);
 }
 
 function fireEventProxyCapture(e: Event) {
-  this._listeners[e.type + 'true'](e);
+  getCustomElementEventHandlersFromNode(this)[e.type + 'true'](e);
 }
