@@ -955,11 +955,12 @@ function pushStartTextArea(
         checkHtmlStringCoercion(children[0]);
       }
       value = '' + children[0];
+    } else {
+      value = '' + children;
     }
     if (__DEV__) {
       checkHtmlStringCoercion(children);
     }
-    value = '' + children;
   }
 
   if (typeof value === 'string' && value[0] === '\n') {
