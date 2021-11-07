@@ -9,10 +9,10 @@
 
 import * as React from 'react';
 import {useCallback} from 'react';
-import Tooltip from '@reach/tooltip';
 
 import styles from './Toggle.css';
 import tooltipStyles from './Tooltip.css';
+import Tooltip from './Components/reach-ui/tooltip';
 
 type Props = {
   children: React$Node,

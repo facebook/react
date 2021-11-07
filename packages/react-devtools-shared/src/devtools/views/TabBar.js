@@ -9,11 +9,11 @@
 
 import * as React from 'react';
 import {Fragment, useCallback} from 'react';
-import Tooltip from '@reach/tooltip';
 import Icon from './Icon';
 
 import styles from './TabBar.css';
 import tooltipStyles from './Tooltip.css';
+import Tooltip from './Components/reach-ui/tooltip';
 
 import type {IconType} from './Icon';
 

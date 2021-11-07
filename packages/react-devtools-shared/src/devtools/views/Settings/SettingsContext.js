@@ -296,12 +296,6 @@ export function updateThemeVariables(
     // $FlowFixMe scrollbarColor is missing in CSSStyleDeclaration
     documentElement.style.scrollbarColor = `var(${`--${theme}-color-scroll-thumb`}) var(${`--${theme}-color-scroll-track`})`;
   });
-
-  // The ThemeProvider works by writing DOM style variables to an HTMLDivElement.
-  // Because Portals render in a different DOM subtree, these variables don't propagate.
-  // So we need to also set @reach/tooltip specific styles on the root.
-  updateStyleHelper(theme, 'color-tooltip-background', documentElements);
-  updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 }
 
 export {SettingsContext, SettingsContextController};
