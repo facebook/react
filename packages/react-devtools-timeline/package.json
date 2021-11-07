@@ -18,7 +18,7 @@
     "@reach/tooltip": "^0.16.0",
     "babel-loader": "^8.1.0",
     "css-loader": "^4.2.1",
-    "file-loader": "^6.0.0",
+    "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.3.0",
     "style-loader": "^1.2.1",
     "url-loader": "^4.1.0",
@@ -26,6 +26,6 @@
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",
-    "worker-loader": "^3.0.2"
+    "worker-loader": "^3.0.3"
   }
 }
