@@ -122,6 +122,7 @@ export default function ProfilingImportExportButtons() {
         ref={inputRef}
         className={styles.Input}
         type="file"
+        accept=".json"
         onChange={
           selectedTabID === 'timeline'
             ? importTimelineDataWrapper
