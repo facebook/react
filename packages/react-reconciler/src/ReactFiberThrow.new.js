@@ -459,6 +459,7 @@ function throwException(
     // Schedule the nearest Suspense to re-render the timed out view.
     const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
     if (suspenseBoundary !== null) {
+      suspenseBoundary.flags &= ~ForceClientRender;
       markSuspenseBoundaryShouldCapture(
         suspenseBoundary,
         returnFiber,
