@@ -1,32 +1,6 @@
 :root {
-  /**
-   * The light and dark theme styles below should be kept in sync with 'react-devtools-shared/src/constants'
-   * They are repeated here because they're used by e.g. tooltips or context menus
-   * which get rendered outside of the DOM subtree (where normal theme/styles are written).
-   */
-
-  /* Light theme */
-  --light-color-scroll-thumb: #c2c2c2;
-  --light-color-scroll-track: #fafafa;
-  --light-color-tooltip-background: rgba(0, 0, 0, 0.9);
-  --light-color-tooltip-text: #ffffff;
-
-  /* Dark theme */
-  --dark-color-scroll-thumb: #afb3b9;
-  --dark-color-scroll-track: #313640;
-  --dark-color-tooltip-background: rgba(255, 255, 255, 0.95);
-  --dark-color-tooltip-text: #000000;
-
   /* Font smoothing */
   --font-smoothing: auto;
-
-  /* Compact density */
-  --compact-line-height-data: 18px;
-  --compact-root-font-size: 16px;
-
-  /* Comfortable density */
-  --comfortable-line-height-data: 22px;
-  --comfortable-root-font-size: 20px;
 
   /* GitHub.com system fonts */
   --font-family-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
