@@ -24,11 +24,12 @@ import {
   rectEqualToRect,
   View,
 } from '../view-base';
-import {BORDER_SIZE, COLORS, SNAPSHOT_HEIGHT} from './constants';
+import {BORDER_SIZE, COLORS, SNAPSHOT_SCRUBBER_SIZE} from './constants';
 
 type OnHover = (node: Snapshot | null) => void;
 
 export class SnapshotsView extends View {
+  _hoverLocation: Point | null = null;
   _intrinsicSize: Size;
   _profilerData: ReactProfilerData;
 
@@ -39,7 +40,7 @@ export class SnapshotsView extends View {
 
     this._intrinsicSize = {
       width: profilerData.duration,
-      height: SNAPSHOT_HEIGHT,
+      height: profilerData.snapshotHeight,
     };
     this._profilerData = profilerData;
   }
@@ -49,6 +50,7 @@ export class SnapshotsView extends View {
   }
 
   draw(context: CanvasRenderingContext2D) {
+    const snapshotHeight = this._profilerData.snapshotHeight;
     const {visibleArea} = this;
 
     context.fillStyle = COLORS.BACKGROUND;
@@ -72,8 +74,8 @@ export class SnapshotsView extends View {
         break;
       }
 
-      const scaledHeight = SNAPSHOT_HEIGHT;
-      const scaledWidth = (snapshot.width * SNAPSHOT_HEIGHT) / snapshot.height;
+      const scaledHeight = snapshotHeight;
+      const scaledWidth = (snapshot.width * snapshotHeight) / snapshot.height;
 
       const imageRect: Rect = {
         origin: {
@@ -95,6 +97,28 @@ export class SnapshotsView extends View {
       }
 
       x += scaledWidth + BORDER_SIZE;
+    }
+
+    const hoverLocation = this._hoverLocation;
+    if (hoverLocation !== null) {
+      const scrubberWidth = SNAPSHOT_SCRUBBER_SIZE + BORDER_SIZE * 2;
+      const scrubberOffset = scrubberWidth / 2;
+
+      context.fillStyle = COLORS.SCRUBBER_BORDER;
+      context.fillRect(
+        hoverLocation.x - scrubberOffset,
+        visibleArea.origin.y,
+        scrubberWidth,
+        visibleArea.size.height,
+      );
+
+      context.fillStyle = COLORS.SCRUBBER_BACKGROUND;
+      context.fillRect(
+        hoverLocation.x - scrubberOffset + BORDER_SIZE,
+        visibleArea.origin.y,
+        SNAPSHOT_SCRUBBER_SIZE,
+        visibleArea.size.height,
+      );
     }
   }
 
@@ -208,15 +232,29 @@ export class SnapshotsView extends View {
     }
 
     if (!rectContainsPoint(location, visibleArea)) {
+      if (this._hoverLocation !== null) {
+        this._hoverLocation = null;
+
+        this.setNeedsDisplay();
+      }
+
       onHover(null);
       return;
     }
 
     const snapshot = this._findClosestSnapshot(location.x);
     if (snapshot !== null) {
+      this._hoverLocation = location;
+
       onHover(snapshot);
     } else {
+      this._hoverLocation = null;
+
       onHover(null);
     }
+
+    // Any time the mouse moves within the boundaries of this view, we need to re-render.
+    // This is because we draw a scrubbing bar that shows the location corresponding to the current tooltip.
+    this.setNeedsDisplay();
   }
 }
