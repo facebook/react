@@ -542,7 +542,9 @@ describe('ReactFabric', () => {
       act(() => {
         ReactFabric.render(<View>this should warn</View>, 11);
       });
-    }).toErrorDev(['Text string "this should warn" must be rendered within a <Text> component.']);
+    }).toErrorDev([
+      'Text string "this should warn" must be rendered within a <Text> component.',
+    ]);
 
     expect(() => {
       act(() => {
@@ -553,7 +555,9 @@ describe('ReactFabric', () => {
           11,
         );
       });
-    }).toErrorDev(['Text string "hi hello hi" must be rendered within a <Text> component.']);
+    }).toErrorDev([
+      'Text string "hi hello hi" must be rendered within a <Text> component.',
+    ]);
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {

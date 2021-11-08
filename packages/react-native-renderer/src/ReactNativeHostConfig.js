@@ -145,7 +145,9 @@ export function createTextInstance(
   internalInstanceHandle: Object,
 ): TextInstance {
   if (!hostContext.isInAParentText) {
-    throw new Error(`Text string "${text}" must be rendered within a <Text> component.`);
+    throw new Error(
+      `Text string "${text}" must be rendered within a <Text> component.`,
+    );
   }
 
   const tag = allocateTag();

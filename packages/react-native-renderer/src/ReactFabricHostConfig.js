@@ -262,7 +262,9 @@ export function createTextInstance(
 ): TextInstance {
   if (__DEV__) {
     if (!hostContext.isInAParentText) {
-      console.error(`Text string "${text}" must be rendered within a <Text> component.`);
+      console.error(
+        `Text string "${text}" must be rendered within a <Text> component.`,
+      );
     }
   }
 
