@@ -248,28 +248,6 @@ function SettingsContextController({
   );
 }
 
-function setStyleVariable(
-  name: string,
-  value: string,
-  documentElements: DocumentElements,
-) {
-  documentElements.forEach(documentElement =>
-    documentElement.style.setProperty(name, value),
-  );
-}
-
-function updateStyleHelper(
-  themeKey: string,
-  style: string,
-  documentElements: DocumentElements,
-) {
-  setStyleVariable(
-    `--${style}`,
-    `var(--${themeKey}-${style})`,
-    documentElements,
-  );
-}
-
 export function updateDisplayDensity(
   displayDensity: DisplayDensity,
   documentElements: DocumentElements,
