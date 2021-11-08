@@ -342,7 +342,7 @@
   "352": "React Lazy Components are not yet supported on the server.",
   "353": "A server block should never encode any other slots. This is a bug in React.",
   "354": "getInspectorDataForViewAtPoint() is not available in production.",
-  "355": "The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.",
+  "355": "The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly. (TODO: This feature was never released so we should be able to remove this error from the map.)",
   "356": "Could not read the cache.",
   "357": "The current renderer does not support React Scopes. This error is likely caused by a bug in React. Please file an issue.",
   "358": "Invalid update priority: %s. This is a bug in React.",

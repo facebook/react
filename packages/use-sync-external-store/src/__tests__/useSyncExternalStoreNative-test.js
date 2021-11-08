@@ -15,7 +15,7 @@ let React;
 let ReactNoop;
 let Scheduler;
 let useSyncExternalStore;
-let useSyncExternalStoreExtra;
+let useSyncExternalStoreWithSelector;
 let act;
 
 // This tests the userspace shim of `useSyncExternalStore` in a server-rendering
@@ -36,25 +36,40 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
         startTransition: _,
         // eslint-disable-next-line no-unused-vars
         useSyncExternalStore: __,
-        // eslint-disable-next-line no-unused-vars
-        unstable_useSyncExternalStore: ___,
         ...otherExports
       } = jest.requireActual('react');
       return otherExports;
     });
 
-    jest.mock('use-sync-external-store', () =>
-      jest.requireActual('use-sync-external-store/index.native'),
+    jest.mock('use-sync-external-store/shim', () =>
+      jest.requireActual('use-sync-external-store/shim/index.native'),
     );
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
-    useSyncExternalStore = require('use-sync-external-store')
+
+    if (gate(flags => flags.source)) {
+      // The `shim/with-selector` module composes the main
+      // `use-sync-external-store` entrypoint. In the compiled artifacts, this
+      // is resolved to the `shim` implementation by our build config, but when
+      // running the tests against the source files, we need to tell Jest how to
+      // resolve it. Because this is a source module, this mock has no affect on
+      // the build tests.
+      jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
+        jest.requireActual('use-sync-external-store/shim'),
+      );
+      jest.mock('use-sync-external-store/src/isServerEnvironment', () =>
+        jest.requireActual(
+          'use-sync-external-store/src/forks/isServerEnvironment.native',
+        ),
+      );
+    }
+    useSyncExternalStore = require('use-sync-external-store/shim')
       .useSyncExternalStore;
-    useSyncExternalStoreExtra = require('use-sync-external-store/extra')
-      .useSyncExternalStoreExtra;
+    useSyncExternalStoreWithSelector = require('use-sync-external-store/shim/with-selector')
+      .useSyncExternalStoreWithSelector;
   });
 
   function Text({text}) {
@@ -105,32 +120,12 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     expect(root).toMatchRenderedOutput('client');
   });
 
-  test('native version', async () => {
-    const store = createExternalStore('client');
-
-    function App() {
-      const text = useSyncExternalStore(
-        store.subscribe,
-        store.getState,
-        () => 'server',
-      );
-      return <Text text={text} />;
-    }
-
-    const root = ReactNoop.createRoot();
-    await act(() => {
-      root.render(<App />);
-    });
-    expect(Scheduler).toHaveYielded(['client']);
-    expect(root).toMatchRenderedOutput('client');
-  });
-
   // @gate !(enableUseRefAccessWarning && __DEV__)
   test('Using isEqual to bailout', async () => {
     const store = createExternalStore({a: 0, b: 0});
 
     function A() {
-      const {a} = useSyncExternalStoreExtra(
+      const {a} = useSyncExternalStoreWithSelector(
         store.subscribe,
         store.getState,
         null,
@@ -140,7 +135,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
       return <Text text={'A' + a} />;
     }
     function B() {
-      const {b} = useSyncExternalStoreExtra(
+      const {b} = useSyncExternalStoreWithSelector(
         store.subscribe,
         store.getState,
         null,

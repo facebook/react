@@ -30,11 +30,10 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
-import {SchedulingProfilerContextController} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
+import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
-import DuplicateInstallationDialog from './DuplicateInstallationDialog';
 import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
@@ -74,7 +73,6 @@ export type Props = {|
   enabledInspectedElementContextMenu?: boolean,
   showTabBar?: boolean,
   store: Store,
-  warnIfDuplicateInstallation?: boolean,
   warnIfLegacyBackendDetected?: boolean,
   warnIfUnsupportedVersionDetected?: boolean,
   viewAttributeSourceFunction?: ?ViewAttributeSource,
@@ -134,7 +132,6 @@ export default function DevTools({
   profilerPortalContainer,
   showTabBar = false,
   store,
-  warnIfDuplicateInstallation = false,
   warnIfLegacyBackendDetected = false,
   warnIfUnsupportedVersionDetected = false,
   viewAttributeSourceFunction,
@@ -276,7 +273,7 @@ export default function DevTools({
                       value={fetchFileWithCaching || null}>
                       <TreeContextController>
                         <ProfilerContextController>
-                          <SchedulingProfilerContextController>
+                          <TimelineContextController>
                             <ThemeProvider>
                               <div
                                 className={styles.DevTools}
@@ -314,7 +311,7 @@ export default function DevTools({
                                 </div>
                               </div>
                             </ThemeProvider>
-                          </SchedulingProfilerContextController>
+                          </TimelineContextController>
                         </ProfilerContextController>
                       </TreeContextController>
                     </FetchFileWithCachingContext.Provider>
@@ -322,7 +319,6 @@ export default function DevTools({
                 </ViewElementSourceContext.Provider>
               </SettingsContextController>
               <UnsupportedBridgeProtocolDialog />
-              {warnIfDuplicateInstallation && <DuplicateInstallationDialog />}
               {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
               {warnIfUnsupportedVersionDetected && <UnsupportedVersionDialog />}
             </ModalDialogContextController>

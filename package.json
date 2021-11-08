@@ -114,7 +114,7 @@
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
-    "extract-errors": "yarn build --type=dev --extract-errors",
+    "extract-errors": "node scripts/error-codes/extract-errors.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json && node ./scripts/flow/createFlowConfigs.js && node ./scripts/yarn/downloadReactIsForPrettyFormat.js",
     "debug-test": "yarn test --deprecated 'yarn test --debug'",
     "test": "node ./scripts/jest/jest-cli.js",

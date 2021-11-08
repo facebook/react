@@ -132,7 +132,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
   let diff = '';
   let numFilesModified = 0;
 
-  // Find-and-replace hard coded version (in built JS) for renderers.
+  // Find-and-replace hardcoded version (in built JS) for renderers.
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const packagePath = join(nodeModulesPath, packageName);

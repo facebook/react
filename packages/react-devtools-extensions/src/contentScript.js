@@ -2,8 +2,6 @@
 
 'use strict';
 
-import {CURRENT_EXTENSION_ID} from './constants';
-
 let backendDisconnected: boolean = false;
 let backendInitialized: boolean = false;
 
@@ -12,7 +10,6 @@ function sayHelloToBackend() {
     {
       source: 'react-devtools-content-script',
       hello: true,
-      extensionId: CURRENT_EXTENSION_ID,
     },
     '*',
   );
@@ -23,7 +20,6 @@ function handleMessageFromDevtools(message) {
     {
       source: 'react-devtools-content-script',
       payload: message,
-      extensionId: CURRENT_EXTENSION_ID,
     },
     '*',
   );
@@ -53,7 +49,6 @@ function handleDisconnect() {
         type: 'event',
         event: 'shutdown',
       },
-      extensionId: CURRENT_EXTENSION_ID,
     },
     '*',
   );

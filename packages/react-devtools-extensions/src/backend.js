@@ -13,16 +13,15 @@ function welcome(event) {
   ) {
     return;
   }
-  const extensionId = event.data.extensionId;
 
   window.removeEventListener('message', welcome);
 
-  setup(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, extensionId);
+  setup(window.__REACT_DEVTOOLS_GLOBAL_HOOK__);
 }
 
 window.addEventListener('message', welcome);
 
-function setup(hook, extensionId) {
+function setup(hook) {
   if (hook == null) {
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return;
@@ -56,7 +55,6 @@ function setup(hook, extensionId) {
         {
           source: 'react-devtools-bridge',
           payload: {event, payload},
-          extensionId,
         },
         '*',
         transferable,

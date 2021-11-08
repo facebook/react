@@ -474,8 +474,7 @@ export function scheduleUpdateOnFiber(
     // if the update originates from user space (with the exception of local
     // hook updates, which are handled differently and don't reach this
     // function), but there are some internal React features that use this as
-    // an implementation detail, like selective hydration
-    // and useOpaqueIdentifier.
+    // an implementation detail, like selective hydration.
     warnAboutRenderPhaseUpdatesInDEV(fiber);
 
     // Track lanes that were updated during the render phase
@@ -898,12 +897,10 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
       exitStatus === RootErrored &&
       workInProgressRootRenderPhaseUpdatedLanes !== NoLanes
     ) {
-      // There was a render phase update during this render. This was likely a
-      // useOpaqueIdentifier hook upgrading itself to a client ID. Try rendering
-      // again. This time, the component will use a client ID and will proceed
-      // without throwing. If multiple IDs upgrade as a result of the same
-      // update, we will have to do multiple render passes. To protect against
-      // an inifinite loop, eventually we'll give up.
+      // There was a render phase update during this render. Some internal React
+      // implementation details may use this as a trick to schedule another
+      // render pass. To protect against an inifinite loop, eventually
+      // we'll give up.
       continue;
     }
     break;
