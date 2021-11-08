@@ -813,7 +813,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
         'C',
         // Mouse out events aren't replayed
         // 'Mouse Out Capture B',
-        // stopPropagation stops these
         // 'Mouse Out B',
         'Mouse Over Capture Parent',
         'Mouse Over Capture C',
@@ -834,14 +833,17 @@ describe('ReactDOMServerSelectiveHydration', () => {
         'Clicked D',
         'B', // Ideally this should be later.
         'C',
+        // Capture phase isn't replayed
+        // Mouseout isn't replayed
         'Mouse Over C',
         'Mouse Enter C',
         'A',
       ]);
     }
 
+    // This test shows existing quirk where stopPropagation on mouseout
+    // prevents mouseEnter from firing
     dispatchMouseHoverEvent(spanC, spanB);
-
     expect(Scheduler).toHaveYielded([
       'Mouse Out Capture B',
       // stopPropagation stops these
