@@ -822,20 +822,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
         // 'Mouse Over C',
         'A',
       ]);
-
-      dispatchMouseHoverEvent(spanC, spanB);
-
-      expect(Scheduler).toHaveYielded([
-        'Mouse Out Capture B',
-        // stopPropagation stops these
-        // 'Mouse Out B',
-        // 'Mouse Enter C',
-        'Mouse Over Capture Parent',
-        'Mouse Over Capture C',
-        // Stop propagation stops these
-        // 'Mouse Over Capture Inner C',
-        // 'Mouse Over C',
-      ]);
     } else {
       // We should prioritize hydrating D first because we clicked it.
       // Next we should hydrate C since that's the current hover target.
@@ -853,6 +839,20 @@ describe('ReactDOMServerSelectiveHydration', () => {
         'A',
       ]);
     }
+
+    dispatchMouseHoverEvent(spanC, spanB);
+
+    expect(Scheduler).toHaveYielded([
+      'Mouse Out Capture B',
+      // stopPropagation stops these
+      // 'Mouse Out B',
+      // 'Mouse Enter C',
+      'Mouse Over Capture Parent',
+      'Mouse Over Capture C',
+      // Stop propagation stops these
+      // 'Mouse Over Capture Inner C',
+      // 'Mouse Over C',
+    ]);
 
     document.body.removeChild(container);
   });
