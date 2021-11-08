@@ -1680,20 +1680,16 @@ describe('ReactDOMFizzServer', () => {
     function getServerSnapshot() {
       return 'server';
     }
-
     function getClientSnapshot() {
       return 'client';
     }
-
     function subscribe() {
       return () => {};
     }
-
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
       return text;
     }
-
     function App() {
       const value = useSyncExternalStore(
         subscribe,
@@ -1706,14 +1702,12 @@ describe('ReactDOMFizzServer', () => {
         </div>
       );
     }
-
     const loggedErrors = [];
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
-
         {
           onError(x) {
             loggedErrors.push(x);
@@ -1737,38 +1731,30 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // The selector implementation uses the lazy ref initialization pattern
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
     // Same as previous test, but with a selector that returns a complex object
     // that is memoized with a custom `isEqual` function.
     const ref = React.createRef();
-
     function getServerSnapshot() {
       return {env: 'server', other: 'unrelated'};
     }
-
     function getClientSnapshot() {
       return {env: 'client', other: 'unrelated'};
     }
-
     function selector({env}) {
       return {env};
     }
-
     function isEqual(a, b) {
       return a.env === b.env;
     }
-
     function subscribe() {
       return () => {};
     }
-
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
       return text;
     }
-
     function App() {
       const {env} = useSyncExternalStoreWithSelector(
         subscribe,
@@ -1783,14 +1769,12 @@ describe('ReactDOMFizzServer', () => {
         </div>
       );
     }
-
     const loggedErrors = [];
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
-
         {
           onError(x) {
             loggedErrors.push(x);
