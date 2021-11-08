@@ -11,7 +11,6 @@ import * as React from 'react';
 import {useCallback} from 'react';
 
 import styles from './Toggle.css';
-import tooltipStyles from './Tooltip.css';
 import Tooltip from './Components/reach-ui/tooltip';
 
 type Props = {
@@ -58,11 +57,7 @@ export default function Toggle({
   );
 
   if (title) {
-    toggle = (
-      <Tooltip className={tooltipStyles.Tooltip} label={title}>
-        {toggle}
-      </Tooltip>
-    );
+    toggle = <Tooltip label={title}>{toggle}</Tooltip>;
   }
 
   return toggle;

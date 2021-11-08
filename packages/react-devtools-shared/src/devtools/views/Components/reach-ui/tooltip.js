@@ -9,12 +9,24 @@
 
 import * as React from 'react';
 import ReachTooltip from '@reach/tooltip';
+import tooltipStyles from './Tooltip.css';
 import useThemeStyles from '../../useThemeStyles';
 
-const Tooltip = ({children, ...props}: {children: React$Node, ...}) => {
+const Tooltip = ({
+  children,
+  className = '',
+  ...props
+}: {
+  children: React$Node,
+  className: string,
+  ...
+}) => {
   const style = useThemeStyles();
   return (
-    <ReachTooltip style={style} {...props}>
+    <ReachTooltip
+      className={`${tooltipStyles.Tooltip} ${className}`}
+      style={style}
+      {...props}>
       {children}
     </ReachTooltip>
   );
