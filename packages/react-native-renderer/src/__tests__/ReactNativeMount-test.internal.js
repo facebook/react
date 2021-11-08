@@ -488,7 +488,7 @@ describe('ReactNative', () => {
     }));
 
     expect(() => ReactNative.render(<View>this should warn</View>, 11)).toThrow(
-      'Text strings must be rendered within a <Text> component.',
+      'Text string "this should warn" must be rendered within a <Text> component.',
     );
 
     expect(() =>
@@ -498,7 +498,7 @@ describe('ReactNative', () => {
         </Text>,
         11,
       ),
-    ).toThrow('Text strings must be rendered within a <Text> component.');
+    ).toThrow('Text string "hi hello hi" must be rendered within a <Text> component.');
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {
