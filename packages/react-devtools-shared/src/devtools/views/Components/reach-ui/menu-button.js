@@ -16,7 +16,7 @@ import {
 } from '@reach/menu-button';
 import useThemeStyles from '../../useThemeStyles';
 
-const MenuList = ({children, ...props}) => {
+const MenuList = ({children, ...props}: {children: React$Node, ...}) => {
   const style = useThemeStyles();
   return (
     <ReachMenuList style={style} {...props}>
