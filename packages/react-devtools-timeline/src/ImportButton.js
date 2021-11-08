@@ -46,6 +46,7 @@ export default function ImportButton({children = null, onFileSelect}: Props) {
         ref={inputRef}
         className={styles.Input}
         type="file"
+        accept=".json"
         onChange={handleFiles}
         tabIndex={-1}
       />
