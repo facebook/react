@@ -128,7 +128,10 @@ function extractEvents(
     eventTypePrefix = 'pointer';
   }
 
-  const fromNode = from == null ? win : getNodeFromInstance(from);
+  const fromNode =
+    from == null
+      ? ((nativeEvent: any): MouseEvent).relatedTarget
+      : getNodeFromInstance(from);
   const toNode = to == null ? win : getNodeFromInstance(to);
 
   const leave = new SyntheticEventCtor(
