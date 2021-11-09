@@ -26,7 +26,9 @@ const ReactNoopFlightServer = ReactFlightServer({
   scheduleWork(callback: () => void) {
     callback();
   },
-  beginWriting(destination: Destination): void {},
+  beginWriting(destination: Destination): boolean {
+    return true;
+  },
   writeChunk(destination: Destination, chunk: string): void {
     destination.push(chunk);
   },

@@ -9,12 +9,13 @@
 
 import type {Writable} from 'stream';
 
-type MightBeFlushable = {
+type WritableExtensions = {
   flush?: () => void,
+  writableNeedDrain?: boolean,
   ...
 };
 
-export type Destination = Writable & MightBeFlushable;
+export type Destination = Writable & WritableExtensions;
 
 export type PrecomputedChunk = Uint8Array;
 export type Chunk = string;
@@ -33,11 +34,16 @@ export function flushBuffered(destination: Destination) {
   }
 }
 
-export function beginWriting(destination: Destination) {
-  // Older Node streams like http.createServer don't have this.
-  if (typeof destination.cork === 'function') {
-    destination.cork();
+export function beginWriting(destination: Destination): boolean {
+  // Older versions of Node don't have this.
+  if (destination.writableNeedDrain !== true) {
+    // Older Node streams like http.createServer don't have this.
+    if (typeof destination.cork === 'function') {
+      destination.cork();
+    }
+    return true;
   }
+  return false;
 }
 
 export function writeChunk(

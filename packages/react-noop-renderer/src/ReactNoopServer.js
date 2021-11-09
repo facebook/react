@@ -57,7 +57,9 @@ const ReactNoopServer = ReactFizzServer({
   scheduleWork(callback: () => void) {
     callback();
   },
-  beginWriting(destination: Destination): void {},
+  beginWriting(destination: Destination): boolean {
+    return true;
+  },
   writeChunk(destination: Destination, buffer: Uint8Array): void {
     const stack = destination.stack;
     if (buffer === POP) {

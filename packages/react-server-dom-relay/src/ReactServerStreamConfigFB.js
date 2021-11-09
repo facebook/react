@@ -23,7 +23,9 @@ export function scheduleWork(callback: () => void) {
 
 export function flushBuffered(destination: Destination) {}
 
-export function beginWriting(destination: Destination) {}
+export function beginWriting(destination: Destination): boolean {
+  return true;
+}
 
 export function writeChunk(
   destination: Destination,

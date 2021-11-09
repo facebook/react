@@ -723,7 +723,10 @@ function flushCompletedChunks(
   request: Request,
   destination: Destination,
 ): void {
-  beginWriting(destination);
+  if (!beginWriting(destination)) {
+    request.destination = null;
+    return;
+  }
   try {
     // We emit module chunks first in the stream so that
     // they can be preloaded as early as possible.
