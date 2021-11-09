@@ -10,6 +10,7 @@
 import type {DataResource} from './createDataResourceFromImportedFile';
 import type {ViewState} from './types';
 
+import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 import * as React from 'react';
 import {
   Suspense,
@@ -79,6 +80,19 @@ export function Timeline(_: {||}) {
 
 const Welcome = ({onFileSelect}: {|onFileSelect: (file: File) => void|}) => (
   <ol className={styles.WelcomeInstructionsList}>
+    {isInternalFacebookBuild && (
+      <li className={styles.WelcomeInstructionsListItem}>
+        Enable the
+        <a
+          className={styles.WelcomeInstructionsListItemLink}
+          href="https://fburl.com/react-devtools-scheduling-profiler-gk"
+          rel="noopener noreferrer"
+          target="_blank">
+          <code>react_enable_scheduling_profiler</code> GK
+        </a>
+        .
+      </li>
+    )}
     <li className={styles.WelcomeInstructionsListItem}>
       Open a website that's built with the
       <a
