@@ -414,9 +414,13 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
     switch (finishedWork.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent: {
+      case SimpleMemoComponent:  
+      case HostComponent:
+      case HostText:
+      case HostPortal:
+      case IncompleteClassComponent:
+        // Nothing to do for these component types
         break;
-      }
       case ClassComponent: {
         if (current !== null) {
           const prevProps = current.memoizedProps;
@@ -480,12 +484,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
         }
         break;
       }
-      case HostComponent:
-      case HostText:
-      case HostPortal:
-      case IncompleteClassComponent:
-        // Nothing to do for these component types
-        break;
+
       default: {
         throw new Error(
           'This unit of work tag should not have side-effects. This error is ' +
