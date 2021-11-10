@@ -414,7 +414,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
     switch (finishedWork.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent:  
+      case SimpleMemoComponent:
       case HostComponent:
       case HostText:
       case HostPortal:
