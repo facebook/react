@@ -214,9 +214,12 @@ describe('ChangeEventPlugin', () => {
     );
 
     expect(node.checked).toBe(false);
-    node.dispatchEvent(
-      new MouseEvent('click', {bubbles: true, cancelable: true, defaultPrevented: true}),
-    );
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
+    event.preventDefault();
+    node.dispatchEvent(event);
     expect(node.checked).toBe(true);
     expect(called).toBe(0);
   });
