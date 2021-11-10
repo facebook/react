@@ -200,6 +200,27 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
+  it('should not fire change for checkbox input when preventDefault', () => {
+    let called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    const node = ReactDOM.render(
+      <input type="checkbox" onChange={cb} />,
+      container,
+    );
+
+    expect(node.checked).toBe(false);
+    node.dispatchEvent(
+      new MouseEvent('click', {bubbles: true, cancelable: true, defaultPrevented: true}),
+    );
+    expect(node.checked).toBe(true);
+    expect(called).toBe(0);
+  });
+
   it('should not fire change setting the value programmatically', () => {
     let called = 0;
 

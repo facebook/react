@@ -219,7 +219,7 @@ function getTargetInstForInputEventPolyfill(
 /**
  * SECTION: handle `click` event
  */
-function shouldUseClickEvent(elem) {
+function shouldUseClickEvent(elem, nativeEvent: AnyNativeEvent) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
@@ -227,7 +227,8 @@ function shouldUseClickEvent(elem) {
   return (
     nodeName &&
     nodeName.toLowerCase() === 'input' &&
-    (elem.type === 'checkbox' || elem.type === 'radio')
+    (elem.type === 'checkbox' || elem.type === 'radio') &&
+    !nativeEvent.defaultPrevented
   );
 }
 
@@ -290,7 +291,7 @@ function extractEvents(
       getTargetInstFunc = getTargetInstForInputEventPolyfill;
       handleEventFunc = handleEventsForInputEventPolyfill;
     }
-  } else if (shouldUseClickEvent(targetNode)) {
+  } else if (shouldUseClickEvent(targetNode, nativeEvent)) {
     getTargetInstFunc = getTargetInstForClickEvent;
   }
 
