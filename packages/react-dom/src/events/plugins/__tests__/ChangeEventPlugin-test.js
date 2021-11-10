@@ -218,9 +218,13 @@ describe('ChangeEventPlugin', () => {
       bubbles: true,
       cancelable: true,
     });
+
+    // Mock native behavior to set checked as true
+    // https://html.spec.whatwg.org/multipage/input.html#the-input-element
     event.preventDefault();
+    node.checked = true;
+
     node.dispatchEvent(event);
-    expect(node.checked).toBe(true);
     expect(called).toBe(0);
   });
 
