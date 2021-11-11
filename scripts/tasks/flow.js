@@ -36,7 +36,7 @@ if (!primaryRenderer) {
   console.log();
   console.log('If you are not sure, run ' + chalk.green('yarn flow dom') + '.');
   console.log(
-    'This will still typecheck non-DOM packages, although less precisely.'
+    'This will still type check non-DOM packages, although less precisely.'
   );
   console.log();
   console.log('Note that checks for all renderers will run on CI.');

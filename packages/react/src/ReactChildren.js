@@ -61,7 +61,7 @@ function escapeUserProvidedKey(text: string): string {
  * @return {string}
  */
 function getElementKey(element: any, index: number): string {
-  // Do some typechecking here since we call this blindly. We want to ensure
+  // Do some type checking here since we call this blindly. We want to ensure
   // that we don't block potential future ES APIs.
   if (typeof element === 'object' && element !== null && element.key != null) {
     // Explicit key
