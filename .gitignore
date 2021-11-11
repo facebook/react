@@ -23,6 +23,11 @@ chrome-user-data
 .vscode
 *.swp
 *.swo
+dist
+TODOs.md
+explorations
+*.local
+.DS_Store
 
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
