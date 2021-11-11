@@ -1546,6 +1546,19 @@ export function attach(
   }
 
   function flushOrQueueOperations(operations: OperationsArray): void {
+    if (operations.length === 3) {
+      // This operations array is a no op: [renderer ID, root ID, string table size (0)]
+      // We can usually skip sending updates like this across the bridge, unless we're Profiling.
+      // In that case, even though the tree didn't change– some Fibers may have still rendered.
+      if (
+        !isProfiling ||
+        currentCommitProfilingMetadata == null ||
+        currentCommitProfilingMetadata.durations.length === 0
+      ) {
+        return;
+      }
+    }
+
     if (pendingOperationsQueue !== null) {
       pendingOperationsQueue.push(operations);
     } else {
@@ -2608,18 +2621,26 @@ export function attach(
     }
 
     if (isProfiling && isProfilingSupported) {
-      const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-        currentRootID,
-      );
-      if (commitProfilingMetadata != null) {
-        commitProfilingMetadata.push(
-          ((currentCommitProfilingMetadata: any): CommitProfilingData),
-        );
-      } else {
-        ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
+      // Make sure at least one Fiber performed work during this commit.
+      // If not, don't send it to the frontend; showing an empty commit in the Profiler is confusing.
+      if (
+        currentCommitProfilingMetadata != null &&
+        currentCommitProfilingMetadata.durations.length > 0
+      ) {
+        const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
           currentRootID,
-          [((currentCommitProfilingMetadata: any): CommitProfilingData)],
         );
+
+        if (commitProfilingMetadata != null) {
+          commitProfilingMetadata.push(
+            ((currentCommitProfilingMetadata: any): CommitProfilingData),
+          );
+        } else {
+          ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
+            currentRootID,
+            [((currentCommitProfilingMetadata: any): CommitProfilingData)],
+          );
+        }
       }
     }
 
