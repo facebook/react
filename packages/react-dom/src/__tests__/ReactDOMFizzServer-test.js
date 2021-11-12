@@ -812,7 +812,7 @@ describe('ReactDOMFizzServer', () => {
 
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
-        // We use two nested boundaries to flush out coverage of an old reentrancy bug.
+        // We use two nested boundaries to flush out coverage of an old re-entrance bug.
         <Suspense fallback="Loading...">
           <Suspense fallback={<Text text="Loading A..." />}>
             <>

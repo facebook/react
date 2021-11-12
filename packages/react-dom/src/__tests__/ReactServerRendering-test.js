@@ -455,7 +455,7 @@ describe('ReactDOMServer', () => {
       expect(results).toEqual([2, 1, 3, 1]);
     });
 
-    it('renders context API, reentrancy', () => {
+    it('renders context API, re-entrance', () => {
       const Context = React.createContext(0);
 
       function Consumer(props) {
