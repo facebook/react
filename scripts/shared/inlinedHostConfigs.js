@@ -69,12 +69,14 @@ module.exports = [
   {
     shortName: 'dom-next',
     entryPoints: [
+      'react-server-dom-webpack/writer.next.server',
+      'react-server-dom-webpack',
       'react-dom/src/server/ReactDOMFizzServerNext', // react-dom/server
     ],
     paths: [
       'react-dom',
       'react-server-dom-webpack',
-      'react-dom/src/server/ReactDOMFizzServerNext.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMFizzServerNext.js', // react-dom/server.next
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,

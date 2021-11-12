@@ -16,7 +16,6 @@ import {
   createRequest,
   startWork,
   startFlowing,
-  stopFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
 
@@ -25,56 +24,63 @@ import {
   createRootFormatContext,
 } from './ReactDOMServerFormatConfig';
 
+type NextStreamSource = {
+  start: (controller: Destination) => void,
+  pull: (controller: Destination) => void,
+  cancel: (reason: mixed) => void,
+};
+
 type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
+  nonce?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts?: Array<string>,
+  bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
-  onReadyToStream?: () => void,
+  signal?: AbortSignal,
+  onCompleteShell?: () => void,
   onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
 |};
 
-type Controls = {|
-  abort(): void,
-  update(): void,
-|};
-
-function createRequestImpl(
+function renderToNextStream(
   children: ReactNodeList,
-  destination: Destination,
-  options: void | Options,
-) {
-  return createRequest(
+  options?: Options,
+): NextStreamSource {
+  const request = createRequest(
     children,
-    destination,
-    createResponseState(options ? options.identifierPrefix : undefined),
+    createResponseState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+    ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
     options ? options.onCompleteAll : undefined,
-    options ? options.onReadyToStream : undefined,
+    options ? options.onCompleteShell : undefined,
   );
-}
-
-function renderToNextStream(
-  children: ReactNodeList,
-  destination: Destination,
-  options?: Options,
-): Controls {
-  const request = createRequestImpl(children, destination, options);
-  startWork(request);
-  return {
-    abort() {
+  if (options && options.signal) {
+    const signal = options.signal;
+    const listener = () => {
       abort(request);
+      signal.removeEventListener('abort', listener);
+    };
+    signal.addEventListener('abort', listener);
+  }
+  const stream = {
+    start(controller) {
+      startWork(request);
     },
-    update() {
-      if (destination.ready) {
-        startFlowing(request);
-      } else {
-        stopFlowing(request);
-      }
+    pull(controller) {
+      startFlowing(request, controller);
     },
+    cancel(reason) {},
   };
+  return stream;
 }
 
 export {renderToNextStream, ReactVersion as version};

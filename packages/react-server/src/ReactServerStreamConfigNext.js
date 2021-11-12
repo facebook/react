@@ -7,23 +7,21 @@
  * @flow
  */
 
-declare function __next_scheduleReactServerStreamWork__(
-  callback: () => void,
-): void;
+declare function __next_scheduleReactServerWork(callback: () => void): void;
 
-export type Destination = {|
-  write: (chunk: Uint8Array) => void,
-  buffer: (shouldBuffer: boolean) => void,
+export type Destination = {
   flush: () => void,
+  buffer: (buffer: boolean) => void,
   close: (error: mixed) => void,
-  ready: boolean,
-|};
+  write: (chunk: Uint8Array) => void,
+  desiredSize: number,
+};
 
 export type PrecomputedChunk = Uint8Array;
 export type Chunk = Uint8Array;
 
 export function scheduleWork(callback: () => void) {
-  __next_scheduleReactServerStreamWork__(callback);
+  __next_scheduleReactServerWork(callback);
 }
 
 export function flushBuffered(destination: Destination) {
@@ -36,10 +34,10 @@ export function beginWriting(destination: Destination) {
 
 export function writeChunk(
   destination: Destination,
-  chunk: PrecomputedChunk | Chunk,
+  chunk: Chunk | PrecomputedChunk,
 ): boolean {
   destination.write(chunk);
-  return destination.ready;
+  return destination.desiredSize > 0;
 }
 
 export function completeWriting(destination: Destination) {
