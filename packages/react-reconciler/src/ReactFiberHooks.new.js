@@ -112,6 +112,7 @@ import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 import {getTreeId} from './ReactFiberTreeContext.new';
 import {getInteractionID} from 'shared/getInteractionID';
+import {now} from './Scheduler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 

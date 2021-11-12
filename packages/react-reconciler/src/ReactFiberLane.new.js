@@ -8,6 +8,7 @@
  */
 
 import type {FiberRoot, Interaction} from './ReactInternalTypes';
+import type {Interactions} from './ReactFiberCacheComponent.new';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -802,6 +803,67 @@ export function addInteractionToLaneMap(
   if (enableInteractionTracing) {
     const interactionsMap = root.interactions;
     const index = laneToIndex(lane);
-    interactionsMap[index].add(interaction);
+    interactionsMap[index].set(interaction.id, interaction);
+  }
+}
+
+export function getInteractionsForLanes(
+  root: FiberRoot,
+  lanes: Lanes,
+): Interactions | null {
+  let laneInteractions: Interactions | null = null;
+  if (enableInteractionTracing) {
+    while (lanes > 0) {
+      const index = laneToIndex(lanes);
+      const lane = 1 << index;
+
+      const interactions = root.interactions[index];
+      if (interactions.size > 0) {
+        interactions.forEach((interaction, id) => {
+          if (laneInteractions === null) {
+            laneInteractions = {
+              interaction,
+              next: null,
+            };
+          } else {
+            let interactionPointer = laneInteractions;
+            while (interactionPointer !== null) {
+              const nextInteraction = interactionPointer.next;
+              if (nextInteraction === null) {
+                interactionPointer.next = {
+                  interaction,
+                  next: null,
+                };
+              } else {
+                if (nextInteraction.interaction.id > interaction.id) {
+                  interactionPointer.next = {
+                    interaction,
+                    next: nextInteraction,
+                  };
+                }
+              }
+              interactionPointer = laneInteractions.next;
+            }
+          }
+        });
+      }
+
+      lanes &= ~lane;
+    }
+  }
+
+  return laneInteractions;
+}
+
+export function clearInteractionsForLanes(root: FiberRoot, lanes: Lanes) {
+  if (enableInteractionTracing) {
+    while (lanes > 0) {
+      const index = laneToIndex(lanes);
+      const lane = 1 << index;
+
+      root.interactions[index].clear();
+
+      lanes &= ~lane;
+    }
   }
 }

@@ -9,7 +9,10 @@
 
 import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
-import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {
+  Interactions,
+  SpawnedCachePool,
+} from './ReactFiberCacheComponent.new';
 
 export type OffscreenProps = {|
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
@@ -30,4 +33,11 @@ export type OffscreenState = {|
   // order to unhide the component.
   baseLanes: Lanes,
   cachePool: SpawnedCachePool | null,
+  // TODO(luna) make this interactions: Interactions | null,
+  interactions?: Interactions | null,
+|};
+
+export type OffscreenUpdateQueue = {|
+  cachePool: SpawnedCachePool | null,
+  interactions: Interactions | null,
 |};

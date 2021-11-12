@@ -11,7 +11,8 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Cache} from './ReactFiberCacheComponent.new';
+import type {OffscreenUpdateQueue} from './ReactFiberOffscreenComponent';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -32,6 +33,7 @@ import {
   enableSuspenseServerRenderer,
   enableProfilerTimer,
   enableCache,
+  enableInteractionTracing,
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
@@ -48,6 +50,8 @@ import {
   popCacheProvider,
   popRootCachePool,
   popCachePool,
+  popInteractionPool,
+  popRootInteractions,
 } from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
@@ -84,6 +88,10 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
 
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
+      }
+      if (enableInteractionTracing) {
+        const root: FiberRoot = workInProgress.stateNode;
+        popRootInteractions(root, renderLanes);
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -152,9 +160,18 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
       if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        const updateQueue: OffscreenUpdateQueue | null = (workInProgress.updateQueue: any);
+        if (updateQueue !== null && updateQueue.cachePool !== null) {
           popCachePool(workInProgress);
+        }
+      }
+      // we don't need to do interaction tracing stuff here because
+      // if we get here, this means the suspense boundary already resolved
+      // so there shouldn't be a cache pool but we'll do it here just in case
+      if (enableInteractionTracing) {
+        const updateQueue: OffscreenUpdateQueue | null = (workInProgress.updateQueue: any);
+        if (updateQueue !== null && updateQueue.interactions !== null) {
+          popInteractionPool(workInProgress);
         }
       }
       return null;
@@ -191,6 +208,11 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
       }
+
+      if (enableInteractionTracing) {
+        const root: FiberRoot = interruptedWork.stateNode;
+        popRootInteractions(root, renderLanes);
+      }
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
       resetMutableSourceWorkInProgressVersions();
@@ -217,9 +239,18 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
       if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (interruptedWork.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        const updateQueue: OffscreenUpdateQueue | null = (interruptedWork.updateQueue: any);
+        if (updateQueue !== null && updateQueue.cachePool !== null) {
           popCachePool(interruptedWork);
+        }
+      }
+
+      // Question: Should we pop this in Suspense instead of OffscreenComponent?
+      if (enableInteractionTracing) {
+        // Question: Are we doing this because we
+        const updateQueue: OffscreenUpdateQueue | null = (interruptedWork.updateQueue: any);
+        if (updateQueue !== null && updateQueue.interactions !== null) {
+          popInteractionPool(interruptedWork);
         }
       }
 

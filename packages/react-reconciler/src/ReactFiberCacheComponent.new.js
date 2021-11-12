@@ -8,23 +8,31 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {FiberRoot} from './ReactInternalTypes';
+import type {FiberRoot, Interaction} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {StackCursor} from './ReactFiberStack.new';
 
-import {enableCache} from 'shared/ReactFeatureFlags';
+import {enableCache, enableInteractionTracing} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
 import {pushProvider, popProvider} from './ReactFiberNewContext.new';
-import * as Scheduler from 'scheduler';
+import {
+  getInteractionsForLanes,
+  clearInteractionsForLanes,
+} from './ReactFiberLane.new';
 
+import * as Scheduler from 'scheduler';
 export type Cache = {|
   controller: AbortController,
   data: Map<() => mixed, mixed>,
   refCount: number,
 |};
+export type Interactions = {
+  interaction: Interaction,
+  next: Interactions | null,
+};
 
 export type CacheComponentState = {|
   +parent: Cache,
@@ -68,6 +76,13 @@ let pooledCache: Cache | null = null;
 // When retrying a Suspense/Offscreen boundary, we override pooledCache with the
 // cache from the render that suspended.
 const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
+
+// The interaction that is currently active
+let pooledInteractions: Interactions | null = null;
+
+const prevFreshInteractionOnStack: StackCursor<Interactions | null> = createCursor(
+  null,
+);
 
 // Creates a new empty Cache instance with a ref-count of 0. The caller is responsible
 // for retaining the cache once it is in use (retainCache), and releasing the cache
@@ -277,4 +292,83 @@ export function getOffscreenDeferredCachePool(): SpawnedCachePool | null {
       : CacheContext._currentValue2,
     pool: pooledCache,
   };
+}
+
+export function requestInteractionFromPool(
+  root: FiberRoot,
+  lane: Lanes,
+): Interactions | null {
+  if (!enableInteractionTracing) {
+    return null;
+  }
+
+  if (pooledInteractions !== null) {
+    // set pooled interactions on the root
+    return pooledInteractions;
+  }
+  // Create a fresh cache.
+  pooledInteractions = null;
+  return pooledInteractions;
+}
+
+// if there is interactions on the suspense boundary append it
+export function pushRootInteractionPool(root: FiberRoot, lanes: Lanes) {
+  if (!enableInteractionTracing) {
+    return;
+  }
+
+  pooledInteractions = getInteractionsForLanes(root, lanes);
+}
+
+// if there is interactions on the suspense boundary append it
+export function popRootInteractions(root: FiberRoot, lanes: Lanes) {
+  if (!enableInteractionTracing) {
+    return;
+  }
+
+  pooledInteractions = null;
+  clearInteractionsForLanes(root, lanes);
+}
+
+export function restoreSpawnedInteractionPool(
+  offscreenWorkInProgress: Fiber,
+  prevInteractionPool: Interactions,
+) {
+  if (!enableInteractionTracing) {
+    return null;
+  }
+
+  push(
+    prevFreshInteractionOnStack,
+    pooledInteractions,
+    offscreenWorkInProgress,
+  );
+  pooledInteractions = prevInteractionPool; // + current pooled interactions;
+
+  return prevInteractionPool;
+}
+
+// for completed hidden trees
+// for trees that are unwound because something in them threw
+// pop values off the stack without completing
+export function popInteractionPool(workInProgress: Fiber) {
+  if (!enableInteractionTracing) {
+    return;
+  }
+
+  pooledInteractions = prevFreshInteractionOnStack.current;
+  pop(prevFreshInteractionOnStack, workInProgress);
+}
+
+// For suspended fallback trees
+export function getSuspendedInteractionPool() {
+  if (!enableInteractionTracing) {
+    return null;
+  }
+
+  if (pooledInteractions === null) {
+    return null;
+  }
+
+  return pooledInteractions;
 }

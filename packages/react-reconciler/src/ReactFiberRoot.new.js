@@ -86,7 +86,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (enableInteractionTracing) {
     const interactionsMap = (this.interactions = []);
     for (let i = 0; i < TotalLanes; i++) {
-      interactionsMap.push(new Set());
+      interactionsMap.push(new Map());
     }
   }
 

@@ -27,8 +27,11 @@ import type {
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
-import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {
+  OffscreenState,
+  OffscreenUpdateQueue,
+} from './ReactFiberOffscreenComponent';
+import type {Cache} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
@@ -58,6 +61,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -131,6 +135,7 @@ import {
   enableCache,
   enableSuspenseLayoutEffectSemantics,
   enablePersistentOffscreenHostContainer,
+  enableInteractionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   renderDidSuspend,
@@ -154,6 +159,8 @@ import {
   popCacheProvider,
   popRootCachePool,
   popCachePool,
+  popRootInteractions,
+  popInteractionPool,
 } from './ReactFiberCacheComponent.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
 
@@ -865,6 +872,9 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
       }
+      if (enableInteractionTracing) {
+        popRootInteractions(fiberRoot, renderLanes);
+      }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
@@ -1015,6 +1025,9 @@ function completeWork(
       bubbleProperties(workInProgress);
       return null;
     }
+    case TracingMarkerComponent:
+      bubbleProperties(workInProgress);
+      return null;
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
@@ -1521,9 +1534,18 @@ function completeWork(
           // Run passive effects to retain/release the cache.
           workInProgress.flags |= Passive;
         }
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        const updateQueue: OffscreenUpdateQueue | null = (workInProgress.updateQueue: any);
+        if (updateQueue !== null && updateQueue.cachePool !== null) {
           popCachePool(workInProgress);
+        }
+      }
+
+      // Question: Should we pop this in Suspense instead of OffscreenComponent?
+      if (enableInteractionTracing) {
+        // Question: Are we doing this because we
+        const updateQueue: OffscreenUpdateQueue | null = (workInProgress.updateQueue: any);
+        if (updateQueue !== null && updateQueue.interactions !== null) {
+          popInteractionPool(workInProgress);
         }
       }
 
@@ -1543,6 +1565,13 @@ function completeWork(
         popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);
         return null;
+      }
+    }
+    case TracingMarkerComponent: {
+      if (enableInteractionTracing) {
+        // if subtree doesn't have suspense boundaries
+        // mark this boundary as having tracing stuff left over
+        // got to somehow pass up the interactions and get it somehow
       }
     }
   }

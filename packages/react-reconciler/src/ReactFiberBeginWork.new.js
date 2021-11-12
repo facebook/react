@@ -27,6 +27,7 @@ import type {
   Cache,
   CacheComponentState,
   SpawnedCachePool,
+  Interactions,
 } from './ReactFiberCacheComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
@@ -59,6 +60,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -75,6 +77,7 @@ import {
   StaticMask,
   ShouldCapture,
   ForceClientRender,
+  SuspenseFallback,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -91,6 +94,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableSchedulingProfiler,
   enablePersistentOffscreenHostContainer,
+  enableInteractionTracing,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -234,6 +238,9 @@ import {
   getSuspendedCachePool,
   restoreSpawnedCachePool,
   getOffscreenDeferredCachePool,
+  pushRootInteractionPool,
+  getSuspendedInteractionPool,
+  restoreSpawnedInteractionPool,
 } from './ReactFiberCacheComponent.new';
 import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.new';
@@ -246,6 +253,7 @@ import {
   pushTreeId,
   pushMaterializedTreeId,
 } from './ReactFiberTreeContext.new';
+import {last} from 'lodash';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -638,6 +646,7 @@ function updateOffscreenComponent(
   // previous render. We will push this to the cache pool context so that we can
   // resume in-flight requests.
   let spawnedCachePool: SpawnedCachePool | null = null;
+  let spawnedInteractionPool: Interactions | null = null;
 
   if (
     nextProps.mode === 'hidden' ||
@@ -649,6 +658,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        interactions: null,
       };
       workInProgress.memoizedState = nextState;
       pushRenderLanes(workInProgress, renderLanes);
@@ -666,6 +676,8 @@ function updateOffscreenComponent(
           // bail out. There won't be a context mismatch because we only pop
           // the cache pool if `updateQueue` is non-null.
         }
+        // Note: We don't have to save the interaction pool here because it's not
+        // tied to suspense
       } else {
         nextBaseLanes = renderLanes;
       }
@@ -677,6 +689,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
         cachePool: spawnedCachePool,
+        interactions: null, // can be null because we won't get here in suspense case
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
@@ -713,10 +726,16 @@ function updateOffscreenComponent(
         }
       }
 
+      if (enableInteractionTracing && prevState !== null) {
+        // I think we shouldn't add this here becuase something
+        // that suspended shouldn't ever get here IMO?
+      }
+
       // Rendering at offscreen, so we can clear the base lanes.
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        interactions: null, // can be null because we won't get here in suspense case
       };
       workInProgress.memoizedState = nextState;
       // Push the lanes that were skipped when we bailed out.
@@ -745,6 +764,17 @@ function updateOffscreenComponent(
         }
       }
 
+      if (enableInteractionTracing) {
+        const prevInteractions = prevState.interactions;
+        // TODO(luna) make this prevInteractions !== null,
+        if (prevInteractions != null) {
+          spawnedInteractionPool = restoreSpawnedInteractionPool(
+            workInProgress,
+            prevInteractions,
+          );
+        }
+      }
+
       // Since we're not hidden anymore, reset the state
       workInProgress.memoizedState = null;
     } else {
@@ -756,10 +786,14 @@ function updateOffscreenComponent(
     pushRenderLanes(workInProgress, subtreeRenderLanes);
   }
 
-  if (enableCache) {
-    // If we have a cache pool from a previous render attempt, then this will be
-    // non-null. We use this to infer whether to push/pop the cache context.
-    workInProgress.updateQueue = spawnedCachePool;
+  if (enableCache || enableInteractionTracing) {
+    // If we have a cache pool or interaction pool from a previous render attempt,
+    // then this will be non-null. We use this to infer whether to push/pop the
+    // cache context.
+    workInProgress.updateQueue = {
+      cachePool: spawnedCachePool,
+      interactions: spawnedInteractionPool,
+    };
   }
 
   if (enablePersistentOffscreenHostContainer && supportsPersistence) {
@@ -937,6 +971,14 @@ function updateProfiler(
   const nextChildren = nextProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
+}
+
+function updateTracingMarker(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  return null;
 }
 
 function markRef(current: Fiber | null, workInProgress: Fiber) {
@@ -1317,6 +1359,10 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       // The root cache refreshed.
       propagateContextChange(workInProgress, CacheContext, renderLanes);
     }
+  }
+
+  if (enableInteractionTracing) {
+    pushRootInteractionPool(root, renderLanes);
   }
 
   // Caution: React DevTools currently depends on this property
@@ -1889,6 +1935,7 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
   return {
     baseLanes: renderLanes,
     cachePool: getSuspendedCachePool(),
+    interactions: getSuspendedInteractionPool(),
   };
 }
 
@@ -1920,9 +1967,69 @@ function updateSuspenseOffscreenState(
       cachePool = getSuspendedCachePool();
     }
   }
+
+  let interactions: Interactions | null = null;
+  if (enableInteractionTracing) {
+    // TODO(luna) make this Interactions | null,
+    let prevInteractionPool: Interactions | null = (prevOffscreenState.interactions: any);
+    let interactionPool: Interactions | null = getSuspendedInteractionPool();
+    // clone interactions
+    // Question: do we need to dedupe?
+    interactions = null;
+    let lastInteraction: Interactions | null = null;
+    const addedInteractions = new Set([]);
+
+    while (interactionPool !== null) {
+      const interaction = interactionPool.interaction;
+      if (lastInteraction === null) {
+        interactions = {
+          interaction,
+          next: null,
+        };
+        lastInteraction = interactions;
+        addedInteractions.add(interaction.id);
+      } else {
+        if (!addedInteractions.has(interaction.id)) {
+          lastInteraction.next = {
+            interaction,
+            next: null,
+          };
+          lastInteraction = lastInteraction.next;
+          addedInteractions.add(interaction.id);
+        }
+      }
+
+      interactionPool = interactionPool.next;
+    }
+
+    while (prevInteractionPool !== null) {
+      const interaction = prevInteractionPool.interaction;
+      if (lastInteraction === null) {
+        interactions = {
+          interaction,
+          next: null,
+        };
+        lastInteraction = interactions;
+        addedInteractions.add(interaction.id);
+      } else {
+        if (!addedInteractions.has(interaction.id)) {
+          lastInteraction.next = {
+            interaction,
+            next: null,
+          };
+          lastInteraction = lastInteraction.next;
+          addedInteractions.add(interaction.id);
+        }
+      }
+
+      prevInteractionPool = prevInteractionPool.next;
+    }
+  }
+
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
     cachePool,
+    interactions: interactions,
   };
 }
 
@@ -2065,6 +2172,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         renderLanes,
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
+      if (enableInteractionTracing) {
+        workInProgress.flags |= SuspenseFallback;
+      }
       return fallbackFragment;
     } else if (typeof nextProps.unstable_expectedLoadTime === 'number') {
       // This is a CPU-bound tree. Skip this tree and show a placeholder to
@@ -2091,6 +2201,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       // RetryLane even if it's the one currently rendering since we're leaving
       // it behind on this node.
       workInProgress.lanes = SomeRetryLane;
+      if (enableInteractionTracing) {
+        workInProgress.flags |= SuspenseFallback;
+      }
       return fallbackFragment;
     } else {
       return mountSuspensePrimaryChildren(
@@ -2182,6 +2295,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           renderLanes,
         );
         workInProgress.memoizedState = SUSPENDED_MARKER;
+        if (enableInteractionTracing) {
+          workInProgress.flags |= SuspenseFallback;
+        }
+
         return fallbackChildFragment;
       } else {
         const nextPrimaryChildren = nextProps.children;
@@ -2221,6 +2338,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
         // Skip the primary children, and continue working on the
         // fallback children.
         workInProgress.memoizedState = SUSPENDED_MARKER;
+        if (enableInteractionTracing) {
+          workInProgress.flags |= SuspenseFallback;
+        }
         return fallbackChildFragment;
       } else {
         // Still haven't timed out. Continue rendering the children, like we
@@ -3450,6 +3570,10 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         pushCacheProvider(workInProgress, cache);
         pushRootCachePool(root);
       }
+      if (enableInteractionTracing) {
+        const root: FiberRoot = workInProgress.stateNode;
+        pushRootInteractionPool(root, renderLanes);
+      }
       resetHydrationState();
       break;
     case HostComponent:
@@ -3816,6 +3940,8 @@ function beginWork(
       return updateMode(current, workInProgress, renderLanes);
     case Profiler:
       return updateProfiler(current, workInProgress, renderLanes);
+    case TracingMarkerComponent:
+      return updateTracingMarker(current, workInProgress, renderLanes);
     case ContextProvider:
       return updateContextProvider(current, workInProgress, renderLanes);
     case ContextConsumer:

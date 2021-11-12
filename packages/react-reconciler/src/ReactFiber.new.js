@@ -757,7 +757,7 @@ export function createFiberFromTracingMarker(
   pendingProps: any,
   mode: TypeOfMode,
   lanes: Lanes,
-  key: null | String,
+  key: null | string,
 ) {
   const fiber = createFiber(TracingMarkerComponent, pendingProps, key, mode);
   fiber.elementType = REACT_TRACING_MARKER_TYPE;

@@ -32,6 +32,7 @@ import {
   skipUnmountedBoundaries,
   enableUpdaterTracking,
   warnOnSubscriptionInsideStartTransition,
+  enableCache,
   enableInteractionTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
