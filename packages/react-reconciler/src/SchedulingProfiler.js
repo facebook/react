@@ -18,6 +18,7 @@ import {
 import ReactVersion from 'shared/ReactVersion';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {SCHEDULING_PROFILER_VERSION} from 'react-devtools-timeline/src/constants';
+import isArray from 'shared/isArray';
 
 import {
   getLabelForLane as getLabelForLane_old,
@@ -105,11 +106,18 @@ function markInternalModuleRanges() {
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges === 'function'
   ) {
     const ranges = __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges();
-    for (let i = 0; i < ranges.length; i++) {
-      const [startStackFrame, stopStackFrame] = ranges[i];
+    // This check would not be required,
+    // except that it's possible for things to override __REACT_DEVTOOLS_GLOBAL_HOOK__.
+    if (isArray(ranges)) {
+      for (let i = 0; i < ranges.length; i++) {
+        const range = ranges[i];
+        if (isArray(range) && range.length === 2) {
+          const [startStackFrame, stopStackFrame] = ranges[i];
 
-      markAndClear(`--react-internal-module-start-${startStackFrame}`);
-      markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
+          markAndClear(`--react-internal-module-start-${startStackFrame}`);
+          markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
+        }
+      }
     }
   }
 }
