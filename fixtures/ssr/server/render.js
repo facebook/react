@@ -21,6 +21,7 @@ export default function render(url, res) {
   });
   let didError = false;
   const {pipe, abort} = renderToPipeableStream(<App assets={assets} />, {
+    bootstrapScripts: [assets['main.js']],
     onCompleteShell() {
       // If something errored before we started streaming, we set the error code appropriately.
       res.statusCode = didError ? 500 : 200;

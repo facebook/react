@@ -82,10 +82,6 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
-export type ServerOptions = {
-  identifierPrefix?: string,
-};
-
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
 type FlatReactChildren = Array<null | ReactNode>;
@@ -784,14 +780,7 @@ class ReactDOMServerRenderer {
   contextValueStack: Array<any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
-  uniqueID: number;
-  identifierPrefix: string;
-
-  constructor(
-    children: mixed,
-    makeStaticMarkup: boolean,
-    options?: ServerOptions,
-  ) {
+  constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
 
     const topFrame: Frame = {
@@ -819,10 +808,6 @@ class ReactDOMServerRenderer {
     this.contextIndex = -1;
     this.contextStack = [];
     this.contextValueStack = [];
-
-    // useOpaqueIdentifier ID
-    this.uniqueID = 0;
-    this.identifierPrefix = (options && options.identifierPrefix) || '';
 
     if (__DEV__) {
       this.contextProviderStack = [];

@@ -42,6 +42,7 @@ module.exports = function render(url, res) {
       <App assets={assets} />
     </DataProvider>,
     {
+      bootstrapScripts: [assets['main.js']],
       onCompleteShell() {
         // If something errored before we started streaming, we set the error code appropriately.
         res.statusCode = didError ? 500 : 200;

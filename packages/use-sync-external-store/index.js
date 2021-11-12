@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/useSyncExternalStore';
+export {useSyncExternalStore} from './src/useSyncExternalStore';

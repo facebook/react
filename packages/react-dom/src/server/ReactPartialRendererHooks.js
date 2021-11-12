@@ -41,8 +41,6 @@ type Hook = {|
   next: Hook | null,
 |};
 
-type OpaqueIDType = string;
-
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
@@ -214,6 +212,10 @@ export function resetHooksState(): void {
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
+}
+
+function getCacheSignal() {
+  throw new Error('Not implemented.');
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
@@ -507,12 +509,8 @@ function useTransition(): [boolean, (callback: () => void) => void] {
   return [false, startTransition];
 }
 
-function useOpaqueIdentifier(): OpaqueIDType {
-  return (
-    (currentPartialRenderer.identifierPrefix || '') +
-    'R:' +
-    (currentPartialRenderer.uniqueID++).toString(36)
-  );
+function useId(): string {
+  throw new Error('Not implemented.');
 }
 
 function useCacheRefresh(): <T>(?() => T, ?T) => void {
@@ -544,13 +542,14 @@ export const Dispatcher: DispatcherType = {
   useDebugValue: noop,
   useDeferredValue,
   useTransition,
-  useOpaqueIdentifier,
+  useId,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
   useSyncExternalStore,
 };
 
 if (enableCache) {
+  Dispatcher.getCacheSignal = getCacheSignal;
   Dispatcher.getCacheForType = getCacheForType;
   Dispatcher.useCacheRefresh = useCacheRefresh;
 }

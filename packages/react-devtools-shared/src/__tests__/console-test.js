@@ -69,7 +69,7 @@ describe('console', () => {
     );
   }
 
-  it('should not patch console methods that are not explicitly overriden', () => {
+  it('should not patch console methods that are not explicitly overridden', () => {
     expect(fakeConsole.error).not.toBe(mockError);
     expect(fakeConsole.info).toBe(mockInfo);
     expect(fakeConsole.log).toBe(mockLog);

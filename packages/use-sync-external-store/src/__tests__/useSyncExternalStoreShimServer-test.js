@@ -35,8 +35,6 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
         startTransition: _,
         // eslint-disable-next-line no-unused-vars
         useSyncExternalStore: __,
-        // eslint-disable-next-line no-unused-vars
-        unstable_useSyncExternalStore: ___,
         ...otherExports
       } = jest.requireActual('react');
       return otherExports;
@@ -47,7 +45,7 @@ describe('useSyncExternalStore (userspace shim, server rendering)', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    useSyncExternalStore = require('use-sync-external-store')
+    useSyncExternalStore = require('use-sync-external-store/shim')
       .useSyncExternalStore;
   });
 

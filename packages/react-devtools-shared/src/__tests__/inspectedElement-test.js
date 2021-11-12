@@ -35,6 +35,11 @@ describe('InspectedElement', () => {
   let legacyRender;
   let testRendererInstance;
 
+  let ErrorBoundary;
+  let errorBoundaryInstance;
+
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
@@ -69,6 +74,23 @@ describe('InspectedElement', () => {
     testRendererInstance = TestRenderer.create(null, {
       unstable_isConcurrent: true,
     });
+
+    errorBoundaryInstance = null;
+
+    ErrorBoundary = class extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        this.setState({error});
+      }
+      render() {
+        errorBoundaryInstance = this;
+
+        if (this.state.error) {
+          return null;
+        }
+        return this.props.children;
+      }
+    };
   });
 
   afterEach(() => {
@@ -109,7 +131,11 @@ describe('InspectedElement', () => {
 
   function noop() {}
 
-  async function inspectElementAtIndex(index, useCustomHook = noop) {
+  async function inspectElementAtIndex(
+    index,
+    useCustomHook = noop,
+    shouldThrow = false,
+  ) {
     let didFinish = false;
     let inspectedElement = null;
 
@@ -124,17 +150,21 @@ describe('InspectedElement', () => {
 
     await utils.actAsync(() => {
       testRendererInstance.update(
-        <Contexts
-          defaultSelectedElementID={id}
-          defaultSelectedElementIndex={index}>
-          <React.Suspense fallback={null}>
-            <Suspender id={id} index={index} />
-          </React.Suspense>
-        </Contexts>,
+        <ErrorBoundary>
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={index}>
+            <React.Suspense fallback={null}>
+              <Suspender id={id} index={index} />
+            </React.Suspense>
+          </Contexts>
+        </ErrorBoundary>,
       );
     }, false);
 
-    expect(didFinish).toBe(true);
+    if (!shouldThrow) {
+      expect(didFinish).toBe(true);
+    }
 
     return inspectedElement;
   }
@@ -2069,6 +2099,37 @@ describe('InspectedElement', () => {
     expect(inspectedElement.rootType).toMatchInlineSnapshot(`"createRoot()"`);
   });
 
+  it('should gracefully surface backend errors on the frontend rather than timing out', async () => {
+    spyOn(console, 'error');
+
+    let shouldThrow = false;
+
+    const Example = () => {
+      const [count] = React.useState(0);
+
+      if (shouldThrow) {
+        throw Error('Expected');
+      } else {
+        return count;
+      }
+    };
+
+    await utils.actAsync(() => {
+      const container = document.createElement('div');
+      ReactDOM.createRoot(container).render(<Example />);
+    }, false);
+
+    shouldThrow = true;
+
+    const value = await inspectElementAtIndex(0, noop, true);
+
+    expect(value).toBe(null);
+
+    const error = errorBoundaryInstance.state.error;
+    expect(error.message).toBe('Expected');
+    expect(error.stack).toContain('inspectHooksOfFiber');
+  });
+
   describe('$r', () => {
     it('should support function components', async () => {
       const Example = () => {
@@ -2656,7 +2717,7 @@ describe('InspectedElement', () => {
 
   describe('error boundary', () => {
     it('can toggle error', async () => {
-      class ErrorBoundary extends React.Component<any> {
+      class LocalErrorBoundary extends React.Component<any> {
         state = {hasError: false};
         static getDerivedStateFromError(error) {
           return {hasError: true};
@@ -2666,13 +2727,14 @@ describe('InspectedElement', () => {
           return hasError ? 'has-error' : this.props.children;
         }
       }
+
       const Example = () => 'example';
 
       await utils.actAsync(() =>
         legacyRender(
-          <ErrorBoundary>
+          <LocalErrorBoundary>
             <Example />
-          </ErrorBoundary>,
+          </LocalErrorBoundary>,
           document.createElement('div'),
         ),
       );

@@ -28,6 +28,9 @@ import {
 
 type Options = {
   identifierPrefix?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts: Array<string>,
+  bootstrapModules: Array<string>,
   progressiveChunkSize?: number,
   onError: (error: mixed) => void,
 };
@@ -46,7 +49,13 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
   };
   const request = createRequest(
     children,
-    createResponseState(options ? options.identifierPrefix : undefined),
+    createResponseState(
+      options ? options.identifierPrefix : undefined,
+      undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+    ),
     createRootFormatContext(undefined),
     options ? options.progressiveChunkSize : undefined,
     options.onError,

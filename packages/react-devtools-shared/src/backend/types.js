@@ -267,9 +267,18 @@ export type InspectedElement = {|
   rendererVersion: string | null,
 |};
 
+export const InspectElementErrorType = 'error';
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
+
+export type InspectElementError = {|
+  id: number,
+  responseID: number,
+  type: 'error',
+  message: string,
+  stack: string,
+|};
 
 export type InspectElementFullData = {|
   id: number,
@@ -299,6 +308,7 @@ export type InspectElementNotFound = {|
 |};
 
 export type InspectedElementPayload =
+  | InspectElementError
   | InspectElementFullData
   | InspectElementHydratedPath
   | InspectElementNoChange
@@ -409,6 +419,11 @@ export type DevToolsHook = {
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
   ) => void,
+
+  // Timeline internal module filtering
+  getInternalModuleRanges: () => Array<[string, string]>,
+  registerInternalModuleStart: (moduleStartError: Error) => void,
+  registerInternalModuleStop: (moduleStopError: Error) => void,
 
   // Testing
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,

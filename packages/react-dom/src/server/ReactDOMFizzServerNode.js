@@ -31,6 +31,10 @@ function createDrainHandler(destination, request) {
 type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
+  nonce?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts?: Array<string>,
+  bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   onCompleteShell?: () => void,
   onCompleteAll?: () => void,
@@ -47,7 +51,13 @@ type Controls = {|
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
   return createRequest(
     children,
-    createResponseState(options ? options.identifierPrefix : undefined),
+    createResponseState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+    ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,

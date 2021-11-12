@@ -19,8 +19,8 @@ import {StoreContext} from '../context';
 
 import type {ProfilingDataFrontend} from './types';
 
-// TODO (scheduling profiler) Should this be its own context?
-export type TabID = 'flame-chart' | 'ranked-chart' | 'scheduling-profiler';
+// TODO (timeline) Should this be its own context?
+export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
 export type Context = {|
   // Which tab is selected in the Profiler UI?
