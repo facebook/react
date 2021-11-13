@@ -871,9 +871,10 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       await act(() => {
         store.set({});
       });
-      expect(container.textContent).toEqual(
+      expect([
         "Cannot read property 'toUpperCase' of undefined",
-      );
+        "Cannot read properties of undefined (reading 'toUpperCase')",
+      ]).toContain(container.textContent);
     });
 
     it('isEqual can throw on update', async () => {
@@ -907,9 +908,10 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       await act(() => {
         store.set({});
       });
-      expect(container.textContent).toEqual(
+      expect([
         "Cannot read property 'trim' of undefined",
-      );
+        "Cannot read properties of undefined (reading 'trim')",
+      ]).toContain(container.textContent);
     });
   });
 });

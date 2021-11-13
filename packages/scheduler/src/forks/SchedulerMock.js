@@ -25,7 +25,7 @@ import {
 } from '../SchedulerPriorities';
 import {
   PRIORITY_TIMEOUT_MAP,
-  NORMAL_PRIORITY_TIMEOUT
+  NORMAL_PRIORITY_TIMEOUT,
 } from '../SchedulerTimeouts';
 import {
   markTaskRun,
@@ -293,7 +293,8 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     startTime = currentTime;
   }
 
-  const timeout = PRIORITY_TIMEOUT_MAP[priorityLevel] || NORMAL_PRIORITY_TIMEOUT;
+  const timeout =
+    PRIORITY_TIMEOUT_MAP[priorityLevel] || NORMAL_PRIORITY_TIMEOUT;
 
   var expirationTime = startTime + timeout;
 

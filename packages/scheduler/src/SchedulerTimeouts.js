@@ -7,15 +7,13 @@
  * @flow
  */
 
-import {
-  maxSigned31BitInt
-} from './constants';
+import {maxSigned31BitInt} from './constants';
 import {
   ImmediatePriority,
   UserBlockingPriority,
   NormalPriority,
   LowPriority,
-  IdlePriority
+  IdlePriority,
 } from './SchedulerPriorities';
 
 // Times out immediately
@@ -33,4 +31,4 @@ export const PRIORITY_TIMEOUT_MAP = {
   [NormalPriority]: NORMAL_PRIORITY_TIMEOUT,
   [LowPriority]: LOW_PRIORITY_TIMEOUT,
   [IdlePriority]: IDLE_PRIORITY_TIMEOUT,
-}
+};
