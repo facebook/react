@@ -55,7 +55,7 @@ async function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
   );
   const ignoredMessageCount = results.length - messages.length;
   return {
-    output: formatter.format(results),
+    output: formatter.format(messages),
     errorCount: errorCount,
     warningCount: warningCount - ignoredMessageCount,
   };
