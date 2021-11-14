@@ -7,6 +7,7 @@ This utility can be used for subscriptions to a single value that are typically 
 ## When should you NOT use this?
 
 Most other cases have **better long-term solutions**:
+
 * Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
 * I/O subscriptions (e.g. notifications) that update infrequently should use a mechanism like [`react-cache`](https://github.com/facebook/react/blob/main/packages/react-cache/README.md) instead.
 * Complex libraries like Relay/Apollo should manage subscriptions manually with the same techniques which this library uses under the hood (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.
@@ -22,6 +23,7 @@ For **full compatibility** with concurrent rendering, including both **time-slic
 ## What types of subscriptions can this support?
 
 This abstraction can handle a variety of subscription types, including:
+
 * Event dispatchers like `HTMLInputElement`.
 * Custom pub/sub components like Relay's `FragmentSpecResolver`.
 * Observable types like RxJS `BehaviorSubject` and `ReplaySubject`. (Types like RxJS `Subject` or `Observable` are not supported, because they provide no way to read the "current" value after it has been emitted.)
@@ -86,6 +88,7 @@ Below are examples showing how `use-subscription` can be used to subscribe to ce
 **Note** that it is not possible to support all observable types (e.g. RxJS `Subject` or `Observable`) because some provide no way to read the "current" value after it has been emitted.
 
 ### `BehaviorSubject`
+
 ```js
 const subscription = useMemo(
   () => ({
@@ -104,6 +107,7 @@ const value = useSubscription(subscription);
 ```
 
 ### `ReplaySubject`
+
 ```js
 const subscription = useMemo(
   () => ({

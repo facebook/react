@@ -1,6 +1,7 @@
 # Overview
 
 The React DevTools extension consists of multiple pieces:
+
 * The **frontend** portion is the extension you see (the Components tree, the Profiler, etc.).
 * The **backend** portion is invisible. It runs in the same context as React itself. When React commits changes to e.g. the DOM, the backend is responsible for notifying the frontend by sending a message through the **bridge** (an abstraction around e.g. `postMessage`).
 
@@ -58,6 +59,7 @@ Adding a root to the tree requires sending 5 numbers:
 1. owner metadata flag
 
 For example, adding a root fiber with an id of 1:
+
 ```js
 [
   1, // add operation
@@ -81,6 +83,7 @@ Adding a leaf node to the tree requires sending 7 numbers:
 1. string table id for `key`
 
 For example, adding a function component `<Foo>` with an id 2:
+
 ```js
 [
   1,   // add operation
@@ -103,6 +106,7 @@ Removing a fiber from the tree (a root or a leaf) requires sending:
    * (followed by a children-first list of removed fiber ids)
 
 For example, removing fibers with ids of 35 and 21:
+
 ```js
 [
   2, // remove operation
@@ -120,6 +124,7 @@ For example, removing fibers with ids of 35 and 21:
    * (followed by an ordered list of child fiber ids)
 
 For example:
+
 ```js
 [
   3,  // re-order operation
@@ -139,6 +144,7 @@ While profiling is in progress, we send an extra operation any time a fiber is a
 1. tree base duration
 
 For example, updating the base duration for a fiber with an id of 1:
+
 ```js
 [
   4,  // update tree base duration operation
@@ -153,7 +159,6 @@ For example, updating the base duration for a fiber with an id of 1:
 We record calls to `console.warn` and `console.error` in the backend.
 Periodically we notify the frontend that the number of recorded calls got updated.
 We only send the serialized messages as part of the `inspectElement` event.
-
 
 ```js
 [
@@ -199,6 +204,7 @@ The frontend stores its information about the tree in a map of id to objects wit
 The tree data structure lets us impose an order on elements and "quickly" find the Nth one using the `weight` attribute.
 
 First we find which root contains the index:
+
 ```js
 let rootID;
 let root;
@@ -217,11 +223,13 @@ for (let i = 0; i < this._roots.length; i++) {
 ```
 
 We skip the root itself because don't display them in the tree:
+
 ```js
 const firstChildID = root.children[0];
 ```
 
 Then we traverse the tree to find the element:
+
 ```js
 let currentElement = this._idToElement.get(firstChildID);
 let currentWeight = rootWeight;
@@ -268,6 +276,7 @@ So how does DevTools identify custom functions called from within third party co
 ### Performance implications
 
 To mitigate the performance impact of re-rendering a component, DevTools does the following:
+
 * Only function components that use _at least one hook_ are rendered. (Props and state can be analyzed without rendering.)
 * Rendering is always shallow.
 * Rendering is throttled to occur, at most, once per second.
@@ -276,6 +285,7 @@ To mitigate the performance impact of re-rendering a component, DevTools does th
 ## Profiler
 
 The Profiler UI is a powerful tool for identifying and fixing performance problems. The primary goal of the new profiler is to minimize its impact (CPU usage) while profiling is active. This can be accomplished by:
+
 * Minimizing bridge traffic.
 * Making expensive computations lazy.
 
@@ -284,6 +294,7 @@ The majority of profiling information is stored on the backend. The backend push
 When profiling begins, the frontend takes a snapshot/copy of each root. This snapshot includes the id, name, key, and child IDs for each node in the tree. (This information is already present on the frontend, so it does not require any additional bridge traffic.) While profiling is active, each time React commits– the frontend also stores a copy of the "_operations_" message (described above). Once profiling has finished, the frontend can use the original snapshot along with each of the stored "_operations_" messages to reconstruct the tree for each of the profiled commits.
 
 When profiling begins, the backend records the base durations of each fiber currently in the tree. While profiling is in progress, the backend also stores some information about each commit, including:
+
 * Commit time and duration
 * Which elements were rendered during that commit
 * Which props and state changed (if enabled in profiler settings)
@@ -303,4 +314,3 @@ Because all of the data is merged in the frontend after a profiling session is c
 ### Devtools Extension Overview Diagram
 
 ![React Devtools Extension](https://user-images.githubusercontent.com/2735514/132768489-6ab85156-b816-442f-9c3f-7af738ee9e49.png)
-

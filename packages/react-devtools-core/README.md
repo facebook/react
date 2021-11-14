@@ -19,6 +19,7 @@ Run `connectToDevTools()` in the same context as React to set up a connection to
 Be sure to run this function *before* importing e.g. `react`, `react-dom`, `react-native`.
 
 The `config` object may contain:
+
 * `host: string` (defaults to "localhost") - Websocket will connect to this host.
 * `port: number` (defaults to `8097`) - Websocket will connect to this port.
 * `useHttps: boolean` (defaults to `false`) - Websocket should use a secure protocol (wss).
@@ -63,11 +64,13 @@ Reference the `react-devtools` package for a complete integration example.
 ## Development
 
 Watch for changes made to the backend entry point and rebuild:
+
 ```sh
 yarn start:backend
 ```
 
 Watch for changes made to the standalone UI entry point and rebuild:
+
 ```sh
 yarn start:standalone
 ```

@@ -55,4 +55,3 @@ yarn merge-fork \
   --base-dir=packages/react-reconciler/src \
   ReactFiberWorkLoop
 ```
-

@@ -21,5 +21,3 @@ Open `http://localhost:3000` in Chrome.
 * Current tree is displayed in green
 
 ![fiber debugger](https://d17oy1vhnax1f7.cloudfront.net/items/3R2W1H2M3a0h3p1l133r/Screen%20Recording%202016-10-21%20at%2020.41.gif?v=e4323e51)
-
-

@@ -3,6 +3,7 @@
 **WIP:** This is an MVP, still needs polish.
 
 ### Known Issues
+
 - There are currently two errors thrown when the page loads;
   `SyntaxError: missing ; before statement`
 
@@ -24,7 +25,6 @@ Right now, we use a purple outline to call out cases where the assigned property
 (or attribute) has changed between React 15 and 16.
 
 ---
-
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 

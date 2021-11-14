@@ -18,6 +18,7 @@ If this is your first time running the release scripts, go to the `scripts/relea
 The release process consists of several phases, each one represented by one of the scripts below.
 
 A typical release cycle goes like this:
+
 1. When a commit is pushed to the React repo, [Circle CI](https://circleci.com/gh/facebook/react/) will build all release bundles and run unit tests against both the source code and the built bundles.
 2. Each weekday, an automated CI cron job publishes prereleases to the `next` and `experimental` channels, from tip of the main branch.
    1. You can also [trigger an automated prerelease via the command line](#trigger-an-automated-prerelease), instead of waiting until the next time the cron job runs.
@@ -25,10 +26,10 @@ A typical release cycle goes like this:
 3. Finally, a "next" release can be [**promoted to stable**](#publishing-a-stable-release)<sup>1</sup> using the [`prepare-release-from-npm`](#prepare-release-from-npm) and [`publish`](#publish) scripts. (This process is always manual.)
 
 The high level process of creating releases is [documented below](#process). Individual scripts are documented as well:
-* [`build-release-locally`](#build-release-locally): Build a release locally from the checked out source code.
-* [`prepare-release-from-ci`](#prepare-release-from-ci): Download a pre-built release from CI.
-* [`prepare-release-from-npm`](#prepare-release-from-npm): Prepare an NPM "next" release to be published as a "stable" release.
-* [`publish`](#publish): Publish the downloaded (or prepared) release to NPM.
+- [`build-release-locally`](#build-release-locally): Build a release locally from the checked out source code.
+- [`prepare-release-from-ci`](#prepare-release-from-ci): Download a pre-built release from CI.
+- [`prepare-release-from-npm`](#prepare-release-from-npm): Prepare an NPM "next" release to be published as a "stable" release.
+- [`publish`](#publish): Publish the downloaded (or prepared) release to NPM.
 
 <sup>1. [**Creating a patch release**](#creating-a-patch-release) has a slightly different process than a major/minor release.</sup>
 
@@ -41,6 +42,7 @@ yarn publish-prereleases
 ```
 
 This will grab the most recent revision on the main branch and publish it to the Next and Experimental channels.
+
 ## Publishing Without Tags
 
 The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
@@ -50,14 +52,17 @@ The sections below include meaningful `--tags` in the instructions. However, kee
 "Next" builds are meant to be lightweight and published often. In most cases, they can be published using artifacts built by Circle CI.
 
 To prepare a build for a particular commit:
+
 1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/main).
 2. Copy the SHA (by clicking the 📋 button)
 5. Run the [`prepare-release-from-ci`](#prepare-release-from-ci) script with the SHA <sup>1</sup> you found:
+
 ```sh
 scripts/release/prepare-release-from-ci.js -r stable --commit=0e526bc
 ```
 
 Once the build has been checked out and tested locally, you're ready to publish it:
+
 ```sh
 scripts/release/publish.js --tags next
 ```
@@ -134,6 +139,7 @@ Once CI is complete, follow the regular [**next**](#publishing-release) and [**p
 # Scripts
 
 ## `build-release-locally`
+
 Creates a "next" build from the current (local) Git revision.
 
 **This script is an escape hatch.** It allows a release to be created without pushing a commit to be verified by Circle CI. **It does not run any automated unit tests.** Testing is solely the responsibility of the release engineer.
@@ -141,23 +147,29 @@ Creates a "next" build from the current (local) Git revision.
 Note that this script git-archives the React repo (at the current revision) to a temporary directory before building, so **uncommitted changes are not included in the build**.
 
 #### Example usage
+
 To create a build from the current branch and revision:
+
 ```sh
 scripts/release/build-release-locally.js
 ```
 
 ## `prepare-release-from-ci`
+
 Downloads build artifacts from Circle CI in preparation to be published to NPM as either a "next" or "experimental" release.
 
 All artifacts built by Circle CI have already been unit-tested (both source and bundles) but these candidates should **always be manually tested** before being published. Upon completion, this script prints manual testing instructions.
 
 #### Example usage
+
 To prepare the artifacts created by Circle CI for commit [0e526bc](https://github.com/facebook/react/commit/0e526bc) you would run:
+
 ```sh
 scripts/release/prepare-release-from-ci.js --commit=0e526bc -r stable
 ```
 
 ## `prepare-release-from-npm`
+
 Checks out a "next" release from NPM and prepares it to be published as a stable release.
 
 This script prompts for new (stable) release versions for each public package and updates the package contents (both `package.json` and inline version numbers) to match. It also updates inter-package dependencies to account for the new versions.
@@ -165,12 +177,15 @@ This script prompts for new (stable) release versions for each public package an
 "Next" releases have already been tested but it is still a good idea to **manually test and verify a release** before publishing to ensure that e.g. version numbers are correct. Upon completion, this script prints manual testing instructions.
 
 #### Example usage
+
 To promote the "next" release `0.0.0-241c4467e-20200129` (aka commit [241c4467e](https://github.com/facebook/react/commit/241c4467e)) to stable:
+
 ```sh
 scripts/release/prepare-release-from-npm.js --version=0.0.0-241c4467e-20200129
 ```
 
 ## `publish`
+
 Publishes the current contents of `build/node_modules` to NPM.
 
 This script publishes each public package to NPM and updates the specified tag(s) to match. **It does not test or verify the local package contents before publishing**. This should be done by the release engineer prior to running the script.
@@ -180,7 +195,9 @@ Upon completion, this script provides instructions for tagging the Git commit th
 **Specify a `--dry` flag when running this script if you want to skip the NPM-publish step.** In this event, the script will print the NPM commands but it will not actually run them.
 
 #### Example usage
+
 To publish a release to NPM as both `next` and `latest`:
+
 ```sh
 scripts/release/publish.js --tags latest next
 ```

@@ -47,7 +47,6 @@ If you want more fine-grained configuration, you can instead add a snippet like 
 }
 ```
 
-
 ## Advanced Configuration
 
 `exhaustive-deps` can be configured to validate dependencies of custom Hooks with the `additionalHooks` option.

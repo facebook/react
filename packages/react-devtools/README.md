@@ -7,7 +7,9 @@ It works both with React DOM and React Native.
 ![React DevTools screenshot](https://user-images.githubusercontent.com/29597/63811956-bdd9b580-c8dd-11e9-8962-c568e475c425.png)
 
 ## Installation
+
 Install the `react-devtools` package. Because this is a development tool, a global install is often the most convenient:
+
 ```sh
 # Yarn
 yarn global add react-devtools
@@ -17,22 +19,27 @@ npm install -g react-devtools
 ```
 
 If you prefer to avoid global installations, you can add `react-devtools` as a project dependency. With Yarn, you can do this by running:
+
 ```sh
 yarn add --dev react-devtools
 ```
 
 With NPM you can just use [NPX](https://www.npmjs.com/package/npx):
+
 ```sh
 npx react-devtools
 ```
 
 ## Usage with React Native
+
 Run `react-devtools` from the terminal to launch the standalone DevTools app:
+
 ```sh
 react-devtools
 ```
 
 If you're not in a simulator then you also need to run the following in a command prompt:
+
 ```sh
 adb reverse tcp:8097 tcp:8097
 ```
@@ -49,7 +56,6 @@ However, when `react-devtools` is running, Inspector will enter a special collap
 
 ![React DevTools Inspector Integration](https://user-images.githubusercontent.com/29597/63811958-be724c00-c8dd-11e9-8587-37357334a0e1.gif)
 
-
 You can choose "Hide Inspector" in the same menu to exit this mode.
 
 ### Inspecting Component Instances
@@ -64,12 +70,12 @@ Then select a React component in React DevTools. There is a search box at the to
 
 ![React DevTools Chrome Console Integration](https://user-images.githubusercontent.com/29597/63811957-be724c00-c8dd-11e9-9d1d-8eba440ef948.gif)
 
-
 ## Usage with React DOM
 
 The standalone shell can also be useful with React DOM (e.g. to debug apps in Safari or inside of an iframe).
 
 Run `react-devtools` from the terminal to launch the standalone DevTools app:
+
 ```sh
 react-devtools
 ```
@@ -110,24 +116,33 @@ Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.c
 **If you still have issues** please [report them](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools). Don't forget to specify your OS, browser version, extension version, and the exact instructions to reproduce the issue with a screenshot.
 
 ## Local development
+
 The standalone DevTools app can be built and tested from source following the instructions below.
 
 ### Prerequisite steps
+
 DevTools depends on local versions of several NPM packages<sup>1</sup> also in this workspace. You'll need to either build or download those packages first.
 
 <sup>1</sup> Note that at this time, an _experimental_ build is required because DevTools depends on the `createRoot` API.
 
 #### Build from source
+
 To build dependencies from source, run the following command from the root of the repository:
+
 ```sh
 yarn build-for-devtools
 ```
+
 #### Download from CI
+
 To use the latest build from CI, run the following command from the root of the repository:
+
 ```sh
 ./scripts/release/download-experimental-build.js
 ```
+
 ### Build steps
+
 You can test the standalone DevTools by running the following:
 
 * **First, complete the prerequisite steps above! If you don't do it, none of the steps below will work.**

@@ -69,6 +69,7 @@ const DevTools = initialize(contentWindow);
 DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and infering the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
 
 To configure this package to support this functionality, you'll need to provide a prop that dynamically imports the extra functionality:
+
 ```js
 // Follow code examples above to configure the backend and frontend.
 // When rendering DevTools, the important part is to pass a 'hookNamesModuleLoaderFunction' prop.
@@ -122,6 +123,7 @@ activateBackend(contentWindow);
 Sandboxed `iframe`s are also supported but require more complex initialization.
 
 **`iframe.html`**
+
 ```js
 import { activate, initialize } from "react-devtools-inline/backend";
 
@@ -146,6 +148,7 @@ window.addEventListener("message", onMessage);
 ```
 
 **`main-window.html`**
+
 ```js
 import { initialize } from "react-devtools-inline/frontend";
 
@@ -206,25 +209,35 @@ const DevTools = createDevTools(target, { bridge, store });
 ```
 
 ## Local development
+
 You can also build and test this package from source.
 
 ### Prerequisite steps
+
 DevTools depends on local versions of several NPM packages<sup>1</sup> also in this workspace. You'll need to either build or download those packages first.
 
 <sup>1</sup> Note that at this time, an _experimental_ build is required because DevTools depends on the `createRoot` API.
 
 #### Build from source
+
 To build dependencies from source, run the following command from the root of the repository:
+
 ```sh
 yarn build-for-devtools
 ```
+
 #### Download from CI
+
 To use the latest build from CI, run the following command from the root of the repository:
+
 ```sh
 ./scripts/release/download-experimental-build.js
 ```
+
 ### Build steps
+
 Once the above packages have been built or downloaded, you can watch for changes made to the source code and automatically rebuild by running:
+
 ```sh
 yarn start
 ```

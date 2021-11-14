@@ -7,6 +7,7 @@
 This utility should be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
 
 Other cases have **better long-term solutions**:
+
 * Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
 * I/O subscriptions (e.g. notifications) that update infrequently should use [`react-cache`](https://github.com/facebook/react/blob/main/packages/react-cache/README.md) instead.
 * Complex libraries like Relay/Apollo should manage subscriptions manually with the same techniques which this library uses under the hood (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.
@@ -24,6 +25,7 @@ For **full compatibility** with asynchronous rendering, including both **time-sl
 ## What types of subscriptions can this support?
 
 This abstraction can handle a variety of subscription types, including:
+
 * Event dispatchers like `HTMLInputElement`.
 * Custom pub/sub components like Relay's `FragmentSpecResolver`.
 * Observable types like RxJS `BehaviorSubject` and `ReplaySubject`. (Types like RxJS `Subject` or `Observable` are not supported, because they provide no way to read the "current" value after it has been emitted.)
@@ -110,6 +112,7 @@ Below are examples showing how `create-subscription` can be used to subscribe to
 **Note** that it is not possible to support all observable types (e.g. RxJS `Subject` or `Observable`) because some provide no way to read the "current" value after it has been emitted.
 
 ### `BehaviorSubject`
+
 ```js
 const BehaviorSubscription = createSubscription({
   getCurrentValue: behaviorSubject => behaviorSubject.getValue(),
@@ -121,6 +124,7 @@ const BehaviorSubscription = createSubscription({
 ```
 
 ### `ReplaySubject`
+
 ```js
 const ReplaySubscription = createSubscription({
   getCurrentValue: replaySubject => {

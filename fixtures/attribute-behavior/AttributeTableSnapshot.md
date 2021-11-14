@@ -1,4 +1,5 @@
 ﻿## `about` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -24,6 +25,7 @@
 | `about=(undefined)`| (initial)| `<null>` |
 
 ## `aBoUt` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aBoUt=(string)`| (changed, warning)| `"a string"` |
@@ -49,6 +51,7 @@
 | `aBoUt=(undefined)`| (initial, warning)| `<null>` |
 
 ## `accent-Height` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accent-Height=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -74,6 +77,7 @@
 | `accent-Height=(undefined)`| (initial, warning)| `<null>` |
 
 ## `accent-height` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accent-height=(string)`| (changed, warning)| `"a string"` |
@@ -99,6 +103,7 @@
 | `accent-height=(undefined)`| (initial, warning)| `<null>` |
 
 ## `accentHeight` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accentHeight=(string)`| (changed)| `"a string"` |
@@ -124,6 +129,7 @@
 | `accentHeight=(undefined)`| (initial)| `<null>` |
 
 ## `accept` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accept=(string)`| (changed)| `"a string"` |
@@ -149,6 +155,7 @@
 | `accept=(undefined)`| (initial)| `<empty string>` |
 
 ## `accept-charset` (on `<form>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accept-charset=(string)`| (changed, warning)| `"a string"` |
@@ -174,6 +181,7 @@
 | `accept-charset=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `accept-Charset` (on `<form>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accept-Charset=(string)`| (changed, warning)| `"a string"` |
@@ -199,6 +207,7 @@
 | `accept-Charset=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `acceptCharset` (on `<form>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `acceptCharset=(string)`| (changed)| `"a string"` |
@@ -224,6 +233,7 @@
 | `acceptCharset=(undefined)`| (initial)| `<empty string>` |
 
 ## `accessKey` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accessKey=(string)`| (changed)| `"a string"` |
@@ -249,6 +259,7 @@
 | `accessKey=(undefined)`| (initial)| `<empty string>` |
 
 ## `accumulate` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accumulate=(string)`| (changed)| `"a string"` |
@@ -274,6 +285,7 @@
 | `accumulate=(undefined)`| (initial)| `<null>` |
 
 ## `action` (on `<form>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `action=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -299,6 +311,7 @@
 | `action=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
 ## `additive` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `additive=(string)`| (changed)| `"a string"` |
@@ -324,6 +337,7 @@
 | `additive=(undefined)`| (initial)| `<null>` |
 
 ## `alignment-baseline` (on `<textPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alignment-baseline=(string)`| (changed, warning)| `"a string"` |
@@ -349,6 +363,7 @@
 | `alignment-baseline=(undefined)`| (initial, warning)| `<null>` |
 
 ## `alignmentBaseline` (on `<textPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alignmentBaseline=(string)`| (changed)| `"a string"` |
@@ -374,6 +389,7 @@
 | `alignmentBaseline=(undefined)`| (initial)| `<null>` |
 
 ## `allowFullScreen` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowFullScreen=(string)`| (changed)| `<boolean: true>` |
@@ -399,6 +415,7 @@
 | `allowFullScreen=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `allowfullscreen` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowfullscreen=(string)`| (changed, warning)| `<boolean: true>` |
@@ -424,6 +441,7 @@
 | `allowfullscreen=(undefined)`| (initial, warning)| `<boolean: false>` |
 
 ## `allowFullscreen` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowFullscreen=(string)`| (changed, warning)| `<boolean: true>` |
@@ -449,6 +467,7 @@
 | `allowFullscreen=(undefined)`| (initial, warning)| `<boolean: false>` |
 
 ## `allowReorder` (on `<switch>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowReorder=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -474,6 +493,7 @@
 | `allowReorder=(undefined)`| (initial)| `<null>` |
 
 ## `alphabetic` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alphabetic=(string)`| (changed)| `"a string"` |
@@ -499,6 +519,7 @@
 | `alphabetic=(undefined)`| (initial)| `<null>` |
 
 ## `alt` (on `<img>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alt=(string)`| (changed)| `"a string"` |
@@ -524,6 +545,7 @@
 | `alt=(undefined)`| (initial)| `<empty string>` |
 
 ## `amplitude` (on `<feFuncA>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `amplitude=(string)`| (changed)| `<number: 0>` |
@@ -549,6 +571,7 @@
 | `amplitude=(undefined)`| (initial)| `<number: 1>` |
 
 ## `arabic-form` (on `<glyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `arabic-form=(string)`| (changed, warning)| `"a string"` |
@@ -574,6 +597,7 @@
 | `arabic-form=(undefined)`| (initial, warning)| `<null>` |
 
 ## `arabicForm` (on `<glyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `arabicForm=(string)`| (changed)| `"a string"` |
@@ -599,6 +623,7 @@
 | `arabicForm=(undefined)`| (initial)| `<null>` |
 
 ## `aria` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aria=(string)`| (changed, warning)| `"a string"` |
@@ -624,6 +649,7 @@
 | `aria=(undefined)`| (initial, warning)| `<null>` |
 
 ## `aria-` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aria-=(string)`| (changed, warning)| `"a string"` |
@@ -649,6 +675,7 @@
 | `aria-=(undefined)`| (initial, warning)| `<null>` |
 
 ## `aria-invalidattribute` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aria-invalidattribute=(string)`| (changed, warning)| `"a string"` |
@@ -674,6 +701,7 @@
 | `aria-invalidattribute=(undefined)`| (initial, warning)| `<null>` |
 
 ## `as` (on `<link>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `as=(string)`| (initial)| `<empty string>` |
@@ -699,6 +727,7 @@
 | `as=(undefined)`| (initial)| `<empty string>` |
 
 ## `ascent` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ascent=(string)`| (changed)| `"a string"` |
@@ -724,6 +753,7 @@
 | `ascent=(undefined)`| (initial)| `<null>` |
 
 ## `async` (on `<script>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `async=(string)`| (changed)| `<boolean: true>` |
@@ -749,6 +779,7 @@
 | `async=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `attributeName` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `attributeName=(string)`| (changed)| `"a string"` |
@@ -774,6 +805,7 @@
 | `attributeName=(undefined)`| (initial)| `<null>` |
 
 ## `attributeType` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `attributeType=(string)`| (changed)| `"a string"` |
@@ -799,6 +831,7 @@
 | `attributeType=(undefined)`| (initial)| `<null>` |
 
 ## `autoCapitalize` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoCapitalize=(string)`| (changed)| `"words"` |
@@ -824,6 +857,7 @@
 | `autoCapitalize=(undefined)`| (initial)| `<empty string>` |
 
 ## `autoComplete` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoComplete=(string)`| (changed)| `"email"` |
@@ -849,6 +883,7 @@
 | `autoComplete=(undefined)`| (initial)| `<empty string>` |
 
 ## `autoCorrect` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoCorrect=(string)`| (changed)| `"off"` |
@@ -874,6 +909,7 @@
 | `autoCorrect=(undefined)`| (initial)| `<null>` |
 
 ## `autoPlay` (on `<video>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoPlay=(string)`| (changed)| `<boolean: true>` |
@@ -899,6 +935,7 @@
 | `autoPlay=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `autoReverse` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoReverse=(string)`| (initial, ssr mismatch)| `<null>` |
@@ -924,6 +961,7 @@
 | `autoReverse=(undefined)`| (initial)| `<null>` |
 
 ## `autoSave` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoSave=(string)`| (changed)| `"a string"` |
@@ -949,6 +987,7 @@
 | `autoSave=(undefined)`| (initial)| `<null>` |
 
 ## `azimuth` (on `<feDistantLight>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `azimuth=(string)`| (initial)| `<number: 0>` |
@@ -974,6 +1013,7 @@
 | `azimuth=(undefined)`| (initial)| `<number: 0>` |
 
 ## `baseFrequency` (on `<feTurbulence>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baseFrequency=(string)`| (changed)| `"a string"` |
@@ -999,6 +1039,7 @@
 | `baseFrequency=(undefined)`| (initial)| `<null>` |
 
 ## `baseline-shift` (on `<textPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baseline-shift=(string)`| (changed, warning)| `"a string"` |
@@ -1024,6 +1065,7 @@
 | `baseline-shift=(undefined)`| (initial, warning)| `<null>` |
 
 ## `baselineShift` (on `<textPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baselineShift=(string)`| (changed)| `"a string"` |
@@ -1049,6 +1091,7 @@
 | `baselineShift=(undefined)`| (initial)| `<null>` |
 
 ## `baseProfile` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baseProfile=(string)`| (changed)| `"a string"` |
@@ -1074,6 +1117,7 @@
 | `baseProfile=(undefined)`| (initial)| `<null>` |
 
 ## `bbox` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `bbox=(string)`| (changed)| `"a string"` |
@@ -1099,6 +1143,7 @@
 | `bbox=(undefined)`| (initial)| `<null>` |
 
 ## `begin` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `begin=(string)`| (changed)| `"a string"` |
@@ -1124,6 +1169,7 @@
 | `begin=(undefined)`| (initial)| `<null>` |
 
 ## `bias` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `bias=(string)`| (initial)| `<number: 0>` |
@@ -1149,6 +1195,7 @@
 | `bias=(undefined)`| (initial)| `<number: 0>` |
 
 ## `by` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `by=(string)`| (changed)| `"a string"` |
@@ -1174,6 +1221,7 @@
 | `by=(undefined)`| (initial)| `<null>` |
 
 ## `calcMode` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `calcMode=(string)`| (changed)| `"discrete"` |
@@ -1199,6 +1247,7 @@
 | `calcMode=(undefined)`| (initial)| `<null>` |
 
 ## `cap-height` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cap-height=(string)`| (changed, warning)| `"a string"` |
@@ -1224,6 +1273,7 @@
 | `cap-height=(undefined)`| (initial, warning)| `<null>` |
 
 ## `capHeight` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `capHeight=(string)`| (changed)| `"a string"` |
@@ -1249,6 +1299,7 @@
 | `capHeight=(undefined)`| (initial)| `<null>` |
 
 ## `capture` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `capture=(string)`| (changed)| `"environment"` |
@@ -1274,6 +1325,7 @@
 | `capture=(undefined)`| (initial)| `<null>` |
 
 ## `cellPadding` (on `<table>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cellPadding=(string)`| (changed)| `"a string"` |
@@ -1299,6 +1351,7 @@
 | `cellPadding=(undefined)`| (initial)| `<empty string>` |
 
 ## `cellSpacing` (on `<table>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cellSpacing=(string)`| (changed)| `"a string"` |
@@ -1324,6 +1377,7 @@
 | `cellSpacing=(undefined)`| (initial)| `<empty string>` |
 
 ## `challenge` (on `<keygen>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `challenge=(string)`| (changed, warning, ssr warning)| `"a string"` |
@@ -1349,6 +1403,7 @@
 | `challenge=(undefined)`| (initial, warning, ssr warning)| `<null>` |
 
 ## `charSet` (on `<script>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `charSet=(string)`| (changed)| `"a string"` |
@@ -1374,6 +1429,7 @@
 | `charSet=(undefined)`| (initial)| `<empty string>` |
 
 ## `checked` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `checked=(string)`| (changed)| `<boolean: true>` |
@@ -1399,6 +1455,7 @@
 | `checked=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `Checked` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `Checked=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -1424,6 +1481,7 @@
 | `Checked=(undefined)`| (initial, warning)| `<null>` |
 
 ## `Children` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `Children=(string)`| (changed, warning)| `"a string"` |
@@ -1449,6 +1507,7 @@
 | `Children=(undefined)`| (initial, warning)| `<null>` |
 
 ## `children` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `children=(string)`| (initial)| `[]` |
@@ -1474,6 +1533,7 @@
 | `children=(undefined)`| (initial)| `[]` |
 
 ## `cite` (on `<blockquote>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cite=(string)`| (changed)| `"http://reactjs.com/"` |
@@ -1499,6 +1559,7 @@
 | `cite=(undefined)`| (initial)| `<empty string>` |
 
 ## `class` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `class=(string)`| (changed, warning)| `"a string"` |
@@ -1524,6 +1585,7 @@
 | `class=(undefined)`| (initial, warning)| `<null>` |
 
 ## `classID` (on `<object>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `classID=(string)`| (changed)| `"a string"` |
@@ -1549,6 +1611,7 @@
 | `classID=(undefined)`| (initial)| `<null>` |
 
 ## `className` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `className=(string)`| (changed)| `"a string"` |
@@ -1574,6 +1637,7 @@
 | `className=(undefined)`| (initial)| `<empty string>` |
 
 ## `clip` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clip=(string)`| (changed)| `"a string"` |
@@ -1599,6 +1663,7 @@
 | `clip=(undefined)`| (initial)| `<null>` |
 
 ## `clip-path` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clip-path=(string)`| (changed, warning)| `"a string"` |
@@ -1624,6 +1689,7 @@
 | `clip-path=(undefined)`| (initial, warning)| `<null>` |
 
 ## `clipPath` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clipPath=(string)`| (changed)| `"a string"` |
@@ -1649,6 +1715,7 @@
 | `clipPath=(undefined)`| (initial)| `<null>` |
 
 ## `clipPathUnits` (on `<clipPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clipPathUnits=(string)`| (changed)| `<number: 2>` |
@@ -1674,6 +1741,7 @@
 | `clipPathUnits=(undefined)`| (initial)| `<number: 1>` |
 
 ## `clip-rule` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clip-rule=(string)`| (changed, warning)| `"a string"` |
@@ -1699,6 +1767,7 @@
 | `clip-rule=(undefined)`| (initial, warning)| `<null>` |
 
 ## `clipRule` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clipRule=(string)`| (changed)| `"a string"` |
@@ -1724,6 +1793,7 @@
 | `clipRule=(undefined)`| (initial)| `<null>` |
 
 ## `color` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color=(string)`| (changed)| `"a string"` |
@@ -1749,6 +1819,7 @@
 | `color=(undefined)`| (initial)| `<null>` |
 
 ## `color-interpolation` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-interpolation=(string)`| (changed, warning)| `"sRGB"` |
@@ -1774,6 +1845,7 @@
 | `color-interpolation=(undefined)`| (initial, warning)| `<null>` |
 
 ## `colorInterpolation` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorInterpolation=(string)`| (changed)| `"sRGB"` |
@@ -1799,6 +1871,7 @@
 | `colorInterpolation=(undefined)`| (initial)| `<null>` |
 
 ## `color-interpolation-filters` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-interpolation-filters=(string)`| (changed, warning)| `"sRGB"` |
@@ -1824,6 +1897,7 @@
 | `color-interpolation-filters=(undefined)`| (initial, warning)| `<null>` |
 
 ## `colorInterpolationFilters` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorInterpolationFilters=(string)`| (changed)| `"sRGB"` |
@@ -1849,6 +1923,7 @@
 | `colorInterpolationFilters=(undefined)`| (initial)| `<null>` |
 
 ## `color-profile` (on `<image>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-profile=(string)`| (changed, warning)| `"sRGB"` |
@@ -1874,6 +1949,7 @@
 | `color-profile=(undefined)`| (initial, warning)| `<null>` |
 
 ## `colorProfile` (on `<image>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorProfile=(string)`| (changed)| `"sRGB"` |
@@ -1899,6 +1975,7 @@
 | `colorProfile=(undefined)`| (initial)| `<null>` |
 
 ## `color-rendering` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-rendering=(string)`| (changed, warning)| `"optimizeSpeed"` |
@@ -1924,6 +2001,7 @@
 | `color-rendering=(undefined)`| (initial, warning)| `<null>` |
 
 ## `colorRendering` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorRendering=(string)`| (changed)| `"optimizeSpeed"` |
@@ -1949,6 +2027,7 @@
 | `colorRendering=(undefined)`| (initial)| `<null>` |
 
 ## `cols` (on `<textarea>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cols=(string)`| (initial)| `<number: 20>` |
@@ -1974,6 +2053,7 @@
 | `cols=(undefined)`| (initial)| `<number: 20>` |
 
 ## `colSpan` (on `<td>` inside `<tr>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colSpan=(string)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
@@ -1999,6 +2079,7 @@
 | `colSpan=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
 ## `content` (on `<meta>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `content=(string)`| (changed)| `"a string"` |
@@ -2024,6 +2105,7 @@
 | `content=(undefined)`| (initial)| `<empty string>` |
 
 ## `contentEditable` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contentEditable=(string)`| (initial)| `"inherit"` |
@@ -2049,6 +2131,7 @@
 | `contentEditable=(undefined)`| (initial)| `"inherit"` |
 
 ## `contentScriptType` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contentScriptType=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -2074,6 +2157,7 @@
 | `contentScriptType=(undefined)`| (initial)| `<null>` |
 
 ## `contentStyleType` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contentStyleType=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -2099,6 +2183,7 @@
 | `contentStyleType=(undefined)`| (initial)| `<null>` |
 
 ## `contextMenu` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contextMenu=(string)`| (changed)| `"a string"` |
@@ -2124,6 +2209,7 @@
 | `contextMenu=(undefined)`| (initial)| `<null>` |
 
 ## `controls` (on `<video>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `controls=(string)`| (changed)| `<boolean: true>` |
@@ -2149,6 +2235,7 @@
 | `controls=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `coords` (on `<a>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `coords=(string)`| (changed)| `"a string"` |
@@ -2174,6 +2261,7 @@
 | `coords=(undefined)`| (initial)| `<empty string>` |
 
 ## `crossOrigin` (on `<script>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `crossOrigin=(string)`| (changed)| `"anonymous"` |
@@ -2199,6 +2287,7 @@
 | `crossOrigin=(undefined)`| (initial)| `<null>` |
 
 ## `cursor` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cursor=(string)`| (changed)| `"a string"` |
@@ -2224,6 +2313,7 @@
 | `cursor=(undefined)`| (initial)| `<null>` |
 
 ## `cx` (on `<circle>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cx=(string)`| (changed)| `<SVGLength: 10px>` |
@@ -2249,6 +2339,7 @@
 | `cx=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `cy` (on `<circle>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cy=(string)`| (changed)| `<SVGLength: 10%>` |
@@ -2274,6 +2365,7 @@
 | `cy=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `d` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `d=(string)`| (changed)| `"a string"` |
@@ -2299,31 +2391,33 @@
 | `d=(undefined)`| (initial)| `<null>` |
 
 ## `dangerouslySetInnerHTML` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `dangerouslySetInnerHTML=(string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(empty string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(array with string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(empty array)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(object)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(numeric string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(-1)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(0)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(integer)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(NaN)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(float)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(true)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(false)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'true')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'false')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'on')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'off')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(symbol)`| (changed, error, warning, ssr error)| `` |
+| `dangerouslySetInnerHTML=(string)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(empty string)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(array with string)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(empty array)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(object)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(numeric string)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(-1)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(0)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(integer)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(NaN)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(float)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(true)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(false)`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(string 'true')`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(string 'false')`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(string 'on')`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(string 'off')`| (changed, error, warning, ssr error)| ``|
+| `dangerouslySetInnerHTML=(symbol)`| (changed, error, warning, ssr error)| ``|
 | `dangerouslySetInnerHTML=(function)`| (changed, error, warning, ssr error)| `` |
 | `dangerouslySetInnerHTML=(null)`| (initial)| `<null>` |
 | `dangerouslySetInnerHTML=(undefined)`| (initial)| `<null>` |
 
 ## `DangerouslySetInnerHTML` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `DangerouslySetInnerHTML=(string)`| (changed, warning)| `"a string"` |
@@ -2349,6 +2443,7 @@
 | `DangerouslySetInnerHTML=(undefined)`| (initial, warning)| `<null>` |
 
 ## `data` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `data=(string)`| (changed)| `"a string"` |
@@ -2374,6 +2469,7 @@
 | `data=(undefined)`| (initial)| `<null>` |
 
 ## `data-` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `data-=(string)`| (changed)| `"a string"` |
@@ -2399,6 +2495,7 @@
 | `data-=(undefined)`| (initial)| `<null>` |
 
 ## `data-unknownattribute` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `data-unknownattribute=(string)`| (changed)| `"a string"` |
@@ -2424,6 +2521,7 @@
 | `data-unknownattribute=(undefined)`| (initial)| `<null>` |
 
 ## `datatype` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `datatype=(string)`| (changed)| `"a string"` |
@@ -2449,6 +2547,7 @@
 | `datatype=(undefined)`| (initial)| `<null>` |
 
 ## `dateTime` (on `<time>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dateTime=(string)`| (changed)| `"2001-05-15T19:00"` |
@@ -2474,6 +2573,7 @@
 | `dateTime=(undefined)`| (initial)| `<null>` |
 
 ## `decelerate` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `decelerate=(string)`| (changed)| `"a string"` |
@@ -2499,6 +2599,7 @@
 | `decelerate=(undefined)`| (initial)| `<null>` |
 
 ## `default` (on `<track>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `default=(string)`| (changed)| `<boolean: true>` |
@@ -2524,6 +2625,7 @@
 | `default=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `defaultchecked` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defaultchecked=(string)`| (changed, warning)| `"a string"` |
@@ -2549,6 +2651,7 @@
 | `defaultchecked=(undefined)`| (initial, warning)| `<null>` |
 
 ## `defaultChecked` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defaultChecked=(string)`| (changed)| `<boolean: true>` |
@@ -2574,6 +2677,7 @@
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `defaultValue` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defaultValue=(string)`| (changed)| `"a string"` |
@@ -2599,6 +2703,7 @@
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 
 ## `defaultValuE` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defaultValuE=(string)`| (changed, warning)| `"a string"` |
@@ -2624,6 +2729,7 @@
 | `defaultValuE=(undefined)`| (initial, warning)| `<null>` |
 
 ## `defer` (on `<script>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defer=(string)`| (changed)| `<boolean: true>` |
@@ -2649,6 +2755,7 @@
 | `defer=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `descent` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `descent=(string)`| (changed)| `"a string"` |
@@ -2674,6 +2781,7 @@
 | `descent=(undefined)`| (initial)| `<null>` |
 
 ## `diffuseConstant` (on `<feDiffuseLighting>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `diffuseConstant=(string)`| (changed)| `<number: 0>` |
@@ -2699,6 +2807,7 @@
 | `diffuseConstant=(undefined)`| (initial)| `<number: 1>` |
 
 ## `dir` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dir=(string)`| (changed)| `"rtl"` |
@@ -2724,6 +2833,7 @@
 | `dir=(undefined)`| (initial)| `<empty string>` |
 
 ## `direction` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `direction=(string)`| (changed)| `"rtl"` |
@@ -2749,6 +2859,7 @@
 | `direction=(undefined)`| (initial)| `<null>` |
 
 ## `disabled` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `disabled=(string)`| (changed)| `<boolean: true>` |
@@ -2774,6 +2885,7 @@
 | `disabled=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `display` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `display=(string)`| (changed)| `"list-item"` |
@@ -2799,6 +2911,7 @@
 | `display=(undefined)`| (initial)| `<null>` |
 
 ## `divisor` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `divisor=(string)`| (initial)| `<number: 0>` |
@@ -2824,6 +2937,7 @@
 | `divisor=(undefined)`| (initial)| `<number: 0>` |
 
 ## `dominant-baseline` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dominant-baseline=(string)`| (changed, warning)| `"a string"` |
@@ -2849,6 +2963,7 @@
 | `dominant-baseline=(undefined)`| (initial, warning)| `<null>` |
 
 ## `dominantBaseline` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dominantBaseline=(string)`| (changed)| `"a string"` |
@@ -2874,6 +2989,7 @@
 | `dominantBaseline=(undefined)`| (initial)| `<null>` |
 
 ## `download` (on `<a>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `download=(string)`| (changed)| `"a string"` |
@@ -2899,6 +3015,7 @@
 | `download=(undefined)`| (initial)| `<empty string>` |
 
 ## `dOwNlOaD` (on `<a>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dOwNlOaD=(string)`| (changed, warning)| `"a string"` |
@@ -2924,6 +3041,7 @@
 | `dOwNlOaD=(undefined)`| (initial, warning)| `<null>` |
 
 ## `draggable` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `draggable=(string)`| (initial)| `<boolean: false>` |
@@ -2949,6 +3067,7 @@
 | `draggable=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `dur` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dur=(string)`| (changed)| `"a string"` |
@@ -2974,6 +3093,7 @@
 | `dur=(undefined)`| (initial)| `<null>` |
 
 ## `dx` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dx=(string)`| (changed)| `[<SVGLength: 1pt>, <SVGLength: 2px>, <SVGLength: 3em>]` |
@@ -2999,6 +3119,7 @@
 | `dx=(undefined)`| (initial)| `[]` |
 
 ## `dX` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dX=(string)`| (initial, warning, ssr mismatch)| `[]` |
@@ -3024,6 +3145,7 @@
 | `dX=(undefined)`| (initial, warning)| `[]` |
 
 ## `dy` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dy=(string)`| (changed)| `[<SVGLength: 1>, <SVGLength: 2>, <SVGLength: 3>]` |
@@ -3049,6 +3171,7 @@
 | `dy=(undefined)`| (initial)| `[]` |
 
 ## `dY` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dY=(string)`| (initial, warning, ssr mismatch)| `[]` |
@@ -3074,6 +3197,7 @@
 | `dY=(undefined)`| (initial, warning)| `[]` |
 
 ## `edgeMode` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `edgeMode=(string)`| (changed)| `<number: 2>` |
@@ -3099,6 +3223,7 @@
 | `edgeMode=(undefined)`| (initial)| `<number: 1>` |
 
 ## `elevation` (on `<feDistantLight>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `elevation=(string)`| (initial)| `<number: 0>` |
@@ -3124,6 +3249,7 @@
 | `elevation=(undefined)`| (initial)| `<number: 0>` |
 
 ## `enable-background` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `enable-background=(string)`| (changed, warning)| `"a string"` |
@@ -3149,6 +3275,7 @@
 | `enable-background=(undefined)`| (initial, warning)| `<null>` |
 
 ## `enableBackground` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `enableBackground=(string)`| (changed)| `"a string"` |
@@ -3174,6 +3301,7 @@
 | `enableBackground=(undefined)`| (initial)| `<null>` |
 
 ## `encType` (on `<form>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `encType=(string)`| (changed)| `"text/plain"` |
@@ -3199,6 +3327,7 @@
 | `encType=(undefined)`| (initial)| `"application/x-www-form-urlencoded"` |
 
 ## `end` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `end=(string)`| (changed)| `"a string"` |
@@ -3224,6 +3353,7 @@
 | `end=(undefined)`| (initial)| `<null>` |
 
 ## `enterKeyHint` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `enterKeyHint=(string)`| (initial)| `<empty string>` |
@@ -3249,6 +3379,7 @@
 | `enterKeyHint=(undefined)`| (initial)| `<empty string>` |
 
 ## `exponent` (on `<feFuncA>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `exponent=(string)`| (changed)| `<number: 0>` |
@@ -3274,6 +3405,7 @@
 | `exponent=(undefined)`| (initial)| `<number: 1>` |
 
 ## `externalResourcesRequired` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `externalResourcesRequired=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -3299,6 +3431,7 @@
 | `externalResourcesRequired=(undefined)`| (initial)| `<null>` |
 
 ## `fill` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fill=(string)`| (changed)| `"a string"` |
@@ -3324,6 +3457,7 @@
 | `fill=(undefined)`| (initial)| `<null>` |
 
 ## `fillOpacity` (on `<circle>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fillOpacity=(string)`| (changed)| `"a string"` |
@@ -3349,6 +3483,7 @@
 | `fillOpacity=(undefined)`| (initial)| `<null>` |
 
 ## `fill-opacity` (on `<circle>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fill-opacity=(string)`| (changed, warning)| `"a string"` |
@@ -3374,6 +3509,7 @@
 | `fill-opacity=(undefined)`| (initial, warning)| `<null>` |
 
 ## `fillRule` (on `<circle>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fillRule=(string)`| (changed)| `"a string"` |
@@ -3399,6 +3535,7 @@
 | `fillRule=(undefined)`| (initial)| `<null>` |
 
 ## `fill-rule` (on `<circle>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fill-rule=(string)`| (changed, warning)| `"a string"` |
@@ -3424,6 +3561,7 @@
 | `fill-rule=(undefined)`| (initial, warning)| `<null>` |
 
 ## `filter` (on `<g>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `filter=(string)`| (changed)| `"a string"` |
@@ -3449,6 +3587,7 @@
 | `filter=(undefined)`| (initial)| `<null>` |
 
 ## `filterRes` (on `<filter>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `filterRes=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -3474,6 +3613,7 @@
 | `filterRes=(undefined)`| (initial)| `<null>` |
 
 ## `filterUnits` (on `<filter>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `filterUnits=(string)`| (changed)| `<number: 1>` |
@@ -3499,6 +3639,7 @@
 | `filterUnits=(undefined)`| (initial)| `<number: 2>` |
 
 ## `flood-color` (on `<feflood>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `flood-color=(string)`| (changed, warning)| `"currentColor"` |
@@ -3524,6 +3665,7 @@
 | `flood-color=(undefined)`| (initial, warning)| `<null>` |
 
 ## `floodColor` (on `<feflood>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `floodColor=(string)`| (changed)| `"currentColor"` |
@@ -3549,6 +3691,7 @@
 | `floodColor=(undefined)`| (initial)| `<null>` |
 
 ## `flood-opacity` (on `<feflood>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `flood-opacity=(string)`| (changed, warning)| `"inherit"` |
@@ -3574,6 +3717,7 @@
 | `flood-opacity=(undefined)`| (initial, warning)| `<null>` |
 
 ## `floodOpacity` (on `<feflood>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `floodOpacity=(string)`| (changed)| `"inherit"` |
@@ -3599,6 +3743,7 @@
 | `floodOpacity=(undefined)`| (initial)| `<null>` |
 
 ## `focusable` (on `<p>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `focusable=(string)`| (changed)| `"a string"` |
@@ -3624,6 +3769,7 @@
 | `focusable=(undefined)`| (initial)| `<null>` |
 
 ## `font-family` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-family=(string)`| (changed, warning)| `"a string"` |
@@ -3649,6 +3795,7 @@
 | `font-family=(undefined)`| (initial, warning)| `<null>` |
 
 ## `font-size` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-size=(string)`| (changed, warning)| `"a string"` |
@@ -3674,6 +3821,7 @@
 | `font-size=(undefined)`| (initial, warning)| `<null>` |
 
 ## `font-size-adjust` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-size-adjust=(string)`| (changed, warning)| `"a string"` |
@@ -3699,6 +3847,7 @@
 | `font-size-adjust=(undefined)`| (initial, warning)| `<null>` |
 
 ## `font-stretch` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-stretch=(string)`| (changed, warning)| `"a string"` |
@@ -3724,6 +3873,7 @@
 | `font-stretch=(undefined)`| (initial, warning)| `<null>` |
 
 ## `font-style` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-style=(string)`| (changed, warning)| `"a string"` |
@@ -3749,6 +3899,7 @@
 | `font-style=(undefined)`| (initial, warning)| `<null>` |
 
 ## `font-variant` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-variant=(string)`| (changed, warning)| `"a string"` |
@@ -3774,6 +3925,7 @@
 | `font-variant=(undefined)`| (initial, warning)| `<null>` |
 
 ## `font-weight` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-weight=(string)`| (changed, warning)| `"a string"` |
@@ -3799,6 +3951,7 @@
 | `font-weight=(undefined)`| (initial, warning)| `<null>` |
 
 ## `fontFamily` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontFamily=(string)`| (changed)| `"a string"` |
@@ -3824,6 +3977,7 @@
 | `fontFamily=(undefined)`| (initial)| `<null>` |
 
 ## `fontSize` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontSize=(string)`| (changed)| `"a string"` |
@@ -3849,6 +4003,7 @@
 | `fontSize=(undefined)`| (initial)| `<null>` |
 
 ## `fontSizeAdjust` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontSizeAdjust=(string)`| (changed)| `"a string"` |
@@ -3874,6 +4029,7 @@
 | `fontSizeAdjust=(undefined)`| (initial)| `<null>` |
 
 ## `fontStretch` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontStretch=(string)`| (changed)| `"a string"` |
@@ -3899,6 +4055,7 @@
 | `fontStretch=(undefined)`| (initial)| `<null>` |
 
 ## `fontStyle` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontStyle=(string)`| (changed)| `"a string"` |
@@ -3924,6 +4081,7 @@
 | `fontStyle=(undefined)`| (initial)| `<null>` |
 
 ## `fontVariant` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontVariant=(string)`| (changed)| `"a string"` |
@@ -3949,6 +4107,7 @@
 | `fontVariant=(undefined)`| (initial)| `<null>` |
 
 ## `fontWeight` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontWeight=(string)`| (changed)| `"a string"` |
@@ -3974,6 +4133,7 @@
 | `fontWeight=(undefined)`| (initial)| `<null>` |
 
 ## `for` (on `<label>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `for=(string)`| (changed, warning)| `"a string"` |
@@ -3999,6 +4159,7 @@
 | `for=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `fOr` (on `<label>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fOr=(string)`| (changed, warning)| `"a string"` |
@@ -4024,6 +4185,7 @@
 | `fOr=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `form` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `form=(string)`| (changed)| `"a string"` |
@@ -4049,6 +4211,7 @@
 | `form=(undefined)`| (initial)| `<null>` |
 
 ## `formAction` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formAction=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -4074,6 +4237,7 @@
 | `formAction=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
 ## `format` (on `<altGlyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `format=(string)`| (changed)| `"a string"` |
@@ -4099,6 +4263,7 @@
 | `format=(undefined)`| (initial)| `<null>` |
 
 ## `formEncType` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formEncType=(string)`| (changed)| `"application/x-www-form-urlencoded"` |
@@ -4124,6 +4289,7 @@
 | `formEncType=(undefined)`| (initial)| `<empty string>` |
 
 ## `formMethod` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formMethod=(string)`| (changed)| `"post"` |
@@ -4149,6 +4315,7 @@
 | `formMethod=(undefined)`| (initial)| `<empty string>` |
 
 ## `formNoValidate` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formNoValidate=(string)`| (changed)| `<boolean: true>` |
@@ -4174,6 +4341,7 @@
 | `formNoValidate=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `formTarget` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formTarget=(string)`| (changed)| `"a string"` |
@@ -4199,6 +4367,7 @@
 | `formTarget=(undefined)`| (initial)| `<empty string>` |
 
 ## `frameBorder` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `frameBorder=(string)`| (changed)| `"a string"` |
@@ -4224,6 +4393,7 @@
 | `frameBorder=(undefined)`| (initial)| `<empty string>` |
 
 ## `from` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `from=(string)`| (changed)| `"a string"` |
@@ -4249,6 +4419,7 @@
 | `from=(undefined)`| (initial)| `<null>` |
 
 ## `fx` (on `<radialGradient>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fx=(string)`| (changed)| `<SVGLength: 10px>` |
@@ -4274,6 +4445,7 @@
 | `fx=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `fX` (on `<radialGradient>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fX=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
@@ -4299,6 +4471,7 @@
 | `fX=(undefined)`| (initial, warning)| `<SVGLength: 0>` |
 
 ## `fY` (on `<radialGradient>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fY=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
@@ -4324,6 +4497,7 @@
 | `fY=(undefined)`| (initial, warning)| `<SVGLength: 0>` |
 
 ## `fy` (on `<radialGradient>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fy=(string)`| (changed)| `<SVGLength: 20em>` |
@@ -4349,6 +4523,7 @@
 | `fy=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `G1` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `G1=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -4374,6 +4549,7 @@
 | `G1=(undefined)`| (initial, warning)| `<null>` |
 
 ## `g1` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `g1=(string)`| (changed)| `"a string"` |
@@ -4399,6 +4575,7 @@
 | `g1=(undefined)`| (initial)| `<null>` |
 
 ## `G2` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `G2=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -4424,6 +4601,7 @@
 | `G2=(undefined)`| (initial, warning)| `<null>` |
 
 ## `g2` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `g2=(string)`| (changed)| `"a string"` |
@@ -4449,6 +4627,7 @@
 | `g2=(undefined)`| (initial)| `<null>` |
 
 ## `glyph-name` (on `<glyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyph-name=(string)`| (changed, warning)| `"a string"` |
@@ -4474,6 +4653,7 @@
 | `glyph-name=(undefined)`| (initial, warning)| `<null>` |
 
 ## `glyph-orientation-horizontal` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyph-orientation-horizontal=(string)`| (changed, warning)| `"a string"` |
@@ -4499,6 +4679,7 @@
 | `glyph-orientation-horizontal=(undefined)`| (initial, warning)| `<null>` |
 
 ## `glyph-orientation-vertical` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyph-orientation-vertical=(string)`| (changed, warning)| `"a string"` |
@@ -4524,6 +4705,7 @@
 | `glyph-orientation-vertical=(undefined)`| (initial, warning)| `<null>` |
 
 ## `glyphName` (on `<glyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphName=(string)`| (changed)| `"a string"` |
@@ -4549,6 +4731,7 @@
 | `glyphName=(undefined)`| (initial)| `<null>` |
 
 ## `glyphOrientationHorizontal` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphOrientationHorizontal=(string)`| (changed)| `"a string"` |
@@ -4574,6 +4757,7 @@
 | `glyphOrientationHorizontal=(undefined)`| (initial)| `<null>` |
 
 ## `glyphOrientationVertical` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphOrientationVertical=(string)`| (changed)| `"a string"` |
@@ -4599,6 +4783,7 @@
 | `glyphOrientationVertical=(undefined)`| (initial)| `<null>` |
 
 ## `glyphRef` (on `<altGlyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphRef=(string)`| (initial)| `<null>` |
@@ -4624,6 +4809,7 @@
 | `glyphRef=(undefined)`| (initial)| `<null>` |
 
 ## `gradientTransform` (on `<linearGradient>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `gradientTransform=(string)`| (changed)| `[<SVGMatrix 1 0 0 1 -10 -20>/2/0, <SVGMatrix 2 0 0 2 0 0>/3/0, <SVGMatrix 0.7071067811865476 0.7071067811865475 -0.7071067811865475 0.7071067811865476 0 0>/4/45, <SVGMatrix 1 0 0 1 5 10>/2/0]` |
@@ -4649,6 +4835,7 @@
 | `gradientTransform=(undefined)`| (initial)| `[]` |
 
 ## `gradientUnits` (on `<linearGradient>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `gradientUnits=(string)`| (changed)| `<number: 1>` |
@@ -4674,6 +4861,7 @@
 | `gradientUnits=(undefined)`| (initial)| `<number: 2>` |
 
 ## `hanging` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `hanging=(string)`| (changed)| `"a string"` |
@@ -4699,6 +4887,7 @@
 | `hanging=(undefined)`| (initial)| `<null>` |
 
 ## `headers` (on `<td>` inside `<tr>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `headers=(string)`| (changed, ssr error, ssr mismatch)| `"a string"` |
@@ -4724,6 +4913,7 @@
 | `headers=(undefined)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 
 ## `height` (on `<img>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `height=(string)`| (initial)| `<number: 0>` |
@@ -4749,6 +4939,7 @@
 | `height=(undefined)`| (initial)| `<number: 0>` |
 
 ## `height` (on `<rect>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `height=(string)`| (changed)| `<SVGLength: 100%>` |
@@ -4774,6 +4965,7 @@
 | `height=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `hidden` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `hidden=(string)`| (changed)| `<boolean: true>` |
@@ -4799,6 +4991,7 @@
 | `hidden=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `high` (on `<meter>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `high=(string)`| (initial)| `<number: 1>` |
@@ -4824,6 +5017,7 @@
 | `high=(undefined)`| (initial)| `<number: 1>` |
 
 ## `horiz-adv-x` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horiz-adv-x=(string)`| (changed, warning)| `"a string"` |
@@ -4849,6 +5043,7 @@
 | `horiz-adv-x=(undefined)`| (initial, warning)| `<null>` |
 
 ## `horiz-origin-x` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horiz-origin-x=(string)`| (changed, warning)| `"a string"` |
@@ -4874,6 +5069,7 @@
 | `horiz-origin-x=(undefined)`| (initial, warning)| `<null>` |
 
 ## `horizAdvX` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horizAdvX=(string)`| (changed)| `"a string"` |
@@ -4899,6 +5095,7 @@
 | `horizAdvX=(undefined)`| (initial)| `<null>` |
 
 ## `horizOriginX` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horizOriginX=(string)`| (changed)| `"a string"` |
@@ -4924,6 +5121,7 @@
 | `horizOriginX=(undefined)`| (initial)| `<null>` |
 
 ## `href` (on `<a>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `href=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -4949,6 +5147,7 @@
 | `href=(undefined)`| (initial)| `<empty string>` |
 
 ## `hrefLang` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `hrefLang=(string)`| (changed)| `"a string"` |
@@ -4974,6 +5173,7 @@
 | `hrefLang=(undefined)`| (initial)| `<null>` |
 
 ## `htmlFor` (on `<label>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `htmlFor=(string)`| (changed)| `"a string"` |
@@ -4999,6 +5199,7 @@
 | `htmlFor=(undefined)`| (initial)| `<empty string>` |
 
 ## `http-equiv` (on `<meta>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `http-equiv=(string)`| (changed, warning)| `"a string"` |
@@ -5024,6 +5225,7 @@
 | `http-equiv=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `httpEquiv` (on `<meta>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `httpEquiv=(string)`| (changed)| `"a string"` |
@@ -5049,6 +5251,7 @@
 | `httpEquiv=(undefined)`| (initial)| `<empty string>` |
 
 ## `icon` (on `<command>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `icon=(string)`| (changed, warning, ssr warning)| `"a string"` |
@@ -5074,6 +5277,7 @@
 | `icon=(undefined)`| (initial, warning, ssr warning)| `<null>` |
 
 ## `id` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `id=(string)`| (changed)| `"a string"` |
@@ -5099,6 +5303,7 @@
 | `id=(undefined)`| (initial)| `<empty string>` |
 
 ## `ID` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ID=(string)`| (changed, warning)| `"a string"` |
@@ -5124,6 +5329,7 @@
 | `ID=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `ideographic` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ideographic=(string)`| (changed)| `"a string"` |
@@ -5149,6 +5355,7 @@
 | `ideographic=(undefined)`| (initial)| `<null>` |
 
 ## `image-rendering` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `image-rendering=(string)`| (changed, warning)| `"a string"` |
@@ -5174,6 +5381,7 @@
 | `image-rendering=(undefined)`| (initial, warning)| `<null>` |
 
 ## `imageRendering` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `imageRendering=(string)`| (changed)| `"a string"` |
@@ -5199,6 +5407,7 @@
 | `imageRendering=(undefined)`| (initial)| `<null>` |
 
 ## `in` (on `<feBlend>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `in=(string)`| (changed)| `"a string"` |
@@ -5224,6 +5433,7 @@
 | `in=(undefined)`| (initial)| `<null>` |
 
 ## `in2` (on `<feBlend>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `in2=(string)`| (changed)| `"a string"` |
@@ -5249,6 +5459,7 @@
 | `in2=(undefined)`| (initial)| `<empty string>` |
 
 ## `initialChecked` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `initialChecked=(string)`| (changed, warning)| `"a string"` |
@@ -5274,6 +5485,7 @@
 | `initialChecked=(undefined)`| (initial, warning)| `<null>` |
 
 ## `initialValue` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `initialValue=(string)`| (changed, warning)| `"a string"` |
@@ -5299,6 +5511,7 @@
 | `initialValue=(undefined)`| (initial, warning)| `<null>` |
 
 ## `inlist` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `inlist=(string)`| (changed)| `"a string"` |
@@ -5324,6 +5537,7 @@
 | `inlist=(undefined)`| (initial)| `<null>` |
 
 ## `inputMode` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `inputMode=(string)`| (changed)| `"a string"` |
@@ -5349,6 +5563,7 @@
 | `inputMode=(undefined)`| (initial)| `<null>` |
 
 ## `integrity` (on `<script>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `integrity=(string)`| (changed)| `"a string"` |
@@ -5374,6 +5589,7 @@
 | `integrity=(undefined)`| (initial)| `<empty string>` |
 
 ## `intercept` (on `<feFuncA>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `intercept=(string)`| (initial)| `<number: 0>` |
@@ -5399,6 +5615,7 @@
 | `intercept=(undefined)`| (initial)| `<number: 0>` |
 
 ## `is` (on `<button>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `is=(string)`| (changed)| `"x-test-element"` |
@@ -5424,6 +5641,7 @@
 | `is=(undefined)`| (initial)| `<null>` |
 
 ## `itemID` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemID=(string)`| (changed)| `"a string"` |
@@ -5449,6 +5667,7 @@
 | `itemID=(undefined)`| (initial)| `<null>` |
 
 ## `itemProp` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemProp=(string)`| (changed)| `"a string"` |
@@ -5474,6 +5693,7 @@
 | `itemProp=(undefined)`| (initial)| `<null>` |
 
 ## `itemRef` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemRef=(string)`| (changed)| `"a string"` |
@@ -5499,6 +5719,7 @@
 | `itemRef=(undefined)`| (initial)| `<null>` |
 
 ## `itemScope` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemScope=(string)`| (changed)| `<empty string>` |
@@ -5524,6 +5745,7 @@
 | `itemScope=(undefined)`| (initial)| `<null>` |
 
 ## `itemType` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemType=(string)`| (changed)| `"a string"` |
@@ -5549,6 +5771,7 @@
 | `itemType=(undefined)`| (initial)| `<null>` |
 
 ## `k` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k=(string)`| (changed)| `"a string"` |
@@ -5574,6 +5797,7 @@
 | `k=(undefined)`| (initial)| `<null>` |
 
 ## `K` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `K=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -5599,6 +5823,7 @@
 | `K=(undefined)`| (initial, warning)| `<null>` |
 
 ## `K1` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `K1=(string)`| (initial, warning)| `<number: 0>` |
@@ -5624,6 +5849,7 @@
 | `K1=(undefined)`| (initial, warning)| `<number: 0>` |
 
 ## `k1` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k1=(string)`| (initial)| `<number: 0>` |
@@ -5649,6 +5875,7 @@
 | `k1=(undefined)`| (initial)| `<number: 0>` |
 
 ## `k2` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k2=(string)`| (initial)| `<number: 0>` |
@@ -5674,6 +5901,7 @@
 | `k2=(undefined)`| (initial)| `<number: 0>` |
 
 ## `k3` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k3=(string)`| (initial)| `<number: 0>` |
@@ -5699,6 +5927,7 @@
 | `k3=(undefined)`| (initial)| `<number: 0>` |
 
 ## `k4` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k4=(string)`| (initial)| `<number: 0>` |
@@ -5724,6 +5953,7 @@
 | `k4=(undefined)`| (initial)| `<number: 0>` |
 
 ## `kernelMatrix` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kernelMatrix=(string)`| (changed)| `[1, 2, 3, 4]` |
@@ -5749,6 +5979,7 @@
 | `kernelMatrix=(undefined)`| (initial)| `[]` |
 
 ## `kernelUnitLength` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kernelUnitLength=(string)`| (changed)| `"a string"` |
@@ -5774,6 +6005,7 @@
 | `kernelUnitLength=(undefined)`| (initial)| `<null>` |
 
 ## `kerning` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kerning=(string)`| (changed)| `"a string"` |
@@ -5799,6 +6031,7 @@
 | `kerning=(undefined)`| (initial)| `<null>` |
 
 ## `keyParams` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyParams=(string)`| (changed)| `"a string"` |
@@ -5824,6 +6057,7 @@
 | `keyParams=(undefined)`| (initial)| `<null>` |
 
 ## `keyPoints` (on `<animateMotion>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyPoints=(string)`| (changed)| `"a string"` |
@@ -5849,6 +6083,7 @@
 | `keyPoints=(undefined)`| (initial)| `<null>` |
 
 ## `keySplines` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keySplines=(string)`| (changed)| `"a string"` |
@@ -5874,6 +6109,7 @@
 | `keySplines=(undefined)`| (initial)| `<null>` |
 
 ## `keyTimes` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyTimes=(string)`| (changed)| `"a string"` |
@@ -5899,6 +6135,7 @@
 | `keyTimes=(undefined)`| (initial)| `<null>` |
 
 ## `keyType` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyType=(string)`| (changed)| `"a string"` |
@@ -5924,6 +6161,7 @@
 | `keyType=(undefined)`| (initial)| `<null>` |
 
 ## `kind` (on `<track>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kind=(string)`| (changed)| `"captions"` |
@@ -5949,6 +6187,7 @@
 | `kind=(undefined)`| (initial)| `"subtitles"` |
 
 ## `label` (on `<track>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `label=(string)`| (changed)| `"a string"` |
@@ -5974,6 +6213,7 @@
 | `label=(undefined)`| (initial)| `<empty string>` |
 
 ## `LANG` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `LANG=(string)`| (changed, warning)| `"a string"` |
@@ -5999,6 +6239,7 @@
 | `LANG=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `lang` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lang=(string)`| (changed)| `"a string"` |
@@ -6024,6 +6265,7 @@
 | `lang=(undefined)`| (initial)| `<empty string>` |
 
 ## `length` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `length=(string)`| (changed)| `"a string"` |
@@ -6049,6 +6291,7 @@
 | `length=(undefined)`| (initial)| `<null>` |
 
 ## `lengthAdjust` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lengthAdjust=(string)`| (changed)| `<number: 2>` |
@@ -6074,6 +6317,7 @@
 | `lengthAdjust=(undefined)`| (initial)| `<number: 1>` |
 
 ## `letter-spacing` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `letter-spacing=(string)`| (changed, warning)| `"a string"` |
@@ -6099,6 +6343,7 @@
 | `letter-spacing=(undefined)`| (initial, warning)| `<null>` |
 
 ## `letterSpacing` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `letterSpacing=(string)`| (changed)| `"a string"` |
@@ -6124,6 +6369,7 @@
 | `letterSpacing=(undefined)`| (initial)| `<null>` |
 
 ## `lighting-color` (on `<feDiffuseLighting>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lighting-color=(string)`| (changed, warning)| `"a string"` |
@@ -6149,6 +6395,7 @@
 | `lighting-color=(undefined)`| (initial, warning)| `<null>` |
 
 ## `lightingColor` (on `<feDiffuseLighting>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lightingColor=(string)`| (changed)| `"a string"` |
@@ -6174,6 +6421,7 @@
 | `lightingColor=(undefined)`| (initial)| `<null>` |
 
 ## `limitingConeAngle` (on `<feSpotLight>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `limitingConeAngle=(string)`| (initial)| `<number: 0>` |
@@ -6199,6 +6447,7 @@
 | `limitingConeAngle=(undefined)`| (initial)| `<number: 0>` |
 
 ## `list` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `list=(string)`| (changed)| `"a string"` |
@@ -6224,6 +6473,7 @@
 | `list=(undefined)`| (initial)| `<null>` |
 
 ## `local` (on `<color-profile>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `local=(string)`| (changed)| `"a string"` |
@@ -6249,6 +6499,7 @@
 | `local=(undefined)`| (initial)| `<null>` |
 
 ## `loop` (on `<audio>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `loop=(string)`| (changed)| `<boolean: true>` |
@@ -6274,6 +6525,7 @@
 | `loop=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `low` (on `<meter>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `low=(string)`| (initial)| `<number: 0>` |
@@ -6299,6 +6551,7 @@
 | `low=(undefined)`| (initial)| `<number: 0>` |
 
 ## `manifest` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `manifest=(string)`| (changed)| `"a string"` |
@@ -6324,6 +6577,7 @@
 | `manifest=(undefined)`| (initial)| `<null>` |
 
 ## `marginHeight` (on `<frame>` inside `<frameset>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marginHeight=(string)`| (changed, warning, ssr error, ssr mismatch)| `"a string"` |
@@ -6349,6 +6603,7 @@
 | `marginHeight=(undefined)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
 
 ## `marginWidth` (on `<frame>` inside `<frameset>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marginWidth=(string)`| (changed, ssr error, ssr mismatch)| `"a string"` |
@@ -6374,6 +6629,7 @@
 | `marginWidth=(undefined)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 
 ## `marker-end` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marker-end=(string)`| (changed, warning)| `"a string"` |
@@ -6399,6 +6655,7 @@
 | `marker-end=(undefined)`| (initial, warning)| `<null>` |
 
 ## `marker-mid` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marker-mid=(string)`| (changed, warning)| `"a string"` |
@@ -6424,6 +6681,7 @@
 | `marker-mid=(undefined)`| (initial, warning)| `<null>` |
 
 ## `marker-start` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marker-start=(string)`| (changed, warning)| `"a string"` |
@@ -6449,6 +6707,7 @@
 | `marker-start=(undefined)`| (initial, warning)| `<null>` |
 
 ## `markerEnd` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerEnd=(string)`| (changed)| `"a string"` |
@@ -6474,6 +6733,7 @@
 | `markerEnd=(undefined)`| (initial)| `<null>` |
 
 ## `markerHeight` (on `<marker>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerHeight=(string)`| (changed)| `<SVGLength: 0>` |
@@ -6499,6 +6759,7 @@
 | `markerHeight=(undefined)`| (initial)| `<SVGLength: 3>` |
 
 ## `markerMid` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerMid=(string)`| (changed)| `"a string"` |
@@ -6524,6 +6785,7 @@
 | `markerMid=(undefined)`| (initial)| `<null>` |
 
 ## `markerStart` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerStart=(string)`| (changed)| `"a string"` |
@@ -6549,6 +6811,7 @@
 | `markerStart=(undefined)`| (initial)| `<null>` |
 
 ## `markerUnits` (on `<marker>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerUnits=(string)`| (initial)| `<number: 2>` |
@@ -6574,6 +6837,7 @@
 | `markerUnits=(undefined)`| (initial)| `<number: 2>` |
 
 ## `markerWidth` (on `<marker>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerWidth=(string)`| (changed)| `<SVGLength: 0>` |
@@ -6599,6 +6863,7 @@
 | `markerWidth=(undefined)`| (initial)| `<SVGLength: 3>` |
 
 ## `mask` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mask=(string)`| (changed)| `"a string"` |
@@ -6624,6 +6889,7 @@
 | `mask=(undefined)`| (initial)| `<null>` |
 
 ## `maskContentUnits` (on `<mask>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `maskContentUnits=(string)`| (changed)| `<number: 2>` |
@@ -6649,6 +6915,7 @@
 | `maskContentUnits=(undefined)`| (initial)| `<number: 1>` |
 
 ## `maskUnits` (on `<mask>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `maskUnits=(string)`| (changed)| `<number: 1>` |
@@ -6674,6 +6941,7 @@
 | `maskUnits=(undefined)`| (initial)| `<number: 2>` |
 
 ## `mathematical` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mathematical=(string)`| (changed)| `"a string"` |
@@ -6699,6 +6967,7 @@
 | `mathematical=(undefined)`| (initial)| `<null>` |
 
 ## `max` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (changed)| `"a string"` |
@@ -6724,6 +6993,7 @@
 | `max=(undefined)`| (initial)| `<empty string>` |
 
 ## `max` (on `<meter>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (initial)| `<number: 1>` |
@@ -6749,6 +7019,7 @@
 | `max=(undefined)`| (initial)| `<number: 1>` |
 
 ## `max` (on `<progress>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (initial)| `<number: 1>` |
@@ -6774,6 +7045,7 @@
 | `max=(undefined)`| (initial)| `<number: 1>` |
 
 ## `max` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (changed)| `"a string"` |
@@ -6799,6 +7071,7 @@
 | `max=(undefined)`| (initial)| `<null>` |
 
 ## `maxLength` (on `<textarea>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `maxLength=(string)`| (initial)| `<number: -1>` |
@@ -6824,6 +7097,7 @@
 | `maxLength=(undefined)`| (initial)| `<number: -1>` |
 
 ## `media` (on `<link>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `media=(string)`| (changed)| `"a string"` |
@@ -6849,6 +7123,7 @@
 | `media=(undefined)`| (initial)| `<empty string>` |
 
 ## `media` (on `<style>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `media=(string)`| (changed)| `"a string"` |
@@ -6874,6 +7149,7 @@
 | `media=(undefined)`| (initial)| `"all"` |
 
 ## `mediaGroup` (on `<video>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mediaGroup=(string)`| (changed)| `"a string"` |
@@ -6899,6 +7175,7 @@
 | `mediaGroup=(undefined)`| (initial)| `<null>` |
 
 ## `method` (on `<form>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `method=(string)`| (changed)| `"post"` |
@@ -6924,6 +7201,7 @@
 | `method=(undefined)`| (initial)| `"get"` |
 
 ## `method` (on `<textPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `method=(string)`| (changed)| `<number: 2>` |
@@ -6949,6 +7227,7 @@
 | `method=(undefined)`| (initial)| `<number: 1>` |
 
 ## `min` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `min=(string)`| (changed)| `"a string"` |
@@ -6974,6 +7253,7 @@
 | `min=(undefined)`| (initial)| `<empty string>` |
 
 ## `min` (on `<meter>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `min=(string)`| (initial)| `<number: 0>` |
@@ -6999,6 +7279,7 @@
 | `min=(undefined)`| (initial)| `<number: 0>` |
 
 ## `min` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `min=(string)`| (changed)| `"a string"` |
@@ -7024,6 +7305,7 @@
 | `min=(undefined)`| (initial)| `<null>` |
 
 ## `minLength` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `minLength=(string)`| (initial)| `<number: -1>` |
@@ -7049,6 +7331,7 @@
 | `minLength=(undefined)`| (initial)| `<number: -1>` |
 
 ## `mode` (on `<feBlend>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mode=(string)`| (changed)| `<number: 2>` |
@@ -7074,6 +7357,7 @@
 | `mode=(undefined)`| (initial)| `<number: 1>` |
 
 ## `multiple` (on `<select>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `multiple=(string)`| (changed)| `<boolean: true>` |
@@ -7099,6 +7383,7 @@
 | `multiple=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `muted` (on `<video>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `muted=(string)`| (changed)| `<boolean: true>` |
@@ -7124,6 +7409,7 @@
 | `muted=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `name` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `name=(string)`| (changed)| `"a string"` |
@@ -7149,6 +7435,7 @@
 | `name=(undefined)`| (initial)| `<empty string>` |
 
 ## `name` (on `<color-profile>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `name=(string)`| (initial)| `<null>` |
@@ -7174,6 +7461,7 @@
 | `name=(undefined)`| (initial)| `<null>` |
 
 ## `noModule` (on `<script>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `noModule=(string)`| (changed)| `<boolean: true>` |
@@ -7199,6 +7487,7 @@
 | `noModule=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `nonce` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `nonce=(string)`| (changed)| `"a string"` |
@@ -7224,6 +7513,7 @@
 | `nonce=(undefined)`| (initial)| `<null>` |
 
 ## `noValidate` (on `<form>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `noValidate=(string)`| (changed)| `<boolean: true>` |
@@ -7249,6 +7539,7 @@
 | `noValidate=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `numOctaves` (on `<feTurbulence>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `numOctaves=(string)`| (changed)| `<number: 0>` |
@@ -7274,6 +7565,7 @@
 | `numOctaves=(undefined)`| (initial)| `<number: 1>` |
 
 ## `offset` (on `<stop>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `offset=(string)`| (initial)| `<number: 0>` |
@@ -7299,6 +7591,7 @@
 | `offset=(undefined)`| (initial)| `<number: 0>` |
 
 ## `on-click` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `on-click=(string)`| (initial, warning)| `<undefined>` |
@@ -7324,6 +7617,7 @@
 | `on-click=(undefined)`| (initial, warning)| `<undefined>` |
 
 ## `on-unknownevent` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `on-unknownevent=(string)`| (initial, warning)| `<undefined>` |
@@ -7349,6 +7643,7 @@
 | `on-unknownevent=(undefined)`| (initial, warning)| `<undefined>` |
 
 ## `onclick` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onclick=(string)`| (initial, warning)| `<null>` |
@@ -7374,6 +7669,7 @@
 | `onclick=(undefined)`| (initial, warning)| `<null>` |
 
 ## `onClick` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onClick=(string)`| (initial, warning, ssr warning)| `<undefined>` |
@@ -7399,6 +7695,7 @@
 | `onClick=(undefined)`| (initial)| `<undefined>` |
 
 ## `onunknownevent` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onunknownevent=(string)`| (initial, warning)| `<undefined>` |
@@ -7424,6 +7721,7 @@
 | `onunknownevent=(undefined)`| (initial, warning)| `<undefined>` |
 
 ## `onUnknownEvent` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onUnknownEvent=(string)`| (initial, warning, ssr warning)| `<undefined>` |
@@ -7449,6 +7747,7 @@
 | `onUnknownEvent=(undefined)`| (initial, warning, ssr warning)| `<undefined>` |
 
 ## `opacity` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `opacity=(string)`| (changed)| `"a string"` |
@@ -7474,6 +7773,7 @@
 | `opacity=(undefined)`| (initial)| `<null>` |
 
 ## `open` (on `<details>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `open=(string)`| (changed)| `<boolean: true>` |
@@ -7499,6 +7799,7 @@
 | `open=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `operator` (on `<feComposite>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `operator=(string)`| (changed)| `<number: 5>` |
@@ -7524,6 +7825,7 @@
 | `operator=(undefined)`| (initial)| `<number: 1>` |
 
 ## `optimum` (on `<meter>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `optimum=(string)`| (initial)| `<number: 0.5>` |
@@ -7549,6 +7851,7 @@
 | `optimum=(undefined)`| (initial)| `<number: 0.5>` |
 
 ## `order` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `order=(string)`| (changed)| `"a string"` |
@@ -7574,6 +7877,7 @@
 | `order=(undefined)`| (initial)| `<null>` |
 
 ## `orient` (on `<marker>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `orient=(string)`| (changed)| `"a string"` |
@@ -7599,6 +7903,7 @@
 | `orient=(undefined)`| (initial)| `<null>` |
 
 ## `orientation` (on `<glyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `orientation=(string)`| (changed)| `"a string"` |
@@ -7624,6 +7929,7 @@
 | `orientation=(undefined)`| (initial)| `<null>` |
 
 ## `origin` (on `<animateMotion>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `origin=(string)`| (changed)| `"a string"` |
@@ -7649,6 +7955,7 @@
 | `origin=(undefined)`| (initial)| `<null>` |
 
 ## `overflow` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overflow=(string)`| (changed)| `"a string"` |
@@ -7674,6 +7981,7 @@
 | `overflow=(undefined)`| (initial)| `<null>` |
 
 ## `overline-position` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overline-position=(string)`| (changed, warning)| `"a string"` |
@@ -7699,6 +8007,7 @@
 | `overline-position=(undefined)`| (initial, warning)| `<null>` |
 
 ## `overline-thickness` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overline-thickness=(string)`| (changed, warning)| `"a string"` |
@@ -7724,6 +8033,7 @@
 | `overline-thickness=(undefined)`| (initial, warning)| `<null>` |
 
 ## `overlinePosition` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overlinePosition=(string)`| (changed)| `"a string"` |
@@ -7749,6 +8059,7 @@
 | `overlinePosition=(undefined)`| (initial)| `<null>` |
 
 ## `overlineThickness` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overlineThickness=(string)`| (changed)| `"a string"` |
@@ -7774,6 +8085,7 @@
 | `overlineThickness=(undefined)`| (initial)| `<null>` |
 
 ## `paint-order` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `paint-order=(string)`| (changed, warning)| `"a string"` |
@@ -7799,6 +8111,7 @@
 | `paint-order=(undefined)`| (initial, warning)| `<null>` |
 
 ## `paintOrder` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `paintOrder=(string)`| (changed)| `"a string"` |
@@ -7824,6 +8137,7 @@
 | `paintOrder=(undefined)`| (initial)| `<null>` |
 
 ## `panose-1` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `panose-1=(string)`| (changed, warning)| `"a string"` |
@@ -7849,6 +8163,7 @@
 | `panose-1=(undefined)`| (initial, warning)| `<null>` |
 
 ## `panose1` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `panose1=(string)`| (initial)| `<null>` |
@@ -7874,6 +8189,7 @@
 | `panose1=(undefined)`| (initial)| `<null>` |
 
 ## `pathLength` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pathLength=(string)`| (initial)| `<number: 0>` |
@@ -7899,6 +8215,7 @@
 | `pathLength=(undefined)`| (initial)| `<number: 0>` |
 
 ## `pattern` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pattern=(string)`| (changed)| `"a string"` |
@@ -7924,6 +8241,7 @@
 | `pattern=(undefined)`| (initial)| `<empty string>` |
 
 ## `patternContentUnits` (on `<pattern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `patternContentUnits=(string)`| (changed)| `<number: 2>` |
@@ -7949,6 +8267,7 @@
 | `patternContentUnits=(undefined)`| (initial)| `<number: 1>` |
 
 ## `patternTransform` (on `<pattern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `patternTransform=(string)`| (changed)| `[<SVGMatrix 1 0 0 1 -10 -20>/2/0, <SVGMatrix 2 0 0 2 0 0>/3/0, <SVGMatrix 0.7071067811865476 0.7071067811865475 -0.7071067811865475 0.7071067811865476 0 0>/4/45, <SVGMatrix 1 0 0 1 5 10>/2/0]` |
@@ -7974,6 +8293,7 @@
 | `patternTransform=(undefined)`| (initial)| `[]` |
 
 ## `patternUnits` (on `<pattern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `patternUnits=(string)`| (changed)| `<number: 1>` |
@@ -7999,6 +8319,7 @@
 | `patternUnits=(undefined)`| (initial)| `<number: 2>` |
 
 ## `placeholder` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `placeholder=(string)`| (changed)| `"a string"` |
@@ -8024,6 +8345,7 @@
 | `placeholder=(undefined)`| (initial)| `<empty string>` |
 
 ## `playsInline` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `playsInline=(string)`| (changed)| `<empty string>` |
@@ -8049,6 +8371,7 @@
 | `playsInline=(undefined)`| (initial)| `<null>` |
 
 ## `pointer-events` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointer-events=(string)`| (changed, warning)| `"a string"` |
@@ -8074,6 +8397,7 @@
 | `pointer-events=(undefined)`| (initial, warning)| `<null>` |
 
 ## `pointerEvents` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointerEvents=(string)`| (changed)| `"a string"` |
@@ -8099,6 +8423,7 @@
 | `pointerEvents=(undefined)`| (initial)| `<null>` |
 
 ## `points` (on `<polygon>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `points=(string)`| (changed)| `[<SVGPoint>, <SVGPoint>, <SVGPoint>]` |
@@ -8124,6 +8449,7 @@
 | `points=(undefined)`| (initial)| `[]` |
 
 ## `pointsAtX` (on `<feSpotLight>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointsAtX=(string)`| (initial)| `<number: 0>` |
@@ -8149,6 +8475,7 @@
 | `pointsAtX=(undefined)`| (initial)| `<number: 0>` |
 
 ## `pointsAtY` (on `<feSpotLight>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointsAtY=(string)`| (initial)| `<number: 0>` |
@@ -8174,6 +8501,7 @@
 | `pointsAtY=(undefined)`| (initial)| `<number: 0>` |
 
 ## `pointsAtZ` (on `<feSpotLight>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointsAtZ=(string)`| (initial)| `<number: 0>` |
@@ -8199,6 +8527,7 @@
 | `pointsAtZ=(undefined)`| (initial)| `<number: 0>` |
 
 ## `poster` (on `<video>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `poster=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -8224,6 +8553,7 @@
 | `poster=(undefined)`| (initial)| `<empty string>` |
 
 ## `prefix` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `prefix=(string)`| (changed)| `"a string"` |
@@ -8249,6 +8579,7 @@
 | `prefix=(undefined)`| (initial)| `<null>` |
 
 ## `preload` (on `<video>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preload=(string)`| (changed)| `"none"` |
@@ -8274,6 +8605,7 @@
 | `preload=(undefined)`| (initial)| `"metadata"` |
 
 ## `preserveAlpha` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preserveAlpha=(string)`| (initial)| `<boolean: false>` |
@@ -8299,6 +8631,7 @@
 | `preserveAlpha=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `preserveAspectRatio` (on `<feImage>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preserveAspectRatio=(string)`| (changed)| `<SVGPreserveAspectRatio: 2/2>` |
@@ -8324,6 +8657,7 @@
 | `preserveAspectRatio=(undefined)`| (initial)| `<SVGPreserveAspectRatio: 6/1>` |
 
 ## `primitiveUnits` (on `<filter>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `primitiveUnits=(string)`| (changed)| `<number: 2>` |
@@ -8349,6 +8683,7 @@
 | `primitiveUnits=(undefined)`| (initial)| `<number: 1>` |
 
 ## `profile` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `profile=(string)`| (changed)| `"a string"` |
@@ -8374,6 +8709,7 @@
 | `profile=(undefined)`| (initial)| `<null>` |
 
 ## `property` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `property=(string)`| (changed)| `"a string"` |
@@ -8399,6 +8735,7 @@
 | `property=(undefined)`| (initial)| `<null>` |
 
 ## `props` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `props=(string)`| (changed)| `"a string"` |
@@ -8424,6 +8761,7 @@
 | `props=(undefined)`| (initial)| `<null>` |
 
 ## `r` (on `<circle>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `r=(string)`| (changed)| `<SVGLength: 10pt>` |
@@ -8449,6 +8787,7 @@
 | `r=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `radioGroup` (on `<command>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `radioGroup=(string)`| (changed)| `"a string"` |
@@ -8474,6 +8813,7 @@
 | `radioGroup=(undefined)`| (initial)| `<null>` |
 
 ## `radius` (on `<feMorphology>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `radius=(string)`| (changed)| `"a string"` |
@@ -8499,6 +8839,7 @@
 | `radius=(undefined)`| (initial)| `<null>` |
 
 ## `readOnly` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `readOnly=(string)`| (changed)| `<boolean: true>` |
@@ -8524,6 +8865,7 @@
 | `readOnly=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `referrerPolicy` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `referrerPolicy=(string)`| (initial)| `<empty string>` |
@@ -8549,6 +8891,7 @@
 | `referrerPolicy=(undefined)`| (initial)| `<empty string>` |
 
 ## `refX` (on `<marker>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `refX=(string)`| (changed)| `<SVGLength: 5em>` |
@@ -8574,6 +8917,7 @@
 | `refX=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `refY` (on `<marker>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `refY=(string)`| (changed)| `<SVGLength: 6em>` |
@@ -8599,6 +8943,7 @@
 | `refY=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `rel` (on `<a>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rel=(string)`| (changed)| `"a string"` |
@@ -8624,6 +8969,7 @@
 | `rel=(undefined)`| (initial)| `<empty string>` |
 
 ## `rendering-intent` (on `<color-profile>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rendering-intent=(string)`| (changed, warning)| `"a string"` |
@@ -8649,6 +8995,7 @@
 | `rendering-intent=(undefined)`| (initial, warning)| `<null>` |
 
 ## `renderingIntent` (on `<color-profile>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `renderingIntent=(string)`| (changed)| `"a string"` |
@@ -8674,6 +9021,7 @@
 | `renderingIntent=(undefined)`| (initial)| `<null>` |
 
 ## `repeatCount` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `repeatCount=(string)`| (initial)| `<null>` |
@@ -8699,6 +9047,7 @@
 | `repeatCount=(undefined)`| (initial)| `<null>` |
 
 ## `repeatDur` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `repeatDur=(string)`| (initial)| `<null>` |
@@ -8724,6 +9073,7 @@
 | `repeatDur=(undefined)`| (initial)| `<null>` |
 
 ## `required` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `required=(string)`| (changed)| `<boolean: true>` |
@@ -8749,6 +9099,7 @@
 | `required=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `requiredExtensions` (on `<a>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `requiredExtensions=(string)`| (changed)| `["a", "string"]` |
@@ -8774,6 +9125,7 @@
 | `requiredExtensions=(undefined)`| (initial)| `[]` |
 
 ## `requiredFeatures` (on `<a>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `requiredFeatures=(string)`| (changed)| `"a string"` |
@@ -8799,6 +9151,7 @@
 | `requiredFeatures=(undefined)`| (initial)| `<null>` |
 
 ## `resource` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `resource=(string)`| (changed)| `"a string"` |
@@ -8824,6 +9177,7 @@
 | `resource=(undefined)`| (initial)| `<null>` |
 
 ## `restart` (on `<animate>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `restart=(string)`| (initial)| `<null>` |
@@ -8849,6 +9203,7 @@
 | `restart=(undefined)`| (initial)| `<null>` |
 
 ## `result` (on `<feBlend>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `result=(string)`| (changed)| `"a string"` |
@@ -8874,6 +9229,7 @@
 | `result=(undefined)`| (initial)| `<empty string>` |
 
 ## `results` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `results=(string)`| (changed)| `"a string"` |
@@ -8899,6 +9255,7 @@
 | `results=(undefined)`| (initial)| `<null>` |
 
 ## `reversed` (on `<ol>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `reversed=(string)`| (changed)| `<boolean: true>` |
@@ -8924,6 +9281,7 @@
 | `reversed=(undefined)`| (initial)| `<boolean: false>` |
 
 ## `role` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `role=(string)`| (changed)| `"a string"` |
@@ -8949,6 +9307,7 @@
 | `role=(undefined)`| (initial)| `<null>` |
 
 ## `rotate` (on `<altGlyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rotate=(string)`| (initial)| `<null>` |
@@ -8974,6 +9333,7 @@
 | `rotate=(undefined)`| (initial)| `<null>` |
 
 ## `rows` (on `<textarea>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rows=(string)`| (initial)| `<number: 2>` |
@@ -8999,6 +9359,7 @@
 | `rows=(undefined)`| (initial)| `<number: 2>` |
 
 ## `rowSpan` (on `<td>` inside `<tr>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rowSpan=(string)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
@@ -9024,6 +9385,7 @@
 | `rowSpan=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
 ## `rx` (on `<ellipse>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rx=(string)`| (changed)| `<SVGLength: 1px>` |
@@ -9049,6 +9411,7 @@
 | `rx=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `ry` (on `<ellipse>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ry=(string)`| (changed)| `<SVGLength: 2px>` |
@@ -9074,6 +9437,7 @@
 | `ry=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `sandbox` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `sandbox=(string)`| (changed)| `["allow-forms", "allow-scripts"]` |
@@ -9099,6 +9463,7 @@
 | `sandbox=(undefined)`| (initial)| `[]` |
 
 ## `scale` (on `<feDisplacementMap>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scale=(string)`| (initial)| `<number: 0>` |
@@ -9124,6 +9489,7 @@
 | `scale=(undefined)`| (initial)| `<number: 0>` |
 
 ## `scope` (on `<th>` inside `<tr>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scope=(string)`| (changed, ssr error, ssr mismatch)| `"row"` |
@@ -9149,6 +9515,7 @@
 | `scope=(undefined)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 
 ## `scoped` (on `<style>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scoped=(string)`| (changed)| `<empty string>` |
@@ -9174,6 +9541,7 @@
 | `scoped=(undefined)`| (initial)| `<null>` |
 
 ## `scrolling` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scrolling=(string)`| (changed)| `"no"` |
@@ -9199,6 +9567,7 @@
 | `scrolling=(undefined)`| (initial)| `<empty string>` |
 
 ## `seamless` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `seamless=(string)`| (changed)| `<empty string>` |
@@ -9224,6 +9593,7 @@
 | `seamless=(undefined)`| (initial)| `<null>` |
 
 ## `security` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `security=(string)`| (changed)| `"a string"` |
@@ -9249,6 +9619,7 @@
 | `security=(undefined)`| (initial)| `<null>` |
 
 ## `seed` (on `<feTurbulence>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `seed=(string)`| (initial)| `<number: 0>` |
@@ -9274,6 +9645,7 @@
 | `seed=(undefined)`| (initial)| `<number: 0>` |
 
 ## `selected` (on `<option>` inside `<select>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `selected=(string)`| (initial, warning, ssr warning)| `<boolean: true>` |
@@ -9299,6 +9671,7 @@
 | `selected=(undefined)`| (initial)| `<boolean: true>` |
 
 ## `selectedIndex` (on `<select>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `selectedIndex=(string)`| (initial, warning)| `<number: -1>` |
@@ -9324,6 +9697,7 @@
 | `selectedIndex=(undefined)`| (initial, warning)| `<number: -1>` |
 
 ## `shape` (on `<a>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `shape=(string)`| (changed)| `"a string"` |
@@ -9349,6 +9723,7 @@
 | `shape=(undefined)`| (initial)| `<empty string>` |
 
 ## `shape-rendering` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `shape-rendering=(string)`| (changed, warning)| `"a string"` |
@@ -9374,6 +9749,7 @@
 | `shape-rendering=(undefined)`| (initial, warning)| `<null>` |
 
 ## `shapeRendering` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `shapeRendering=(string)`| (changed)| `"a string"` |
@@ -9399,6 +9775,7 @@
 | `shapeRendering=(undefined)`| (initial)| `<null>` |
 
 ## `size` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `size=(string)`| (initial)| `<number: 20>` |
@@ -9424,6 +9801,7 @@
 | `size=(undefined)`| (initial)| `<number: 20>` |
 
 ## `sizes` (on `<link>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `sizes=(string)`| (changed)| `["a", "string"]` |
@@ -9449,6 +9827,7 @@
 | `sizes=(undefined)`| (initial)| `[]` |
 
 ## `slope` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `slope=(string)`| (changed)| `"a string"` |
@@ -9474,6 +9853,7 @@
 | `slope=(undefined)`| (initial)| `<null>` |
 
 ## `spacing` (on `<textPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spacing=(string)`| (changed)| `<number: 1>` |
@@ -9499,6 +9879,7 @@
 | `spacing=(undefined)`| (initial)| `<number: 2>` |
 
 ## `span` (on `<col>` inside `<colgroup>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `span=(string)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
@@ -9524,6 +9905,7 @@
 | `span=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
 ## `specularConstant` (on `<feSpecularLighting>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `specularConstant=(string)`| (changed)| `<number: 0>` |
@@ -9549,6 +9931,7 @@
 | `specularConstant=(undefined)`| (initial)| `<number: 1>` |
 
 ## `specularExponent` (on `<feSpecularLighting>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `specularExponent=(string)`| (initial)| `<number: 1>` |
@@ -9574,6 +9957,7 @@
 | `specularExponent=(undefined)`| (initial)| `<number: 1>` |
 
 ## `speed` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `speed=(string)`| (changed)| `"a string"` |
@@ -9599,6 +9983,7 @@
 | `speed=(undefined)`| (initial)| `<null>` |
 
 ## `spellCheck` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spellCheck=(string)`| (changed)| `<boolean: false>` |
@@ -9624,6 +10009,7 @@
 | `spellCheck=(undefined)`| (initial)| `<boolean: true>` |
 
 ## `spellcheck` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spellcheck=(string)`| (changed, warning)| `<boolean: false>` |
@@ -9649,6 +10035,7 @@
 | `spellcheck=(undefined)`| (initial, warning)| `<boolean: true>` |
 
 ## `spreadMethod` (on `<linearGradient>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spreadMethod=(string)`| (changed)| `<number: 2>` |
@@ -9674,6 +10061,7 @@
 | `spreadMethod=(undefined)`| (initial)| `<number: 1>` |
 
 ## `src` (on `<img>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `src=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -9699,6 +10087,7 @@
 | `src=(undefined)`| (initial)| `<empty string>` |
 
 ## `srcDoc` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcDoc=(string)`| (changed)| `"<p>Hi</p>"` |
@@ -9724,6 +10113,7 @@
 | `srcDoc=(undefined)`| (initial)| `<empty string>` |
 
 ## `srcdoc` (on `<iframe>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcdoc=(string)`| (changed, warning)| `"<p>Hi</p>"` |
@@ -9749,6 +10139,7 @@
 | `srcdoc=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `srcLang` (on `<track>` inside `<audio>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcLang=(string)`| (changed)| `"en"` |
@@ -9774,6 +10165,7 @@
 | `srcLang=(undefined)`| (initial)| `<empty string>` |
 
 ## `srclang` (on `<track>` inside `<audio>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srclang=(string)`| (changed, warning)| `"en"` |
@@ -9799,6 +10191,7 @@
 | `srclang=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `srcSet` (on `<img>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcSet=(string)`| (initial)| `<undefined>` |
@@ -9824,6 +10217,7 @@
 | `srcSet=(undefined)`| (initial)| `<undefined>` |
 
 ## `srcset` (on `<img>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcset=(string)`| (changed, warning)| `"a string"` |
@@ -9849,6 +10243,7 @@
 | `srcset=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `start` (on `<ol>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `start=(string)`| (initial)| `<number: 1>` |
@@ -9874,6 +10269,7 @@
 | `start=(undefined)`| (initial)| `<number: 1>` |
 
 ## `startOffset` (on `<textPath>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `startOffset=(string)`| (initial)| `<SVGLength: 0>` |
@@ -9899,6 +10295,7 @@
 | `startOffset=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `state` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `state=(string)`| (changed)| `"a string"` |
@@ -9924,6 +10321,7 @@
 | `state=(undefined)`| (initial)| `<null>` |
 
 ## `stdDeviation` (on `<feGaussianBlur>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stdDeviation=(string)`| (changed)| `"a string"` |
@@ -9949,6 +10347,7 @@
 | `stdDeviation=(undefined)`| (initial)| `<null>` |
 
 ## `stemh` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stemh=(string)`| (changed)| `"a string"` |
@@ -9974,6 +10373,7 @@
 | `stemh=(undefined)`| (initial)| `<null>` |
 
 ## `stemv` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stemv=(string)`| (changed)| `"a string"` |
@@ -9999,6 +10399,7 @@
 | `stemv=(undefined)`| (initial)| `<null>` |
 
 ## `step` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `step=(string)`| (changed)| `"a string"` |
@@ -10024,6 +10425,7 @@
 | `step=(undefined)`| (initial)| `<null>` |
 
 ## `stitchTiles` (on `<feTurbulence>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stitchTiles=(string)`| (changed)| `<number: 1>` |
@@ -10049,6 +10451,7 @@
 | `stitchTiles=(undefined)`| (initial)| `<number: 2>` |
 
 ## `stop-color` (on `<stop>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stop-color=(string)`| (changed, warning)| `"a string"` |
@@ -10074,6 +10477,7 @@
 | `stop-color=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stop-opacity` (on `<stop>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stop-opacity=(string)`| (changed, warning)| `"a string"` |
@@ -10099,6 +10503,7 @@
 | `stop-opacity=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stopColor` (on `<stop>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stopColor=(string)`| (changed)| `"a string"` |
@@ -10124,6 +10529,7 @@
 | `stopColor=(undefined)`| (initial)| `<null>` |
 
 ## `stopOpacity` (on `<stop>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stopOpacity=(string)`| (changed)| `"a string"` |
@@ -10149,6 +10555,7 @@
 | `stopOpacity=(undefined)`| (initial)| `<null>` |
 
 ## `strikethrough-position` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethrough-position=(string)`| (changed, warning)| `"a string"` |
@@ -10174,6 +10581,7 @@
 | `strikethrough-position=(undefined)`| (initial, warning)| `<null>` |
 
 ## `strikethrough-thickness` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethrough-thickness=(string)`| (changed, warning)| `"a string"` |
@@ -10199,6 +10607,7 @@
 | `strikethrough-thickness=(undefined)`| (initial, warning)| `<null>` |
 
 ## `strikethroughPosition` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethroughPosition=(string)`| (changed)| `"a string"` |
@@ -10224,6 +10633,7 @@
 | `strikethroughPosition=(undefined)`| (initial)| `<null>` |
 
 ## `strikethroughThickness` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethroughThickness=(string)`| (changed)| `"a string"` |
@@ -10249,6 +10659,7 @@
 | `strikethroughThickness=(undefined)`| (initial)| `<null>` |
 
 ## `string` (on `<font-face-format>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `string=(string)`| (changed)| `"a string"` |
@@ -10274,6 +10685,7 @@
 | `string=(undefined)`| (initial)| `<null>` |
 
 ## `stroke` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke=(string)`| (changed)| `"a string"` |
@@ -10299,6 +10711,7 @@
 | `stroke=(undefined)`| (initial)| `<null>` |
 
 ## `stroke-dasharray` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-dasharray=(string)`| (changed, warning)| `"a string"` |
@@ -10324,6 +10737,7 @@
 | `stroke-dasharray=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stroke-Dasharray` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-Dasharray=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -10349,6 +10763,7 @@
 | `stroke-Dasharray=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stroke-dashoffset` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-dashoffset=(string)`| (changed, warning)| `"a string"` |
@@ -10374,6 +10789,7 @@
 | `stroke-dashoffset=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stroke-linecap` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-linecap=(string)`| (changed, warning)| `"a string"` |
@@ -10399,6 +10815,7 @@
 | `stroke-linecap=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stroke-linejoin` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-linejoin=(string)`| (changed, warning)| `"a string"` |
@@ -10424,6 +10841,7 @@
 | `stroke-linejoin=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stroke-miterlimit` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-miterlimit=(string)`| (changed, warning)| `"a string"` |
@@ -10449,6 +10867,7 @@
 | `stroke-miterlimit=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stroke-opacity` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-opacity=(string)`| (changed, warning)| `"a string"` |
@@ -10474,6 +10893,7 @@
 | `stroke-opacity=(undefined)`| (initial, warning)| `<null>` |
 
 ## `stroke-width` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-width=(string)`| (changed, warning)| `"a string"` |
@@ -10499,6 +10919,7 @@
 | `stroke-width=(undefined)`| (initial, warning)| `<null>` |
 
 ## `strokeDasharray` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeDasharray=(string)`| (changed)| `"a string"` |
@@ -10524,6 +10945,7 @@
 | `strokeDasharray=(undefined)`| (initial)| `<null>` |
 
 ## `strokeDashoffset` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeDashoffset=(string)`| (changed)| `"a string"` |
@@ -10549,6 +10971,7 @@
 | `strokeDashoffset=(undefined)`| (initial)| `<null>` |
 
 ## `strokeLinecap` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeLinecap=(string)`| (changed)| `"a string"` |
@@ -10574,6 +10997,7 @@
 | `strokeLinecap=(undefined)`| (initial)| `<null>` |
 
 ## `strokeLinejoin` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeLinejoin=(string)`| (changed)| `"a string"` |
@@ -10599,6 +11023,7 @@
 | `strokeLinejoin=(undefined)`| (initial)| `<null>` |
 
 ## `strokeMiterlimit` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeMiterlimit=(string)`| (changed)| `"a string"` |
@@ -10624,6 +11049,7 @@
 | `strokeMiterlimit=(undefined)`| (initial)| `<null>` |
 
 ## `strokeOpacity` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeOpacity=(string)`| (changed)| `"a string"` |
@@ -10649,6 +11075,7 @@
 | `strokeOpacity=(undefined)`| (initial)| `<null>` |
 
 ## `strokeWidth` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeWidth=(string)`| (changed)| `"a string"` |
@@ -10674,31 +11101,33 @@
 | `strokeWidth=(undefined)`| (initial)| `<null>` |
 
 ## `style` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `style=(string)`| (changed, error, warning, ssr error)| `` |
-| `style=(empty string)`| (changed, error, warning, ssr error)| `` |
+| `style=(string)`| (changed, error, warning, ssr error)| ``|
+| `style=(empty string)`| (changed, error, warning, ssr error)| ``|
 | `style=(array with string)`| (initial)| `[]` |
 | `style=(empty array)`| (initial)| `[]` |
 | `style=(object)`| (initial)| `[]` |
-| `style=(numeric string)`| (changed, error, warning, ssr error)| `` |
-| `style=(-1)`| (changed, error, warning, ssr error)| `` |
-| `style=(0)`| (changed, error, warning, ssr error)| `` |
-| `style=(integer)`| (changed, error, warning, ssr error)| `` |
-| `style=(NaN)`| (changed, error, warning, ssr error)| `` |
-| `style=(float)`| (changed, error, warning, ssr error)| `` |
-| `style=(true)`| (changed, error, warning, ssr error)| `` |
-| `style=(false)`| (changed, error, warning, ssr error)| `` |
-| `style=(string 'true')`| (changed, error, warning, ssr error)| `` |
-| `style=(string 'false')`| (changed, error, warning, ssr error)| `` |
-| `style=(string 'on')`| (changed, error, warning, ssr error)| `` |
-| `style=(string 'off')`| (changed, error, warning, ssr error)| `` |
-| `style=(symbol)`| (changed, error, warning, ssr error)| `` |
+| `style=(numeric string)`| (changed, error, warning, ssr error)| ``|
+| `style=(-1)`| (changed, error, warning, ssr error)| ``|
+| `style=(0)`| (changed, error, warning, ssr error)| ``|
+| `style=(integer)`| (changed, error, warning, ssr error)| ``|
+| `style=(NaN)`| (changed, error, warning, ssr error)| ``|
+| `style=(float)`| (changed, error, warning, ssr error)| ``|
+| `style=(true)`| (changed, error, warning, ssr error)| ``|
+| `style=(false)`| (changed, error, warning, ssr error)| ``|
+| `style=(string 'true')`| (changed, error, warning, ssr error)| ``|
+| `style=(string 'false')`| (changed, error, warning, ssr error)| ``|
+| `style=(string 'on')`| (changed, error, warning, ssr error)| ``|
+| `style=(string 'off')`| (changed, error, warning, ssr error)| ``|
+| `style=(symbol)`| (changed, error, warning, ssr error)| ``|
 | `style=(function)`| (changed, error, warning, ssr error)| `` |
 | `style=(null)`| (initial)| `[]` |
 | `style=(undefined)`| (initial)| `[]` |
 
 ## `summary` (on `<table>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `summary=(string)`| (changed)| `"a string"` |
@@ -10724,6 +11153,7 @@
 | `summary=(undefined)`| (initial)| `<empty string>` |
 
 ## `suppressContentEditableWarning` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `suppressContentEditableWarning=(string)`| (initial)| `<null>` |
@@ -10749,6 +11179,7 @@
 | `suppressContentEditableWarning=(undefined)`| (initial)| `<null>` |
 
 ## `surfaceScale` (on `<feDiffuseLighting>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `surfaceScale=(string)`| (changed)| `<number: 0>` |
@@ -10774,6 +11205,7 @@
 | `surfaceScale=(undefined)`| (initial)| `<number: 1>` |
 
 ## `systemLanguage` (on `<a>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `systemLanguage=(string)`| (changed)| `["en"]` |
@@ -10799,6 +11231,7 @@
 | `systemLanguage=(undefined)`| (initial)| `[]` |
 
 ## `tabIndex` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `tabIndex=(string)`| (initial)| `<number: -1>` |
@@ -10824,6 +11257,7 @@
 | `tabIndex=(undefined)`| (initial)| `<number: -1>` |
 
 ## `tabIndex` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `tabIndex=(string)`| (initial)| `<number: -1>` |
@@ -10849,6 +11283,7 @@
 | `tabIndex=(undefined)`| (initial)| `<number: -1>` |
 
 ## `tableValues` (on `<feFuncA>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `tableValues=(string)`| (changed)| `[0, 1, 2, 3]` |
@@ -10874,6 +11309,7 @@
 | `tableValues=(undefined)`| (initial)| `[]` |
 
 ## `target` (on `<a>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `target=(string)`| (changed)| `"a string"` |
@@ -10899,6 +11335,7 @@
 | `target=(undefined)`| (initial)| `<empty string>` |
 
 ## `targetX` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `targetX=(string)`| (initial)| `<number: 0>` |
@@ -10924,6 +11361,7 @@
 | `targetX=(undefined)`| (initial)| `<number: 0>` |
 
 ## `targetY` (on `<feConvolveMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `targetY=(string)`| (initial)| `<number: 0>` |
@@ -10949,6 +11387,7 @@
 | `targetY=(undefined)`| (initial)| `<number: 0>` |
 
 ## `text-anchor` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `text-anchor=(string)`| (changed, warning)| `"a string"` |
@@ -10974,6 +11413,7 @@
 | `text-anchor=(undefined)`| (initial, warning)| `<null>` |
 
 ## `text-decoration` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `text-decoration=(string)`| (changed, warning)| `"a string"` |
@@ -10999,6 +11439,7 @@
 | `text-decoration=(undefined)`| (initial, warning)| `<null>` |
 
 ## `text-rendering` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `text-rendering=(string)`| (changed, warning)| `"a string"` |
@@ -11024,6 +11465,7 @@
 | `text-rendering=(undefined)`| (initial, warning)| `<null>` |
 
 ## `textAnchor` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textAnchor=(string)`| (changed)| `"a string"` |
@@ -11049,6 +11491,7 @@
 | `textAnchor=(undefined)`| (initial)| `<null>` |
 
 ## `textDecoration` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textDecoration=(string)`| (changed)| `"a string"` |
@@ -11074,6 +11517,7 @@
 | `textDecoration=(undefined)`| (initial)| `<null>` |
 
 ## `textLength` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textLength=(string)`| (initial)| `<SVGLength: 0>` |
@@ -11099,6 +11543,7 @@
 | `textLength=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `textRendering` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textRendering=(string)`| (changed)| `"a string"` |
@@ -11124,6 +11569,7 @@
 | `textRendering=(undefined)`| (initial)| `<null>` |
 
 ## `title` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `title=(string)`| (changed)| `"a string"` |
@@ -11149,6 +11595,7 @@
 | `title=(undefined)`| (initial)| `<empty string>` |
 
 ## `to` (on `<set>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `to=(string)`| (changed)| `"a string"` |
@@ -11174,6 +11621,7 @@
 | `to=(undefined)`| (initial)| `<null>` |
 
 ## `transform` (on `<a>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `transform=(string)`| (changed)| `[<SVGMatrix 1 0 0 1 -10 -20>/2/0, <SVGMatrix 2 0 0 2 0 0>/3/0, <SVGMatrix 0.7071067811865476 0.7071067811865475 -0.7071067811865475 0.7071067811865476 0 0>/4/45, <SVGMatrix 1 0 0 1 5 10>/2/0]` |
@@ -11199,6 +11647,7 @@
 | `transform=(undefined)`| (initial)| `[]` |
 
 ## `type` (on `<button>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `type=(string)`| (changed)| `"reset"` |
@@ -11224,6 +11673,7 @@
 | `type=(undefined)`| (initial)| `"submit"` |
 
 ## `type` (on `<feFuncA>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `type=(string)`| (changed)| `<number: 3>` |
@@ -11249,6 +11699,7 @@
 | `type=(undefined)`| (initial)| `<number: 1>` |
 
 ## `typeof` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `typeof=(string)`| (changed)| `"a string"` |
@@ -11274,6 +11725,7 @@
 | `typeof=(undefined)`| (initial)| `<null>` |
 
 ## `u1` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `u1=(string)`| (changed)| `"a string"` |
@@ -11299,6 +11751,7 @@
 | `u1=(undefined)`| (initial)| `<null>` |
 
 ## `u2` (on `<hkern>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `u2=(string)`| (changed)| `"a string"` |
@@ -11324,6 +11777,7 @@
 | `u2=(undefined)`| (initial)| `<null>` |
 
 ## `underline-position` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underline-position=(string)`| (changed, warning)| `"a string"` |
@@ -11349,6 +11803,7 @@
 | `underline-position=(undefined)`| (initial, warning)| `<null>` |
 
 ## `underline-thickness` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underline-thickness=(string)`| (changed, warning)| `"a string"` |
@@ -11374,6 +11829,7 @@
 | `underline-thickness=(undefined)`| (initial, warning)| `<null>` |
 
 ## `underlinePosition` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underlinePosition=(string)`| (changed)| `"a string"` |
@@ -11399,6 +11855,7 @@
 | `underlinePosition=(undefined)`| (initial)| `<null>` |
 
 ## `underlineThickness` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underlineThickness=(string)`| (changed)| `"a string"` |
@@ -11424,6 +11881,7 @@
 | `underlineThickness=(undefined)`| (initial)| `<null>` |
 
 ## `unicode` (on `<glyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicode=(string)`| (changed)| `"a string"` |
@@ -11449,6 +11907,7 @@
 | `unicode=(undefined)`| (initial)| `<null>` |
 
 ## `unicode-bidi` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicode-bidi=(string)`| (changed, warning)| `"a string"` |
@@ -11474,6 +11933,7 @@
 | `unicode-bidi=(undefined)`| (initial, warning)| `<null>` |
 
 ## `unicode-range` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicode-range=(string)`| (changed, warning)| `"a string"` |
@@ -11499,6 +11959,7 @@
 | `unicode-range=(undefined)`| (initial, warning)| `<null>` |
 
 ## `unicodeBidi` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicodeBidi=(string)`| (changed)| `"a string"` |
@@ -11524,6 +11985,7 @@
 | `unicodeBidi=(undefined)`| (initial)| `<null>` |
 
 ## `unicodeRange` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicodeRange=(string)`| (changed)| `"a string"` |
@@ -11549,6 +12011,7 @@
 | `unicodeRange=(undefined)`| (initial)| `<null>` |
 
 ## `units-per-em` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `units-per-em=(string)`| (changed, warning)| `"a string"` |
@@ -11574,6 +12037,7 @@
 | `units-per-em=(undefined)`| (initial, warning)| `<null>` |
 
 ## `unitsPerEm` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unitsPerEm=(string)`| (initial)| `<null>` |
@@ -11599,6 +12063,7 @@
 | `unitsPerEm=(undefined)`| (initial)| `<null>` |
 
 ## `unknown` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unknown=(string)`| (changed)| `"a string"` |
@@ -11624,6 +12089,7 @@
 | `unknown=(undefined)`| (initial)| `<null>` |
 
 ## `unselectable` (on `<span>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unselectable=(string)`| (changed)| `"on"` |
@@ -11649,6 +12115,7 @@
 | `unselectable=(undefined)`| (initial)| `<null>` |
 
 ## `useMap` (on `<img>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `useMap=(string)`| (changed)| `"a string"` |
@@ -11674,6 +12141,7 @@
 | `useMap=(undefined)`| (initial)| `<empty string>` |
 
 ## `v-alphabetic` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-alphabetic=(string)`| (changed, warning)| `"a string"` |
@@ -11699,6 +12167,7 @@
 | `v-alphabetic=(undefined)`| (initial, warning)| `<null>` |
 
 ## `v-hanging` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-hanging=(string)`| (changed, warning)| `"a string"` |
@@ -11724,6 +12193,7 @@
 | `v-hanging=(undefined)`| (initial, warning)| `<null>` |
 
 ## `v-ideographic` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-ideographic=(string)`| (changed, warning)| `"a string"` |
@@ -11749,6 +12219,7 @@
 | `v-ideographic=(undefined)`| (initial, warning)| `<null>` |
 
 ## `v-mathematical` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-mathematical=(string)`| (changed, warning)| `"a string"` |
@@ -11774,6 +12245,7 @@
 | `v-mathematical=(undefined)`| (initial, warning)| `<null>` |
 
 ## `vAlphabetic` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vAlphabetic=(string)`| (changed)| `"a string"` |
@@ -11799,6 +12271,7 @@
 | `vAlphabetic=(undefined)`| (initial)| `<null>` |
 
 ## `value` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11824,6 +12297,7 @@
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11849,6 +12323,7 @@
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<input>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (initial)| `<empty string>` |
@@ -11874,6 +12349,7 @@
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<textarea>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11899,6 +12375,7 @@
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<option>` inside `<select>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11924,6 +12401,7 @@
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `Value` (on `<option>` inside `<select>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `Value=(string)`| (changed, warning)| `"a string"` |
@@ -11949,6 +12427,7 @@
 | `Value=(undefined)`| (initial, warning)| `<empty string>` |
 
 ## `values` (on `<feColorMatrix>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `values=(string)`| (changed)| `[1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0]` |
@@ -11974,6 +12453,7 @@
 | `values=(undefined)`| (initial)| `[]` |
 
 ## `vector-effect` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vector-effect=(string)`| (changed, warning)| `"a string"` |
@@ -11999,6 +12479,7 @@
 | `vector-effect=(undefined)`| (initial, warning)| `<null>` |
 
 ## `vectorEffect` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vectorEffect=(string)`| (changed)| `"a string"` |
@@ -12024,6 +12505,7 @@
 | `vectorEffect=(undefined)`| (initial)| `<null>` |
 
 ## `version` (on `<html>` inside `<document>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `version=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -12049,6 +12531,7 @@
 | `version=(undefined)`| (initial)| `<empty string>` |
 
 ## `version` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `version=(string)`| (changed)| `"a string"` |
@@ -12074,6 +12557,7 @@
 | `version=(undefined)`| (initial)| `<null>` |
 
 ## `vert-adv-y` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vert-adv-y=(string)`| (initial, warning)| `<null>` |
@@ -12099,6 +12583,7 @@
 | `vert-adv-y=(undefined)`| (initial, warning)| `<null>` |
 
 ## `vert-origin-x` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vert-origin-x=(string)`| (initial, warning)| `<null>` |
@@ -12124,6 +12609,7 @@
 | `vert-origin-x=(undefined)`| (initial, warning)| `<null>` |
 
 ## `vert-origin-y` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vert-origin-y=(string)`| (changed, warning)| `"a string"` |
@@ -12149,6 +12635,7 @@
 | `vert-origin-y=(undefined)`| (initial, warning)| `<null>` |
 
 ## `vertAdvY` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vertAdvY=(string)`| (changed)| `"a string"` |
@@ -12174,6 +12661,7 @@
 | `vertAdvY=(undefined)`| (initial)| `<null>` |
 
 ## `vertOriginX` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vertOriginX=(string)`| (changed)| `"a string"` |
@@ -12199,6 +12687,7 @@
 | `vertOriginX=(undefined)`| (initial)| `<null>` |
 
 ## `vertOriginY` (on `<font>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vertOriginY=(string)`| (changed)| `"a string"` |
@@ -12224,6 +12713,7 @@
 | `vertOriginY=(undefined)`| (initial)| `<null>` |
 
 ## `vHanging` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vHanging=(string)`| (changed)| `"a string"` |
@@ -12249,6 +12739,7 @@
 | `vHanging=(undefined)`| (initial)| `<null>` |
 
 ## `vIdeographic` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vIdeographic=(string)`| (changed)| `"a string"` |
@@ -12274,6 +12765,7 @@
 | `vIdeographic=(undefined)`| (initial)| `<null>` |
 
 ## `viewBox` (on `<marker>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `viewBox=(string)`| (changed)| `<SVGRect: 0,0,1500,1000>` |
@@ -12299,6 +12791,7 @@
 | `viewBox=(undefined)`| (initial)| `<SVGRect: 0,0,0,0>` |
 
 ## `viewTarget` (on `<view>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `viewTarget=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -12324,6 +12817,7 @@
 | `viewTarget=(undefined)`| (initial)| `<null>` |
 
 ## `visibility` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `visibility=(string)`| (changed)| `"a string"` |
@@ -12349,6 +12843,7 @@
 | `visibility=(undefined)`| (initial)| `<null>` |
 
 ## `visibility` (on `<path>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `visibility=(string)`| (changed)| `"a string"` |
@@ -12374,6 +12869,7 @@
 | `visibility=(undefined)`| (initial)| `<null>` |
 
 ## `vMathematical` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vMathematical=(string)`| (changed)| `"a string"` |
@@ -12399,6 +12895,7 @@
 | `vMathematical=(undefined)`| (initial)| `<null>` |
 
 ## `vocab` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vocab=(string)`| (changed)| `"a string"` |
@@ -12424,6 +12921,7 @@
 | `vocab=(undefined)`| (initial)| `<null>` |
 
 ## `width` (on `<img>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `width=(string)`| (initial)| `<number: 0>` |
@@ -12449,6 +12947,7 @@
 | `width=(undefined)`| (initial)| `<number: 0>` |
 
 ## `width` (on `<rect>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `width=(string)`| (initial)| `<SVGLength: 0>` |
@@ -12474,6 +12973,7 @@
 | `width=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `widths` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `widths=(string)`| (changed)| `"a string"` |
@@ -12499,6 +12999,7 @@
 | `widths=(undefined)`| (initial)| `<null>` |
 
 ## `wmode` (on `<embed>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `wmode=(string)`| (changed)| `"a string"` |
@@ -12524,6 +13025,7 @@
 | `wmode=(undefined)`| (initial)| `<null>` |
 
 ## `word-spacing` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `word-spacing=(string)`| (changed, warning)| `"a string"` |
@@ -12549,6 +13051,7 @@
 | `word-spacing=(undefined)`| (initial, warning)| `<null>` |
 
 ## `wordSpacing` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `wordSpacing=(string)`| (changed)| `"a string"` |
@@ -12574,6 +13077,7 @@
 | `wordSpacing=(undefined)`| (initial)| `<null>` |
 
 ## `wrap` (on `<textarea>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `wrap=(string)`| (changed)| `"a string"` |
@@ -12599,6 +13103,7 @@
 | `wrap=(undefined)`| (initial)| `<empty string>` |
 
 ## `writing-mode` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `writing-mode=(string)`| (changed, warning)| `"a string"` |
@@ -12624,6 +13129,7 @@
 | `writing-mode=(undefined)`| (initial, warning)| `<null>` |
 
 ## `writingMode` (on `<text>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `writingMode=(string)`| (changed)| `"a string"` |
@@ -12649,6 +13155,7 @@
 | `writingMode=(undefined)`| (initial)| `<null>` |
 
 ## `x` (on `<altGlyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x=(string)`| (changed)| `"a string"` |
@@ -12674,6 +13181,7 @@
 | `x=(undefined)`| (initial)| `<null>` |
 
 ## `x-height` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x-height=(string)`| (changed, warning)| `"a string"` |
@@ -12699,6 +13207,7 @@
 | `x-height=(undefined)`| (initial, warning)| `<null>` |
 
 ## `x1` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x1=(string)`| (initial)| `<SVGLength: 0>` |
@@ -12724,6 +13233,7 @@
 | `x1=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `x2` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x2=(string)`| (initial)| `<SVGLength: 0>` |
@@ -12749,6 +13259,7 @@
 | `x2=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `xChannelSelector` (on `<feDisplacementMap>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xChannelSelector=(string)`| (changed)| `<number: 1>` |
@@ -12774,6 +13285,7 @@
 | `xChannelSelector=(undefined)`| (initial)| `<number: 4>` |
 
 ## `xHeight` (on `<font-face>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xHeight=(string)`| (changed)| `"a string"` |
@@ -12799,6 +13311,7 @@
 | `xHeight=(undefined)`| (initial)| `<null>` |
 
 ## `XLink:Actuate` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `XLink:Actuate=(string)`| (changed, warning)| `"a string"` |
@@ -12824,6 +13337,7 @@
 | `XLink:Actuate=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlink:actuate` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:actuate=(string)`| (changed, warning)| `"a string"` |
@@ -12849,6 +13363,7 @@
 | `xlink:actuate=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlink:arcrole` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:arcrole=(string)`| (changed, warning)| `"a string"` |
@@ -12874,6 +13389,7 @@
 | `xlink:arcrole=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlink:href` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:href=(string)`| (changed, warning)| `"a string"` |
@@ -12899,6 +13415,7 @@
 | `xlink:href=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlink:role` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:role=(string)`| (changed, warning)| `"a string"` |
@@ -12924,6 +13441,7 @@
 | `xlink:role=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlink:show` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:show=(string)`| (changed, warning)| `"a string"` |
@@ -12949,6 +13467,7 @@
 | `xlink:show=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlink:title` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:title=(string)`| (changed, warning)| `"a string"` |
@@ -12974,6 +13493,7 @@
 | `xlink:title=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlink:type` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:type=(string)`| (changed, warning)| `"a string"` |
@@ -12999,6 +13519,7 @@
 | `xlink:type=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlinkActuate` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkActuate=(string)`| (changed)| `"a string"` |
@@ -13024,6 +13545,7 @@
 | `xlinkActuate=(undefined)`| (initial)| `<null>` |
 
 ## `XlinkActuate` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `XlinkActuate=(string)`| (initial, warning)| `<null>` |
@@ -13049,6 +13571,7 @@
 | `XlinkActuate=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xlinkArcrole` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkArcrole=(string)`| (changed)| `"a string"` |
@@ -13074,6 +13597,7 @@
 | `xlinkArcrole=(undefined)`| (initial)| `<null>` |
 
 ## `xlinkHref` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkHref=(string)`| (changed)| `"a string"` |
@@ -13099,6 +13623,7 @@
 | `xlinkHref=(undefined)`| (initial)| `<null>` |
 
 ## `xlinkRole` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkRole=(string)`| (changed)| `"a string"` |
@@ -13124,6 +13649,7 @@
 | `xlinkRole=(undefined)`| (initial)| `<null>` |
 
 ## `xlinkShow` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkShow=(string)`| (changed)| `"a string"` |
@@ -13149,6 +13675,7 @@
 | `xlinkShow=(undefined)`| (initial)| `<null>` |
 
 ## `xlinkTitle` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkTitle=(string)`| (changed)| `"a string"` |
@@ -13174,6 +13701,7 @@
 | `xlinkTitle=(undefined)`| (initial)| `<null>` |
 
 ## `xlinkType` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkType=(string)`| (changed)| `"a string"` |
@@ -13199,6 +13727,7 @@
 | `xlinkType=(undefined)`| (initial)| `<null>` |
 
 ## `xml:base` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xml:base=(string)`| (changed, warning)| `"a string"` |
@@ -13224,6 +13753,7 @@
 | `xml:base=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xml:lang` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xml:lang=(string)`| (changed, warning)| `"a string"` |
@@ -13249,6 +13779,7 @@
 | `xml:lang=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xml:space` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xml:space=(string)`| (changed, warning)| `"a string"` |
@@ -13274,6 +13805,7 @@
 | `xml:space=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xmlBase` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlBase=(string)`| (changed)| `"a string"` |
@@ -13299,6 +13831,7 @@
 | `xmlBase=(undefined)`| (initial)| `<null>` |
 
 ## `xmlLang` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlLang=(string)`| (changed)| `"a string"` |
@@ -13324,6 +13857,7 @@
 | `xmlLang=(undefined)`| (initial)| `<null>` |
 
 ## `xmlns` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlns=(string)`| (initial)| `"http://www.w3.org/2000/svg"` |
@@ -13349,6 +13883,7 @@
 | `xmlns=(undefined)`| (initial)| `"http://www.w3.org/2000/svg"` |
 
 ## `xmlns:xlink` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlns:xlink=(string)`| (changed, warning)| `"a string"` |
@@ -13374,6 +13909,7 @@
 | `xmlns:xlink=(undefined)`| (initial, warning)| `<null>` |
 
 ## `xmlnsXlink` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlnsXlink=(string)`| (changed)| `"a string"` |
@@ -13399,6 +13935,7 @@
 | `xmlnsXlink=(undefined)`| (initial)| `<null>` |
 
 ## `xmlSpace` (on `<div>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlSpace=(string)`| (changed)| `"a string"` |
@@ -13424,6 +13961,7 @@
 | `xmlSpace=(undefined)`| (initial)| `<null>` |
 
 ## `y` (on `<altGlyph>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `y=(string)`| (changed)| `"a string"` |
@@ -13449,6 +13987,7 @@
 | `y=(undefined)`| (initial)| `<null>` |
 
 ## `y1` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `y1=(string)`| (initial)| `<SVGLength: 0>` |
@@ -13474,6 +14013,7 @@
 | `y1=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `y2` (on `<line>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `y2=(string)`| (initial)| `<SVGLength: 0>` |
@@ -13499,6 +14039,7 @@
 | `y2=(undefined)`| (initial)| `<SVGLength: 0>` |
 
 ## `yChannelSelector` (on `<feDisplacementMap>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `yChannelSelector=(string)`| (changed)| `<number: 3>` |
@@ -13524,6 +14065,7 @@
 | `yChannelSelector=(undefined)`| (initial)| `<number: 4>` |
 
 ## `z` (on `<fePointLight>` inside `<svg>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `z=(string)`| (initial)| `<number: 0>` |
@@ -13549,6 +14091,7 @@
 | `z=(undefined)`| (initial)| `<number: 0>` |
 
 ## `zoomAndPan` (on `<svg>` inside `<div>`)
+
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `zoomAndPan=(string)`| (changed)| `<number: 0>` |
@@ -13572,4 +14115,3 @@
 | `zoomAndPan=(function)`| (initial, warning)| `<number: 2>` |
 | `zoomAndPan=(null)`| (initial)| `<number: 2>` |
 | `zoomAndPan=(undefined)`| (initial)| `<number: 2>` |
-

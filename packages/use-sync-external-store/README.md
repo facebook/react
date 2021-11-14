@@ -2,4 +2,4 @@
 
 Backwards compatible shim for React's `useSyncExternalStore`. Works with any React that supports hooks.
 
-Until `useSyncExternalStore` is documented, refer to https://github.com/reactwg/react-18/discussions/86
+Until `useSyncExternalStore` is documented, refer to <https://github.com/reactwg/react-18/discussions/86>

@@ -1,6 +1,7 @@
 # Test fixture for `packages/react-devtools-scheduling-profiler`
 
 1. First, run the fixture:
+
 ```sh
 # In the root directory
 # Download the latest *experimental* React build

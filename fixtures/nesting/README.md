@@ -12,7 +12,7 @@ Using a single version of React removes a lot of complexity. It is also essentia
 
 ## What Is This For?
 
-However, for some apps that have been in production for many years, upgrading all screens at once may be prohibitively difficult. For example, React components written in 2014 may still rely on [the unofficial legacy context API](https://reactjs.org/docs/legacy-context.html) (not to be confused with the modern one), and are not always maintained. 
+However, for some apps that have been in production for many years, upgrading all screens at once may be prohibitively difficult. For example, React components written in 2014 may still rely on [the unofficial legacy context API](https://reactjs.org/docs/legacy-context.html) (not to be confused with the modern one), and are not always maintained.
 
 Traditionally, this meant that if a legacy API is deprecated, you would be stuck on the old version of React forever. That prevents your whole app from receiving improvements and bugfixes. This repository demonstrates a hybrid approach. It shows how you can use a newer version of React for some parts of your app, while **lazy-loading an older version of React** for the parts that haven't been migrated yet.
 
@@ -65,7 +65,7 @@ File structure is extremely important in this demo. It has a direct effect on wh
 We will use three different `package.json`s: one for non-React code at the root, and two in the respective `src/legacy` and `src/modern` folders that specify the React dependencies:
 
 - **`package.json`**: The root `package.json` is a place for build dependencies (such as `react-scripts`) and any React-agnostic libraries (for example, `lodash`, `immer`, or `redux`). We do **not** include React or any React-related libraries in this file.
-- **`src/legacy/package.json`**: This is where we declare the `react` and `react-dom`  dependencies for the "legacy" trees. In this demo, we're using React 16.8 (although, as noted above, we could downgrade it further below). This is **also** where we specify any third-party libraries that use React. For example, we include `react-router` and `react-redux` in this example. 
+- **`src/legacy/package.json`**: This is where we declare the `react` and `react-dom`  dependencies for the "legacy" trees. In this demo, we're using React 16.8 (although, as noted above, we could downgrade it further below). This is **also** where we specify any third-party libraries that use React. For example, we include `react-router` and `react-redux` in this example.
 - **`src/modern/package.json`**: This is where we declare the `react` and `react-dom`  dependencies for the "modern" trees. In this demo, we're using React 17. Here, we also specify third-party dependencies that use React and are used from the modern part of our app. This is why we *also* have `react-router` and `react-redux` in this file. (Their versions don't strictly have to match their `legacy` counterparts, but features that rely on context may require workarounds if they differ.)
 
 The `scripts` in the root `package.json` are set up so that when you run `npm install` in it, it also runs `npm intall` in both `src/legacy` and `src/modern` folders.
@@ -80,7 +80,7 @@ There are a few key folders in this example:
 - **`src/legacy`**: This is where all the code using the older version of React should go. This includes React components and Hooks, and general product code that is **only** used by the legacy trees.
 - **`src/modern`**: This is where all the code using the newer version of React should go. This includes React components and Hooks, and general product code that is **only** used by the modern trees.
 - **`src/shared`**: You may have some components or Hooks that you wish to use from both modern and legacy subtrees. The build process is set up so that **everything inside `src/shared` gets copied by a file watcher** into both `src/legacy/shared` and `src/modern/shared` on every change. This lets you write a component or a Hook once, but reuse it in both places.
- 
+
 ### Lazy Loading
 
 Loading two Reacts on the same page is bad for the user experience, so you should strive to push this as far as possible from the critical path of your app. For example, if there is a dialog that is less commonly used, or a route that is rarely visited, those are better candidates for staying on an older version of React than parts of your homepage.
@@ -126,7 +126,6 @@ If the legacy component is only rendered conditionally, we won't load the second
 </>
 ```
 
-
 The implementation of the `src/modern/lazyLegacyRoot.js` helper is included so you can tweak it and customize it to your needs. Remember to test lazy loading with the production builds because the bundler may not optimize it in development.
 
 ### Context
@@ -137,8 +136,8 @@ This breaks third-party libraries like React Redux or React Router, as well as a
 
 To solve this problem, we read all the Contexts we care about in the outer tree, pass them to the inner tree, and then wrap the inner tree in the corresponding Providers. You can see this in action in two files:
 
-* `src/modern/lazyLegacyRoot.js`: Look for `useContext` calls, and how their results are combined into a single object that is passed through. **You can read more Contexts there** if your app requires them.
-* `src/legacy/createLegacyRoot.js`: Look for the `Bridge` component which receives that object and wraps its children with the appropriate Context Providers. **You can wrap them with more Providers there** if your app requires them.
+- `src/modern/lazyLegacyRoot.js`: Look for `useContext` calls, and how their results are combined into a single object that is passed through. **You can read more Contexts there** if your app requires them.
+- `src/legacy/createLegacyRoot.js`: Look for the `Bridge` component which receives that object and wraps its children with the appropriate Context Providers. **You can wrap them with more Providers there** if your app requires them.
 
 Note that, generally saying, this approach is somewhat fragile, especially because some libraries may not expose their Contexts officially or consider their structure private. You may be able to expose private Contexts by using a tool like [patch-package](https://www.npmjs.com/package/patch-package), but remember to keep all the versions pinned because even a patch release of a third-party library may change the behavior.
 
@@ -154,10 +153,10 @@ Note that before React 17, `event.stopPropagation()` in the inner React tree doe
 
 This setup is unusual, so it has a few gotchas.
 
-* Don't add `package.json` to the `src/shared` folder. For example, if you want to use an npm React component inside `src/shared`, you should add it to both `src/modern/package.json` and `src/legacy/package.json` instead. You can use different versions of it but make sure your code works with both of them — and that it works with both Reacts!
-* Don't use React outside of the `src/modern`, `src/legacy`, or `src/shared`. Don't add React-related libraries outside of `src/modern/package.json` or `src/legacy/package.json`.
-* Remember that `src/shared` is where you write shared components, but the files you write there are automatically copied into `src/modern/shared` and `src/legacy/shared`, **from which you should import them**. Both of the target directories are in `.gitignore`. Importing directly from `src/shared` **will not work** because it is ambiguous what `react` refers to in that folder.
-* Keep in mind that any code in `src/shared` gets duplicated between the legacy and the modern bundles. Code that should not be duplicated needs to be anywhere else in `src` (but you can't use React there since the version is ambiguous).
-* You'll want to exclude `src/*/node_modules` from your linter's configuration, as this demo does in `.eslintignorerc`.
+- Don't add `package.json` to the `src/shared` folder. For example, if you want to use an npm React component inside `src/shared`, you should add it to both `src/modern/package.json` and `src/legacy/package.json` instead. You can use different versions of it but make sure your code works with both of them — and that it works with both Reacts!
+- Don't use React outside of the `src/modern`, `src/legacy`, or `src/shared`. Don't add React-related libraries outside of `src/modern/package.json` or `src/legacy/package.json`.
+- Remember that `src/shared` is where you write shared components, but the files you write there are automatically copied into `src/modern/shared` and `src/legacy/shared`, **from which you should import them**. Both of the target directories are in `.gitignore`. Importing directly from `src/shared` **will not work** because it is ambiguous what `react` refers to in that folder.
+- Keep in mind that any code in `src/shared` gets duplicated between the legacy and the modern bundles. Code that should not be duplicated needs to be anywhere else in `src` (but you can't use React there since the version is ambiguous).
+- You'll want to exclude `src/*/node_modules` from your linter's configuration, as this demo does in `.eslintignorerc`.
 
 This setup is complicated, and we don't recommend it for most apps. However, we believe it is important to offer it as an option for apps that would otherwise get left behind. There might be ways to simplify it with a layer of tooling, but this example is intentionally showing the low-level mechanism that other tools may build on.
