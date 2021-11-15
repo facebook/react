@@ -42,7 +42,9 @@ describe('ReactDOMFizzServer', () => {
     }
     Stream = require('stream');
     Suspense = React.Suspense;
-    SuspenseList = React.SuspenseList;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
 
     PropTypes = require('prop-types');
 
@@ -656,6 +658,7 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(b);
   });
 
+  // @gate enableSuspenseList
   // @gate experimental
   it('shows inserted items before pending in a SuspenseList as fallbacks while hydrating', async () => {
     const ref = React.createRef();
