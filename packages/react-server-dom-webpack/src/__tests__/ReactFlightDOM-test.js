@@ -57,8 +57,8 @@ describe('ReactFlightDOM', () => {
       },
     });
     return {
-      writable,
       readable,
+      writable,
     };
   }
 
@@ -113,7 +113,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(<App />, writable, webpackMap);
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      <App />,
+      webpackMap,
+    );
+    pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
     await waitForSuspense(() => {
       const model = response.readRoot();
@@ -162,11 +166,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
       <RootModel />,
-      writable,
       webpackMap,
     );
+    pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
@@ -200,11 +204,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
       <RootModel />,
-      writable,
       webpackMap,
     );
+    pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
@@ -236,11 +240,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
       <RootModel />,
-      writable,
       webpackMap,
     );
+    pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
@@ -371,11 +375,16 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(model, writable, webpackMap, {
-      onError(x) {
-        reportedErrors.push(x);
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
+      model,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
       },
-    });
+    );
+    pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
@@ -481,11 +490,11 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOM.createRoot(container);
 
     const stream1 = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
       <App color="red" />,
-      stream1.writable,
       webpackMap,
     );
+    pipe(stream1.writable);
     const response1 = ReactServerDOMReader.createFromReadableStream(
       stream1.readable,
     );
@@ -509,11 +518,11 @@ describe('ReactFlightDOM', () => {
     inputB.value = 'goodbye';
 
     const stream2 = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(
+    const {pipe: pipe2} = ReactServerDOMWriter.renderToPipeableStream(
       <App color="blue" />,
-      stream2.writable,
       webpackMap,
     );
+    pipe2(stream2.writable);
     const response2 = ReactServerDOMReader.createFromReadableStream(
       stream2.readable,
     );

@@ -9,11 +9,10 @@
 
 import * as React from 'react';
 import {Fragment, useCallback} from 'react';
-import Tooltip from '@reach/tooltip';
 import Icon from './Icon';
 
 import styles from './TabBar.css';
-import tooltipStyles from './Tooltip.css';
+import Tooltip from './Components/reach-ui/tooltip';
 
 import type {IconType} from './Icon';
 
@@ -127,7 +126,7 @@ export default function TabBar({
 
         if (title) {
           button = (
-            <Tooltip key={id} className={tooltipStyles.Tooltip} label={title}>
+            <Tooltip key={id} label={title}>
               {button}
             </Tooltip>
           );

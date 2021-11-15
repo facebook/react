@@ -9,25 +9,31 @@
 
 import {enableLogger} from 'react-devtools-feature-flags';
 
-type LoadHookNamesEvent = {|
-  +name: 'loadHookNames',
-  +displayName: string | null,
-  +numberOfHooks: number | null,
-  +durationMs: number,
-  +resolution: 'success' | 'error' | 'timeout' | 'unknown',
-|};
-
-// prettier-ignore
 export type LogEvent =
-  | LoadHookNamesEvent;
+  | {|
+      +event_name: 'loaded-dev-tools',
+    |}
+  | {|
+      +event_name: 'selected-components-tab',
+    |}
+  | {|
+      +event_name: 'selected-profiler-tab',
+    |}
+  | {|
+      +event_name: 'load-hook-names',
+      +event_status: 'success' | 'error' | 'timeout' | 'unknown',
+      +duration_ms: number,
+      +inspected_element_display_name: string | null,
+      +inspected_element_number_of_hooks: number | null,
+    |};
 
 export type LogFunction = LogEvent => void;
 
-let loggers: Array<LogFunction> = [];
+let logFunctions: Array<LogFunction> = [];
 export const logEvent: LogFunction =
   enableLogger === true
     ? function logEvent(event: LogEvent): void {
-        loggers.forEach(log => {
+        logFunctions.forEach(log => {
           log(event);
         });
       }
@@ -35,13 +41,15 @@ export const logEvent: LogFunction =
 
 export const registerEventLogger =
   enableLogger === true
-    ? function registerEventLogger(eventLogger: LogFunction): () => void {
+    ? function registerEventLogger(logFunction: LogFunction): () => void {
         if (enableLogger) {
-          loggers.push(eventLogger);
+          logFunctions.push(logFunction);
           return function unregisterEventLogger() {
-            loggers = loggers.filter(logger => logger !== eventLogger);
+            logFunctions = logFunctions.filter(log => log !== logFunction);
           };
         }
         return () => {};
       }
-    : function registerEventLogger() {};
+    : function registerEventLogger(logFunction: LogFunction) {
+        return () => {};
+      };

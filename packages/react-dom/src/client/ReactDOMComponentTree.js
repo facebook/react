@@ -30,7 +30,6 @@ import {
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
 
-import invariant from 'shared/invariant';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 const randomKey = Math.random()
@@ -190,7 +189,7 @@ export function getNodeFromInstance(inst: Fiber): Instance | TextInstance {
 
   // Without this first invariant, passing a non-DOM-component triggers the next
   // invariant for a missing parent, which is super confusing.
-  invariant(false, 'getNodeFromInstance: Invalid argument.');
+  throw new Error('getNodeFromInstance: Invalid argument.');
 }
 
 export function getFiberCurrentPropsFromNode(

@@ -13,7 +13,7 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef} from 'react';
 import Store from '../store';
 import {
   BridgeContext,
@@ -30,7 +30,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
-import {SchedulingProfilerContextController} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
+import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
@@ -38,6 +38,7 @@ import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
 import ThemeProvider from './ThemeProvider';
+import {LOCAL_STORAGE_DEFAULT_TAB_KEY} from '../../constants';
 
 import styles from './DevTools.css';
 
@@ -47,6 +48,7 @@ import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Co
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import {logEvent} from '../../Logger';
 
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
@@ -142,7 +144,7 @@ export default function DevTools({
   hideViewSourceAction,
 }: Props) {
   const [currentTab, setTab] = useLocalStorage<TabID>(
-    'React::DevTools::defaultTab',
+    LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,
   );
 
@@ -151,6 +153,24 @@ export default function DevTools({
   if (overrideTab != null) {
     tab = overrideTab;
   }
+
+  const selectTab = useCallback(
+    (tabId: TabID) => {
+      // We show the TabBar when DevTools is NOT rendered as a browser extension.
+      // In this case, we want to capture when people select tabs with the TabBar.
+      // When DevTools is rendered as an extension, we capture this event when
+      // the browser devtools panel changes.
+      if (showTabBar === true) {
+        if (tabId === 'components') {
+          logEvent({event_name: 'selected-components-tab'});
+        } else {
+          logEvent({event_name: 'selected-profiler-tab'});
+        }
+      }
+      setTab(tabId);
+    },
+    [setTab, showTabBar],
+  );
 
   const options = useMemo(
     () => ({
@@ -204,12 +224,12 @@ export default function DevTools({
       if (event.ctrlKey || event.metaKey) {
         switch (event.key) {
           case '1':
-            setTab(tabs[0].id);
+            selectTab(tabs[0].id);
             event.preventDefault();
             event.stopPropagation();
             break;
           case '2':
-            setTab(tabs[1].id);
+            selectTab(tabs[1].id);
             event.preventDefault();
             event.stopPropagation();
             break;
@@ -232,6 +252,10 @@ export default function DevTools({
       }
     };
   }, [bridge]);
+
+  useEffect(() => {
+    logEvent({event_name: 'loaded-dev-tools'});
+  }, []);
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
@@ -249,7 +273,7 @@ export default function DevTools({
                       value={fetchFileWithCaching || null}>
                       <TreeContextController>
                         <ProfilerContextController>
-                          <SchedulingProfilerContextController>
+                          <TimelineContextController>
                             <ThemeProvider>
                               <div
                                 className={styles.DevTools}
@@ -265,7 +289,7 @@ export default function DevTools({
                                     <TabBar
                                       currentTab={tab}
                                       id="DevTools"
-                                      selectTab={setTab}
+                                      selectTab={selectTab}
                                       tabs={tabs}
                                       type="navigation"
                                     />
@@ -287,7 +311,7 @@ export default function DevTools({
                                 </div>
                               </div>
                             </ThemeProvider>
-                          </SchedulingProfilerContextController>
+                          </TimelineContextController>
                         </ProfilerContextController>
                       </TreeContextController>
                     </FetchFileWithCachingContext.Provider>

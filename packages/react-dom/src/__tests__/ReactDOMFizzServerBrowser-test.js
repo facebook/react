@@ -72,6 +72,22 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should emit bootstrap script src at the end', async () => {
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <div>hello world</div>,
+      {
+        bootstrapScriptContent: 'INIT();',
+        bootstrapScripts: ['init.js'],
+        bootstrapModules: ['init.mjs'],
+      },
+    );
+    const result = await readResult(stream);
+    expect(result).toMatchInlineSnapshot(
+      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+    );
+  });
+
+  // @gate experimental
   it('emits all HTML as one unit if we wait until the end to start', async () => {
     let hasLoaded = false;
     let resolve;

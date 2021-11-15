@@ -23,13 +23,18 @@ import {
   getShowInlineWarningsAndErrors,
   getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
+import {registerDevToolsEventLogger} from 'react-devtools-shared/src/registerDevToolsEventLogger';
 import {Server} from 'ws';
 import {join} from 'path';
 import {readFileSync} from 'fs';
 import {installHook} from 'react-devtools-shared/src/hook';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {doesFilePathExist, launchEditor} from './editor';
-import {__DEBUG__} from 'react-devtools-shared/src/constants';
+import {
+  __DEBUG__,
+  LOCAL_STORAGE_DEFAULT_TAB_KEY,
+} from 'react-devtools-shared/src/constants';
+import {localStorageSetItem} from '../../react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
@@ -37,11 +42,13 @@ import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Co
 installHook(window);
 
 export type StatusListener = (message: string) => void;
+export type OnDisconnectedCallback = () => void;
 
 let node: HTMLElement = ((null: any): HTMLElement);
 let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
 let statusListener: StatusListener = (message: string) => {};
+let disconnectedCallback: OnDisconnectedCallback = () => {};
 
 // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
 function hookNamesModuleLoaderFunction() {
@@ -65,6 +72,11 @@ function setProjectRoots(value: Array<string>) {
 
 function setStatusListener(value: StatusListener) {
   statusListener = value;
+  return DevtoolsUI;
+}
+
+function setDisconnectedCallback(value: OnDisconnectedCallback) {
+  disconnectedCallback = value;
   return DevtoolsUI;
 }
 
@@ -148,6 +160,8 @@ function onDisconnected() {
   safeUnmount();
 
   node.innerHTML = nodeWaitingToConnectHTML;
+
+  disconnectedCallback();
 }
 
 function onError({code, message}) {
@@ -176,6 +190,20 @@ function onError({code, message}) {
       </div>
     `;
   }
+}
+
+function openProfiler() {
+  // Mocked up bridge and store to allow the DevTools to be rendered
+  bridge = new Bridge({listen: () => {}, send: () => {}});
+  store = new Store(bridge, {});
+
+  // Ensure the Profiler tab is shown initially.
+  localStorageSetItem(
+    LOCAL_STORAGE_DEFAULT_TAB_KEY,
+    JSON.stringify('profiler'),
+  );
+
+  reload();
 }
 
 function initialize(socket: WebSocket) {
@@ -255,16 +283,23 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-type ServerOptions = {
+type ServerOptions = {|
   key?: string,
   cert?: string,
-};
+|};
+
+type LoggerOptions = {|
+  surface?: ?string,
+|};
 
 function startServer(
   port?: number = 8097,
   host?: string = 'localhost',
   httpsOptions?: ServerOptions,
+  loggerOptions?: LoggerOptions,
 ) {
+  registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
+
   const useHttps = !!httpsOptions;
   const httpServer = useHttps
     ? require('https').createServer(httpsOptions)
@@ -363,7 +398,9 @@ const DevtoolsUI = {
   setContentDOMNode,
   setProjectRoots,
   setStatusListener,
+  setDisconnectedCallback,
   startServer,
+  openProfiler,
 };
 
 export default DevtoolsUI;

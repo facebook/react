@@ -63,12 +63,11 @@ function render(model: ReactModel, options?: Options): Destination {
   const bundlerConfig = undefined;
   const request = ReactNoopFlightServer.createRequest(
     model,
-    destination,
     bundlerConfig,
     options ? options.onError : undefined,
   );
   ReactNoopFlightServer.startWork(request);
-  ReactNoopFlightServer.startFlowing(request);
+  ReactNoopFlightServer.startFlowing(request, destination);
   return destination;
 }
 

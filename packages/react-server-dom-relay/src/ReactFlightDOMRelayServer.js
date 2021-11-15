@@ -31,12 +31,11 @@ function render(
 ): void {
   const request = createRequest(
     model,
-    destination,
     config,
     options ? options.onError : undefined,
   );
   startWork(request);
-  startFlowing(request);
+  startFlowing(request, destination);
 }
 
 export {render};

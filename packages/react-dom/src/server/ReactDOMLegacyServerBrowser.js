@@ -8,7 +8,6 @@
  */
 
 import ReactVersion from 'shared/ReactVersion';
-import invariant from 'shared/invariant';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 
@@ -59,7 +58,6 @@ function renderToStringImpl(
   }
   const request = createRequest(
     children,
-    destination,
     createResponseState(
       generateStaticMarkup,
       options ? options.identifierPrefix : undefined,
@@ -74,17 +72,20 @@ function renderToStringImpl(
   // If anything suspended and is still pending, we'll abort it before writing.
   // That way we write only client-rendered boundaries from the start.
   abort(request);
-  startFlowing(request);
+  startFlowing(request, destination);
   if (didFatal) {
     throw fatalError;
   }
-  invariant(
-    readyToStream,
-    'A React component suspended while rendering, but no fallback UI was specified.\n' +
-      '\n' +
-      'Add a <Suspense fallback=...> component higher in the tree to ' +
-      'provide a loading indicator or placeholder to display.',
-  );
+
+  if (!readyToStream) {
+    throw new Error(
+      'A React component suspended while rendering, but no fallback UI was specified.\n' +
+        '\n' +
+        'Add a <Suspense fallback=...> component higher in the tree to ' +
+        'provide a loading indicator or placeholder to display.',
+    );
+  }
+
   return result;
 }
 
@@ -103,16 +104,14 @@ function renderToStaticMarkup(
 }
 
 function renderToNodeStream() {
-  invariant(
-    false,
+  throw new Error(
     'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
       'in the browser. Use ReactDOMServer.renderToString() instead.',
   );
 }
 
 function renderToStaticNodeStream() {
-  invariant(
-    false,
+  throw new Error(
     'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
       'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
   );

@@ -36,7 +36,7 @@ describe('useSyncExternalStore', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     useRef = React.useRef;
-    useSyncExternalStore = React.unstable_useSyncExternalStore;
+    useSyncExternalStore = React.useSyncExternalStore;
     startTransition = React.startTransition;
 
     act = require('jest-react').act;
@@ -70,7 +70,6 @@ describe('useSyncExternalStore', () => {
     };
   }
 
-  // @gate supportsNativeUseSyncExternalStore
   test(
     'detects interleaved mutations during a concurrent read before ' +
       'layout effects fire',

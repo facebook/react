@@ -24,9 +24,9 @@ function render(
   destination: Destination,
   config: BundlerConfig,
 ): void {
-  const request = createRequest(model, destination, config);
+  const request = createRequest(model, config);
   startWork(request);
-  startFlowing(request);
+  startFlowing(request, destination);
 }
 
 export {render};

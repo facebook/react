@@ -92,7 +92,6 @@ import {
   enableSchedulingProfiler,
   enablePersistentOffscreenHostContainer,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
@@ -175,7 +174,11 @@ import {
   prepareToReadContext,
   scheduleWorkOnParentPath,
 } from './ReactFiberNewContext.old';
-import {renderWithHooks, bailoutHooks} from './ReactFiberHooks.old';
+import {
+  renderWithHooks,
+  checkDidRenderIdHook,
+  bailoutHooks,
+} from './ReactFiberHooks.old';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.old';
 import {
   getMaskedContext,
@@ -187,6 +190,7 @@ import {
   invalidateContextProvider,
 } from './ReactFiberContext.old';
 import {
+  getIsHydrating,
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
@@ -236,6 +240,12 @@ import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.old';
 import is from 'shared/objectIs';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
+import {
+  getForksAtLevel,
+  isForkedChild,
+  pushTreeId,
+  pushMaterializedTreeId,
+} from './ReactFiberTreeContext.old';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -360,6 +370,7 @@ function updateForwardRef(
 
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
+  let hasId;
   prepareToReadContext(workInProgress, renderLanes);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
@@ -375,6 +386,7 @@ function updateForwardRef(
       ref,
       renderLanes,
     );
+    hasId = checkDidRenderIdHook();
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
@@ -389,6 +401,7 @@ function updateForwardRef(
           ref,
           renderLanes,
         );
+        hasId = checkDidRenderIdHook();
       } finally {
         setIsStrictModeForDevtools(false);
       }
@@ -403,6 +416,7 @@ function updateForwardRef(
       ref,
       renderLanes,
     );
+    hasId = checkDidRenderIdHook();
   }
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
@@ -411,6 +425,10 @@ function updateForwardRef(
   if (current !== null && !didReceiveUpdate) {
     bailoutHooks(current, workInProgress, renderLanes);
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+  }
+
+  if (getIsHydrating() && hasId) {
+    pushMaterializedTreeId(workInProgress);
   }
 
   // React DevTools reads this flag.
@@ -965,6 +983,7 @@ function updateFunctionComponent(
   }
 
   let nextChildren;
+  let hasId;
   prepareToReadContext(workInProgress, renderLanes);
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
@@ -980,6 +999,7 @@ function updateFunctionComponent(
       context,
       renderLanes,
     );
+    hasId = checkDidRenderIdHook();
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
@@ -994,6 +1014,7 @@ function updateFunctionComponent(
           context,
           renderLanes,
         );
+        hasId = checkDidRenderIdHook();
       } finally {
         setIsStrictModeForDevtools(false);
       }
@@ -1008,6 +1029,7 @@ function updateFunctionComponent(
       context,
       renderLanes,
     );
+    hasId = checkDidRenderIdHook();
   }
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
@@ -1016,6 +1038,10 @@ function updateFunctionComponent(
   if (current !== null && !didReceiveUpdate) {
     bailoutHooks(current, workInProgress, renderLanes);
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
+  }
+
+  if (getIsHydrating() && hasId) {
+    pushMaterializedTreeId(workInProgress);
   }
 
   // React DevTools reads this flag.
@@ -1050,6 +1076,7 @@ function updateClassComponent(
       case true: {
         workInProgress.flags |= DidCapture;
         workInProgress.flags |= ShouldCapture;
+        // eslint-disable-next-line react-internal/prod-error-codes
         const error = new Error('Simulated error coming from DevTools');
         const lane = pickArbitraryLane(renderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
@@ -1264,12 +1291,15 @@ function pushHostRootContext(workInProgress) {
 function updateHostRoot(current, workInProgress, renderLanes) {
   pushHostRootContext(workInProgress);
   const updateQueue = workInProgress.updateQueue;
-  invariant(
-    current !== null && updateQueue !== null,
-    'If the root does not have an updateQueue, we should have already ' +
-      'bailed out. This error is likely caused by a bug in React. Please ' +
-      'file an issue.',
-  );
+
+  if (current === null || updateQueue === null) {
+    throw new Error(
+      'If the root does not have an updateQueue, we should have already ' +
+        'bailed out. This error is likely caused by a bug in React. Please ' +
+        'file an issue.',
+    );
+  }
+
   const nextProps = workInProgress.pendingProps;
   const prevState = workInProgress.memoizedState;
   const prevChildren = prevState.element;
@@ -1496,15 +1526,13 @@ function mountLazyComponent(
       hint = ' Did you wrap a component in React.lazy() more than once?';
     }
   }
+
   // This message intentionally doesn't mention ForwardRef or MemoComponent
   // because the fact that it's a separate type of work is an
   // implementation detail.
-  invariant(
-    false,
-    'Element type is invalid. Received a promise that resolves to: %s. ' +
-      'Lazy element type must resolve to a class or function.%s',
-    Component,
-    hint,
+  throw new Error(
+    `Element type is invalid. Received a promise that resolves to: ${Component}. ` +
+      `Lazy element type must resolve to a class or function.${hint}`,
   );
 }
 
@@ -1586,6 +1614,7 @@ function mountIndeterminateComponent(
 
   prepareToReadContext(workInProgress, renderLanes);
   let value;
+  let hasId;
 
   if (enableSchedulingProfiler) {
     markComponentRenderStarted(workInProgress);
@@ -1622,6 +1651,7 @@ function mountIndeterminateComponent(
       context,
       renderLanes,
     );
+    hasId = checkDidRenderIdHook();
     setIsRendering(false);
   } else {
     value = renderWithHooks(
@@ -1632,6 +1662,7 @@ function mountIndeterminateComponent(
       context,
       renderLanes,
     );
+    hasId = checkDidRenderIdHook();
   }
   if (enableSchedulingProfiler) {
     markComponentRenderStopped();
@@ -1751,11 +1782,17 @@ function mountIndeterminateComponent(
             context,
             renderLanes,
           );
+          hasId = checkDidRenderIdHook();
         } finally {
           setIsStrictModeForDevtools(false);
         }
       }
     }
+
+    if (getIsHydrating() && hasId) {
+      pushMaterializedTreeId(workInProgress);
+    }
+
     reconcileChildren(null, workInProgress, value, renderLanes);
     if (__DEV__) {
       validateFunctionComponentInDev(workInProgress, Component);
@@ -1844,6 +1881,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 
 const SUSPENDED_MARKER: SuspenseState = {
   dehydrated: null,
+  treeContext: null,
   retryLane: NoLane,
 };
 
@@ -2692,6 +2730,7 @@ function updateDehydratedSuspenseComponent(
     reenterHydrationStateFromDehydratedSuspenseInstance(
       workInProgress,
       suspenseInstance,
+      suspenseState.treeContext,
     );
     const nextProps = workInProgress.pendingProps;
     const primaryChildren = nextProps.children;
@@ -3317,6 +3356,7 @@ function remountFiber(
   if (__DEV__) {
     const returnFiber = oldWorkInProgress.return;
     if (returnFiber === null) {
+      // eslint-disable-next-line react-internal/prod-error-codes
       throw new Error('Cannot swap the root fiber.');
     }
 
@@ -3337,11 +3377,13 @@ function remountFiber(
     } else {
       let prevSibling = returnFiber.child;
       if (prevSibling === null) {
+        // eslint-disable-next-line react-internal/prod-error-codes
         throw new Error('Expected parent to have a child.');
       }
       while (prevSibling.sibling !== oldWorkInProgress) {
         prevSibling = prevSibling.sibling;
         if (prevSibling === null) {
+          // eslint-disable-next-line react-internal/prod-error-codes
           throw new Error('Expected to find the previous sibling.');
         }
       }
@@ -3671,6 +3713,21 @@ function beginWork(
     }
   } else {
     didReceiveUpdate = false;
+
+    if (getIsHydrating() && isForkedChild(workInProgress)) {
+      // Check if this child belongs to a list of muliple children in
+      // its parent.
+      //
+      // In a true multi-threaded implementation, we would render children on
+      // parallel threads. This would represent the beginning of a new render
+      // thread for this subtree.
+      //
+      // We only use this for id generation during hydration, which is why the
+      // logic is located in this special branch.
+      const slotIndex = workInProgress.index;
+      const numberOfForks = getForksAtLevel(workInProgress);
+      pushTreeId(workInProgress, numberOfForks, slotIndex);
+    }
   }
 
   // Before entering the begin phase, clear pending update priority.
@@ -3836,11 +3893,10 @@ function beginWork(
       break;
     }
   }
-  invariant(
-    false,
-    'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
+
+  throw new Error(
+    `Unknown unit of work tag (${workInProgress.tag}). This error is likely caused by a bug in ` +
       'React. Please file an issue.',
-    workInProgress.tag,
   );
 }
 

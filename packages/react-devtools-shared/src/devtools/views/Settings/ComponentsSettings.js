@@ -16,7 +16,8 @@ import {
   useRef,
   useState,
 } from 'react';
-import {useSubscription} from '../hooks';
+import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {useLocalStorage, useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -37,6 +38,7 @@ import {
   ElementTypeProfiler,
   ElementTypeSuspense,
 } from 'react-devtools-shared/src/types';
+import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
 
@@ -79,6 +81,11 @@ export default function ComponentsSettings(_: {||}) {
       setParseHookNames(currentTarget.checked);
     },
     [setParseHookNames],
+  );
+
+  const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
+    LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+    getDefaultOpenInEditorURL(),
   );
 
   const [componentFilters, setComponentFilters] = useState<
@@ -269,6 +276,19 @@ export default function ComponentsSettings(_: {||}) {
         />{' '}
         Always parse hook names from source{' '}
         <span className={styles.Warning}>(may be slow)</span>
+      </label>
+
+      <label className={styles.OpenInURLSetting}>
+        Open in Editor URL:{' '}
+        <input
+          className={styles.Input}
+          type="text"
+          placeholder={process.env.EDITOR_URL ?? 'vscode://file/{path}:{line}'}
+          value={openInEditorURL}
+          onChange={event => {
+            setOpenInEditorURL(event.target.value);
+          }}
+        />
       </label>
 
       <div className={styles.Header}>Hide components where...</div>

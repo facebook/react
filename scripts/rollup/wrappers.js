@@ -1,5 +1,7 @@
 'use strict';
 
+const {resolve} = require('path');
+const {readFileSync} = require('fs');
 const {bundleTypes, moduleTypes} = require('./bundles');
 const reactVersion = require('../../package.json').version;
 
@@ -24,6 +26,25 @@ const {
 } = bundleTypes;
 
 const {RECONCILER} = moduleTypes;
+
+const USE_STRICT_HEADER_REGEX = /'use strict';\n+/;
+
+function registerInternalModuleStart(globalName) {
+  const path = resolve(__dirname, 'wrappers', 'registerInternalModuleBegin.js');
+  const file = readFileSync(path);
+  return String(file).trim();
+}
+
+function registerInternalModuleStop(globalName) {
+  const path = resolve(__dirname, 'wrappers', 'registerInternalModuleEnd.js');
+  const file = readFileSync(path);
+
+  // Remove the 'use strict' directive from the footer.
+  // This directive is only meaningful when it is the first statement in a file or function.
+  return String(file)
+    .replace(USE_STRICT_HEADER_REGEX, '')
+    .trim();
+}
 
 const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -319,7 +340,40 @@ ${source}
   },
 };
 
-function wrapBundle(source, bundleType, globalName, filename, moduleType) {
+function wrapBundle(
+  source,
+  bundleType,
+  globalName,
+  filename,
+  moduleType,
+  wrapWithModuleBoundaries
+) {
+  if (wrapWithModuleBoundaries) {
+    switch (bundleType) {
+      case NODE_DEV:
+      case NODE_PROFILING:
+      case FB_WWW_DEV:
+      case FB_WWW_PROFILING:
+      case RN_OSS_DEV:
+      case RN_OSS_PROFILING:
+      case RN_FB_DEV:
+      case RN_FB_PROFILING:
+        // Remove the 'use strict' directive from source.
+        // The module start wrapper will add its own.
+        // This directive is only meaningful when it is the first statement in a file or function.
+        source = source.replace(USE_STRICT_HEADER_REGEX, '');
+
+        // Certain DEV and Profiling bundles should self-register their own module boundaries with DevTools.
+        // This allows the Timeline to de-emphasize (dim) internal stack frames.
+        source = `
+          ${registerInternalModuleStart(globalName)}
+          ${source}
+          ${registerInternalModuleStop(globalName)}
+        `;
+        break;
+    }
+  }
+
   if (moduleType === RECONCILER) {
     // Standalone reconciler is only used by third-party renderers.
     // It is handled separately.

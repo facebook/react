@@ -19,7 +19,6 @@ import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 
-import invariant from 'shared/invariant';
 import {enableCache} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 
@@ -42,8 +41,6 @@ type Hook = {|
   next: Hook | null,
 |};
 
-type OpaqueIDType = string;
-
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
@@ -63,15 +60,17 @@ let isInHookUserCodeInDev = false;
 let currentHookNameInDev: ?string;
 
 function resolveCurrentlyRenderingComponent(): Object {
-  invariant(
-    currentlyRenderingComponent !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-      ' one of the following reasons:\n' +
-      '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-      '2. You might be breaking the Rules of Hooks\n' +
-      '3. You might have more than one copy of React in the same app\n' +
-      'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
-  );
+  if (currentlyRenderingComponent === null) {
+    throw new Error(
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+    );
+  }
+
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
       console.error(
@@ -127,7 +126,7 @@ function areHookInputsEqual(
 
 function createHook(): Hook {
   if (numberOfReRenders > 0) {
-    invariant(false, 'Rendered more hooks than during the previous render');
+    throw new Error('Rendered more hooks than during the previous render');
   }
   return {
     memoizedState: null,
@@ -215,8 +214,12 @@ export function resetHooksState(): void {
   workInProgressHook = null;
 }
 
+function getCacheSignal() {
+  throw new Error('Not implemented.');
+}
+
 function getCacheForType<T>(resourceType: () => T): T {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
 
 function readContext<T>(context: ReactContext<T>): T {
@@ -423,11 +426,12 @@ function dispatchAction<A>(
   queue: UpdateQueue<A>,
   action: A,
 ) {
-  invariant(
-    numberOfReRenders < RE_RENDER_LIMIT,
-    'Too many re-renders. React limits the number of renders to prevent ' +
-      'an infinite loop.',
-  );
+  if (numberOfReRenders >= RE_RENDER_LIMIT) {
+    throw new Error(
+      'Too many re-renders. React limits the number of renders to prevent ' +
+        'an infinite loop.',
+    );
+  }
 
   if (componentIdentity === currentlyRenderingComponent) {
     // This is a render phase update. Stash it in a lazily-created map of
@@ -484,8 +488,7 @@ function useSyncExternalStore<T>(
   getServerSnapshot?: () => T,
 ): T {
   if (getServerSnapshot === undefined) {
-    invariant(
-      false,
+    throw new Error(
       'Missing getServerSnapshot, which is required for ' +
         'server-rendered content. Will revert to client rendering.',
     );
@@ -506,16 +509,12 @@ function useTransition(): [boolean, (callback: () => void) => void] {
   return [false, startTransition];
 }
 
-function useOpaqueIdentifier(): OpaqueIDType {
-  return (
-    (currentPartialRenderer.identifierPrefix || '') +
-    'R:' +
-    (currentPartialRenderer.uniqueID++).toString(36)
-  );
+function useId(): string {
+  throw new Error('Not implemented.');
 }
 
 function useCacheRefresh(): <T>(?() => T, ?T) => void {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
 
 function noop(): void {}
@@ -543,13 +542,14 @@ export const Dispatcher: DispatcherType = {
   useDebugValue: noop,
   useDeferredValue,
   useTransition,
-  useOpaqueIdentifier,
+  useId,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
   useSyncExternalStore,
 };
 
 if (enableCache) {
+  Dispatcher.getCacheSignal = getCacheSignal;
   Dispatcher.getCacheForType = getCacheForType;
   Dispatcher.useCacheRefresh = useCacheRefresh;
 }

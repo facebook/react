@@ -7,7 +7,6 @@
  * @flow
  */
 
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
@@ -40,12 +39,6 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type EventResponder = any;
-export opaque type OpaqueIDType =
-  | string
-  | {
-      toString: () => string | void,
-      valueOf: () => string | void,
-    };
 
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
@@ -296,43 +289,6 @@ export function getInstanceFromNode(mockNode: Object) {
     return instance.internalInstanceHandle;
   }
   return null;
-}
-
-let clientId: number = 0;
-export function makeClientId(): OpaqueIDType {
-  return 'c_' + (clientId++).toString(36);
-}
-
-export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
-  const id = 'c_' + (clientId++).toString(36);
-  return {
-    toString() {
-      warnOnAccessInDEV();
-      return id;
-    },
-    valueOf() {
-      warnOnAccessInDEV();
-      return id;
-    },
-  };
-}
-
-export function isOpaqueHydratingObject(value: mixed): boolean {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    value.$$typeof === REACT_OPAQUE_ID_TYPE
-  );
-}
-
-export function makeOpaqueHydratingObject(
-  attemptToReadValue: () => void,
-): OpaqueIDType {
-  return {
-    $$typeof: REACT_OPAQUE_ID_TYPE,
-    toString: attemptToReadValue,
-    valueOf: attemptToReadValue,
-  };
 }
 
 export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {

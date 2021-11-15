@@ -28,7 +28,6 @@ export default function Html({assets, children, title}) {
             __html: `assetManifest = ${JSON.stringify(assets)};`,
           }}
         />
-        <script async src={assets['main.js']} />
       </body>
     </html>
   );

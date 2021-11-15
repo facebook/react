@@ -14,4 +14,4 @@ exports.renderToString = l.renderToString;
 exports.renderToStaticMarkup = l.renderToStaticMarkup;
 exports.renderToNodeStream = l.renderToNodeStream;
 exports.renderToStaticNodeStream = l.renderToStaticNodeStream;
-exports.pipeToNodeWritable = s.pipeToNodeWritable;
+exports.renderToPipeableStream = s.renderToPipeableStream;

@@ -49,7 +49,6 @@ import warnValidStyle from '../shared/warnValidStyle';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
-import invariant from 'shared/invariant';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
@@ -60,30 +59,73 @@ export const isPrimaryRenderer = true;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
+  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  startInlineScript: PrecomputedChunk,
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  opaqueIdentifierPrefix: string,
   nextSuspenseID: number,
-  nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
   ...
 };
 
+const startInlineScript = stringToPrecomputedChunk('<script>');
+const endInlineScript = stringToPrecomputedChunk('</script>');
+
+const startScriptSrc = stringToPrecomputedChunk('<script src="');
+const startModuleSrc = stringToPrecomputedChunk('<script type="module" src="');
+const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 export function createResponseState(
   identifierPrefix: string | void,
+  nonce: string | void,
+  bootstrapScriptContent: string | void,
+  bootstrapScripts: Array<string> | void,
+  bootstrapModules: Array<string> | void,
 ): ResponseState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
+  const inlineScriptWithNonce =
+    nonce === undefined
+      ? startInlineScript
+      : stringToPrecomputedChunk(
+          '<script nonce="' + escapeTextForBrowser(nonce) + '">',
+        );
+  const bootstrapChunks = [];
+  if (bootstrapScriptContent !== undefined) {
+    bootstrapChunks.push(
+      inlineScriptWithNonce,
+      stringToChunk(escapeTextForBrowser(bootstrapScriptContent)),
+      endInlineScript,
+    );
+  }
+  if (bootstrapScripts !== undefined) {
+    for (let i = 0; i < bootstrapScripts.length; i++) {
+      bootstrapChunks.push(
+        startScriptSrc,
+        stringToChunk(escapeTextForBrowser(bootstrapScripts[i])),
+        endAsyncScript,
+      );
+    }
+  }
+  if (bootstrapModules !== undefined) {
+    for (let i = 0; i < bootstrapModules.length; i++) {
+      bootstrapChunks.push(
+        startModuleSrc,
+        stringToChunk(escapeTextForBrowser(bootstrapModules[i])),
+        endAsyncScript,
+      );
+    }
+  }
   return {
+    bootstrapChunks: bootstrapChunks,
+    startInlineScript: inlineScriptWithNonce,
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
-    opaqueIdentifierPrefix: idPrefix + 'R:',
     nextSuspenseID: 0,
-    nextOpaqueID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
@@ -187,22 +229,6 @@ export function assignSuspenseBoundaryID(
   );
 }
 
-export type OpaqueIDType = string;
-
-export function makeServerID(
-  responseState: null | ResponseState,
-): OpaqueIDType {
-  invariant(
-    responseState !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
-  );
-  // TODO: This is not deterministic since it's created during render.
-  return (
-    responseState.opaqueIdentifierPrefix +
-    (responseState.nextOpaqueID++).toString(36)
-  );
-}
-
 function encodeHTMLTextNode(text: string): string {
   return escapeTextForBrowser(text);
 }
@@ -244,12 +270,13 @@ function pushStyle(
   responseState: ResponseState,
   style: Object,
 ): void {
-  invariant(
-    typeof style === 'object',
-    'The `style` prop expects a mapping from style properties to values, ' +
-      "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
-      'using JSX.',
-  );
+  if (typeof style !== 'object') {
+    throw new Error(
+      'The `style` prop expects a mapping from style properties to values, ' +
+        "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+        'using JSX.',
+    );
+  }
 
   let isFirst = true;
   for (const styleName in style) {
@@ -422,7 +449,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -433,7 +460,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -444,7 +471,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -461,7 +488,7 @@ function pushAttribute(
           attributeSeparator,
           attributeNameChunk,
           attributeAssign,
-          escapeTextForBrowser(value),
+          stringToChunk(escapeTextForBrowser(value)),
           attributeEnd,
         );
     }
@@ -483,7 +510,7 @@ function pushAttribute(
       attributeSeparator,
       stringToChunk(name),
       attributeAssign,
-      escapeTextForBrowser(value),
+      stringToChunk(escapeTextForBrowser(value)),
       attributeEnd,
     );
   }
@@ -498,17 +525,20 @@ function pushInnerHTML(
   children,
 ) {
   if (innerHTML != null) {
-    invariant(
-      children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-    );
+    if (children != null) {
+      throw new Error(
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
+    }
 
-    invariant(
-      typeof innerHTML === 'object' && '__html' in innerHTML,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
-        'for more information.',
-    );
+    if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
+      throw new Error(
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'for more information.',
+      );
+    }
+
     const html = innerHTML.__html;
     if (html !== null && html !== undefined) {
       if (__DEV__) {
@@ -799,11 +829,9 @@ function pushInput(
       switch (propKey) {
         case 'children':
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
-            '%s is a self-closing tag and must neither have `children` nor ' +
+          throw new Error(
+            `${'input'} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
-            'input',
           );
         // eslint-disable-next-line-no-fallthrough
         case 'defaultChecked':
@@ -885,8 +913,7 @@ function pushStartTextArea(
           defaultValue = propValue;
           break;
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
+          throw new Error(
             '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
           );
         // eslint-disable-next-line-no-fallthrough
@@ -910,15 +937,18 @@ function pushStartTextArea(
           'children on <textarea>.',
       );
     }
-    invariant(
-      value == null,
-      'If you supply `defaultValue` on a <textarea>, do not pass children.',
-    );
-    if (isArray(children)) {
-      invariant(
-        children.length <= 1,
-        '<textarea> can only have at most one child.',
+
+    if (value != null) {
+      throw new Error(
+        'If you supply `defaultValue` on a <textarea>, do not pass children.',
       );
+    }
+
+    if (isArray(children)) {
+      if (children.length > 1) {
+        throw new Error('<textarea> can only have at most one child.');
+      }
+
       // TODO: remove the coercion and the DEV check below because it will
       // always be overwritten by the coercion several lines below it. #22309
       if (__DEV__) {
@@ -966,11 +996,9 @@ function pushSelfClosing(
       switch (propKey) {
         case 'children':
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
-            '%s is a self-closing tag and must neither have `children` nor ' +
+          throw new Error(
+            `${tag} is a self-closing tag and must neither have \`children\` nor ` +
               'use `dangerouslySetInnerHTML`.',
-            tag,
           );
         // eslint-disable-next-line-no-fallthrough
         default:
@@ -1000,8 +1028,7 @@ function pushStartMenuItem(
       switch (propKey) {
         case 'children':
         case 'dangerouslySetInnerHTML':
-          invariant(
-            false,
+          throw new Error(
             'menuitems cannot have `children` nor `dangerouslySetInnerHTML`.',
           );
         // eslint-disable-next-line-no-fallthrough
@@ -1097,7 +1124,7 @@ function pushStartCustomElement(
               attributeSeparator,
               stringToChunk(propKey),
               attributeAssign,
-              escapeTextForBrowser(propValue),
+              stringToChunk(escapeTextForBrowser(propValue)),
               attributeEnd,
             );
           }
@@ -1158,17 +1185,20 @@ function pushStartPreformattedElement(
   // TODO: This doesn't deal with the case where the child is an array
   // or component that returns a string.
   if (innerHTML != null) {
-    invariant(
-      children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
-    );
+    if (children != null) {
+      throw new Error(
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
+    }
 
-    invariant(
-      typeof innerHTML === 'object' && '__html' in innerHTML,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
-        'for more information.',
-    );
+    if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
+      throw new Error(
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+          'for more information.',
+      );
+    }
+
     const html = innerHTML.__html;
     if (html !== null && html !== undefined) {
       if (typeof html === 'string' && html.length > 0 && html[0] === '\n') {
@@ -1195,7 +1225,10 @@ const validatedTagCache = new Map();
 function startChunkForTag(tag: string): PrecomputedChunk {
   let tagStartChunk = validatedTagCache.get(tag);
   if (tagStartChunk === undefined) {
-    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    if (!VALID_TAG_REGEX.test(tag)) {
+      throw new Error(`Invalid tag: ${tag}`);
+    }
+
     tagStartChunk = stringToPrecomputedChunk('<' + tag);
     validatedTagCache.set(tag, tagStartChunk);
   }
@@ -1351,6 +1384,18 @@ export function pushEndInstance(
   }
 }
 
+export function writeCompletedRoot(
+  destination: Destination,
+  responseState: ResponseState,
+): boolean {
+  const bootstrapChunks = responseState.bootstrapChunks;
+  let result = true;
+  for (let i = 0; i < bootstrapChunks.length; i++) {
+    result = writeChunk(destination, bootstrapChunks[i]);
+  }
+  return result;
+}
+
 // Structural Nodes
 
 // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
@@ -1405,10 +1450,13 @@ export function writeStartPendingSuspenseBoundary(
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, startPendingSuspenseBoundary1);
-  invariant(
-    id !== null,
-    'An ID must have been assigned before we can complete the boundary.',
-  );
+
+  if (id === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
   writeChunk(destination, id);
   return writeChunk(destination, startPendingSuspenseBoundary2);
 }
@@ -1528,7 +1576,7 @@ export function writeStartSegment(
       return writeChunk(destination, startSegmentColGroup2);
     }
     default: {
-      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+      throw new Error('Unknown insertion mode. This is a bug in React.');
     }
   }
 }
@@ -1560,7 +1608,7 @@ export function writeEndSegment(
       return writeChunk(destination, endSegmentColGroup);
     }
     default: {
-      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+      throw new Error('Unknown insertion mode. This is a bug in React.');
     }
   }
 }
@@ -1678,9 +1726,9 @@ const clientRenderFunction =
   'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
-  '<script>' + completeSegmentFunction + ';$RS("',
+  completeSegmentFunction + ';$RS("',
 );
-const completeSegmentScript1Partial = stringToPrecomputedChunk('<script>$RS("');
+const completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 const completeSegmentScript2 = stringToPrecomputedChunk('","');
 const completeSegmentScript3 = stringToPrecomputedChunk('")</script>');
 
@@ -1689,6 +1737,7 @@ export function writeCompletedSegmentInstruction(
   responseState: ResponseState,
   contentSegmentID: number,
 ): boolean {
+  writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentCompleteSegmentFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentCompleteSegmentFunction = true;
@@ -1707,11 +1756,9 @@ export function writeCompletedSegmentInstruction(
 }
 
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
-  '<script>' + completeBoundaryFunction + ';$RC("',
+  completeBoundaryFunction + ';$RC("',
 );
-const completeBoundaryScript1Partial = stringToPrecomputedChunk(
-  '<script>$RC("',
-);
+const completeBoundaryScript1Partial = stringToPrecomputedChunk('$RC("');
 const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3 = stringToPrecomputedChunk('")</script>');
 
@@ -1721,6 +1768,7 @@ export function writeCompletedBoundaryInstruction(
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
 ): boolean {
+  writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentCompleteBoundaryFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentCompleteBoundaryFunction = true;
@@ -1729,10 +1777,13 @@ export function writeCompletedBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, completeBoundaryScript1Partial);
   }
-  invariant(
-    boundaryID !== null,
-    'An ID must have been assigned before we can complete the boundary.',
-  );
+
+  if (boundaryID === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, boundaryID);
   writeChunk(destination, completeBoundaryScript2);
@@ -1742,9 +1793,9 @@ export function writeCompletedBoundaryInstruction(
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
-  '<script>' + clientRenderFunction + ';$RX("',
+  clientRenderFunction + ';$RX("',
 );
-const clientRenderScript1Partial = stringToPrecomputedChunk('<script>$RX("');
+const clientRenderScript1Partial = stringToPrecomputedChunk('$RX("');
 const clientRenderScript2 = stringToPrecomputedChunk('")</script>');
 
 export function writeClientRenderBoundaryInstruction(
@@ -1752,6 +1803,7 @@ export function writeClientRenderBoundaryInstruction(
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
 ): boolean {
+  writeChunk(destination, responseState.startInlineScript);
   if (!responseState.sentClientRenderFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentClientRenderFunction = true;
@@ -1760,10 +1812,13 @@ export function writeClientRenderBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, clientRenderScript1Partial);
   }
-  invariant(
-    boundaryID !== null,
-    'An ID must have been assigned before we can complete the boundary.',
-  );
+
+  if (boundaryID === null) {
+    throw new Error(
+      'An ID must have been assigned before we can complete the boundary.',
+    );
+  }
+
   writeChunk(destination, boundaryID);
   return writeChunk(destination, clientRenderScript2);
 }

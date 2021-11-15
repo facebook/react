@@ -97,6 +97,13 @@ const argv = yargs
       requiresArg: true,
       type: 'string',
     },
+    compactConsole: {
+      alias: 'c',
+      describe: 'Compact console output (hide file locations).',
+      requiresArg: false,
+      type: 'boolean',
+      default: false,
+    },
   }).argv;
 
 function logError(message) {
@@ -157,6 +164,11 @@ function validateOptions() {
 
     if (!argv.build) {
       logError('DevTool tests require --build.');
+      success = false;
+    }
+  } else {
+    if (argv.compactConsole) {
+      logError('Only DevTool tests support compactConsole flag.');
       success = false;
     }
   }
@@ -284,6 +296,10 @@ function getEnvars() {
     RELEASE_CHANNEL: argv.releaseChannel.match(/modern|experimental/)
       ? 'experimental'
       : 'stable',
+
+    // Pass this flag through to the confit environment
+    // so the base config can conditionally load the console setup file.
+    compactConsole: argv.compactConsole,
   };
 
   if (argv.prod) {
@@ -306,7 +322,9 @@ function main() {
     console.log(chalk.red(`\nPlease run: \`${argv.deprecated}\` instead.\n`));
     return;
   }
+
   validateOptions();
+
   const args = getCommandArgs();
   const envars = getEnvars();
   const env = Object.entries(envars).map(([k, v]) => `${k}=${v}`);
@@ -334,6 +352,7 @@ function main() {
     stdio: 'inherit',
     env: {...envars, ...process.env},
   });
+
   // Ensure we close our process when we get a failure case.
   jest.on('close', code => {
     // Forward the exit code from the Jest process.

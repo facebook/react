@@ -18,6 +18,7 @@ let act;
 
 const babel = require('@babel/core');
 const freshPlugin = require('react-refresh/babel');
+const ts = require('typescript');
 
 describe('ReactFreshIntegration', () => {
   let container;
@@ -46,42 +47,72 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
+  function executeCommon(source, compileDestructuring) {
+    const compiled = babel.transform(source, {
+      babelrc: false,
+      presets: ['@babel/react'],
+      plugins: [
+        [freshPlugin, {skipEnvCheck: true}],
+        '@babel/plugin-transform-modules-commonjs',
+        compileDestructuring && '@babel/plugin-transform-destructuring',
+      ].filter(Boolean),
+    }).code;
+    return executeCompiled(compiled);
+  }
+
+  function executeCompiled(compiled) {
+    exportsObj = {};
+    // eslint-disable-next-line no-new-func
+    new Function(
+      'global',
+      'React',
+      'exports',
+      '$RefreshReg$',
+      '$RefreshSig$',
+      compiled,
+    )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
+    // Module systems will register exports as a fallback.
+    // This is useful for cases when e.g. a class is exported,
+    // and we don't want to propagate the update beyond this module.
+    $RefreshReg$(exportsObj.default, 'exports.default');
+    return exportsObj.default;
+  }
+
+  function $RefreshReg$(type, id) {
+    ReactFreshRuntime.register(type, id);
+  }
+
+  function $RefreshSig$() {
+    return ReactFreshRuntime.createSignatureFunctionForTransform();
+  }
+
   describe('with compiled destructuring', () => {
-    runTests(true);
+    runTests(executeCommon, testCommon);
   });
 
   describe('without compiled destructuring', () => {
-    runTests(false);
+    runTests(executeCommon, testCommon);
   });
 
-  function runTests(compileDestructuring) {
-    function execute(source) {
-      const compiled = babel.transform(source, {
+  describe('with typescript syntax', () => {
+    runTests(function(source) {
+      const typescriptSource = babel.transform(source, {
         babelrc: false,
+        configFile: false,
         presets: ['@babel/react'],
         plugins: [
           [freshPlugin, {skipEnvCheck: true}],
-          '@babel/plugin-transform-modules-commonjs',
-          compileDestructuring && '@babel/plugin-transform-destructuring',
-        ].filter(Boolean),
+          ['@babel/plugin-syntax-typescript', {isTSX: true}],
+        ],
       }).code;
-      exportsObj = {};
-      // eslint-disable-next-line no-new-func
-      new Function(
-        'global',
-        'React',
-        'exports',
-        '$RefreshReg$',
-        '$RefreshSig$',
-        compiled,
-      )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
-      // Module systems will register exports as a fallback.
-      // This is useful for cases when e.g. a class is exported,
-      // and we don't want to propagate the update beyond this module.
-      $RefreshReg$(exportsObj.default, 'exports.default');
-      return exportsObj.default;
-    }
+      const compiled = ts.transpileModule(typescriptSource, {
+        module: ts.ModuleKind.CommonJS,
+      }).outputText;
+      return executeCompiled(compiled);
+    }, testTypescript);
+  });
 
+  function runTests(execute, test) {
     function render(source) {
       const Component = execute(source);
       act(() => {
@@ -127,14 +158,10 @@ describe('ReactFreshIntegration', () => {
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    function $RefreshReg$(type, id) {
-      ReactFreshRuntime.register(type, id);
-    }
+    test(render, patch);
+  }
 
-    function $RefreshSig$() {
-      return ReactFreshRuntime.createSignatureFunctionForTransform();
-    }
-
+  function testCommon(render, patch) {
     it('reloads function declarations', () => {
       if (__DEV__) {
         render(`
@@ -1945,6 +1972,43 @@ describe('ReactFreshIntegration', () => {
           expect(el.textContent).toBe('CXY');
         }
       });
+    });
+  }
+
+  function testTypescript(render, patch) {
+    it('reloads component exported in typescript namespace', () => {
+      if (__DEV__) {
+        render(`
+          namespace Foo {
+            export namespace Bar {
+              export const Child = ({prop}) => {
+                return <h1>{prop}1</h1>
+              };
+            }
+          }
+
+          export default function Parent() {
+            return <Foo.Bar.Child prop={'A'} />;
+          }
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          namespace Foo {
+            export namespace Bar {
+              export const Child = ({prop}) => {
+                return <h1>{prop}2</h1>
+              };
+            }
+          }
+
+          export default function Parent() {
+            return <Foo.Bar.Child prop={'B'} />;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B2');
+      }
     });
   }
 });

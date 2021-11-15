@@ -21,7 +21,7 @@ export type IconType =
   | 'flame-chart'
   | 'profiler'
   | 'ranked-chart'
-  | 'scheduling-profiler'
+  | 'timeline'
   | 'search'
   | 'settings'
   | 'store-as-global-variable'
@@ -65,7 +65,7 @@ export default function Icon({className = '', type}: Props) {
     case 'ranked-chart':
       pathData = PATH_RANKED_CHART;
       break;
-    case 'scheduling-profiler':
+    case 'timeline':
       pathData = PATH_SCHEDULING_PROFILER;
       break;
     case 'search':

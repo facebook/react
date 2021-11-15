@@ -8,22 +8,18 @@
  */
 
 import * as React from 'react';
-import {useContext, useMemo} from 'react';
-import {SettingsContext} from './Settings/SettingsContext';
-import {THEME_STYLES} from '../../constants';
+import useThemeStyles from './useThemeStyles';
 
 export default function ThemeProvider({children}: {|children: React$Node|}) {
-  const {theme, displayDensity, browserTheme} = useContext(SettingsContext);
+  const themeStyle = useThemeStyles();
 
-  const style = useMemo(
-    () => ({
+  const style = React.useMemo(() => {
+    return {
+      ...themeStyle,
       width: '100%',
       height: '100%',
-      ...THEME_STYLES[displayDensity],
-      ...THEME_STYLES[theme === 'auto' ? browserTheme : theme],
-    }),
-    [theme, browserTheme, displayDensity],
-  );
+    };
+  }, [themeStyle]);
 
   return <div style={style}>{children}</div>;
 }

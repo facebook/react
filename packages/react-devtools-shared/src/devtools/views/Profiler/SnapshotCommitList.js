@@ -217,7 +217,11 @@ function List({
 
     // Only some React versions include commit durations.
     // Show a richer tooltip only for builds that have that info.
-    if (effectDuration !== null || passiveEffectDuration !== null) {
+    if (
+      effectDuration !== null ||
+      passiveEffectDuration !== null ||
+      priorityLevel !== null
+    ) {
       tooltipLabel = (
         <ul className={styles.TooltipList}>
           {priorityLevel !== null && (

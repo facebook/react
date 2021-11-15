@@ -25,12 +25,16 @@ import {
 } from './ReactDOMServerFormatConfig';
 
 function createDrainHandler(destination, request) {
-  return () => startFlowing(request);
+  return () => startFlowing(request, destination);
 }
 
 type Options = {|
   identifierPrefix?: string,
   namespaceURI?: string,
+  nonce?: string,
+  bootstrapScriptContent?: string,
+  bootstrapScripts?: Array<string>,
+  bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   onCompleteShell?: () => void,
   onCompleteAll?: () => void,
@@ -41,18 +45,19 @@ type Controls = {|
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
   abort(): void,
-  startWriting(): void,
+  pipe<T: Writable>(destination: T): T,
 |};
 
-function createRequestImpl(
-  children: ReactNodeList,
-  destination: Writable,
-  options: void | Options,
-) {
+function createRequestImpl(children: ReactNodeList, options: void | Options) {
   return createRequest(
     children,
-    destination,
-    createResponseState(options ? options.identifierPrefix : undefined),
+    createResponseState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+    ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
@@ -61,22 +66,24 @@ function createRequestImpl(
   );
 }
 
-function pipeToNodeWritable(
+function renderToPipeableStream(
   children: ReactNodeList,
-  destination: Writable,
   options?: Options,
 ): Controls {
-  const request = createRequestImpl(children, destination, options);
+  const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {
-    startWriting() {
+    pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {
-        return;
+        throw new Error(
+          'React currently only supports piping to one writable stream.',
+        );
       }
       hasStartedFlowing = true;
-      startFlowing(request);
+      startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      return destination;
     },
     abort() {
       abort(request);
@@ -84,4 +91,4 @@ function pipeToNodeWritable(
   };
 }
 
-export {pipeToNodeWritable, ReactVersion as version};
+export {renderToPipeableStream, ReactVersion as version};
