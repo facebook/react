@@ -86,6 +86,7 @@ function getTestFlags() {
 
       // This isn't a flag, just a useful alias for tests.
       enableUseSyncExternalStoreShim: !__VARIANT__,
+      enableSuspenseList: releaseChannel === 'experimental' || www,
 
       // If there's a naming conflict between scheduler and React feature flags, the
       // React ones take precedence.
