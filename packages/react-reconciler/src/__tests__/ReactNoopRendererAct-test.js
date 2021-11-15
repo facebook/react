@@ -7,14 +7,17 @@
  * @jest-environment node
  */
 
-// sanity tests for ReactNoop.act()
+// sanity tests for act()
 
-jest.useRealTimers();
 const React = require('react');
 const ReactNoop = require('react-noop-renderer');
 const Scheduler = require('scheduler');
+const act = require('jest-react').act;
 
-describe('ReactNoop.act()', () => {
+// TODO: These tests are no longer specific to the noop renderer
+// implementation. They test the internal implementation we use in the React
+// test suite.
+describe('internal act()', () => {
   it('can use act to flush effects', async () => {
     function App(props) {
       React.useEffect(props.callback);
@@ -22,7 +25,7 @@ describe('ReactNoop.act()', () => {
     }
 
     const calledLog = [];
-    ReactNoop.act(() => {
+    act(() => {
       ReactNoop.render(
         <App
           callback={() => {
@@ -50,7 +53,7 @@ describe('ReactNoop.act()', () => {
       }, []);
       return ctr;
     }
-    await ReactNoop.act(async () => {
+    await act(async () => {
       ReactNoop.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['stage 1', 'stage 2']);

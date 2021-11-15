@@ -49,26 +49,28 @@ Later operations will reference strings by a one-based index. For example, `1` w
 
 #### Adding a root node
 
-Adding a root to the tree requires sending 4 numbers:
+Adding a root to the tree requires sending 5 numbers:
 
 1. add operation constant (`1`)
 1. fiber id
-1. element type constant (`8 === ElementTypeRoot`)
+1. element type constant (`11 === ElementTypeRoot`)
 1. profiling supported flag
+1. owner metadata flag
 
 For example, adding a root fiber with an id of 1:
 ```js
 [
   1, // add operation
   1, // fiber id
-  8, // ElementTypeRoot
+  11, // ElementTypeRoot
   1, // this root's renderer supports profiling
+  1, // this root has owner metadata
 ]
 ```
 
 #### Adding a leaf node
 
-Adding a leaf node takes a variable number of numbers since we need to decode the name (and potentially the key):
+Adding a leaf node to the tree requires sending 7 numbers:
 
 1. add operation constant (`1`)
 1. fiber id
@@ -86,7 +88,6 @@ For example, adding a function component `<Foo>` with an id 2:
   1,   // ElementTypeClass
   1,   // parent id
   0,   // owner id
-  3,   // encoded display name size
   1,   // id of "Foo" displayName in the string table
   0,   // id of null key in the string table (always zero for null)
 ]
@@ -140,11 +141,40 @@ While profiling is in progress, we send an extra operation any time a fiber is a
 For example, updating the base duration for a fiber with an id of 1:
 ```js
 [
+  4,  // update tree base duration operation
   4,  // tree base duration operation
   1,  // fiber id
   32, // new tree base duration value
 ]
 ```
+
+#### Updating errors and warnings on a Fiber
+
+We record calls to `console.warn` and `console.error` in the backend.
+Periodically we notify the frontend that the number of recorded calls got updated.
+We only send the serialized messages as part of the `inspectElement` event.
+
+
+```js
+[
+  5, // update error/warning counts operation
+  4, // fiber id
+  0, // number of calls to console.error from that fiber
+  3, // number of calls to console.warn from that fiber
+]
+```
+
+#### Removing a root
+
+Special case of unmounting an entire root (include its descendants). This specialized message replaces what would otherwise be a series of remove-node operations. It is currently only used in one case: updating component filters. The primary motivation for this is actually to preserve fiber ids for components that are re-added to the tree after the updated filters have been applied. This preserves mappings between the Fiber (id) and things like error and warning logs.
+
+```js
+[
+  6, // remove root operation
+]
+```
+
+This operation has no additional payload because renderer and root ids are already sent at the beginning of every operations payload.
 
 ## Reconstructing the tree
 
@@ -223,13 +253,13 @@ Elements can update frequently, especially in response to things like scrolling 
 
 ### Deeply nested properties
 
-Even when dealing with a single component, serializing deeply nested properties can be expensive. Because of this, DevTools uses a technique referred to as "dehyration" to only send a shallow copy of the data on initial inspection. DevTools then fills in the missing data on demand as a user expands nested objects or arrays. Filled in paths are remembered (for the currently inspected element) so they are not "dehyrated" again as part of a polling update.
+Even when dealing with a single component, serializing deeply nested properties can be expensive. Because of this, DevTools uses a technique referred to as "dehydration" to only send a shallow copy of the data on initial inspection. DevTools then fills in the missing data on demand as a user expands nested objects or arrays. Filled in paths are remembered (for the currently inspected element) so they are not "dehydrated" again as part of a polling update.
 
 ### Inspecting hooks
 
 Hooks present a unique challenge for the DevTools because of the concept of _custom_ hooks. (A custom hook is essentially any function that calls at least one of the built-in hooks. By convention custom hooks also have names that begin with "use".)
 
-So how does DevTools identify custom functions called from within third party components? It does this by temporarily overriding React's built-in hooks and shallow rendering the component in question. Whenever one of the (overridden) built-in hooks are called, it parses the call stack to spot potential custom hooks (functions between the component itself and the built-in hook). This approach enables it to build a tree structure describing all of the calls to both the built-in _and_ custom hooks, along with the values passed to those hooks. (If you're interested in learning more about this, [here is the source code](https://github.com/facebook/react/blob/master/packages/react-debug-tools/src/ReactDebugHooks.js).)
+So how does DevTools identify custom functions called from within third party components? It does this by temporarily overriding React's built-in hooks and shallow rendering the component in question. Whenever one of the (overridden) built-in hooks are called, it parses the call stack to spot potential custom hooks (functions between the component itself and the built-in hook). This approach enables it to build a tree structure describing all of the calls to both the built-in _and_ custom hooks, along with the values passed to those hooks. (If you're interested in learning more about this, [here is the source code](https://github.com/facebook/react/blob/main/packages/react-debug-tools/src/ReactDebugHooks.js).)
 
 > **Note**: DevTools obtains hooks info by re-rendering a component.
 > Breakpoints will be invoked during this additional (shallow) render,
@@ -256,7 +286,6 @@ When profiling begins, the frontend takes a snapshot/copy of each root. This sna
 When profiling begins, the backend records the base durations of each fiber currently in the tree. While profiling is in progress, the backend also stores some information about each commit, including:
 * Commit time and duration
 * Which elements were rendered during that commit
-* Which interactions (if any) were part of the commit
 * Which props and state changed (if enabled in profiler settings)
 
 This information will eventually be required by the frontend in order to render its profiling graphs, but it will not be sent across the bridge until profiling has completed (to minimize the performance impact of profiling).
@@ -268,3 +297,10 @@ Once profiling is finished, the frontend requests profiling data from the backen
 ### Importing/exporting data
 
 Because all of the data is merged in the frontend after a profiling session is completed, it can be exported and imported (as a single JSON object), enabling profiling sessions to be shared between users.
+
+## Package Specific Details
+
+### Devtools Extension Overview Diagram
+
+![React Devtools Extension](https://user-images.githubusercontent.com/2735514/132768489-6ab85156-b816-442f-9c3f-7af738ee9e49.png)
+

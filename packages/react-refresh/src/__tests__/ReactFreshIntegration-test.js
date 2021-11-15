@@ -18,6 +18,7 @@ let act;
 
 const babel = require('@babel/core');
 const freshPlugin = require('react-refresh/babel');
+const ts = require('typescript');
 
 describe('ReactFreshIntegration', () => {
   let container;
@@ -30,7 +31,7 @@ describe('ReactFreshIntegration', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
-      act = require('react-dom/test-utils').act;
+      act = require('jest-react').act;
       container = document.createElement('div');
       document.body.appendChild(container);
       exportsObj = undefined;
@@ -46,42 +47,72 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
+  function executeCommon(source, compileDestructuring) {
+    const compiled = babel.transform(source, {
+      babelrc: false,
+      presets: ['@babel/react'],
+      plugins: [
+        [freshPlugin, {skipEnvCheck: true}],
+        '@babel/plugin-transform-modules-commonjs',
+        compileDestructuring && '@babel/plugin-transform-destructuring',
+      ].filter(Boolean),
+    }).code;
+    return executeCompiled(compiled);
+  }
+
+  function executeCompiled(compiled) {
+    exportsObj = {};
+    // eslint-disable-next-line no-new-func
+    new Function(
+      'global',
+      'React',
+      'exports',
+      '$RefreshReg$',
+      '$RefreshSig$',
+      compiled,
+    )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
+    // Module systems will register exports as a fallback.
+    // This is useful for cases when e.g. a class is exported,
+    // and we don't want to propagate the update beyond this module.
+    $RefreshReg$(exportsObj.default, 'exports.default');
+    return exportsObj.default;
+  }
+
+  function $RefreshReg$(type, id) {
+    ReactFreshRuntime.register(type, id);
+  }
+
+  function $RefreshSig$() {
+    return ReactFreshRuntime.createSignatureFunctionForTransform();
+  }
+
   describe('with compiled destructuring', () => {
-    runTests(true);
+    runTests(executeCommon, testCommon);
   });
 
   describe('without compiled destructuring', () => {
-    runTests(false);
+    runTests(executeCommon, testCommon);
   });
 
-  function runTests(compileDestructuring) {
-    function execute(source) {
-      const compiled = babel.transform(source, {
+  describe('with typescript syntax', () => {
+    runTests(function(source) {
+      const typescriptSource = babel.transform(source, {
         babelrc: false,
+        configFile: false,
         presets: ['@babel/react'],
         plugins: [
           [freshPlugin, {skipEnvCheck: true}],
-          '@babel/plugin-transform-modules-commonjs',
-          compileDestructuring && '@babel/plugin-transform-destructuring',
-        ].filter(Boolean),
+          ['@babel/plugin-syntax-typescript', {isTSX: true}],
+        ],
       }).code;
-      exportsObj = {};
-      // eslint-disable-next-line no-new-func
-      new Function(
-        'global',
-        'React',
-        'exports',
-        '$RefreshReg$',
-        '$RefreshSig$',
-        compiled,
-      )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
-      // Module systems will register exports as a fallback.
-      // This is useful for cases when e.g. a class is exported,
-      // and we don't want to propagate the update beyond this module.
-      $RefreshReg$(exportsObj.default, 'exports.default');
-      return exportsObj.default;
-    }
+      const compiled = ts.transpileModule(typescriptSource, {
+        module: ts.ModuleKind.CommonJS,
+      }).outputText;
+      return executeCompiled(compiled);
+    }, testTypescript);
+  });
 
+  function runTests(execute, test) {
     function render(source) {
       const Component = execute(source);
       act(() => {
@@ -127,14 +158,10 @@ describe('ReactFreshIntegration', () => {
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    function $RefreshReg$(type, id) {
-      ReactFreshRuntime.register(type, id);
-    }
+    test(render, patch);
+  }
 
-    function $RefreshSig$() {
-      return ReactFreshRuntime.createSignatureFunctionForTransform();
-    }
-
+  function testCommon(render, patch) {
     it('reloads function declarations', () => {
       if (__DEV__) {
         render(`
@@ -466,6 +493,227 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         const newEl = container.firstChild;
         expect(newEl.textContent).toBe('C3');
+      }
+    });
+
+    it('resets state when renaming a state variable inside a HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useState} = React;
+          const S = 1;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            const [foo, setFoo] = useState(S);
+            return <h1>A{foo}</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+
+        patch(`
+          const {useState} = React;
+          const S = 2;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            const [foo, setFoo] = useState(S);
+            return <h1>B{foo}</h1>;
+          });
+        `);
+        // Same state variable name, so state is preserved.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B1');
+
+        patch(`
+          const {useState} = React;
+          const S = 3;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            const [bar, setBar] = useState(S);
+            return <h1>C{bar}</h1>;
+          });
+        `);
+        // Different state variable name, so state is reset.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('C3');
+      }
+    });
+
+    it('does not crash when changing Hook order inside a HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          });
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
+      }
+    });
+
+    it('does not crash when changing Hook order inside a memo-ed HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect, memo} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(function Generated() {
+              return Wrapped();
+            });
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect, memo} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(function Generated() {
+              return Wrapped();
+            });
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          });
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
+      }
+    });
+
+    it('does not crash when changing Hook order inside a memo+forwardRef-ed HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect, memo, forwardRef} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(forwardRef(function Generated() {
+              return Wrapped();
+            }));
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect, memo, forwardRef} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(forwardRef(function Generated() {
+              return Wrapped();
+            }));
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          });
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
+      }
+    });
+
+    it('does not crash when changing Hook order inside a HOC returning an object', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return {Wrapped: Wrapped};
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          }).Wrapped;
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return {Wrapped: Wrapped};
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          }).Wrapped;
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
       }
     });
 
@@ -1724,6 +1972,43 @@ describe('ReactFreshIntegration', () => {
           expect(el.textContent).toBe('CXY');
         }
       });
+    });
+  }
+
+  function testTypescript(render, patch) {
+    it('reloads component exported in typescript namespace', () => {
+      if (__DEV__) {
+        render(`
+          namespace Foo {
+            export namespace Bar {
+              export const Child = ({prop}) => {
+                return <h1>{prop}1</h1>
+              };
+            }
+          }
+
+          export default function Parent() {
+            return <Foo.Bar.Child prop={'A'} />;
+          }
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          namespace Foo {
+            export namespace Bar {
+              export const Child = ({prop}) => {
+                return <h1>{prop}2</h1>
+              };
+            }
+          }
+
+          export default function Parent() {
+            return <Foo.Bar.Child prop={'B'} />;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B2');
+      }
     });
   }
 });

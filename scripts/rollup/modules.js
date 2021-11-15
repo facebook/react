@@ -9,14 +9,19 @@ const {UMD_DEV, UMD_PROD, UMD_PROFILING} = require('./bundles').bundleTypes;
 const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 // const HAS_SIDE_EFFECTS_ON_IMPORT = true;
 const importSideEffects = Object.freeze({
+  fs: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'fs/promises': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  path: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  react: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-fetch/node': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  url: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  ReactNativeInternalFeatureFlags: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
@@ -26,8 +31,8 @@ const knownGlobals = Object.freeze({
   'react-dom/server': 'ReactDOMServer',
   'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
-  'scheduler/tracing': 'SchedulerTracing',
   'scheduler/unstable_mock': 'SchedulerMock',
+  ReactNativeInternalFeatureFlags: 'ReactNativeInternalFeatureFlags',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

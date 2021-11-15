@@ -1,56 +1,58 @@
 'use strict';
 
-const path = require('path');
+/* eslint-disable no-for-of-loops/no-for-of-loops */
 
+const path = require('path');
+const {promisify} = require('util');
+const glob = promisify(require('glob'));
 const {ESLint} = require('eslint');
 
-const {bundles, getFilename, bundleTypes} = require('../bundles');
-const Packaging = require('../packaging');
+// Lint the final build artifacts. Helps catch bugs in our build pipeline.
 
-const {
-  NODE_ES2015,
-  UMD_DEV,
-  UMD_PROD,
-  UMD_PROFILING,
-  NODE_DEV,
-  NODE_PROD,
-  NODE_PROFILING,
-  FB_WWW_DEV,
-  FB_WWW_PROD,
-  FB_WWW_PROFILING,
-  RN_OSS_DEV,
-  RN_OSS_PROD,
-  RN_OSS_PROFILING,
-  RN_FB_DEV,
-  RN_FB_PROD,
-  RN_FB_PROFILING,
-} = bundleTypes;
-
-function getFormat(bundleType) {
-  switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-    case UMD_PROFILING:
-      return 'umd';
-    case NODE_ES2015:
-      return 'cjs2015';
-    case NODE_DEV:
-    case NODE_PROD:
-    case NODE_PROFILING:
-      return 'cjs';
-    case FB_WWW_DEV:
-    case FB_WWW_PROD:
-    case FB_WWW_PROFILING:
-      return 'fb';
-    case RN_OSS_DEV:
-    case RN_OSS_PROD:
-    case RN_OSS_PROFILING:
-    case RN_FB_DEV:
-    case RN_FB_PROD:
-    case RN_FB_PROFILING:
-      return 'rn';
+function getFormat(filepath) {
+  if (filepath.includes('facebook')) {
+    if (filepath.includes('shims')) {
+      // We don't currently lint these shims. We rely on the downstream Facebook
+      // repo to transform them.
+      // TODO: Should we lint them?
+      return null;
+    }
+    return 'fb';
   }
-  throw new Error('unknown bundleType');
+  if (filepath.includes('react-native')) {
+    if (filepath.includes('shims')) {
+      // We don't currently lint these shims. We rely on the downstream Facebook
+      // repo to transform them.
+      // TODO: Should we we lint them?
+      return null;
+    }
+    return 'rn';
+  }
+  if (filepath.includes('cjs')) {
+    if (
+      filepath.includes('react-server-dom-webpack-plugin') ||
+      filepath.includes('react-server-dom-webpack-node-register') ||
+      filepath.includes('react-suspense-test-utils')
+    ) {
+      return 'cjs2015';
+    }
+    return 'cjs';
+  }
+  if (filepath.includes('esm')) {
+    return 'esm';
+  }
+  if (filepath.includes('umd')) {
+    return 'umd';
+  }
+  if (
+    filepath.includes('oss-experimental') ||
+    filepath.includes('oss-stable')
+  ) {
+    // If a file in one of the open source channels doesn't match an earlier,
+    // more specific rule, then assume it's CommonJS.
+    return 'cjs';
+  }
+  throw new Error('Could not find matching lint format for file: ' + filepath);
 }
 
 function getESLintInstance(format) {
@@ -61,34 +63,13 @@ function getESLintInstance(format) {
   });
 }
 
-const esLints = {
-  cjs: getESLintInstance('cjs'),
-  cjs2015: getESLintInstance('cjs2015'),
-  rn: getESLintInstance('rn'),
-  fb: getESLintInstance('fb'),
-  umd: getESLintInstance('umd'),
-};
-
-// Performs sanity checks on bundles *built* by Rollup.
-// Helps catch Rollup regressions.
-async function lint(bundle, bundleType) {
-  const filename = getFilename(bundle, bundleType);
-  const format = getFormat(bundleType);
-  const eslint = esLints[format];
-
-  const packageName = Packaging.getPackageName(bundle.entry);
-  const mainOutputPath = Packaging.getBundleOutputPath(
-    bundleType,
-    filename,
-    packageName
-  );
-
-  const results = await eslint.lintFiles([mainOutputPath]);
+async function lint(eslint, filepaths) {
+  const results = await eslint.lintFiles(filepaths);
   if (
     results.some(result => result.errorCount > 0 || result.warningCount > 0)
   ) {
     process.exitCode = 1;
-    console.log(`Failed ${mainOutputPath}`);
+    console.log(`Lint failed`);
     const formatter = await eslint.loadFormatter('stylish');
     const resultText = formatter.format(results);
     console.log(resultText);
@@ -96,14 +77,27 @@ async function lint(bundle, bundleType) {
 }
 
 async function lintEverything() {
-  console.log(`Linting known bundles...`);
-  let promises = [];
-  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (const bundle of bundles) {
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const bundleType of bundle.bundleTypes) {
-      promises.push(lint(bundle, bundleType));
+  console.log(`Linting build artifacts...`);
+
+  const allFilepaths = await glob('build/**/*.js');
+
+  const pathsByFormat = new Map();
+  for (const filepath of allFilepaths) {
+    const format = getFormat(filepath);
+    if (format !== null) {
+      const paths = pathsByFormat.get(format);
+      if (paths === undefined) {
+        pathsByFormat.set(format, [filepath]);
+      } else {
+        paths.push(filepath);
+      }
     }
+  }
+
+  const promises = [];
+  for (const [format, filepaths] of pathsByFormat) {
+    const eslint = getESLintInstance(format);
+    promises.push(lint(eslint, filepaths));
   }
   await Promise.all(promises);
 }

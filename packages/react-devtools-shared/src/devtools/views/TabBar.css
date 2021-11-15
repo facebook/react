@@ -10,6 +10,9 @@
   user-select: none;
   color: var(--color-text);
 
+  /* Hide radio buttons for Firefox too */
+  position:  relative;
+
   /* Electron drag area */
   -webkit-app-region: no-drag;
 }
@@ -48,6 +51,9 @@
   width: 0;
   margin: 0;
   opacity: 0;
+
+  /* Hide radio buttons for Firefox too */
+  position:  absolute;
 }
 
 .IconSizeNavigation,
@@ -77,6 +83,14 @@
 .TabLabelNavigation,
 .TabLabelProfiler,
 .TabLabelSettings {
+}
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  border-left: 1px solid var(--color-border);
+  padding-left: 0.25rem;
+  margin-left: 0.25rem;
 }
 
 @media screen and (max-width: 525px) {

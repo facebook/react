@@ -9,8 +9,6 @@
 
 import type {TouchedViewDataAtPoint} from './ReactNativeTypes';
 
-import invariant from 'shared/invariant';
-
 // Modules provided by RN:
 import {
   ReactNativeViewConfigRegistry,
@@ -25,6 +23,8 @@ import {
   updateFiberProps,
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
+
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -43,7 +43,6 @@ export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type OpaqueIDType = void;
 
 export type RendererInspectionConfig = $ReadOnly<{|
   // Deprecated. Replaced with getInspectorDataForViewAtPoint.
@@ -89,6 +88,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -144,10 +144,9 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  invariant(
-    hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
-  );
+  if (!hostContext.isInAParentText) {
+    throw new Error('Text strings must be rendered within a <Text> component.');
+  }
 
   const tag = allocateTag();
 
@@ -256,6 +255,10 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   // It's not clear to me which is better so I'm deferring for now.
   // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
   return false;
+}
+
+export function getCurrentEventPriority(): * {
+  return DefaultEventPriority;
 }
 
 // -------------------
@@ -404,10 +407,9 @@ export function insertInContainerBefore(
   // We create a wrapper object for the container in ReactNative render()
   // Or we refactor to remove wrapper objects entirely.
   // For more info on pros/cons see PR #8560 description.
-  invariant(
-    typeof parentInstance !== 'number',
-    'Container does not support insertBefore operation',
-  );
+  if (typeof parentInstance === 'number') {
+    throw new Error('Container does not support insertBefore operation');
+  }
 }
 
 export function removeChild(
@@ -492,49 +494,11 @@ export function unhideTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function getFundamentalComponentInstance(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function mountFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function shouldUpdateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function updateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
 export function getInstanceFromNode(node: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function isOpaqueHydratingObject(value: mixed): boolean {
-  throw new Error('Not yet implemented');
-}
-
-export function makeOpaqueHydratingObject(
-  attemptToReadValue: () => void,
-): OpaqueIDType {
-  throw new Error('Not yet implemented.');
-}
-
-export function makeClientId(): OpaqueIDType {
-  throw new Error('Not yet implemented');
-}
-
-export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
-  throw new Error('Not yet implemented');
-}
-
-export function beforeActiveInstanceBlur() {
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }
 
@@ -543,5 +507,9 @@ export function afterActiveInstanceBlur() {
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
+  // noop
+}
+
+export function detachDeletedInstance(node: Instance): void {
   // noop
 }

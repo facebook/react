@@ -12,14 +12,15 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
+import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
-import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {
-  unstable_runWithPriority as runWithPriority,
+  enableSelectiveHydration,
+  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+} from 'shared/ReactFeatureFlags';
+import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
-  unstable_getCurrentPriorityLevel as getCurrentPriorityLevel,
 } from 'scheduler';
 import {
   getNearestMountedFiber,
@@ -32,17 +33,22 @@ import {
   getClosestInstanceFromNode,
 } from '../client/ReactDOMComponentTree';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {isHigherEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
-let attemptSynchronousHydration: (fiber: Object) => void;
+let _attemptSynchronousHydration: (fiber: Object) => void;
 
 export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
-  attemptSynchronousHydration = fn;
+  _attemptSynchronousHydration = fn;
 }
 
-let attemptUserBlockingHydration: (fiber: Object) => void;
+export function attemptSynchronousHydration(fiber: Object) {
+  _attemptSynchronousHydration(fiber);
+}
 
-export function setAttemptUserBlockingHydration(fn: (fiber: Object) => void) {
-  attemptUserBlockingHydration = fn;
+let attemptDiscreteHydration: (fiber: Object) => void;
+
+export function setAttemptDiscreteHydration(fn: (fiber: Object) => void) {
+  attemptDiscreteHydration = fn;
 }
 
 let attemptContinuousHydration: (fiber: Object) => void;
@@ -59,16 +65,16 @@ export function setAttemptHydrationAtCurrentPriority(
   attemptHydrationAtCurrentPriority = fn;
 }
 
-let getCurrentUpdatePriority: () => LanePriority;
+let getCurrentUpdatePriority: () => EventPriority;
 
-export function setGetCurrentUpdatePriority(fn: () => LanePriority) {
+export function setGetCurrentUpdatePriority(fn: () => EventPriority) {
   getCurrentUpdatePriority = fn;
 }
 
-let attemptHydrationAtPriority: <T>(priority: LanePriority, fn: () => T) => T;
+let attemptHydrationAtPriority: <T>(priority: EventPriority, fn: () => T) => T;
 
 export function setAttemptHydrationAtPriority(
-  fn: <T>(priority: LanePriority, fn: () => T) => T,
+  fn: <T>(priority: EventPriority, fn: () => T) => T,
 ) {
   attemptHydrationAtPriority = fn;
 }
@@ -82,7 +88,6 @@ type PointerEvent = Event & {
 };
 
 import {IS_REPLAYED} from './EventSystemFlags';
-import {listenToNativeEvent} from './DOMPluginEventSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -112,8 +117,7 @@ const queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
-  priority: number,
-  lanePriority: LanePriority,
+  priority: EventPriority,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -156,42 +160,10 @@ const discreteReplayableEvents: Array<DOMEventName> = [
   'submit',
 ];
 
-const continuousReplayableEvents: Array<DOMEventName> = [
-  'dragenter',
-  'dragleave',
-  'focusin',
-  'focusout',
-  'mouseover',
-  'mouseout',
-  'pointerover',
-  'pointerout',
-  'gotpointercapture',
-  'lostpointercapture',
-];
-
-export function isReplayableDiscreteEvent(eventType: DOMEventName): boolean {
+export function isDiscreteEventThatRequiresHydration(
+  eventType: DOMEventName,
+): boolean {
   return discreteReplayableEvents.indexOf(eventType) > -1;
-}
-
-function trapReplayableEventForContainer(
-  domEventName: DOMEventName,
-  container: Container,
-) {
-  listenToNativeEvent(domEventName, false, ((container: any): Element), null);
-}
-
-export function eagerlyTrapReplayableEvents(
-  container: Container,
-  document: Document,
-) {
-  // Discrete
-  discreteReplayableEvents.forEach(domEventName => {
-    trapReplayableEventForContainer(domEventName, container);
-  });
-  // Continuous
-  continuousReplayableEvents.forEach(domEventName => {
-    trapReplayableEventForContainer(domEventName, container);
-  });
 }
 
 function createQueuedReplayableEvent(
@@ -217,6 +189,9 @@ export function queueDiscreteEvent(
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    return;
+  }
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
     domEventName,
@@ -428,17 +403,15 @@ function attemptExplicitHydrationTarget(
           // We're blocked on hydrating this boundary.
           // Increase its priority.
           queuedTarget.blockedOn = instance;
-          attemptHydrationAtPriority(queuedTarget.lanePriority, () => {
-            runWithPriority(queuedTarget.priority, () => {
-              attemptHydrationAtCurrentPriority(nearestMounted);
-            });
+          attemptHydrationAtPriority(queuedTarget.priority, () => {
+            attemptHydrationAtCurrentPriority(nearestMounted);
           });
 
           return;
         }
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
-        if (root.hydrate) {
+        if (root.isDehydrated) {
           queuedTarget.blockedOn = getContainerFromFiber(nearestMounted);
           // We don't currently have a way to increase the priority of
           // a root other than sync.
@@ -452,17 +425,24 @@ function attemptExplicitHydrationTarget(
 
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
-    const schedulerPriority = getCurrentPriorityLevel();
-    const updateLanePriority = getCurrentUpdatePriority();
+    // TODO: This will read the priority if it's dispatched by the React
+    // event system but not native events. Should read window.event.type, like
+    // we do for updates (getCurrentEventPriority).
+    const updatePriority = getCurrentUpdatePriority();
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,
-      priority: schedulerPriority,
-      lanePriority: updateLanePriority,
+      priority: updatePriority,
     };
     let i = 0;
     for (; i < queuedExplicitHydrationTargets.length; i++) {
-      if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
+      // Stop once we hit the first target with lower priority than
+      if (
+        !isHigherEventPriority(
+          updatePriority,
+          queuedExplicitHydrationTargets[i].priority,
+        )
+      ) {
         break;
       }
     }
@@ -515,39 +495,41 @@ function attemptReplayContinuousQueuedEventInMap(
 
 function replayUnblockedEvents() {
   hasScheduledReplayAttempt = false;
-  // First replay discrete events.
-  while (queuedDiscreteEvents.length > 0) {
-    const nextDiscreteEvent = queuedDiscreteEvents[0];
-    if (nextDiscreteEvent.blockedOn !== null) {
-      // We're still blocked.
-      // Increase the priority of this boundary to unblock
-      // the next discrete event.
-      const fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
-      if (fiber !== null) {
-        attemptUserBlockingHydration(fiber);
-      }
-      break;
-    }
-    const targetContainers = nextDiscreteEvent.targetContainers;
-    while (targetContainers.length > 0) {
-      const targetContainer = targetContainers[0];
-      const nextBlockedOn = attemptToDispatchEvent(
-        nextDiscreteEvent.domEventName,
-        nextDiscreteEvent.eventSystemFlags,
-        targetContainer,
-        nextDiscreteEvent.nativeEvent,
-      );
-      if (nextBlockedOn !== null) {
-        // We're still blocked. Try again later.
-        nextDiscreteEvent.blockedOn = nextBlockedOn;
+  if (!enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    // First replay discrete events.
+    while (queuedDiscreteEvents.length > 0) {
+      const nextDiscreteEvent = queuedDiscreteEvents[0];
+      if (nextDiscreteEvent.blockedOn !== null) {
+        // We're still blocked.
+        // Increase the priority of this boundary to unblock
+        // the next discrete event.
+        const fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
+        if (fiber !== null) {
+          attemptDiscreteHydration(fiber);
+        }
         break;
       }
-      // This target container was successfully dispatched. Try the next.
-      targetContainers.shift();
-    }
-    if (nextDiscreteEvent.blockedOn === null) {
-      // We've successfully replayed the first event. Let's try the next one.
-      queuedDiscreteEvents.shift();
+      const targetContainers = nextDiscreteEvent.targetContainers;
+      while (targetContainers.length > 0) {
+        const targetContainer = targetContainers[0];
+        const nextBlockedOn = attemptToDispatchEvent(
+          nextDiscreteEvent.domEventName,
+          nextDiscreteEvent.eventSystemFlags,
+          targetContainer,
+          nextDiscreteEvent.nativeEvent,
+        );
+        if (nextBlockedOn !== null) {
+          // We're still blocked. Try again later.
+          nextDiscreteEvent.blockedOn = nextBlockedOn;
+          break;
+        }
+        // This target container was successfully dispatched. Try the next.
+        targetContainers.shift();
+      }
+      if (nextDiscreteEvent.blockedOn === null) {
+        // We've successfully replayed the first event. Let's try the next one.
+        queuedDiscreteEvents.shift();
+      }
     }
   }
   // Next replay any continuous events.

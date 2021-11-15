@@ -12,8 +12,12 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let readText;
 let resolveText;
+let startTransition;
+let useState;
+let useEffect;
 
 describe('ReactExpiration', () => {
   beforeEach(() => {
@@ -22,6 +26,10 @@ describe('ReactExpiration', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
+    startTransition = React.startTransition;
+    useState = React.useState;
+    useEffect = React.useEffect;
 
     const textCache = new Map();
 
@@ -101,23 +109,38 @@ describe('ReactExpiration', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
+  function flushNextRenderIfExpired() {
+    // This will start rendering the next level of work. If the work hasn't
+    // expired yet, React will exit without doing anything. If it has expired,
+    // it will schedule a sync task.
+    Scheduler.unstable_flushExpired();
+    // Flush the sync task.
+    ReactNoop.flushSync();
+  }
+
   it('increases priority of updates as time progresses', () => {
-    ReactNoop.render(<span prop="done" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<span prop="done" />);
+      });
+    } else {
+      ReactNoop.render(<span prop="done" />);
+    }
 
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Nothing has expired yet because time hasn't advanced.
-    ReactNoop.flushExpired();
+    flushNextRenderIfExpired();
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance time a bit, but not enough to expire the low pri update.
     ReactNoop.expire(4500);
-    ReactNoop.flushExpired();
+    flushNextRenderIfExpired();
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance by another second. Now the update should expire and flush.
-    ReactNoop.expire(1000);
-    ReactNoop.flushExpired();
+    ReactNoop.expire(500);
+    flushNextRenderIfExpired();
     expect(ReactNoop.getChildren()).toEqual([span('done')]);
   });
 
@@ -143,7 +166,13 @@ describe('ReactExpiration', () => {
 
     // First, show what happens for updates in two separate events.
     // Schedule an update.
-    ReactNoop.render(<TextClass text="A" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<TextClass text="A" />);
+      });
+    } else {
+      ReactNoop.render(<TextClass text="A" />);
+    }
     // Advance the timer.
     Scheduler.unstable_advanceTime(2000);
     // Partially flush the first update, then interrupt it.
@@ -198,7 +227,13 @@ describe('ReactExpiration', () => {
 
       // First, show what happens for updates in two separate events.
       // Schedule an update.
-      ReactNoop.render(<TextClass text="A" />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          ReactNoop.render(<TextClass text="A" />);
+        });
+      } else {
+        ReactNoop.render(<TextClass text="A" />);
+      }
       // Advance the timer.
       Scheduler.unstable_advanceTime(2000);
       // Partially flush the first update, then interrupt it.
@@ -270,7 +305,13 @@ describe('ReactExpiration', () => {
     }
 
     // Initial mount
-    ReactNoop.render(<App />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render(<App />);
+      });
+    } else {
+      ReactNoop.render(<App />);
+    }
     expect(Scheduler).toFlushAndYield([
       'initial [A] [render]',
       'initial [B] [render]',
@@ -283,7 +324,13 @@ describe('ReactExpiration', () => {
     ]);
 
     // Partial update
-    subscribers.forEach(s => s.setState({text: '1'}));
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        subscribers.forEach(s => s.setState({text: '1'}));
+      });
+    } else {
+      subscribers.forEach(s => s.setState({text: '1'}));
+    }
     expect(Scheduler).toFlushAndYieldThrough([
       '1 [A] [render]',
       '1 [B] [render]',
@@ -313,7 +360,13 @@ describe('ReactExpiration', () => {
       );
     }
 
-    root.render(<App />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.render(<App />);
+      });
+    } else {
+      root.render(<App />);
+    }
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
     expect(Scheduler).toFlushAndYieldThrough(['B']);
@@ -321,7 +374,8 @@ describe('ReactExpiration', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    expect(Scheduler).toFlushExpired(['D', 'E']);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded(['D', 'E']);
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
@@ -340,8 +394,13 @@ describe('ReactExpiration', () => {
         </>
       );
     }
-
-    root.render(<App />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.render(<App />);
+      });
+    } else {
+      root.render(<App />);
+    }
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
     expect(Scheduler).toFlushAndYieldThrough(['B']);
@@ -349,7 +408,8 @@ describe('ReactExpiration', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    expect(Scheduler).toFlushExpired(['D', 'E']);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded(['D', 'E']);
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
@@ -368,15 +428,24 @@ describe('ReactExpiration', () => {
     // current time.
     ReactNoop = require('react-noop-renderer');
 
-    ReactNoop.render('Hi');
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render('Hi');
+      });
+    } else {
+      ReactNoop.render('Hi');
+    }
 
     // The update should not have expired yet.
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
+
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advance the time some more to expire the update.
     Scheduler.unstable_advanceTime(10000);
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
@@ -388,36 +457,40 @@ describe('ReactExpiration', () => {
     // Before scheduling an update, advance the current time.
     Scheduler.unstable_advanceTime(10000);
 
-    ReactNoop.render('Hi');
-    expect(Scheduler).toFlushExpired([]);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        ReactNoop.render('Hi');
+      });
+    } else {
+      ReactNoop.render('Hi');
+    }
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advancing by ~5 seconds should be sufficient to expire the update. (I
     // used a slightly larger number to allow for possible rounding.)
     Scheduler.unstable_advanceTime(6000);
-
-    ReactNoop.render('Hi');
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
-  it('prevents starvation by high priority updates', async () => {
-    const {useState} = React;
-
-    let updateHighPri;
+  it('prevents starvation by sync updates by disabling time slicing if too much time has elapsed', async () => {
+    let updateSyncPri;
     let updateNormalPri;
     function App() {
       const [highPri, setHighPri] = useState(0);
       const [normalPri, setNormalPri] = useState(0);
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
+      updateSyncPri = () => {
+        ReactNoop.flushSync(() => {
+          setHighPri(n => n + 1);
+        });
+      };
       updateNormalPri = () => setNormalPri(n => n + 1);
       return (
         <>
-          <Text text={'High pri: ' + highPri} />
+          <Text text={'Sync pri: ' + highPri} />
           {', '}
           <Text text={'Normal pri: ' + normalPri} />
         </>
@@ -425,32 +498,46 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['High pri: 0', 'Normal pri: 0']);
-    expect(root).toMatchRenderedOutput('High pri: 0, Normal pri: 0');
+    expect(Scheduler).toHaveYielded(['Sync pri: 0', 'Normal pri: 0']);
+    expect(root).toMatchRenderedOutput('Sync pri: 0, Normal pri: 0');
 
     // First demonstrate what happens when there's no starvation
-    await ReactNoop.act(async () => {
-      updateNormalPri();
-      expect(Scheduler).toFlushAndYieldThrough(['High pri: 0']);
-      updateHighPri();
+    await act(async () => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          updateNormalPri();
+        });
+      } else {
+        updateNormalPri();
+      }
+      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 0']);
+      updateSyncPri();
+      expect(Scheduler).toHaveYielded(['Sync pri: 1', 'Normal pri: 0']);
+
+      // The remaining work hasn't expired, so the render phase is time sliced.
+      // In other words, we can flush just the first child without flushing
+      // the rest.
+      Scheduler.unstable_flushNumberOfYields(1);
+      // Yield right after first child.
+      expect(Scheduler).toHaveYielded(['Sync pri: 1']);
+      // Now do the rest.
+      expect(Scheduler).toFlushAndYield(['Normal pri: 1']);
     });
-    expect(Scheduler).toHaveYielded([
-      // Interrupt high pri update to render sync update
-      'High pri: 1',
-      'Normal pri: 0',
-      // Now render normal pri
-      'High pri: 1',
-      'Normal pri: 1',
-    ]);
-    expect(root).toMatchRenderedOutput('High pri: 1, Normal pri: 1');
+    expect(root).toMatchRenderedOutput('Sync pri: 1, Normal pri: 1');
 
     // Do the same thing, but starve the first update
-    await ReactNoop.act(async () => {
-      updateNormalPri();
-      expect(Scheduler).toFlushAndYieldThrough(['High pri: 1']);
+    await act(async () => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          updateNormalPri();
+        });
+      } else {
+        updateNormalPri();
+      }
+      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 1']);
 
       // This time, a lot of time has elapsed since the normal pri update
       // started rendering. (This should advance time by some number that's
@@ -458,92 +545,18 @@ describe('ReactExpiration', () => {
       // starvation of normal priority updates.)
       Scheduler.unstable_advanceTime(10000);
 
-      // So when we get a high pri update, we shouldn't interrupt
-      updateHighPri();
-    });
-    expect(Scheduler).toHaveYielded([
-      // Finish normal pri update
-      'Normal pri: 2',
-      // Then do high pri update
-      'High pri: 2',
-      'Normal pri: 2',
-    ]);
-    expect(root).toMatchRenderedOutput('High pri: 2, Normal pri: 2');
-  });
-
-  it('prevents starvation by sync updates', async () => {
-    const {useState} = React;
-
-    let updateSyncPri;
-    let updateHighPri;
-    function App() {
-      const [syncPri, setSyncPri] = useState(0);
-      const [highPri, setHighPri] = useState(0);
-      updateSyncPri = () => ReactNoop.flushSync(() => setSyncPri(n => n + 1));
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
-      return (
-        <>
-          <Text text={'Sync pri: ' + syncPri} />
-          {', '}
-          <Text text={'High pri: ' + highPri} />
-        </>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
-      root.render(<App />);
-    });
-    expect(Scheduler).toHaveYielded(['Sync pri: 0', 'High pri: 0']);
-    expect(root).toMatchRenderedOutput('Sync pri: 0, High pri: 0');
-
-    // First demonstrate what happens when there's no starvation
-    await ReactNoop.act(async () => {
-      updateHighPri();
-      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 0']);
       updateSyncPri();
+      expect(Scheduler).toHaveYielded(['Sync pri: 2', 'Normal pri: 1']);
+
+      // The remaining work _has_ expired, so the render phase is _not_ time
+      // sliced. Attempting to flush just the first child also flushes the rest.
+      Scheduler.unstable_flushNumberOfYields(1);
+      expect(Scheduler).toHaveYielded(['Sync pri: 2', 'Normal pri: 2']);
     });
-    expect(Scheduler).toHaveYielded([
-      // Interrupt high pri update to render sync update
-      'Sync pri: 1',
-      'High pri: 0',
-      // Now render high pri
-      'Sync pri: 1',
-      'High pri: 1',
-    ]);
-    expect(root).toMatchRenderedOutput('Sync pri: 1, High pri: 1');
-
-    // Do the same thing, but starve the first update
-    await ReactNoop.act(async () => {
-      updateHighPri();
-      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 1']);
-
-      // This time, a lot of time has elapsed since the high pri update started
-      // rendering. (This should advance time by some number that's definitely
-      // bigger than the constant heuristic we use to detect starvation of user
-      // interactions, but not as high as the onse used for normal pri updates.)
-      Scheduler.unstable_advanceTime(1500);
-
-      // So when we get a sync update, we shouldn't interrupt
-      updateSyncPri();
-    });
-    expect(Scheduler).toHaveYielded([
-      // Finish high pri update
-      'High pri: 2',
-      // Then do sync update
-      'Sync pri: 2',
-      'High pri: 2',
-    ]);
-    expect(root).toMatchRenderedOutput('Sync pri: 2, High pri: 2');
+    expect(root).toMatchRenderedOutput('Sync pri: 2, Normal pri: 2');
   });
 
   it('idle work never expires', async () => {
-    const {useState} = React;
-
     let updateSyncPri;
     let updateIdlePri;
     function App() {
@@ -551,10 +564,9 @@ describe('ReactExpiration', () => {
       const [highPri, setIdlePri] = useState(0);
       updateSyncPri = () => ReactNoop.flushSync(() => setSyncPri(n => n + 1));
       updateIdlePri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_IdlePriority,
-          () => setIdlePri(n => n + 1),
-        );
+        ReactNoop.idleUpdates(() => {
+          setIdlePri(n => n + 1);
+        });
       return (
         <>
           <Text text={'Sync pri: ' + syncPri} />
@@ -565,14 +577,14 @@ describe('ReactExpiration', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Sync pri: 0', 'Idle pri: 0']);
     expect(root).toMatchRenderedOutput('Sync pri: 0, Idle pri: 0');
 
     // First demonstrate what happens when there's no starvation
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateIdlePri();
       expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 0']);
       updateSyncPri();
@@ -588,7 +600,7 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('Sync pri: 1, Idle pri: 1');
 
     // Do the same thing, but starve the first update
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateIdlePri();
       expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 1']);
 
@@ -610,195 +622,186 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('Sync pri: 2, Idle pri: 2');
   });
 
-  it('a single update can expire without forcing all other updates to expire', async () => {
-    const {useState} = React;
-
-    let updateHighPri;
-    let updateNormalPri;
+  it('when multiple lanes expire, we can finish the in-progress one without including the others', async () => {
+    let setA;
+    let setB;
     function App() {
-      const [highPri, setHighPri] = useState(0);
-      const [normalPri, setNormalPri] = useState(0);
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
-      updateNormalPri = () => setNormalPri(n => n + 1);
+      const [a, _setA] = useState(0);
+      const [b, _setB] = useState(0);
+      setA = _setA;
+      setB = _setB;
       return (
         <>
-          <Text text={'High pri: ' + highPri} />
-          {', '}
-          <Text text={'Normal pri: ' + normalPri} />
-          {', '}
-          <Text text="Sibling" />
+          <Text text={'A' + a} />
+          <Text text={'B' + b} />
+          <Text text="C" />
         </>
       );
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded([
-      'High pri: 0',
-      'Normal pri: 0',
-      'Sibling',
-    ]);
-    expect(root).toMatchRenderedOutput('High pri: 0, Normal pri: 0, Sibling');
+    expect(Scheduler).toHaveYielded(['A0', 'B0', 'C']);
+    expect(root).toMatchRenderedOutput('A0B0C');
 
-    await ReactNoop.act(async () => {
-      // Partially render an update
-      updateNormalPri();
-      expect(Scheduler).toFlushAndYieldThrough(['High pri: 0']);
-      // Some time goes by. In an interleaved event, schedule another update.
-      // This will be placed into a separate batch.
-      Scheduler.unstable_advanceTime(4000);
-      updateNormalPri();
-      // Keep rendering the first update
-      expect(Scheduler).toFlushAndYieldThrough(['Normal pri: 1']);
-      // More time goes by. Enough to expire the first batch, but not the
-      // second one.
-      Scheduler.unstable_advanceTime(1000);
-      // Attempt to interrupt with a high pri update.
-      updateHighPri();
-
-      // The first update expired, so first will finish it without interrupting.
-      // But not the second update, which hasn't expired yet.
-      expect(Scheduler).toFlushExpired(['Sibling']);
-    });
-    expect(Scheduler).toHaveYielded([
-      // Then render the high pri update
-      'High pri: 1',
-      'Normal pri: 1',
-      'Sibling',
-      // Then the second normal pri update
-      'High pri: 1',
-      'Normal pri: 2',
-      'Sibling',
-    ]);
-  });
-
-  it('detects starvation in multiple batches', async () => {
-    const {useState} = React;
-
-    let updateHighPri;
-    let updateNormalPri;
-    function App() {
-      const [highPri, setHighPri] = useState(0);
-      const [normalPri, setNormalPri] = useState(0);
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
-      updateNormalPri = () => setNormalPri(n => n + 1);
-      return (
-        <>
-          <Text text={'High pri: ' + highPri} />
-          {', '}
-          <Text text={'Normal pri: ' + normalPri} />
-          {', '}
-          <Text text="Sibling" />
-        </>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
-      root.render(<App />);
-    });
-    expect(Scheduler).toHaveYielded([
-      'High pri: 0',
-      'Normal pri: 0',
-      'Sibling',
-    ]);
-    expect(root).toMatchRenderedOutput('High pri: 0, Normal pri: 0, Sibling');
-
-    await ReactNoop.act(async () => {
-      // Partially render an update
-      updateNormalPri();
-      expect(Scheduler).toFlushAndYieldThrough(['High pri: 0']);
-      // Some time goes by. In an interleaved event, schedule another update.
-      // This will be placed into a separate batch.
-      Scheduler.unstable_advanceTime(4000);
-      updateNormalPri();
-      // Keep rendering the first update
-      expect(Scheduler).toFlushAndYieldThrough(['Normal pri: 1']);
-      // More time goes by. This expires both of the updates just scheduled.
+    await act(async () => {
+      startTransition(() => {
+        setA(1);
+      });
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+      startTransition(() => {
+        setB(1);
+      });
+      // Expire both the transitions
       Scheduler.unstable_advanceTime(10000);
+      // Both transitions have expired, but since they aren't related
+      // (entangled), we should be able to finish the in-progress transition
+      // without also including the next one.
+      Scheduler.unstable_flushNumberOfYields(1);
+      expect(Scheduler).toHaveYielded(['B0', 'C']);
+      expect(root).toMatchRenderedOutput('A1B0C');
 
-      // Attempt to interrupt with a high pri update.
-      updateHighPri();
-
-      // Both normal pri updates should have expired.
-      expect(Scheduler).toFlushExpired([
-        'Sibling',
-        // Note: we also flushed the high pri update here, because in the
-        // current implementation, once we pick the next lanes to work on, we
-        // entangle it with all pending at equal or higher priority. We could
-        // feasibly change this heuristic so that the high pri update doesn't
-        // render until after the expired updates have finished. But the
-        // important thing in this test is that the normal updates expired.
-        'High pri: 1',
-        'Normal pri: 2',
-        'Sibling',
-      ]);
+      // The next transition also finishes without yielding.
+      Scheduler.unstable_flushNumberOfYields(1);
+      expect(Scheduler).toHaveYielded(['A1', 'B1', 'C']);
+      expect(root).toMatchRenderedOutput('A1B1C');
     });
   });
 
   it('updates do not expire while they are IO-bound', async () => {
     const {Suspense} = React;
 
-    function App({text}) {
+    function App({step}) {
       return (
         <Suspense fallback={<Text text="Loading..." />}>
-          <AsyncText text={text} />
-          {', '}
-          <Text text="Sibling" />
+          <AsyncText text={'A' + step} />
+          <Text text="B" />
+          <Text text="C" />
         </Suspense>
       );
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
-      await resolveText('A');
-      root.render(<App text="A" />);
+    await act(async () => {
+      await resolveText('A0');
+      root.render(<App step={0} />);
     });
-    expect(Scheduler).toHaveYielded(['A', 'Sibling']);
-    expect(root).toMatchRenderedOutput('A, Sibling');
+    expect(Scheduler).toHaveYielded(['A0', 'B', 'C']);
+    expect(root).toMatchRenderedOutput('A0BC');
 
-    await ReactNoop.act(async () => {
-      root.render(<App text="B" />);
+    await act(async () => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          root.render(<App step={1} />);
+        });
+      } else {
+        root.render(<App step={1} />);
+      }
       expect(Scheduler).toFlushAndYield([
-        'Suspend! [B]',
-        'Sibling',
+        'Suspend! [A1]',
+        'B',
+        'C',
         'Loading...',
       ]);
 
       // Lots of time elapses before the promise resolves
       Scheduler.unstable_advanceTime(10000);
-      await resolveText('B');
-      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+      await resolveText('A1');
+      expect(Scheduler).toHaveYielded(['Promise resolved [A1]']);
 
       // But the update doesn't expire, because it was IO bound. So we can
       // partially rendering without finishing.
-      expect(Scheduler).toFlushAndYieldThrough(['B']);
-      expect(root).toMatchRenderedOutput('A, Sibling');
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+      expect(root).toMatchRenderedOutput('A0BC');
 
       // Lots more time elapses. We're CPU-bound now, so we should treat this
       // as starvation.
       Scheduler.unstable_advanceTime(10000);
 
-      // Attempt to interrupt with a sync update.
-      ReactNoop.flushSync(() => root.render(<App text="A" />));
-      expect(Scheduler).toHaveYielded([
-        // Because the previous update had already expired, we don't interrupt
-        // it. Finish rendering it first.
-        'Sibling',
-        // Then do the sync update.
-        'A',
-        'Sibling',
-      ]);
+      // The rest of the update finishes without yielding.
+      Scheduler.unstable_flushNumberOfYields(1);
+      expect(Scheduler).toHaveYielded(['B', 'C']);
     });
+  });
+
+  it('flushSync should not affect expired work', async () => {
+    let setA;
+    let setB;
+    function App() {
+      const [a, _setA] = useState(0);
+      const [b, _setB] = useState(0);
+      setA = _setA;
+      setB = _setB;
+      return (
+        <>
+          <Text text={'A' + a} />
+          <Text text={'B' + b} />
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['A0', 'B0']);
+
+    await act(async () => {
+      startTransition(() => {
+        setA(1);
+      });
+      expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+      // Expire the in-progress update
+      Scheduler.unstable_advanceTime(10000);
+
+      ReactNoop.flushSync(() => {
+        setB(1);
+      });
+      expect(Scheduler).toHaveYielded(['A0', 'B1']);
+
+      // Now flush the original update. Because it expired, it should finish
+      // without yielding.
+      Scheduler.unstable_flushNumberOfYields(1);
+      expect(Scheduler).toHaveYielded(['A1', 'B1']);
+    });
+  });
+
+  it('passive effects of expired update flush after paint', async () => {
+    function App({step}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Effect: ' + step);
+      }, [step]);
+      return (
+        <>
+          <Text text={'A' + step} />
+          <Text text={'B' + step} />
+          <Text text={'C' + step} />
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App step={0} />);
+    });
+    expect(Scheduler).toHaveYielded(['A0', 'B0', 'C0', 'Effect: 0']);
+    expect(root).toMatchRenderedOutput('A0B0C0');
+
+    await act(async () => {
+      startTransition(() => {
+        root.render(<App step={1} />);
+      });
+      // Expire the update
+      Scheduler.unstable_advanceTime(10000);
+
+      // The update finishes without yielding. But it does not flush the effect.
+      Scheduler.unstable_flushNumberOfYields(1);
+      expect(Scheduler).toHaveYielded(['A1', 'B1', 'C1']);
+    });
+    // The effect flushes after paint.
+    expect(Scheduler).toHaveYielded(['Effect: 1']);
   });
 });

@@ -24,7 +24,7 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^17.0.0-alpha"
+    "react": "^17.0.0"
   },
   "dependencies": {
     "loose-envify": "^1.1.0",

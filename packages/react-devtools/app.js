@@ -9,6 +9,7 @@
 
 const {app, BrowserWindow} = require('electron'); // Module to create native browser window.
 const {join} = require('path');
+const os = require('os');
 
 const argv = require('minimist')(process.argv.slice(2));
 const projectRoots = argv._;
@@ -29,7 +30,19 @@ app.on('ready', function() {
     //titleBarStyle: 'customButtonsOnHover',
     webPreferences: {
       nodeIntegration: true,
+      nodeIntegrationInWorker: true,
     },
+  });
+
+  // set dock icon for macos
+  if (os.platform() === 'darwin') {
+    app.dock.setIcon(join(__dirname, 'icons/icon128.png'));
+  }
+
+  // https://stackoverflow.com/questions/32402327/
+  mainWindow.webContents.on('new-window', function(event, url) {
+    event.preventDefault();
+    require('electron').shell.openExternal(url);
   });
 
   // and load the index.html of the app.

@@ -123,16 +123,12 @@ describe('ReactMount', () => {
     expect(instance1 === instance2).toBe(true);
   });
 
-  it('should warn if mounting into left padded rendered markup', () => {
+  it('does not warn if mounting into left padded rendered markup', () => {
     const container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
-    expect(() =>
-      ReactDOM.hydrate(<div />, container),
-    ).toErrorDev(
-      'Did not expect server HTML to contain the text node " " in <container>.',
-      {withoutStack: true},
-    );
+    // This should probably ideally warn but we ignore extra markup at the root.
+    ReactDOM.hydrate(<div />, container);
   });
 
   it('should warn if mounting into right padded rendered markup', () => {
@@ -281,7 +277,7 @@ describe('ReactMount', () => {
     expect(calls).toBe(5);
   });
 
-  it('initial mount is sync inside batchedUpdates, but task work is deferred until the end of the batch', () => {
+  it('initial mount of legacy root is sync inside batchedUpdates, as if it were wrapped in flushSync', () => {
     const container1 = document.createElement('div');
     const container2 = document.createElement('div');
 
@@ -306,12 +302,12 @@ describe('ReactMount', () => {
 
       // Initial mount on another root. Should flush immediately.
       ReactDOM.render(<Foo>a</Foo>, container2);
-      // The update did not flush yet.
-      expect(container1.textContent).toEqual('1');
-      // The initial mount flushed, but not the update scheduled in cDM.
-      expect(container2.textContent).toEqual('a');
+      // The earlier update also flushed, since flushSync flushes all pending
+      // sync work across all roots.
+      expect(container1.textContent).toEqual('2');
+      // Layout updates are also flushed synchronously
+      expect(container2.textContent).toEqual('a!');
     });
-    // All updates have flushed.
     expect(container1.textContent).toEqual('2');
     expect(container2.textContent).toEqual('a!');
   });

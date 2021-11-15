@@ -7,7 +7,9 @@
 
 import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
-import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
+
+export {act} from './internalAct';
 
 function captureAssertion(fn) {
   // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an
@@ -28,11 +30,12 @@ function captureAssertion(fn) {
 function assertYieldsWereCleared(root) {
   const Scheduler = root._Scheduler;
   const actualYields = Scheduler.unstable_clearYields();
-  invariant(
-    actualYields.length === 0,
-    'Log of yielded values is not empty. ' +
-      'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.',
-  );
+  if (actualYields.length !== 0) {
+    throw new Error(
+      'Log of yielded values is not empty. ' +
+        'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.',
+    );
+  }
 }
 
 export function unstable_toMatchRenderedOutput(root, expectedJSX) {
@@ -42,7 +45,7 @@ export function unstable_toMatchRenderedOutput(root, expectedJSX) {
   let actualJSX;
   if (actualJSON === null || typeof actualJSON === 'string') {
     actualJSX = actualJSON;
-  } else if (Array.isArray(actualJSON)) {
+  } else if (isArray(actualJSON)) {
     if (actualJSON.length === 0) {
       actualJSX = null;
     } else if (actualJSON.length === 1) {

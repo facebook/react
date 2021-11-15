@@ -1,10 +1,14 @@
 /* eslint-disable */
 
+const AbortController = require('abort-controller');
+
 const NODE_ENV = process.env.NODE_ENV;
 if (NODE_ENV !== 'development' && NODE_ENV !== 'production') {
   throw new Error('NODE_ENV must either be set to development or production.');
 }
 global.__DEV__ = NODE_ENV === 'development';
+global.__EXTENSION__ = false;
+global.__TEST__ = NODE_ENV === 'test';
 global.__PROFILE__ = NODE_ENV === 'development';
 global.__UMD__ = false;
 
@@ -18,6 +22,8 @@ global.__EXPERIMENTAL__ =
     : true;
 
 global.__VARIANT__ = !!process.env.VARIANT;
+
+global.AbortController = AbortController;
 
 if (typeof window !== 'undefined') {
   global.requestIdleCallback = function(callback) {

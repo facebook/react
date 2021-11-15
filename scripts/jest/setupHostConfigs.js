@@ -1,9 +1,57 @@
 'use strict';
 
+const fs = require('fs');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
+function resolveEntryFork(resolvedEntry, isFBBundle) {
+  // Pick which entry point fork to use:
+  // .modern.fb.js
+  // .classic.fb.js
+  // .fb.js
+  // .stable.js
+  // .experimental.js
+  // .js
+
+  if (isFBBundle) {
+    if (__EXPERIMENTAL__) {
+      // We can't currently use the true modern entry point because too many tests fail.
+      // TODO: Fix tests to not use ReactDOM.render or gate them. Then we can remove this.
+      return resolvedEntry;
+    }
+    const resolvedFBEntry = resolvedEntry.replace(
+      '.js',
+      __EXPERIMENTAL__ ? '.modern.fb.js' : '.classic.fb.js'
+    );
+    if (fs.existsSync(resolvedFBEntry)) {
+      return resolvedFBEntry;
+    }
+    const resolvedGenericFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    if (fs.existsSync(resolvedGenericFBEntry)) {
+      return resolvedGenericFBEntry;
+    }
+    // Even if it's a FB bundle we fallthrough to pick stable or experimental if we don't have an FB fork.
+  }
+  const resolvedForkedEntry = resolvedEntry.replace(
+    '.js',
+    __EXPERIMENTAL__ ? '.experimental.js' : '.stable.js'
+  );
+  if (fs.existsSync(resolvedForkedEntry)) {
+    return resolvedForkedEntry;
+  }
+  // Just use the plain .js one.
+  return resolvedEntry;
+}
+
+jest.mock('react', () => {
+  const resolvedEntryPoint = resolveEntryFork(
+    require.resolve('react'),
+    global.__WWW__
+  );
+  return jest.requireActual(resolvedEntryPoint);
+});
+
 jest.mock('react-reconciler/src/ReactFiberReconciler', () => {
-  return require.requireActual(
+  return jest.requireActual(
     __VARIANT__
       ? 'react-reconciler/src/ReactFiberReconciler.new'
       : 'react-reconciler/src/ReactFiberReconciler.old'
@@ -16,7 +64,7 @@ const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';
 jest.mock('react-reconciler', () => {
   return config => {
     jest.mock(shimHostConfigPath, () => config);
-    return require.requireActual('react-reconciler');
+    return jest.requireActual('react-reconciler');
   };
 });
 const shimServerStreamConfigPath = 'react-server/src/ReactServerStreamConfig';
@@ -26,7 +74,7 @@ jest.mock('react-server', () => {
   return config => {
     jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
-    return require.requireActual('react-server');
+    return jest.requireActual('react-server');
   };
 });
 jest.mock('react-server/flight', () => {
@@ -34,14 +82,16 @@ jest.mock('react-server/flight', () => {
     jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
     jest.mock('react-server/src/ReactFlightServerBundlerConfigCustom', () => ({
+      isModuleReference: config.isModuleReference,
+      getModuleKey: config.getModuleKey,
       resolveModuleMetaData: config.resolveModuleMetaData,
     }));
     jest.mock(shimFlightServerConfigPath, () =>
-      require.requireActual(
+      jest.requireActual(
         'react-server/src/forks/ReactFlightServerConfig.custom'
       )
     );
-    return require.requireActual('react-server/flight');
+    return jest.requireActual('react-server/flight');
   };
 });
 const shimFlightClientHostConfigPath =
@@ -49,7 +99,7 @@ const shimFlightClientHostConfigPath =
 jest.mock('react-client/flight', () => {
   return config => {
     jest.mock(shimFlightClientHostConfigPath, () => config);
-    return require.requireActual('react-client/flight');
+    return jest.requireActual('react-client/flight');
   };
 });
 
@@ -67,7 +117,7 @@ function mockAllConfigs(rendererInfo) {
     jest.mock(path, () => {
       let idx = path.lastIndexOf('/');
       let forkPath = path.substr(0, idx) + '/forks' + path.substr(idx);
-      return require.requireActual(`${forkPath}.${rendererInfo.shortName}.js`);
+      return jest.requireActual(`${forkPath}.${rendererInfo.shortName}.js`);
     });
   });
 }
@@ -83,7 +133,11 @@ inlinedHostConfigs.forEach(rendererInfo => {
   rendererInfo.entryPoints.forEach(entryPoint => {
     jest.mock(entryPoint, () => {
       mockAllConfigs(rendererInfo);
-      return require.requireActual(entryPoint);
+      const resolvedEntryPoint = resolveEntryFork(
+        require.resolve(entryPoint),
+        global.__WWW__
+      );
+      return jest.requireActual(resolvedEntryPoint);
     });
   });
 });
@@ -91,10 +145,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
 // Make it possible to import this module inside
 // the React package itself.
 jest.mock('shared/ReactSharedInternals', () =>
-  require.requireActual('react/src/ReactSharedInternals')
+  jest.requireActual('react/src/ReactSharedInternals')
 );
 
-jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));
-jest.mock('scheduler/src/SchedulerHostConfig', () =>
-  require.requireActual('scheduler/src/forks/SchedulerHostConfig.mock.js')
-);
+jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));

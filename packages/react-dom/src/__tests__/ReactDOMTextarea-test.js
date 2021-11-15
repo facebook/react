@@ -142,7 +142,7 @@ describe('ReactDOMTextarea', () => {
             return value;
           },
           set: function(val) {
-            value = '' + val;
+            value = String(val);
             counter++;
           },
         });
@@ -217,6 +217,36 @@ describe('ReactDOMTextarea', () => {
       container,
     );
     expect(node.value).toEqual('foo');
+  });
+
+  it('should throw when value is set to a Temporal-like object', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+    const container = document.createElement('div');
+    const stub = <textarea value="giraffe" onChange={emptyFunction} />;
+    const node = renderTextarea(stub, container);
+
+    expect(node.value).toBe('giraffe');
+
+    const test = () =>
+      ReactDOM.render(
+        <textarea value={new TemporalLike()} onChange={emptyFunction} />,
+        container,
+      );
+    expect(() =>
+      expect(test).toThrowError(new TypeError('prod message')),
+    ).toErrorDev(
+      'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
+        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+    );
   });
 
   it('should take updates to `defaultValue` for uncontrolled textarea', () => {
@@ -525,7 +555,7 @@ describe('ReactDOMTextarea', () => {
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled textarea ' +
         'and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components',
+        'https://reactjs.org/link/controlled-components',
     );
 
     // No additional warnings are expected

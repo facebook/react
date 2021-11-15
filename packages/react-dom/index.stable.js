@@ -8,17 +8,16 @@
  */
 
 export {
-  createPortal,
-  unstable_batchedUpdates,
-  flushSync,
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  version,
+  createPortal,
+  createRoot,
+  hydrateRoot,
   findDOMNode,
+  flushSync,
   hydrate,
   render,
   unmountComponentAtNode,
+  unstable_batchedUpdates,
   unstable_renderSubtreeIntoContainer,
-  // Temporary alias since we already shipped React 16 RC with it.
-  // TODO: remove in React 18.
-  unstable_createPortal,
+  version,
 } from './src/client/ReactDOM';

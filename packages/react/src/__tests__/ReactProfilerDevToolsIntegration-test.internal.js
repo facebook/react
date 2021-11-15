@@ -15,7 +15,6 @@ describe('ReactProfiler DevTools integration', () => {
   let ReactFeatureFlags;
   let ReactTestRenderer;
   let Scheduler;
-  let SchedulerTracing;
   let AdvanceTime;
   let hook;
 
@@ -31,9 +30,7 @@ describe('ReactProfiler DevTools integration', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
-    ReactFeatureFlags.enableSchedulerTracing = true;
     Scheduler = require('scheduler');
-    SchedulerTracing = require('scheduler/tracing');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
 
@@ -76,15 +73,7 @@ describe('ReactProfiler DevTools integration', () => {
     // The time spent in App (above the Profiler) won't be included in the durations,
     // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
-    expect(onRender).toHaveBeenCalledWith(
-      'Profiler',
-      'mount',
-      10,
-      10,
-      2,
-      12,
-      new Set(),
-    );
+    expect(onRender).toHaveBeenCalledWith('Profiler', 'mount', 10, 10, 2, 12);
     onRender.mockClear();
 
     // Measure unobservable timing required by the DevTools profiler.
@@ -101,15 +90,7 @@ describe('ReactProfiler DevTools integration', () => {
     // The time spent in App (above the Profiler) won't be included in the durations,
     // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
-    expect(onRender).toHaveBeenCalledWith(
-      'Profiler',
-      'update',
-      6,
-      13,
-      14,
-      20,
-      new Set(),
-    );
+    expect(onRender).toHaveBeenCalledWith('Profiler', 'update', 6, 13, 14, 20);
 
     // Measure unobservable timing required by the DevTools profiler.
     // At this point, the base time should include both:
@@ -157,27 +138,6 @@ describe('ReactProfiler DevTools integration', () => {
     ).toBe(7);
   });
 
-  it('should store traced interactions on the HostNode so DevTools can access them', () => {
-    // Render without an interaction
-    const rendered = ReactTestRenderer.create(<div />);
-
-    const root = rendered.root._currentFiber().return;
-    expect(root.stateNode.memoizedInteractions).toContainNoInteractions();
-
-    Scheduler.unstable_advanceTime(10);
-
-    const eventTime = Scheduler.unstable_now();
-
-    // Render with an interaction
-    SchedulerTracing.unstable_trace('some event', eventTime, () => {
-      rendered.update(<div />);
-    });
-
-    expect(root.stateNode.memoizedInteractions).toMatchInteractions([
-      {name: 'some event', timestamp: eventTime},
-    ]);
-  });
-
   it('regression test: #17159', () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -195,10 +155,16 @@ describe('ReactProfiler DevTools integration', () => {
     // for updates.
     Scheduler.unstable_advanceTime(10000);
     // Schedule an update.
-    root.update(<Text text="B" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.startTransition(() => {
+        root.update(<Text text="B" />);
+      });
+    } else {
+      root.update(<Text text="B" />);
+    }
 
     // Update B should not instantly expire.
-    expect(Scheduler).toFlushExpired([]);
+    expect(Scheduler).toFlushAndYieldThrough([]);
 
     expect(Scheduler).toFlushAndYield(['B']);
     expect(root).toMatchRenderedOutput('B');

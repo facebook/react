@@ -7,17 +7,15 @@
 
 import assign from 'object-assign';
 import * as Scheduler from 'scheduler';
-import * as SchedulerTracing from 'scheduler/tracing';
 import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
+import ReactCurrentActQueue from '../ReactCurrentActQueue';
 import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
-import IsSomeRendererActing from '../IsSomeRendererActing';
 import ReactCurrentBatchConfig from '../ReactCurrentBatchConfig';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  IsSomeRendererActing,
   ReactCurrentBatchConfig,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
@@ -28,10 +26,10 @@ const ReactSharedInternals = {
   // This re-export is only required for UMD bundles;
   // CJS bundles use the shared NPM package.
   Scheduler,
-  SchedulerTracing,
 };
 
 if (__DEV__) {
+  ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
   ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
 }
 

@@ -110,6 +110,10 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ) => void,
     ...
   };
+  declare export var legacySendAccessibilityEvent: (
+    reactTag: number,
+    eventTypeName: string,
+  ) => void;
   declare export var BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
     ...
@@ -156,6 +160,7 @@ declare var nativeFabricUIManager: {
   ) => void,
 
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
+  sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 
   measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
   measureInWindow: (
@@ -174,6 +179,14 @@ declare var nativeFabricUIManager: {
     locationY: number,
     callback: (Fiber) => void,
   ) => void,
+  setIsJSResponder: (
+    node: Node,
+    isJsResponder: boolean,
+    blockNativeResponder: boolean,
+  ) => void,
+  unstable_DefaultEventPriority: number,
+  unstable_DiscreteEventPriority: number,
+  unstable_getCurrentEventPriority: () => number,
   ...
 };
 

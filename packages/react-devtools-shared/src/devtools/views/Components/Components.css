@@ -19,7 +19,7 @@
   overflow: auto;
 }
 
-.SelectedElementWrapper {
+.InspectedElementWrapper {
   flex: 1 1 35%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -47,7 +47,7 @@
     flex: 0 0 var(--vertical-resize-percentage);
   }
 
-  .SelectedElementWrapper {
+  .InspectedElementWrapper {
     flex: 1 1 50%;
   }
 
@@ -68,4 +68,5 @@
   justify-content: center;
   font-size: var(--font-size-sans-large);
   color: var(--color-dim);
+  border-left: 1px solid var(--color-border);
 }

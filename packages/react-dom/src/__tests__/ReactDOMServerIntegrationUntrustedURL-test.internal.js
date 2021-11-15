@@ -242,6 +242,11 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
       // consistency but the code structure makes that hard right now.
       expectedToStringCalls = 2;
     }
+    if (__DEV__) {
+      // Checking for string coercion problems results in double the
+      // toString calls in DEV
+      expectedToStringCalls *= 2;
+    }
 
     let toStringCalls = 0;
     const firstIsSafe = {
@@ -250,7 +255,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
         // the first times it is called and then becomes dangerous.
         toStringCalls++;
         if (toStringCalls <= expectedToStringCalls) {
-          return 'https://fb.me/';
+          return 'https://reactjs.org/';
         }
         return 'javascript:notfine';
       },
@@ -258,7 +263,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
 
     const e = await render(<a href={firstIsSafe} />);
     expect(toStringCalls).toBe(expectedToStringCalls);
-    expect(e.href).toBe('https://fb.me/');
+    expect(e.href).toBe('https://reactjs.org/');
   });
 
   it('rejects a javascript protocol href if it is added during an update twice', () => {

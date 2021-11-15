@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {gte} from 'semver';
+import {gt, gte} from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -26,28 +26,41 @@ import {
   ElementTypeSuspenseList,
 } from 'react-devtools-shared/src/types';
 import {
+  deletePathInObject,
   getDisplayName,
   getDefaultComponentFilters,
   getInObject,
   getUID,
+  renamePathInObject,
   setInObject,
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyToClipboard, copyWithSet} from './utils';
+import {
+  cleanForBridge,
+  copyToClipboard,
+  copyWithDelete,
+  copyWithRename,
+  copyWithSet,
+  getEffectDurations,
+} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
+  patchForStrictMode as patchConsoleForStrictMode,
+  unpatchForStrictMode as unpatchConsoleForStrictMode,
 } from './console';
 import {
   CONCURRENT_MODE_NUMBER,
@@ -68,6 +81,11 @@ import {
   MEMO_NUMBER,
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
+import {format} from './utils';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import is from 'shared/objectIs';
+import isArray from 'shared/isArray';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -78,16 +96,15 @@ import type {
   InspectedElementPayload,
   InstanceAndStyle,
   NativeType,
-  Owner,
   PathFrame,
   PathMatch,
   ProfilingDataBackend,
   ProfilingDataForRootBackend,
   ReactRenderer,
   RendererInterface,
+  SerializedElement,
   WorkTagMap,
 } from './types';
-import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {
   ComponentFilter,
   ElementType,
@@ -106,10 +123,18 @@ type ReactPriorityLevelsType = {|
 |};
 
 type ReactTypeOfSideEffectType = {|
-  NoEffect: number,
+  DidCapture: number,
+  NoFlags: number,
   PerformedWork: number,
   Placement: number,
+  Incomplete: number,
+  Hydrating: number,
 |};
+
+function getFiberFlags(fiber: Fiber): number {
+  // The name of this field changed from "effectTag" to "flags"
+  return fiber.flags !== undefined ? fiber.flags : (fiber: any).effectTag;
+}
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
@@ -127,9 +152,12 @@ export function getInternalReactConstants(
   ReactTypeOfWork: WorkTagMap,
 |} {
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
-    NoEffect: 0b00,
+    DidCapture: 0b10000000,
+    NoFlags: 0b00,
     PerformedWork: 0b01,
     Placement: 0b10,
+    Incomplete: 0b10000000000000,
+    Hydrating: 0b1000000000000,
   };
 
   // **********************************************************
@@ -139,7 +167,7 @@ export function getInternalReactConstants(
   // Technically these priority levels are invalid for versions before 16.9,
   // but 16.9 is the first version to report priority level to DevTools,
   // so we can avoid checking for earlier versions and support pre-16.9 canary releases in the process.
-  const ReactPriorityLevels: ReactPriorityLevelsType = {
+  let ReactPriorityLevels: ReactPriorityLevelsType = {
     ImmediatePriority: 99,
     UserBlockingPriority: 98,
     NormalPriority: 97,
@@ -148,15 +176,28 @@ export function getInternalReactConstants(
     NoPriority: 90,
   };
 
+  if (gt(version, '17.0.2')) {
+    ReactPriorityLevels = {
+      ImmediatePriority: 1,
+      UserBlockingPriority: 2,
+      NormalPriority: 3,
+      LowPriority: 4,
+      IdlePriority: 5,
+      NoPriority: 0,
+    };
+  }
+
   let ReactTypeOfWork: WorkTagMap = ((null: any): WorkTagMap);
 
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
-  if (gte(version, '17.0.0-alpha')) {
-    // TODO (Offscreen) Update the version number above to reflect the first Offscreen alpha/beta release.
+  //
+  // TODO Update the gt() check below to be gte() whichever the next version number is.
+  // Currently the version in Git is 17.0.2 (but that version has not been/may not end up being released).
+  if (gt(version, '17.0.1')) {
     ReactTypeOfWork = {
-      Block: 22,
+      CacheComponent: 24, // Experimental
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -173,10 +214,42 @@ export function getInternalReactConstants(
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
       LazyComponent: 16,
+      LegacyHiddenComponent: 23,
+      MemoComponent: 14,
+      Mode: 8,
+      OffscreenComponent: 22, // Experimental
+      Profiler: 12,
+      ScopeComponent: 21, // Experimental
+      SimpleMemoComponent: 15,
+      SuspenseComponent: 13,
+      SuspenseListComponent: 19, // Experimental
+      YieldComponent: -1, // Removed
+    };
+  } else if (gte(version, '17.0.0-alpha')) {
+    ReactTypeOfWork = {
+      CacheComponent: -1, // Doesn't exist yet
+      ClassComponent: 1,
+      ContextConsumer: 9,
+      ContextProvider: 10,
+      CoroutineComponent: -1, // Removed
+      CoroutineHandlerPhase: -1, // Removed
+      DehydratedSuspenseComponent: 18, // Behind a flag
+      ForwardRef: 11,
+      Fragment: 7,
+      FunctionComponent: 0,
+      HostComponent: 5,
+      HostPortal: 4,
+      HostRoot: 3,
+      HostText: 6,
+      IncompleteClassComponent: 17,
+      IndeterminateComponent: 2,
+      LazyComponent: 16,
+      LegacyHiddenComponent: 24,
       MemoComponent: 14,
       Mode: 8,
       OffscreenComponent: 23, // Experimental
       Profiler: 12,
+      ScopeComponent: 21, // Experimental
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
       SuspenseListComponent: 19, // Experimental
@@ -184,7 +257,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
-      Block: 22,
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -201,10 +274,12 @@ export function getInternalReactConstants(
       IncompleteClassComponent: 17,
       IndeterminateComponent: 2,
       LazyComponent: 16,
+      LegacyHiddenComponent: -1,
       MemoComponent: 14,
       Mode: 8,
       OffscreenComponent: -1, // Experimental
       Profiler: 12,
+      ScopeComponent: -1, // Experimental
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
       SuspenseListComponent: 19, // Experimental
@@ -212,7 +287,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
-      Block: -1, // Doesn't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -229,10 +304,12 @@ export function getInternalReactConstants(
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 4,
       LazyComponent: -1, // Doesn't exist yet
+      LegacyHiddenComponent: -1,
       MemoComponent: -1, // Doesn't exist yet
       Mode: 10,
       OffscreenComponent: -1, // Experimental
       Profiler: 15,
+      ScopeComponent: -1, // Experimental
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
       SuspenseListComponent: -1, // Doesn't exist yet
@@ -240,7 +317,7 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
-      Block: -1, // Doesn't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
@@ -257,10 +334,12 @@ export function getInternalReactConstants(
       IncompleteClassComponent: -1, // Doesn't exist yet
       IndeterminateComponent: 0,
       LazyComponent: -1, // Doesn't exist yet
+      LegacyHiddenComponent: -1,
       MemoComponent: -1, // Doesn't exist yet
       Mode: 11,
       OffscreenComponent: -1, // Experimental
       Profiler: 15,
+      ScopeComponent: -1, // Experimental
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
       SuspenseListComponent: -1, // Doesn't exist yet
@@ -282,6 +361,7 @@ export function getInternalReactConstants(
   }
 
   const {
+    CacheComponent,
     ClassComponent,
     IncompleteClassComponent,
     FunctionComponent,
@@ -292,7 +372,12 @@ export function getInternalReactConstants(
     HostPortal,
     HostText,
     Fragment,
+    LazyComponent,
+    LegacyHiddenComponent,
     MemoComponent,
+    OffscreenComponent,
+    Profiler,
+    ScopeComponent,
     SimpleMemoComponent,
     SuspenseComponent,
     SuspenseListComponent,
@@ -315,7 +400,7 @@ export function getInternalReactConstants(
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const {type, tag} = fiber;
+    const {elementType, type, tag} = fiber;
 
     let resolvedType = type;
     if (typeof type === 'object' && type !== null) {
@@ -325,6 +410,8 @@ export function getInternalReactConstants(
     let resolvedContext: any = null;
 
     switch (tag) {
+      case CacheComponent:
+        return 'Cache';
       case ClassComponent:
       case IncompleteClassComponent:
         return getDisplayName(resolvedType);
@@ -338,6 +425,10 @@ export function getInternalReactConstants(
           getDisplayName(resolvedType, 'Anonymous')
         );
       case HostRoot:
+        const fiberRoot = fiber.stateNode;
+        if (fiberRoot != null && fiberRoot._debugRootType !== null) {
+          return fiberRoot._debugRootType;
+        }
         return null;
       case HostComponent:
         return type;
@@ -345,13 +436,30 @@ export function getInternalReactConstants(
       case HostText:
       case Fragment:
         return null;
+      case LazyComponent:
+        // This display name will not be user visible.
+        // Once a Lazy component loads its inner component, React replaces the tag and type.
+        // This display name will only show up in console logs when DevTools DEBUG mode is on.
+        return 'Lazy';
       case MemoComponent:
       case SimpleMemoComponent:
-        return getDisplayName(resolvedType, 'Anonymous');
+        return (
+          (elementType && elementType.displayName) ||
+          (type && type.displayName) ||
+          getDisplayName(resolvedType, 'Anonymous')
+        );
       case SuspenseComponent:
         return 'Suspense';
+      case LegacyHiddenComponent:
+        return 'LegacyHidden';
+      case OffscreenComponent:
+        return 'Offscreen';
+      case ScopeComponent:
+        return 'Scope';
       case SuspenseListComponent:
         return 'SuspenseList';
+      case Profiler:
+        return 'Profiler';
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -409,27 +517,41 @@ export function attach(
   renderer: ReactRenderer,
   global: Object,
 ): RendererInterface {
+  // Newer versions of the reconciler package also specific reconciler version.
+  // If that version number is present, use it.
+  // Third party renderer versions may not match the reconciler version,
+  // and the latter is what's important in terms of tags and symbols.
+  const version = renderer.reconcilerVersion || renderer.version;
+
   const {
     getDisplayNameForFiber,
     getTypeSymbol,
     ReactPriorityLevels,
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
-  } = getInternalReactConstants(renderer.version);
-  const {NoEffect, PerformedWork, Placement} = ReactTypeOfSideEffect;
+  } = getInternalReactConstants(version);
   const {
-    FunctionComponent,
+    DidCapture,
+    Hydrating,
+    NoFlags,
+    PerformedWork,
+    Placement,
+  } = ReactTypeOfSideEffect;
+  const {
+    CacheComponent,
     ClassComponent,
     ContextConsumer,
     DehydratedSuspenseComponent,
-    Fragment,
     ForwardRef,
+    Fragment,
+    FunctionComponent,
     HostRoot,
     HostPortal,
     HostComponent,
     HostText,
     IncompleteClassComponent,
     IndeterminateComponent,
+    LegacyHiddenComponent,
     MemoComponent,
     OffscreenComponent,
     SimpleMemoComponent,
@@ -447,13 +569,168 @@ export function attach(
 
   const {
     overrideHookState,
+    overrideHookStateDeletePath,
+    overrideHookStateRenamePath,
     overrideProps,
+    overridePropsDeletePath,
+    overridePropsRenamePath,
+    scheduleRefresh,
+    setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
   } = renderer;
+  const supportsTogglingError =
+    typeof setErrorHandler === 'function' &&
+    typeof scheduleUpdate === 'function';
   const supportsTogglingSuspense =
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
+
+  if (typeof scheduleRefresh === 'function') {
+    // When Fast Refresh updates a component, the frontend may need to purge cached information.
+    // For example, ASTs cached for the component (for named hooks) may no longer be valid.
+    // Send a signal to the frontend to purge this cached information.
+    // The "fastRefreshScheduled" dispatched is global (not Fiber or even Renderer specific).
+    // This is less effecient since it means the front-end will need to purge the entire cache,
+    // but this is probably an okay trade off in order to reduce coupling between the DevTools and Fast Refresh.
+    renderer.scheduleRefresh = (...args) => {
+      try {
+        hook.emit('fastRefreshScheduled');
+      } finally {
+        return scheduleRefresh(...args);
+      }
+    };
+  }
+
+  // Tracks Fibers with recently changed number of error/warning messages.
+  // These collections store the Fiber rather than the ID,
+  // in order to avoid generating an ID for Fibers that never get mounted
+  // (due to e.g. Suspense or error boundaries).
+  // onErrorOrWarning() adds Fibers and recordPendingErrorsAndWarnings() later clears them.
+  const fibersWithChangedErrorOrWarningCounts: Set<Fiber> = new Set();
+  const pendingFiberToErrorsMap: Map<Fiber, Map<string, number>> = new Map();
+  const pendingFiberToWarningsMap: Map<Fiber, Map<string, number>> = new Map();
+
+  // Mapping of fiber IDs to error/warning messages and counts.
+  const fiberIDToErrorsMap: Map<number, Map<string, number>> = new Map();
+  const fiberIDToWarningsMap: Map<number, Map<string, number>> = new Map();
+
+  function clearErrorsAndWarnings() {
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const id of fiberIDToErrorsMap.keys()) {
+      const fiber = idToArbitraryFiberMap.get(id);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+        updateMostRecentlyInspectedElementIfNecessary(id);
+      }
+    }
+
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const id of fiberIDToWarningsMap.keys()) {
+      const fiber = idToArbitraryFiberMap.get(id);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+        updateMostRecentlyInspectedElementIfNecessary(id);
+      }
+    }
+
+    fiberIDToErrorsMap.clear();
+    fiberIDToWarningsMap.clear();
+
+    flushPendingEvents();
+  }
+
+  function clearMessageCountHelper(
+    fiberID: number,
+    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    fiberIDToMessageCountMap: Map<number, Map<string, number>>,
+  ) {
+    const fiber = idToArbitraryFiberMap.get(fiberID);
+    if (fiber != null) {
+      // Throw out any pending changes.
+      pendingFiberToErrorsMap.delete(fiber);
+
+      if (fiberIDToMessageCountMap.has(fiberID)) {
+        fiberIDToMessageCountMap.delete(fiberID);
+
+        // If previous flushed counts have changed, schedule an update too.
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+        flushPendingEvents();
+
+        updateMostRecentlyInspectedElementIfNecessary(fiberID);
+      } else {
+        fibersWithChangedErrorOrWarningCounts.delete(fiber);
+      }
+    }
+  }
+
+  function clearErrorsForFiberID(fiberID: number) {
+    clearMessageCountHelper(
+      fiberID,
+      pendingFiberToErrorsMap,
+      fiberIDToErrorsMap,
+    );
+  }
+
+  function clearWarningsForFiberID(fiberID: number) {
+    clearMessageCountHelper(
+      fiberID,
+      pendingFiberToWarningsMap,
+      fiberIDToWarningsMap,
+    );
+  }
+
+  function updateMostRecentlyInspectedElementIfNecessary(
+    fiberID: number,
+  ): void {
+    if (
+      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElement.id === fiberID
+    ) {
+      hasElementUpdatedSinceLastInspected = true;
+    }
+  }
+
+  // Called when an error or warning is logged during render, commit, or passive (including unmount functions).
+  function onErrorOrWarning(
+    fiber: Fiber,
+    type: 'error' | 'warn',
+    args: $ReadOnlyArray<any>,
+  ): void {
+    if (type === 'error') {
+      const maybeID = getFiberIDUnsafe(fiber);
+      // if this is an error simulated by us to trigger error boundary, ignore
+      if (maybeID != null && forceErrorForFiberIDs.get(maybeID) === true) {
+        return;
+      }
+    }
+    const message = format(...args);
+    if (__DEBUG__) {
+      debug('onErrorOrWarning', fiber, null, `${type}: "${message}"`);
+    }
+
+    // Mark this Fiber as needed its warning/error count updated during the next flush.
+    fibersWithChangedErrorOrWarningCounts.add(fiber);
+
+    // Track the warning/error for later.
+    const fiberMap =
+      type === 'error' ? pendingFiberToErrorsMap : pendingFiberToWarningsMap;
+    const messageMap = fiberMap.get(fiber);
+    if (messageMap != null) {
+      const count = messageMap.get(message) || 0;
+      messageMap.set(message, count + 1);
+    } else {
+      fiberMap.set(fiber, new Map([[message, 1]]));
+    }
+
+    // Passive effects may trigger errors or warnings too;
+    // In this case, we should wait until the rest of the passive effects have run,
+    // but we shouldn't wait until the next commit because that might be a long time.
+    // This would also cause "tearing" between an inspected Component and the tree view.
+    // Then again we don't want to flush too soon because this could be an error during async rendering.
+    // Use a debounce technique to ensure that we'll eventually flush.
+    flushPendingErrorsAndWarningsAfterDelay();
+  }
 
   // Patching the console enables DevTools to do a few useful things:
   // * Append component stacks to warnings and error messages
@@ -461,7 +738,7 @@ export function attach(
   //
   // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
   if (process.env.NODE_ENV !== 'test') {
-    registerRendererWithConsole(renderer);
+    registerRendererWithConsole(renderer, onErrorOrWarning);
 
     // The renderer interface can't read these preferences directly,
     // because it is stored in localStorage within the context of the extension.
@@ -470,32 +747,57 @@ export function attach(
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
     const breakOnConsoleErrors =
       window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-    if (appendComponentStack || breakOnConsoleErrors) {
-      patchConsole({
-        appendComponentStack,
-        breakOnConsoleErrors,
-      });
-    }
+    const showInlineWarningsAndErrors =
+      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
+    const hideConsoleLogsInStrictMode =
+      window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ === true;
+    const browserTheme = window.__REACT_DEVTOOLS_BROWSER_THEME__;
+
+    patchConsole({
+      appendComponentStack,
+      breakOnConsoleErrors,
+      showInlineWarningsAndErrors,
+      hideConsoleLogsInStrictMode,
+      browserTheme,
+    });
   }
 
-  const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
+  const debug = (
+    name: string,
+    fiber: Fiber,
+    parentFiber: ?Fiber,
+    extraString?: string = '',
+  ): void => {
     if (__DEBUG__) {
-      const displayName = getDisplayNameForFiber(fiber) || 'null';
-      const id = getFiberID(fiber);
-      const parentDisplayName =
-        (parentFiber != null && getDisplayNameForFiber(parentFiber)) || 'null';
-      const parentID = parentFiber ? getFiberID(parentFiber) : '';
-      // NOTE: calling getFiberID or getPrimaryFiber is unsafe here
-      // because it will put them in the map. For now, we'll omit them.
-      // TODO: better debugging story for this.
-      console.log(
-        `[renderer] %c${name} %c${displayName} (${id}) %c${
-          parentFiber ? `${parentDisplayName} (${parentID})` : ''
-        }`,
+      const displayName =
+        fiber.tag + ':' + (getDisplayNameForFiber(fiber) || 'null');
+
+      const maybeID = getFiberIDUnsafe(fiber) || '<no id>';
+      const parentDisplayName = parentFiber
+        ? parentFiber.tag +
+          ':' +
+          (getDisplayNameForFiber(parentFiber) || 'null')
+        : '';
+      const maybeParentID = parentFiber
+        ? getFiberIDUnsafe(parentFiber) || '<no-id>'
+        : '';
+
+      console.groupCollapsed(
+        `[renderer] %c${name} %c${displayName} (${maybeID}) %c${
+          parentFiber ? `${parentDisplayName} (${maybeParentID})` : ''
+        } %c${extraString}`,
         'color: red; font-weight: bold;',
         'color: blue;',
         'color: purple;',
+        'color: black;',
       );
+      console.log(
+        new Error().stack
+          .split('\n')
+          .slice(1)
+          .join('\n'),
+      );
+      console.groupEnd();
     }
   };
 
@@ -574,9 +876,12 @@ export function attach(
 
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getFiberID(getPrimaryFiber(root.current));
-      unmountFiberChildrenRecursively(root.current);
-      recordUnmount(root.current, false);
+      currentRootID = getOrGenerateFiberID(root.current);
+      // The TREE_OPERATION_REMOVE_ROOT operation serves two purposes:
+      // 1. It avoids sending unnecessary bridge traffic to clear a root.
+      // 2. It preserves Fiber IDs when remounting (below) which in turn ID to error/warning mapping.
+      pushOperation(TREE_OPERATION_REMOVE_ROOT);
+      flushPendingEvents(root);
       currentRootID = -1;
     });
 
@@ -587,12 +892,16 @@ export function attach(
 
     // Recursively re-mount all roots with new filter criteria applied.
     hook.getFiberRoots(rendererID).forEach(root => {
-      currentRootID = getFiberID(getPrimaryFiber(root.current));
+      currentRootID = getOrGenerateFiberID(root.current);
       setRootPseudoKey(currentRootID, root.current);
       mountFiberRecursively(root.current, null, false, false);
       flushPendingEvents(root);
       currentRootID = -1;
     });
+
+    // Also re-evaluate all error and warning counts given the new filters.
+    reevaluateErrorsAndWarnings();
+    flushPendingEvents();
   }
 
   // NOTICE Keep in sync with get*ForFiber methods
@@ -610,6 +919,7 @@ export function attach(
       case HostPortal:
       case HostText:
       case Fragment:
+      case LegacyHiddenComponent:
       case OffscreenComponent:
         return true;
       case HostRoot:
@@ -659,6 +969,7 @@ export function attach(
 
     return false;
   }
+
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getElementTypeForFiber(fiber: Fiber): ElementType {
     const {type, tag} = fiber;
@@ -713,25 +1024,16 @@ export function attach(
     }
   }
 
-  // This is a slightly annoying indirection.
-  // It is currently necessary because DevTools wants to use unique objects as keys for instances.
-  // However fibers have two versions.
-  // We use this set to remember first encountered fiber for each conceptual instance.
-  function getPrimaryFiber(fiber: Fiber): Fiber {
-    if (primaryFibers.has(fiber)) {
-      return fiber;
-    }
-    const {alternate} = fiber;
-    if (alternate != null && primaryFibers.has(alternate)) {
-      return alternate;
-    }
-    primaryFibers.add(fiber);
-    return fiber;
-  }
-
+  // Map of one or more Fibers in a pair to their unique id number.
+  // We track both Fibers to support Fast Refresh,
+  // which may forcefully replace one of the pair as part of hot reloading.
+  // In that case it's still important to be able to locate the previous ID during subsequent renders.
   const fiberToIDMap: Map<Fiber, number> = new Map();
-  const idToFiberMap: Map<number, Fiber> = new Map();
-  const primaryFibers: Set<Fiber> = new Set();
+
+  // Map of id to one (arbitrary) Fiber in a pair.
+  // This Map is used to e.g. get the display name for a Fiber or schedule an update,
+  // operations that should be the same whether the current and work-in-progress Fiber is used.
+  const idToArbitraryFiberMap: Map<number, Fiber> = new Map();
 
   // When profiling is supported, we store the latest tree base durations for each Fiber.
   // This is so that we can quickly capture a snapshot of those values if profiling starts.
@@ -746,13 +1048,153 @@ export function attach(
   // When a mount or update is in progress, this value tracks the root that is being operated on.
   let currentRootID: number = -1;
 
-  function getFiberID(primaryFiber: Fiber): number {
-    if (!fiberToIDMap.has(primaryFiber)) {
-      const id = getUID();
-      fiberToIDMap.set(primaryFiber, id);
-      idToFiberMap.set(id, primaryFiber);
+  // Returns the unique ID for a Fiber or generates and caches a new one if the Fiber hasn't been seen before.
+  // Once this method has been called for a Fiber, untrackFiberID() should always be called later to avoid leaking.
+  function getOrGenerateFiberID(fiber: Fiber): number {
+    let id = null;
+    if (fiberToIDMap.has(fiber)) {
+      id = fiberToIDMap.get(fiber);
+    } else {
+      const {alternate} = fiber;
+      if (alternate !== null && fiberToIDMap.has(alternate)) {
+        id = fiberToIDMap.get(alternate);
+      }
     }
-    return ((fiberToIDMap.get(primaryFiber): any): number);
+
+    let didGenerateID = false;
+    if (id === null) {
+      didGenerateID = true;
+      id = getUID();
+    }
+
+    // This refinement is for Flow purposes only.
+    const refinedID = ((id: any): number);
+
+    // Make sure we're tracking this Fiber
+    // e.g. if it just mounted or an error was logged during initial render.
+    if (!fiberToIDMap.has(fiber)) {
+      fiberToIDMap.set(fiber, refinedID);
+      idToArbitraryFiberMap.set(refinedID, fiber);
+    }
+
+    // Also make sure we're tracking its alternate,
+    // e.g. in case this is the first update after mount.
+    const {alternate} = fiber;
+    if (alternate !== null) {
+      if (!fiberToIDMap.has(alternate)) {
+        fiberToIDMap.set(alternate, refinedID);
+      }
+    }
+
+    if (__DEBUG__) {
+      if (didGenerateID) {
+        debug(
+          'getOrGenerateFiberID()',
+          fiber,
+          fiber.return,
+          'Generated a new UID',
+        );
+      }
+    }
+
+    return refinedID;
+  }
+
+  // Returns an ID if one has already been generated for the Fiber or throws.
+  function getFiberIDThrows(fiber: Fiber): number {
+    const maybeID = getFiberIDUnsafe(fiber);
+    if (maybeID !== null) {
+      return maybeID;
+    }
+    throw Error(
+      `Could not find ID for Fiber "${getDisplayNameForFiber(fiber) || ''}"`,
+    );
+  }
+
+  // Returns an ID if one has already been generated for the Fiber or null if one has not been generated.
+  // Use this method while e.g. logging to avoid over-retaining Fibers.
+  function getFiberIDUnsafe(fiber: Fiber): number | null {
+    if (fiberToIDMap.has(fiber)) {
+      return ((fiberToIDMap.get(fiber): any): number);
+    } else {
+      const {alternate} = fiber;
+      if (alternate !== null && fiberToIDMap.has(alternate)) {
+        return ((fiberToIDMap.get(alternate): any): number);
+      }
+    }
+    return null;
+  }
+
+  // Removes a Fiber (and its alternate) from the Maps used to track their id.
+  // This method should always be called when a Fiber is unmounting.
+  function untrackFiberID(fiber: Fiber) {
+    if (__DEBUG__) {
+      debug('untrackFiberID()', fiber, fiber.return, 'schedule after delay');
+    }
+
+    // Untrack Fibers after a slight delay in order to support a Fast Refresh edge case:
+    // 1. Component type is updated and Fast Refresh schedules an update+remount.
+    // 2. flushPendingErrorsAndWarningsAfterDelay() runs, sees the old Fiber is no longer mounted
+    //    (it's been disconnected by Fast Refresh), and calls untrackFiberID() to clear it from the Map.
+    // 3. React flushes pending passive effects before it runs the next render,
+    //    which logs an error or warning, which causes a new ID to be generated for this Fiber.
+    // 4. DevTools now tries to unmount the old Component with the new ID.
+    //
+    // The underlying problem here is the premature clearing of the Fiber ID,
+    // but DevTools has no way to detect that a given Fiber has been scheduled for Fast Refresh.
+    // (The "_debugNeedsRemount" flag won't necessarily be set.)
+    //
+    // The best we can do is to delay untracking by a small amount,
+    // and give React time to process the Fast Refresh delay.
+
+    untrackFibersSet.add(fiber);
+
+    // React may detach alternate pointers during unmount;
+    // Since our untracking code is async, we should explicily track the pending alternate here as well.
+    const alternate = fiber.alternate;
+    if (alternate !== null) {
+      untrackFibersSet.add(alternate);
+    }
+
+    if (untrackFibersTimeoutID === null) {
+      untrackFibersTimeoutID = setTimeout(untrackFibers, 1000);
+    }
+  }
+
+  const untrackFibersSet: Set<Fiber> = new Set();
+  let untrackFibersTimeoutID: TimeoutID | null = null;
+
+  function untrackFibers() {
+    if (untrackFibersTimeoutID !== null) {
+      clearTimeout(untrackFibersTimeoutID);
+      untrackFibersTimeoutID = null;
+    }
+
+    untrackFibersSet.forEach(fiber => {
+      const fiberID = getFiberIDUnsafe(fiber);
+      if (fiberID !== null) {
+        idToArbitraryFiberMap.delete(fiberID);
+
+        // Also clear any errors/warnings associated with this fiber.
+        clearErrorsForFiberID(fiberID);
+        clearWarningsForFiberID(fiberID);
+      }
+
+      fiberToIDMap.delete(fiber);
+
+      const {alternate} = fiber;
+      if (alternate !== null) {
+        fiberToIDMap.delete(alternate);
+      }
+
+      if (forceErrorForFiberIDs.has(fiberID)) {
+        forceErrorForFiberIDs.delete(fiberID);
+        if (forceErrorForFiberIDs.size === 0 && setErrorHandler != null) {
+          setErrorHandler(shouldErrorFiberAlwaysNull);
+        }
+      }
+    });
+    untrackFibersSet.clear();
   }
 
   function getChangeDescription(
@@ -773,12 +1215,9 @@ export function attach(
             state: null,
           };
         } else {
-          return {
+          const data: ChangeDescription = {
             context: getContextChangedKeys(nextFiber),
-            didHooksChange: didHooksChange(
-              prevFiber.memoizedState,
-              nextFiber.memoizedState,
-            ),
+            didHooksChange: false,
             isFirstMount: false,
             props: getChangedKeys(
               prevFiber.memoizedProps,
@@ -789,6 +1228,23 @@ export function attach(
               nextFiber.memoizedState,
             ),
           };
+
+          // Only traverse the hooks list once, depending on what info we're returning.
+          if (enableProfilerChangedHookIndices) {
+            const indices = getChangedHooksIndices(
+              prevFiber.memoizedState,
+              nextFiber.memoizedState,
+            );
+            data.hooks = indices;
+            data.didHooksChange = indices !== null && indices.length > 0;
+          } else {
+            data.didHooksChange = didHooksChange(
+              prevFiber.memoizedState,
+              nextFiber.memoizedState,
+            );
+          }
+
+          return data;
         }
       default:
         return null;
@@ -798,8 +1254,11 @@ export function attach(
   function updateContextsForFiber(fiber: Fiber) {
     switch (getElementTypeForFiber(fiber)) {
       case ElementTypeClass:
+      case ElementTypeForwardRef:
+      case ElementTypeFunction:
+      case ElementTypeMemo:
         if (idToContextsMap !== null) {
-          const id = getFiberID(getPrimaryFiber(fiber));
+          const id = getFiberIDThrows(fiber);
           const contexts = getContextsForFiber(fiber);
           if (contexts !== null) {
             idToContextsMap.set(id, contexts);
@@ -815,11 +1274,12 @@ export function attach(
   const NO_CONTEXT = {};
 
   function getContextsForFiber(fiber: Fiber): [Object, any] | null {
+    let legacyContext = NO_CONTEXT;
+    let modernContext = NO_CONTEXT;
+
     switch (getElementTypeForFiber(fiber)) {
       case ElementTypeClass:
         const instance = fiber.stateNode;
-        let legacyContext = NO_CONTEXT;
-        let modernContext = NO_CONTEXT;
         if (instance != null) {
           if (
             instance.constructor &&
@@ -833,6 +1293,15 @@ export function attach(
             }
           }
         }
+        return [legacyContext, modernContext];
+      case ElementTypeForwardRef:
+      case ElementTypeFunction:
+      case ElementTypeMemo:
+        const dependencies = fiber.dependencies;
+        if (dependencies && dependencies.firstContext) {
+          modernContext = dependencies.firstContext;
+        }
+
         return [legacyContext, modernContext];
       default:
         return null;
@@ -852,33 +1321,104 @@ export function attach(
   }
 
   function getContextChangedKeys(fiber: Fiber): null | boolean | Array<string> {
-    switch (getElementTypeForFiber(fiber)) {
-      case ElementTypeClass:
-        if (idToContextsMap !== null) {
-          const id = getFiberID(getPrimaryFiber(fiber));
-          const prevContexts = idToContextsMap.has(id)
-            ? idToContextsMap.get(id)
-            : null;
-          const nextContexts = getContextsForFiber(fiber);
+    if (idToContextsMap !== null) {
+      const id = getFiberIDThrows(fiber);
+      const prevContexts = idToContextsMap.has(id)
+        ? idToContextsMap.get(id)
+        : null;
+      const nextContexts = getContextsForFiber(fiber);
 
-          if (prevContexts == null || nextContexts == null) {
-            return null;
+      if (prevContexts == null || nextContexts == null) {
+        return null;
+      }
+
+      const [prevLegacyContext, prevModernContext] = prevContexts;
+      const [nextLegacyContext, nextModernContext] = nextContexts;
+
+      switch (getElementTypeForFiber(fiber)) {
+        case ElementTypeClass:
+          if (prevContexts && nextContexts) {
+            if (nextLegacyContext !== NO_CONTEXT) {
+              return getChangedKeys(prevLegacyContext, nextLegacyContext);
+            } else if (nextModernContext !== NO_CONTEXT) {
+              return prevModernContext !== nextModernContext;
+            }
           }
+          break;
+        case ElementTypeForwardRef:
+        case ElementTypeFunction:
+        case ElementTypeMemo:
+          if (nextModernContext !== NO_CONTEXT) {
+            let prevContext = prevModernContext;
+            let nextContext = nextModernContext;
 
-          const [prevLegacyContext, prevModernContext] = prevContexts;
-          const [nextLegacyContext, nextModernContext] = nextContexts;
+            while (prevContext && nextContext) {
+              // Note this only works for versions of React that support this key (e.v. 18+)
+              // For older versions, there's no good way to read the current context value after render has completed.
+              // This is because React maintains a stack of context values during render,
+              // but by the time DevTools is called, render has finished and the stack is empty.
+              if (!is(prevContext.memoizedValue, nextContext.memoizedValue)) {
+                return true;
+              }
 
-          if (nextLegacyContext !== NO_CONTEXT) {
-            return getChangedKeys(prevLegacyContext, nextLegacyContext);
-          } else if (nextModernContext !== NO_CONTEXT) {
-            return prevModernContext !== nextModernContext;
+              prevContext = prevContext.next;
+              nextContext = nextContext.next;
+            }
+
+            return false;
           }
-        }
-        break;
-      default:
-        break;
+          break;
+        default:
+          break;
+      }
     }
     return null;
+  }
+
+  function areHookInputsEqual(
+    nextDeps: Array<mixed>,
+    prevDeps: Array<mixed> | null,
+  ) {
+    if (prevDeps === null) {
+      return false;
+    }
+
+    for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+      if (is(nextDeps[i], prevDeps[i])) {
+        continue;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function isEffect(memoizedState) {
+    if (memoizedState === null || typeof memoizedState !== 'object') {
+      return false;
+    }
+    const {deps} = memoizedState;
+    const boundHasOwnProperty = hasOwnProperty.bind(memoizedState);
+    return (
+      boundHasOwnProperty('create') &&
+      boundHasOwnProperty('destroy') &&
+      boundHasOwnProperty('deps') &&
+      boundHasOwnProperty('next') &&
+      boundHasOwnProperty('tag') &&
+      (deps === null || isArray(deps))
+    );
+  }
+
+  function didHookChange(prev: any, next: any): boolean {
+    const prevMemoizedState = prev.memoizedState;
+    const nextMemoizedState = next.memoizedState;
+
+    if (isEffect(prevMemoizedState) && isEffect(nextMemoizedState)) {
+      return (
+        prevMemoizedState !== nextMemoizedState &&
+        !areHookInputsEqual(nextMemoizedState.deps, prevMemoizedState.deps)
+      );
+    }
+    return nextMemoizedState !== prevMemoizedState;
   }
 
   function didHooksChange(prev: any, next: any): boolean {
@@ -894,7 +1434,7 @@ export function attach(
       next.hasOwnProperty('queue')
     ) {
       while (next !== null) {
-        if (next.memoizedState !== prev.memoizedState) {
+        if (didHookChange(prev, next)) {
           return true;
         } else {
           next = next.next;
@@ -904,6 +1444,36 @@ export function attach(
     }
 
     return false;
+  }
+
+  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
+    if (enableProfilerChangedHookIndices) {
+      if (prev == null || next == null) {
+        return null;
+      }
+
+      const indices = [];
+      let index = 0;
+      if (
+        next.hasOwnProperty('baseState') &&
+        next.hasOwnProperty('memoizedState') &&
+        next.hasOwnProperty('next') &&
+        next.hasOwnProperty('queue')
+      ) {
+        while (next !== null) {
+          if (didHookChange(prev, next)) {
+            indices.push(index);
+          }
+          next = next.next;
+          prev = prev.next;
+          index++;
+        }
+      }
+
+      return indices;
+    }
+
+    return null;
   }
 
   function getChangedKeys(prev: any, next: any): null | Array<string> {
@@ -944,7 +1514,7 @@ export function attach(
         // For types that execute user code, we check PerformedWork effect.
         // We don't reflect bailouts (either referential or sCU) in DevTools.
         // eslint-disable-next-line no-bitwise
-        return (nextFiber.effectTag & PerformedWork) === PerformedWork;
+        return (getFiberFlags(nextFiber) & PerformedWork) === PerformedWork;
       // Note: ContextConsumer only gets PerformedWork effect in 16.3.3+
       // so it won't get highlighted with React 16.3.0 to 16.3.2.
       default:
@@ -958,11 +1528,18 @@ export function attach(
     }
   }
 
-  const pendingOperations: Array<number> = [];
+  type OperationsArray = Array<number>;
+
+  type StringTableEntry = {|
+    encodedString: Array<number>,
+    id: number,
+  |};
+
+  const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
   const pendingSimulatedUnmountedIDs: Array<number> = [];
-  let pendingOperationsQueue: Array<Array<number>> | null = [];
-  const pendingStringTable: Map<string, number> = new Map();
+  let pendingOperationsQueue: Array<OperationsArray> | null = [];
+  const pendingStringTable: Map<string, StringTableEntry> = new Map();
   let pendingStringTableLength: number = 0;
   let pendingUnmountedRootID: number | null = null;
 
@@ -978,7 +1555,173 @@ export function attach(
     pendingOperations.push(op);
   }
 
+  function flushOrQueueOperations(operations: OperationsArray): void {
+    if (operations.length === 3) {
+      // This operations array is a no op: [renderer ID, root ID, string table size (0)]
+      // We can usually skip sending updates like this across the bridge, unless we're Profiling.
+      // In that case, even though the tree didn't change– some Fibers may have still rendered.
+      if (
+        !isProfiling ||
+        currentCommitProfilingMetadata == null ||
+        currentCommitProfilingMetadata.durations.length === 0
+      ) {
+        return;
+      }
+    }
+
+    if (pendingOperationsQueue !== null) {
+      pendingOperationsQueue.push(operations);
+    } else {
+      hook.emit('operations', operations);
+    }
+  }
+
+  let flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+
+  function clearPendingErrorsAndWarningsAfterDelay() {
+    if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
+      clearTimeout(flushPendingErrorsAndWarningsAfterDelayTimeoutID);
+      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+    }
+  }
+
+  function flushPendingErrorsAndWarningsAfterDelay() {
+    clearPendingErrorsAndWarningsAfterDelay();
+
+    flushPendingErrorsAndWarningsAfterDelayTimeoutID = setTimeout(() => {
+      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+
+      if (pendingOperations.length > 0) {
+        // On the off chance that something else has pushed pending operations,
+        // we should bail on warnings; it's probably not safe to push midway.
+        return;
+      }
+
+      recordPendingErrorsAndWarnings();
+
+      if (pendingOperations.length === 0) {
+        // No warnings or errors to flush; we can bail out early here too.
+        return;
+      }
+
+      // We can create a smaller operations array than flushPendingEvents()
+      // because we only need to flush warning and error counts.
+      // Only a few pieces of fixed information are required up front.
+      const operations: OperationsArray = new Array(
+        3 + pendingOperations.length,
+      );
+      operations[0] = rendererID;
+      operations[1] = currentRootID;
+      operations[2] = 0; // String table size
+      for (let j = 0; j < pendingOperations.length; j++) {
+        operations[3 + j] = pendingOperations[j];
+      }
+
+      flushOrQueueOperations(operations);
+
+      pendingOperations.length = 0;
+    }, 1000);
+  }
+
+  function reevaluateErrorsAndWarnings() {
+    fibersWithChangedErrorOrWarningCounts.clear();
+    fiberIDToErrorsMap.forEach((countMap, fiberID) => {
+      const fiber = idToArbitraryFiberMap.get(fiberID);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+      }
+    });
+    fiberIDToWarningsMap.forEach((countMap, fiberID) => {
+      const fiber = idToArbitraryFiberMap.get(fiberID);
+      if (fiber != null) {
+        fibersWithChangedErrorOrWarningCounts.add(fiber);
+      }
+    });
+    recordPendingErrorsAndWarnings();
+  }
+
+  function mergeMapsAndGetCountHelper(
+    fiber: Fiber,
+    fiberID: number,
+    pendingFiberToMessageCountMap: Map<Fiber, Map<string, number>>,
+    fiberIDToMessageCountMap: Map<number, Map<string, number>>,
+  ): number {
+    let newCount = 0;
+
+    let messageCountMap = fiberIDToMessageCountMap.get(fiberID);
+
+    const pendingMessageCountMap = pendingFiberToMessageCountMap.get(fiber);
+    if (pendingMessageCountMap != null) {
+      if (messageCountMap == null) {
+        messageCountMap = pendingMessageCountMap;
+
+        fiberIDToMessageCountMap.set(fiberID, pendingMessageCountMap);
+      } else {
+        // This Flow refinement should not be necessary and yet...
+        const refinedMessageCountMap = ((messageCountMap: any): Map<
+          string,
+          number,
+        >);
+
+        pendingMessageCountMap.forEach((pendingCount, message) => {
+          const previousCount = refinedMessageCountMap.get(message) || 0;
+          refinedMessageCountMap.set(message, previousCount + pendingCount);
+        });
+      }
+    }
+
+    if (!shouldFilterFiber(fiber)) {
+      if (messageCountMap != null) {
+        messageCountMap.forEach(count => {
+          newCount += count;
+        });
+      }
+    }
+
+    pendingFiberToMessageCountMap.delete(fiber);
+
+    return newCount;
+  }
+
+  function recordPendingErrorsAndWarnings() {
+    clearPendingErrorsAndWarningsAfterDelay();
+
+    fibersWithChangedErrorOrWarningCounts.forEach(fiber => {
+      const fiberID = getFiberIDUnsafe(fiber);
+      if (fiberID === null) {
+        // Don't send updates for Fibers that didn't mount due to e.g. Suspense or an error boundary.
+      } else {
+        const errorCount = mergeMapsAndGetCountHelper(
+          fiber,
+          fiberID,
+          pendingFiberToErrorsMap,
+          fiberIDToErrorsMap,
+        );
+        const warningCount = mergeMapsAndGetCountHelper(
+          fiber,
+          fiberID,
+          pendingFiberToWarningsMap,
+          fiberIDToWarningsMap,
+        );
+
+        pushOperation(TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS);
+        pushOperation(fiberID);
+        pushOperation(errorCount);
+        pushOperation(warningCount);
+      }
+
+      // Always clean up so that we don't leak.
+      pendingFiberToErrorsMap.delete(fiber);
+      pendingFiberToWarningsMap.delete(fiber);
+    });
+    fibersWithChangedErrorOrWarningCounts.clear();
+  }
+
   function flushPendingEvents(root: Object): void {
+    // Add any pending errors and warnings to the operations array.
+    // We do this just before flushing, so we can ignore errors for no-longer-mounted Fibers.
+    recordPendingErrorsAndWarnings();
+
     if (
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
@@ -1022,18 +1765,24 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
+    operations[i++] = currentRootID;
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
     operations[i++] = pendingStringTableLength;
-    pendingStringTable.forEach((value, key) => {
-      operations[i++] = key.length;
-      const encodedKey = utfEncodeString(key);
-      for (let j = 0; j < encodedKey.length; j++) {
-        operations[i + j] = encodedKey[j];
+    pendingStringTable.forEach((entry, stringKey) => {
+      const encodedString = entry.encodedString;
+
+      // Don't use the string length.
+      // It won't work for multibyte characters (like emoji).
+      const length = encodedString.length;
+
+      operations[i++] = length;
+      for (let j = 0; j < length; j++) {
+        operations[i + j] = encodedString[j];
       }
-      i += key.length;
+
+      i += length;
     });
 
     if (numUnmountIDs > 0) {
@@ -1069,18 +1818,9 @@ export function attach(
     i += pendingOperations.length;
 
     // Let the frontend know about tree operations.
-    // The first value in this array will identify which root it corresponds to,
-    // so we do no longer need to dispatch a separate root-committed event.
-    if (pendingOperationsQueue !== null) {
-      // Until the frontend has been connected, store the tree operations.
-      // This will let us avoid walking the tree later when the frontend connects,
-      // and it enables the Profiler's reload-and-profile functionality to work as well.
-      pendingOperationsQueue.push(operations);
-    } else {
-      // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', operations);
-    }
+    flushOrQueueOperations(operations);
 
+    // Reset all of the pending state now that we've told the frontend about it.
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
     pendingSimulatedUnmountedIDs.length = 0;
@@ -1089,30 +1829,40 @@ export function attach(
     pendingStringTableLength = 0;
   }
 
-  function getStringID(str: string | null): number {
-    if (str === null) {
+  function getStringID(string: string | null): number {
+    if (string === null) {
       return 0;
     }
-    const existingID = pendingStringTable.get(str);
-    if (existingID !== undefined) {
-      return existingID;
+    const existingEntry = pendingStringTable.get(string);
+    if (existingEntry !== undefined) {
+      return existingEntry.id;
     }
-    const stringID = pendingStringTable.size + 1;
-    pendingStringTable.set(str, stringID);
-    // The string table total length needs to account
-    // both for the string length, and for the array item
-    // that contains the length itself. Hence + 1.
-    pendingStringTableLength += str.length + 1;
-    return stringID;
+
+    const id = pendingStringTable.size + 1;
+    const encodedString = utfEncodeString(string);
+
+    pendingStringTable.set(string, {
+      encodedString,
+      id,
+    });
+
+    // The string table total length needs to account both for the string length,
+    // and for the array item that contains the length itself.
+    //
+    // Don't use string length for this table.
+    // It won't work for multibyte characters (like emoji).
+    pendingStringTableLength += encodedString.length + 1;
+
+    return id;
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
+    const isRoot = fiber.tag === HostRoot;
+    const id = getOrGenerateFiberID(fiber);
+
     if (__DEBUG__) {
       debug('recordMount()', fiber, parentFiber);
     }
-
-    const isRoot = fiber.tag === HostRoot;
-    const id = getFiberID(getPrimaryFiber(fiber));
 
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
@@ -1135,17 +1885,20 @@ export function attach(
       const elementType = getElementTypeForFiber(fiber);
       const {_debugOwner} = fiber;
 
+      // Ideally we should call getFiberIDThrows() for _debugOwner,
+      // since owners are almost always higher in the tree (and so have already been processed),
+      // but in some (rare) instances reported in open source, a descendant mounts before an owner.
+      // Since this is a DEV only field it's probably okay to also just lazily generate and ID here if needed.
+      // See https://github.com/facebook/react/issues/21445
       const ownerID =
-        _debugOwner != null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
-      const parentID = parentFiber
-        ? getFiberID(getPrimaryFiber(parentFiber))
-        : 0;
+        _debugOwner != null ? getOrGenerateFiberID(_debugOwner) : 0;
+      const parentID = parentFiber ? getFiberIDThrows(parentFiber) : 0;
 
       const displayNameStringID = getStringID(displayName);
 
       // This check is a guard to handle a React element that has been modified
       // in such a way as to bypass the default stringification of the "key" property.
-      const keyString = key === null ? null : '' + key;
+      const keyString = key === null ? null : String(key);
       const keyStringID = getStringID(keyString);
 
       pushOperation(TREE_OPERATION_ADD);
@@ -1166,7 +1919,12 @@ export function attach(
 
   function recordUnmount(fiber: Fiber, isSimulated: boolean) {
     if (__DEBUG__) {
-      debug('recordUnmount()', fiber);
+      debug(
+        'recordUnmount()',
+        fiber,
+        null,
+        isSimulated ? 'unmount is simulated' : '',
+      );
     }
 
     if (trackedPathMatchFiber !== null) {
@@ -1181,19 +1939,21 @@ export function attach(
       }
     }
 
-    const isRoot = fiber.tag === HostRoot;
-    const primaryFiber = getPrimaryFiber(fiber);
-    if (!fiberToIDMap.has(primaryFiber)) {
-      // If we've never seen this Fiber, it might be because
-      // it is inside a non-current Suspense fragment tree,
-      // and so the store is not even aware of it.
-      // In that case we can just ignore it, or otherwise
-      // there will be errors later on.
-      primaryFibers.delete(primaryFiber);
-      // TODO: this is fragile and can obscure actual bugs.
+    const unsafeID = getFiberIDUnsafe(fiber);
+    if (unsafeID === null) {
+      // If we've never seen this Fiber, it might be inside of a legacy render Suspense fragment (so the store is not even aware of it).
+      // In that case we can just ignore it or it will cause errors later on.
+      // One example of this is a Lazy component that never resolves before being unmounted.
+      //
+      // This also might indicate a Fast Refresh force-remount scenario.
+      //
+      // TODO: This is fragile and can obscure actual bugs.
       return;
     }
-    const id = getFiberID(primaryFiber);
+
+    // Flow refinement.
+    const id = ((unsafeID: any): number);
+    const isRoot = fiber.tag === HostRoot;
     if (isRoot) {
       // Roots must be removed only after all children (pending and simulated) have been removed.
       // So we track it separately.
@@ -1208,114 +1968,116 @@ export function attach(
         pendingRealUnmountedIDs.push(id);
       }
     }
-    fiberToIDMap.delete(primaryFiber);
-    idToFiberMap.delete(id);
-    primaryFibers.delete(primaryFiber);
 
-    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-    if (isProfilingSupported) {
-      idToRootMap.delete(id);
-      idToTreeBaseDurationMap.delete(id);
+    if (!fiber._debugNeedsRemount) {
+      untrackFiberID(fiber);
+
+      const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
+      if (isProfilingSupported) {
+        idToRootMap.delete(id);
+        idToTreeBaseDurationMap.delete(id);
+      }
     }
   }
 
   function mountFiberRecursively(
-    fiber: Fiber,
+    firstChild: Fiber,
     parentFiber: Fiber | null,
     traverseSiblings: boolean,
     traceNearestHostComponentUpdate: boolean,
   ) {
-    if (__DEBUG__) {
-      debug('mountFiberRecursively()', fiber, parentFiber);
-    }
+    // Iterate over siblings rather than recursing.
+    // This reduces the chance of stack overflow for wide trees (e.g. lists with many items).
+    let fiber: Fiber | null = firstChild;
+    while (fiber !== null) {
+      // Generate an ID even for filtered Fibers, in case it's needed later (e.g. for Profiling).
+      getOrGenerateFiberID(fiber);
 
-    // If we have the tree selection from previous reload, try to match this Fiber.
-    // Also remember whether to do the same for siblings.
-    const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
-      fiber,
-    );
-
-    const shouldIncludeInTree = !shouldFilterFiber(fiber);
-    if (shouldIncludeInTree) {
-      recordMount(fiber, parentFiber);
-    }
-
-    if (traceUpdatesEnabled) {
-      if (traceNearestHostComponentUpdate) {
-        const elementType = getElementTypeForFiber(fiber);
-        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
-        if (elementType === ElementTypeHostComponent) {
-          traceUpdatesForNodes.add(fiber.stateNode);
-          traceNearestHostComponentUpdate = false;
-        }
+      if (__DEBUG__) {
+        debug('mountFiberRecursively()', fiber, parentFiber);
       }
 
-      // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
-      // because we don't want to highlight every host node inside of a newly mounted subtree.
-    }
+      // If we have the tree selection from previous reload, try to match this Fiber.
+      // Also remember whether to do the same for siblings.
+      const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
+        fiber,
+      );
 
-    const isSuspense = fiber.tag === ReactTypeOfWork.SuspenseComponent;
-    if (isSuspense) {
-      const isTimedOut = fiber.memoizedState !== null;
-      if (isTimedOut) {
-        // Special case: if Suspense mounts in a timed-out state,
-        // get the fallback child from the inner fragment and mount
-        // it as if it was our own child. Updates handle this too.
-        const primaryChildFragment = fiber.child;
-        const fallbackChildFragment = primaryChildFragment
-          ? primaryChildFragment.sibling
-          : null;
-        const fallbackChild = fallbackChildFragment
-          ? fallbackChildFragment.child
-          : null;
-        if (fallbackChild !== null) {
-          mountFiberRecursively(
-            fallbackChild,
-            shouldIncludeInTree ? fiber : parentFiber,
-            true,
-            traceNearestHostComponentUpdate,
-          );
+      const shouldIncludeInTree = !shouldFilterFiber(fiber);
+      if (shouldIncludeInTree) {
+        recordMount(fiber, parentFiber);
+      }
+
+      if (traceUpdatesEnabled) {
+        if (traceNearestHostComponentUpdate) {
+          const elementType = getElementTypeForFiber(fiber);
+          // If an ancestor updated, we should mark the nearest host nodes for highlighting.
+          if (elementType === ElementTypeHostComponent) {
+            traceUpdatesForNodes.add(fiber.stateNode);
+            traceNearestHostComponentUpdate = false;
+          }
+        }
+
+        // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
+        // because we don't want to highlight every host node inside of a newly mounted subtree.
+      }
+
+      const isSuspense = fiber.tag === ReactTypeOfWork.SuspenseComponent;
+      if (isSuspense) {
+        const isTimedOut = fiber.memoizedState !== null;
+        if (isTimedOut) {
+          // Special case: if Suspense mounts in a timed-out state,
+          // get the fallback child from the inner fragment and mount
+          // it as if it was our own child. Updates handle this too.
+          const primaryChildFragment = fiber.child;
+          const fallbackChildFragment = primaryChildFragment
+            ? primaryChildFragment.sibling
+            : null;
+          const fallbackChild = fallbackChildFragment
+            ? fallbackChildFragment.child
+            : null;
+          if (fallbackChild !== null) {
+            mountFiberRecursively(
+              fallbackChild,
+              shouldIncludeInTree ? fiber : parentFiber,
+              true,
+              traceNearestHostComponentUpdate,
+            );
+          }
+        } else {
+          let primaryChild: Fiber | null = null;
+          const areSuspenseChildrenConditionallyWrapped =
+            OffscreenComponent === -1;
+          if (areSuspenseChildrenConditionallyWrapped) {
+            primaryChild = fiber.child;
+          } else if (fiber.child !== null) {
+            primaryChild = fiber.child.child;
+          }
+          if (primaryChild !== null) {
+            mountFiberRecursively(
+              primaryChild,
+              shouldIncludeInTree ? fiber : parentFiber,
+              true,
+              traceNearestHostComponentUpdate,
+            );
+          }
         }
       } else {
-        let primaryChild: Fiber | null = null;
-        const areSuspenseChildrenConditionallyWrapped =
-          OffscreenComponent === -1;
-        if (areSuspenseChildrenConditionallyWrapped) {
-          primaryChild = fiber.child;
-        } else if (fiber.child !== null) {
-          primaryChild = fiber.child.child;
-        }
-        if (primaryChild !== null) {
+        if (fiber.child !== null) {
           mountFiberRecursively(
-            primaryChild,
+            fiber.child,
             shouldIncludeInTree ? fiber : parentFiber,
             true,
             traceNearestHostComponentUpdate,
           );
         }
       }
-    } else {
-      if (fiber.child !== null) {
-        mountFiberRecursively(
-          fiber.child,
-          shouldIncludeInTree ? fiber : parentFiber,
-          true,
-          traceNearestHostComponentUpdate,
-        );
-      }
-    }
 
-    // We're exiting this Fiber now, and entering its siblings.
-    // If we have selection to restore, we might need to re-activate tracking.
-    updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
+      // We're exiting this Fiber now, and entering its siblings.
+      // If we have selection to restore, we might need to re-activate tracking.
+      updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
 
-    if (traverseSiblings && fiber.sibling !== null) {
-      mountFiberRecursively(
-        fiber.sibling,
-        parentFiber,
-        true,
-        traceNearestHostComponentUpdate,
-      );
+      fiber = traverseSiblings ? fiber.sibling : null;
     }
   }
 
@@ -1354,7 +2116,7 @@ export function attach(
   }
 
   function recordProfilingDurations(fiber: Fiber) {
-    const id = getFiberID(getPrimaryFiber(fiber));
+    const id = getFiberIDThrows(fiber);
     const {actualDuration, treeBaseDuration} = fiber;
 
     idToTreeBaseDurationMap.set(id, treeBaseDuration || 0);
@@ -1420,6 +2182,9 @@ export function attach(
   }
 
   function recordResetChildren(fiber: Fiber, childSet: Fiber) {
+    if (__DEBUG__) {
+      debug('recordResetChildren()', childSet, fiber);
+    }
     // The frontend only really cares about the displayName, key, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
@@ -1439,7 +2204,7 @@ export function attach(
       return;
     }
     pushOperation(TREE_OPERATION_REORDER_CHILDREN);
-    pushOperation(getFiberID(getPrimaryFiber(fiber)));
+    pushOperation(getFiberIDThrows(fiber));
     pushOperation(numChildren);
     for (let i = 0; i < nextChildren.length; i++) {
       pushOperation(nextChildren[i]);
@@ -1451,9 +2216,26 @@ export function attach(
     nextChildren: Array<number>,
   ) {
     if (!shouldFilterFiber(fiber)) {
-      nextChildren.push(getFiberID(getPrimaryFiber(fiber)));
+      nextChildren.push(getFiberIDThrows(fiber));
     } else {
       let child = fiber.child;
+      const isTimedOutSuspense =
+        fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+      if (isTimedOutSuspense) {
+        // Special case: if Suspense mounts in a timed-out state,
+        // get the fallback child from the inner fragment,
+        // and skip over the primary child.
+        const primaryChildFragment = fiber.child;
+        const fallbackChildFragment = primaryChildFragment
+          ? primaryChildFragment.sibling
+          : null;
+        const fallbackChild = fallbackChildFragment
+          ? fallbackChildFragment.child
+          : null;
+        if (fallbackChild !== null) {
+          child = fallbackChild;
+        }
+      }
       while (child !== null) {
         findReorderedChildrenRecursively(child, nextChildren);
         child = child.sibling;
@@ -1468,6 +2250,8 @@ export function attach(
     parentFiber: Fiber | null,
     traceNearestHostComponentUpdate: boolean,
   ): boolean {
+    const id = getOrGenerateFiberID(nextFiber);
+
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
@@ -1484,7 +2268,9 @@ export function attach(
         if (
           elementType === ElementTypeFunction ||
           elementType === ElementTypeClass ||
-          elementType === ElementTypeContext
+          elementType === ElementTypeContext ||
+          elementType === ElementTypeMemo ||
+          elementType === ElementTypeForwardRef
         ) {
           // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
           traceNearestHostComponentUpdate = didFiberRender(
@@ -1497,8 +2283,7 @@ export function attach(
 
     if (
       mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id ===
-        getFiberID(getPrimaryFiber(nextFiber)) &&
+      mostRecentlyInspectedElement.id === id &&
       didFiberRender(prevFiber, nextFiber)
     ) {
       // If this Fiber has updated, clear cached inspected data.
@@ -1555,7 +2340,7 @@ export function attach(
       if (nextPrimaryChildSet !== null) {
         mountFiberRecursively(
           nextPrimaryChildSet,
-          nextFiber,
+          shouldIncludeInTree ? nextFiber : parentFiber,
           true,
           traceNearestHostComponentUpdate,
         );
@@ -1575,7 +2360,7 @@ export function attach(
       if (nextFallbackChildSet != null) {
         mountFiberRecursively(
           nextFallbackChildSet,
-          nextFiber,
+          shouldIncludeInTree ? nextFiber : parentFiber,
           true,
           traceNearestHostComponentUpdate,
         );
@@ -1642,7 +2427,7 @@ export function attach(
           // we should fall back to recursively marking the nearest host descendants for highlight.
           if (traceNearestHostComponentUpdate) {
             const hostFibers = findAllCurrentHostFibers(
-              getFiberID(getPrimaryFiber(nextFiber)),
+              getFiberIDThrows(nextFiber),
             );
             hostFibers.forEach(hostFiber => {
               traceUpdatesForNodes.add(hostFiber.stateNode);
@@ -1688,6 +2473,22 @@ export function attach(
     // We don't patch any methods so there is no cleanup.
   }
 
+  function rootSupportsProfiling(root) {
+    if (root.memoizedInteractions != null) {
+      // v16 builds include this field for the scheduler/tracing API.
+      return true;
+    } else if (
+      root.current != null &&
+      root.current.hasOwnProperty('treeBaseDuration')
+    ) {
+      // The scheduler/tracing API was removed in v17 though
+      // so we need to check a non-root Fiber.
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function flushInitialOperations() {
     const localPendingOperationsQueue = pendingOperationsQueue;
 
@@ -1710,26 +2511,22 @@ export function attach(
       }
       // If we have not been profiling, then we can just walk the tree and build up its current state as-is.
       hook.getFiberRoots(rendererID).forEach(root => {
-        currentRootID = getFiberID(getPrimaryFiber(root.current));
+        currentRootID = getOrGenerateFiberID(root.current);
         setRootPseudoKey(currentRootID, root.current);
 
-        // Checking root.memoizedInteractions handles multi-renderer edge-case-
-        // where some v16 renderers support profiling and others don't.
-        if (isProfiling && root.memoizedInteractions != null) {
-          // If profiling is active, store commit time and duration, and the current interactions.
+        // Handle multi-renderer edge-case where only some v16 renderers support profiling.
+        if (isProfiling && rootSupportsProfiling(root)) {
+          // If profiling is active, store commit time and duration.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
             changeDescriptions: recordChangeDescriptions ? new Map() : null,
             durations: [],
             commitTime: getCurrentTime() - profilingStartTime,
-            interactions: Array.from(root.memoizedInteractions).map(
-              (interaction: Interaction) => ({
-                ...interaction,
-                timestamp: interaction.timestamp - profilingStartTime,
-              }),
-            ),
             maxActualDuration: 0,
             priorityLevel: null,
+            updaters: getUpdatersList(root),
+            effectDuration: null,
+            passiveEffectDuration: null,
           };
         }
 
@@ -1740,6 +2537,12 @@ export function attach(
     }
   }
 
+  function getUpdatersList(root): Array<SerializedElement> | null {
+    return root.memoizedUpdaters != null
+      ? Array.from(root.memoizedUpdaters).map(fiberToSerializedElement)
+      : null;
+  }
+
   function handleCommitFiberUnmount(fiber) {
     // This is not recursive.
     // We can't traverse fibers after unmounting so instead
@@ -1747,11 +2550,27 @@ export function attach(
     recordUnmount(fiber, false);
   }
 
+  function handlePostCommitFiberRoot(root) {
+    if (isProfiling && rootSupportsProfiling(root)) {
+      if (currentCommitProfilingMetadata !== null) {
+        const {effectDuration, passiveEffectDuration} = getEffectDurations(
+          root,
+        );
+        currentCommitProfilingMetadata.effectDuration = effectDuration;
+        currentCommitProfilingMetadata.passiveEffectDuration = passiveEffectDuration;
+      }
+    }
+  }
+
   function handleCommitFiberRoot(root, priorityLevel) {
     const current = root.current;
     const alternate = current.alternate;
 
-    currentRootID = getFiberID(getPrimaryFiber(current));
+    // Flush any pending Fibers that we are untracking before processing the new commit.
+    // If we don't do this, we might end up double-deleting Fibers in some cases (like Legacy Suspense).
+    untrackFibers();
+
+    currentRootID = getOrGenerateFiberID(current);
 
     // Before the traversals, remember to start tracking
     // our path in case we have selection to restore.
@@ -1763,26 +2582,26 @@ export function attach(
       traceUpdatesForNodes.clear();
     }
 
-    // Checking root.memoizedInteractions handles multi-renderer edge-case-
-    // where some v16 renderers support profiling and others don't.
-    const isProfilingSupported = root.memoizedInteractions != null;
+    // Handle multi-renderer edge-case where only some v16 renderers support profiling.
+    const isProfilingSupported = rootSupportsProfiling(root);
 
     if (isProfiling && isProfilingSupported) {
-      // If profiling is active, store commit time and duration, and the current interactions.
+      // If profiling is active, store commit time and duration.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
         changeDescriptions: recordChangeDescriptions ? new Map() : null,
         durations: [],
         commitTime: getCurrentTime() - profilingStartTime,
-        interactions: Array.from(root.memoizedInteractions).map(
-          (interaction: Interaction) => ({
-            ...interaction,
-            timestamp: interaction.timestamp - profilingStartTime,
-          }),
-        ),
         maxActualDuration: 0,
         priorityLevel:
           priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
+
+        updaters: getUpdatersList(root),
+
+        // Initialize to null; if new enough React version is running,
+        // these values will be read during separate handlePostCommitFiberRoot() call.
+        effectDuration: null,
+        passiveEffectDuration: null,
       };
     }
 
@@ -1812,18 +2631,26 @@ export function attach(
     }
 
     if (isProfiling && isProfilingSupported) {
-      const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-        currentRootID,
-      );
-      if (commitProfilingMetadata != null) {
-        commitProfilingMetadata.push(
-          ((currentCommitProfilingMetadata: any): CommitProfilingData),
-        );
-      } else {
-        ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
+      // Make sure at least one Fiber performed work during this commit.
+      // If not, don't send it to the frontend; showing an empty commit in the Profiler is confusing.
+      if (
+        currentCommitProfilingMetadata != null &&
+        currentCommitProfilingMetadata.durations.length > 0
+      ) {
+        const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
           currentRootID,
-          [((currentCommitProfilingMetadata: any): CommitProfilingData)],
         );
+
+        if (commitProfilingMetadata != null) {
+          commitProfilingMetadata.push(
+            ((currentCommitProfilingMetadata: any): CommitProfilingData),
+          );
+        } else {
+          ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
+            currentRootID,
+            [((currentCommitProfilingMetadata: any): CommitProfilingData)],
+          );
+        }
       }
     }
 
@@ -1897,7 +2724,7 @@ export function attach(
   }
 
   function getDisplayNameForFiberID(id) {
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
   }
 
@@ -1912,31 +2739,38 @@ export function attach(
           fiber = fiber.return;
         }
       }
-      return getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
+      return getFiberIDThrows(((fiber: any): Fiber));
     }
     return null;
   }
 
-  const MOUNTING = 1;
-  const MOUNTED = 2;
-  const UNMOUNTED = 3;
+  // This function is copied from React and should be kept in sync:
+  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  function assertIsMounted(fiber) {
+    if (getNearestMountedFiber(fiber) !== fiber) {
+      throw new Error('Unable to find node on an unmounted component.');
+    }
+  }
 
   // This function is copied from React and should be kept in sync:
-  // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
-  function isFiberMountedImpl(fiber: Fiber): number {
+  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  function getNearestMountedFiber(fiber: Fiber): null | Fiber {
     let node = fiber;
+    let nearestMounted = fiber;
     if (!fiber.alternate) {
       // If there is no alternate, this might be a new tree that isn't inserted
       // yet. If it is, then it will have a pending insertion effect on it.
-      if ((node.effectTag & Placement) !== NoEffect) {
-        return MOUNTING;
-      }
-      while (node.return) {
-        node = node.return;
-        if ((node.effectTag & Placement) !== NoEffect) {
-          return MOUNTING;
+      let nextNode = node;
+      do {
+        node = nextNode;
+        if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
+          // This is an insertion or in-progress hydration. The nearest possible
+          // mounted fiber is the parent but we need to continue to figure out
+          // if that one is still mounted.
+          nearestMounted = node.return;
         }
-      }
+        nextNode = node.return;
+      } while (nextNode);
     } else {
       while (node.return) {
         node = node.return;
@@ -1945,19 +2779,19 @@ export function attach(
     if (node.tag === HostRoot) {
       // TODO: Check if this was a nested HostRoot when used with
       // renderContainerIntoSubtree.
-      return MOUNTED;
+      return nearestMounted;
     }
     // If we didn't hit the root, that means that we're in an disconnected tree
     // that has been unmounted.
-    return UNMOUNTED;
+    return null;
   }
 
   // This function is copied from React and should be kept in sync:
-  // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
+  // https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberTreeReflection.js
   // It would be nice if we updated React to inject this function directly (vs just indirectly via findDOMNode).
   // BEGIN copied code
   function findCurrentFiberUsingSlowPathById(id: number): Fiber | null {
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return null;
@@ -1966,11 +2800,13 @@ export function attach(
     const alternate = fiber.alternate;
     if (!alternate) {
       // If there is no alternate, then we only need to check if it is mounted.
-      const state = isFiberMountedImpl(fiber);
-      if (state === UNMOUNTED) {
-        throw Error('Unable to find node on an unmounted component.');
+      const nearestMounted = getNearestMountedFiber(fiber);
+
+      if (nearestMounted === null) {
+        throw new Error('Unable to find node on an unmounted component.');
       }
-      if (state === MOUNTING) {
+
+      if (nearestMounted !== fiber) {
         return null;
       }
       return fiber;
@@ -2009,23 +2845,20 @@ export function attach(
         while (child) {
           if (child === a) {
             // We've determined that A is the current branch.
-            if (isFiberMountedImpl(parentA) !== MOUNTED) {
-              throw Error('Unable to find node on an unmounted component.');
-            }
+            assertIsMounted(parentA);
             return fiber;
           }
           if (child === b) {
             // We've determined that B is the current branch.
-            if (isFiberMountedImpl(parentA) !== MOUNTED) {
-              throw Error('Unable to find node on an unmounted component.');
-            }
+            assertIsMounted(parentA);
             return alternate;
           }
           child = child.sibling;
         }
+
         // We should never have an alternate for any mounting node. So the only
         // way this could possibly happen is if this was unmounted, if at all.
-        throw Error('Unable to find node on an unmounted component.');
+        throw new Error('Unable to find node on an unmounted component.');
       }
 
       if (a.return !== b.return) {
@@ -2076,8 +2909,9 @@ export function attach(
             }
             child = child.sibling;
           }
+
           if (!didFindChild) {
-            throw Error(
+            throw new Error(
               'Child was not found in either parent set. This indicates a bug ' +
                 'in React related to the return pointer. Please file an issue.',
             );
@@ -2086,17 +2920,19 @@ export function attach(
       }
 
       if (a.alternate !== b) {
-        throw Error(
+        throw new Error(
           "Return fibers should always be each others' alternates. " +
             'This error is likely caused by a bug in React. Please file an issue.',
         );
       }
     }
+
     // If the root is not a host container, we're in a disconnected tree. I.e.
     // unmounted.
     if (a.tag !== HostRoot) {
-      throw Error('Unable to find node on an unmounted component.');
+      throw new Error('Unable to find node on an unmounted component.');
     }
+
     if (a.stateNode.current === a) {
       // We've determined that A is the current branch.
       return fiber;
@@ -2104,14 +2940,14 @@ export function attach(
     // Otherwise B has to be current branch.
     return alternate;
   }
+
   // END copied code
 
   function prepareViewAttributeSource(
     id: number,
     path: Array<string | number>,
   ): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       window.$attribute = getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
@@ -2120,7 +2956,7 @@ export function attach(
   }
 
   function prepareViewElementSource(id: number): void {
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -2151,7 +2987,16 @@ export function attach(
     }
   }
 
-  function getOwnersList(id: number): Array<Owner> | null {
+  function fiberToSerializedElement(fiber: Fiber): SerializedElement {
+    return {
+      displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
+      id: getFiberIDThrows(fiber),
+      key: fiber.key,
+      type: getElementTypeForFiber(fiber),
+    };
+  }
+
+  function getOwnersList(id: number): Array<SerializedElement> | null {
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
       return null;
@@ -2159,22 +3004,12 @@ export function attach(
 
     const {_debugOwner} = fiber;
 
-    const owners = [
-      {
-        displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
-        id,
-        type: getElementTypeForFiber(fiber),
-      },
-    ];
+    const owners: Array<SerializedElement> = [fiberToSerializedElement(fiber)];
 
     if (_debugOwner) {
       let owner = _debugOwner;
       while (owner !== null) {
-        owners.unshift({
-          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
-          id: getFiberID(getPrimaryFiber(owner)),
-          type: getElementTypeForFiber(owner),
-        });
+        owners.unshift(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
       }
     }
@@ -2199,6 +3034,34 @@ export function attach(
     }
 
     return {instance, style};
+  }
+
+  function isErrorBoundary(fiber: Fiber): boolean {
+    const {tag, type} = fiber;
+
+    switch (tag) {
+      case ClassComponent:
+      case IncompleteClassComponent:
+        const instance = fiber.stateNode;
+        return (
+          typeof type.getDerivedStateFromError === 'function' ||
+          (instance !== null &&
+            typeof instance.componentDidCatch === 'function')
+        );
+      default:
+        return false;
+    }
+  }
+
+  function getNearestErrorBoundaryID(fiber: Fiber): number | null {
+    let parent = fiber.return;
+    while (parent !== null) {
+      if (isErrorBoundary(parent)) {
+        return getFiberIDUnsafe(parent);
+      }
+      parent = parent.return;
+    }
+    return null;
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {
@@ -2226,6 +3089,10 @@ export function attach(
         tag === SimpleMemoComponent ||
         tag === ForwardRef) &&
       (!!memoizedState || !!dependencies);
+
+    // TODO Show custom UI for Cache like we do for Suspense
+    // For now, just hide state data entirely since it's not meant to be inspected.
+    const showState = !usesHooks && tag !== CacheComponent;
 
     const typeSymbol = getTypeSymbol(type);
 
@@ -2301,11 +3168,7 @@ export function attach(
       owners = [];
       let owner = _debugOwner;
       while (owner !== null) {
-        owners.push({
-          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
-          id: getFiberID(getPrimaryFiber(owner)),
-          type: getElementTypeForFiber(owner),
-        });
+        owners.push(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
       }
     }
@@ -2330,6 +3193,7 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
+          true, // Include source location info for hooks
         );
       } finally {
         // Restore original console functionality.
@@ -2352,14 +3216,45 @@ export function attach(
       rootType = fiberRoot._debugRootType;
     }
 
+    const errors = fiberIDToErrorsMap.get(id) || new Map();
+    const warnings = fiberIDToWarningsMap.get(id) || new Map();
+
+    const isErrored =
+      (fiber.flags & DidCapture) !== NoFlags ||
+      forceErrorForFiberIDs.get(id) === true;
+
+    let targetErrorBoundaryID;
+    if (isErrorBoundary(fiber)) {
+      // if the current inspected element is an error boundary,
+      // either that we want to use it to toggle off error state
+      // or that we allow to force error state on it if it's within another
+      // error boundary
+      targetErrorBoundaryID = isErrored ? id : getNearestErrorBoundaryID(fiber);
+    } else {
+      targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
+    }
+
     return {
       id,
 
-      // Does the current renderer support editable hooks?
+      // Does the current renderer support editable hooks and function props?
       canEditHooks: typeof overrideHookState === 'function',
-
-      // Does the current renderer support editable function props?
       canEditFunctionProps: typeof overrideProps === 'function',
+
+      // Does the current renderer support advanced editing interface?
+      canEditHooksAndDeletePaths:
+        typeof overrideHookStateDeletePath === 'function',
+      canEditHooksAndRenamePaths:
+        typeof overrideHookStateRenamePath === 'function',
+      canEditFunctionPropsDeletePaths:
+        typeof overridePropsDeletePath === 'function',
+      canEditFunctionPropsRenamePaths:
+        typeof overridePropsRenamePath === 'function',
+
+      canToggleError: supportsTogglingError && targetErrorBoundaryID != null,
+      // Is this error boundary in error state.
+      isErrored,
+      targetErrorBoundaryID,
 
       canToggleSuspense:
         supportsTogglingSuspense &&
@@ -2385,7 +3280,9 @@ export function attach(
       context,
       hooks,
       props: memoizedProps,
-      state: usesHooks ? null : memoizedState,
+      state: showState ? memoizedState : null,
+      errors: Array.from(errors.entries()),
+      warnings: Array.from(warnings.entries()),
 
       // List of owners
       owners,
@@ -2403,11 +3300,16 @@ export function attach(
   let hasElementUpdatedSinceLastInspected: boolean = false;
   let currentlyInspectedPaths: Object = {};
 
-  function isMostRecentlyInspectedElementCurrent(id: number): boolean {
+  function isMostRecentlyInspectedElement(id: number): boolean {
     return (
       mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id === id &&
-      !hasElementUpdatedSinceLastInspected
+      mostRecentlyInspectedElement.id === id
+    );
+  }
+
+  function isMostRecentlyInspectedElementCurrent(id: number): boolean {
+    return (
+      isMostRecentlyInspectedElement(id) && !hasElementUpdatedSinceLastInspected
     );
   }
 
@@ -2436,6 +3338,17 @@ export function attach(
             // Never dehydrate the "hooks" object at the top levels.
             return true;
           }
+
+          if (
+            path[path.length - 2] === 'hookSource' &&
+            path[path.length - 1] === 'fileName'
+          ) {
+            // It's important to preserve the full file name (URL) for hook sources
+            // in case the user has enabled the named hooks feature.
+            // Otherwise the frontend may end up with a partial URL which it can't load.
+            return true;
+          }
+
           if (
             path[path.length - 1] === 'subHooks' ||
             path[path.length - 2] === 'subHooks'
@@ -2468,7 +3381,7 @@ export function attach(
   function updateSelectedElement(inspectedElement: InspectedElement): void {
     const {hooks, id, props} = inspectedElement;
 
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -2491,6 +3404,7 @@ export function attach(
         break;
       case ForwardRef:
         global.$r = {
+          hooks,
           props,
           type: type.render,
         };
@@ -2498,6 +3412,7 @@ export function attach(
       case MemoComponent:
       case SimpleMemoComponent:
         global.$r = {
+          hooks,
           props,
           type:
             elementType != null && elementType.type != null
@@ -2516,9 +3431,7 @@ export function attach(
     path: Array<string | number>,
     count: number,
   ): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       const value = getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
@@ -2533,9 +3446,7 @@ export function attach(
   }
 
   function copyElementPath(id: number, path: Array<string | number>): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       copyToClipboard(
         getInObject(
           ((mostRecentlyInspectedElement: any): InspectedElement),
@@ -2546,97 +3457,109 @@ export function attach(
   }
 
   function inspectElement(
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    path: Array<string | number> | null,
+    forceFullData: boolean,
   ): InspectedElementPayload {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+    if (path !== null) {
+      mergeInspectedPaths(path);
+    }
 
-    if (isCurrent) {
-      if (path != null) {
-        mergeInspectedPaths(path);
+    if (isMostRecentlyInspectedElement(id) && !forceFullData) {
+      if (!hasElementUpdatedSinceLastInspected) {
+        if (path !== null) {
+          let secondaryCategory = null;
+          if (path[0] === 'hooks') {
+            secondaryCategory = 'hooks';
+          }
 
-        let secondaryCategory = null;
-        if (path[0] === 'hooks') {
-          secondaryCategory = 'hooks';
-        }
-
-        // If this element has not been updated since it was last inspected,
-        // we can just return the subset of data in the newly-inspected path.
-        return {
-          id,
-          type: 'hydrated-path',
-          path,
-          value: cleanForBridge(
-            getInObject(
-              ((mostRecentlyInspectedElement: any): InspectedElement),
+          // If this element has not been updated since it was last inspected,
+          // we can just return the subset of data in the newly-inspected path.
+          return {
+            id,
+            responseID: requestID,
+            type: 'hydrated-path',
+            path,
+            value: cleanForBridge(
+              getInObject(
+                ((mostRecentlyInspectedElement: any): InspectedElement),
+                path,
+              ),
+              createIsPathAllowed(null, secondaryCategory),
               path,
             ),
-            createIsPathAllowed(null, secondaryCategory),
-            path,
-          ),
-        };
-      } else {
-        // If this element has not been updated since it was last inspected, we don't need to re-run it.
-        // Instead we can just return the ID to indicate that it has not changed.
-        return {
-          id,
-          type: 'no-change',
-        };
+          };
+        } else {
+          // If this element has not been updated since it was last inspected, we don't need to return it.
+          // Instead we can just return the ID to indicate that it has not changed.
+          return {
+            id,
+            responseID: requestID,
+            type: 'no-change',
+          };
+        }
       }
     } else {
-      hasElementUpdatedSinceLastInspected = false;
+      currentlyInspectedPaths = {};
+    }
 
-      if (
-        mostRecentlyInspectedElement === null ||
-        mostRecentlyInspectedElement.id !== id
-      ) {
-        currentlyInspectedPaths = {};
-      }
+    hasElementUpdatedSinceLastInspected = false;
 
+    try {
       mostRecentlyInspectedElement = inspectElementRaw(id);
-      if (mostRecentlyInspectedElement === null) {
-        return {
-          id,
-          type: 'not-found',
-        };
-      }
-
-      if (path != null) {
-        mergeInspectedPaths(path);
-      }
-
-      // Any time an inspected element has an update,
-      // we should update the selected $r value as wel.
-      // Do this before dehydration (cleanForBridge).
-      updateSelectedElement(mostRecentlyInspectedElement);
-
-      // Clone before cleaning so that we preserve the full data.
-      // This will enable us to send patches without re-inspecting if hydrated paths are requested.
-      // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
-      const cleanedInspectedElement = {...mostRecentlyInspectedElement};
-      cleanedInspectedElement.context = cleanForBridge(
-        cleanedInspectedElement.context,
-        createIsPathAllowed('context', null),
-      );
-      cleanedInspectedElement.hooks = cleanForBridge(
-        cleanedInspectedElement.hooks,
-        createIsPathAllowed('hooks', 'hooks'),
-      );
-      cleanedInspectedElement.props = cleanForBridge(
-        cleanedInspectedElement.props,
-        createIsPathAllowed('props', null),
-      );
-      cleanedInspectedElement.state = cleanForBridge(
-        cleanedInspectedElement.state,
-        createIsPathAllowed('state', null),
-      );
+    } catch (error) {
+      console.error('Error inspecting element.\n\n', error);
 
       return {
+        type: 'error',
         id,
-        type: 'full-data',
-        value: cleanedInspectedElement,
+        responseID: requestID,
+        message: error.message,
+        stack: error.stack,
       };
     }
+
+    if (mostRecentlyInspectedElement === null) {
+      return {
+        id,
+        responseID: requestID,
+        type: 'not-found',
+      };
+    }
+
+    // Any time an inspected element has an update,
+    // we should update the selected $r value as wel.
+    // Do this before dehydration (cleanForBridge).
+    updateSelectedElement(mostRecentlyInspectedElement);
+
+    // Clone before cleaning so that we preserve the full data.
+    // This will enable us to send patches without re-inspecting if hydrated paths are requested.
+    // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
+    const cleanedInspectedElement = {...mostRecentlyInspectedElement};
+    cleanedInspectedElement.context = cleanForBridge(
+      cleanedInspectedElement.context,
+      createIsPathAllowed('context', null),
+    );
+    cleanedInspectedElement.hooks = cleanForBridge(
+      cleanedInspectedElement.hooks,
+      createIsPathAllowed('hooks', 'hooks'),
+    );
+    cleanedInspectedElement.props = cleanForBridge(
+      cleanedInspectedElement.props,
+      createIsPathAllowed('props', null),
+    );
+    cleanedInspectedElement.state = cleanForBridge(
+      cleanedInspectedElement.state,
+      createIsPathAllowed('state', null),
+    );
+
+    return {
+      id,
+      responseID: requestID,
+      type: 'full-data',
+      value: cleanedInspectedElement,
+    };
   }
 
   function logElementToConsole(id) {
@@ -2682,60 +3605,188 @@ export function attach(
     }
   }
 
-  function setInHook(
+  function deletePath(
+    type: 'context' | 'hooks' | 'props' | 'state',
     id: number,
-    index: number,
+    hookID: ?number,
+    path: Array<string | number>,
+  ): void {
+    const fiber = findCurrentFiberUsingSlowPathById(id);
+    if (fiber !== null) {
+      const instance = fiber.stateNode;
+
+      switch (type) {
+        case 'context':
+          // To simplify hydration and display of primitive context values (e.g. number, string)
+          // the inspectElement() method wraps context in a {value: ...} object.
+          // We need to remove the first part of the path (the "value") before continuing.
+          path = path.slice(1);
+
+          switch (fiber.tag) {
+            case ClassComponent:
+              if (path.length === 0) {
+                // Simple context value (noop)
+              } else {
+                deletePathInObject(instance.context, path);
+              }
+              instance.forceUpdate();
+              break;
+            case FunctionComponent:
+              // Function components using legacy context are not editable
+              // because there's no instance on which to create a cloned, mutated context.
+              break;
+          }
+          break;
+        case 'hooks':
+          if (typeof overrideHookStateDeletePath === 'function') {
+            overrideHookStateDeletePath(fiber, ((hookID: any): number), path);
+          }
+          break;
+        case 'props':
+          if (instance === null) {
+            if (typeof overridePropsDeletePath === 'function') {
+              overridePropsDeletePath(fiber, path);
+            }
+          } else {
+            fiber.pendingProps = copyWithDelete(instance.props, path);
+            instance.forceUpdate();
+          }
+          break;
+        case 'state':
+          deletePathInObject(instance.state, path);
+          instance.forceUpdate();
+          break;
+      }
+    }
+  }
+
+  function renamePath(
+    type: 'context' | 'hooks' | 'props' | 'state',
+    id: number,
+    hookID: ?number,
+    oldPath: Array<string | number>,
+    newPath: Array<string | number>,
+  ): void {
+    const fiber = findCurrentFiberUsingSlowPathById(id);
+    if (fiber !== null) {
+      const instance = fiber.stateNode;
+
+      switch (type) {
+        case 'context':
+          // To simplify hydration and display of primitive context values (e.g. number, string)
+          // the inspectElement() method wraps context in a {value: ...} object.
+          // We need to remove the first part of the path (the "value") before continuing.
+          oldPath = oldPath.slice(1);
+          newPath = newPath.slice(1);
+
+          switch (fiber.tag) {
+            case ClassComponent:
+              if (oldPath.length === 0) {
+                // Simple context value (noop)
+              } else {
+                renamePathInObject(instance.context, oldPath, newPath);
+              }
+              instance.forceUpdate();
+              break;
+            case FunctionComponent:
+              // Function components using legacy context are not editable
+              // because there's no instance on which to create a cloned, mutated context.
+              break;
+          }
+          break;
+        case 'hooks':
+          if (typeof overrideHookStateRenamePath === 'function') {
+            overrideHookStateRenamePath(
+              fiber,
+              ((hookID: any): number),
+              oldPath,
+              newPath,
+            );
+          }
+          break;
+        case 'props':
+          if (instance === null) {
+            if (typeof overridePropsRenamePath === 'function') {
+              overridePropsRenamePath(fiber, oldPath, newPath);
+            }
+          } else {
+            fiber.pendingProps = copyWithRename(
+              instance.props,
+              oldPath,
+              newPath,
+            );
+            instance.forceUpdate();
+          }
+          break;
+        case 'state':
+          renamePathInObject(instance.state, oldPath, newPath);
+          instance.forceUpdate();
+          break;
+      }
+    }
+  }
+
+  function overrideValueAtPath(
+    type: 'context' | 'hooks' | 'props' | 'state',
+    id: number,
+    hookID: ?number,
     path: Array<string | number>,
     value: any,
-  ) {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null) {
-      if (typeof overrideHookState === 'function') {
-        overrideHookState(fiber, index, path, value);
-      }
-    }
-  }
-
-  function setInProps(id: number, path: Array<string | number>, value: any) {
+  ): void {
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       const instance = fiber.stateNode;
-      if (instance === null) {
-        if (typeof overrideProps === 'function') {
-          overrideProps(fiber, path, value);
-        }
-      } else {
-        fiber.pendingProps = copyWithSet(instance.props, path, value);
-        instance.forceUpdate();
+
+      switch (type) {
+        case 'context':
+          // To simplify hydration and display of primitive context values (e.g. number, string)
+          // the inspectElement() method wraps context in a {value: ...} object.
+          // We need to remove the first part of the path (the "value") before continuing.
+          path = path.slice(1);
+
+          switch (fiber.tag) {
+            case ClassComponent:
+              if (path.length === 0) {
+                // Simple context value
+                instance.context = value;
+              } else {
+                setInObject(instance.context, path, value);
+              }
+              instance.forceUpdate();
+              break;
+            case FunctionComponent:
+              // Function components using legacy context are not editable
+              // because there's no instance on which to create a cloned, mutated context.
+              break;
+          }
+          break;
+        case 'hooks':
+          if (typeof overrideHookState === 'function') {
+            overrideHookState(fiber, ((hookID: any): number), path, value);
+          }
+          break;
+        case 'props':
+          switch (fiber.tag) {
+            case ClassComponent:
+              fiber.pendingProps = copyWithSet(instance.props, path, value);
+              instance.forceUpdate();
+              break;
+            default:
+              if (typeof overrideProps === 'function') {
+                overrideProps(fiber, path, value);
+              }
+              break;
+          }
+          break;
+        case 'state':
+          switch (fiber.tag) {
+            case ClassComponent:
+              setInObject(instance.state, path, value);
+              instance.forceUpdate();
+              break;
+          }
+          break;
       }
-    }
-  }
-
-  function setInState(id: number, path: Array<string | number>, value: any) {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null) {
-      const instance = fiber.stateNode;
-      setInObject(instance.state, path, value);
-      instance.forceUpdate();
-    }
-  }
-
-  function setInContext(id: number, path: Array<string | number>, value: any) {
-    // To simplify hydration and display of primitive context values (e.g. number, string)
-    // the inspectElement() method wraps context in a {value: ...} object.
-    // We need to remove the first part of the path (the "value") before continuing.
-    path = path.slice(1);
-
-    const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null) {
-      const instance = fiber.stateNode;
-      if (path.length === 0) {
-        // Simple context value
-        instance.context = value;
-      } else {
-        setInObject(instance.context, path, value);
-      }
-      instance.forceUpdate();
     }
   }
 
@@ -2743,9 +3794,11 @@ export function attach(
     changeDescriptions: Map<number, ChangeDescription> | null,
     commitTime: number,
     durations: Array<number>,
-    interactions: Array<Interaction>,
+    effectDuration: number | null,
     maxActualDuration: number,
+    passiveEffectDuration: number | null,
     priorityLevel: string | null,
+    updaters: Array<SerializedElement> | null,
   |};
 
   type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
@@ -2774,8 +3827,6 @@ export function attach(
       (commitProfilingMetadata, rootID) => {
         const commitData: Array<CommitDataBackend> = [];
         const initialTreeBaseDurations: Array<[number, number]> = [];
-        const allInteractions: Map<number, Interaction> = new Map();
-        const interactionCommits: Map<number, Array<number>> = new Map();
 
         const displayName =
           (displayNamesByRootID !== null && displayNamesByRootID.get(rootID)) ||
@@ -2798,28 +3849,13 @@ export function attach(
           const {
             changeDescriptions,
             durations,
-            interactions,
+            effectDuration,
             maxActualDuration,
+            passiveEffectDuration,
             priorityLevel,
             commitTime,
+            updaters,
           } = commitProfilingData;
-
-          const interactionIDs: Array<number> = [];
-
-          interactions.forEach(interaction => {
-            if (!allInteractions.has(interaction.id)) {
-              allInteractions.set(interaction.id, interaction);
-            }
-
-            interactionIDs.push(interaction.id);
-
-            const commitIndices = interactionCommits.get(interaction.id);
-            if (commitIndices != null) {
-              commitIndices.push(commitIndex);
-            } else {
-              interactionCommits.set(interaction.id, [commitIndex]);
-            }
-          });
 
           const fiberActualDurations: Array<[number, number]> = [];
           const fiberSelfDurations: Array<[number, number]> = [];
@@ -2835,11 +3871,13 @@ export function attach(
                 ? Array.from(changeDescriptions.entries())
                 : null,
             duration: maxActualDuration,
+            effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
-            interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp: commitTime,
+            updaters,
           });
         });
 
@@ -2847,8 +3885,6 @@ export function attach(
           commitData,
           displayName,
           initialTreeBaseDurations,
-          interactionCommits: Array.from(interactionCommits.entries()),
-          interactions: Array.from(allInteractions.entries()),
           rootID,
         });
       },
@@ -2877,7 +3913,7 @@ export function attach(
     idToContextsMap = new Map();
 
     hook.getFiberRoots(rendererID).forEach(root => {
-      const rootID = getFiberID(getPrimaryFiber(root.current));
+      const rootID = getFiberIDThrows(root.current);
       ((displayNamesByRootID: any): DisplayNamesByRootID).set(
         rootID,
         getDisplayNameForRoot(root.current),
@@ -2912,16 +3948,83 @@ export function attach(
   }
 
   // React will switch between these implementations depending on whether
-  // we have any manually suspended Fibers or not.
+  // we have any manually suspended/errored-out Fibers or not.
+  function shouldErrorFiberAlwaysNull() {
+    return null;
+  }
+
+  // Map of id and its force error status: true (error), false (toggled off),
+  // null (do nothing)
+  const forceErrorForFiberIDs = new Map();
+
+  function shouldErrorFiberAccordingToMap(fiber) {
+    if (typeof setErrorHandler !== 'function') {
+      throw new Error(
+        'Expected overrideError() to not get called for earlier React versions.',
+      );
+    }
+
+    const id = getFiberIDUnsafe(fiber);
+    if (id === null) {
+      return null;
+    }
+
+    let status = null;
+    if (forceErrorForFiberIDs.has(id)) {
+      status = forceErrorForFiberIDs.get(id);
+      if (status === false) {
+        // TRICKY overrideError adds entries to this Map,
+        // so ideally it would be the method that clears them too,
+        // but that would break the functionality of the feature,
+        // since DevTools needs to tell React to act differently than it normally would
+        // (don't just re-render the failed boundary, but reset its errored state too).
+        // So we can only clear it after telling React to reset the state.
+        // Technically this is premature and we should schedule it for later,
+        // since the render could always fail without committing the updated error boundary,
+        // but since this is a DEV-only feature, the simplicity is worth the trade off.
+        forceErrorForFiberIDs.delete(id);
+
+        if (forceErrorForFiberIDs.size === 0) {
+          // Last override is gone. Switch React back to fast path.
+          setErrorHandler(shouldErrorFiberAlwaysNull);
+        }
+      }
+    }
+    return status;
+  }
+
+  function overrideError(id, forceError) {
+    if (
+      typeof setErrorHandler !== 'function' ||
+      typeof scheduleUpdate !== 'function'
+    ) {
+      throw new Error(
+        'Expected overrideError() to not get called for earlier React versions.',
+      );
+    }
+
+    forceErrorForFiberIDs.set(id, forceError);
+
+    if (forceErrorForFiberIDs.size === 1) {
+      // First override is added. Switch React to slower path.
+      setErrorHandler(shouldErrorFiberAccordingToMap);
+    }
+
+    const fiber = idToArbitraryFiberMap.get(id);
+    if (fiber != null) {
+      scheduleUpdate(fiber);
+    }
+  }
 
   function shouldSuspendFiberAlwaysFalse() {
     return false;
   }
 
   const forceFallbackForSuspenseIDs = new Set();
+
   function shouldSuspendFiberAccordingToSet(fiber) {
-    const id = getFiberID(getPrimaryFiber(((fiber: any): Fiber)));
-    return forceFallbackForSuspenseIDs.has(id);
+    const maybeID = getFiberIDUnsafe(((fiber: any): Fiber));
+    return maybeID !== null && forceFallbackForSuspenseIDs.has(maybeID);
   }
 
   function overrideSuspense(id, forceFallback) {
@@ -2946,7 +4049,7 @@ export function attach(
         setSuspenseHandler(shouldSuspendFiberAlwaysFalse);
       }
     }
-    const fiber = idToFiberMap.get(id);
+    const fiber = idToArbitraryFiberMap.get(id);
     if (fiber != null) {
       scheduleUpdate(fiber);
     }
@@ -3097,7 +4200,7 @@ export function attach(
       case HostRoot:
         // Roots don't have a real displayName, index, or key.
         // Instead, we'll use the pseudo key (childDisplayName:indexWithThatName).
-        const id = getFiberID(getPrimaryFiber(fiber));
+        const id = getFiberIDThrows(fiber);
         const pseudoKey = rootPseudoKeys.get(id);
         if (pseudoKey === undefined) {
           throw new Error('Expected mounted root to have known pseudo key.');
@@ -3122,7 +4225,7 @@ export function attach(
   // The return path will contain Fibers that are "invisible" to the store
   // because their keys and indexes are important to restoring the selection.
   function getPathForElement(id: number): Array<PathFrame> | null {
-    let fiber = idToFiberMap.get(id);
+    let fiber = idToArbitraryFiberMap.get(id);
     if (fiber == null) {
       return null;
     }
@@ -3153,7 +4256,7 @@ export function attach(
       return null;
     }
     return {
-      id: getFiberID(getPrimaryFiber(fiber)),
+      id: getFiberIDThrows(fiber),
       isFullMatch: trackedPathMatchDepth === trackedPath.length - 1,
     };
   }
@@ -3186,7 +4289,11 @@ export function attach(
 
   return {
     cleanup,
+    clearErrorsAndWarnings,
+    clearErrorsForFiberID,
+    clearWarningsForFiberID,
     copyElementPath,
+    deletePath,
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
@@ -3198,21 +4305,23 @@ export function attach(
     getProfilingData,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
+    handlePostCommitFiberRoot,
     inspectElement,
     logElementToConsole,
+    patchConsoleForStrictMode,
     prepareViewAttributeSource,
     prepareViewElementSource,
+    overrideError,
     overrideSuspense,
+    overrideValueAtPath,
+    renamePath,
     renderer,
-    setInContext,
-    setInHook,
-    setInProps,
-    setInState,
     setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    unpatchConsoleForStrictMode,
     updateComponentFilters,
   };
 }

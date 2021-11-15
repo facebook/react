@@ -9,14 +9,15 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import invariant from 'shared/invariant';
 
 import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {updateValueIfChanged} from './inputValueTracking';
+import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 import type {ToStringValue} from './ToStringValue';
 
@@ -86,7 +87,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -103,7 +104,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -147,7 +148,7 @@ export function updateWrapper(element: Element, props: Object) {
           'This is likely caused by the value changing from undefined to ' +
           'a defined value, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -161,7 +162,7 @@ export function updateWrapper(element: Element, props: Object) {
           'This is likely caused by the value changing from a defined to ' +
           'undefined, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnControlledToUncontrolled = true;
     }
@@ -364,6 +365,9 @@ function updateNamedCousins(rootNode, props) {
     // the input might not even be in a form. It might not even be in the
     // document. Let's just use the local `querySelectorAll` to ensure we don't
     // miss anything.
+    if (__DEV__) {
+      checkAttributeStringCoercion(name, 'name');
+    }
     const group = queryRoot.querySelectorAll(
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
     );
@@ -378,11 +382,13 @@ function updateNamedCousins(rootNode, props) {
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
       const otherProps = getFiberCurrentPropsFromNode(otherNode);
-      invariant(
-        otherProps,
-        'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.',
-      );
+
+      if (!otherProps) {
+        throw new Error(
+          'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+            'same `name` is not supported.',
+        );
+      }
 
       // We need update the tracked value on the named cousin since the value
       // was changed but the input saw no event or value set
@@ -412,7 +418,7 @@ export function setDefaultValue(
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     type !== 'number' ||
-    node.ownerDocument.activeElement !== node
+    getActiveElement(node.ownerDocument) !== node
   ) {
     if (value == null) {
       node.defaultValue = toString(node._wrapperState.initialValue);

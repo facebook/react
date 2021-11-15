@@ -16,7 +16,9 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
+  REACT_OFFSCREEN_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -32,24 +34,27 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
-import {block} from './ReactBlock';
 import {
+  getCacheSignal,
+  getCacheForType,
   useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
   useDebugValue,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useMutableSource,
+  useSyncExternalStore,
   useReducer,
   useRef,
   useState,
   useTransition,
   useDeferredValue,
-  useOpaqueIdentifier,
+  useId,
+  useCacheRefresh,
 } from './ReactHooks';
-import {withSuspenseConfig} from './ReactBatchConfig';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -57,7 +62,8 @@ import {
 } from './ReactElementValidator';
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
-import {createFundamental} from './ReactFundamental';
+import {startTransition} from './ReactStartTransition';
+import {act} from './ReactAct';
 
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
@@ -87,9 +93,11 @@ export {
   useEffect,
   useImperativeHandle,
   useDebugValue,
+  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useMutableSource,
+  useSyncExternalStore,
   useReducer,
   useRef,
   useState,
@@ -107,15 +115,17 @@ export {
   createFactory,
   // Concurrent Mode
   useTransition,
+  startTransition,
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  withSuspenseConfig as unstable_withSuspenseConfig,
-  // enableBlocksAPI
-  block,
-  // enableFundamentalAPI
-  createFundamental as unstable_createFundamental,
+  REACT_OFFSCREEN_TYPE as unstable_Offscreen,
+  getCacheSignal as unstable_getCacheSignal,
+  getCacheForType as unstable_getCacheForType,
+  useCacheRefresh as unstable_useCacheRefresh,
+  REACT_CACHE_TYPE as unstable_Cache,
   // enableScopeAPI
   REACT_SCOPE_TYPE as unstable_Scope,
-  useOpaqueIdentifier as unstable_useOpaqueIdentifier,
+  useId,
+  act,
 };

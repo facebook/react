@@ -26,11 +26,12 @@ module.exports = {
     require: true,
     globalThis: true,
     global: true,
+    // Internet Explorer
+    setImmediate: true,
     // Trusted Types
     trustedTypes: true,
 
     // Scheduler profiling
-    SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
 
@@ -43,6 +44,12 @@ module.exports = {
     // Flight Webpack
     __webpack_chunk_load__: true,
     __webpack_require__: true,
+
+    // jest
+    jest: true,
+
+    // act
+    IS_REACT_ACT_ENVIRONMENT: true,
   },
   parserOptions: {
     ecmaVersion: 5,

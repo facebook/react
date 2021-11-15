@@ -12,7 +12,9 @@ import {inspect} from 'util';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import {ElementTypeRoot} from '../types';
@@ -27,10 +29,17 @@ import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
 import {printStore} from './utils';
 import ProfilerStore from './ProfilerStore';
+import {
+  BRIDGE_PROTOCOL,
+  currentBridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
 
 import type {Element} from './views/Components/types';
 import type {ComponentFilter, ElementType} from '../types';
-import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {
+  FrontendBridge,
+  BridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -48,11 +57,15 @@ const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
 const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
+type ErrorAndWarningTuples = Array<{|id: number, index: number|}>;
+
 type Config = {|
+  checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
   supportsNativeInspection?: boolean,
-  supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
+  supportsReloadAndProfile?: boolean,
+  supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
 |};
 
@@ -68,27 +81,40 @@ export type Capabilities = {|
 export default class Store extends EventEmitter<{|
   collapseNodesByDefault: [],
   componentFilters: [],
+  error: [Error],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
   supportsNativeStyleEditor: [],
   supportsProfiling: [],
   supportsReloadAndProfile: [],
+  unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
 |}> {
   _bridge: FrontendBridge;
+
+  // Computed whenever _errorsAndWarnings Map changes.
+  _cachedErrorCount: number = 0;
+  _cachedWarningCount: number = 0;
+  _cachedErrorAndWarningTuples: ErrorAndWarningTuples | null = null;
 
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
 
   _componentFilters: Array<ComponentFilter>;
 
+  // Map of ID to number of recorded error and warning message IDs.
+  _errorsAndWarnings: Map<
+    number,
+    {|errorCount: number, warningCount: number|},
+  > = new Map();
+
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
 
   // Map of ID to (mutable) Element.
   // Elements are mutated to avoid excessive cloning during tree updates.
-  // The InspectedElementContext also relies on this mutability for its WeakMap usage.
+  // The InspectedElement Suspense cache also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
   // Should the React Native style editor panel be shown?
@@ -98,7 +124,17 @@ export default class Store extends EventEmitter<{|
   // If not, features like reload-and-profile will not work correctly and must be disabled.
   _isBackendStorageAPISupported: boolean = false;
 
+  // Can DevTools use sync XHR requests?
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  // This current limitation applies only to web extension builds
+  // and will need to be reconsidered in the future if we add support for reload to React Native.
+  _isSynchronousXHRSupported: boolean = false;
+
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
+
+  // Older backends don't support an explicit bridge protocol,
+  // so we should timeout eventually and show a downgrade message.
+  _onBridgeProtocolTimeoutID: TimeoutID | null = null;
 
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
@@ -126,8 +162,10 @@ export default class Store extends EventEmitter<{|
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
+  _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
+  _unsupportedBridgeProtocol: BridgeProtocol | null = null;
   _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
@@ -159,6 +197,7 @@ export default class Store extends EventEmitter<{|
         supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
+        supportsTimeline,
         supportsTraceUpdates,
       } = config;
       this._supportsNativeInspection = supportsNativeInspection !== false;
@@ -167,6 +206,9 @@ export default class Store extends EventEmitter<{|
       }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
+      }
+      if (supportsTimeline) {
+        this._supportsTimeline = true;
       }
       if (supportsTraceUpdates) {
         this._supportsTraceUpdates = true;
@@ -182,11 +224,15 @@ export default class Store extends EventEmitter<{|
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+      this.onBackendStorageAPISupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.addListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -194,6 +240,20 @@ export default class Store extends EventEmitter<{|
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
+
+    // Verify that the frontend version is compatible with the connected backend.
+    // See github.com/facebook/react/issues/21326
+    if (config != null && config.checkBridgeProtocolCompatibility) {
+      // Older backends don't support an explicit bridge protocol,
+      // so we should timeout eventually and show a downgrade message.
+      this._onBridgeProtocolTimeoutID = setTimeout(
+        this.onBridgeProtocolTimeout,
+        10000,
+      );
+
+      bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
+      bridge.send('getBridgeProtocol');
+    }
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -219,12 +279,14 @@ export default class Store extends EventEmitter<{|
   assertMapSizeMatchesRootCount(map: Map<any, any>, mapName: string) {
     const expectedSize = this.roots.length;
     if (map.size !== expectedSize) {
-      throw new Error(
-        `Expected ${mapName} to contain ${expectedSize} items, but it contains ${
-          map.size
-        } items\n\n${inspect(map, {
-          depth: 20,
-        })}`,
+      this._throwAndEmitError(
+        Error(
+          `Expected ${mapName} to contain ${expectedSize} items, but it contains ${
+            map.size
+          } items\n\n${inspect(map, {
+            depth: 20,
+          })}`,
+        ),
       );
     }
   }
@@ -250,7 +312,9 @@ export default class Store extends EventEmitter<{|
     if (this._profilerStore.isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
-      throw Error('Cannot modify filter preferences while profiling');
+      this._throwAndEmitError(
+        Error('Cannot modify filter preferences while profiling'),
+      );
     }
 
     // Filter updates are expensive to apply (since they impact the entire tree).
@@ -279,14 +343,18 @@ export default class Store extends EventEmitter<{|
     // Update persisted filter preferences stored in localStorage.
     saveComponentFilters(value);
 
-    // Notify the renderer that filter prefernces have changed.
-    // This is an expensive opreation; it unmounts and remounts the entire tree,
+    // Notify the renderer that filter preferences have changed.
+    // This is an expensive operation; it unmounts and remounts the entire tree,
     // so only do it if the set of enabled component filters has changed.
     if (haveEnabledFiltersChanged) {
       this._bridge.send('updateComponentFilters', value);
     }
 
     this.emit('componentFilters');
+  }
+
+  get errorCount(): number {
+    return this._cachedErrorCount;
   }
 
   get hasOwnerMetadata(): boolean {
@@ -342,19 +410,36 @@ export default class Store extends EventEmitter<{|
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
+
   get supportsReloadAndProfile(): boolean {
     // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
-    // And if so, can the backend use the localStorage API?
-    // Both of these are required for the reload-and-profile feature to work.
-    return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+    // And if so, can the backend use the localStorage API and sync XHR?
+    // All of these are currently required for the reload-and-profile feature to work.
+    return (
+      this._supportsReloadAndProfile &&
+      this._isBackendStorageAPISupported &&
+      this._isSynchronousXHRSupported
+    );
+  }
+
+  get supportsTimeline(): boolean {
+    return this._supportsTimeline;
   }
 
   get supportsTraceUpdates(): boolean {
     return this._supportsTraceUpdates;
   }
 
+  get unsupportedBridgeProtocol(): BridgeProtocol | null {
+    return this._unsupportedBridgeProtocol;
+  }
+
   get unsupportedRendererVersionDetected(): boolean {
     return this._unsupportedRendererVersionDetected;
+  }
+
+  get warningCount(): number {
+    return this._cachedWarningCount;
   }
 
   containsElement(id: number): boolean {
@@ -423,6 +508,44 @@ export default class Store extends EventEmitter<{|
     }
 
     return element;
+  }
+
+  // Returns a tuple of [id, index]
+  getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
+    if (this._cachedErrorAndWarningTuples !== null) {
+      return this._cachedErrorAndWarningTuples;
+    } else {
+      const errorAndWarningTuples: ErrorAndWarningTuples = [];
+
+      this._errorsAndWarnings.forEach((_, id) => {
+        const index = this.getIndexOfElementID(id);
+        if (index !== null) {
+          let low = 0;
+          let high = errorAndWarningTuples.length;
+          while (low < high) {
+            const mid = (low + high) >> 1;
+            if (errorAndWarningTuples[mid].index > index) {
+              high = mid;
+            } else {
+              low = mid + 1;
+            }
+          }
+
+          errorAndWarningTuples.splice(low, 0, {id, index});
+        }
+      });
+
+      // Cache for later (at least until the tree changes again).
+      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
+
+      return errorAndWarningTuples;
+    }
+  }
+
+  getErrorAndWarningCountForElementID(
+    id: number,
+  ): {|errorCount: number, warningCount: number|} {
+    return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
   getIndexOfElementID(id: number): number | null {
@@ -528,7 +651,7 @@ export default class Store extends EventEmitter<{|
             }
 
             if (depth === 0) {
-              throw Error('Invalid owners list');
+              this._throwAndEmitError(Error('Invalid owners list'));
             }
 
             list.push({...innerElement, depth});
@@ -588,7 +711,7 @@ export default class Store extends EventEmitter<{|
     if (element !== null) {
       if (isCollapsed) {
         if (element.type === ElementTypeRoot) {
-          throw Error('Root nodes cannot be collapsed');
+          this._throwAndEmitError(Error('Root nodes cannot be collapsed'));
         }
 
         if (!element.isCollapsed) {
@@ -709,6 +832,7 @@ export default class Store extends EventEmitter<{|
     }
 
     let haveRootsChanged = false;
+    let haveErrorsOrWarningsChanged = false;
 
     // The first two values are always rendererID and rootID
     const rendererID = operations[0];
@@ -745,8 +869,10 @@ export default class Store extends EventEmitter<{|
           i += 3;
 
           if (this._idToElement.has(id)) {
-            throw Error(
-              `Cannot add node ${id} because a node with that id is already in the Store.`,
+            this._throwAndEmitError(
+              Error(
+                `Cannot add node "${id}" because a node with that id is already in the Store.`,
+              ),
             );
           }
 
@@ -808,8 +934,10 @@ export default class Store extends EventEmitter<{|
             }
 
             if (!this._idToElement.has(parentID)) {
-              throw Error(
-                `Cannot add child ${id} to parent ${parentID} because parent node was not found in the Store.`,
+              this._throwAndEmitError(
+                Error(
+                  `Cannot add child "${id}" to parent "${parentID}" because parent node was not found in the Store.`,
+                ),
               );
             }
 
@@ -860,8 +988,10 @@ export default class Store extends EventEmitter<{|
             const id = ((operations[i]: any): number);
 
             if (!this._idToElement.has(id)) {
-              throw Error(
-                `Cannot remove node ${id} because no matching node was found in the Store.`,
+              this._throwAndEmitError(
+                Error(
+                  `Cannot remove node "${id}" because no matching node was found in the Store.`,
+                ),
               );
             }
 
@@ -870,7 +1000,9 @@ export default class Store extends EventEmitter<{|
             const element = ((this._idToElement.get(id): any): Element);
             const {children, ownerID, parentID, weight} = element;
             if (children.length > 0) {
-              throw new Error(`Node ${id} was removed before its children.`);
+              this._throwAndEmitError(
+                Error(`Node "${id}" was removed before its children.`),
+              );
             }
 
             this._idToElement.delete(id);
@@ -892,8 +1024,10 @@ export default class Store extends EventEmitter<{|
               }
               parentElement = ((this._idToElement.get(parentID): any): Element);
               if (parentElement === undefined) {
-                throw Error(
-                  `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`,
+                this._throwAndEmitError(
+                  Error(
+                    `Cannot remove node "${id}" from parent "${parentID}" because no matching node was found in the Store.`,
+                  ),
                 );
               }
               const index = parentElement.children.indexOf(id);
@@ -910,7 +1044,41 @@ export default class Store extends EventEmitter<{|
                 set.delete(id);
               }
             }
+
+            if (this._errorsAndWarnings.has(id)) {
+              this._errorsAndWarnings.delete(id);
+              haveErrorsOrWarningsChanged = true;
+            }
           }
+          break;
+        }
+        case TREE_OPERATION_REMOVE_ROOT: {
+          i += 1;
+
+          const id = operations[1];
+
+          if (__DEBUG__) {
+            debug(`Remove root ${id}`);
+          }
+
+          const recursivelyDeleteElements = elementID => {
+            const element = this._idToElement.get(elementID);
+            this._idToElement.delete(elementID);
+            if (element) {
+              // Mostly for Flow's sake
+              for (let index = 0; index < element.children.length; index++) {
+                recursivelyDeleteElements(element.children[index]);
+              }
+            }
+          };
+
+          const root = ((this._idToElement.get(id): any): Element);
+          recursivelyDeleteElements(id);
+
+          this._rootIDToCapabilities.delete(id);
+          this._rootIDToRendererID.delete(id);
+          this._roots = this._roots.filter(rootID => rootID !== id);
+          this._weightAcrossRoots -= root.weight;
           break;
         }
         case TREE_OPERATION_REORDER_CHILDREN: {
@@ -919,16 +1087,20 @@ export default class Store extends EventEmitter<{|
           i += 3;
 
           if (!this._idToElement.has(id)) {
-            throw Error(
-              `Cannot reorder children for node ${id} because no matching node was found in the Store.`,
+            this._throwAndEmitError(
+              Error(
+                `Cannot reorder children for node "${id}" because no matching node was found in the Store.`,
+              ),
             );
           }
 
           const element = ((this._idToElement.get(id): any): Element);
           const children = element.children;
           if (children.length !== numChildren) {
-            throw Error(
-              `Children cannot be added or removed during a reorder operation.`,
+            this._throwAndEmitError(
+              Error(
+                `Children cannot be added or removed during a reorder operation.`,
+              ),
             );
           }
 
@@ -958,12 +1130,44 @@ export default class Store extends EventEmitter<{|
           // The profiler UI uses them lazily in order to generate the tree.
           i += 3;
           break;
+        case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+          const id = operations[i + 1];
+          const errorCount = operations[i + 2];
+          const warningCount = operations[i + 3];
+
+          i += 4;
+
+          if (errorCount > 0 || warningCount > 0) {
+            this._errorsAndWarnings.set(id, {errorCount, warningCount});
+          } else if (this._errorsAndWarnings.has(id)) {
+            this._errorsAndWarnings.delete(id);
+          }
+          haveErrorsOrWarningsChanged = true;
+          break;
         default:
-          throw Error(`Unsupported Bridge operation ${operation}`);
+          this._throwAndEmitError(
+            Error(`Unsupported Bridge operation "${operation}"`),
+          );
       }
     }
 
     this._revision++;
+
+    // Any time the tree changes (e.g. elements added, removed, or reordered) cached inidices may be invalid.
+    this._cachedErrorAndWarningTuples = null;
+
+    if (haveErrorsOrWarningsChanged) {
+      let errorCount = 0;
+      let warningCount = 0;
+
+      this._errorsAndWarnings.forEach(entry => {
+        errorCount += entry.errorCount;
+        warningCount += entry.warningCount;
+      });
+
+      this._cachedErrorCount = errorCount;
+      this._cachedWarningCount = warningCount;
+    }
 
     if (haveRootsChanged) {
       const prevSupportsProfiling = this._supportsProfiling;
@@ -1014,16 +1218,45 @@ export default class Store extends EventEmitter<{|
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
 
-    this._bridge.removeListener('operations', this.onBridgeOperations);
-    this._bridge.removeListener('shutdown', this.onBridgeShutdown);
-    this._bridge.removeListener(
-      'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+    const bridge = this._bridge;
+    bridge.removeListener('operations', this.onBridgeOperations);
+    bridge.removeListener(
+      'overrideComponentFilters',
+      this.onBridgeOverrideComponentFilters,
     );
+    bridge.removeListener('shutdown', this.onBridgeShutdown);
+    bridge.removeListener(
+      'isBackendStorageAPISupported',
+      this.onBackendStorageAPISupported,
+    );
+    bridge.removeListener(
+      'isNativeStyleEditorSupported',
+      this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.removeListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
+    );
+    bridge.removeListener(
+      'unsupportedRendererVersion',
+      this.onBridgeUnsupportedRendererVersion,
+    );
+    bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
+
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
   };
 
-  onBridgeStorageSupported = (isBackendStorageAPISupported: boolean) => {
+  onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+
+    this.emit('supportsReloadAndProfile');
+  };
+
+  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+    this._isSynchronousXHRSupported = isSynchronousXHRSupported;
 
     this.emit('supportsReloadAndProfile');
   };
@@ -1033,4 +1266,43 @@ export default class Store extends EventEmitter<{|
 
     this.emit('unsupportedRendererVersionDetected');
   };
+
+  onBridgeProtocol = (bridgeProtocol: BridgeProtocol) => {
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
+
+    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+      this._unsupportedBridgeProtocol = bridgeProtocol;
+    } else {
+      // If we should happen to get a response after timing out...
+      this._unsupportedBridgeProtocol = null;
+    }
+
+    this.emit('unsupportedBridgeProtocolDetected');
+  };
+
+  onBridgeProtocolTimeout = () => {
+    this._onBridgeProtocolTimeoutID = null;
+
+    // If we timed out, that indicates the backend predates the bridge protocol,
+    // so we can set a fake version (0) to trigger the downgrade message.
+    this._unsupportedBridgeProtocol = BRIDGE_PROTOCOL[0];
+
+    this.emit('unsupportedBridgeProtocolDetected');
+  };
+
+  // The Store should never throw an Error without also emitting an event.
+  // Otherwise Store errors will be invisible to users,
+  // but the downstream errors they cause will be reported as bugs.
+  // For example, https://github.com/facebook/react/issues/21402
+  // Emitting an error event allows the ErrorBoundary to show the original error.
+  _throwAndEmitError(error: Error) {
+    this.emit('error', error);
+
+    // Throwing is still valuable for local development
+    // and for unit testing the Store itself.
+    throw error;
+  }
 }

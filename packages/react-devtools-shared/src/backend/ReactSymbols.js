@@ -13,9 +13,6 @@
 // 2. DevTools must support both Symbol and numeric forms of each symbol;
 //    Since e.g. standalone DevTools runs in a separate process, it can't rely on its own ES capabilities.
 
-export const BLOCK_NUMBER = 0xead9;
-export const BLOCK_SYMBOL_STRING = 'Symbol(react.block)';
-
 export const CONCURRENT_MODE_NUMBER = 0xeacf;
 export const CONCURRENT_MODE_SYMBOL_STRING = 'Symbol(react.concurrent_mode)';
 
@@ -37,17 +34,11 @@ export const FORWARD_REF_SYMBOL_STRING = 'Symbol(react.forward_ref)';
 export const FRAGMENT_NUMBER = 0xeacb;
 export const FRAGMENT_SYMBOL_STRING = 'Symbol(react.fragment)';
 
-export const FUNDAMENTAL_NUMBER = 0xead5;
-export const FUNDAMENTAL_SYMBOL_STRING = 'Symbol(react.fundamental)';
-
 export const LAZY_NUMBER = 0xead4;
 export const LAZY_SYMBOL_STRING = 'Symbol(react.lazy)';
 
 export const MEMO_NUMBER = 0xead3;
 export const MEMO_SYMBOL_STRING = 'Symbol(react.memo)';
-
-export const OPAQUE_ID_NUMBER = 0xeae0;
-export const OPAQUE_ID_SYMBOL_STRING = 'Symbol(react.opaque.id)';
 
 export const PORTAL_NUMBER = 0xeaca;
 export const PORTAL_SYMBOL_STRING = 'Symbol(react.portal)';
@@ -60,9 +51,6 @@ export const PROVIDER_SYMBOL_STRING = 'Symbol(react.provider)';
 
 export const SCOPE_NUMBER = 0xead7;
 export const SCOPE_SYMBOL_STRING = 'Symbol(react.scope)';
-
-export const SERVER_BLOCK_NUMBER = 0xeada;
-export const SERVER_BLOCK_SYMBOL_STRING = 'Symbol(react.server.block)';
 
 export const STRICT_MODE_NUMBER = 0xeacc;
 export const STRICT_MODE_SYMBOL_STRING = 'Symbol(react.strict_mode)';

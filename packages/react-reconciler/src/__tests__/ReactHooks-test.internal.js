@@ -19,8 +19,6 @@ let Scheduler;
 let ReactDOMServer;
 let act;
 
-// Additional tests can be found in ReactHooksWithNoopRenderer. Plan is to
-// gradually migrate those to this file.
 describe('ReactHooks', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -31,7 +29,7 @@ describe('ReactHooks', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server');
-    act = ReactTestRenderer.act;
+    act = require('jest-react').act;
   });
 
   if (__DEV__) {
@@ -51,7 +49,7 @@ describe('ReactHooks', () => {
           '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
           '2. You might be breaking the Rules of Hooks\n' +
           '3. You might have more than one copy of React in the same app\n' +
-          'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
       );
     });
   }
@@ -729,42 +727,6 @@ describe('ReactHooks', () => {
     ReactTestRenderer.create(<App deps={undefined} />);
   });
 
-  it('assumes useEffect clean-up function is either a function or undefined', () => {
-    const {useLayoutEffect} = React;
-
-    function App(props) {
-      useLayoutEffect(() => {
-        return props.return;
-      });
-      return null;
-    }
-
-    const root1 = ReactTestRenderer.create(null);
-    expect(() => root1.update(<App return={17} />)).toErrorDev([
-      'Warning: An effect function must not return anything besides a ' +
-        'function, which is used for clean-up. You returned: 17',
-    ]);
-
-    const root2 = ReactTestRenderer.create(null);
-    expect(() => root2.update(<App return={null} />)).toErrorDev([
-      'Warning: An effect function must not return anything besides a ' +
-        'function, which is used for clean-up. You returned null. If your ' +
-        'effect does not require clean up, return undefined (or nothing).',
-    ]);
-
-    const root3 = ReactTestRenderer.create(null);
-    expect(() => root3.update(<App return={Promise.resolve()} />)).toErrorDev([
-      'Warning: An effect function must not return anything besides a ' +
-        'function, which is used for clean-up.\n\n' +
-        'It looks like you wrote useEffect(async () => ...) or returned a Promise.',
-    ]);
-
-    // Error on unmount because React assumes the value is a function
-    expect(() => {
-      root3.update(null);
-    }).toThrow('is not a function');
-  });
-
   it('does not forget render phase useState updates inside an effect', () => {
     const {useState, useEffect} = React;
 
@@ -782,7 +744,7 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    ReactTestRenderer.act(() => {
+    act(() => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
@@ -806,7 +768,7 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    ReactTestRenderer.act(() => {
+    act(() => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
@@ -829,7 +791,7 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    ReactTestRenderer.act(() => {
+    act(() => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
@@ -906,7 +868,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // the next round, it does a fresh mount, so should render
     expect(() => root.update(<MemoApp />)).not.toThrow(
@@ -915,7 +877,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
     // and then again, fail
     expect(() => root.update(<MemoApp />)).toThrow(
@@ -924,7 +886,7 @@ describe('ReactHooks', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
   });
 
@@ -1115,7 +1077,7 @@ describe('ReactHooks', () => {
       'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks',
       'Warning: React has detected a change in the order of Hooks called by App. ' +
         'This will lead to bugs and errors if not fixed. For more information, ' +
-        'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+        'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
         '   Previous render            Next render\n' +
         '   ------------------------------------------------------\n' +
         '1. useReducer                 useReducer\n' +
@@ -1511,7 +1473,7 @@ describe('ReactHooks', () => {
     ];
 
     if (__EXPERIMENTAL__) {
-      const useTransitionHelper = () => React.useTransition({timeoutMs: 1000});
+      const useTransitionHelper = () => React.useTransition();
       const useDeferredValueHelper = () =>
         React.useDeferredValue(0, {timeoutMs: 1000});
 
@@ -1573,7 +1535,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameB)}\n` +
@@ -1593,8 +1555,7 @@ describe('ReactHooks', () => {
         }
       });
 
-      it(`warns when more hooks (${(hookNameA,
-      hookNameB)}) are used during update than mount`, () => {
+      it(`warns when more hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1624,7 +1585,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(hookNameA, hookNameA)}\n` +
@@ -1648,8 +1609,7 @@ describe('ReactHooks', () => {
         .replace('use', '')
         .replace('Helper', '');
 
-      it(`warns when fewer hooks (${(hookNameA,
-      hookNameB)}) are used during update than mount`, () => {
+      it(`warns when fewer hooks (${hookNameA}, ${hookNameB}) are used during update than mount`, () => {
         function App(props) {
           /* eslint-disable no-unused-vars */
           if (props.update) {
@@ -1704,7 +1664,7 @@ describe('ReactHooks', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             `1. ${formatHookNamesToMatchErrorMessage(
@@ -1746,7 +1706,7 @@ describe('ReactHooks', () => {
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
           '   Previous render            Next render\n' +
           '   ------------------------------------------------------\n' +
           '1. useReducer                 useState\n' +
@@ -1775,13 +1735,15 @@ describe('ReactHooks', () => {
     }
 
     await act(async () => {
-      ReactTestRenderer.create(
-        <>
-          <A />
-          <B />
-        </>,
-      );
-      expect(() => Scheduler.unstable_flushAll()).toThrow('Hello');
+      ReactTestRenderer.unstable_batchedUpdates(() => {
+        ReactTestRenderer.create(
+          <>
+            <A />
+            <B />
+          </>,
+        );
+        expect(() => Scheduler.unstable_flushAll()).toThrow('Hello');
+      });
     });
 
     if (__DEV__) {
@@ -1830,7 +1792,7 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    ReactTestRenderer.act(() => {
+    act(() => {
       ReactTestRenderer.create(<A />);
     });
 

@@ -9,42 +9,46 @@
 
 'use strict';
 
-module.exports = function(context) {
-  function report(node, name, msg) {
-    context.report(node, `Do not use the ${name} constructor. ${msg}`);
-  }
-
-  function check(node) {
-    const name = node.callee.name;
-    switch (name) {
-      case 'Boolean':
-        report(
-          node,
-          name,
-          'To cast a value to a boolean, use double negation: !!value'
-        );
-        break;
-      case 'String':
-        report(
-          node,
-          name,
-          'To cast a value to a string, concat it with the empty string ' +
-            "(unless it's a symbol, which has different semantics): " +
-            "'' + value"
-        );
-        break;
-      case 'Number':
-        report(
-          node,
-          name,
-          'To cast a value to a number, use the plus operator: +value'
-        );
-        break;
+module.exports = {
+  meta: {
+    schema: [],
+  },
+  create(context) {
+    function report(node, name, msg) {
+      context.report(node, `Do not use the ${name} constructor. ${msg}`);
     }
-  }
 
-  return {
-    CallExpression: check,
-    NewExpression: check,
-  };
+    function check(node) {
+      const name = node.callee.name;
+      switch (name) {
+        case 'Boolean':
+          report(
+            node,
+            name,
+            'To cast a value to a boolean, use double negation: !!value'
+          );
+          break;
+        case 'String':
+          if (node.type === 'NewExpression') {
+            context.report(
+              node,
+              "Do not use `new String()`. Use String() without new (or '' + value for perf-sensitive code)."
+            );
+          }
+          break;
+        case 'Number':
+          report(
+            node,
+            name,
+            'To cast a value to a number, use the plus operator: +value'
+          );
+          break;
+      }
+    }
+
+    return {
+      CallExpression: check,
+      NewExpression: check,
+    };
+  },
 };

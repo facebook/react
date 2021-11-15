@@ -13,7 +13,6 @@ let React;
 let ReactDOM;
 let Suspense;
 let ReactCache;
-let ReactTestUtils;
 let Scheduler;
 let TextResource;
 let act;
@@ -26,9 +25,8 @@ describe('ReactDOMSuspensePlaceholder', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactCache = require('react-cache');
-    ReactTestUtils = require('react-dom/test-utils');
     Scheduler = require('scheduler');
-    act = ReactTestUtils.act;
+    act = require('jest-react').act;
     Suspense = React.Suspense;
     container = document.createElement('div');
     document.body.appendChild(container);

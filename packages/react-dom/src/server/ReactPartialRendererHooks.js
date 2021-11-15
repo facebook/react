@@ -15,12 +15,11 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 
-import invariant from 'shared/invariant';
+import {enableCache} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 
 type BasicStateAction<S> = (S => S) | S;
@@ -42,12 +41,6 @@ type Hook = {|
   next: Hook | null,
 |};
 
-type TimeoutConfig = {|
-  timeoutMs: number,
-|};
-
-type OpaqueIDType = string;
-
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
@@ -67,22 +60,24 @@ let isInHookUserCodeInDev = false;
 let currentHookNameInDev: ?string;
 
 function resolveCurrentlyRenderingComponent(): Object {
-  invariant(
-    currentlyRenderingComponent !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-      ' one of the following reasons:\n' +
-      '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-      '2. You might be breaking the Rules of Hooks\n' +
-      '3. You might have more than one copy of React in the same app\n' +
-      'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
-  );
+  if (currentlyRenderingComponent === null) {
+    throw new Error(
+      'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+        ' one of the following reasons:\n' +
+        '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+        '2. You might be breaking the Rules of Hooks\n' +
+        '3. You might have more than one copy of React in the same app\n' +
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+    );
+  }
+
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
       console.error(
         'Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. ' +
           'You can only call Hooks at the top level of your React function. ' +
           'For more information, see ' +
-          'https://fb.me/rules-of-hooks',
+          'https://reactjs.org/link/rules-of-hooks',
       );
     }
   }
@@ -131,7 +126,7 @@ function areHookInputsEqual(
 
 function createHook(): Hook {
   if (numberOfReRenders > 0) {
-    invariant(false, 'Rendered more hooks than during the previous render');
+    throw new Error('Rendered more hooks than during the previous render');
   }
   return {
     memoizedState: null,
@@ -219,10 +214,15 @@ export function resetHooksState(): void {
   workInProgressHook = null;
 }
 
-function readContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
+function getCacheSignal() {
+  throw new Error('Not implemented.');
+}
+
+function getCacheForType<T>(resourceType: () => T): T {
+  throw new Error('Not implemented.');
+}
+
+function readContext<T>(context: ReactContext<T>): T {
   const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
@@ -238,10 +238,7 @@ function readContext<T>(
   return context[threadID];
 }
 
-function useContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
+function useContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
   }
@@ -391,6 +388,22 @@ function useRef<T>(initialValue: T): {|current: T|} {
   }
 }
 
+function useInsertionEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+) {
+  if (__DEV__) {
+    currentHookNameInDev = 'useInsertionEffect';
+    console.error(
+      'useInsertionEffect does nothing on the server, because its effect cannot ' +
+        "be encoded into the server renderer's output format. This will lead " +
+        'to a mismatch between the initial, non-hydrated UI and the intended ' +
+        'UI. To avoid this, useInsertionEffect should only be used in ' +
+        'components that render exclusively on the client.',
+    );
+  }
+}
+
 export function useLayoutEffect(
   create: () => (() => void) | void,
   inputs: Array<mixed> | void | null,
@@ -403,7 +416,7 @@ export function useLayoutEffect(
         'to a mismatch between the initial, non-hydrated UI and the intended ' +
         'UI. To avoid this, useLayoutEffect should only be used in ' +
         'components that render exclusively on the client. ' +
-        'See https://fb.me/react-uselayouteffect-ssr for common fixes.',
+        'See https://reactjs.org/link/uselayouteffect-ssr for common fixes.',
     );
   }
 }
@@ -413,11 +426,12 @@ function dispatchAction<A>(
   queue: UpdateQueue<A>,
   action: A,
 ) {
-  invariant(
-    numberOfReRenders < RE_RENDER_LIMIT,
-    'Too many re-renders. React limits the number of renders to prevent ' +
-      'an infinite loop.',
-  );
+  if (numberOfReRenders >= RE_RENDER_LIMIT) {
+    throw new Error(
+      'Too many re-renders. React limits the number of renders to prevent ' +
+        'an infinite loop.',
+    );
+  }
 
   if (componentIdentity === currentlyRenderingComponent) {
     // This is a render phase update. Stash it in a lazily-created map of
@@ -468,27 +482,39 @@ function useMutableSource<Source, Snapshot>(
   return getSnapshot(source._source);
 }
 
-function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
+function useSyncExternalStore<T>(
+  subscribe: (() => void) => () => void,
+  getSnapshot: () => T,
+  getServerSnapshot?: () => T,
+): T {
+  if (getServerSnapshot === undefined) {
+    throw new Error(
+      'Missing getServerSnapshot, which is required for ' +
+        'server-rendered content. Will revert to client rendering.',
+    );
+  }
+  return getServerSnapshot();
+}
+
+function useDeferredValue<T>(value: T): T {
   resolveCurrentlyRenderingComponent();
   return value;
 }
 
-function useTransition(
-  config: SuspenseConfig | null | void,
-): [(callback: () => void) => void, boolean] {
+function useTransition(): [boolean, (callback: () => void) => void] {
   resolveCurrentlyRenderingComponent();
   const startTransition = callback => {
     callback();
   };
-  return [startTransition, false];
+  return [false, startTransition];
 }
 
-function useOpaqueIdentifier(): OpaqueIDType {
-  return (
-    (currentPartialRenderer.identifierPrefix || '') +
-    'R:' +
-    (currentPartialRenderer.uniqueID++).toString(36)
-  );
+function useId(): string {
+  throw new Error('Not implemented.');
+}
+
+function useCacheRefresh(): <T>(?() => T, ?T) => void {
+  throw new Error('Not implemented.');
 }
 
 function noop(): void {}
@@ -505,6 +531,7 @@ export const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
+  useInsertionEffect,
   useLayoutEffect,
   useCallback,
   // useImperativeHandle is not run in the server environment
@@ -515,7 +542,14 @@ export const Dispatcher: DispatcherType = {
   useDebugValue: noop,
   useDeferredValue,
   useTransition,
-  useOpaqueIdentifier,
+  useId,
   // Subscriptions are not setup in a server environment.
   useMutableSource,
+  useSyncExternalStore,
 };
+
+if (enableCache) {
+  Dispatcher.getCacheSignal = getCacheSignal;
+  Dispatcher.getCacheForType = getCacheForType;
+  Dispatcher.useCacheRefresh = useCacheRefresh;
+}

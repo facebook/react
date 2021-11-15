@@ -17,6 +17,7 @@ let React;
 let ReactNoop;
 let Suspense;
 let Scheduler;
+let act;
 
 describe('memo', () => {
   beforeEach(() => {
@@ -26,6 +27,7 @@ describe('memo', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     ({Suspense} = React);
   });
 
@@ -221,7 +223,7 @@ describe('memo', () => {
         class CounterInner extends React.Component {
           static defaultProps = {suffix: '!'};
           render() {
-            return <Text text={this.props.count + '' + this.props.suffix} />;
+            return <Text text={this.props.count + String(this.props.suffix)} />;
           }
         }
         const Counter = memo(CounterInner);
@@ -447,12 +449,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await ReactNoop.act(async () => {
+        await act(async () => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);
@@ -483,12 +485,12 @@ describe('memo', () => {
         }
 
         const root = ReactNoop.createRoot();
-        await ReactNoop.act(async () => {
+        await act(async () => {
           root.render(<App />);
         });
         expect(root).toMatchRenderedOutput('0');
 
-        await ReactNoop.act(async () => {
+        await act(async () => {
           setCounter(1);
           ReactNoop.discreteUpdates(() => {
             root.render(<App />);
@@ -498,11 +500,48 @@ describe('memo', () => {
       });
     });
 
+    it('should fall back to showing something meaningful if no displayName or name are present', () => {
+      const MemoComponent = React.memo(props => <div {...props} />);
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Memo`, but its value is `undefined`.',
+        // There's no component stack in this warning because the inner function is anonymous.
+        // If we wanted to support this (for the Error frames / source location)
+        // we could do this by updating ReactComponentStackFrame.
+        {withoutStack: true},
+      );
+    });
+
+    it('should honor a displayName if set on the inner component in warnings', () => {
+      function Component(props) {
+        return <div {...props} />;
+      }
+      Component.displayName = 'Inner';
+      const MemoComponent = React.memo(Component);
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Inner`, but its value is `undefined`.\n' +
+          '    in Inner (at **)',
+      );
+    });
+
     it('should honor a displayName if set on the memo wrapper in warnings', () => {
       const MemoComponent = React.memo(function Component(props) {
         return <div {...props} />;
       });
-      MemoComponent.displayName = 'Foo';
+      MemoComponent.displayName = 'Outer';
       MemoComponent.propTypes = {
         required: PropTypes.string.isRequired,
       };
@@ -511,19 +550,16 @@ describe('memo', () => {
         ReactNoop.render(<MemoComponent optional="foo" />),
       ).toErrorDev(
         'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Foo`, but its value is `undefined`.\n' +
-          '    in Foo (at **)',
+          '`Outer`, but its value is `undefined`.\n' +
+          '    in Component (at **)',
       );
     });
 
-    it('should honor a inner displayName if set on the wrapped function', () => {
-      function Component(props) {
+    it('should pass displayName to an anonymous inner component so it shows up in component stacks', () => {
+      const MemoComponent = React.memo(props => {
         return <div {...props} />;
-      }
-      Component.displayName = 'Foo';
-
-      const MemoComponent = React.memo(Component);
-      MemoComponent.displayName = 'Bar';
+      });
+      MemoComponent.displayName = 'Memo';
       MemoComponent.propTypes = {
         required: PropTypes.string.isRequired,
       };
@@ -532,8 +568,29 @@ describe('memo', () => {
         ReactNoop.render(<MemoComponent optional="foo" />),
       ).toErrorDev(
         'Warning: Failed prop type: The prop `required` is marked as required in ' +
-          '`Foo`, but its value is `undefined`.\n' +
-          '    in Foo (at **)',
+          '`Memo`, but its value is `undefined`.\n' +
+          '    in Memo (at **)',
+      );
+    });
+
+    it('should honor a outer displayName when wrapped component and memo component set displayName at the same time.', () => {
+      function Component(props) {
+        return <div {...props} />;
+      }
+      Component.displayName = 'Inner';
+
+      const MemoComponent = React.memo(Component);
+      MemoComponent.displayName = 'Outer';
+      MemoComponent.propTypes = {
+        required: PropTypes.string.isRequired,
+      };
+
+      expect(() =>
+        ReactNoop.render(<MemoComponent optional="foo" />),
+      ).toErrorDev(
+        'Warning: Failed prop type: The prop `required` is marked as required in ' +
+          '`Outer`, but its value is `undefined`.\n' +
+          '    in Inner (at **)',
       );
     });
   }

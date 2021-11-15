@@ -12,11 +12,15 @@ describe('Store', () => {
   let ReactDOM;
   let agent;
   let act;
+  let bridge;
   let getRendererID;
+  let legacyRender;
   let store;
+  let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
     agent = global.agent;
+    bridge = global.bridge;
     store = global.store;
 
     React = require('react');
@@ -25,13 +29,15 @@ describe('Store', () => {
     const utils = require('./utils');
     act = utils.act;
     getRendererID = utils.getRendererID;
+    legacyRender = utils.legacyRender;
+    withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
   });
 
   it('should not allow a root node to be collapsed', () => {
     const Component = () => <div>Hi</div>;
 
     act(() =>
-      ReactDOM.render(<Component count={4} />, document.createElement('div')),
+      legacyRender(<Component count={4} />, document.createElement('div')),
     );
     expect(store).toMatchSnapshot('1: mount');
 
@@ -49,11 +55,63 @@ describe('Store', () => {
 
     const container = document.createElement('div');
 
-    act(() => ReactDOM.render(<Root>{null}</Root>, container));
+    act(() => legacyRender(<Root>{null}</Root>, container));
     expect(store).toMatchSnapshot('1: mount');
 
-    act(() => ReactDOM.render(<div />, container));
+    act(() => legacyRender(<div />, container));
     expect(store).toMatchSnapshot('2: add host nodes');
+  });
+
+  // This test is not the same cause as what's reported on GitHub,
+  // but the resulting behavior (owner mounting after descendant) is the same.
+  // Thec ase below is admittedly contrived and relies on side effects.
+  // I'mnot yet sure of how to reduce the GitHub reported production case to a test though.
+  // See https://github.com/facebook/react/issues/21445
+  it('should handle when a component mounts before its owner', () => {
+    const promise = new Promise(resolve => {});
+
+    let Dynamic = null;
+    const Owner = () => {
+      Dynamic = <Child />;
+      throw promise;
+    };
+    const Parent = () => {
+      return Dynamic;
+    };
+    const Child = () => null;
+
+    const container = document.createElement('div');
+
+    act(() =>
+      legacyRender(
+        <>
+          <React.Suspense fallback="Loading...">
+            <Owner />
+          </React.Suspense>
+          <Parent />
+        </>,
+        container,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Suspense>
+        ▾ <Parent>
+            <Child>
+    `);
+  });
+
+  it('should handle multibyte character strings', () => {
+    const Component = () => null;
+    Component.displayName = '🟩💜🔵';
+
+    const container = document.createElement('div');
+
+    act(() => legacyRender(<Component />, container));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <🟩💜🔵>
+    `);
   });
 
   describe('collapseNodesByDefault:false', () => {
@@ -74,10 +132,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() => ReactDOM.render(<Grandparent count={4} />, container));
+      act(() => legacyRender(<Grandparent count={4} />, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() => ReactDOM.render(<Grandparent count={2} />, container));
+      act(() => legacyRender(<Grandparent count={2} />, container));
       expect(store).toMatchSnapshot('2: update');
 
       act(() => ReactDOM.unmountComponentAtNode(container));
@@ -93,14 +151,14 @@ describe('Store', () => {
       const containerB = document.createElement('div');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={3} />, containerA);
-        ReactDOM.render(<Parent key="B" count={2} />, containerB);
+        legacyRender(<Parent key="A" count={3} />, containerA);
+        legacyRender(<Parent key="B" count={2} />, containerB);
       });
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={4} />, containerA);
-        ReactDOM.render(<Parent key="B" count={1} />, containerB);
+        legacyRender(<Parent key="A" count={4} />, containerA);
+        legacyRender(<Parent key="B" count={1} />, containerB);
       });
       expect(store).toMatchSnapshot('2: update');
 
@@ -128,10 +186,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={4} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={4} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
     });
@@ -158,11 +213,11 @@ describe('Store', () => {
       );
 
       const container = document.createElement('div');
-      act(() => ReactDOM.render(<Wrapper shouldSuspense={true} />, container));
+      act(() => legacyRender(<Wrapper shouldSuspense={true} />, container));
       expect(store).toMatchSnapshot('1: loading');
 
       act(() => {
-        ReactDOM.render(<Wrapper shouldSuspense={false} />, container);
+        legacyRender(<Wrapper shouldSuspense={false} />, container);
       });
       expect(store).toMatchSnapshot('2: resolved');
     });
@@ -208,7 +263,7 @@ describe('Store', () => {
 
       const container = document.createElement('div');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -219,7 +274,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('1: third child is suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -230,7 +285,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('2: first and third child are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -241,7 +296,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('3: second and third child are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -252,7 +307,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('4: first and third child are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={true}
             suspendFirst={true}
@@ -263,7 +318,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('5: parent is suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -274,7 +329,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('6: all children are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -303,7 +358,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('9: parent is suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -330,7 +385,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('12: all children are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -352,18 +407,18 @@ describe('Store', () => {
       };
       const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
-          <React.unstable_SuspenseList revealOrder="forwards" tail="collapsed">
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
             <Component key="A" />
             <React.Suspense fallback={<Loading />}>
               {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
             </React.Suspense>
             <Component key="C" />
-          </React.unstable_SuspenseList>
+          </React.SuspenseList>
         </React.Fragment>
       );
 
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       act(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
@@ -387,10 +442,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={2} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={2} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -425,10 +477,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() => ReactDOM.render(<Root>{[foo, bar]}</Root>, container));
+      act(() => legacyRender(<Root>{[foo, bar]}</Root>, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
+      act(() => legacyRender(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), true));
@@ -452,7 +504,7 @@ describe('Store', () => {
       const container = document.createElement('div');
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Parent count={1} />
             <Parent count={3} />
@@ -463,7 +515,7 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('1: mount');
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Parent count={2} />
             <Parent count={1} />
@@ -486,14 +538,14 @@ describe('Store', () => {
       const containerB = document.createElement('div');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={3} />, containerA);
-        ReactDOM.render(<Parent key="B" count={2} />, containerB);
+        legacyRender(<Parent key="A" count={3} />, containerA);
+        legacyRender(<Parent key="B" count={2} />, containerB);
       });
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={4} />, containerA);
-        ReactDOM.render(<Parent key="B" count={1} />, containerB);
+        legacyRender(<Parent key="A" count={4} />, containerA);
+        legacyRender(<Parent key="B" count={1} />, containerB);
       });
       expect(store).toMatchSnapshot('2: update');
 
@@ -521,10 +573,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={4} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={4} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -557,7 +606,7 @@ describe('Store', () => {
       );
 
       const container = document.createElement('div');
-      act(() => ReactDOM.render(<Wrapper shouldSuspense={true} />, container));
+      act(() => legacyRender(<Wrapper shouldSuspense={true} />, container));
       expect(store).toMatchSnapshot('1: loading');
 
       // This test isn't meaningful unless we expand the suspended tree
@@ -566,7 +615,7 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('2: expand Wrapper and Suspense');
 
       act(() => {
-        ReactDOM.render(<Wrapper shouldSuspense={false} />, container);
+        legacyRender(<Wrapper shouldSuspense={false} />, container);
       });
       expect(store).toMatchSnapshot('2: resolved');
     });
@@ -583,10 +632,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={2} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={2} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -628,7 +674,7 @@ describe('Store', () => {
       const ref = React.createRef();
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper forwardedRef={ref} />,
           document.createElement('div'),
         ),
@@ -668,10 +714,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() => ReactDOM.render(<Root>{[foo, bar]}</Root>, container));
+      act(() => legacyRender(<Root>{[foo, bar]}</Root>, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
+      act(() => legacyRender(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
@@ -700,9 +746,7 @@ describe('Store', () => {
       const Parent = () => <Child />;
       const Child = () => null;
 
-      act(() =>
-        ReactDOM.render(<SuspenseTree />, document.createElement('div')),
-      );
+      act(() => legacyRender(<SuspenseTree />, document.createElement('div')));
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
@@ -747,9 +791,7 @@ describe('Store', () => {
       const Parent = () => <Child />;
       const Child = () => null;
 
-      act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
-      );
+      act(() => legacyRender(<Grandparent />, document.createElement('div')));
 
       for (let i = 0; i < store.numElements; i++) {
         expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
@@ -762,8 +804,8 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() => {
-        ReactDOM.render(<Grandparent />, document.createElement('div'));
-        ReactDOM.render(<Grandparent />, document.createElement('div'));
+        legacyRender(<Grandparent />, document.createElement('div'));
+        legacyRender(<Grandparent />, document.createElement('div'));
       });
 
       for (let i = 0; i < store.numElements; i++) {
@@ -777,7 +819,7 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Grandparent />
             <Grandparent />
@@ -797,14 +839,14 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() => {
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Grandparent />
             <Grandparent />
           </React.Fragment>,
           document.createElement('div'),
         );
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Grandparent />
             <Grandparent />
@@ -827,10 +869,10 @@ describe('Store', () => {
 
     expect(store.supportsProfiling).toBe(false);
 
-    act(() => ReactDOM.render(<Component />, containerA));
+    act(() => legacyRender(<Component />, containerA));
     expect(store.supportsProfiling).toBe(true);
 
-    act(() => ReactDOM.render(<Component />, containerB));
+    act(() => legacyRender(<Component />, containerB));
     act(() => ReactDOM.unmountComponentAtNode(containerA));
     expect(store.supportsProfiling).toBe(true);
 
@@ -845,15 +887,11 @@ describe('Store', () => {
     // This is pretty hacky.
     const fauxElement = Object.assign({}, <Child />, {key: 123});
 
-    act(() => ReactDOM.render([fauxElement], document.createElement('div')));
+    act(() => legacyRender([fauxElement], document.createElement('div')));
     expect(store).toMatchSnapshot('1: mount');
   });
 
-  it('should show the right display names for special component types', async done => {
-    async function fakeImport(result) {
-      return {default: result};
-    }
-
+  it('should show the right display names for special component types', async () => {
     const MyComponent = (props, ref) => null;
     const ForwardRefComponent = React.forwardRef(MyComponent);
     const MyComponent2 = (props, ref) => null;
@@ -868,8 +906,6 @@ describe('Store', () => {
     const MyComponent4 = (props, ref) => null;
     const MemoComponent = React.memo(MyComponent4);
     const MemoForwardRefComponent = React.memo(ForwardRefComponent);
-    const MyComponent5 = (props, ref) => null;
-    const LazyComponent = React.lazy(() => fakeImport(MyComponent5));
 
     const FakeHigherOrderComponent = () => null;
     FakeHigherOrderComponent.displayName = 'withFoo(withBar(Baz))';
@@ -881,6 +917,17 @@ describe('Store', () => {
       FakeHigherOrderComponent,
     );
 
+    const MemoizedFakeHigherOrderComponentWithDisplayNameOverride = React.memo(
+      FakeHigherOrderComponent,
+    );
+    MemoizedFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'memoRefOverride';
+    const ForwardRefFakeHigherOrderComponentWithDisplayNameOverride = React.forwardRef(
+      FakeHigherOrderComponent,
+    );
+    ForwardRefFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'forwardRefOverride';
+
     const App = () => (
       <React.Fragment>
         <MyComponent />
@@ -889,27 +936,539 @@ describe('Store', () => {
         <ForwardRefComponentWithCustomDisplayName />
         <MemoComponent />
         <MemoForwardRefComponent />
-        <React.Suspense fallback="Loading...">
-          <LazyComponent />
-        </React.Suspense>
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
+        <React.unstable_Cache />
+        <MemoizedFakeHigherOrderComponentWithDisplayNameOverride />
+        <ForwardRefFakeHigherOrderComponentWithDisplayNameOverride />
       </React.Fragment>
     );
 
     const container = document.createElement('div');
 
     // Render once to start fetching the lazy component
-    act(() => ReactDOM.render(<App />, container));
+    act(() => legacyRender(<App />, container));
 
     await Promise.resolve();
 
     // Render again after it resolves
-    act(() => ReactDOM.render(<App />, container));
+    act(() => legacyRender(<App />, container));
 
-    expect(store).toMatchSnapshot();
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <MyComponent>
+            <MyComponent> [ForwardRef]
+          ▾ <Anonymous> [ForwardRef]
+              <MyComponent2>
+            <Custom> [ForwardRef]
+            <MyComponent4> [Memo]
+          ▾ <MyComponent> [Memo]
+              <MyComponent> [ForwardRef]
+            <Baz> [withFoo][withBar]
+            <Baz> [Memo][withFoo][withBar]
+            <Baz> [ForwardRef][withFoo][withBar]
+            <Cache>
+            <memoRefOverride> [Memo]
+            <forwardRefOverride> [ForwardRef]
+    `);
+  });
 
-    done();
+  describe('Lazy', () => {
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    const LazyInnerComponent = () => null;
+
+    const App = ({renderChildren}) => {
+      if (renderChildren) {
+        return (
+          <React.Suspense fallback="Loading...">
+            <LazyComponent />
+          </React.Suspense>
+        );
+      } else {
+        return null;
+      }
+    };
+
+    let LazyComponent;
+    beforeEach(() => {
+      LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
+    });
+
+    it('should support Lazy components (legacy render)', async () => {
+      const container = document.createElement('div');
+
+      // Render once to start fetching the lazy component
+      act(() => legacyRender(<App renderChildren={true} />, container));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      await Promise.resolve();
+
+      // Render again after it resolves
+      act(() => legacyRender(<App renderChildren={true} />, container));
+
+      expect(store).toMatchSnapshot('2: mounted + loaded');
+
+      // Render again to unmount it
+      act(() => legacyRender(<App renderChildren={false} />, container));
+
+      expect(store).toMatchSnapshot('3: unmounted');
+    });
+
+    it('should support Lazy components in (createRoot)', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+
+      // Render once to start fetching the lazy component
+      act(() => root.render(<App renderChildren={true} />));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      await Promise.resolve();
+
+      // Render again after it resolves
+      act(() => root.render(<App renderChildren={true} />));
+
+      expect(store).toMatchSnapshot('2: mounted + loaded');
+
+      // Render again to unmount it
+      act(() => root.render(<App renderChildren={false} />));
+
+      expect(store).toMatchSnapshot('3: unmounted');
+    });
+
+    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
+      const container = document.createElement('div');
+
+      // Render once to start fetching the lazy component
+      act(() => legacyRender(<App renderChildren={true} />, container));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      // Render again to unmount it before it finishes loading
+      act(() => legacyRender(<App renderChildren={false} />, container));
+
+      expect(store).toMatchSnapshot('2: unmounted');
+    });
+
+    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+
+      // Render once to start fetching the lazy component
+      act(() => root.render(<App renderChildren={true} />));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      // Render again to unmount it before it finishes loading
+      act(() => root.render(<App renderChildren={false} />));
+
+      expect(store).toMatchSnapshot('2: unmounted');
+    });
+  });
+
+  describe('inline errors and warnings', () => {
+    it('during render are counted', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => legacyRender(<Example />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+            <Example> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => legacyRender(<Example rerender={1} />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+      `);
+    });
+
+    it('during layout get counted', () => {
+      function Example() {
+        React.useLayoutEffect(() => {
+          console.error('test-only: layout error');
+          console.warn('test-only: layout warning');
+        });
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => legacyRender(<Example />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+            <Example> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => legacyRender(<Example rerender={1} />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+      `);
+    });
+
+    describe('during passive effects', () => {
+      function flushPendingBridgeOperations() {
+        jest.runOnlyPendingTimers();
+      }
+
+      // Gross abstraction around pending passive warning/error delay.
+      function flushPendingPassiveErrorAndWarningCounts() {
+        jest.advanceTimersByTime(1000);
+      }
+
+      it('are counted (after a delay)', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            legacyRender(<Example />, container);
+          }, false);
+        });
+        flushPendingBridgeOperations();
+        expect(store).toMatchInlineSnapshot(`
+          [root]
+              <Example>
+        `);
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 1, ⚠ 1
+          [root]
+              <Example> ✕⚠
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
+      });
+
+      it('are flushed early when there is a new commit', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
+
+        function Noop() {
+          return null;
+        }
+
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            legacyRender(
+              <>
+                <Example />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            [root]
+                <Example>
+          `);
+
+          // Before warnings and errors have flushed, flush another commit.
+          act(() => {
+            legacyRender(
+              <>
+                <Example />
+                <Noop />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            ✕ 1, ⚠ 1
+            [root]
+                <Example> ✕⚠
+                <Noop>
+          `);
+        });
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 2, ⚠ 2
+          [root]
+              <Example> ✕⚠
+              <Noop>
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
+      });
+    });
+
+    it('from react get counted', () => {
+      const container = document.createElement('div');
+      function Example() {
+        return [<Child />];
+      }
+      function Child() {
+        return null;
+      }
+
+      withErrorsOrWarningsIgnored(
+        ['Warning: Each child in a list should have a unique "key" prop'],
+        () => {
+          act(() => legacyRender(<Example />, container));
+        },
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+          ▾ <Example> ✕
+              <Child>
+      `);
+    });
+
+    it('can be cleared for the whole app', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          legacyRender(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ✕⚠
+      `);
+
+      const {
+        clearErrorsAndWarnings,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsAndWarnings({bridge, store});
+
+      // flush events to the renderer
+      jest.runAllTimers();
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <Example>
+            <Example>
+      `);
+    });
+
+    it('can be cleared for particular Fiber (only warnings)', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          legacyRender(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ✕⚠
+      `);
+
+      const id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearWarningsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearWarningsForElement({bridge, id, rendererID});
+
+      // Flush events to the renderer.
+      jest.runAllTimers();
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 1
+        [root]
+            <Example> ✕⚠
+            <Example> ✕
+      `);
+    });
+
+    it('can be cleared for a particular Fiber (only errors)', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          legacyRender(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ✕⚠
+      `);
+
+      const id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearErrorsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsForElement({bridge, id, rendererID});
+
+      // Flush events to the renderer.
+      jest.runAllTimers();
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ⚠
+      `);
+    });
+
+    it('are updated when fibers are removed from the tree', () => {
+      function ComponentWithWarning() {
+        console.warn('test-only: render warning');
+        return null;
+      }
+      function ComponentWithError() {
+        console.error('test-only: render error');
+        return null;
+      }
+      function ComponentWithWarningAndError() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          legacyRender(
+            <React.Fragment>
+              <ComponentWithError />
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <ComponentWithError> ✕
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          legacyRender(
+            <React.Fragment>
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 2
+        [root]
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          legacyRender(
+            <React.Fragment>
+              <ComponentWithWarning />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 0, ⚠ 2
+        [root]
+            <ComponentWithWarning> ⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => legacyRender(<React.Fragment />, container));
+      });
+      expect(store).toMatchInlineSnapshot(`[root]`);
+      expect(store.errorCount).toBe(0);
+      expect(store.warningCount).toBe(0);
+    });
   });
 });

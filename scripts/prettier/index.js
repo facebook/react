@@ -25,7 +25,15 @@ let didWarn = false;
 let didError = false;
 
 const files = glob
-  .sync('**/*.js', {ignore: '**/node_modules/**'})
+  .sync('**/*.js', {
+    ignore: [
+      '**/node_modules/**',
+      '**/cjs/**',
+      '**/__compiled__/**',
+      '**/__untransformed__/**',
+      'packages/react-devtools-extensions/src/ErrorTesterCompiled.js',
+    ],
+  })
   .filter(f => !onlyChanged || changedFiles.has(f));
 
 if (!files.length) {

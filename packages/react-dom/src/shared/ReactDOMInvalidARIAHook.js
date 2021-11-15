@@ -8,12 +8,11 @@
 import {ATTRIBUTE_NAME_CHAR} from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import validAriaProperties from './validAriaProperties';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 const warnedProperties = {};
 const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
 const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function validateProperty(tagName, name) {
   if (__DEV__) {
@@ -95,14 +94,14 @@ function warnInvalidARIAProps(type, props) {
     if (invalidProps.length === 1) {
       console.error(
         'Invalid aria prop %s on <%s> tag. ' +
-          'For details, see https://fb.me/invalid-aria-prop',
+          'For details, see https://reactjs.org/link/invalid-aria-props',
         unknownPropString,
         type,
       );
     } else if (invalidProps.length > 1) {
       console.error(
         'Invalid aria props %s on <%s> tag. ' +
-          'For details, see https://fb.me/invalid-aria-prop',
+          'For details, see https://reactjs.org/link/invalid-aria-props',
         unknownPropString,
         type,
       );

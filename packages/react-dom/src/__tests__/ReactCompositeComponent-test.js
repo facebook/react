@@ -13,7 +13,6 @@ let ChildUpdates;
 let MorphingComponent;
 let React;
 let ReactDOM;
-let ReactDOMServer;
 let ReactCurrentOwner;
 let ReactTestUtils;
 let PropTypes;
@@ -65,7 +64,6 @@ describe('ReactCompositeComponent', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMServer = require('react-dom/server');
     ReactCurrentOwner = require('react')
       .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
     ReactTestUtils = require('react-dom/test-utils');
@@ -168,43 +166,6 @@ describe('ReactCompositeComponent', () => {
     instance._toggleActivatedState();
     el = ReactDOM.findDOMNode(instance);
     expect(el.tagName).toBe('A');
-  });
-
-  it('should not thrash a server rendered layout with client side one', () => {
-    class Child extends React.Component {
-      render() {
-        return null;
-      }
-    }
-
-    class Parent extends React.Component {
-      render() {
-        return (
-          <div>
-            <Child />
-          </div>
-        );
-      }
-    }
-
-    const markup = ReactDOMServer.renderToString(<Parent />);
-
-    // Old API based on heuristic
-    let container = document.createElement('div');
-    container.innerHTML = markup;
-    expect(() =>
-      ReactDOM.render(<Parent />, container),
-    ).toWarnDev(
-      'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-        'will stop working in React v18. Replace the ReactDOM.render() call ' +
-        'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      {withoutStack: true},
-    );
-
-    // New explicit API
-    container = document.createElement('div');
-    container.innerHTML = markup;
-    ReactDOM.hydrate(<Parent />, container);
   });
 
   it('should react to state changes from callbacks', () => {
@@ -346,7 +307,7 @@ describe('ReactCompositeComponent', () => {
     ReactDOM.render(<MyComponent />, container2);
   });
 
-  it('should warn about `forceUpdate` on unmounted components', () => {
+  it('should not warn about `forceUpdate` on unmounted components', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -364,19 +325,11 @@ describe('ReactCompositeComponent', () => {
 
     ReactDOM.unmountComponentAtNode(container);
 
-    expect(() => instance.forceUpdate()).toErrorDev(
-      "Warning: Can't perform a React state update on an unmounted " +
-        'component. This is a no-op, but it indicates a memory leak in your ' +
-        'application. To fix, cancel all subscriptions and asynchronous ' +
-        'tasks in the componentWillUnmount method.\n' +
-        '    in Component (at **)',
-    );
-
-    // No additional warning should be recorded
+    instance.forceUpdate();
     instance.forceUpdate();
   });
 
-  it('should warn about `setState` on unmounted components', () => {
+  it('should not warn about `setState` on unmounted components', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -404,22 +357,10 @@ describe('ReactCompositeComponent', () => {
     expect(renders).toBe(1);
 
     instance.setState({value: 1});
-
     expect(renders).toBe(2);
 
     ReactDOM.render(<div />, container);
-
-    expect(() => {
-      instance.setState({value: 2});
-    }).toErrorDev(
-      "Warning: Can't perform a React state update on an unmounted " +
-        'component. This is a no-op, but it indicates a memory leak in your ' +
-        'application. To fix, cancel all subscriptions and asynchronous ' +
-        'tasks in the componentWillUnmount method.\n' +
-        '    in Component (at **)\n' +
-        '    in span',
-    );
-
+    instance.setState({value: 2});
     expect(renders).toBe(2);
   });
 

@@ -10,10 +10,22 @@ It depends on a local build of React and enables us to easily test async "time s
 
 No. The APIs being tested here are unstable and some of them have still not been released to NPM. For now, this fixture is only a test harness.
 
-There are also known bugs and inefficiencies in master so **don't use this fixture for demonstration purposes either yet**. Until they are fixed, this fixture is **not** indicative of React async rendering performance.
+There are also known bugs and inefficiencies in main so **don't use this fixture for demonstration purposes either yet**. Until they are fixed, this fixture is **not** indicative of React async rendering performance.
 
 ## How do I run this fixture?
 
+### From npm version
+
+```
+# 1: Install fixture dependencies
+cd fixtures/unstable-async/time-slicing/
+yarn
+
+# 2: Run the app
+yarn start
+```
+
+### From React source code
 ```shell
 # 1: Build react from source
 cd /path/to/react
@@ -23,6 +35,9 @@ yarn build react-dom/index,react/index,react-cache,scheduler --type=NODE
 # 2: Install fixture dependencies
 cd fixtures/unstable-async/time-slicing/
 yarn
+
+# 3: Copy React source code over
+yarn copy-source
 
 # 3: Run the app
 yarn start

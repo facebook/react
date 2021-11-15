@@ -8,7 +8,7 @@ This is a low-level package. If you're looking for the standalone DevTools app, 
 
 This package exports two entry points: a frontend (to be run in the main `window`) and a backend (to be installed and run within an `iframe`<sup>1</sup>).
 
-The frontend and backend can be initialized in any order, but **the backend must not be activated until after the frontend has been initialized**. Because of this, the simplest sequence is:
+The frontend and backend can be initialized in any order, but **the backend must not be activated until the frontend initialization has completed**. Because of this, the simplest sequence is:
 
 1. Frontend (DevTools interface) initialized in the main `window`.
 1. Backend initialized in an `iframe`.
@@ -64,6 +64,23 @@ const DevTools = initialize(contentWindow);
 
 ## Examples
 
+### Supporting named hooks
+
+DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and inferring the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
+
+To configure this package to support this functionality, you'll need to provide a prop that dynamically imports the extra functionality:
+```js
+// Follow code examples above to configure the backend and frontend.
+// When rendering DevTools, the important part is to pass a 'hookNamesModuleLoaderFunction' prop.
+const hookNamesModuleLoaderFunction = () => import('react-devtools-inline/hookNames');
+
+// Render:
+<DevTools
+  hookNamesModuleLoaderFunction={hookNamesModuleLoaderFunction}
+  {...otherProps}
+/>;
+```
+
 ### Configuring a same-origin `iframe`
 
 The simplest way to use this package is to install the hook from the parent `window`. This is possible if the `iframe` is not sandboxed and there are no cross-origin restrictions.
@@ -83,13 +100,14 @@ const { contentWindow } = iframe;
 // This must be called before React is loaded into that frame.
 initializeBackend(contentWindow);
 
+// Initialize DevTools UI to listen to the hook we just installed.
+// This returns a React component we can render anywhere in the parent window.
+// This also must be called before React is loaded into the iframe
+const DevTools = initializeFrontend(contentWindow);
+
 // React application can be injected into <iframe> at any time now...
 // Note that this would need to be done via <script> tag injection,
 // as setting the src of the <iframe> would load a new page (without the injected backend).
-
-// Initialize DevTools UI to listen to the hook we just installed.
-// This returns a React component we can render anywhere in the parent window.
-const DevTools = initializeFrontend(contentWindow);
 
 // <DevTools /> interface can be rendered in the parent window at any time now...
 // Be sure to use either ReactDOM.createRoot()
@@ -153,6 +171,40 @@ iframe.onload = () => {
 };
 ```
 
+### Advanced integration with custom "wall"
+
+Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/).
+
+```js
+import {
+  createBridge,
+  createStore,
+  initialize as createDevTools,
+} from "react-devtools-inline/frontend";
+
+// Custom Wall implementation enables serializing data
+// using an API other than window.postMessage()
+// For example...
+const wall = {
+  emit() {},
+  listen(listener) {
+    wall._listener = listener;
+  },
+  async send(event, payload) {
+    const response = await fetch(...).json();
+    wall._listener(response);
+  },
+};
+
+// Create a Bridge and Store that use the custom Wall.
+const bridge = createBridge(target, wall);
+const store = createStore(bridge);
+const DevTools = createDevTools(target, { bridge, store });
+
+// Render DevTools with it.
+<DevTools {...otherProps} />;
+```
+
 ## Local development
 You can also build and test this package from source.
 
@@ -177,4 +229,4 @@ Once the above packages have been built or downloaded, you can watch for changes
 yarn start
 ```
 
-To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/master/packages/react-devtools-shell/README.md).
+To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/main/packages/react-devtools-shell/README.md).

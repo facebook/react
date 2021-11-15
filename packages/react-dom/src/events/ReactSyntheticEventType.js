@@ -9,7 +9,6 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {EventPriority} from 'shared/ReactTypes';
 import type {DOMEventName} from './DOMEventNames';
 
 export type DispatchConfig = {|
@@ -19,17 +18,28 @@ export type DispatchConfig = {|
     captured: null | string,
   |},
   registrationName?: string,
-  eventPriority?: EventPriority,
 |};
 
-export type ReactSyntheticEvent = {|
+type BaseSyntheticEvent = {
   isPersistent: () => boolean,
   isPropagationStopped: () => boolean,
   _dispatchInstances?: null | Array<Fiber | null> | Fiber,
   _dispatchListeners?: null | Array<Function> | Function,
-  _reactName: string,
   _targetInst: Fiber,
   nativeEvent: Event,
+  target?: mixed,
+  relatedTarget?: mixed,
   type: string,
   currentTarget: null | EventTarget,
-|};
+};
+
+export type KnownReactSyntheticEvent = BaseSyntheticEvent & {
+  _reactName: string,
+};
+export type UnknownReactSyntheticEvent = BaseSyntheticEvent & {
+  _reactName: null,
+};
+
+export type ReactSyntheticEvent =
+  | KnownReactSyntheticEvent
+  | UnknownReactSyntheticEvent;

@@ -3,65 +3,65 @@
 'use strict';
 
 const {exec} = require('child-process-promise');
-const {existsSync, readdirSync} = require('fs');
-const {readJsonSync} = require('fs-extra');
+const {existsSync} = require('fs');
 const {join} = require('path');
 const {getArtifactsList, logPromise} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({build, cwd}) => {
+const run = async ({build, cwd, releaseChannel}) => {
   const artifacts = await getArtifactsList(build);
-  const nodeModulesArtifact = artifacts.find(entry =>
-    entry.path.endsWith('node_modules.tgz')
+  const buildArtifacts = artifacts.find(entry =>
+    entry.path.endsWith('build.tgz')
   );
 
-  if (!nodeModulesArtifact) {
+  if (!buildArtifacts) {
     console.log(
       theme`{error The specified build (${build}) does not contain any build artifacts.}`
     );
     process.exit(1);
   }
 
-  const nodeModulesURL = nodeModulesArtifact.url;
+  // Download and extract artifact
+  await exec(`rm -rf ./build`, {cwd});
+  await exec(
+    `curl -L $(fwdproxy-config curl) ${buildArtifacts.url} | tar -xvz`,
+    {
+      cwd,
+    }
+  );
 
+  // Copy to staging directory
+  // TODO: Consider staging the release in a different directory from the CI
+  // build artifacts: `./build/node_modules` -> `./staged-releases`
   if (!existsSync(join(cwd, 'build'))) {
     await exec(`mkdir ./build`, {cwd});
+  } else {
+    await exec(`rm -rf ./build/node_modules`, {cwd});
   }
-
-  // Download and extract artifact
-  await exec(`rm -rf ./build/node_modules*`, {cwd});
-  await exec(`curl -L ${nodeModulesURL} --output ./build/node_modules.tgz`, {
-    cwd,
-  });
-  await exec(`mkdir ./build/node_modules`, {cwd});
-  await exec(`tar zxvf ./build/node_modules.tgz -C ./build/node_modules/`, {
-    cwd,
-  });
-
-  // Unpack packages and prepare to publish
-  const compressedPackages = readdirSync(join(cwd, 'build/node_modules/'));
-  for (let i = 0; i < compressedPackages.length; i++) {
-    await exec(
-      `tar zxvf ./build/node_modules/${compressedPackages[i]} -C ./build/node_modules/`,
-      {cwd}
-    );
-    const packageJSON = readJsonSync(
-      join(cwd, `/build/node_modules/package/package.json`)
-    );
-    await exec(
-      `mv ./build/node_modules/package ./build/node_modules/${packageJSON.name}`,
-      {cwd}
-    );
+  let sourceDir;
+  // TODO: Rename release channel to `next`
+  if (releaseChannel === 'stable') {
+    sourceDir = 'oss-stable';
+  } else if (releaseChannel === 'experimental') {
+    sourceDir = 'oss-experimental';
+  } else if (releaseChannel === 'latest') {
+    sourceDir = 'oss-stable-semver';
+  } else {
+    console.error('Internal error: Invalid release channel: ' + releaseChannel);
+    process.exit(releaseChannel);
   }
-
-  // Cleanup
-  await exec(`rm ./build/node_modules.tgz`, {cwd});
-  await exec(`rm ./build/node_modules/*.tgz`, {cwd});
+  await exec(`cp -r ./build/${sourceDir} ./build/node_modules`, {cwd});
 };
 
-module.exports = async ({build, cwd}) => {
+module.exports = async ({build, commit, cwd, releaseChannel}) => {
+  let buildLabel;
+  if (commit !== null) {
+    buildLabel = theme`commit {commit ${commit}} (build {build ${build}})`;
+  } else {
+    buildLabel = theme`build {build ${build}}`;
+  }
   return logPromise(
-    run({build, cwd}),
-    theme`Downloading artifacts from Circle CI for build {build ${build}}`
+    run({build, cwd, releaseChannel}),
+    theme`Downloading artifacts from Circle CI for ${buildLabel}`
   );
 };

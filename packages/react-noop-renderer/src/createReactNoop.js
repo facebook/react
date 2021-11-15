@@ -16,16 +16,19 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import isArray from 'shared/isArray';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {
+  DefaultEventPriority,
+  IdleEventPriority,
   ConcurrentRoot,
-  BlockingRoot,
   LegacyRoot,
-} from 'react-reconciler/src/ReactRootTags';
+} from 'react-reconciler/constants';
 
 type Container = {
   rootID: string,
@@ -46,6 +49,7 @@ type Props = {
 type Instance = {|
   type: string,
   id: number,
+  parent: number,
   children: Array<Instance | TextInstance>,
   text: string | null,
   prop: any,
@@ -55,6 +59,7 @@ type Instance = {|
 type TextInstance = {|
   text: string,
   id: number,
+  parent: number,
   hidden: boolean,
   context: HostContext,
 |};
@@ -78,6 +83,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance: Container | Instance,
     child: Instance | TextInstance,
   ): void {
+    const prevParent = child.parent;
+    if (prevParent !== -1 && prevParent !== parentInstance.id) {
+      throw new Error('Reparenting is not allowed');
+    }
+    child.parent = parentInstance.id;
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -206,9 +216,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     keepChildren: boolean,
     recyclableInstance: null | Instance,
   ): Instance {
+    if (__DEV__) {
+      checkPropStringCoercion(newProps.children, 'children');
+    }
     const clone = {
       id: instance.id,
       type: type,
+      parent: instance.parent,
       children: keepChildren ? instance.children : [],
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
@@ -219,6 +233,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     };
     Object.defineProperty(clone, 'id', {
       value: clone.id,
+      enumerable: false,
+    });
+    Object.defineProperty(clone, 'parent', {
+      value: clone.parent,
       enumerable: false,
     });
     Object.defineProperty(clone, 'text', {
@@ -256,6 +274,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       type: string,
       rootcontainerInstance: Container,
     ) {
+      if (type === 'offscreen') {
+        return parentHostContext;
+      }
       if (type === 'uppercase') {
         return UPPERCASE_CONTEXT;
       }
@@ -271,16 +292,26 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
       rootContainerInstance: Container,
       hostContext: HostContext,
+      internalInstanceHandle: Object,
     ): Instance {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
+      }
+      if (__DEV__) {
+        // The `if` statement here prevents auto-disabling of the safe coercion
+        // ESLint rule, so we must manually disable it below.
+        if (shouldSetTextContent(type, props)) {
+          checkPropStringCoercion(props.children, 'children');
+        }
       }
       const inst = {
         id: instanceCounter++,
         type: type,
         children: [],
+        parent: -1,
         text: shouldSetTextContent(type, props)
-          ? computeText((props.children: any) + '', hostContext)
+          ? // eslint-disable-next-line react-internal/safe-string-coercion
+            computeText((props.children: any) + '', hostContext)
           : null,
         prop: props.prop,
         hidden: !!props.hidden,
@@ -288,12 +319,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+      Object.defineProperty(inst, 'parent', {
+        value: inst.parent,
+        enumerable: false,
+      });
       Object.defineProperty(inst, 'text', {
         value: inst.text,
         enumerable: false,
       });
       Object.defineProperty(inst, 'context', {
         value: inst.context,
+        enumerable: false,
+      });
+      Object.defineProperty(inst, 'fiber', {
+        value: internalInstanceHandle,
         enumerable: false,
       });
       return inst;
@@ -303,6 +342,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       parentInstance: Instance,
       child: Instance | TextInstance,
     ): void {
+      const prevParent = child.parent;
+      if (prevParent !== -1 && prevParent !== parentInstance.id) {
+        throw new Error('Reparenting is not allowed');
+      }
+      child.parent = parentInstance.id;
       parentInstance.children.push(child);
     },
 
@@ -347,11 +391,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const inst = {
         text: text,
         id: instanceCounter++,
+        parent: -1,
         hidden: false,
         context: hostContext,
       };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+      Object.defineProperty(inst, 'parent', {
+        value: inst.parent,
+        enumerable: false,
+      });
       Object.defineProperty(inst, 'context', {
         value: inst.context,
         enumerable: false,
@@ -363,68 +412,36 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     cancelTimeout: clearTimeout,
     noTimeout: -1,
 
+    supportsMicrotasks: true,
+    scheduleMicrotask:
+      typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : typeof Promise !== 'undefined'
+        ? callback =>
+            Promise.resolve(null)
+              .then(callback)
+              .catch(error => {
+                setTimeout(() => {
+                  throw error;
+                });
+              })
+        : setTimeout,
+
     prepareForCommit(): null | Object {
       return null;
     },
 
     resetAfterCommit(): void {},
 
+    getCurrentEventPriority() {
+      return currentEventPriority;
+    },
+
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
     warnsIfNotActing: true,
     supportsHydration: false,
-
-    getFundamentalComponentInstance(fundamentalInstance): Instance {
-      const {impl, props, state} = fundamentalInstance;
-      return impl.getInstance(null, props, state);
-    },
-
-    mountFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, props, state} = fundamentalInstance;
-      const onMount = impl.onUpdate;
-      if (onMount !== undefined) {
-        onMount(null, instance, props, state);
-      }
-    },
-
-    shouldUpdateFundamentalComponent(fundamentalInstance): boolean {
-      const {impl, instance, prevProps, props, state} = fundamentalInstance;
-      const shouldUpdate = impl.shouldUpdate;
-      if (shouldUpdate !== undefined) {
-        return shouldUpdate(null, instance, prevProps, props, state);
-      }
-      return true;
-    },
-
-    updateFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, prevProps, props, state} = fundamentalInstance;
-      const onUpdate = impl.onUpdate;
-      if (onUpdate !== undefined) {
-        onUpdate(null, instance, prevProps, props, state);
-      }
-    },
-
-    unmountFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, props, state} = fundamentalInstance;
-      const onUnmount = impl.onUnmount;
-      if (onUnmount !== undefined) {
-        onUnmount(null, instance, props, state);
-      }
-    },
-
-    cloneFundamentalInstance(fundamentalInstance): Instance {
-      const instance = fundamentalInstance.instance;
-      return {
-        children: [],
-        text: instance.text,
-        type: instance.type,
-        prop: instance.prop,
-        id: instance.id,
-        context: instance.context,
-        hidden: instance.hidden,
-      };
-    },
 
     getInstanceFromNode() {
       throw new Error('Not yet implemented.');
@@ -447,6 +464,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     getInstanceFromScope() {
       throw new Error('Not yet implemented.');
     },
+
+    detachDeletedInstance() {},
   };
 
   const hostConfig = useMutation
@@ -474,6 +493,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance.prop = newProps.prop;
           instance.hidden = !!newProps.hidden;
           if (shouldSetTextContent(type, newProps)) {
+            if (__DEV__) {
+              checkPropStringCoercion(newProps.children, 'children');
+            }
             instance.text = computeText(
               (newProps.children: any) + '',
               instance.context,
@@ -562,6 +584,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           container.children = newChildren;
         },
 
+        getOffscreenContainerType(): string {
+          return 'offscreen';
+        },
+
+        getOffscreenContainerProps(
+          mode: OffscreenMode,
+          children: ReactNodeList,
+        ): Props {
+          return {
+            hidden: mode === 'hidden',
+            children,
+          };
+        },
+
         cloneHiddenInstance(
           instance: Instance,
           type: string,
@@ -589,13 +625,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ): TextInstance {
           const clone = {
             text: instance.text,
-            id: instanceCounter++,
+            id: instance.id,
+            parent: instance.parent,
             hidden: true,
             context: instance.context,
           };
           // Hide from unit tests
           Object.defineProperty(clone, 'id', {
             value: clone.id,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'parent', {
+            value: clone.parent,
             enumerable: false,
           });
           Object.defineProperty(clone, 'context', {
@@ -612,6 +653,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
+  let currentEventPriority = DefaultEventPriority;
+
   function childToJSX(child, text) {
     if (text !== null) {
       return text;
@@ -622,7 +665,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (typeof child === 'string') {
       return child;
     }
-    if (Array.isArray(child)) {
+    if (isArray(child)) {
       if (child.length === 0) {
         return null;
       }
@@ -636,7 +679,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
       return children;
     }
-    if (Array.isArray(child.children)) {
+    if (isArray(child.children)) {
       // This is an instance.
       const instance: Instance = (child: any);
       const children = childToJSX(instance.children, instance.text);
@@ -667,7 +710,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getChildren(root) {
     if (root) {
-      return root.children;
+      return useMutation
+        ? root.children
+        : removeOffscreenContainersFromChildren(root.children, false);
     } else {
       return null;
     }
@@ -675,10 +720,167 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getPendingChildren(root) {
     if (root) {
-      return root.pendingChildren;
+      return useMutation
+        ? root.children
+        : removeOffscreenContainersFromChildren(root.pendingChildren, false);
     } else {
       return null;
     }
+  }
+
+  function removeOffscreenContainersFromChildren(children, hideNearestNode) {
+    // Mutation mode and persistent mode have different outputs for Offscreen
+    // and Suspense trees. Persistent mode adds an additional host node wrapper,
+    // whereas mutation mode does not.
+    //
+    // This function removes the offscreen host wrappers so that the output is
+    // consistent. If the offscreen node is hidden, it transfers the hiddenness
+    // to the child nodes, to mimic how it works in mutation mode. That way our
+    // tests don't have to fork tree assertions.
+    //
+    // So, it takes a tree that looks like this:
+    //
+    //    <offscreen hidden={true}>
+    //      <span>A</span>
+    //      <span>B</span>
+    //    </offscren>
+    //
+    // And turns it into this:
+    //
+    //   <span hidden={true}>A</span>
+    //   <span hidden={true}>B</span>
+    //
+    // We don't mutate the original tree, but instead return a copy.
+    //
+    // This function is only used by our test assertions, via the `getChildren`
+    // and `getChildrenAsJSX` methods.
+    let didClone = false;
+    const newChildren = [];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const innerChildren = child.children;
+      if (innerChildren !== undefined) {
+        // This is a host instance instance
+        const instance: Instance = (child: any);
+        if (instance.type === 'offscreen') {
+          // This is an offscreen wrapper instance. Remove it from the tree
+          // and recursively return its children, as if it were a fragment.
+          didClone = true;
+          if (instance.text !== null) {
+            // If this offscreen tree contains only text, we replace it with
+            // a text child. Related to `shouldReplaceTextContent` feature.
+            const offscreenTextInstance: TextInstance = {
+              text: instance.text,
+              id: instanceCounter++,
+              parent: instance.parent,
+              hidden: hideNearestNode || instance.hidden,
+              context: instance.context,
+            };
+            // Hide from unit tests
+            Object.defineProperty(offscreenTextInstance, 'id', {
+              value: offscreenTextInstance.id,
+              enumerable: false,
+            });
+            Object.defineProperty(offscreenTextInstance, 'parent', {
+              value: offscreenTextInstance.parent,
+              enumerable: false,
+            });
+            Object.defineProperty(offscreenTextInstance, 'context', {
+              value: offscreenTextInstance.context,
+              enumerable: false,
+            });
+            newChildren.push(offscreenTextInstance);
+          } else {
+            // Skip the offscreen node and replace it with its children
+            const offscreenChildren = removeOffscreenContainersFromChildren(
+              innerChildren,
+              hideNearestNode || instance.hidden,
+            );
+            newChildren.push.apply(newChildren, offscreenChildren);
+          }
+        } else {
+          // This is a regular (non-offscreen) instance. If the nearest
+          // offscreen boundary is hidden, hide this node.
+          const hidden = hideNearestNode ? true : instance.hidden;
+          const clonedChildren = removeOffscreenContainersFromChildren(
+            instance.children,
+            // We never need to hide the children of this node, since if we're
+            // inside a hidden tree, then the hidden style will be applied to
+            // this node.
+            false,
+          );
+          if (
+            clonedChildren === instance.children &&
+            hidden === instance.hidden
+          ) {
+            // No changes. Reuse the original instance without cloning.
+            newChildren.push(instance);
+          } else {
+            didClone = true;
+            const clone: Instance = {
+              id: instance.id,
+              type: instance.type,
+              parent: instance.parent,
+              children: clonedChildren,
+              text: instance.text,
+              prop: instance.prop,
+              hidden: hideNearestNode ? true : instance.hidden,
+              context: instance.context,
+            };
+            Object.defineProperty(clone, 'id', {
+              value: clone.id,
+              enumerable: false,
+            });
+            Object.defineProperty(clone, 'parent', {
+              value: clone.parent,
+              enumerable: false,
+            });
+            Object.defineProperty(clone, 'text', {
+              value: clone.text,
+              enumerable: false,
+            });
+            Object.defineProperty(clone, 'context', {
+              value: clone.context,
+              enumerable: false,
+            });
+            newChildren.push(clone);
+          }
+        }
+      } else {
+        // This is a text instance
+        const textInstance: TextInstance = (child: any);
+        if (hideNearestNode) {
+          didClone = true;
+          const clone = {
+            text: textInstance.text,
+            id: textInstance.id,
+            parent: textInstance.parent,
+            hidden: textInstance.hidden || hideNearestNode,
+            context: textInstance.context,
+          };
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'parent', {
+            value: clone.parent,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'context', {
+            value: clone.context,
+            enumerable: false,
+          });
+
+          newChildren.push(clone);
+        } else {
+          newChildren.push(textInstance);
+        }
+      }
+    }
+    // There are some tests that assume reference equality, so preserve it
+    // when possible. Alternatively, we could update the tests to compare the
+    // ids instead.
+    return didClone ? newChildren : children;
   }
 
   function getChildrenAsJSX(root) {
@@ -686,7 +888,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (children === null) {
       return null;
     }
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
         type: REACT_FRAGMENT_TYPE,
@@ -705,7 +907,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (children === null) {
       return null;
     }
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
         type: REACT_FRAGMENT_TYPE,
@@ -717,6 +919,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
     }
     return children;
+  }
+
+  function flushSync<R>(fn: () => R): R {
+    if (__DEV__) {
+      if (NoopRenderer.isAlreadyRendering()) {
+        console.error(
+          'flushSync was called from inside a lifecycle method. React cannot ' +
+            'flush when React is already rendering. Consider moving this call to ' +
+            'a scheduler task or micro task.',
+        );
+      }
+    }
+    return NoopRenderer.flushSync(fn);
   }
 
   let idCounter = 0;
@@ -739,7 +954,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (!root) {
         const container = {rootID: rootID, pendingChildren: [], children: []};
         rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(container, tag, false, null);
+        root = NoopRenderer.createContainer(container, tag, false, null, null);
         roots.set(rootID, root);
       }
       return root.current.stateNode.containerInfo;
@@ -757,31 +972,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ConcurrentRoot,
         false,
         null,
-      );
-      return {
-        _Scheduler: Scheduler,
-        render(children: ReactNodeList) {
-          NoopRenderer.updateContainer(children, fiberRoot, null, null);
-        },
-        getChildren() {
-          return getChildren(container);
-        },
-        getChildrenAsJSX() {
-          return getChildrenAsJSX(container);
-        },
-      };
-    },
-
-    createBlockingRoot() {
-      const container = {
-        rootID: '' + idCounter++,
-        pendingChildren: [],
-        children: [],
-      };
-      const fiberRoot = NoopRenderer.createContainer(
-        container,
-        BlockingRoot,
-        false,
         null,
       );
       return {
@@ -808,6 +998,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         container,
         LegacyRoot,
         false,
+        null,
         null,
       );
       return {
@@ -946,19 +1137,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     deferredUpdates: NoopRenderer.deferredUpdates,
 
-    unbatchedUpdates: NoopRenderer.unbatchedUpdates,
-
     discreteUpdates: NoopRenderer.discreteUpdates,
 
-    flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
-
-    flushSync(fn: () => mixed) {
-      NoopRenderer.flushSync(fn);
+    idleUpdates<T>(fn: () => T): T {
+      const prevEventPriority = currentEventPriority;
+      currentEventPriority = IdleEventPriority;
+      try {
+        fn();
+      } finally {
+        currentEventPriority = prevEventPriority;
+      }
     },
 
+    flushSync,
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
-
-    act: NoopRenderer.act,
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {

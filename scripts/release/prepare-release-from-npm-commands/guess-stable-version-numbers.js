@@ -25,9 +25,9 @@ const run = async ({cwd, packages, skipPackages}, versionsMap) => {
 
         // Guess the next version by incrementing patch.
         // The script will confirm this later.
-        // By default, new releases from masters should increment the minor version number,
+        // By default, new releases from mains should increment the minor version number,
         // and patch releases should be done from branches.
-        if (branch === 'master') {
+        if (branch === 'main') {
           versionsMap.set(packageName, `${major}.${minor + 1}.0`);
         } else {
           versionsMap.set(packageName, `${major}.${minor}.${patch + 1}`);

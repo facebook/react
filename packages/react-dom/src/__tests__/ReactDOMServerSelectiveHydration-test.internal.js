@@ -14,9 +14,12 @@ import {createEventTarget} from 'dom-event-testing-library';
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactTestUtils;
+let ReactFeatureFlags;
 let Scheduler;
 let Suspense;
+let act;
+
+let IdleEventPriority;
 
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
@@ -91,21 +94,37 @@ function dispatchClickEvent(target) {
   return target.dispatchEvent(mouseOutEvent);
 }
 
+// TODO: There's currently no React DOM API to opt into Idle priority updates,
+// and there's no native DOM event that maps to idle priority, so this is a
+// temporary workaround. Need something like ReactDOM.unstable_IdleUpdates.
+function TODO_scheduleIdleDOMSchedulerTask(fn) {
+  ReactDOM.unstable_runWithPriority(IdleEventPriority, () => {
+    const prevEvent = window.event;
+    window.event = {type: 'message'};
+    try {
+      fn();
+    } finally {
+      window.event = prevEvent;
+    }
+  });
+}
+
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
 
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableCreateEventHandleAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
+
+    IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
 
-  // @gate experimental
   it('hydrates the target boundary synchronously during a click', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -168,7 +187,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates at higher pri if sync did not work first time', async () => {
     let suspend = false;
     let resolve;
@@ -233,27 +251,39 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toHaveYielded([]);
 
     // This click target cannot be hydrated yet because it's suspended.
-    const result = dispatchClickEvent(spanD);
+    await act(async () => {
+      const result = dispatchClickEvent(spanD);
+      expect(result).toBe(true);
+    });
+    expect(Scheduler).toHaveYielded([
+      'App',
+      // Continuing rendering will render B next.
+      'B',
+      'C',
+    ]);
 
-    expect(Scheduler).toHaveYielded(['App']);
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
-    expect(result).toBe(true);
-
-    // Continuing rendering will render B next.
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
-
-    suspend = false;
-    resolve();
-    await promise;
-
-    // After the click, we should prioritize D and the Click first,
-    // and only after that render A and C.
-    expect(Scheduler).toFlushAndYield(['D', 'Clicked D', 'A']);
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(Scheduler).toHaveYielded(['D', 'A']);
+    } else {
+      // After the click, we should prioritize D and the Click first,
+      // and only after that render A and C.
+      expect(Scheduler).toHaveYielded(['D', 'Clicked D', 'A']);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates at higher pri for secondary discrete events', async () => {
     let suspend = false;
     let resolve;
@@ -324,29 +354,51 @@ describe('ReactDOMServerSelectiveHydration', () => {
     dispatchClickEvent(spanC);
     dispatchClickEvent(spanD);
 
-    expect(Scheduler).toHaveYielded(['App']);
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      expect(Scheduler).toHaveYielded(['App', 'C', 'Clicked C']);
+    } else {
+      expect(Scheduler).toHaveYielded(['App']);
+    }
 
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
-    // We should prioritize hydrating A, C and D first since we clicked in
-    // them. Only after they're done will we hydrate B.
-    expect(Scheduler).toFlushAndYield([
-      'A',
-      'Clicked A',
-      'C',
-      'Clicked C',
-      'D',
-      'Clicked D',
-      // B should render last since it wasn't clicked.
-      'B',
-    ]);
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(Scheduler).toHaveYielded([
+        'A',
+        'D',
+        // B should render last since it wasn't clicked.
+        'B',
+      ]);
+    } else {
+      // We should prioritize hydrating A, C and D first since we clicked in
+      // them. Only after they're done will we hydrate B.
+      expect(Scheduler).toHaveYielded([
+        'A',
+        'Clicked A',
+        'C',
+        'Clicked C',
+        'D',
+        'Clicked D',
+        // B should render last since it wasn't clicked.
+        'B',
+      ]);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates the target boundary synchronously during a click (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let isServerRendering = true;
@@ -415,7 +467,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates at higher pri if sync did not work first time (createEventHandle)', async () => {
     let suspend = false;
     let isServerRendering = true;
@@ -484,26 +536,36 @@ describe('ReactDOMServerSelectiveHydration', () => {
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
 
-    const target = createEventTarget(spanD);
-    target.virtualclick();
-
-    expect(Scheduler).toHaveYielded(['App']);
-
     // Continuing rendering will render B next.
-    expect(Scheduler).toFlushAndYield(['B', 'C']);
-
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      const target = createEventTarget(spanD);
+      target.virtualclick();
+    });
+    expect(Scheduler).toHaveYielded(['App', 'B', 'C']);
 
     // After the click, we should prioritize D and the Click first,
     // and only after that render A and C.
-    expect(Scheduler).toFlushAndYield(['D', 'Clicked D', 'A']);
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      // no replay
+      expect(Scheduler).toHaveYielded(['D', 'A']);
+    } else {
+      expect(Scheduler).toHaveYielded(['D', 'Clicked D', 'A']);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate www
   it('hydrates at higher pri for secondary discrete events (createEventHandle)', async () => {
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
@@ -578,29 +640,46 @@ describe('ReactDOMServerSelectiveHydration', () => {
     createEventTarget(spanC).virtualclick();
     createEventTarget(spanD).virtualclick();
 
-    expect(Scheduler).toHaveYielded(['App']);
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(Scheduler).toHaveYielded(['App', 'C', 'Clicked C']);
+    } else {
+      expect(Scheduler).toHaveYielded(['App']);
+    }
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
-    suspend = false;
-    resolve();
-    await promise;
-
-    // We should prioritize hydrating A, C and D first since we clicked in
-    // them. Only after they're done will we hydrate B.
-    expect(Scheduler).toFlushAndYield([
-      'A',
-      'Clicked A',
-      'C',
-      'Clicked C',
-      'D',
-      'Clicked D',
-      // B should render last since it wasn't clicked.
-      'B',
-    ]);
+    if (
+      ReactFeatureFlags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    ) {
+      expect(Scheduler).toHaveYielded([
+        'A',
+        'D',
+        // B should render last since it wasn't clicked.
+        'B',
+      ]);
+    } else {
+      // We should prioritize hydrating A, C and D first since we clicked in
+      // them. Only after they're done will we hydrate B.
+      expect(Scheduler).toHaveYielded([
+        'A',
+        'Clicked A',
+        'C',
+        'Clicked C',
+        'D',
+        'Clicked D',
+        // B should render last since it wasn't clicked.
+        'B',
+      ]);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates the hovered targets as higher priority for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -679,29 +758,47 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     expect(Scheduler).toHaveYielded(['App']);
 
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
-    // We should prioritize hydrating D first because we clicked it.
-    // Next we should hydrate C since that's the current hover target.
-    // To simplify implementation details we hydrate both B and C at
-    // the same time since B was already scheduled.
-    // This is ok because it will at least not continue for nested
-    // boundary. See the next test below.
-    expect(Scheduler).toFlushAndYield([
-      'D',
-      'Clicked D',
-      'B', // Ideally this should be later.
-      'C',
-      'Hover C',
-      'A',
-    ]);
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      // We should prioritize hydrating D first because we clicked it.
+      // but event isnt replayed
+      expect(Scheduler).toHaveYielded([
+        'D',
+        'B', // Ideally this should be later.
+        'C',
+        'Hover C',
+        'A',
+      ]);
+    } else {
+      // We should prioritize hydrating D first because we clicked it.
+      // Next we should hydrate C since that's the current hover target.
+      // To simplify implementation details we hydrate both B and C at
+      // the same time since B was already scheduled.
+      // This is ok because it will at least not continue for nested
+      // boundary. See the next test below.
+      expect(Scheduler).toHaveYielded([
+        'D',
+        'Clicked D',
+        'B', // Ideally this should be later.
+        'C',
+        'Hover C',
+        'A',
+      ]);
+    }
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -773,21 +870,23 @@ describe('ReactDOMServerSelectiveHydration', () => {
     dispatchMouseHoverEvent(spanB, spanD);
     dispatchMouseHoverEvent(spanC, spanB);
 
-    suspend = false;
-    resolve();
-    await promise;
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
 
     // We should prioritize hydrating D first because we clicked it.
     // Next we should hydrate C since that's the current hover target.
     // Next it doesn't matter if we hydrate A or B first but as an
     // implementation detail we're currently hydrating B first since
     // we at one point hovered over it and we never deprioritized it.
-    expect(Scheduler).toFlushAndYield(['App', 'C', 'Hover C', 'A', 'B', 'D']);
+    expect(Scheduler).toHaveYielded(['App', 'C', 'Hover C', 'A', 'B', 'D']);
 
     document.body.removeChild(container);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -836,7 +935,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toFlushAndYield(['App', 'C', 'B', 'A']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('hydrates before an update even if hydration moves away from it', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -880,19 +979,17 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanC = container.getElementsByTagName('span')[4];
 
     const root = ReactDOM.createRoot(container, {hydrate: true});
-    ReactTestUtils.act(() => {
+    act(() => {
       root.render(<App a="A" />);
 
       // Hydrate the shell.
       expect(Scheduler).toFlushAndYieldThrough(['App', 'Commit']);
 
       // Render an update at Idle priority that needs to update A.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_IdlePriority,
-        () => {
-          root.render(<App a="AA" />);
-        },
-      );
+
+      TODO_scheduleIdleDOMSchedulerTask(() => {
+        root.render(<App a="AA" />);
+      });
 
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.
@@ -948,5 +1045,152 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(spanA).toBe(spanA2);
 
     document.body.removeChild(container);
+  });
+
+  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+  it('fires capture event handlers and native events if content is hydratable during discrete event', async () => {
+    spyOnDev(console, 'error');
+    function Child({text}) {
+      Scheduler.unstable_yieldValue(text);
+      const ref = React.useRef();
+      React.useLayoutEffect(() => {
+        if (!ref.current) {
+          return;
+        }
+        ref.current.onclick = () => {
+          Scheduler.unstable_yieldValue('Native Click ' + text);
+        };
+      }, [text]);
+      return (
+        <span
+          ref={ref}
+          onClickCapture={() => {
+            Scheduler.unstable_yieldValue('Capture Clicked ' + text);
+          }}
+          onClick={e => {
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          }}>
+          {text}
+        </span>
+      );
+    }
+
+    function App() {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child text="A" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="B" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let finalHTML;
+    expect(() => {
+      finalHTML = ReactDOMServer.renderToString(<App />);
+    }).toErrorDev([
+      'useLayoutEffect does nothing on the server',
+      'useLayoutEffect does nothing on the server',
+    ]);
+
+    expect(Scheduler).toHaveYielded(['App', 'A', 'B']);
+
+    const container = document.createElement('div');
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[1];
+
+    ReactDOM.hydrateRoot(container, <App />);
+
+    // Nothing has been hydrated so far.
+    expect(Scheduler).toHaveYielded([]);
+
+    // This should synchronously hydrate the root App and the second suspense
+    // boundary.
+    dispatchClickEvent(span);
+
+    // We rendered App, B and then invoked the event without rendering A.
+    expect(Scheduler).toHaveYielded([
+      'App',
+      'B',
+      'Capture Clicked B',
+      'Native Click B',
+      'Clicked B',
+    ]);
+
+    // After continuing the scheduler, we finally hydrate A.
+    expect(Scheduler).toFlushAndYield(['A']);
+
+    document.body.removeChild(container);
+  });
+
+  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+  it('does not propagate discrete event if it cannot be synchronously hydrated', async () => {
+    let triggeredParent = false;
+    let triggeredChild = false;
+    let suspend = false;
+    const promise = new Promise(() => {});
+    function Child() {
+      if (suspend) {
+        throw promise;
+      }
+      Scheduler.unstable_yieldValue('Child');
+      return (
+        <span
+          onClickCapture={e => {
+            e.stopPropagation();
+            triggeredChild = true;
+          }}>
+          Click me
+        </span>
+      );
+    }
+    function App() {
+      const onClick = () => {
+        triggeredParent = true;
+      };
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <div
+          ref={n => {
+            if (n) n.onclick = onClick;
+          }}
+          onClick={onClick}>
+          <Suspense fallback={null}>
+            <Child />
+          </Suspense>
+        </div>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    expect(Scheduler).toHaveYielded(['App', 'Child']);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+
+    suspend = true;
+
+    ReactDOM.hydrateRoot(container, <App />);
+    // Nothing has been hydrated so far.
+    expect(Scheduler).toHaveYielded([]);
+
+    const span = container.getElementsByTagName('span')[0];
+    dispatchClickEvent(span);
+
+    expect(Scheduler).toHaveYielded(['App']);
+
+    dispatchClickEvent(span);
+
+    expect(triggeredParent).toBe(false);
+    expect(triggeredChild).toBe(false);
   });
 });

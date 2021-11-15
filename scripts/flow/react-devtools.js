@@ -7,4 +7,12 @@
  * @flow
  */
 
-// No types
+declare var __EXTENSION__: boolean;
+declare var __TEST__: boolean;
+
+declare var DARK_MODE_DIMMED_WARNING_COLOR: string;
+declare var DARK_MODE_DIMMED_ERROR_COLOR: string;
+declare var DARK_MODE_DIMMED_LOG_COLOR: string;
+declare var LIGHT_MODE_DIMMED_WARNING_COLOR: string;
+declare var LIGHT_MODE_DIMMED_ERROR_COLOR: string;
+declare var LIGHT_MODE_DIMMED_LOG_COLOR: string;

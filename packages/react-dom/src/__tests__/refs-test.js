@@ -351,6 +351,36 @@ describe('ref swapping', () => {
       'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
     );
   });
+
+  // @gate !__DEV__ || warnAboutCallbackRefReturningFunction
+  it('should warn about callback refs returning a function', () => {
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<div ref={() => () => {}} />, container);
+    }).toErrorDev('Unexpected return value from a callback ref in div');
+
+    // Cleanup should warn, too.
+    expect(() => {
+      ReactDOM.render(<span />, container);
+    }).toErrorDev('Unexpected return value from a callback ref in div', {
+      withoutStack: true,
+    });
+
+    // No warning when returning non-functions.
+    ReactDOM.render(<p ref={() => ({})} />, container);
+    ReactDOM.render(<p ref={() => null} />, container);
+    ReactDOM.render(<p ref={() => undefined} />, container);
+
+    // Still warns on functions (not deduped).
+    expect(() => {
+      ReactDOM.render(<div ref={() => () => {}} />, container);
+    }).toErrorDev('Unexpected return value from a callback ref in div');
+    expect(() => {
+      ReactDOM.unmountComponentAtNode(container);
+    }).toErrorDev('Unexpected return value from a callback ref in div', {
+      withoutStack: true,
+    });
+  });
 });
 
 describe('root level refs', () => {
@@ -458,7 +488,7 @@ describe('creating element with ref in constructor', () => {
         '1. You may be adding a ref to a function component\n' +
         "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
         '3. You have multiple copies of React loaded\n' +
-        'See https://fb.me/react-refs-must-have-owner for more information.',
+        'See https://reactjs.org/link/refs-must-have-owner for more information.',
     );
   });
 });

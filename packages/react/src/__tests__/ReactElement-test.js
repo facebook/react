@@ -79,7 +79,7 @@ describe('ReactElement', () => {
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
+        'prop. (https://reactjs.org/link/special-props)',
     );
   });
 
@@ -91,7 +91,7 @@ describe('ReactElement', () => {
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
+        'prop. (https://reactjs.org/link/special-props)',
       {withoutStack: true},
     );
   });
@@ -116,7 +116,7 @@ describe('ReactElement', () => {
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
+        'prop. (https://reactjs.org/link/special-props)',
     );
   });
 

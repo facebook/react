@@ -19,7 +19,11 @@ type SubscriptionData = {|
   supportsReloadAndProfile: boolean,
 |};
 
-export default function ReloadAndProfileButton() {
+export default function ReloadAndProfileButton({
+  disabled,
+}: {|
+  disabled: boolean,
+|}) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -61,7 +65,7 @@ export default function ReloadAndProfileButton() {
 
   return (
     <Button
-      disabled={!store.supportsProfiling}
+      disabled={disabled}
       onClick={reloadAndProfile}
       title="Reload and start profiling">
       <ButtonIcon type="reload" />

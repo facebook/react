@@ -10,7 +10,7 @@
 'use strict';
 
 const rule = require('../invariant-args');
-const RuleTester = require('eslint').RuleTester;
+const {RuleTester} = require('eslint');
 const ruleTester = new RuleTester();
 
 ruleTester.run('eslint-rules/invariant-args', rule, {
