@@ -197,12 +197,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     ReactDOM.hydrateRoot(container, <App />);
-    expect(() => {
-      Scheduler.unstable_flushAll();
-    }).toErrorDev(
-      // TODO: This error should not be logged in this case. It's a false positive.
-      'Did not expect server HTML to contain the text node "Hello" in <div>.',
-    );
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Expect the server-generated HTML to stay intact.
@@ -216,6 +211,101 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
     // Hydration should not change anything.
     expect(container.textContent).toBe('HelloHello');
+  });
+
+  it('falls back to client rendering boundary on mismatch', async () => {
+    let client = false;
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => {
+      resolve = () => {
+        suspend = false;
+        resolvePromise();
+      };
+    });
+    function Child() {
+      if (suspend) {
+        Scheduler.unstable_yieldValue('Suspend');
+        throw promise;
+      } else {
+        Scheduler.unstable_yieldValue('Hello');
+        return 'Hello';
+      }
+    }
+    function Component({shouldMismatch}) {
+      Scheduler.unstable_yieldValue('Component');
+      if (shouldMismatch && client) {
+        return <article>Mismatch</article>;
+      }
+      return <div>Component</div>;
+    }
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+          <Component />
+          <Component />
+          <Component />
+          <Component shouldMismatch={true} />
+        </Suspense>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    expect(Scheduler).toHaveYielded([
+      'Hello',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+    ]);
+
+    expect(container.innerHTML).toBe(
+      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+    );
+
+    suspend = true;
+    client = true;
+
+    ReactDOM.hydrateRoot(container, <App />);
+    expect(Scheduler).toFlushAndYield([
+      'Suspend',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+    ]);
+    jest.runAllTimers();
+
+    // Unchanged
+    expect(container.innerHTML).toBe(
+      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+    );
+
+    suspend = false;
+    resolve();
+    await promise;
+
+    expect(Scheduler).toFlushAndYield([
+      // first pass, mismatches at end
+      'Hello',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+      // second pass as client render
+      'Hello',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+    ]);
+
+    // Client rendered - suspense comment nodes removed
+    expect(container.innerHTML).toBe(
+      'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
+    );
   });
 
   it('calls the hydration callbacks after hydration or deletion', async () => {

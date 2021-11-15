@@ -13,28 +13,26 @@ import {ProfilerContext} from './ProfilerContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
-import {SchedulingProfilerContext} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 export default function ClearProfilingDataButton() {
   const store = useContext(StoreContext);
   const {didRecordCommits, isProfiling, selectedTabID} = useContext(
     ProfilerContext,
   );
-  const {clearSchedulingProfilerData, schedulingProfilerData} = useContext(
-    SchedulingProfilerContext,
-  );
+  const {clearTimelineData, timelineData} = useContext(TimelineContext);
   const {profilerStore} = store;
 
   let doesHaveData = false;
-  if (selectedTabID === 'scheduling-profiler') {
-    doesHaveData = schedulingProfilerData !== null;
+  if (selectedTabID === 'timeline') {
+    doesHaveData = timelineData !== null;
   } else {
     doesHaveData = didRecordCommits;
   }
 
   const clear = () => {
-    if (selectedTabID === 'scheduling-profiler') {
-      clearSchedulingProfilerData();
+    if (selectedTabID === 'timeline') {
+      clearTimelineData();
     } else {
       profilerStore.clear();
     }

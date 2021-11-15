@@ -170,6 +170,9 @@ export function useLocalStorage<T>(
           value instanceof Function ? (value: any)(storedValue) : value;
         setStoredValue(valueToStore);
         localStorageSetItem(key, JSON.stringify(valueToStore));
+
+        // Notify listeners that this setting has changed.
+        window.dispatchEvent(new Event(key));
       } catch (error) {
         console.log(error);
       }

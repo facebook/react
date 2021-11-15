@@ -155,6 +155,7 @@ import {
   popRootCachePool,
   popCachePool,
 } from './ReactFiberCacheComponent.old';
+import {popTreeContext} from './ReactFiberTreeContext.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -822,7 +823,11 @@ function completeWork(
   renderLanes: Lanes,
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
-
+  // Note: This intentionally doesn't check if we're hydrating because comparing
+  // to the current tree provider fiber is just as fast and less error-prone.
+  // Ideally we would have a special version of the work loop only
+  // for hydration.
+  popTreeContext(workInProgress);
   switch (workInProgress.tag) {
     case IndeterminateComponent:
     case LazyComponent:
@@ -879,7 +884,7 @@ function completeWork(
           // Schedule an effect to clear this container at the start of the next commit.
           // This handles the case of React rendering into a container with previous children.
           // It's also safe to do for updates too, because current.child would only be null
-          // if the previous render was null (so the the container would already be empty).
+          // if the previous render was null (so the container would already be empty).
           workInProgress.flags |= Snapshot;
         }
       }

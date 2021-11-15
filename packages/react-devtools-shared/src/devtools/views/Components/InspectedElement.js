@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useCallback, useContext} from 'react';
+import {useCallback, useContext, useSyncExternalStore} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
@@ -20,6 +20,8 @@ import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
+import {getOpenInEditorURL} from '../../../utils';
+import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
 
 import styles from './InspectedElement.css';
 
@@ -123,6 +125,21 @@ export default function InspectedElementWrapper(_: Props) {
     inspectedElement != null &&
     inspectedElement.canToggleSuspense;
 
+  const editorURL = useSyncExternalStore(
+    function subscribe(callback) {
+      window.addEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+      return function unsubscribe() {
+        window.removeEventListener(LOCAL_STORAGE_OPEN_IN_EDITOR_URL, callback);
+      };
+    },
+    function getState() {
+      return getOpenInEditorURL();
+    },
+  );
+
+  const canOpenInEditor =
+    editorURL && inspectedElement != null && inspectedElement.source != null;
+
   const toggleErrored = useCallback(() => {
     if (inspectedElement == null || targetErrorBoundaryID == null) {
       return;
@@ -198,6 +215,18 @@ export default function InspectedElementWrapper(_: Props) {
     }
   }, [bridge, dispatch, element, isSuspended, modalDialogDispatch, store]);
 
+  const onOpenInEditor = useCallback(() => {
+    const source = inspectedElement?.source;
+    if (source == null || editorURL == null) {
+      return;
+    }
+
+    const url = new URL(editorURL);
+    url.href = url.href.replace('{path}', source.fileName);
+    url.href = url.href.replace('{line}', String(source.lineNumber));
+    window.open(url);
+  }, [inspectedElement, editorURL]);
+
   if (element === null) {
     return (
       <div className={styles.InspectedElement}>
@@ -223,7 +252,14 @@ export default function InspectedElementWrapper(_: Props) {
             {element.displayName}
           </div>
         </div>
-
+        {canOpenInEditor && (
+          <Button
+            className={styles.IconButton}
+            onClick={onOpenInEditor}
+            title="Open in editor">
+            <ButtonIcon type="editor" />
+          </Button>
+        )}
         {canToggleError && (
           <Toggle
             className={styles.IconButton}

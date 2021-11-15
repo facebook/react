@@ -1184,7 +1184,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       });
 
-      // This update is exists to test an internal implementation detail:
+      // This update exists to test an internal implementation detail:
       // Effects without updating dependencies lose their layout/passive tag during an update.
       act(() => {
         ReactNoop.render(<Child bar={1} foo={2} />, () =>

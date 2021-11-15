@@ -64,9 +64,7 @@ export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  opaqueIdentifierPrefix: string,
   nextSuspenseID: number,
-  nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
@@ -127,9 +125,7 @@ export function createResponseState(
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
-    opaqueIdentifierPrefix: idPrefix + 'R:',
     nextSuspenseID: 0,
-    nextOpaqueID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
@@ -230,24 +226,6 @@ export function assignSuspenseBoundaryID(
   const generatedID = responseState.nextSuspenseID++;
   return stringToPrecomputedChunk(
     responseState.boundaryPrefix + generatedID.toString(16),
-  );
-}
-
-export type OpaqueIDType = string;
-
-export function makeServerID(
-  responseState: null | ResponseState,
-): OpaqueIDType {
-  if (responseState === null) {
-    throw new Error(
-      'Invalid hook call. Hooks can only be called inside of the body of a function component.',
-    );
-  }
-
-  // TODO: This is not deterministic since it's created during render.
-  return (
-    responseState.opaqueIdentifierPrefix +
-    (responseState.nextOpaqueID++).toString(36)
   );
 }
 
@@ -471,7 +449,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -482,7 +460,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -493,7 +471,7 @@ function pushAttribute(
             attributeSeparator,
             attributeNameChunk,
             attributeAssign,
-            escapeTextForBrowser(value),
+            stringToChunk(escapeTextForBrowser(value)),
             attributeEnd,
           );
         }
@@ -510,7 +488,7 @@ function pushAttribute(
           attributeSeparator,
           attributeNameChunk,
           attributeAssign,
-          escapeTextForBrowser(value),
+          stringToChunk(escapeTextForBrowser(value)),
           attributeEnd,
         );
     }
@@ -532,7 +510,7 @@ function pushAttribute(
       attributeSeparator,
       stringToChunk(name),
       attributeAssign,
-      escapeTextForBrowser(value),
+      stringToChunk(escapeTextForBrowser(value)),
       attributeEnd,
     );
   }
@@ -1146,7 +1124,7 @@ function pushStartCustomElement(
               attributeSeparator,
               stringToChunk(propKey),
               attributeAssign,
-              escapeTextForBrowser(propValue),
+              stringToChunk(escapeTextForBrowser(propValue)),
               attributeEnd,
             );
           }
