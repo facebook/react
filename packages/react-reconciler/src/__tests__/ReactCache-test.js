@@ -1132,7 +1132,7 @@ describe('ReactCache', () => {
 
     // Unmount children: the first text cache instance is created only after the root
     // commits, so both fresh cache instances are released by their cache boundaries,
-    // cleaning up v1 (used for the first two children which render togeether) and
+    // cleaning up v1 (used for the first two children which render together) and
     // v2 (used for the third boundary added later).
     await act(async () => {
       root.render('Bye!');
