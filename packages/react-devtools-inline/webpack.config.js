@@ -33,6 +33,14 @@ const babelOptions = {
   ),
 };
 
+const builtModulesDir = resolve(
+  __dirname,
+  '..',
+  '..',
+  'build',
+  'oss-experimental',
+);
+
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'eval-cheap-source-map' : 'source-map',
@@ -49,12 +57,10 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   externals: {
-    react: 'react',
-    // TODO: Once this package is published, remove the external
-    // 'react-debug-tools': 'react-debug-tools',
-    'react-dom': 'react-dom',
-    'react-is': 'react-is',
-    scheduler: 'scheduler',
+    react: resolve(builtModulesDir, 'react'),
+    'react-dom': resolve(builtModulesDir, 'react-dom/unstable_testing'),
+    'react-is': resolve(builtModulesDir, 'react-is'),
+    scheduler: resolve(builtModulesDir, 'scheduler'),
   },
   node: {
     // source-maps package has a dependency on 'fs'
