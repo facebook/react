@@ -34,6 +34,7 @@ import {
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
@@ -384,6 +385,22 @@ export function setShowInlineWarningsAndErrors(value: boolean): void {
     LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
     JSON.stringify(value),
   );
+}
+
+export function getDefaultOpenInEditorURL(): string {
+  return typeof process.env.EDITOR_URL === 'string'
+    ? process.env.EDITOR_URL
+    : '';
+}
+
+export function getOpenInEditorURL(): string {
+  try {
+    const raw = localStorageGetItem(LOCAL_STORAGE_OPEN_IN_EDITOR_URL);
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return getDefaultOpenInEditorURL();
 }
 
 export function separateDisplayNameAndHOCs(

@@ -17,7 +17,6 @@ import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {OpaqueIDType} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {Flags} from './ReactFiberFlags';
 
@@ -96,17 +95,11 @@ import {
 } from './ReactFiberBeginWork.old';
 import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {
-  makeClientId,
-  makeClientIdInDEV,
-  makeOpaqueHydratingObject,
-} from './ReactFiberHostConfig';
-import {
   getWorkInProgressVersion,
   markSourceAsDirty,
   setWorkInProgressVersion,
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.old';
-import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
 import {createCache, CacheContext} from './ReactFiberCacheComponent.old';
@@ -117,6 +110,7 @@ import {
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
+import {getTreeId} from './ReactFiberTreeContext.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -138,10 +132,8 @@ export type UpdateQueue<S, A> = {|
 |};
 
 let didWarnAboutMismatchedHooksForComponent;
-let didWarnAboutUseOpaqueIdentifier;
 let didWarnUncachedGetSnapshot;
 if (__DEV__) {
-  didWarnAboutUseOpaqueIdentifier = {};
   didWarnAboutMismatchedHooksForComponent = new Set();
 }
 
@@ -203,6 +195,12 @@ let didScheduleRenderPhaseUpdate: boolean = false;
 // TODO: Maybe there's some way to consolidate this with
 // `didScheduleRenderPhaseUpdate`. Or with `numberOfReRenders`.
 let didScheduleRenderPhaseUpdateDuringThisPass: boolean = false;
+// Counts the number of useId hooks in this component.
+let localIdCounter: number = 0;
+// Used for ids that are generated completely client-side (i.e. not during
+// hydration). This counter is global, so client ids are not stable across
+// render attempts.
+let globalClientIdCounter: number = 0;
 
 const RE_RENDER_LIMIT = 25;
 
@@ -396,6 +394,7 @@ export function renderWithHooks<Props, SecondArg>(
   // workInProgressHook = null;
 
   // didScheduleRenderPhaseUpdate = false;
+  // localIdCounter = 0;
 
   // TODO Warn if no hooks are used at all during mount, then some are used during update.
   // Currently we will identify the update render as a mount because memoizedState === null.
@@ -433,6 +432,7 @@ export function renderWithHooks<Props, SecondArg>(
     let numberOfReRenders: number = 0;
     do {
       didScheduleRenderPhaseUpdateDuringThisPass = false;
+      localIdCounter = 0;
 
       if (numberOfReRenders >= RE_RENDER_LIMIT) {
         throw new Error(
@@ -514,6 +514,8 @@ export function renderWithHooks<Props, SecondArg>(
   }
 
   didScheduleRenderPhaseUpdate = false;
+  // This is reset by checkDidRenderIdHook
+  // localIdCounter = 0;
 
   if (didRenderTooFewHooks) {
     throw new Error(
@@ -542,8 +544,16 @@ export function renderWithHooks<Props, SecondArg>(
       }
     }
   }
-
   return children;
+}
+
+export function checkDidRenderIdHook() {
+  // This should be called immediately after every renderWithHooks call.
+  // Conceptually, it's part of the return value of renderWithHooks; it's only a
+  // separate function to avoid using an array tuple.
+  const didRenderIdHook = localIdCounter !== 0;
+  localIdCounter = 0;
+  return didRenderIdHook;
 }
 
 export function bailoutHooks(
@@ -612,6 +622,7 @@ export function resetHooksAfterThrow(): void {
   }
 
   didScheduleRenderPhaseUpdateDuringThisPass = false;
+  localIdCounter = 0;
 }
 
 function mountWorkInProgressHook(): Hook {
@@ -2021,91 +2032,36 @@ export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
   }
 }
 
-function warnOnOpaqueIdentifierAccessInDEV(fiber) {
-  if (__DEV__) {
-    // TODO: Should warn in effects and callbacks, too
-    const name = getComponentNameFromFiber(fiber) || 'Unknown';
-    if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
-      console.error(
-        'The object passed back from useOpaqueIdentifier is meant to be ' +
-          'passed through to attributes only. Do not read the ' +
-          'value directly.',
-      );
-      didWarnAboutUseOpaqueIdentifier[name] = true;
-    }
-  }
-}
+function mountId(): string {
+  const hook = mountWorkInProgressHook();
 
-function mountOpaqueIdentifier(): OpaqueIDType | void {
-  const makeId = __DEV__
-    ? makeClientIdInDEV.bind(
-        null,
-        warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
-      )
-    : makeClientId;
-
+  let id;
   if (getIsHydrating()) {
-    let didUpgrade = false;
-    const fiber = currentlyRenderingFiber;
-    const readValue = () => {
-      if (!didUpgrade) {
-        // Only upgrade once. This works even inside the render phase because
-        // the update is added to a shared queue, which outlasts the
-        // in-progress render.
-        didUpgrade = true;
-        if (__DEV__) {
-          isUpdatingOpaqueValueInRenderPhase = true;
-          setId(makeId());
-          isUpdatingOpaqueValueInRenderPhase = false;
-          warnOnOpaqueIdentifierAccessInDEV(fiber);
-        } else {
-          setId(makeId());
-        }
-      }
+    const treeId = getTreeId();
 
-      throw new Error(
-        'The object passed back from useOpaqueIdentifier is meant to be ' +
-          'passed through to attributes only. Do not read the value directly.',
-      );
-    };
-    const id = makeOpaqueHydratingObject(readValue);
+    // Use a captial R prefix for server-generated ids.
+    id = 'R:' + treeId;
 
-    const setId = mountState(id)[1];
-
-    if ((currentlyRenderingFiber.mode & ConcurrentMode) === NoMode) {
-      if (
-        __DEV__ &&
-        enableStrictEffects &&
-        (currentlyRenderingFiber.mode & StrictEffectsMode) === NoMode
-      ) {
-        currentlyRenderingFiber.flags |= MountPassiveDevEffect | PassiveEffect;
-      } else {
-        currentlyRenderingFiber.flags |= PassiveEffect;
-      }
-      pushEffect(
-        HookHasEffect | HookPassive,
-        () => {
-          setId(makeId());
-        },
-        undefined,
-        null,
-      );
+    // Unless this is the first id at this level, append a number at the end
+    // that represents the position of this useId hook among all the useId
+    // hooks for this fiber.
+    const localId = localIdCounter++;
+    if (localId > 0) {
+      id += ':' + localId.toString(32);
     }
-    return id;
   } else {
-    const id = makeId();
-    mountState(id);
-    return id;
+    // Use a lowercase r prefix for client-generated ids.
+    const globalClientId = globalClientIdCounter++;
+    id = 'r:' + globalClientId.toString(32);
   }
-}
 
-function updateOpaqueIdentifier(): OpaqueIDType | void {
-  const id = updateState(undefined)[0];
+  hook.memoizedState = id;
   return id;
 }
 
-function rerenderOpaqueIdentifier(): OpaqueIDType | void {
-  const id = rerenderState(undefined)[0];
+function updateId(): string {
+  const hook = updateWorkInProgressHook();
+  const id: string = hook.memoizedState;
   return id;
 }
 
@@ -2424,7 +2380,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
-  useOpaqueIdentifier: throwInvalidHookError,
+  useId: throwInvalidHookError,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2452,7 +2408,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
-  useOpaqueIdentifier: mountOpaqueIdentifier,
+  useId: mountId,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2480,7 +2436,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
-  useOpaqueIdentifier: updateOpaqueIdentifier,
+  useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2508,7 +2464,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
-  useOpaqueIdentifier: rerenderOpaqueIdentifier,
+  useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,
 };
@@ -2675,10 +2631,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
+    useId(): string {
+      currentHookNameInDev = 'useId';
       mountHookTypesDev();
-      return mountOpaqueIdentifier();
+      return mountId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -2817,10 +2773,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
+    useId(): string {
+      currentHookNameInDev = 'useId';
       updateHookTypesDev();
-      return mountOpaqueIdentifier();
+      return mountId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -2959,10 +2915,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
+    useId(): string {
+      currentHookNameInDev = 'useId';
       updateHookTypesDev();
-      return updateOpaqueIdentifier();
+      return updateId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -3102,10 +3058,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
+    useId(): string {
+      currentHookNameInDev = 'useId';
       updateHookTypesDev();
-      return rerenderOpaqueIdentifier();
+      return updateId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -3260,11 +3216,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
+    useId(): string {
+      currentHookNameInDev = 'useId';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountOpaqueIdentifier();
+      return mountId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -3419,11 +3375,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
+    useId(): string {
+      currentHookNameInDev = 'useId';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateOpaqueIdentifier();
+      return updateId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,
@@ -3579,11 +3535,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
     },
-    useOpaqueIdentifier(): OpaqueIDType | void {
-      currentHookNameInDev = 'useOpaqueIdentifier';
+    useId(): string {
+      currentHookNameInDev = 'useId';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderOpaqueIdentifier();
+      return updateId();
     },
 
     unstable_isNewReconciler: enableNewReconciler,

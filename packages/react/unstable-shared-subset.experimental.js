@@ -27,7 +27,7 @@ export {
   unstable_DebugTracingMode,
   unstable_getCacheSignal,
   unstable_getCacheForType,
-  unstable_useOpaqueIdentifier,
+  useId,
   useCallback,
   useContext,
   useDebugValue,

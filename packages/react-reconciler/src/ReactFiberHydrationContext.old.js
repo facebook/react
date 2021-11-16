@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import type {
   Instance,
   TextInstance,
@@ -17,6 +18,7 @@ import type {
   HostContext,
 } from './ReactFiberHostConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {TreeContext} from './ReactFiberTreeContext.old';
 
 import {
   HostComponent,
@@ -62,6 +64,10 @@ import {
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 import {OffscreenLane} from './ReactFiberLane.old';
+import {
+  getSuspendedTreeContext,
+  restoreSuspendedTreeContext,
+} from './ReactFiberTreeContext.old';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -96,6 +102,7 @@ function enterHydrationState(fiber: Fiber): boolean {
 function reenterHydrationStateFromDehydratedSuspenseInstance(
   fiber: Fiber,
   suspenseInstance: SuspenseInstance,
+  treeContext: TreeContext | null,
 ): boolean {
   if (!supportsHydration) {
     return false;
@@ -105,6 +112,9 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  if (treeContext !== null) {
+    restoreSuspendedTreeContext(fiber, treeContext);
+  }
   return true;
 }
 
@@ -287,6 +297,7 @@ function tryHydrate(fiber, nextInstance) {
         if (suspenseInstance !== null) {
           const suspenseState: SuspenseState = {
             dehydrated: suspenseInstance,
+            treeContext: getSuspendedTreeContext(),
             retryLane: OffscreenLane,
           };
           fiber.memoizedState = suspenseState;
@@ -313,12 +324,21 @@ function tryHydrate(fiber, nextInstance) {
   }
 }
 
+function throwOnHydrationMismatchIfConcurrentMode(fiber) {
+  if ((fiber.mode & ConcurrentMode) !== NoMode) {
+    throw new Error(
+      'An error occurred during hydration. The server HTML was replaced with client content',
+    );
+  }
+}
+
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
+    throwOnHydrationMismatchIfConcurrentMode(fiber);
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
     isHydrating = false;
@@ -327,6 +347,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   }
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrate(fiber, nextInstance)) {
+    throwOnHydrationMismatchIfConcurrentMode(fiber);
     // If we can't hydrate this instance let's try the next one.
     // We use this as a heuristic. It's based on intuition and not data so it
     // might be flawed or unnecessary.

@@ -68,7 +68,6 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
@@ -775,15 +774,6 @@ export function diffProperties(
         // to update this element.
         updatePayload = [];
       }
-    } else if (
-      typeof nextProp === 'object' &&
-      nextProp !== null &&
-      nextProp.$$typeof === REACT_OPAQUE_ID_TYPE
-    ) {
-      // If we encounter useOpaqueReference's opaque object, this means we are hydrating.
-      // In this case, call the opaque object's toString function which generates a new client
-      // ID so client and server IDs match and throws to rerender.
-      nextProp.toString();
     } else {
       // For any other property we always add it to the queue and then we
       // filter it out using the allowed property list during the commit.

@@ -4,7 +4,7 @@
 // Older versions use e.g. "Cannot read property 'world' of undefined"
 // Newer versions use e.g. "Cannot read properties of undefined (reading 'world')"
 // This file overrides the built-in toThrow() matches to handle both cases,
-// enabling the React project to support Node 12-16 witout forking tests.
+// enabling the React project to support Node 12-16 without forking tests.
 
 const toThrowMatchers = require('expect/build/toThrowMatchers').default;
 const builtInToThrow = toThrowMatchers.toThrow;

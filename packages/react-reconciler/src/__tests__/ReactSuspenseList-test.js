@@ -16,7 +16,9 @@ describe('ReactSuspenseList', () => {
     act = require('jest-react').act;
     Profiler = React.Profiler;
     Suspense = React.Suspense;
-    SuspenseList = React.SuspenseList;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
   });
 
   function Text(props) {
@@ -42,6 +44,7 @@ describe('ReactSuspenseList', () => {
     return Component;
   }
 
+  // @gate enableSuspenseList
   it('warns if an unsupported revealOrder option is used', () => {
     function Foo() {
       return (
@@ -61,6 +64,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('warns if a upper case revealOrder option is used', () => {
     function Foo() {
       return (
@@ -80,6 +84,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('warns if a misspelled revealOrder option is used', () => {
     function Foo() {
       return (
@@ -100,6 +105,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('warns if a single element is passed to a "forwards" list', () => {
     function Foo({children}) {
       return <SuspenseList revealOrder="forwards">{children}</SuspenseList>;
@@ -132,6 +138,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('warns if a single fragment is passed to a "backwards" list', () => {
     function Foo() {
       return (
@@ -152,6 +159,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('warns if a nested array is passed to a "forwards" list', () => {
     function Foo({items}) {
       return (
@@ -179,6 +187,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('shows content independently by default', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -245,6 +254,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('shows content independently in legacy mode regardless of option', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -315,6 +325,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays all "together"', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -384,6 +395,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays all "together" even when nested as siblings', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -469,6 +481,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays all "together" in nested SuspenseLists', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -530,6 +543,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays all "together" in nested SuspenseLists where the inner is default', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -589,6 +603,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays all "together" during an update', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -673,6 +688,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('avoided boundaries can be coordinate with SuspenseList', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -771,6 +787,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('boundaries without fallbacks can be coordinate with SuspenseList', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -854,6 +871,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays each items in "forwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -919,6 +937,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays each items in "backwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -984,6 +1003,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays added row at the top "together" and the bottom in "forwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1138,6 +1158,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('displays added row at the top "together" and the bottom in "backwards" order', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1322,6 +1343,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('switches to rendering fallbacks if the tail takes long CPU time', async () => {
     function Foo() {
       return (
@@ -1390,6 +1412,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('only shows one loading state at a time for "collapsed" tail insertions', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1459,6 +1482,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('warns if an unsupported tail option is used', () => {
     function Foo() {
       return (
@@ -1479,6 +1503,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('warns if a tail option is used with "together"', () => {
     function Foo() {
       return (
@@ -1499,6 +1524,7 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('renders one "collapsed" fallback even if CPU time elapsed', async () => {
     function Foo() {
       return (
@@ -1571,6 +1597,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('adding to the middle does not collapse insertions (forwards)', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1713,6 +1740,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('adding to the middle does not collapse insertions (backwards)', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -1860,6 +1888,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('adding to the middle of committed tail does not collapse insertions', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -2017,6 +2046,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('only shows no initial loading state "hidden" tail insertions', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -2080,6 +2110,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('eventually resolves a nested forwards suspense list', async () => {
     const B = createAsyncText('B');
 
@@ -2142,6 +2173,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('eventually resolves a nested forwards suspense list with a hidden tail', async () => {
     const B = createAsyncText('B');
 
@@ -2188,6 +2220,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('eventually resolves two nested forwards suspense lists with a hidden tail', async () => {
     const B = createAsyncText('B');
 
@@ -2255,6 +2288,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('can do unrelated adjacent updates', async () => {
     let updateAdjacent;
     function Adjacent() {
@@ -2301,6 +2335,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('is able to re-suspend the last rows during an update with hidden', async () => {
     const AsyncB = createAsyncText('B');
 
@@ -2389,6 +2424,7 @@ describe('ReactSuspenseList', () => {
     expect(previousInst).toBe(setAsyncB);
   });
 
+  // @gate enableSuspenseList
   it('is able to re-suspend the last rows during an update with hidden', async () => {
     const AsyncB = createAsyncText('B');
 
@@ -2477,6 +2513,7 @@ describe('ReactSuspenseList', () => {
     expect(previousInst).toBe(setAsyncB);
   });
 
+  // @gate enableSuspenseList
   it('is able to interrupt a partially rendered tree and continue later', async () => {
     const AsyncA = createAsyncText('A');
 
@@ -2555,6 +2592,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('can resume class components when revealed together', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -2617,6 +2655,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('should be able to progressively show CPU expensive rows with two pass rendering', async () => {
     function TwoPass({text}) {
       const [pass, setPass] = React.useState(0);
@@ -2687,6 +2726,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('should be able to progressively show rows with two pass rendering and visible', async () => {
     function TwoPass({text}) {
       const [pass, setPass] = React.useState(0);
@@ -2769,6 +2809,7 @@ describe('ReactSuspenseList', () => {
   });
 
   // @gate enableProfilerTimer
+  // @gate enableSuspenseList
   it('counts the actual duration when profiling a SuspenseList', async () => {
     // Order of parameters: id, phase, actualDuration, treeBaseDuration
     const onRender = jest.fn();
