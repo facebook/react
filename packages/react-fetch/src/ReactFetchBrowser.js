@@ -32,8 +32,11 @@ type RejectedRecord = {|
 
 type Record = PendingRecord | ResolvedRecord | RejectedRecord;
 
+declare var globalThis: any;
+
 // TODO: this is a browser-only version. Add a separate Node entry point.
-const nativeFetch = window.fetch;
+const nativeFetch = (typeof globalThis !== 'undefined' ? globalThis : window)
+  .fetch;
 
 function getRecordMap(): Map<string, Record> {
   return unstable_getCacheForType(createRecordMap);
