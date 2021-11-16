@@ -16,6 +16,7 @@ let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
 let act;
+let SuspenseList;
 
 function initModules() {
   // Reset warning cache.
@@ -26,6 +27,9 @@ function initModules() {
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
   act = require('jest-react').act;
+  if (gate(flags => flags.enableSuspenseList)) {
+    SuspenseList = React.SuspenseList;
+  }
 
   // Make them available to the helpers.
   return {
@@ -137,16 +141,17 @@ describe('ReactDOMServerSuspense', () => {
     );
   });
 
+  // @gate enableSuspenseList
   it('server renders a SuspenseList component and its children', async () => {
     const example = (
-      <React.SuspenseList>
+      <SuspenseList>
         <React.Suspense fallback="Loading A">
           <div>A</div>
         </React.Suspense>
         <React.Suspense fallback="Loading B">
           <div>B</div>
         </React.Suspense>
-      </React.SuspenseList>
+      </SuspenseList>
     );
     const element = await serverRender(example);
     const parent = element.parentNode;

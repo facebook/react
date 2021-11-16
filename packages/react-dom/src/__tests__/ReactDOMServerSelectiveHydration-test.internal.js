@@ -886,7 +886,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental || www
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -920,15 +919,14 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanB = container.getElementsByTagName('span')[1];
     const spanC = container.getElementsByTagName('span')[2];
 
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    const root = ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
 
     // Increase priority of B and then C.
-    ReactDOM.unstable_scheduleHydration(spanB);
-    ReactDOM.unstable_scheduleHydration(spanC);
+    root.unstable_scheduleHydration(spanB);
+    root.unstable_scheduleHydration(spanC);
 
     // We should prioritize hydrating C first because the last added
     // gets highest priority followed by the next added.

@@ -1025,7 +1025,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
 
 function isRenderConsistentWithExternalStores(finishedWork: Fiber): boolean {
   // Search the rendered tree for external store reads, and check whether the
-  // stores were mutated in a concurrent event. Intentionally using a iterative
+  // stores were mutated in a concurrent event. Intentionally using an iterative
   // loop instead of recursion so we can exit early.
   let node: Fiber = finishedWork;
   while (true) {

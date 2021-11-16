@@ -11,6 +11,8 @@ import type {Container} from './ReactDOMHostConfig';
 import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 
+import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
+
 export type RootType = {
   render(children: ReactNodeList): void,
   unmount(): void,
@@ -72,7 +74,9 @@ function ReactDOMRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
 
-ReactDOMRoot.prototype.render = function(children: ReactNodeList): void {
+ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = function(
+  children: ReactNodeList,
+): void {
   const root = this._internalRoot;
   if (root === null) {
     throw new Error('Cannot update an unmounted root.');
@@ -104,7 +108,7 @@ ReactDOMRoot.prototype.render = function(children: ReactNodeList): void {
   updateContainer(children, root, null, null);
 };
 
-ReactDOMRoot.prototype.unmount = function(): void {
+ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function(): void {
   if (__DEV__) {
     if (typeof arguments[0] === 'function') {
       console.error(
@@ -189,6 +193,16 @@ export function createRoot(
   return new ReactDOMRoot(root);
 }
 
+function ReactDOMHydrationRoot(internalRoot: FiberRoot) {
+  this._internalRoot = internalRoot;
+}
+function scheduleHydration(target: Node) {
+  if (target) {
+    queueExplicitHydrationTarget(target);
+  }
+}
+ReactDOMHydrationRoot.prototype.unstable_scheduleHydration = scheduleHydration;
+
 export function hydrateRoot(
   container: Container,
   initialChildren: ReactNodeList,
@@ -236,7 +250,7 @@ export function hydrateRoot(
   // Render the initial children
   updateContainer(initialChildren, root, null, null);
 
-  return new ReactDOMRoot(root);
+  return new ReactDOMHydrationRoot(root);
 }
 
 export function isValidContainer(node: any): boolean {
