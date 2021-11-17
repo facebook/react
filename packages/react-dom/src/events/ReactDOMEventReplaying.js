@@ -15,7 +15,7 @@ import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import getEventTarget from './getEventTarget';
-import {isReplayingEvent, setEventIsReplaying} from './replayedEvent';
+import {isReplayingEvent, replayEventWrapper} from './replayedEvent';
 
 import {
   enableSelectiveHydration,
@@ -620,36 +620,21 @@ function replayEvent(
   queuedEvent: QueuedReplayableEvent,
   targetContainer: EventTarget,
 ) {
+  const event = queuedEvent.nativeEvent;
   if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
-    nativeDispatchForReplay(queuedEvent.nativeEvent, targetContainer);
+    const eventClone = new event.constructor(event.type, (event: any));
+    replayEventWrapper(eventClone, () => {
+      event.target.dispatchEvent(eventClone);
+    });
   } else {
-    setEventIsReplaying(queuedEvent.nativeEvent);
-    dispatchEventForPluginEventSystem(
-      queuedEvent.domEventName,
-      queuedEvent.eventSystemFlags,
-      queuedEvent.nativeEvent,
-      getClosestInstanceFromNode(getEventTarget(queuedEvent.nativeEvent)),
-      targetContainer,
-    );
+    replayEventWrapper(event, () => {
+      dispatchEventForPluginEventSystem(
+        queuedEvent.domEventName,
+        queuedEvent.eventSystemFlags,
+        event,
+        getClosestInstanceFromNode(getEventTarget(queuedEvent.nativeEvent)),
+        targetContainer,
+      );
+    });
   }
 }
-
-export const nativeDispatchForReplay = (
-  event: AnyNativeEvent,
-  targetContainer: EventTarget,
-) => {
-  /**
-   * When we queue continuous events we queue them in both capture and bubble phase
-   * but We only want to dispatch them once though. Some events only have a bubble phase
-   * so gating to queue only in capture phase would cause us to miss those events.
-   * Instead we queue both and use this WeakSet to make sure we don't double dispatch events.
-   * This has the benefit of not needing to hook into the native events stopPropagation() since
-   * the bubble phase will not be fired by the browser if the event has stopPropagation called on it.
-   */
-  if (!isReplayingEvent(event)) {
-    const eventClone = new event.constructor(event.type, (event: any));
-    setEventIsReplaying(event);
-    setEventIsReplaying(eventClone);
-    event.target.dispatchEvent(eventClone);
-  }
-};

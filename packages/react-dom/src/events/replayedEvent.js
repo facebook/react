@@ -8,20 +8,16 @@
  */
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 
-const eventsReplayingMap = typeof WeakSet === 'function' ? new WeakSet() : null;
+const eventsReplaying = new Set();
 
-export const setEventIsReplaying = eventsReplayingMap
-  ? (event: AnyNativeEvent) => {
-      eventsReplayingMap.add(event);
-    }
-  : (event: AnyNativeEvent) => {
-      (event: any)._reactEventisReplaying = true;
-    };
+// This exists to avoid circular dependency between ReactDOMEventReplaying
+// and DOMPluginEventSystem
+export function replayEventWrapper(event: AnyNativeEvent, replay: () => void) {
+  eventsReplaying.add(event);
+  replay();
+  eventsReplaying.delete(event);
+}
 
-export const isReplayingEvent = eventsReplayingMap
-  ? (event: AnyNativeEvent) => {
-      return eventsReplayingMap.has(event);
-    }
-  : (event: AnyNativeEvent) => {
-      return !!(event: any)._reactEventisReplaying;
-    };
+export const isReplayingEvent = (event: AnyNativeEvent) => {
+  return eventsReplaying.has(event);
+};

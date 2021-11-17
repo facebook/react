@@ -859,6 +859,278 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
+  describe('can handle replaying events as part of multiple instance of React', () => {
+    let resolveInner;
+    let resolveOuter;
+    let innerPromise;
+    let outerPromise;
+    let OuterScheduler;
+    let InnerScheduler;
+    let innerDiv;
+
+    beforeEach(async () => {
+      document.body.innerHTML = '';
+      jest.resetModuleRegistry();
+      let OuterReactDOM;
+      let InnerReactDOM;
+      let InnerAct;
+      let OuterAct;
+      jest.isolateModules(() => {
+        OuterReactDOM = require('react-dom');
+        OuterScheduler = require('scheduler');
+      });
+      jest.isolateModules(() => {
+        InnerReactDOM = require('react-dom');
+        InnerScheduler = require('scheduler');
+      });
+
+      expect(OuterReactDOM).not.toBe(InnerReactDOM);
+      expect(OuterScheduler).not.toBe(InnerScheduler);
+
+      const outerContainer = document.createElement('div');
+      const innerContainer = document.createElement('div');
+
+      let suspendOuter = false;
+      outerPromise = new Promise(res => {
+        resolveOuter = () => {
+          suspendOuter = false;
+          res();
+        };
+      });
+
+      let isServer = true;
+      function Outer() {
+        if (suspendOuter) {
+          OuterScheduler.unstable_yieldValue('Suspend Outer');
+          throw outerPromise;
+        }
+        OuterScheduler.unstable_yieldValue('Outer');
+        const innerRoot = outerContainer.querySelector('#inner-root');
+        return (
+          <div
+            id="inner-root"
+            onMouseEnter={() => {
+              Scheduler.unstable_yieldValue('Outer Mouse Enter');
+            }}
+            dangerouslySetInnerHTML={{
+              __html: innerRoot ? innerRoot.innerHTML : '',
+            }}></div>
+        );
+      }
+      const OuterApp = () => {
+        return (
+          <Suspense fallback={<div>Loading</div>}>
+            <Outer />
+          </Suspense>
+        );
+      };
+
+      let suspendInner = false;
+      innerPromise = new Promise(res => {
+        resolveInner = () => {
+          suspendInner = false;
+          res();
+        };
+      });
+      function Inner() {
+        if (suspendInner) {
+          InnerScheduler.unstable_yieldValue('Suspend Inner');
+          throw innerPromise;
+        }
+        InnerScheduler.unstable_yieldValue('Inner');
+        return (
+          <div
+            id="inner"
+            onMouseEnter={() => {
+              Scheduler.unstable_yieldValue('Inner Mouse Enter');
+            }}></div>
+        );
+      }
+      const InnerApp = () => {
+        return (
+          <Suspense fallback={<div>Loading</div>}>
+            <Inner />
+          </Suspense>
+        );
+      };
+
+      document.body.appendChild(outerContainer);
+      const outerHTML = ReactDOMServer.renderToString(<OuterApp />);
+      outerContainer.innerHTML = outerHTML;
+
+      const innerWrapper = document.querySelector('#inner-root');
+      innerWrapper.appendChild(innerContainer);
+      const innerHTML = ReactDOMServer.renderToString(<InnerApp />);
+      innerContainer.innerHTML = innerHTML;
+
+      expect(OuterScheduler).toHaveYielded(['Outer']);
+      expect(InnerScheduler).toHaveYielded(['Inner']);
+
+      suspendOuter = true;
+      suspendInner = true;
+      isServer = false;
+
+      OuterReactDOM.createRoot(outerContainer, {hydrate: true}).render(
+        <OuterApp />,
+      );
+      InnerReactDOM.hydrateRoot(innerContainer, {hydrate: true}).render(
+        <InnerApp />,
+      );
+
+      expect(OuterScheduler).toFlushAndYield(['Suspend Outer']);
+      expect(InnerScheduler).toFlushAndYield(['Suspend Inner']);
+
+      innerDiv = document.querySelector('#inner');
+
+      dispatchClickEvent(innerDiv);
+
+      await act(async () => {
+        jest.runAllTimers();
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      expect(OuterScheduler).toHaveYielded(['Suspend Outer']);
+      if (
+        gate(
+          flags =>
+            flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+        )
+      ) {
+        // InnerApp doesn't see the event because OuterApp calls stopPropagation in
+        // capture phase since the event is blocked on suspended component
+        expect(InnerScheduler).toHaveYielded([]);
+      } else {
+        // no stopPropagation
+        expect(InnerScheduler).toHaveYielded(['Suspend Inner']);
+      }
+
+      expect(Scheduler).toHaveYielded([]);
+    });
+    afterEach(async () => {
+      document.body.innerHTML = '';
+    });
+
+    // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    it('Inner hydrates first then Outer', async () => {
+      dispatchMouseHoverEvent(innerDiv);
+
+      await act(async () => {
+        resolveInner();
+        await innerPromise;
+        jest.runAllTimers();
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      expect(OuterScheduler).toHaveYielded(['Suspend Outer']);
+      // Inner App renders because it is unblocked
+      expect(InnerScheduler).toHaveYielded(['Inner']);
+      // No event is replayed yet
+      expect(Scheduler).toHaveYielded([]);
+
+      dispatchMouseHoverEvent(innerDiv);
+      expect(OuterScheduler).toHaveYielded([]);
+      expect(InnerScheduler).toHaveYielded([]);
+      // No event is replayed yet
+      expect(Scheduler).toHaveYielded([]);
+
+      await act(async () => {
+        resolveOuter();
+        await outerPromise;
+        jest.runAllTimers();
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      // Nothing happens to inner app yet.
+      // Its blocked on the outer app replaing the event
+      expect(InnerScheduler).toHaveYielded([]);
+      // Outer hydrates and schedules Replay
+      expect(OuterScheduler).toHaveYielded(['Outer']);
+      // No event is replayed yet
+      expect(Scheduler).toHaveYielded([]);
+
+      // fire scheduled Replay
+      await act(async () => {
+        jest.runAllTimers();
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      // First Inner Mouse Enter fires then Outer Mouse Enter
+      expect(Scheduler).toHaveYielded([
+        'Inner Mouse Enter',
+        'Outer Mouse Enter',
+      ]);
+    });
+
+    // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+    it('Outer hydrates first then Inner', async () => {
+      dispatchMouseHoverEvent(innerDiv);
+
+      await act(async () => {
+        resolveOuter();
+        await outerPromise;
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      // Outer resolves and scheduled replay
+      expect(OuterScheduler).toHaveYielded(['Outer']);
+      // Inner App is still blocked
+      expect(InnerScheduler).toHaveYielded([]);
+
+      // Replay outer event
+      await act(async () => {
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      // Inner is still blocked so when Outer replays the event in capture phase
+      // inner ends up caling stopPropagation
+      expect(Scheduler).toHaveYielded([]);
+      expect(OuterScheduler).toHaveYielded([]);
+      expect(InnerScheduler).toHaveYielded(['Suspend Inner']);
+
+      dispatchMouseHoverEvent(innerDiv);
+      expect(OuterScheduler).toHaveYielded([]);
+      expect(InnerScheduler).toHaveYielded([]);
+      expect(Scheduler).toHaveYielded([]);
+
+      await act(async () => {
+        resolveInner();
+        await innerPromise;
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      // Inner hydrates
+      expect(InnerScheduler).toHaveYielded(['Inner']);
+      // Outer was hydrated earlier
+      expect(OuterScheduler).toHaveYielded([]);
+
+      await act(async () => {
+        Scheduler.unstable_flushAllWithoutAsserting();
+        OuterScheduler.unstable_flushAllWithoutAsserting();
+        InnerScheduler.unstable_flushAllWithoutAsserting();
+      });
+
+      // First Inner Mouse Enter fires then Outer Mouse Enter
+      expect(Scheduler).toHaveYielded([
+        'Inner Mouse Enter',
+        'Outer Mouse Enter',
+      ]);
+    });
+  });
+
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;
@@ -946,7 +1218,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  // @gate experimental || www
   it('hydrates the last explicitly hydrated target at higher priority', async () => {
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -980,15 +1251,14 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanB = container.getElementsByTagName('span')[1];
     const spanC = container.getElementsByTagName('span')[2];
 
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    const root = ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
 
     // Increase priority of B and then C.
-    ReactDOM.unstable_scheduleHydration(spanB);
-    ReactDOM.unstable_scheduleHydration(spanC);
+    root.unstable_scheduleHydration(spanB);
+    root.unstable_scheduleHydration(spanC);
 
     // We should prioritize hydrating C first because the last added
     // gets highest priority followed by the next added.

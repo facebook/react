@@ -155,10 +155,29 @@ export function dispatchEvent(
     return;
   }
 
-  const allowReplay =
-    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay ||
-    (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+  } else {
+    dispatchEventOriginal(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+  }
+}
 
+function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
+  nativeEvent: AnyNativeEvent,
+) {
   let blockedOn = findInstanceBlockingEvent(
     domEventName,
     eventSystemFlags,
@@ -167,82 +186,43 @@ export function dispatchEvent(
   );
 
   // We can dispatch the event now
-  if (blockedOn === null) {
-    if (allowReplay) {
-      clearIfContinuousEvent(domEventName, nativeEvent);
-    }
-    if (
-      enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay ||
-      !hasQueuedDiscreteEvents() ||
-      !isDiscreteEventThatRequiresHydration(domEventName)
-    ) {
-      dispatchEventForPluginEventSystem(
-        domEventName,
-        eventSystemFlags,
-        nativeEvent,
-        getClosestInstanceFromNode(getEventTarget(nativeEvent)),
-        targetContainer,
-      );
-      return;
-    }
-  }
-
-  if (
-    allowReplay &&
-    hasQueuedDiscreteEvents() &&
-    isDiscreteEventThatRequiresHydration(domEventName)
-  ) {
-    // If we already have a queue of discrete events, and this is another discrete
-    // event, then we can't dispatch it regardless of its target, since they
-    // need to dispatch in order.
-    queueDiscreteEvent(
-      null, // Flags that we're not actually blocked on anything as far as we know.
+  // Intentional double equals, either null or undefined
+  if (blockedOn == null) {
+    clearIfContinuousEvent(domEventName, nativeEvent);
+    dispatchEventForPluginEventSystem(
       domEventName,
       eventSystemFlags,
-      targetContainer,
       nativeEvent,
+      blockedOn === null
+        ? getClosestInstanceFromNode(getEventTarget(nativeEvent))
+        : null,
+      targetContainer,
     );
     return;
   }
 
-  if (allowReplay) {
-    if (
-      !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-      isDiscreteEventThatRequiresHydration(domEventName)
-    ) {
-      // This this to be replayed later once the target is available.
-      queueDiscreteEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      );
-      return;
-    }
-    if (
-      queueIfContinuousEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      )
-    ) {
-      nativeEvent.stopPropagation();
-      return;
-    }
-    // We need to clear only if we didn't queue because
-    // queueing is accumulative.
-    clearIfContinuousEvent(domEventName, nativeEvent);
+  if (
+    queueIfContinuousEvent(
+      blockedOn,
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    )
+  ) {
+    nativeEvent.stopPropagation();
+    return;
   }
+  // We need to clear only if we didn't queue because
+  // queueing is accumulative.
+  clearIfContinuousEvent(domEventName, nativeEvent);
 
   if (
-    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
     eventSystemFlags & IS_CAPTURE_PHASE &&
     isDiscreteEventThatRequiresHydration(domEventName)
   ) {
-    while (blockedOn !== null) {
+    // Intentionally not strick equal. Could be `null` or `undefined`
+    while (blockedOn != null) {
       const fiber = getInstanceFromNode(blockedOn);
       if (fiber !== null) {
         attemptSynchronousHydration(fiber);
@@ -266,7 +246,9 @@ export function dispatchEvent(
       domEventName,
       eventSystemFlags,
       nativeEvent,
-      getClosestInstanceFromNode(getEventTarget(nativeEvent)),
+      blockedOn === null
+        ? getClosestInstanceFromNode(getEventTarget(nativeEvent))
+        : null,
       targetContainer,
     );
     return;
@@ -283,7 +265,101 @@ export function dispatchEvent(
   );
 }
 
-// Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
+function dispatchEventOriginal(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
+  nativeEvent: AnyNativeEvent,
+) {
+  // TODO: replaying capture phase events is currently broken
+  // because we used to do it during top-level native bubble handlers
+  // but now we use different bubble and capture handlers.
+  // In eager mode, we attach capture listeners early, so we need
+  // to filter them out until we fix the logic to handle them correctly.
+  const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+  if (
+    allowReplay &&
+    hasQueuedDiscreteEvents() &&
+    isDiscreteEventThatRequiresHydration(domEventName)
+  ) {
+    // If we already have a queue of discrete events, and this is another discrete
+    // event, then we can't dispatch it regardless of its target, since they
+    // need to dispatch in order.
+    queueDiscreteEvent(
+      null, // Flags that we're not actually blocked on anything as far as we know.
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+    return;
+  }
+
+  const blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent,
+  );
+  if (blockedOn == null) {
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      blockedOn === null
+        ? getClosestInstanceFromNode(getEventTarget(nativeEvent))
+        : null,
+      targetContainer,
+    );
+    // We successfully dispatched this event.
+    if (allowReplay) {
+      clearIfContinuousEvent(domEventName, nativeEvent);
+    }
+    return;
+  }
+
+  if (allowReplay) {
+    if (isDiscreteEventThatRequiresHydration(domEventName)) {
+      // This this to be replayed later once the target is available.
+      queueDiscreteEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
+      return;
+    }
+    if (
+      queueIfContinuousEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      )
+    ) {
+      return;
+    }
+    // We need to clear only if we didn't queue because
+    // queueing is accumulative.
+    clearIfContinuousEvent(domEventName, nativeEvent);
+  }
+
+  // This is not replayable so we'll invoke it but without a target,
+  // in case the event system needs to trace it.
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    null,
+    targetContainer,
+  );
+}
+
+// Returns a SuspenseInstance or Container if it's blocked.
+// Returns null if not blocked and we should use closestInstance
+// Returns undefined if not blocked but we should dispatch without a targetInst
 export function findInstanceBlockingEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
@@ -308,6 +384,10 @@ export function findInstanceBlockingEvent(
           // priority for this boundary.
           return instance;
         }
+        // This shouldn't happen, something went wrong but to avoid blocking
+        // the whole system, dispatch the event without a target.
+        // TODO: Warn.
+        return undefined;
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
         if (root.isDehydrated) {
@@ -315,7 +395,16 @@ export function findInstanceBlockingEvent(
           // the whole system.
           return getContainerFromFiber(nearestMounted);
         }
+      } else if (nearestMounted !== targetInst) {
+        // If we get an event (ex: img onload) before committing that
+        // component's mount, ignore it for now (that is, treat it as if it was an
+        // event on a non-React tree). We might also consider queueing events and
+        // dispatching them after the mount.
+        return undefined;
       }
+    } else {
+      // This tree has been unmounted already. Dispatch without a target.
+      return undefined;
     }
   }
   // We're not blocked on anything.

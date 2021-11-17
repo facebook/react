@@ -9,8 +9,6 @@
 
 'use strict';
 
-jest.setTimeout(10000);
-
 describe('ReactFetchNode', () => {
   let http;
   let fetch;

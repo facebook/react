@@ -59,6 +59,7 @@ function extractEvents(
     // the event in the out event of the other target.
     const related =
       (nativeEvent: any).relatedTarget || (nativeEvent: any).fromElement;
+    console.log({related});
     if (related) {
       // If the related node is managed by React, we can assume that we have
       // already dispatched the corresponding events during its mouseout.
