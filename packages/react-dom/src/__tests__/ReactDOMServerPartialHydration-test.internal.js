@@ -291,7 +291,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    expect(() => {
+    function whatWeExpect() {
       expect(() => {
         expect(Scheduler).toFlushAndYield([
           // first pass, mismatches at end
@@ -312,7 +312,15 @@ describe('ReactDOMServerPartialHydration', () => {
         'Warning: An error occurred during hydration. expected article got DIV. At:  [object HTMLDivElement] Inside:  [object HTMLDivElement]',
         {withoutStack: true},
       );
-    }).toThrow('Received 5 arguments for a message with 2 placeholders');
+    }
+
+    if (__DEV__) {
+      expect(whatWeExpect).toThrow(
+        'Received 5 arguments for a message with 2 placeholders',
+      );
+    } else {
+      whatWeExpect();
+    }
 
     // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe(
