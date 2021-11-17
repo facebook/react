@@ -1790,15 +1790,31 @@ describe('ReactDOMFizzServer', () => {
 
     ReactDOM.hydrateRoot(container, <App />);
 
-    // The first paint uses the client due to mismatch forcing client render
-    expect(() => {
-      // The first paint switches to client rendering due to mismatch
+    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      // The first paint uses the client due to mismatch forcing client render
+      expect(() => {
+        // The first paint switches to client rendering due to mismatch
+        expect(Scheduler).toFlushUntilNextPaint(['client']);
+      }).toErrorDev(
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
+        {withoutStack: true},
+      );
+      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+    } else {
+      const serverRenderedDiv = container.getElementsByTagName('div')[0];
+
+      // The first paint uses the server snapshot
+      expect(Scheduler).toFlushUntilNextPaint(['server']);
+      expect(getVisibleChildren(container)).toEqual(<div>server</div>);
+      // Hydration succeeded
+      expect(ref.current).toEqual(serverRenderedDiv);
+
+      // Asynchronously we detect that the store has changed on the client,
+      // and patch up the inconsistency
       expect(Scheduler).toFlushUntilNextPaint(['client']);
-    }).toErrorDev(
-      'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-      {withoutStack: true},
-    );
-    expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+      expect(ref.current).toEqual(serverRenderedDiv);
+    }
   });
 
   // @gate experimental
