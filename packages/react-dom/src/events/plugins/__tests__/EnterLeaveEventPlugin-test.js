@@ -94,7 +94,6 @@ describe('EnterLeaveEventPlugin', () => {
 
     expect(enterEvents.length).toBe(1);
     expect(enterEvents[0].target).toBe(node);
-    console.log(!!enterEvents[0].relatedTarget, !!iframe.contentWindow);
     expect(iframe.contentWindow).toBe(enterEvents[0].relatedTarget);
   });
 
