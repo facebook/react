@@ -221,7 +221,7 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
     eventSystemFlags & IS_CAPTURE_PHASE &&
     isDiscreteEventThatRequiresHydration(domEventName)
   ) {
-    // Intentionally not strick equal. Could be `null` or `undefined`
+    // Intentionally not strict equal. Could be `null` or `undefined`
     while (blockedOn != null) {
       const fiber = getInstanceFromNode(blockedOn);
       if (fiber !== null) {
@@ -365,7 +365,7 @@ export function findInstanceBlockingEvent(
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
-): null | Container | SuspenseInstance {
+): typeof undefined | null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
 
   const nativeEventTarget = getEventTarget(nativeEvent);

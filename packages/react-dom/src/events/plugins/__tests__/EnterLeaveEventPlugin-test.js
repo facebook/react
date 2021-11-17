@@ -94,7 +94,7 @@ describe('EnterLeaveEventPlugin', () => {
 
     expect(enterEvents.length).toBe(1);
     expect(enterEvents[0].target).toBe(node);
-    expect(iframe.contentWindow).toBe(enterEvents[0].relatedTarget);
+    expect(enterEvents[0].relatedTarget).toBe(iframe.contentWindow);
   });
 
   // Regression test for https://github.com/facebook/react/issues/10906.

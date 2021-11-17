@@ -15,7 +15,7 @@ import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import getEventTarget from './getEventTarget';
-import {isReplayingEvent, replayEventWrapper} from './replayedEvent';
+import {replayEventWrapper} from './replayedEvent';
 
 import {
   enableSelectiveHydration,
@@ -91,7 +91,7 @@ type PointerEvent = Event & {
 };
 
 type QueuedReplayableEvent = {|
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: typeof undefined | null | Container | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
@@ -116,7 +116,7 @@ const queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 // We could consider replaying selectionchange and touchmoves too.
 
 type QueuedHydrationTarget = {|
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: typeof undefined | null | Container | SuspenseInstance,
   target: Node,
   priority: EventPriority,
 |};
@@ -168,7 +168,7 @@ export function isDiscreteEventThatRequiresHydration(
 }
 
 function createQueuedReplayableEvent(
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: typeof undefined | null | Container | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -184,7 +184,7 @@ function createQueuedReplayableEvent(
 }
 
 export function queueDiscreteEvent(
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: typeof undefined | null | Container | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -205,13 +205,13 @@ export function queueDiscreteEvent(
     if (queuedDiscreteEvents.length === 1) {
       // If this was the first discrete event, we might be able to
       // synchronously unblock it so that preventDefault still works.
-      while (queuedEvent.blockedOn !== null) {
+      while (queuedEvent.blockedOn != null) {
         const fiber = getInstanceFromNode(queuedEvent.blockedOn);
         if (fiber === null) {
           break;
         }
         attemptSynchronousHydration(fiber);
-        if (queuedEvent.blockedOn === null) {
+        if (queuedEvent.blockedOn == null) {
           // We got unblocked by hydration. Let's try again.
           replayUnblockedEvents();
           // If we're reblocked, on an inner boundary, we might need
@@ -262,7 +262,7 @@ export function clearIfContinuousEvent(
 
 function accumulateOrCreateContinuousQueuedReplayableEvent(
   existingQueuedEvent: null | QueuedReplayableEvent,
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: typeof undefined | null | Container | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -279,7 +279,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
       targetContainer,
       nativeEvent,
     );
-    if (blockedOn !== null) {
+    if (blockedOn != null) {
       const fiber = getInstanceFromNode(blockedOn);
       if (fiber !== null) {
         // Attempt to increase the priority of this target.
@@ -304,7 +304,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
 }
 
 export function queueIfContinuousEvent(
-  blockedOn: null | Container | SuspenseInstance,
+  blockedOn: typeof undefined | null | Container | SuspenseInstance,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
@@ -454,7 +454,7 @@ export function queueExplicitHydrationTarget(target: Node): void {
 function attemptReplayContinuousQueuedEvent(
   queuedEvent: QueuedReplayableEvent,
 ): boolean {
-  if (queuedEvent.blockedOn !== null) {
+  if (queuedEvent.blockedOn != null) {
     return false;
   }
   const targetContainers = queuedEvent.targetContainers;
@@ -466,7 +466,7 @@ function attemptReplayContinuousQueuedEvent(
       targetContainer,
       queuedEvent.nativeEvent,
     );
-    if (nextBlockedOn !== null) {
+    if (nextBlockedOn != null) {
       // We're still blocked. Try again later.
       const fiber = getInstanceFromNode(nextBlockedOn);
       if (fiber !== null) {
@@ -498,7 +498,7 @@ function replayUnblockedEvents() {
     // First replay discrete events.
     while (queuedDiscreteEvents.length > 0) {
       const nextDiscreteEvent = queuedDiscreteEvents[0];
-      if (nextDiscreteEvent.blockedOn !== null) {
+      if (nextDiscreteEvent.blockedOn != null) {
         // We're still blocked.
         // Increase the priority of this boundary to unblock
         // the next discrete event.
@@ -517,7 +517,7 @@ function replayUnblockedEvents() {
           targetContainer,
           nextDiscreteEvent.nativeEvent,
         );
-        if (nextBlockedOn !== null) {
+        if (nextBlockedOn != null) {
           // We're still blocked. Try again later.
           nextDiscreteEvent.blockedOn = nextBlockedOn;
           break;
@@ -526,7 +526,7 @@ function replayUnblockedEvents() {
         // This target container was successfully dispatched. Try the next.
         targetContainers.shift();
       }
-      if (nextDiscreteEvent.blockedOn === null) {
+      if (nextDiscreteEvent.blockedOn == null) {
         // We've successfully replayed the first event. Let's try the next one.
         queuedDiscreteEvents.shift();
       }
@@ -603,12 +603,12 @@ export function retryIfBlockedOn(
 
   while (queuedExplicitHydrationTargets.length > 0) {
     const nextExplicitTarget = queuedExplicitHydrationTargets[0];
-    if (nextExplicitTarget.blockedOn !== null) {
+    if (nextExplicitTarget.blockedOn != null) {
       // We're still blocked.
       break;
     } else {
       attemptExplicitHydrationTarget(nextExplicitTarget);
-      if (nextExplicitTarget.blockedOn === null) {
+      if (nextExplicitTarget.blockedOn == null) {
         // We're unblocked.
         queuedExplicitHydrationTargets.shift();
       }

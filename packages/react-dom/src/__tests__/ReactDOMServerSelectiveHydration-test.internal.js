@@ -684,6 +684,117 @@ describe('ReactDOMServerSelectiveHydration', () => {
     let suspend = false;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    function Child({text}) {
+      if ((text === 'A' || text === 'D') && suspend) {
+        throw promise;
+      }
+      Scheduler.unstable_yieldValue(text);
+      return (
+        <span
+          onClick={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          }}
+          onMouseEnter={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Hover ' + text);
+          }}>
+          {text}
+        </span>
+      );
+    }
+
+    function App() {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child text="A" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="B" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="C" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="D" />
+          </Suspense>
+        </div>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
+    const container = document.createElement('div');
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    container.innerHTML = finalHTML;
+
+    const spanB = container.getElementsByTagName('span')[1];
+    const spanC = container.getElementsByTagName('span')[2];
+    const spanD = container.getElementsByTagName('span')[3];
+
+    suspend = true;
+
+    // A and D will be suspended. We'll click on D which should take
+    // priority, after we unsuspend.
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
+
+    // Nothing has been hydrated so far.
+    expect(Scheduler).toHaveYielded([]);
+    // Click D
+    dispatchMouseHoverEvent(spanD, null);
+    dispatchClickEvent(spanD);
+    // Hover over B and then C.
+    dispatchMouseHoverEvent(spanB, spanD);
+    dispatchMouseHoverEvent(spanC, spanB);
+    expect(Scheduler).toHaveYielded(['App']);
+    await act(async () => {
+      suspend = false;
+      resolve();
+      await promise;
+    });
+    if (
+      gate(
+        flags =>
+          flags.enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+      )
+    ) {
+      // We should prioritize hydrating D first because we clicked it.
+      // but event isnt replayed
+      expect(Scheduler).toHaveYielded([
+        'D',
+        'B', // Ideally this should be later.
+        'C',
+        'Hover C',
+        'A',
+      ]);
+    } else {
+      // We should prioritize hydrating D first because we clicked it.
+      // Next we should hydrate C since that's the current hover target.
+      // To simplify implementation details we hydrate both B and C at
+      // the same time since B was already scheduled.
+      // This is ok because it will at least not continue for nested
+      // boundary. See the next test below.
+      expect(Scheduler).toHaveYielded([
+        'D',
+        'Clicked D',
+        'B', // Ideally this should be later.
+        'C',
+        'Hover C',
+        'A',
+      ]);
+    }
+
+    document.body.removeChild(container);
+  });
+
+  it('replays capture phase for continuous events and respects stopPropagation', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     function Child({text}) {
       if ((text === 'A' || text === 'D') && suspend) {
@@ -859,7 +970,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     document.body.removeChild(container);
   });
 
-  describe('can handle replaying events as part of multiple instance of React', () => {
+  describe('can handle replaying events as part of multiple instances of React', () => {
     let resolveInner;
     let resolveOuter;
     let innerPromise;
@@ -873,8 +984,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
       jest.resetModuleRegistry();
       let OuterReactDOM;
       let InnerReactDOM;
-      let InnerAct;
-      let OuterAct;
       jest.isolateModules(() => {
         OuterReactDOM = require('react-dom');
         OuterScheduler = require('scheduler');
@@ -898,7 +1007,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
         };
       });
 
-      let isServer = true;
       function Outer() {
         if (suspendOuter) {
           OuterScheduler.unstable_yieldValue('Suspend Outer');
@@ -914,7 +1022,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
             }}
             dangerouslySetInnerHTML={{
               __html: innerRoot ? innerRoot.innerHTML : '',
-            }}></div>
+            }}
+          />
         );
       }
       const OuterApp = () => {
@@ -943,7 +1052,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
             id="inner"
             onMouseEnter={() => {
               Scheduler.unstable_yieldValue('Inner Mouse Enter');
-            }}></div>
+            }}
+          />
         );
       }
       const InnerApp = () => {
@@ -968,7 +1078,6 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
       suspendOuter = true;
       suspendInner = true;
-      isServer = false;
 
       OuterReactDOM.createRoot(outerContainer, {hydrate: true}).render(
         <OuterApp />,
@@ -1047,7 +1156,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
       });
 
       // Nothing happens to inner app yet.
-      // Its blocked on the outer app replaing the event
+      // Its blocked on the outer app replaying the event
       expect(InnerScheduler).toHaveYielded([]);
       // Outer hydrates and schedules Replay
       expect(OuterScheduler).toHaveYielded(['Outer']);
