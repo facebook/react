@@ -209,12 +209,22 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     resolve();
     await promise;
-    Scheduler.unstable_flushAll();
+    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      Scheduler.unstable_flushAll();
+    } else {
+      expect(() => {
+        Scheduler.unstable_flushAll();
+      }).toErrorDev(
+        // TODO: This error should not be logged in this case. It's a false positive.
+        'Did not expect server HTML to contain the text node "Hello" in <div>.',
+      );
+    }
     jest.runAllTimers();
     // Hydration should not change anything.
     expect(container.textContent).toBe('HelloHello');
   });
 
+  // @gate enableClientRenderFallbackOnHydrationMismatch
   it('falls back to client rendering boundary on mismatch', async () => {
     let client = false;
     let suspend = false;
