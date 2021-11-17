@@ -34,6 +34,7 @@ let forwardRef;
 let memo;
 let act;
 let ContinuousEventPriority;
+let SuspenseList;
 
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
@@ -60,6 +61,9 @@ describe('ReactHooksWithNoopRenderer', () => {
     Suspense = React.Suspense;
     ContinuousEventPriority = require('react-reconciler/constants')
       .ContinuousEventPriority;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
 
     textCache = new Map();
 
@@ -4291,9 +4295,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('regression: SuspenseList causes unmounts to be dropped on deletion', async () => {
-    const SuspenseList = React.SuspenseList;
-
     function Row({label}) {
       useEffect(() => {
         Scheduler.unstable_yieldValue('Mount ' + label);

@@ -13,6 +13,7 @@ let ReactDOM;
 let JSResourceReference;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayClient;
+let SuspenseList;
 
 describe('ReactFlightDOMRelay', () => {
   beforeEach(() => {
@@ -24,6 +25,9 @@ describe('ReactFlightDOMRelay', () => {
     ReactDOMFlightRelayServer = require('react-server-dom-relay/server');
     ReactDOMFlightRelayClient = require('react-server-dom-relay');
     JSResourceReference = require('JSResourceReference');
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
   });
 
   function readThrough(data) {
@@ -104,16 +108,9 @@ describe('ReactFlightDOMRelay', () => {
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
   });
 
+  // @gate enableSuspenseList
   it('can reasonably handle different element types', () => {
-    const {
-      forwardRef,
-      memo,
-      Fragment,
-      StrictMode,
-      Profiler,
-      Suspense,
-      SuspenseList,
-    } = React;
+    const {forwardRef, memo, Fragment, StrictMode, Profiler, Suspense} = React;
 
     const Inner = memo(
       forwardRef((props, ref) => {
