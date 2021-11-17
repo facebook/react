@@ -244,11 +244,13 @@ describe('ReactDOMServerPartialHydration', () => {
     function App() {
       return (
         <Suspense fallback="Loading...">
-          <Child />
-          <Component />
-          <Component />
-          <Component />
-          <Component shouldMismatch={true} />
+          <div>
+            <Child />
+            <Component />
+            <Component />
+            <Component />
+            <Component shouldMismatch={true} />
+          </div>
         </Suspense>
       );
     }
@@ -264,7 +266,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ]);
 
     expect(container.innerHTML).toBe(
-      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+      '<!--$--><div>Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div></div><!--/$-->',
     );
 
     suspend = true;
@@ -282,31 +284,39 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Unchanged
     expect(container.innerHTML).toBe(
-      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+      '<!--$--><div>Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div></div><!--/$-->',
     );
 
     suspend = false;
     resolve();
     await promise;
 
-    expect(Scheduler).toFlushAndYield([
-      // first pass, mismatches at end
-      'Hello',
-      'Component',
-      'Component',
-      'Component',
-      'Component',
-      // second pass as client render
-      'Hello',
-      'Component',
-      'Component',
-      'Component',
-      'Component',
-    ]);
+    expect(() => {
+      expect(() => {
+        expect(Scheduler).toFlushAndYield([
+          // first pass, mismatches at end
+          'Hello',
+          'Component',
+          'Component',
+          'Component',
+          'Component',
+          // second pass as client render
+          'Hello',
+          'Component',
+          'Component',
+          'Component',
+          'Component',
+        ]);
+        // eslint-disable-next-line react-internal/no-to-warn-dev-within-to-throw
+      }).toWarnDev(
+        'Warning: An error occurred during hydration. expected article got DIV. At:  [object HTMLDivElement] Inside:  [object HTMLDivElement]',
+        {withoutStack: true},
+      );
+    }).toThrow('Received 5 arguments for a message with 2 placeholders');
 
     // Client rendered - suspense comment nodes removed
     expect(container.innerHTML).toBe(
-      'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
+      '<div>Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article></div>',
     );
   });
 

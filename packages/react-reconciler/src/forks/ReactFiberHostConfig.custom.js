@@ -189,3 +189,4 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
+export const warnOnHydrationMismatch = $$$hostConfig.warnOnHydrationMismatch;

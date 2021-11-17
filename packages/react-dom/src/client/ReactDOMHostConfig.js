@@ -66,7 +66,11 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {
+  HostComponent,
+  HostText,
+  SuspenseComponent,
+} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
@@ -1073,6 +1077,28 @@ export function errorHydratingContainer(parentContainer: Container): void {
     console.error(
       'An error occurred during hydration. The server HTML was replaced with client content in <%s>.',
       parentContainer.nodeName.toLowerCase(),
+    );
+  }
+}
+
+export function warnOnHydrationMismatch(
+  fiber: Fiber,
+  parentFiber: Fiber | null,
+  hydratableInstance: HydratableInstance | null,
+) {
+  if (__DEV__) {
+    // eslint-disable-next-line react-internal/warning-args
+    console.warn(
+      'An error occurred during hydration. expected %s got %s. At: ',
+      fiber.type,
+      hydratableInstance ? hydratableInstance.nodeName : '<null>',
+      hydratableInstance,
+      'Inside: ',
+      parentFiber
+        ? parentFiber.tag === SuspenseComponent
+          ? '<Suspense>'
+          : parentFiber.stateNode
+        : null,
     );
   }
 }

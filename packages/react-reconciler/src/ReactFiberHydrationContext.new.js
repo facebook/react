@@ -61,6 +61,7 @@ import {
   didNotFindHydratableInstance,
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
+  warnOnHydrationMismatch as hostWarnOnHydrationMismatch,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 import {OffscreenLane} from './ReactFiberLane.new';
@@ -324,7 +325,15 @@ function tryHydrate(fiber, nextInstance) {
   }
 }
 
-function throwOnHydrationMismatchIfConcurrentMode(fiber) {
+export function warnOnHydrationMismatch(fiber: Fiber) {
+  hostWarnOnHydrationMismatch(
+    fiber,
+    hydrationParentFiber,
+    nextHydratableInstance,
+  );
+}
+
+function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
   if ((fiber.mode & ConcurrentMode) !== NoMode) {
     throw new Error(
       'An error occurred during hydration. The server HTML was replaced with client content',

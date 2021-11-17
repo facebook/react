@@ -55,3 +55,4 @@ export const didNotFindHydratableInstance = shim;
 export const didNotFindHydratableTextInstance = shim;
 export const didNotFindHydratableSuspenseInstance = shim;
 export const errorHydratingContainer = shim;
+export const warnOnHydrationMismatch = shim;

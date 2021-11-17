@@ -79,7 +79,10 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane.old';
-import {getIsHydrating} from './ReactFiberHydrationContext.old';
+import {
+  warnOnHydrationMismatch,
+  getIsHydrating,
+} from './ReactFiberHydrationContext.old';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -499,6 +502,18 @@ function throwException(
           // Set a flag to indicate that we should try rendering the normal
           // children again, not the fallback.
           suspenseBoundary.flags |= ForceClientRender;
+          if (__DEV__) {
+            if (
+              value &&
+              value.message &&
+              value.message.startsWith instanceof Function &&
+              (value.message.startsWith: any)(
+                'An error occurred during hydration',
+              )
+            ) {
+              warnOnHydrationMismatch(sourceFiber);
+            }
+          }
         }
         markSuspenseBoundaryShouldCapture(
           suspenseBoundary,
