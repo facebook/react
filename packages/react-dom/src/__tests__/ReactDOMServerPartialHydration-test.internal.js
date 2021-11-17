@@ -199,16 +199,6 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     ReactDOM.hydrateRoot(container, <App />);
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    // Expect the server-generated HTML to stay intact.
-    expect(container.textContent).toBe('HelloHello');
-
-    // Resolving the promise should continue hydration
-    suspend = false;
-    resolve();
-    await promise;
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
       Scheduler.unstable_flushAll();
     } else {
@@ -219,6 +209,16 @@ describe('ReactDOMServerPartialHydration', () => {
         'Did not expect server HTML to contain the text node "Hello" in <div>.',
       );
     }
+    jest.runAllTimers();
+
+    // Expect the server-generated HTML to stay intact.
+    expect(container.textContent).toBe('HelloHello');
+
+    // Resolving the promise should continue hydration
+    suspend = false;
+    resolve();
+    await promise;
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
     // Hydration should not change anything.
     expect(container.textContent).toBe('HelloHello');
