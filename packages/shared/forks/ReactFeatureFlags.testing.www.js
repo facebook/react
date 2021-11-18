@@ -42,6 +42,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 export const enableFilterEmptyStringAttributesDOM = false;

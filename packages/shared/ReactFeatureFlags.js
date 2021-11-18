@@ -105,6 +105,8 @@ export const enableSuspenseAvoidThisFallback = false;
 
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
 
+export const enableClientRenderFallbackOnHydrationMismatch = true;
+
 export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
