@@ -2958,4 +2958,30 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
+
+  it('Can hydrate empty string without mismatch', () => {
+    function App() {
+      return (
+        <div>
+          <div id="test">Test</div>
+          {'' && <div>Test</div>}
+          <div>Test</div>
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    container.innerHTML = finalHTML;
+
+    // Execute script that inserts text node for empty string
+    const scriptContent = container.getElementsByTagName('script')[0].innerHTML;
+    const script = document.createElement('script');
+    script.innerHTML = scriptContent;
+    container.appendChild(script);
+
+    ReactDOM.hydrateRoot(container, <App />);
+    Scheduler.unstable_flushAll();
+  });
 });

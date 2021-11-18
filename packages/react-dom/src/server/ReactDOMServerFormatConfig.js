@@ -68,6 +68,7 @@ export type ResponseState = {
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean, // We allow the legacy renderer to extend this object.
+  sentInsertEmptyStringTextNodeFunction: boolean,
   ...
 };
 
@@ -129,6 +130,7 @@ export function createResponseState(
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
+    sentInsertEmptyStringTextNodeFunction: false,
   };
 }
 
@@ -241,7 +243,7 @@ export function pushTextInstance(
   responseState: ResponseState,
 ): void {
   if (text === '') {
-    // Empty text doesn't have a DOM node representation and the hydration is aware of this.
+    pushInsertEmptyStringTextNodeInstruction(target, responseState);
     return;
   }
   // TODO: Avoid adding a text separator in common cases.
@@ -1718,12 +1720,23 @@ export function writeEndSegment(
 //   placeholderNode.parentNode.removeChild(placeholderNode);
 // }
 
+// function insertEmptyStringTextNode(scriptId) {
+//   const thisScript = document.getElementById(scriptId);
+//   thisScript.parentNode.insertBefore(
+//     document.createTextNode(''),
+//     thisScript,
+//   );
+//   thisScript.parentNode.removeChild(thisScript);
+// }
+
 const completeSegmentFunction =
   'function $RS(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)}';
 const completeBoundaryFunction =
   'function $RC(a,b){a=document.getElementById(a);b=document.getElementById(b);b.parentNode.removeChild(b);if(a){a=a.previousSibling;var f=a.parentNode,c=a.nextSibling,e=0;do{if(c&&8===c.nodeType){var d=c.data;if("/$"===d)if(0===e)break;else e--;else"$"!==d&&"$?"!==d&&"$!"!==d||e++}d=c.nextSibling;f.removeChild(c);c=d}while(c);for(;b.firstChild;)f.insertBefore(b.firstChild,c);a.data="$";a._reactRetry&&a._reactRetry()}}';
 const clientRenderFunction =
   'function $RX(a){if(a=document.getElementById(a))a=a.previousSibling,a.data="$!",a._reactRetry&&a._reactRetry()}';
+const insertEmptyStringTextNodeFunction =
+  'function IESTN(a){a=document.getElementById(a);a.parentNode.insertBefore(document.createTextNode(""),a);a.parentNode.removeChild(a)};';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
   completeSegmentFunction + ';$RS("',
@@ -1821,4 +1834,34 @@ export function writeClientRenderBoundaryInstruction(
 
   writeChunk(destination, boundaryID);
   return writeChunk(destination, clientRenderScript2);
+}
+
+const insertEmptyStringTextNodeScript1Full =
+  insertEmptyStringTextNodeFunction + ';IESTN("';
+const insertEmptyStringTextNodeScript1Partial = 'IESTN("';
+const startInlineScriptWithID1 = '<script id="';
+const startInlineScriptWithID2 = '">';
+const insertEmptyStringTextNodeScript2 = '")</script>';
+
+export function pushInsertEmptyStringTextNodeInstruction(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+) {
+  const generatedID = responseState.nextSuspenseID++;
+  const nodeID = stringToChunk(
+    responseState.boundaryPrefix + generatedID.toString(16),
+  );
+  target.push(stringToChunk(startInlineScriptWithID1));
+  target.push(nodeID);
+  target.push(stringToChunk(startInlineScriptWithID2));
+  if (!responseState.sentClientRenderFunction) {
+    responseState.sentClientRenderFunction = true;
+    // The first time we write this, we'll need to include the full implementation.
+    target.push(stringToChunk(insertEmptyStringTextNodeScript1Full));
+  } else {
+    // Future calls can just reuse the same function.
+    target.push(stringToChunk(insertEmptyStringTextNodeScript1Partial));
+  }
+  target.push(nodeID);
+  target.push(stringToChunk(insertEmptyStringTextNodeScript2));
 }

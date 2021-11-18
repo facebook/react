@@ -38,6 +38,7 @@ export type ResponseState = {
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
+  sentInsertEmptyStringTextNodeFunction: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
 };
@@ -58,6 +59,9 @@ export function createResponseState(
     sentCompleteSegmentFunction: responseState.sentCompleteSegmentFunction,
     sentCompleteBoundaryFunction: responseState.sentCompleteBoundaryFunction,
     sentClientRenderFunction: responseState.sentClientRenderFunction,
+    sentInsertEmptyStringTextNodeFunction:
+      responseState.sentInsertEmptyStringTextNodeFunction,
+
     // This is an extra field for the legacy renderer
     generateStaticMarkup,
   };

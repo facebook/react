@@ -692,7 +692,7 @@ export function canHydrateTextInstance(
   instance: HydratableInstance,
   text: string,
 ): null | TextInstance {
-  if (text === '' || instance.nodeType !== TEXT_NODE) {
+  if (instance.nodeType !== TEXT_NODE) {
     // Empty strings are not parsed by HTML so there won't be a correct match here.
     return null;
   }
