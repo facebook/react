@@ -1045,7 +1045,9 @@ export function diffHydratedProperties(
           propKey === 'offsetLeft' ||
           propKey === 'offsetWidth' ||
           propKey === 'offsetHeight' ||
-          propKey === 'isContentEditable')
+          propKey === 'isContentEditable' ||
+          propKey === 'outerText' ||
+          propKey === 'outerHTML')
       ) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey.toLowerCase());

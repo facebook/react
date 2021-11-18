@@ -540,6 +540,8 @@ describe('ReactDOMServerHydration', () => {
       'offsetWidth',
       'offsetHeight',
       'isContentEditable',
+      'outerText',
+      'outerHTML',
     ];
     readOnlyProperties.forEach(readOnlyProperty => {
       const props = {};
