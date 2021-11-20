@@ -141,7 +141,9 @@ export function popProvider(
     } else {
       context._currentValue = currentValue;
     }
-    context._currentRenderer = null;
+    if (__DEV__) {
+      context._currentRenderer = null;
+    }
   } else {
     if (
       enableServerContext &&
@@ -151,7 +153,9 @@ export function popProvider(
     } else {
       context._currentValue2 = currentValue;
     }
-    context._currentRenderer2 = null;
+    if (__DEV__) {
+      context._currentRenderer2 = null;
+    }
   }
 }
 
