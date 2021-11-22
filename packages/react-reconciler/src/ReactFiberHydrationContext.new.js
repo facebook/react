@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
+import {NoMode, ConcurrentMode} from './ReactTypeOfMode';
 import type {
   Instance,
   TextInstance,
@@ -61,7 +62,10 @@ import {
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
-import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import {
+  enableClientRenderFallbackOnHydrationMismatch,
+  enableSuspenseServerRenderer,
+} from 'shared/ReactFeatureFlags';
 import {OffscreenLane} from './ReactFiberLane.new';
 import {
   getSuspendedTreeContext,
@@ -323,12 +327,24 @@ function tryHydrate(fiber, nextInstance) {
   }
 }
 
+function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
+  if (
+    enableClientRenderFallbackOnHydrationMismatch &&
+    (fiber.mode & ConcurrentMode) !== NoMode
+  ) {
+    throw new Error(
+      'An error occurred during hydration. The server HTML was replaced with client content',
+    );
+  }
+}
+
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
   }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
+    throwOnHydrationMismatchIfConcurrentMode(fiber);
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
     isHydrating = false;
@@ -337,6 +353,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   }
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrate(fiber, nextInstance)) {
+    throwOnHydrationMismatchIfConcurrentMode(fiber);
     // If we can't hydrate this instance let's try the next one.
     // We use this as a heuristic. It's based on intuition and not data so it
     // might be flawed or unnecessary.

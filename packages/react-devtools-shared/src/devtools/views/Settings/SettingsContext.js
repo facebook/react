@@ -248,28 +248,6 @@ function SettingsContextController({
   );
 }
 
-function setStyleVariable(
-  name: string,
-  value: string,
-  documentElements: DocumentElements,
-) {
-  documentElements.forEach(documentElement =>
-    documentElement.style.setProperty(name, value),
-  );
-}
-
-function updateStyleHelper(
-  themeKey: string,
-  style: string,
-  documentElements: DocumentElements,
-) {
-  setStyleVariable(
-    `--${style}`,
-    `var(--${themeKey}-${style})`,
-    documentElements,
-  );
-}
-
 export function updateDisplayDensity(
   displayDensity: DisplayDensity,
   documentElements: DocumentElements,
@@ -296,12 +274,6 @@ export function updateThemeVariables(
     // $FlowFixMe scrollbarColor is missing in CSSStyleDeclaration
     documentElement.style.scrollbarColor = `var(${`--${theme}-color-scroll-thumb`}) var(${`--${theme}-color-scroll-track`})`;
   });
-
-  // The ThemeProvider works by writing DOM style variables to an HTMLDivElement.
-  // Because Portals render in a different DOM subtree, these variables don't propagate.
-  // So we need to also set @reach/tooltip specific styles on the root.
-  updateStyleHelper(theme, 'color-tooltip-background', documentElements);
-  updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 }
 
 export {SettingsContext, SettingsContextController};

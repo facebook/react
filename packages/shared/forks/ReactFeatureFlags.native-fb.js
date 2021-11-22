@@ -51,6 +51,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
@@ -74,7 +75,7 @@ export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableUseMutableSource = false;
+export const enableUseMutableSource = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

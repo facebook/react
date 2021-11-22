@@ -16,6 +16,7 @@
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
     "@babel/plugin-syntax-import-meta": "^7.10.4",
     "@babel/plugin-syntax-jsx": "^7.10.4",
+    "@babel/plugin-syntax-typescript": "^7.14.5",
     "@babel/plugin-transform-arrow-functions": "^7.10.4",
     "@babel/plugin-transform-async-to-generator": "^7.10.4",
     "@babel/plugin-transform-block-scoped-functions": "^7.10.4",
@@ -35,7 +36,6 @@
     "@babel/preset-flow": "^7.10.4",
     "@babel/preset-react": "^7.10.4",
     "@babel/traverse": "^7.11.0",
-    "web-streams-polyfill": "^3.1.1",
     "abort-controller": "^3.0.0",
     "art": "0.10.1",
     "babel-eslint": "^10.0.3",
@@ -96,6 +96,7 @@
     "through2": "^3.0.1",
     "tmp": "^0.1.0",
     "typescript": "^3.7.5",
+    "web-streams-polyfill": "^3.1.1",
     "webpack": "^4.41.2",
     "yargs": "^15.3.1"
   },
@@ -108,7 +109,7 @@
   "scripts": {
     "build": "node ./scripts/rollup/build.js",
     "build-combined": "node ./scripts/rollup/build-all-release-channels.js",
-    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh --type=NODE && cp -r ./build/node_modules build/oss-experimental/",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/test,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh --type=NODE && cp -r ./build/node_modules build/oss-experimental/",
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",
@@ -145,5 +146,8 @@
     "download-build": "node ./scripts/release/download-experimental-build.js",
     "download-build-for-head": "node ./scripts/release/download-experimental-build.js --commit=$(git rev-parse HEAD)",
     "download-build-in-codesandbox-ci": "cd scripts/release && yarn install && cd ../../ && yarn download-build-for-head || yarn build-combined --type=node react/index react-dom scheduler"
+  },
+  "resolutions": {
+    "**/@playwright/test/**/react-is": "^16.0.0"
   }
 }

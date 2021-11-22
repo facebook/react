@@ -50,7 +50,7 @@
 // new level with a single slot. You can think of this as a fork with only one
 // prong, or an array of children with length 1.
 //
-// It's possible for the the size of the sequence to exceed 32 bits, the max
+// It's possible for the size of the sequence to exceed 32 bits, the max
 // size for bitwise operations. When this happens, we make more room by
 // converting the right part of the id to a string and storing it in an overflow
 // variable. We use a base 32 string representation, because 32 is the largest
