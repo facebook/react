@@ -4391,4 +4391,22 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Render: 0']);
   });
+
+  it('warn on setState inside useInsertionEffect', async () => {
+    function App() {
+      const [_, setState] = useState();
+      useInsertionEffect(() => {
+        debugger;
+        setState('test');
+      }, []);
+      return <div />;
+    }
+
+    const root = ReactNoop.createRoot();
+    expect(async () => {
+      await act(async () => {
+        root.render(<App />);
+      });
+    }).toWarnDev('Unsafe setState inside useInsertionEffect in App');
+  });
 });

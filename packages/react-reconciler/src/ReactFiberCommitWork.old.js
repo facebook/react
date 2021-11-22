@@ -157,6 +157,7 @@ import {
   markComponentLayoutEffectUnmountStopped,
 } from './SchedulingProfiler';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.old';
+import {setInsideInsertionEffectDEV} from './ReactFiberHooks.old';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -567,6 +568,12 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
           }
         }
 
+        if (__DEV__) {
+          if ((effect.tag & HookInsertion) !== NoHookEffect) {
+            setInsideInsertionEffectDEV(true);
+          }
+        }
+
         // Mount
         const create = effect.create;
         effect.destroy = create();
@@ -580,6 +587,9 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
         }
 
         if (__DEV__) {
+          if ((effect.tag & HookInsertion) !== NoHookEffect) {
+            setInsideInsertionEffectDEV(false);
+          }
           const destroy = effect.destroy;
           if (destroy !== undefined && typeof destroy !== 'function') {
             let hookName;

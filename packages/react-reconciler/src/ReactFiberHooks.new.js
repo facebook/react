@@ -2162,6 +2162,16 @@ function dispatchReducerAction<S, A>(
   markUpdateInDevTools(fiber, lane, action);
 }
 
+let didWarnSetStateInsideInsertionEffect;
+let devInsideInsertionEffect;
+if (__DEV__) {
+  didWarnSetStateInsideInsertionEffect = new Set();
+}
+export function setInsideInsertionEffectDEV(isInside: boolean) {
+  if (__DEV__) {
+    devInsideInsertionEffect = isInside;
+  }
+}
 function dispatchSetState<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -2173,6 +2183,17 @@ function dispatchSetState<S, A>(
         "State updates from the useState() and useReducer() Hooks don't support the " +
           'second callback argument. To execute a side effect after ' +
           'rendering, declare it in the component body with useEffect().',
+      );
+    }
+    const componentName = getComponentNameFromFiber(fiber);
+    if (
+      devInsideInsertionEffect &&
+      !didWarnSetStateInsideInsertionEffect.has(componentName)
+    ) {
+      didWarnSetStateInsideInsertionEffect.add(componentName);
+      console.warn(
+        'Unsafe setState inside useInsertionEffect in %s',
+        componentName,
       );
     }
   }
