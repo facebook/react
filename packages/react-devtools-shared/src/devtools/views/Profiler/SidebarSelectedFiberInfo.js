@@ -106,7 +106,6 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         </div>
 
         <Button
-          className={styles.IconButton}
           onClick={() => selectFiber(null, null)}
           title="Back to commit view">
           <ButtonIcon type="close" />

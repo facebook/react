@@ -22,11 +22,6 @@
   user-select: none;
 }
 
-.ScrollAnchor {
-  height: 100%;
-  width: 0;
-}
-
 .SelectedElement {
   background-color: var(--color-background-selected);
   color: var(--color-text-selected);
