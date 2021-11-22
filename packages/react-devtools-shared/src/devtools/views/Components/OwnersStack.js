@@ -191,10 +191,7 @@ export default function OwnerStack() {
           ))}
       </div>
       <div className={styles.VRule} />
-      <Button
-        className={styles.IconButton}
-        onClick={() => selectOwner(null)}
-        title="Back to tree view">
+      <Button onClick={() => selectOwner(null)} title="Back to tree view">
         <ButtonIcon type="close" />
       </Button>
     </div>
