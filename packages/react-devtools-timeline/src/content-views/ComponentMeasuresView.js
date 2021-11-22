@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactComponentMeasure, ReactProfilerData} from '../types';
+import type {
+  ReactComponentMeasure,
+  ReactProfilerData,
+  ViewState,
+} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -31,7 +35,7 @@ import {
   rectIntersectsRect,
   intersectionOfRects,
 } from '../view-base';
-import {COLORS, NATIVE_EVENT_HEIGHT, BORDER_SIZE} from './constants';
+import {BORDER_SIZE, COLORS, NATIVE_EVENT_HEIGHT} from './constants';
 
 const ROW_WITH_BORDER_HEIGHT = NATIVE_EVENT_HEIGHT + BORDER_SIZE;
 
@@ -39,13 +43,24 @@ export class ComponentMeasuresView extends View {
   _hoveredComponentMeasure: ReactComponentMeasure | null = null;
   _intrinsicSize: IntrinsicSize;
   _profilerData: ReactProfilerData;
+  _viewState: ViewState;
 
   onHover: ((event: ReactComponentMeasure | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(
+    surface: Surface,
+    frame: Rect,
+    profilerData: ReactProfilerData,
+    viewState: ViewState,
+  ) {
     super(surface, frame);
 
     this._profilerData = profilerData;
+    this._viewState = viewState;
+
+    viewState.onSearchRegExpStateChange(() => {
+      this.setNeedsDisplay();
+    });
 
     this._intrinsicSize = {
       width: profilerData.duration,
@@ -150,6 +165,15 @@ export class ComponentMeasuresView extends View {
           break;
       }
     }
+
+    const searchRegExp = this._viewState.searchRegExp;
+    const isSearchMatch =
+      searchRegExp !== null &&
+      componentMeasure.componentName.match(searchRegExp);
+    if (isSearchMatch) {
+      context.fillStyle = COLORS.SEARCH_RESULT_FILL;
+    }
+
     context.fillRect(
       drawableRect.origin.x,
       drawableRect.origin.y,

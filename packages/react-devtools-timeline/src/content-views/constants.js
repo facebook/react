@@ -91,6 +91,7 @@ export let COLORS = {
   SCROLL_CARET: '',
   SCRUBBER_BACKGROUND: '',
   SCRUBBER_BORDER: '',
+  SEARCH_RESULT_FILL: '',
   TEXT_COLOR: '',
   TEXT_DIM_COLOR: '',
   TIME_MARKER_LABEL: '',
@@ -233,6 +234,9 @@ export function updateColorsToMatchTheme(element: Element): boolean {
     ),
     SCROLL_CARET: computedStyle.getPropertyValue('--color-scroll-caret'),
     SCRUBBER_BACKGROUND: computedStyle.getPropertyValue(
+      '--color-timeline-react-suspense-rejected',
+    ),
+    SEARCH_RESULT_FILL: computedStyle.getPropertyValue(
       '--color-timeline-react-suspense-rejected',
     ),
     SCRUBBER_BORDER: computedStyle.getPropertyValue(
