@@ -2958,4 +2958,44 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
+
+  function itHydratesWithoutMismatch(msg, App) {
+    it(msg + ' without mismatch', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
+      container.innerHTML = finalHTML;
+
+      ReactDOM.hydrateRoot(container, <App />);
+      Scheduler.unstable_flushAll();
+    });
+  }
+
+  itHydratesWithoutMismatch('can hydrate empty string ', function App() {
+    return (
+      <div>
+        <div id="test">Test</div>
+        {'' && <div>Test</div>}
+        <div>Test</div>
+      </div>
+    );
+  });
+
+  itHydratesWithoutMismatch('can hydrate empty string simple', function App() {
+    return '';
+  });
+  itHydratesWithoutMismatch('can hydrate empty string simple', function App() {
+    return (
+      <>
+        {''}
+        {'sup'}
+      </>
+    );
+  });
+  itHydratesWithoutMismatch(
+    'can hydrate empty string without mismatch simple 2',
+    function App() {
+      return <Suspense>{'' && false}</Suspense>;
+    },
+  );
 });

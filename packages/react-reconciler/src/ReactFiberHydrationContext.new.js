@@ -24,6 +24,7 @@ import {
   HostComponent,
   HostText,
   HostRoot,
+  HostPortal,
   SuspenseComponent,
 } from './ReactWorkTags';
 import {ChildDeletion, Placement, Hydrating} from './ReactFiberFlags';
@@ -61,6 +62,7 @@ import {
   didNotFindHydratableInstance,
   didNotFindHydratableTextInstance,
   didNotFindHydratableSuspenseInstance,
+  insertMissingEmptyTextNode,
 } from './ReactFiberHostConfig';
 import {
   enableClientRenderFallbackOnHydrationMismatch,
@@ -327,6 +329,36 @@ function tryHydrate(fiber, nextInstance) {
   }
 }
 
+function tryHydrateEmptyTextNode(
+  fiber: Fiber,
+  nextInstance: null | HydratableInstance,
+  parentFiber: null | Fiber,
+) {
+  if (
+    nextInstance &&
+    canHydrateTextInstance(nextInstance, fiber.pendingProps)
+  ) {
+    return nextInstance;
+  } else {
+    if (!parentFiber) {
+      return null;
+    }
+    switch (parentFiber.tag) {
+      case HostRoot:
+      case HostPortal:
+        return insertMissingEmptyTextNode(
+          nextInstance,
+          parentFiber.stateNode.containerInfo,
+        );
+      case HostComponent:
+        return insertMissingEmptyTextNode(nextInstance, parentFiber.stateNode);
+      default:
+        // Recurse upwards to find parent host node for text node
+        return tryHydrateEmptyTextNode(fiber, nextInstance, parentFiber.return);
+    }
+  }
+}
+
 function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
   if (
     enableClientRenderFallbackOnHydrationMismatch &&
@@ -341,6 +373,13 @@ function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   if (!isHydrating) {
     return;
+  }
+  if (fiber.tag === HostText && fiber.pendingProps === '') {
+    nextHydratableInstance = tryHydrateEmptyTextNode(
+      fiber,
+      nextHydratableInstance,
+      hydrationParentFiber,
+    );
   }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {

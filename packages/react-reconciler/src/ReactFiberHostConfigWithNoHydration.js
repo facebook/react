@@ -23,6 +23,7 @@ export type SuspenseInstance = mixed;
 export const supportsHydration = false;
 export const canHydrateInstance = shim;
 export const canHydrateTextInstance = shim;
+export const insertMissingEmptyTextNode = shim;
 export const canHydrateSuspenseInstance = shim;
 export const isSuspenseInstancePending = shim;
 export const isSuspenseInstanceFallback = shim;

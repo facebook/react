@@ -134,6 +134,8 @@ export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
 // -------------------
 export const canHydrateInstance = $$$hostConfig.canHydrateInstance;
 export const canHydrateTextInstance = $$$hostConfig.canHydrateTextInstance;
+export const insertMissingEmptyTextNode =
+  $$$hostConfig.insertMissingEmptyTextNode;
 export const canHydrateSuspenseInstance =
   $$$hostConfig.canHydrateSuspenseInstance;
 export const isSuspenseInstancePending =

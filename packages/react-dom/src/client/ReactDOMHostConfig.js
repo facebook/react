@@ -692,12 +692,31 @@ export function canHydrateTextInstance(
   instance: HydratableInstance,
   text: string,
 ): null | TextInstance {
-  if (text === '' || instance.nodeType !== TEXT_NODE) {
-    // Empty strings are not parsed by HTML so there won't be a correct match here.
+  if (
+    (instance.textContent !== '' && text === '') ||
+    instance.nodeType !== TEXT_NODE
+  ) {
     return null;
   }
   // This has now been refined to a text node.
   return ((instance: any): TextInstance);
+}
+
+export function insertMissingEmptyTextNode(
+  instance: null | HydratableInstance,
+  parent: null | HydratableInstance,
+): null | HydratableInstance {
+  const parentNode = instance ? instance.parentNode : parent;
+  if (parentNode) {
+    const textNode = document.createTextNode('');
+    if (instance) {
+      parentNode.insertBefore(textNode, instance);
+    } else {
+      parentNode.appendChild(textNode);
+    }
+    return (textNode: TextInstance);
+  }
+  return null;
 }
 
 export function canHydrateSuspenseInstance(
