@@ -4396,7 +4396,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     function App() {
       const [_, setState] = useState();
       useInsertionEffect(() => {
-        debugger;
         setState('test');
       }, []);
       return <div />;
