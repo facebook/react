@@ -86,6 +86,7 @@ import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import {getStyleXValues} from './StyleX/utils';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -3234,6 +3235,13 @@ export function attach(
       targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
     }
 
+    const modifiedProps = {
+      ...memoizedProps,
+    };
+    if (modifiedProps.hasOwnProperty('xstyle')) {
+      modifiedProps.xstyle = getStyleXValues(modifiedProps.xstyle);
+    }
+
     return {
       id,
 
@@ -3279,7 +3287,7 @@ export function attach(
       // TODO Review sanitization approach for the below inspectable values.
       context,
       hooks,
-      props: memoizedProps,
+      props: modifiedProps,
       state: showState ? memoizedState : null,
       errors: Array.from(errors.entries()),
       warnings: Array.from(warnings.entries()),
