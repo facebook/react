@@ -9,7 +9,7 @@
 
 'use strict';
 
-let React;
+let React = require('react');
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
@@ -67,6 +67,17 @@ function dispatchMouseEvent(to, from) {
       from,
     );
     to.dispatchEvent(mouseOverEvent);
+  }
+}
+
+class TestAppClass extends React.Component {
+  render() {
+    return (
+      <div>
+        <>{''}</>
+        <>{'Hello'}</>
+      </div>
+    );
   }
 }
 
@@ -2958,4 +2969,49 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
+
+  function itHydratesWithoutMismatch(msg, App) {
+    it('hydrates without mismatch ' + msg, () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
+      container.innerHTML = finalHTML;
+
+      ReactDOM.hydrateRoot(container, <App />);
+      Scheduler.unstable_flushAll();
+    });
+  }
+
+  itHydratesWithoutMismatch('an empty string with neighbors', function App() {
+    return (
+      <div>
+        <div id="test">Test</div>
+        {'' && <div>Test</div>}
+        {'Test'}
+      </div>
+    );
+  });
+
+  itHydratesWithoutMismatch('an empty string', function App() {
+    return '';
+  });
+  itHydratesWithoutMismatch(
+    'an empty string simple in fragment',
+    function App() {
+      return (
+        <>
+          {''}
+          {'sup'}
+        </>
+      );
+    },
+  );
+  itHydratesWithoutMismatch(
+    'an empty string simple in suspense',
+    function App() {
+      return <Suspense>{'' && false}</Suspense>;
+    },
+  );
+
+  itHydratesWithoutMismatch('an empty string in class component', TestAppClass);
 });

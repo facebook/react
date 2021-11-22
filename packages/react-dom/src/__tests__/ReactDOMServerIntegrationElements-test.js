@@ -87,17 +87,8 @@ describe('ReactDOMServerIntegration', () => {
             {''}
           </div>,
         );
-        if (render === serverRender || render === streamRender) {
-          // For plain server markup result we should have no text nodes if
-          // they're all empty.
-          expect(e.childNodes.length).toBe(0);
-          expect(e.textContent).toBe('');
-        } else {
-          expect(e.childNodes.length).toBe(3);
-          expectTextNode(e.childNodes[0], '');
-          expectTextNode(e.childNodes[1], '');
-          expectTextNode(e.childNodes[2], '');
-        }
+        expect(e.childNodes.length).toBe(0);
+        expect(e.textContent).toBe('');
       });
 
       itRenders('a div with multiple whitespace children', async render => {
@@ -162,27 +153,14 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('a leading blank child with a text sibling', async render => {
         const e = await render(<div>{''}foo</div>);
-        if (render === serverRender || render === streamRender) {
-          expect(e.childNodes.length).toBe(1);
-          expectTextNode(e.childNodes[0], 'foo');
-        } else {
-          expect(e.childNodes.length).toBe(2);
-          expectTextNode(e.childNodes[0], '');
-          expectTextNode(e.childNodes[1], 'foo');
-        }
+        expect(e.childNodes.length).toBe(1);
+        expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('a trailing blank child with a text sibling', async render => {
         const e = await render(<div>foo{''}</div>);
-        // with Fiber, there are just two text nodes.
-        if (render === serverRender || render === streamRender) {
-          expect(e.childNodes.length).toBe(1);
-          expectTextNode(e.childNodes[0], 'foo');
-        } else {
-          expect(e.childNodes.length).toBe(2);
-          expectTextNode(e.childNodes[0], 'foo');
-          expectTextNode(e.childNodes[1], '');
-        }
+        expect(e.childNodes.length).toBe(1);
+        expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('an element with two text children', async render => {
