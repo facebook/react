@@ -4394,7 +4394,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
   it('warn on setState inside useInsertionEffect', async () => {
     function App() {
-      const [_, setState] = useState();
+      const setState = useState()[1];
       useInsertionEffect(() => {
         setState('test');
         Scheduler.unstable_yieldValue('useInsertionEffect');
