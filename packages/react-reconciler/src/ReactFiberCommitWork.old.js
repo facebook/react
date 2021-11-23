@@ -568,12 +568,6 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
           }
         }
 
-        if (__DEV__) {
-          if ((effect.tag & HookInsertion) !== NoHookEffect) {
-            setInsideInsertionEffectDEV(true);
-          }
-        }
-
         // Mount
         const create = effect.create;
         effect.destroy = create();
@@ -587,9 +581,6 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
         }
 
         if (__DEV__) {
-          if ((effect.tag & HookInsertion) !== NoHookEffect) {
-            setInsideInsertionEffectDEV(false);
-          }
           const destroy = effect.destroy;
           if (destroy !== undefined && typeof destroy !== 'function') {
             let hookName;
@@ -1838,7 +1829,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           finishedWork,
           finishedWork.return,
         );
+        if (__DEV__) {
+          setInsideInsertionEffectDEV(true);
+        }
         commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
+        if (__DEV__) {
+          setInsideInsertionEffectDEV(false);
+        }
 
         // Layout effects are destroyed during the mutation phase so that all
         // destroy functions for all fibers are called before any create functions.
@@ -1917,7 +1914,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         finishedWork,
         finishedWork.return,
       );
+      if (__DEV__) {
+        setInsideInsertionEffectDEV(true);
+      }
       commitHookEffectListMount(HookInsertion | HookHasEffect, finishedWork);
+      if (__DEV__) {
+        setInsideInsertionEffectDEV(false);
+      }
       // Layout effects are destroyed during the mutation phase so that all
       // destroy functions for all fibers are called before any create functions.
       // This prevents sibling component effects from interfering with each other,
