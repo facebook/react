@@ -7561,15 +7561,14 @@ fbjs-css-vars@^1.0.0:
   resolved "https://registry.yarnpkg.com/fbjs-css-vars/-/fbjs-css-vars-1.0.2.tgz#216551136ae02fe255932c3ec8775f18e2c078b8"
   integrity sha512-b2XGFAFdWZWg0phtAWLHCk836A1Xann+I+Dgd3Gk64MHKZO44FfoD1KxyvbSh0qZsIoXQGGlVztIY+oitJPpRQ==
 
-fbjs-scripts@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/fbjs-scripts/-/fbjs-scripts-1.2.0.tgz#069a0c0634242d10031c6460ef1fccefcdae8b27"
-  integrity sha512-5krZ8T0Bf8uky0abPoCLrfa7Orxd8UH4Qq8hRUF2RZYNMu+FmEOrBc7Ib3YVONmxTXTlLAvyrrdrVmksDb2OqQ==
+fbjs-scripts@3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/fbjs-scripts/-/fbjs-scripts-3.0.1.tgz#5265699e158700b453786e4892aa9730c0cb0f75"
+  integrity sha512-UHsf5lk5G33mSZIviQqulKvyV/kPIMwODH3tpkuoXbsBewFaWwT9KTfEvkoPj+WSGMGI6n+bRsc8VVdSa9Jh+w==
   dependencies:
     "@babel/core" "^7.0.0"
     ansi-colors "^1.0.1"
     babel-preset-fbjs "^3.2.0"
-    core-js "^2.4.1"
     cross-spawn "^5.1.0"
     fancy-log "^1.3.2"
     object-assign "^4.0.1"

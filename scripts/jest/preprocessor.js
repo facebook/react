@@ -6,7 +6,7 @@ const babel = require('@babel/core');
 const coffee = require('coffee-script');
 
 const tsPreprocessor = require('./typescript/preprocessor');
-const createCacheKeyFunctionJest26 = require('fbjs-scripts/jest/createCacheKeyFunction');
+const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 const {getDevToolsPlugins} = require('./devtools/preprocessor.js');
 
 const pathToBabel = path.join(
@@ -52,20 +52,6 @@ const babelOptions = {
   ],
   retainLines: true,
 };
-
-const getCacheKeyJest26 = createCacheKeyFunctionJest26([
-  __filename,
-  pathToBabel,
-  pathToBabelrc,
-  pathToTransformInfiniteLoops,
-  pathToTransformTestGatePragma,
-  pathToErrorCodes,
-]);
-
-// TODO: Upstream fix for `options` being nullable
-function getCacheKey(src, file, configString, options = {}) {
-  return getCacheKeyJest26(src, file, configString, options);
-}
 
 module.exports = {
   process: function(src, filePath) {
@@ -117,5 +103,12 @@ module.exports = {
     return src;
   },
 
-  getCacheKey,
+  getCacheKey: createCacheKeyFunction([
+    __filename,
+    pathToBabel,
+    pathToBabelrc,
+    pathToTransformInfiniteLoops,
+    pathToTransformTestGatePragma,
+    pathToErrorCodes,
+  ]),
 };
