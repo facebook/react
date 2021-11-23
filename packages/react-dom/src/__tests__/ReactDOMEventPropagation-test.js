@@ -7,7 +7,7 @@
 
 'use strict';
 
-describe('ReactDOMEventListener', () => {
+describe('ReactDOMEventPropagation', () => {
   let React;
   let OuterReactDOM;
   let InnerReactDOM;
@@ -16,12 +16,12 @@ describe('ReactDOMEventListener', () => {
   beforeEach(() => {
     window.TextEvent = function() {};
     jest.resetModules();
-    React = require('react');
-    jest.isolateModules(() => {
-      OuterReactDOM = require('react-dom');
-    });
     jest.isolateModules(() => {
       InnerReactDOM = require('react-dom');
+    });
+    jest.isolateModules(() => {
+      React = require('react');
+      OuterReactDOM = require('react-dom');
     });
     expect(OuterReactDOM).not.toBe(InnerReactDOM);
   });
