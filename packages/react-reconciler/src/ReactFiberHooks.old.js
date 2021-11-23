@@ -2191,7 +2191,7 @@ function dispatchSetState<S, A>(
       !didWarnSetStateInsideInsertionEffect.has(componentName)
     ) {
       didWarnSetStateInsideInsertionEffect.add(componentName);
-      console.warn(
+      console.error(
         'Unsafe setState inside useInsertionEffect in %s',
         componentName,
       );
