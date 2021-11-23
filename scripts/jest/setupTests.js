@@ -311,10 +311,4 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   };
 
   require('jasmine-check').install();
-
-  if (typeof window !== 'undefined') {
-    // FIXME: Possible bug in jest 27 + legacy fake timers?
-    delete window.setImmediate;
-    delete window.clearImmediate;
-  }
 }
