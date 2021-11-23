@@ -1088,7 +1088,7 @@ export function warnOnHydrationMismatch(
 ) {
   if (__DEV__) {
     // eslint-disable-next-line react-internal/warning-args
-    console.warn(
+    console.error(
       'An error occurred during hydration. expected %s got %s. At: ',
       fiber.type,
       hydratableInstance ? hydratableInstance.nodeName : '<null>',

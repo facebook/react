@@ -307,8 +307,7 @@ describe('ReactDOMServerPartialHydration', () => {
           'Component',
           'Component',
         ]);
-        // eslint-disable-next-line react-internal/no-to-warn-dev-within-to-throw
-      }).toWarnDev(
+      }).toErrorDev(
         'Warning: An error occurred during hydration. expected article got DIV. At:  [object HTMLDivElement] Inside:  [object HTMLDivElement]',
         {withoutStack: true},
       );
