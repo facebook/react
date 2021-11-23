@@ -4406,7 +4406,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       act(() => {
         ReactNoop.render(<App />);
       });
-    }).toWarnDev('Unsafe setState inside useInsertionEffect in App');
+    }).toErrorDev('Unsafe setState inside useInsertionEffect in App');
 
     expect(Scheduler).toHaveYielded(['useInsertionEffect']);
   });
