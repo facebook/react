@@ -53,6 +53,9 @@ const expectChildren = function(container, children) {
       const child = children[i];
 
       if (typeof child === 'string') {
+        if (child === '') {
+          continue;
+        }
         textNode = outerNode.childNodes[mountIndex];
         expect(textNode.nodeType).toBe(3);
         expect(textNode.data).toBe(child);
@@ -83,7 +86,7 @@ describe('ReactMultiChildText', () => {
         true, [],
         0, '0',
         1.2, '1.2',
-        '', '',
+        '', [],
         'foo', 'foo',
 
         [], [],
@@ -93,7 +96,7 @@ describe('ReactMultiChildText', () => {
         [true], [],
         [0], ['0'],
         [1.2], ['1.2'],
-        [''], [''],
+        [''], [],
         ['foo'], ['foo'],
         [<div />], [<div />],
 
