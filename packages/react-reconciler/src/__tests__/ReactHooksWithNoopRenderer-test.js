@@ -34,6 +34,7 @@ let forwardRef;
 let memo;
 let act;
 let ContinuousEventPriority;
+let SuspenseList;
 
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
@@ -47,7 +48,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
-    useInsertionEffect = React.unstable_useInsertionEffect;
+    useInsertionEffect = React.useInsertionEffect;
     useLayoutEffect = React.useLayoutEffect;
     useCallback = React.useCallback;
     useMemo = React.useMemo;
@@ -60,6 +61,9 @@ describe('ReactHooksWithNoopRenderer', () => {
     Suspense = React.Suspense;
     ContinuousEventPriority = require('react-reconciler/constants')
       .ContinuousEventPriority;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
 
     textCache = new Map();
 
@@ -1184,7 +1188,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       });
 
-      // This update is exists to test an internal implementation detail:
+      // This update exists to test an internal implementation detail:
       // Effects without updating dependencies lose their layout/passive tag during an update.
       act(() => {
         ReactNoop.render(<Child bar={1} foo={2} />, () =>
@@ -2685,7 +2689,6 @@ describe('ReactHooksWithNoopRenderer', () => {
   });
 
   describe('useInsertionEffect', () => {
-    // @gate experimental || www
     it('fires insertion effects after snapshots on update', () => {
       function CounterA(props) {
         useInsertionEffect(() => {
@@ -2745,7 +2748,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || www
     it('fires insertion effects before layout effects', () => {
       let committedText = '(empty)';
 
@@ -2808,7 +2810,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['Destroy passive [current: 0]']);
     });
 
-    // @gate experimental || www
     it('force flushes passive effects before firing new insertion effects', () => {
       let committedText = '(empty)';
 
@@ -2876,7 +2877,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    // @gate experimental || www
     it('fires all insertion effects (interleaved) before firing any layout effects', () => {
       let committedA = '(empty)';
       let committedB = '(empty)';
@@ -3043,7 +3043,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
-    // @gate experimental || www
     it('assumes insertion effect destroy function is either a function or undefined', () => {
       function App(props) {
         useInsertionEffect(() => {
@@ -4296,9 +4295,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate enableSuspenseList
   it('regression: SuspenseList causes unmounts to be dropped on deletion', async () => {
-    const SuspenseList = React.SuspenseList;
-
     function Row({label}) {
       useEffect(() => {
         Scheduler.unstable_yieldValue('Mount ' + label);

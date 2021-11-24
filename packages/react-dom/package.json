@@ -34,6 +34,7 @@
     "server.browser.js",
     "server.node.js",
     "test-utils.js",
+    "unstable_testing.js",
     "cjs/",
     "umd/"
   ],

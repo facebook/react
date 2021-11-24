@@ -673,7 +673,7 @@ describe('ReactIncrementalUpdates', () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['Committed: ']);
-    expect(root).toMatchRenderedOutput('');
+    expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
@@ -734,7 +734,7 @@ describe('ReactIncrementalUpdates', () => {
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded([]);
-    expect(root).toMatchRenderedOutput('');
+    expect(root).toMatchRenderedOutput(null);
 
     await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {

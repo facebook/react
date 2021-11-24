@@ -12,8 +12,10 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "extra.js",
     "index.native.js",
+    "with-selector.js",
+    "with-selector.native.js",
+    "shim/",
     "cjs/"
   ],
   "license": "MIT",

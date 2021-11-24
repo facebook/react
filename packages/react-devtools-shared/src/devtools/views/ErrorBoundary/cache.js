@@ -71,7 +71,7 @@ export function findGitHubIssue(errorMessage: string): GitHubIssue | null {
         callbacks.add(callback);
       },
 
-      // Optional property used by Scheduling Profiler:
+      // Optional property used by Timeline:
       displayName: `Searching GitHub issues for error "${errorMessage}"`,
     };
     const wake = () => {

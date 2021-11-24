@@ -72,6 +72,7 @@ import {
   ChildDeletion,
   StaticMask,
   MutationMask,
+  Passive,
 } from './ReactFiberFlags';
 
 import {
@@ -154,6 +155,7 @@ import {
   popRootCachePool,
   popCachePool,
 } from './ReactFiberCacheComponent.new';
+import {popTreeContext} from './ReactFiberTreeContext.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -821,7 +823,11 @@ function completeWork(
   renderLanes: Lanes,
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
-
+  // Note: This intentionally doesn't check if we're hydrating because comparing
+  // to the current tree provider fiber is just as fast and less error-prone.
+  // Ideally we would have a special version of the work loop only
+  // for hydration.
+  popTreeContext(workInProgress);
   switch (workInProgress.tag) {
     case IndeterminateComponent:
     case LazyComponent:
@@ -848,7 +854,15 @@ function completeWork(
       if (enableCache) {
         popRootCachePool(fiberRoot, renderLanes);
 
+        let previousCache: Cache | null = null;
+        if (workInProgress.alternate !== null) {
+          previousCache = workInProgress.alternate.memoizedState.cache;
+        }
         const cache: Cache = workInProgress.memoizedState.cache;
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          workInProgress.flags |= Passive;
+        }
         popCacheProvider(workInProgress, cache);
       }
       popHostContainer(workInProgress);
@@ -870,7 +884,7 @@ function completeWork(
           // Schedule an effect to clear this container at the start of the next commit.
           // This handles the case of React rendering into a container with previous children.
           // It's also safe to do for updates too, because current.child would only be null
-          // if the previous render was null (so the the container would already be empty).
+          // if the previous render was null (so the container would already be empty).
           workInProgress.flags |= Snapshot;
         }
       }
@@ -1007,16 +1021,16 @@ function completeWork(
 
       if (enableSuspenseServerRenderer) {
         if (nextState !== null && nextState.dehydrated !== null) {
+          // We might be inside a hydration state the first time we're picking up this
+          // Suspense boundary, and also after we've reentered it for further hydration.
+          const wasHydrated = popHydrationState(workInProgress);
           if (current === null) {
-            const wasHydrated = popHydrationState(workInProgress);
-
             if (!wasHydrated) {
               throw new Error(
                 'A dehydrated suspense component was completed without a hydrated node. ' +
                   'This is probably a bug in React.',
               );
             }
-
             prepareToHydrateHostSuspenseInstance(workInProgress);
             bubbleProperties(workInProgress);
             if (enableProfilerTimer) {
@@ -1034,9 +1048,8 @@ function completeWork(
             }
             return null;
           } else {
-            // We should never have been in a hydration state if we didn't have a current.
-            // However, in some of those paths, we might have reentered a hydration state
-            // and then we might be inside a hydration state. In that case, we'll need to exit out of it.
+            // We might have reentered this boundary to hydrate it. If so, we need to reset the hydration
+            // state since we're now exiting out of it. popHydrationState doesn't do that for us.
             resetHydrationState();
             if ((workInProgress.flags & DidCapture) === NoFlags) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
@@ -1088,6 +1101,29 @@ function completeWork(
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
         prevDidTimeout = prevState !== null;
+      }
+
+      if (enableCache && nextDidTimeout) {
+        const offscreenFiber: Fiber = (workInProgress.child: any);
+        let previousCache: Cache | null = null;
+        if (
+          offscreenFiber.alternate !== null &&
+          offscreenFiber.alternate.memoizedState !== null &&
+          offscreenFiber.alternate.memoizedState.cachePool !== null
+        ) {
+          previousCache = offscreenFiber.alternate.memoizedState.cachePool.pool;
+        }
+        let cache: Cache | null = null;
+        if (
+          offscreenFiber.memoizedState !== null &&
+          offscreenFiber.memoizedState.cachePool !== null
+        ) {
+          cache = offscreenFiber.memoizedState.cachePool.pool;
+        }
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          offscreenFiber.flags |= Passive;
+        }
       }
 
       // If the suspended state of the boundary changes, we need to schedule
@@ -1466,6 +1502,25 @@ function completeWork(
       }
 
       if (enableCache) {
+        let previousCache: Cache | null = null;
+        if (
+          workInProgress.alternate !== null &&
+          workInProgress.alternate.memoizedState !== null &&
+          workInProgress.alternate.memoizedState.cachePool !== null
+        ) {
+          previousCache = workInProgress.alternate.memoizedState.cachePool.pool;
+        }
+        let cache: Cache | null = null;
+        if (
+          workInProgress.memoizedState !== null &&
+          workInProgress.memoizedState.cachePool !== null
+        ) {
+          cache = workInProgress.memoizedState.cachePool.pool;
+        }
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          workInProgress.flags |= Passive;
+        }
         const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
         if (spawnedCachePool !== null) {
           popCachePool(workInProgress);
@@ -1476,7 +1531,15 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
+        let previousCache: Cache | null = null;
+        if (workInProgress.alternate !== null) {
+          previousCache = workInProgress.alternate.memoizedState.cache;
+        }
         const cache: Cache = workInProgress.memoizedState.cache;
+        if (cache !== previousCache) {
+          // Run passive effects to retain/release the cache.
+          workInProgress.flags |= Passive;
+        }
         popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);
         return null;

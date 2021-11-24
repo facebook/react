@@ -22,7 +22,7 @@ const ReactVersion = '18.0.0';
 
 // The label used by the @next channel. Represents the upcoming release's
 // stability. Could be "alpha", "beta", "rc", etc.
-const nextChannelLabel = 'alpha';
+const nextChannelLabel = 'beta';
 
 const stablePackages = {
   'create-subscription': ReactVersion,
@@ -36,6 +36,7 @@ const stablePackages = {
   'react-refresh': '0.11.0',
   'react-test-renderer': ReactVersion,
   'use-subscription': '1.6.0',
+  'use-sync-external-store': '1.0.0',
   scheduler: '0.21.0',
 };
 
@@ -47,7 +48,6 @@ const experimentalPackages = [
   'react-fs',
   'react-pg',
   'react-server-dom-webpack',
-  'use-sync-external-store',
 ];
 
 module.exports = {

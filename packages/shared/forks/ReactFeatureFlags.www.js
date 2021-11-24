@@ -33,6 +33,7 @@ export const {
   enableSyncDefaultUpdates,
   warnOnSubscriptionInsideStartTransition,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+  enableClientRenderFallbackOnHydrationMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -101,6 +102,9 @@ export const deletedTreeCleanUpLevel = 3;
 export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// Some www surfaces are still using this. Remove once they have been migrated.
+export const enableUseMutableSource = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

@@ -9,7 +9,7 @@
 
 'use strict';
 
-let React;
+let React = require('react');
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
@@ -70,6 +70,17 @@ function dispatchMouseEvent(to, from) {
   }
 }
 
+class TestAppClass extends React.Component {
+  render() {
+    return (
+      <div>
+        <>{''}</>
+        <>{'Hello'}</>
+      </div>
+    );
+  }
+}
+
 describe('ReactDOMServerPartialHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -84,7 +95,9 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
-    SuspenseList = React.SuspenseList;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
@@ -158,6 +171,164 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // We should now have hydrated with a ref on the existing span.
     expect(ref.current).toBe(span);
+  });
+
+  it('can hydrate siblings of a suspended component without errors', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+          <Suspense fallback="Loading...">
+            <div>Hello</div>
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    expect(container.textContent).toBe('HelloHello');
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    ReactDOM.hydrateRoot(container, <App />);
+    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      Scheduler.unstable_flushAll();
+    } else {
+      expect(() => {
+        Scheduler.unstable_flushAll();
+      }).toErrorDev(
+        // TODO: This error should not be logged in this case. It's a false positive.
+        'Did not expect server HTML to contain the text node "Hello" in <div>.',
+      );
+    }
+    jest.runAllTimers();
+
+    // Expect the server-generated HTML to stay intact.
+    expect(container.textContent).toBe('HelloHello');
+
+    // Resolving the promise should continue hydration
+    suspend = false;
+    resolve();
+    await promise;
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+    // Hydration should not change anything.
+    expect(container.textContent).toBe('HelloHello');
+  });
+
+  // @gate enableClientRenderFallbackOnHydrationMismatch
+  it('falls back to client rendering boundary on mismatch', async () => {
+    let client = false;
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => {
+      resolve = () => {
+        suspend = false;
+        resolvePromise();
+      };
+    });
+    function Child() {
+      if (suspend) {
+        Scheduler.unstable_yieldValue('Suspend');
+        throw promise;
+      } else {
+        Scheduler.unstable_yieldValue('Hello');
+        return 'Hello';
+      }
+    }
+    function Component({shouldMismatch}) {
+      Scheduler.unstable_yieldValue('Component');
+      if (shouldMismatch && client) {
+        return <article>Mismatch</article>;
+      }
+      return <div>Component</div>;
+    }
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+          <Component />
+          <Component />
+          <Component />
+          <Component shouldMismatch={true} />
+        </Suspense>
+      );
+    }
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    expect(Scheduler).toHaveYielded([
+      'Hello',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+    ]);
+
+    expect(container.innerHTML).toBe(
+      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+    );
+
+    suspend = true;
+    client = true;
+
+    ReactDOM.hydrateRoot(container, <App />);
+    expect(Scheduler).toFlushAndYield([
+      'Suspend',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+    ]);
+    jest.runAllTimers();
+
+    // Unchanged
+    expect(container.innerHTML).toBe(
+      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+    );
+
+    suspend = false;
+    resolve();
+    await promise;
+
+    expect(Scheduler).toFlushAndYield([
+      // first pass, mismatches at end
+      'Hello',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+      // second pass as client render
+      'Hello',
+      'Component',
+      'Component',
+      'Component',
+      'Component',
+    ]);
+
+    // Client rendered - suspense comment nodes removed
+    expect(container.innerHTML).toBe(
+      'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
+    );
   });
 
   it('calls the hydration callbacks after hydration or deletion', async () => {
@@ -248,6 +419,64 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(hydrated.length).toBe(1);
     expect(deleted.length).toBe(1);
+  });
+
+  it('hydrates an empty suspense boundary', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading..." />
+          <div>Sibling</div>
+        </div>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    ReactDOM.hydrateRoot(container, <App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(container.innerHTML).toContain('<div>Sibling</div>');
+  });
+
+  it('recovers when server rendered additional nodes', async () => {
+    const ref = React.createRef();
+    function App({hasB}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref}>A</span>
+            {hasB ? <span>B</span> : null}
+          </Suspense>
+          <div>Sibling</div>
+        </div>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App hasB={true} />);
+
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    const span = container.getElementsByTagName('span')[0];
+
+    expect(container.innerHTML).toContain('<span>A</span>');
+    expect(container.innerHTML).toContain('<span>B</span>');
+    expect(ref.current).toBe(null);
+
+    ReactDOM.hydrateRoot(container, <App hasB={false} />);
+    expect(() => {
+      Scheduler.unstable_flushAll();
+    }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
+    jest.runAllTimers();
+
+    expect(container.innerHTML).toContain('<span>A</span>');
+    expect(container.innerHTML).not.toContain('<span>B</span>');
+    expect(ref.current).toBe(span);
   });
 
   it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
@@ -1339,6 +1568,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  // @gate enableSuspenseList
   it('shows inserted items in a SuspenseList before content is hydrated', async () => {
     let suspend = false;
     let resolve;
@@ -1424,6 +1654,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(spanB);
   });
 
+  // @gate enableSuspenseList
   it('shows is able to hydrate boundaries even if others in a list are pending', async () => {
     let suspend = false;
     let resolve;
@@ -1498,7 +1729,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('ALoading B');
   });
 
-  // @gate experimental || www
+  // @gate enableSuspenseList
   it('clears server boundaries when SuspenseList runs out of time hydrating', async () => {
     let suspend = false;
     let resolve;
@@ -1561,10 +1792,9 @@ describe('ReactDOMServerPartialHydration', () => {
     const b = container.getElementsByTagName('span')[1];
     expect(b.textContent).toBe('B');
 
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-
+    const root = ReactDOM.hydrateRoot(container, <App />);
     // Increase hydration priority to higher than "offscreen".
-    ReactDOM.unstable_scheduleHydration(b);
+    root.unstable_scheduleHydration(b);
 
     suspend = true;
 
@@ -1601,6 +1831,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(b);
   });
 
+  // @gate enableSuspenseList
   it('clears server boundaries when SuspenseList suspends last row hydrating', async () => {
     let suspend = false;
     let resolve;
@@ -2738,4 +2969,49 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
+
+  function itHydratesWithoutMismatch(msg, App) {
+    it('hydrates without mismatch ' + msg, () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const finalHTML = ReactDOMServer.renderToString(<App />);
+      container.innerHTML = finalHTML;
+
+      ReactDOM.hydrateRoot(container, <App />);
+      Scheduler.unstable_flushAll();
+    });
+  }
+
+  itHydratesWithoutMismatch('an empty string with neighbors', function App() {
+    return (
+      <div>
+        <div id="test">Test</div>
+        {'' && <div>Test</div>}
+        {'Test'}
+      </div>
+    );
+  });
+
+  itHydratesWithoutMismatch('an empty string', function App() {
+    return '';
+  });
+  itHydratesWithoutMismatch(
+    'an empty string simple in fragment',
+    function App() {
+      return (
+        <>
+          {''}
+          {'sup'}
+        </>
+      );
+    },
+  );
+  itHydratesWithoutMismatch(
+    'an empty string simple in suspense',
+    function App() {
+      return <Suspense>{'' && false}</Suspense>;
+    },
+  );
+
+  itHydratesWithoutMismatch('an empty string in class component', TestAppClass);
 });

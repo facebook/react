@@ -43,7 +43,7 @@ export type HookType =
   | 'useTransition'
   | 'useMutableSource'
   | 'useSyncExternalStore'
-  | 'useOpaqueIdentifier'
+  | 'useId'
   | 'useCacheRefresh';
 
 export type ContextDependency<T> = {
@@ -273,6 +273,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
+  getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
@@ -315,7 +316,7 @@ export type Dispatcher = {|
     getSnapshot: () => T,
     getServerSnapshot?: () => T,
   ): T,
-  useOpaqueIdentifier(): any,
+  useId(): string,
   useCacheRefresh?: () => <T>(?() => T, ?T) => void,
 
   unstable_isNewReconciler?: boolean,

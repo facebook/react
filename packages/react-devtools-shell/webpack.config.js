@@ -24,6 +24,8 @@ if (!TARGET) {
   process.exit(1);
 }
 
+const EDITOR_URL = process.env.EDITOR_URL || null;
+
 const builtModulesDir = resolve(
   __dirname,
   '..',
@@ -53,7 +55,7 @@ const config = {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-devtools-feature-flags': resolveFeatureFlags('shell'),
-      'react-dom': resolve(builtModulesDir, 'react-dom'),
+      'react-dom': resolve(builtModulesDir, 'react-dom/unstable_testing'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
@@ -69,6 +71,7 @@ const config = {
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
+      'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-shell"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.DARK_MODE_DIMMED_WARNING_COLOR': `"${DARK_MODE_DIMMED_WARNING_COLOR}"`,
@@ -104,7 +107,7 @@ const config = {
             options: {
               sourceMap: true,
               modules: true,
-              localIdentName: '[local]___[hash:base64:5]',
+              localIdentName: '[local]',
             },
           },
         ],

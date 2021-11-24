@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 let ReactIs;
+let SuspenseList;
 
 describe('ReactIs', () => {
   beforeEach(() => {
@@ -20,6 +21,10 @@ describe('ReactIs', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactIs = require('react-is');
+
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
   });
 
   it('should return undefined for unknown/invalid types', () => {
@@ -186,10 +191,11 @@ describe('ReactIs', () => {
     expect(ReactIs.isSuspense(<div />)).toBe(false);
   });
 
+  // @gate enableSuspenseList
   it('should identify suspense list', () => {
-    expect(ReactIs.isValidElementType(React.SuspenseList)).toBe(true);
-    expect(ReactIs.typeOf(<React.SuspenseList />)).toBe(ReactIs.SuspenseList);
-    expect(ReactIs.isSuspenseList(<React.SuspenseList />)).toBe(true);
+    expect(ReactIs.isValidElementType(SuspenseList)).toBe(true);
+    expect(ReactIs.typeOf(<SuspenseList />)).toBe(ReactIs.SuspenseList);
+    expect(ReactIs.isSuspenseList(<SuspenseList />)).toBe(true);
     expect(ReactIs.isSuspenseList({type: ReactIs.SuspenseList})).toBe(false);
     expect(ReactIs.isSuspenseList('React.SuspenseList')).toBe(false);
     expect(ReactIs.isSuspenseList(<div />)).toBe(false);

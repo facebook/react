@@ -8,10 +8,9 @@
  */
 
 import * as React from 'react';
-import Tooltip from '@reach/tooltip';
 
 import styles from './Button.css';
-import tooltipStyles from './Tooltip.css';
+import Tooltip from './Components/reach-ui/tooltip';
 
 type Props = {
   children: React$Node,
@@ -35,11 +34,7 @@ export default function Button({
   );
 
   if (title) {
-    button = (
-      <Tooltip className={tooltipStyles.Tooltip} label={title}>
-        {button}
-      </Tooltip>
-    );
+    button = <Tooltip label={title}>{button}</Tooltip>;
   }
 
   return button;

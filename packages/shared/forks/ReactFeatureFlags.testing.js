@@ -23,7 +23,7 @@ export const enableUpdaterTracking = false;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
-export const enableCache = false;
+export const enableCache = __EXPERIMENTAL__;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
@@ -42,6 +42,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
@@ -66,6 +67,7 @@ export const allowConcurrentByDefault = false;
 export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
+export const enableUseMutableSource = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

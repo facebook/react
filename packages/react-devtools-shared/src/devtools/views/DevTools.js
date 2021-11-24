@@ -30,7 +30,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
-import {SchedulingProfilerContextController} from 'react-devtools-scheduling-profiler/src/SchedulingProfilerContext';
+import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import UnsupportedBridgeProtocolDialog from './UnsupportedBridgeProtocolDialog';
@@ -38,6 +38,7 @@ import UnsupportedVersionDialog from './UnsupportedVersionDialog';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import {useLocalStorage} from './hooks';
 import ThemeProvider from './ThemeProvider';
+import {LOCAL_STORAGE_DEFAULT_TAB_KEY} from '../../constants';
 
 import styles from './DevTools.css';
 
@@ -143,7 +144,7 @@ export default function DevTools({
   hideViewSourceAction,
 }: Props) {
   const [currentTab, setTab] = useLocalStorage<TabID>(
-    'React::DevTools::defaultTab',
+    LOCAL_STORAGE_DEFAULT_TAB_KEY,
     defaultTab,
   );
 
@@ -272,7 +273,7 @@ export default function DevTools({
                       value={fetchFileWithCaching || null}>
                       <TreeContextController>
                         <ProfilerContextController>
-                          <SchedulingProfilerContextController>
+                          <TimelineContextController>
                             <ThemeProvider>
                               <div
                                 className={styles.DevTools}
@@ -310,7 +311,7 @@ export default function DevTools({
                                 </div>
                               </div>
                             </ThemeProvider>
-                          </SchedulingProfilerContextController>
+                          </TimelineContextController>
                         </ProfilerContextController>
                       </TreeContextController>
                     </FetchFileWithCachingContext.Provider>

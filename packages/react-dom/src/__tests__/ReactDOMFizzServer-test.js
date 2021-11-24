@@ -18,11 +18,13 @@ let ReactDOMFizzServer;
 let Suspense;
 let SuspenseList;
 let useSyncExternalStore;
-let useSyncExternalStoreExtra;
+let useSyncExternalStoreWithSelector;
 let PropTypes;
 let textCache;
+let window;
 let document;
 let writable;
+let CSPnonce = null;
 let container;
 let buffer = '';
 let hasErrored = false;
@@ -40,11 +42,25 @@ describe('ReactDOMFizzServer', () => {
     }
     Stream = require('stream');
     Suspense = React.Suspense;
-    SuspenseList = React.SuspenseList;
-    useSyncExternalStore = React.unstable_useSyncExternalStore;
-    useSyncExternalStoreExtra = require('use-sync-external-store/extra')
-      .useSyncExternalStoreExtra;
+    if (gate(flags => flags.enableSuspenseList)) {
+      SuspenseList = React.SuspenseList;
+    }
+
     PropTypes = require('prop-types');
+
+    if (gate(flags => flags.source)) {
+      // The `with-selector` module composes the main `use-sync-external-store`
+      // entrypoint. In the compiled artifacts, this is resolved to the `shim`
+      // implementation by our build config, but when running the tests against
+      // the source files, we need to tell Jest how to resolve it. Because this
+      // is a source module, this mock has no affect on the build tests.
+      jest.mock('use-sync-external-store/src/useSyncExternalStore', () =>
+        jest.requireActual('react'),
+      );
+    }
+    useSyncExternalStore = React.useSyncExternalStore;
+    useSyncExternalStoreWithSelector = require('use-sync-external-store/with-selector')
+      .useSyncExternalStoreWithSelector;
 
     textCache = new Map();
 
@@ -55,6 +71,7 @@ describe('ReactDOMFizzServer', () => {
         runScripts: 'dangerously',
       },
     );
+    window = jsdom.window;
     document = jsdom.window.document;
     container = document.getElementById('container');
 
@@ -91,7 +108,10 @@ describe('ReactDOMFizzServer', () => {
     fakeBody.innerHTML = bufferedContent;
     while (fakeBody.firstChild) {
       const node = fakeBody.firstChild;
-      if (node.nodeName === 'SCRIPT') {
+      if (
+        node.nodeName === 'SCRIPT' &&
+        (CSPnonce === null || node.getAttribute('nonce') === CSPnonce)
+      ) {
         const script = document.createElement('script');
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
@@ -282,6 +302,38 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should support nonce scripts', async () => {
+    CSPnonce = 'R4nd0m';
+    try {
+      let resolve;
+      const Lazy = React.lazy(() => {
+        return new Promise(r => {
+          resolve = r;
+        });
+      });
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
+          <div>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Lazy text="Hello" />
+            </Suspense>
+          </div>,
+          {nonce: 'R4nd0m'},
+        );
+        pipe(writable);
+      });
+      expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+      await act(async () => {
+        resolve({default: Text});
+      });
+      expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    } finally {
+      CSPnonce = null;
+    }
+  });
+
+  // @gate experimental
   it('should client render a boundary if a lazy component rejects', async () => {
     let rejectComponent;
     const LazyComponent = React.lazy(() => {
@@ -302,11 +354,18 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    let bootstrapped = false;
+    window.__INIT__ = function() {
+      bootstrapped = true;
+      // Attempt to hydrate the content.
+      ReactDOM.hydrateRoot(container, <App isClient={true} />);
+    };
+
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <App isClient={false} />,
-
         {
+          bootstrapScriptContent: '__INIT__();',
           onError(x) {
             loggedErrors.push(x);
           },
@@ -315,10 +374,8 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
     expect(loggedErrors).toEqual([]);
+    expect(bootstrapped).toBe(true);
 
-    // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App isClient={true} />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -471,17 +528,27 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
+    let bootstrapped = false;
+    window.__INIT__ = function() {
+      bootstrapped = true;
+      // Attempt to hydrate the content.
+      ReactDOM.hydrateRoot(container, <App />);
+    };
+
     await act(async () => {
-      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        bootstrapScriptContent: '__INIT__();',
+      });
       pipe(writable);
     });
 
     // We're still showing a fallback.
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
+    // We already bootstrapped.
+    expect(bootstrapped).toBe(true);
+
     // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -591,6 +658,7 @@ describe('ReactDOMFizzServer', () => {
     expect(ref.current).toBe(b);
   });
 
+  // @gate enableSuspenseList
   // @gate experimental
   it('shows inserted items before pending in a SuspenseList as fallbacks while hydrating', async () => {
     const ref = React.createRef();
@@ -1610,7 +1678,6 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot', async () => {
     const ref = React.createRef();
@@ -1651,7 +1718,6 @@ describe('ReactDOMFizzServer', () => {
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
-
         {
           onError(x) {
             loggedErrors.push(x);
@@ -1662,59 +1728,60 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    const serverRenderedDiv = container.getElementsByTagName('div')[0];
-
     ReactDOM.hydrateRoot(container, <App />);
 
-    // The first paint uses the server snapshot
-    expect(Scheduler).toFlushUntilNextPaint(['server']);
-    expect(getVisibleChildren(container)).toEqual(<div>server</div>);
-    // Hydration succeeded
-    expect(ref.current).toEqual(serverRenderedDiv);
+    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      expect(() => {
+        // The first paint switches to client rendering due to mismatch
+        expect(Scheduler).toFlushUntilNextPaint(['client']);
+      }).toErrorDev(
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
+        {withoutStack: true},
+      );
+      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+    } else {
+      const serverRenderedDiv = container.getElementsByTagName('div')[0];
+      // The first paint uses the server snapshot
+      expect(Scheduler).toFlushUntilNextPaint(['server']);
+      expect(getVisibleChildren(container)).toEqual(<div>server</div>);
+      // Hydration succeeded
+      expect(ref.current).toEqual(serverRenderedDiv);
 
-    // Asynchronously we detect that the store has changed on the client,
-    // and patch up the inconsistency
-    expect(Scheduler).toFlushUntilNextPaint(['client']);
-    expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-    expect(ref.current).toEqual(serverRenderedDiv);
+      // Asynchronously we detect that the store has changed on the client,
+      // and patch up the inconsistency
+      expect(Scheduler).toFlushUntilNextPaint(['client']);
+      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+      expect(ref.current).toEqual(serverRenderedDiv);
+    }
   });
 
   // The selector implementation uses the lazy ref initialization pattern
-  // @gate !(enableUseRefAccessWarning && __DEV__)
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it('calls getServerSnapshot instead of getSnapshot (with selector and isEqual)', async () => {
     // Same as previous test, but with a selector that returns a complex object
     // that is memoized with a custom `isEqual` function.
     const ref = React.createRef();
-
     function getServerSnapshot() {
       return {env: 'server', other: 'unrelated'};
     }
-
     function getClientSnapshot() {
       return {env: 'client', other: 'unrelated'};
     }
-
     function selector({env}) {
       return {env};
     }
-
     function isEqual(a, b) {
       return a.env === b.env;
     }
-
     function subscribe() {
       return () => {};
     }
-
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
       return text;
     }
-
     function App() {
-      const {env} = useSyncExternalStoreExtra(
+      const {env} = useSyncExternalStoreWithSelector(
         subscribe,
         getClientSnapshot,
         getServerSnapshot,
@@ -1727,14 +1794,12 @@ describe('ReactDOMFizzServer', () => {
         </div>
       );
     }
-
     const loggedErrors = [];
     await act(async () => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
         <Suspense fallback="Loading...">
           <App />
         </Suspense>,
-
         {
           onError(x) {
             loggedErrors.push(x);
@@ -1745,24 +1810,35 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    const serverRenderedDiv = container.getElementsByTagName('div')[0];
-
     ReactDOM.hydrateRoot(container, <App />);
 
-    // The first paint uses the server snapshot
-    expect(Scheduler).toFlushUntilNextPaint(['server']);
-    expect(getVisibleChildren(container)).toEqual(<div>server</div>);
-    // Hydration succeeded
-    expect(ref.current).toEqual(serverRenderedDiv);
+    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      // The first paint uses the client due to mismatch forcing client render
+      expect(() => {
+        // The first paint switches to client rendering due to mismatch
+        expect(Scheduler).toFlushUntilNextPaint(['client']);
+      }).toErrorDev(
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
+        {withoutStack: true},
+      );
+      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+    } else {
+      const serverRenderedDiv = container.getElementsByTagName('div')[0];
 
-    // Asynchronously we detect that the store has changed on the client,
-    // and patch up the inconsistency
-    expect(Scheduler).toFlushUntilNextPaint(['client']);
-    expect(getVisibleChildren(container)).toEqual(<div>client</div>);
-    expect(ref.current).toEqual(serverRenderedDiv);
+      // The first paint uses the server snapshot
+      expect(Scheduler).toFlushUntilNextPaint(['server']);
+      expect(getVisibleChildren(container)).toEqual(<div>server</div>);
+      // Hydration succeeded
+      expect(ref.current).toEqual(serverRenderedDiv);
+
+      // Asynchronously we detect that the store has changed on the client,
+      // and patch up the inconsistency
+      expect(Scheduler).toFlushUntilNextPaint(['client']);
+      expect(getVisibleChildren(container)).toEqual(<div>client</div>);
+      expect(ref.current).toEqual(serverRenderedDiv);
+    }
   });
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +
@@ -1911,7 +1987,6 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate supportsNativeUseSyncExternalStore
   // @gate experimental
   it(
     'errors during hydration force a client render at the nearest Suspense ' +

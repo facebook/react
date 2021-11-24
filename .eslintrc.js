@@ -26,11 +26,8 @@ module.exports = {
 
   parser: 'babel-eslint',
   parserOptions: {
-    ecmaVersion: 8,
+    ecmaVersion: 9,
     sourceType: 'script',
-    ecmaFeatures: {
-      experimentalObjectRestSpread: true,
-    },
   },
 
   // We're stricter than the default config, mostly. We'll override a few rules
@@ -113,7 +110,6 @@ module.exports = {
       {isProductionUserAppCode: true},
     ],
     'react-internal/no-to-warn-dev-within-to-throw': ERROR,
-    'react-internal/invariant-args': ERROR,
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
     'react-internal/no-cross-fork-imports': ERROR,
@@ -151,7 +147,7 @@ module.exports = {
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
         'packages/react-devtools-extensions/**/*.js',
-        'packages/react-devtools-scheduling-profiler/**/*.js',
+        'packages/react-devtools-timeline/**/*.js',
         'packages/react-native-renderer/**/*.js',
         'packages/eslint-plugin-react-hooks/**/*.js',
         'packages/jest-react/**/*.js',
@@ -249,35 +245,36 @@ module.exports = {
         'packages/react-server-native-relay/**/*.js',
       ],
       globals: {
-        nativeFabricUIManager: true,
+        nativeFabricUIManager: 'readonly',
       },
     },
     {
       files: ['packages/react-server-dom-webpack/**/*.js'],
       globals: {
-        __webpack_chunk_load__: true,
-        __webpack_require__: true,
+        __webpack_chunk_load__: 'readonly',
+        __webpack_require__: 'readonly',
       },
     },
     {
       files: ['packages/scheduler/**/*.js'],
       globals: {
-        TaskController: true,
+        TaskController: 'readonly',
       },
     },
   ],
 
   globals: {
-    spyOnDev: true,
-    spyOnDevAndProd: true,
-    spyOnProd: true,
-    __EXPERIMENTAL__: true,
-    __EXTENSION__: true,
-    __PROFILE__: true,
-    __TEST__: true,
-    __UMD__: true,
-    __VARIANT__: true,
-    gate: true,
-    trustedTypes: true,
+    spyOnDev: 'readonly',
+    spyOnDevAndProd: 'readonly',
+    spyOnProd: 'readonly',
+    __EXPERIMENTAL__: 'readonly',
+    __EXTENSION__: 'readonly',
+    __PROFILE__: 'readonly',
+    __TEST__: 'readonly',
+    __UMD__: 'readonly',
+    __VARIANT__: 'readonly',
+    gate: 'readonly',
+    trustedTypes: 'readonly',
+    IS_REACT_ACT_ENVIRONMENT: 'readonly',
   },
 };
