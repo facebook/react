@@ -605,23 +605,20 @@ export function getDataType(data: Object): DataType {
         return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
           ? 'typed_array'
           : 'data_view';
-      } else if (
-        data.constructor &&
-        data.constructor.name === 'ArrayBuffer'
-      ) {
+      } else if (data.constructor && data.constructor.name === 'ArrayBuffer') {
         // HACK This ArrayBuffer check is gross; is there a better way?
         // We could try to create a new DataView with the value.
         // If it doesn't error, we know it's an ArrayBuffer,
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
-        let iterator
+        let iterator;
         try {
           iterator = data[Symbol.iterator]();
         } catch (ignore) {
           return 'error';
         }
-        
+
         if (!iterator) {
           // Proxies might break assumptoins about iterators.
           // See github.com/facebook/react/issues/21654
