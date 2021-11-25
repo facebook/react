@@ -5248,6 +5248,56 @@
 | `imageRendering=(null)`| (initial)| `<null>` |
 | `imageRendering=(undefined)`| (initial)| `<null>` |
 
+## `imageSizes` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `imageSizes=(string)`| (changed)| `"a string"` |
+| `imageSizes=(empty string)`| (initial)| `<empty string>` |
+| `imageSizes=(array with string)`| (changed)| `"string"` |
+| `imageSizes=(empty array)`| (initial)| `<empty string>` |
+| `imageSizes=(object)`| (changed)| `"result of toString()"` |
+| `imageSizes=(numeric string)`| (changed)| `"42"` |
+| `imageSizes=(-1)`| (changed)| `"-1"` |
+| `imageSizes=(0)`| (changed)| `"0"` |
+| `imageSizes=(integer)`| (changed)| `"1"` |
+| `imageSizes=(NaN)`| (changed, warning)| `"NaN"` |
+| `imageSizes=(float)`| (changed)| `"99.99"` |
+| `imageSizes=(true)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(false)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(string 'true')`| (changed)| `"true"` |
+| `imageSizes=(string 'false')`| (changed)| `"false"` |
+| `imageSizes=(string 'on')`| (changed)| `"on"` |
+| `imageSizes=(string 'off')`| (changed)| `"off"` |
+| `imageSizes=(symbol)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(function)`| (initial, warning)| `<empty string>` |
+| `imageSizes=(null)`| (initial)| `<empty string>` |
+| `imageSizes=(undefined)`| (initial)| `<empty string>` |
+
+## `imageSrcSet` (on `<link>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `imageSrcSet=(string)`| (changed)| `"a string"` |
+| `imageSrcSet=(empty string)`| (initial)| `<empty string>` |
+| `imageSrcSet=(array with string)`| (changed)| `"string"` |
+| `imageSrcSet=(empty array)`| (initial)| `<empty string>` |
+| `imageSrcSet=(object)`| (changed)| `"result of toString()"` |
+| `imageSrcSet=(numeric string)`| (changed)| `"42"` |
+| `imageSrcSet=(-1)`| (changed)| `"-1"` |
+| `imageSrcSet=(0)`| (changed)| `"0"` |
+| `imageSrcSet=(integer)`| (changed)| `"1"` |
+| `imageSrcSet=(NaN)`| (changed, warning)| `"NaN"` |
+| `imageSrcSet=(float)`| (changed)| `"99.99"` |
+| `imageSrcSet=(true)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(false)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(string 'true')`| (changed)| `"true"` |
+| `imageSrcSet=(string 'false')`| (changed)| `"false"` |
+| `imageSrcSet=(string 'on')`| (changed)| `"on"` |
+| `imageSrcSet=(string 'off')`| (changed)| `"off"` |
+| `imageSrcSet=(symbol)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(function)`| (initial, warning)| `<empty string>` |
+| `imageSrcSet=(null)`| (initial)| `<empty string>` |
+| `imageSrcSet=(undefined)`| (initial)| `<empty string>` |
+
 ## `in` (on `<feBlend>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
