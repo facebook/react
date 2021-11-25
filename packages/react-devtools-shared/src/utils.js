@@ -599,44 +599,47 @@ export function getDataType(data: Object): DataType {
         return 'number';
       }
     case 'object':
+      let isArrayBufferConstructor = false;
+      let isIteratorFunction = false;
       try {
-        if (Array.isArray(data)) {
-          return 'array';
-        } else if (ArrayBuffer.isView(data)) {
-          return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-            ? 'typed_array'
-            : 'data_view';
-        } else if (
-          data.constructor &&
-          data.constructor.name === 'ArrayBuffer'
-        ) {
-          // HACK This ArrayBuffer check is gross; is there a better way?
-          // We could try to create a new DataView with the value.
-          // If it doesn't error, we know it's an ArrayBuffer,
-          // but this seems kind of awkward and expensive.
-          return 'array_buffer';
-        } else if (typeof data[Symbol.iterator] === 'function') {
-          const iterator = data[Symbol.iterator]();
-          if (!iterator) {
-            // Proxies might break assumptoins about iterators.
-            // See github.com/facebook/react/issues/21654
-          } else {
-            return iterator === data ? 'opaque_iterator' : 'iterator';
-          }
-        } else if (data.constructor && data.constructor.name === 'RegExp') {
-          return 'regexp';
-        } else {
-          const toStringValue = Object.prototype.toString.call(data);
-          if (toStringValue === '[object Date]') {
-            return 'date';
-          } else if (toStringValue === '[object HTMLAllCollection]') {
-            return 'html_all_collection';
-          }
-        }
-        return 'object';
+        isArrayBufferConstructor =
+          data.constructor && data.constructor.name === 'ArrayBuffer';
+        isIteratorFunction = typeof data[Symbol.iterator] === 'function';
       } catch (ignore) {
         return 'error';
       }
+
+      if (Array.isArray(data)) {
+        return 'array';
+      } else if (ArrayBuffer.isView(data)) {
+        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
+          ? 'typed_array'
+          : 'data_view';
+      } else if (isArrayBufferConstructor) {
+        // HACK This ArrayBuffer check is gross; is there a better way?
+        // We could try to create a new DataView with the value.
+        // If it doesn't error, we know it's an ArrayBuffer,
+        // but this seems kind of awkward and expensive.
+        return 'array_buffer';
+      } else if (isIteratorFunction) {
+        const iterator = data[Symbol.iterator]();
+        if (!iterator) {
+          // Proxies might break assumptoins about iterators.
+          // See github.com/facebook/react/issues/21654
+        } else {
+          return iterator === data ? 'opaque_iterator' : 'iterator';
+        }
+      } else if (data.constructor && data.constructor.name === 'RegExp') {
+        return 'regexp';
+      } else {
+        const toStringValue = Object.prototype.toString.call(data);
+        if (toStringValue === '[object Date]') {
+          return 'date';
+        } else if (toStringValue === '[object HTMLAllCollection]') {
+          return 'html_all_collection';
+        }
+      }
+      return 'object';
     case 'string':
       return 'string';
     case 'symbol':
