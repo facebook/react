@@ -583,73 +583,75 @@ export function getDataType(data: Object): DataType {
   }
 
   const type = typeof data;
-  try {
-    switch (type) {
-      case 'bigint':
-        return 'bigint';
-      case 'boolean':
-        return 'boolean';
-      case 'function':
-        return 'function';
-      case 'number':
-        if (Number.isNaN(data)) {
-          return 'nan';
-        } else if (!Number.isFinite(data)) {
-          return 'infinity';
-        } else {
-          return 'number';
+  switch (type) {
+    case 'bigint':
+      return 'bigint';
+    case 'boolean':
+      return 'boolean';
+    case 'function':
+      return 'function';
+    case 'number':
+      if (Number.isNaN(data)) {
+        return 'nan';
+      } else if (!Number.isFinite(data)) {
+        return 'infinity';
+      } else {
+        return 'number';
+      }
+    case 'object':
+      if (Array.isArray(data)) {
+        return 'array';
+      } else if (ArrayBuffer.isView(data)) {
+        return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
+          ? 'typed_array'
+          : 'data_view';
+      } else if (
+        data.constructor &&
+        data.constructor.name === 'ArrayBuffer'
+      ) {
+        // HACK This ArrayBuffer check is gross; is there a better way?
+        // We could try to create a new DataView with the value.
+        // If it doesn't error, we know it's an ArrayBuffer,
+        // but this seems kind of awkward and expensive.
+        return 'array_buffer';
+      } else if (typeof data[Symbol.iterator] === 'function') {
+        let iterator
+        try {
+          iterator = data[Symbol.iterator]();
+        } catch (ignore) {
+          return 'error';
         }
-      case 'object':
-        if (Array.isArray(data)) {
-          return 'array';
-        } else if (ArrayBuffer.isView(data)) {
-          return hasOwnProperty.call(data.constructor, 'BYTES_PER_ELEMENT')
-            ? 'typed_array'
-            : 'data_view';
-        } else if (
-          data.constructor &&
-          data.constructor.name === 'ArrayBuffer'
-        ) {
-          // HACK This ArrayBuffer check is gross; is there a better way?
-          // We could try to create a new DataView with the value.
-          // If it doesn't error, we know it's an ArrayBuffer,
-          // but this seems kind of awkward and expensive.
-          return 'array_buffer';
-        } else if (typeof data[Symbol.iterator] === 'function') {
-          const iterator = data[Symbol.iterator]();
-          if (!iterator) {
-            // Proxies might break assumptoins about iterators.
-            // See github.com/facebook/react/issues/21654
-          } else {
-            return iterator === data ? 'opaque_iterator' : 'iterator';
-          }
-        } else if (data.constructor && data.constructor.name === 'RegExp') {
-          return 'regexp';
+        
+        if (!iterator) {
+          // Proxies might break assumptoins about iterators.
+          // See github.com/facebook/react/issues/21654
         } else {
-          const toStringValue = Object.prototype.toString.call(data);
-          if (toStringValue === '[object Date]') {
-            return 'date';
-          } else if (toStringValue === '[object HTMLAllCollection]') {
-            return 'html_all_collection';
-          }
+          return iterator === data ? 'opaque_iterator' : 'iterator';
         }
-        return 'object';
-      case 'string':
-        return 'string';
-      case 'symbol':
-        return 'symbol';
-      case 'undefined':
-        if (
-          Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-        ) {
+      } else if (data.constructor && data.constructor.name === 'RegExp') {
+        return 'regexp';
+      } else {
+        const toStringValue = Object.prototype.toString.call(data);
+        if (toStringValue === '[object Date]') {
+          return 'date';
+        } else if (toStringValue === '[object HTMLAllCollection]') {
           return 'html_all_collection';
         }
-        return 'undefined';
-      default:
-        return 'unknown';
-    }
-  } catch (ignore) {
-    return 'error';
+      }
+      return 'object';
+    case 'string':
+      return 'string';
+    case 'symbol':
+      return 'symbol';
+    case 'undefined':
+      if (
+        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
+      ) {
+        return 'html_all_collection';
+      }
+      return 'undefined';
+    default:
+      return 'unknown';
   }
 }
 
