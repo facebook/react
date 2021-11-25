@@ -12,7 +12,7 @@
   },
   "scripts": {
     "prestart":
-      "cp ../../build/node_modules/react/umd/react.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js public/",
+      "cp ../../build/node_modules/react/umd/react.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom-server-legacy.browser.development.js public/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
