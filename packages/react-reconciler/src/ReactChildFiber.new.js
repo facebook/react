@@ -870,6 +870,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     // Add all children to a key map for quick lookups.
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
+    let lastStableOldIndex = newIdx;
+    let needToBeMoved = false;
+    const oldChildIndexes: Array<number> = [];
+    const newChildFiberToOldIndexMap: Map<Fiber, number> = new Map();
+
     // Keep scanning and use the map to restore deleted items as moves.
     for (; newIdx < newChildren.length; newIdx++) {
       const newFiber = updateFromMap(
@@ -880,6 +885,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         lanes,
       );
       if (newFiber !== null) {
+        newFiber.index = newIdx;
         if (shouldTrackSideEffects) {
           if (newFiber.alternate !== null) {
             // The new fiber is a work in progress, but if there exists a
@@ -890,8 +896,27 @@ function ChildReconciler(shouldTrackSideEffects) {
               newFiber.key === null ? newIdx : newFiber.key,
             );
           }
+
+          // This function is fork of placeChild.
+          const current = newFiber.alternate;
+          if (current !== null) {
+            const oldIndex = current.index;
+            newChildFiberToOldIndexMap.set(newFiber, oldIndex);
+            oldChildIndexes.push(oldIndex);
+
+            if (oldIndex < lastStableOldIndex) {
+              // This is a move.
+              needToBeMoved = true;
+            } else {
+              // This item can stay in place.
+              lastStableOldIndex = oldIndex;
+            }
+          } else {
+            // This is an insertion.
+            newFiber.flags |= Placement;
+          }
         }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+
         if (previousNewFiber === null) {
           resultingFirstChild = newFiber;
         } else {
@@ -905,6 +930,30 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Any existing children that weren't consumed above were deleted. We need
       // to add them to the deletion list.
       existingChildren.forEach(child => deleteChild(returnFiber, child));
+
+      // This is the worst case. We need to move the old children
+      if (needToBeMoved) {
+        // generate the longest increasing subsequence
+        const longestIncreasingSequenceIndexes = getLongestIncreasingSubsequence(
+          oldChildIndexes,
+        );
+
+        // add the indexes of the longest increasing subsequence into a map for quick lookups
+        const longestIncreasingSequencIndexesMap: Map<
+          number,
+          boolean,
+        > = longestIncreasingSequenceIndexes.reduce((map, index) => {
+          map.set(index, true);
+          return map;
+        }, new Map());
+
+        newChildFiberToOldIndexMap.forEach((oldIndex, newChildFiber) => {
+          if (!longestIncreasingSequencIndexesMap.get(oldIndex)) {
+            // This is a move.
+            newChildFiber.flags |= Placement;
+          }
+        });
+      }
     }
 
     if (getIsHydrating()) {
@@ -912,6 +961,54 @@ function ChildReconciler(shouldTrackSideEffects) {
       pushTreeFork(returnFiber, numberOfForks);
     }
     return resultingFirstChild;
+  }
+
+  // https://en.wikipedia.org/wiki/Longest_increasing_subsequence
+  function getLongestIncreasingSubsequence(X: Array<number> = []) {
+    const N = X.length;
+    const P = new Array(N);
+    const M = new Array(N + 1);
+
+    let L = 0;
+    for (let i = 0; i <= N - 1; i++) {
+      // Binary search for the largest positive j ≤ L
+      // such that X[M[j]] < X[i]
+      let lo = 1;
+      let hi = L + 1;
+      while (lo < hi) {
+        const mid = lo + Math.floor((hi - lo) / 2);
+        if (X[M[mid]] < X[i]) {
+          lo = mid + 1;
+        } else {
+          hi = mid;
+        }
+      }
+
+      // After searching, lo is 1 greater than the
+      // length of the longest prefix of X[i]
+      const newL = lo;
+
+      // The predecessor of X[i] is the last index of
+      // the subsequence of length newL-1
+      P[i] = M[newL - 1];
+      M[newL] = i;
+
+      if (newL > L) {
+        // If we found a subsequence longer than any we've
+        // found yet, update L
+        L = newL;
+      }
+    }
+
+    // Reconstruct the longest increasing subsequence
+    const S = new Array(L);
+    let k = M[L];
+    for (let i = L - 1; i >= 0; i--) {
+      S[i] = X[k];
+      k = P[k];
+    }
+
+    return S;
   }
 
   function reconcileChildrenIterator(
@@ -1072,6 +1169,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     // Add all children to a key map for quick lookups.
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
+    let lastStableOldIndex = newIdx;
+    let needToBeMoved = false;
+    const oldChildIndexes: Array<number> = [];
+    const newChildFiberToOldIndexMap: Map<Fiber, number> = new Map();
+
     // Keep scanning and use the map to restore deleted items as moves.
     for (; !step.done; newIdx++, step = newChildren.next()) {
       const newFiber = updateFromMap(
@@ -1082,6 +1184,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         lanes,
       );
       if (newFiber !== null) {
+        newFiber.index = newIdx;
         if (shouldTrackSideEffects) {
           if (newFiber.alternate !== null) {
             // The new fiber is a work in progress, but if there exists a
@@ -1092,8 +1195,27 @@ function ChildReconciler(shouldTrackSideEffects) {
               newFiber.key === null ? newIdx : newFiber.key,
             );
           }
+
+          // This function is fork of placeChild.
+          const current = newFiber.alternate;
+          if (current !== null) {
+            const oldIndex = current.index;
+            newChildFiberToOldIndexMap.set(newFiber, oldIndex);
+            oldChildIndexes.push(oldIndex);
+
+            if (oldIndex < lastStableOldIndex) {
+              // This is a move.
+              needToBeMoved = true;
+            } else {
+              // This item can stay in place.
+              lastStableOldIndex = oldIndex;
+            }
+          } else {
+            // This is an insertion.
+            newFiber.flags |= Placement;
+          }
         }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+
         if (previousNewFiber === null) {
           resultingFirstChild = newFiber;
         } else {
@@ -1107,6 +1229,29 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Any existing children that weren't consumed above were deleted. We need
       // to add them to the deletion list.
       existingChildren.forEach(child => deleteChild(returnFiber, child));
+
+      if (needToBeMoved) {
+        // generate the longest increasing subsequence
+        const longestIncreasingSequenceIndexes = getLongestIncreasingSubsequence(
+          Array.from(oldChildIndexes),
+        );
+
+        // add the indexes of the longest increasing subsequence into a map for quick lookups
+        const longestIncreasingSequencIndexesMap: Map<
+          number,
+          boolean,
+        > = longestIncreasingSequenceIndexes.reduce((map, index) => {
+          map.set(index, true);
+          return map;
+        }, new Map());
+
+        newChildFiberToOldIndexMap.forEach((oldIndex, newChildFiber) => {
+          if (!longestIncreasingSequencIndexesMap.get(oldIndex)) {
+            // This is a move.
+            newChildFiber.flags |= Placement;
+          }
+        });
+      }
     }
 
     if (getIsHydrating()) {
