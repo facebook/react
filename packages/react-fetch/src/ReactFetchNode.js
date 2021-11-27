@@ -154,9 +154,12 @@ Response.prototype = {
       return this._json;
     }
     const buffer = readRecordValue(this._bufferRecord);
-    const json = JSON.parse(buffer.toString());
-    this._json = json;
-    return json;
+    try {
+      this._json = JSON.parse(buffer.toString());
+    } catch (error) {
+      return this.text();
+    }
+    return this._json;
   },
   text() {
     if (this._text !== null) {
