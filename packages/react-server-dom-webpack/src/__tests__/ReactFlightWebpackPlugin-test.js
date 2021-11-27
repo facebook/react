@@ -1,32 +1,6 @@
 const path = require('path');
 const os = require('os');
 
-function getDependencies(mode: 'wp5' | 'wp4') {
-  jest.resetModuleRegistry();
-  let webpack;
-  if (mode === 'wp5') {
-    webpack = jest.requireActual('webpack');
-    // The code we are testing (ReactFlightWebpackPlugin) directly imports `webpack`. It cannot depend upon `webpack5` as
-    // consumers of `ReactFlightWebpackPlugin` are more likely to have installed wp5 just as `webpack`. So we fix this by mocking the
-    // `webpack` module, and return the webpack 5 instance that we required.
-    jest.mock('webpack', () => {
-      return webpack;
-    });
-    // Sanity-check. If the webpack in package.json changes, this should catch that
-    expect(webpack.version).toMatch(/5\.[0-9]*\.[0-9]*/);
-  } else {
-    webpack = jest.requireActual('webpack');
-    // Sanity-check. If the webpack in package.json changes, this should catch that
-    expect(webpack.version).toMatch(/4\.[0-9]*\.[0-9]*/);
-  }
-
-  const FlightPlugin = require('../ReactFlightWebpackPlugin').default;
-  return {
-    FlightPlugin,
-    webpack,
-  };
-}
-
 describe('ReactFlightWebpackPlugin', () => {
   // Running webpack can be slow, so we increase Jest's default timeout. These values are
   // "magic", and not backed by any kind of logic or reasoning.
@@ -36,7 +10,9 @@ describe('ReactFlightWebpackPlugin', () => {
     const entry = path.resolve(
       path.join(__dirname, 'fixture', 'entry.client.js'),
     );
-    const {webpack, FlightPlugin} = getDependencies('wp5');
+
+    const webpack = jest.requireActual('webpack');
+    const FlightPlugin = require('../ReactFlightWebpackPlugin').default;
 
     const plugin = new FlightPlugin({isServer: false});
     const fileName = plugin.manifestFilename;
