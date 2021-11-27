@@ -724,8 +724,13 @@ function pushStartOption(
       }
     }
   }
-  
-  const isAttributeValueRemovable = shouldRemoveAttributeWithWarning('option', value, getPropertyInfo('option'), false);
+
+  const isAttributeValueRemovable = shouldRemoveAttributeWithWarning(
+    'option',
+    value,
+    getPropertyInfo('option'),
+    false,
+  );
   let stringValue;
   if (value !== null && !isAttributeValueRemovable) {
     if (__DEV__) {
@@ -744,9 +749,9 @@ function pushStartOption(
         }
       }
     }
-    stringValue = flattenOptionChildren(children); 
+    stringValue = flattenOptionChildren(children);
   }
-  
+
   if (selectedValue != null && stringValue !== undefined) {
     if (isArray(selectedValue)) {
       // multiple
