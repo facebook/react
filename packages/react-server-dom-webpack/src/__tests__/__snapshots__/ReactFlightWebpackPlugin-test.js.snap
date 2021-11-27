@@ -1,0 +1,93 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactFlightWebpackPlugin manifest matches snapshot 1`] = `
+Object {
+  "file:///Users/samcooke/work/misc/react/fixtures/flight/src/Counter.client.js": Object {
+    "": Object {
+      "chunks": Array [
+        "client1",
+      ],
+      "id": "./fixtures/flight/src/Counter.client.js",
+      "name": "",
+    },
+    "*": Object {
+      "chunks": Array [
+        "client1",
+      ],
+      "id": "./fixtures/flight/src/Counter.client.js",
+      "name": "*",
+    },
+  },
+  "file:///Users/samcooke/work/misc/react/fixtures/flight/src/Counter2.client.js": Object {
+    "": Object {
+      "chunks": Array [
+        "client1",
+      ],
+      "id": "./fixtures/flight/src/Counter2.client.js",
+      "name": "",
+    },
+    "*": Object {
+      "chunks": Array [
+        "client1",
+      ],
+      "id": "./fixtures/flight/src/Counter2.client.js",
+      "name": "*",
+    },
+  },
+  "file:///Users/samcooke/work/misc/react/fixtures/flight/src/ShowMore.client.js": Object {
+    "": Object {
+      "chunks": Array [
+        "client2",
+      ],
+      "id": "./fixtures/flight/src/ShowMore.client.js",
+      "name": "",
+    },
+    "*": Object {
+      "chunks": Array [
+        "client2",
+      ],
+      "id": "./fixtures/flight/src/ShowMore.client.js",
+      "name": "*",
+    },
+  },
+  "file:///Users/samcooke/work/misc/react/packages/react-server-dom-webpack/src/__tests__/fixture/Form.client.js": Object {
+    "": Object {
+      "chunks": Array [
+        "main",
+      ],
+      "id": "./packages/react-server-dom-webpack/src/__tests__/fixture/Form.client.js",
+      "name": "",
+    },
+    "*": Object {
+      "chunks": Array [
+        "main",
+      ],
+      "id": "./packages/react-server-dom-webpack/src/__tests__/fixture/Form.client.js",
+      "name": "*",
+    },
+    "Form": Object {
+      "chunks": Array [
+        "main",
+      ],
+      "id": "./packages/react-server-dom-webpack/src/__tests__/fixture/Form.client.js",
+      "name": "Form",
+    },
+  },
+  "file:///Users/samcooke/work/misc/react/packages/react-server-dom-webpack/src/__tests__/fixture/entry.client.js": Object {
+    "": Object {
+      "chunks": Array [
+        "main",
+      ],
+      "id": "./packages/react-server-dom-webpack/src/__tests__/fixture/entry.client.js",
+      "name": "",
+    },
+    "*": Object {
+      "chunks": Array [
+        "main",
+      ],
+      "id": "./packages/react-server-dom-webpack/src/__tests__/fixture/entry.client.js",
+      "name": "*",
+    },
+  },
+}
+`;
