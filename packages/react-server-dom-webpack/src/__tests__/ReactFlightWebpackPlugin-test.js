@@ -15,7 +15,7 @@ describe('ReactFlightWebpackPlugin', () => {
     const FlightPlugin = require('../ReactFlightWebpackPlugin').default;
 
     const plugin = new FlightPlugin({isServer: false});
-    const fileName = plugin.manifestFilename;
+    const manifestFileName = plugin.manifestFilename;
 
     const output = webpack({
       entry: {
@@ -47,16 +47,12 @@ describe('ReactFlightWebpackPlugin', () => {
       expect(err).toBeNull();
       expect(stats.compilation.warnings).toHaveLength(0);
 
-      expect(output.outputFileSystem.writeFile).toHaveBeenCalledWith(
-        expect.stringContaining(fileName),
-        expect.anything(),
-        expect.anything(),
-      );
       const calls = output.outputFileSystem.writeFile.mock.calls;
       // Get the idx that was called with the fileName,
       const idx = calls.findIndex(val => {
-        return val[0].includes(fileName);
+        return val[0].includes(manifestFileName);
       });
+      expect(idx).not.toBe(-1);
       const contents = output.outputFileSystem.writeFile.mock.calls[
         idx
       ][1].toString();
