@@ -38,6 +38,7 @@ import {
   OVERLOADED_BOOLEAN,
   NUMERIC,
   POSITIVE_NUMERIC,
+  shouldRemoveAttributeWithWarning,
 } from '../shared/DOMProperty';
 import {isUnitlessNumber} from '../shared/CSSProperty';
 
@@ -723,28 +724,30 @@ function pushStartOption(
       }
     }
   }
-
-  if (selectedValue !== null) {
-    let stringValue;
-    if (value !== null) {
-      if (__DEV__) {
-        checkAttributeStringCoercion(value, 'value');
-      }
-      stringValue = '' + value;
-    } else {
-      if (__DEV__) {
-        if (innerHTML !== null) {
-          if (!didWarnInvalidOptionInnerHTML) {
-            didWarnInvalidOptionInnerHTML = true;
-            console.error(
-              'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
-                'which value should be selected.',
-            );
-          }
+  
+  const isAttributeValueRemovable = shouldRemoveAttributeWithWarning('option', value, getPropertyInfo('option'), false);
+  let stringValue;
+  if (value !== null && !isAttributeValueRemovable) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(value, 'value');
+    }
+    stringValue = '' + value;
+  } else {
+    if (__DEV__) {
+      if (innerHTML !== null) {
+        if (!didWarnInvalidOptionInnerHTML) {
+          didWarnInvalidOptionInnerHTML = true;
+          console.error(
+            'Pass a `value` prop if you set dangerouslyInnerHTML so React knows ' +
+              'which value should be selected.',
+          );
         }
       }
-      stringValue = flattenOptionChildren(children);
     }
+    stringValue = flattenOptionChildren(children); 
+  }
+  
+  if (selectedValue != null && stringValue !== undefined) {
     if (isArray(selectedValue)) {
       // multiple
       for (let i = 0; i < selectedValue.length; i++) {
