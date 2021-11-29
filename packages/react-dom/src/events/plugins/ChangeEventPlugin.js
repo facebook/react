@@ -291,9 +291,7 @@ function extractEvents(
       handleEventFunc = handleEventsForInputEventPolyfill;
     }
   } else if (shouldUseClickEvent(targetNode)) {
-    getTargetInstFunc = nativeEvent.defaultPrevented
-      ? null
-      : getTargetInstForClickEvent;
+    getTargetInstFunc = getTargetInstForClickEvent;
   }
 
   if (getTargetInstFunc) {
