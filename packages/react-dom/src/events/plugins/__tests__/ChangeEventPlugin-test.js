@@ -200,35 +200,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('should not fire change for checkbox input when preventDefault by native click', () => {
-    let called = 0;
-
-    function cb(e) {
-      called++;
-      expect(e.type).toBe('change');
-    }
-
-    const node = ReactDOM.render(
-      <input type="checkbox" onChange={cb} />,
-      container,
-    );
-
-    expect(node.checked).toBe(false);
-    const event = new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    // Mock native behavior to set checked as true
-    // https://html.spec.whatwg.org/multipage/input.html#the-input-element
-    event.preventDefault();
-    node.checked = true;
-
-    node.dispatchEvent(event);
-    expect(called).toBe(0);
-  });
-
-  it('should not fire change for checkbox input when preventDefault by react onClick', () => {
+  it('should not fire change for checkbox input when preventDefault is called in onClick', () => {
     const handleReactChange = jest.fn();
     const handleNativeChange = jest.fn();
 
