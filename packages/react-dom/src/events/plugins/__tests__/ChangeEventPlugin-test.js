@@ -229,9 +229,7 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should not fire change for checkbox input when preventDefault by react onClick', () => {
-    const handleReactChange = jest.fn((event) => {
-      console.log('React Change:', event.defaultPrevented, event.nativeEvent.defaultPrevented);
-    });
+    const handleReactChange = jest.fn();
     const handleNativeChange = jest.fn();
 
     const node = ReactDOM.render(
