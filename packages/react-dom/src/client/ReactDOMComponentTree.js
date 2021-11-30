@@ -41,8 +41,6 @@ const internalContainerInstanceKey = '__reactContainer$' + randomKey;
 const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
-const internalCustomElementEventHandlersKey =
-  '__reactCustomEventHandlers$' + randomKey;
 
 export function detachDeletedInstance(node: Instance): void {
   // TODO: This function is only called on host components. I don't think all of
@@ -257,13 +255,4 @@ export function doesTargetHaveEventHandle(
     return false;
   }
   return eventHandles.has(eventHandle);
-}
-
-export function getCustomElementEventHandlersFromNode(
-  node: Instance | TextInstance | SuspenseInstance,
-): Props {
-  if (!(node: any)[internalCustomElementEventHandlersKey]) {
-    (node: any)[internalCustomElementEventHandlersKey] = {};
-  }
-  return (node: any)[internalCustomElementEventHandlersKey];
 }

@@ -22,7 +22,7 @@ import {
   enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
-import {getCustomElementEventHandlersFromNode} from './ReactDOMComponentTree';
+import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -162,20 +162,13 @@ export function setValueForProperty(
     const useCapture = name !== eventName;
     eventName = eventName.slice(2);
 
-    const listenersObjName = eventName + (useCapture ? 'true' : 'false');
-    const listeners = getCustomElementEventHandlersFromNode(node);
-    const alreadyHadListener = listeners[listenersObjName];
-
-    if (typeof value === 'function' || alreadyHadListener) {
-      listeners[listenersObjName] = value;
-      const proxy = useCapture ? fireEventProxyCapture : fireEventProxy;
-      if (value) {
-        if (!alreadyHadListener) {
-          node.addEventListener(eventName, proxy, useCapture);
-        }
-      } else {
-        node.removeEventListener(eventName, proxy, useCapture);
-      }
+    const prevProps = getFiberCurrentPropsFromNode(node);
+    const prevValue = prevProps != null ? prevProps[name] : null;
+    if (typeof prevValue === 'function') {
+      node.removeEventListener(eventName, prevValue, useCapture)
+    }
+    if (typeof value === 'function') {
+      node.addEventListener(eventName, value, useCapture);
       return;
     }
   }
@@ -256,12 +249,4 @@ export function setValueForProperty(
       node.setAttribute(attributeName, attributeValue);
     }
   }
-}
-
-function fireEventProxy(e: Event) {
-  getCustomElementEventHandlersFromNode(this)[e.type + 'false'](e);
-}
-
-function fireEventProxyCapture(e: Event) {
-  getCustomElementEventHandlersFromNode(this)[e.type + 'true'](e);
 }
