@@ -282,7 +282,7 @@ describe('DOMPropertyOperations', () => {
           <my-custom-element
             oncustomeventCapture={oncustomeventCapture}
             oncustomevent={oncustomevent}>
-            <div></div>
+            <div />
           </my-custom-element>
         );
       }
