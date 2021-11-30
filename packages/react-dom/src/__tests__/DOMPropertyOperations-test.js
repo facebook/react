@@ -217,6 +217,16 @@ describe('DOMPropertyOperations', () => {
       expect(customElement).toBe(customElement);
       customElement.dispatchEvent(new Event('customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<Test handler={oncustomevent} />, container);
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(2);
+
+      const oncustomevent2 = jest.fn();
+      ReactDOM.render(<Test handler={oncustomevent2} />, container);
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(2);
+      expect(oncustomevent2).toHaveBeenCalledTimes(1);
     });
 
     it('custom elements shouldnt have non-functions for on* attributes treated as event listeners', () => {
