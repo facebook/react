@@ -247,16 +247,16 @@ describe('DOMPropertyOperations', () => {
       let nativeClickEvent = null;
       const nativeEventHandler = jest.fn(event => (nativeClickEvent = event));
       function Test() {
-        return <span onClick={syntheticEventHandler} />;
+        return <my-custom-element onClick={syntheticEventHandler} />;
       }
 
       const container = document.createElement('div');
       document.body.appendChild(container);
       ReactDOM.render(<Test />, container);
 
-      const span = container.querySelector('span');
-      span.onclick = nativeEventHandler;
-      container.querySelector('span').click();
+      const customElement = container.querySelector('my-custom-element');
+      customElement.onclick = nativeEventHandler;
+      container.querySelector('my-custom-element').click();
 
       expect(nativeEventHandler).toHaveBeenCalledTimes(1);
       expect(syntheticEventHandler).toHaveBeenCalledTimes(1);

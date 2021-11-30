@@ -160,10 +160,6 @@ export function setValueForProperty(
   ) {
     let eventName = name.replace(/Capture$/, '');
     const useCapture = name !== eventName;
-    const nameLower = eventName.toLowerCase();
-    if (nameLower in node) {
-      eventName = nameLower;
-    }
     eventName = eventName.slice(2);
 
     const listenersObjName = eventName + (useCapture ? 'true' : 'false');
