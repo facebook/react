@@ -25,6 +25,7 @@ export function registerDevToolsEventLogger(surface: string) {
             event: event,
             context: {
               surface,
+              version: process.env.DEVTOOLS_VERSION,
             },
           },
           '*',
