@@ -278,11 +278,13 @@ describe('DOMPropertyOperations', () => {
       const oncustomeventCapture = jest.fn();
       const oncustomevent = jest.fn();
       function Test() {
-        return <my-custom-element
+        return (
+          <my-custom-element
             oncustomeventCapture={oncustomeventCapture}
             oncustomevent={oncustomevent}>
-              <div></div>
-          </my-custom-element>;
+            <div></div>
+          </my-custom-element>
+        );
       }
       const container = document.createElement('div');
       ReactDOM.render(<Test />, container);
