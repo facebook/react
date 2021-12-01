@@ -15,7 +15,7 @@ import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import getEventTarget from './getEventTarget';
-import {replayEventWrapper} from './replayedEvent';
+import {isReplayingEvent, replayEventWrapper} from './replayedEvent';
 
 import {
   enableSelectiveHydration,
@@ -643,6 +643,16 @@ function replayEvent(
   targetInst: null | NullTarget | Container | SuspenseInstance,
 ) {
   const event = queuedEvent.nativeEvent;
+  if (isReplayingEvent(event)) {
+    // If an event reaches this codepath then it was recently unblocked.
+    // If the event is unblocked then it should never hit this codepath again after
+    // the initial unblocking since we'll just dispatch it directly without queueing it
+    // for replay.
+    throw new Error(
+      'Attempting to replay event that is already replaying. ' +
+        'This should never happen. This is a bug in React.',
+    );
+  }
   if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
     const eventClone = new event.constructor(event.type, (event: any));
     replayEventWrapper(eventClone, () => {
