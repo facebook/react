@@ -11,10 +11,10 @@ import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
+import type {NullTarget} from './ReactDOMEventReplaying';
 import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
 import {
   nullTarget,
-  NullTarget,
   isBlocked,
   isDiscreteEventThatRequiresHydration,
   queueDiscreteEvent,
