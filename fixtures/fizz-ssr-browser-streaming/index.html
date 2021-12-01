@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%; overflow: hidden">
+  <head>
+    <meta charset="utf-8">
+    <title>Fizz Example</title>
+  </head>
+  <body>
+    <h1>Fizz Example</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="https://github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is <strong>not</strong> working right.
+        If you checked out the source from GitHub make sure to run <code>npm run build</code>.
+      </p>
+    </div>
+    <script src="../../build/node_modules/react/umd/react.development.js"></script>
+    <script src="../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    <script type="text/babel">
+      let controller = new AbortController();
+      let serverData = data();
+      let stream = ReactDOMServer.renderToReadableStream(
+        <html>
+          <body>
+            <p>Success</p>
+
+            {/**
+              * With a single Suspense boundary, you'll probably see this error in the browser console:
+              * "Failed to execute 'close' on 'ReadableStreamDefaultController': Cannot close a readable stream that has already been requested to be closed"
+              */}
+            <React.Suspense fallback="Loading...">
+              <SuspendedData />
+            </React.Suspense>
+            {/**
+              * If you uncomment the following to add another Suspense boundary, you'll probably see this error in the browser console:
+              * "Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React."
+              */}
+            {/* <React.Suspense fallback="Loading more...">
+              <SuspendedData />
+            </React.Suspense> */}
+
+          </body>
+        </html>,
+        {
+          signal: controller.signal,
+        }
+      );
+      let response = new Response(stream, {
+        headers: {'Content-Type': 'text/html'},
+      });
+      display(response);
+
+      function SuspendedData() {
+        const message = useData();
+
+        return <p>{message}</p>;
+      }
+
+      function useData() {
+        serverData.read();
+
+        return 'Hi';
+      }
+
+      function data() {
+        let done = false;
+        let promise = null;
+        return {
+          read() {
+            if (done) {
+              return;
+            }
+            if (promise) {
+              throw promise;
+            }
+            promise = new Promise((resolve) => {
+              setTimeout(() => {
+                done = true;
+                promise = null;
+                resolve();
+              }, 1000);
+            });
+            throw promise;
+          },
+        };
+      }
+
+      async function display(responseToDisplay) {
+        let iframe = document.createElement('iframe');
+        let container = document.getElementById('container');
+        container.innerHTML = '';
+        container.appendChild(iframe);
+
+        let reader = responseToDisplay.body.getReader();
+        let done = false;
+        let decoder = new TextDecoder();
+        let debugOutput = '';
+
+        while (!done) {
+          const chunk = await reader.read();
+          done = chunk.done;
+
+          let output = decoder.decode(chunk.value);
+          iframe.contentWindow.document.write(output);
+          debugOutput += output;
+        }
+
+        console.log(
+          `DEBUG OUTPUT:\n\n` +
+          `👀 Notice the invalid HTML chunk '<div hidden id="<div' 👀 \n\n` +
+          debugOutput
+        );
+      }
+    </script>
+  </body>
+</html>
