@@ -180,13 +180,21 @@ export function dispatchEvent(
     return;
   }
 
-  let blockedOn = attemptToDispatchEvent(
+  let blockedOn = findInstanceBlockingEvent(
     domEventName,
     eventSystemFlags,
     targetContainer,
     nativeEvent,
   );
-
+  if (return_shouldDispatch) {
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      return_targetInst,
+      targetContainer,
+    );
+  }
   if (blockedOn === null) {
     // We successfully dispatched this event.
     if (allowReplay) {
@@ -236,12 +244,21 @@ export function dispatchEvent(
       if (fiber !== null) {
         attemptSynchronousHydration(fiber);
       }
-      const nextBlockedOn = attemptToDispatchEvent(
+      const nextBlockedOn = findInstanceBlockingEvent(
         domEventName,
         eventSystemFlags,
         targetContainer,
         nativeEvent,
       );
+      if (return_shouldDispatch) {
+        dispatchEventForPluginEventSystem(
+          domEventName,
+          eventSystemFlags,
+          nativeEvent,
+          return_targetInst,
+          targetContainer,
+        );
+      }
       if (nextBlockedOn === blockedOn) {
         break;
       }
@@ -264,13 +281,20 @@ export function dispatchEvent(
   );
 }
 
-// Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
-export function attemptToDispatchEvent(
+export let return_shouldDispatch = false;
+export let return_targetInst = null;
+
+// Returns a SuspenseInstance or Container if it's blocked.
+// The two fields above are conceptually part of the return value.
+export function findInstanceBlockingEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
+  return_shouldDispatch = false;
+  return_targetInst = null;
+
   // TODO: Warn if _enabled is false.
 
   const nativeEventTarget = getEventTarget(nativeEvent);
@@ -313,13 +337,8 @@ export function attemptToDispatchEvent(
       }
     }
   }
-  dispatchEventForPluginEventSystem(
-    domEventName,
-    eventSystemFlags,
-    nativeEvent,
-    targetInst,
-    targetContainer,
-  );
+  return_targetInst = targetInst;
+  return_shouldDispatch = true;
   // We're not blocked on anything.
   return null;
 }

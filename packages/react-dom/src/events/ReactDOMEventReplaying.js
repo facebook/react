@@ -27,7 +27,12 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {attemptToDispatchEvent} from './ReactDOMEventListener';
+import {
+  findInstanceBlockingEvent,
+  return_targetInst,
+  return_shouldDispatch,
+} from './ReactDOMEventListener';
+import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
@@ -389,7 +394,7 @@ export function queueIfContinuousEvent(
 function attemptExplicitHydrationTarget(
   queuedTarget: QueuedHydrationTarget,
 ): void {
-  // TODO: This function shares a lot of logic with attemptToDispatchEvent.
+  // TODO: This function shares a lot of logic with findInstanceBlockingEvent.
   // Try to unify them. It's a bit tricky since it would require two return
   // values.
   const targetInst = getClosestInstanceFromNode(queuedTarget.target);
@@ -462,12 +467,21 @@ function attemptReplayContinuousQueuedEvent(
   const targetContainers = queuedEvent.targetContainers;
   while (targetContainers.length > 0) {
     const targetContainer = targetContainers[0];
-    const nextBlockedOn = attemptToDispatchEvent(
+    const nextBlockedOn = findInstanceBlockingEvent(
       queuedEvent.domEventName,
       queuedEvent.eventSystemFlags,
       targetContainer,
       queuedEvent.nativeEvent,
     );
+    if (return_shouldDispatch) {
+      dispatchEventForPluginEventSystem(
+        queuedEvent.domEventName,
+        queuedEvent.eventSystemFlags,
+        queuedEvent.nativeEvent,
+        return_targetInst,
+        targetContainer,
+      );
+    }
     if (nextBlockedOn !== null) {
       // We're still blocked. Try again later.
       const fiber = getInstanceFromNode(nextBlockedOn);
@@ -512,12 +526,21 @@ function replayUnblockedEvents() {
       const targetContainers = nextDiscreteEvent.targetContainers;
       while (targetContainers.length > 0) {
         const targetContainer = targetContainers[0];
-        const nextBlockedOn = attemptToDispatchEvent(
+        const nextBlockedOn = findInstanceBlockingEvent(
           nextDiscreteEvent.domEventName,
           nextDiscreteEvent.eventSystemFlags,
           targetContainer,
           nextDiscreteEvent.nativeEvent,
         );
+        if (return_shouldDispatch) {
+          dispatchEventForPluginEventSystem(
+            nextDiscreteEvent.domEventName,
+            nextDiscreteEvent.eventSystemFlags,
+            nextDiscreteEvent.nativeEvent,
+            return_targetInst,
+            targetContainer,
+          );
+        }
         if (nextBlockedOn !== null) {
           // We're still blocked. Try again later.
           nextDiscreteEvent.blockedOn = nextBlockedOn;
