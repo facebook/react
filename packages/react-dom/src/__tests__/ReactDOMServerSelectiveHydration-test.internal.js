@@ -1240,6 +1240,82 @@ describe('ReactDOMServerSelectiveHydration', () => {
     });
   });
 
+  // @gate enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay
+  it('replays event with null target when tree is dismounted', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => {
+      resolve = () => {
+        suspend = false;
+        resolvePromise();
+      };
+    });
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      }
+      Scheduler.unstable_yieldValue('Child');
+      return (
+        <div
+          onMouseOver={() => {
+            Scheduler.unstable_yieldValue('on mouse over');
+          }}>
+          Child
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <Suspense>
+          <Child />
+        </Suspense>
+      );
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    expect(Scheduler).toHaveYielded(['Child']);
+
+    const container = document.createElement('div');
+
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+    suspend = true;
+
+    ReactDOM.hydrateRoot(container, <App />);
+
+    const childDiv = container.firstElementChild;
+    dispatchMouseHoverEvent(childDiv);
+
+    // Not hydrated so event is saved for replay and stopPropagation is called
+    expect(Scheduler).toHaveYielded([]);
+
+    resolve();
+    Scheduler.unstable_flushNumberOfYields(1);
+    expect(Scheduler).toHaveYielded(['Child']);
+
+    Scheduler.unstable_scheduleCallback(
+      Scheduler.unstable_ImmediatePriority,
+      () => {
+        container.removeChild(childDiv);
+
+        const container2 = document.createElement('div');
+        container2.addEventListener('mouseover', () => {
+          Scheduler.unstable_yieldValue('container2 mouse over');
+        });
+        container2.appendChild(childDiv);
+      },
+    );
+    Scheduler.unstable_flushAllWithoutAsserting();
+
+    // Even though the tree is remove the event is still dispatched with native event handler
+    // on the container firing.
+    expect(Scheduler).toHaveYielded(['container2 mouse over']);
+
+    document.body.removeChild(container);
+  });
+
   it('hydrates the last target path first for continuous events', async () => {
     let suspend = false;
     let resolve;

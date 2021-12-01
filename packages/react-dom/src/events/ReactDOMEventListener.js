@@ -13,6 +13,9 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
 import {
+  nullTarget,
+  NullTarget,
+  isBlocked,
   isDiscreteEventThatRequiresHydration,
   queueDiscreteEvent,
   hasQueuedDiscreteEvents,
@@ -186,8 +189,8 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
   );
 
   // We can dispatch the event now
-  // Intentional double equals, either null or undefined
-  if (blockedOn == null) {
+  let blockedOnInst = isBlocked(blockedOn);
+  if (!blockedOnInst) {
     clearIfContinuousEvent(domEventName, nativeEvent);
     dispatchEventForPluginEventSystem(
       domEventName,
@@ -221,9 +224,8 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
     eventSystemFlags & IS_CAPTURE_PHASE &&
     isDiscreteEventThatRequiresHydration(domEventName)
   ) {
-    // Intentionally not strict equal. Could be `null` or `undefined`
-    while (blockedOn != null) {
-      const fiber = getInstanceFromNode(blockedOn);
+    while (blockedOnInst) {
+      const fiber = getInstanceFromNode(blockedOnInst);
       if (fiber !== null) {
         attemptSynchronousHydration(fiber);
       }
@@ -237,8 +239,9 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
         break;
       }
       blockedOn = nextBlockedOn;
+      blockedOnInst = isBlocked(blockedOn);
     }
-    if (blockedOn) {
+    if (blockedOnInst) {
       nativeEvent.stopPropagation();
       return;
     }
@@ -301,7 +304,8 @@ function dispatchEventOriginal(
     targetContainer,
     nativeEvent,
   );
-  if (blockedOn == null) {
+  const blockedOnInst = isBlocked(blockedOn);
+  if (!blockedOnInst) {
     dispatchEventForPluginEventSystem(
       domEventName,
       eventSystemFlags,
@@ -359,13 +363,13 @@ function dispatchEventOriginal(
 
 // Returns a SuspenseInstance or Container if it's blocked.
 // Returns null if not blocked and we should use closestInstance
-// Returns undefined if not blocked but we should dispatch without a targetInst
+// Returns nullTarget if not blocked but we should dispatch without a targetInst
 export function findInstanceBlockingEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
-): typeof undefined | null | Container | SuspenseInstance {
+): NullTarget | null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
 
   const nativeEventTarget = getEventTarget(nativeEvent);
@@ -380,14 +384,12 @@ export function findInstanceBlockingEvent(
         if (instance !== null) {
           // Queue the event to be replayed later. Abort dispatching since we
           // don't want this event dispatched twice through the event system.
-          // TODO: If this is the first discrete event in the queue. Schedule an increased
-          // priority for this boundary.
           return instance;
         }
         // This shouldn't happen, something went wrong but to avoid blocking
         // the whole system, dispatch the event without a target.
         // TODO: Warn.
-        return undefined;
+        return nullTarget;
       } else if (tag === HostRoot) {
         const root: FiberRoot = nearestMounted.stateNode;
         if (root.isDehydrated) {
@@ -395,16 +397,17 @@ export function findInstanceBlockingEvent(
           // the whole system.
           return getContainerFromFiber(nearestMounted);
         }
+        return nullTarget;
       } else if (nearestMounted !== targetInst) {
         // If we get an event (ex: img onload) before committing that
         // component's mount, ignore it for now (that is, treat it as if it was an
         // event on a non-React tree). We might also consider queueing events and
         // dispatching them after the mount.
-        return undefined;
+        return nullTarget;
       }
     } else {
       // This tree has been unmounted already. Dispatch without a target.
-      return undefined;
+      return nullTarget;
     }
   }
   // We're not blocked on anything.
