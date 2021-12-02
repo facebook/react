@@ -154,7 +154,119 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+  } else {
+    dispatchEventOriginal(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+  }
+}
 
+function dispatchEventOriginal(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
+  nativeEvent: AnyNativeEvent,
+) {
+  // TODO: replaying capture phase events is currently broken
+  // because we used to do it during top-level native bubble handlers
+  // but now we use different bubble and capture handlers.
+  // In eager mode, we attach capture listeners early, so we need
+  // to filter them out until we fix the logic to handle them correctly.
+  const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+
+  if (
+    allowReplay &&
+    hasQueuedDiscreteEvents() &&
+    isDiscreteEventThatRequiresHydration(domEventName)
+  ) {
+    // If we already have a queue of discrete events, and this is another discrete
+    // event, then we can't dispatch it regardless of its target, since they
+    // need to dispatch in order.
+    queueDiscreteEvent(
+      null, // Flags that we're not actually blocked on anything as far as we know.
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+    return;
+  }
+
+  const blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent,
+  );
+  if (blockedOn === null) {
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      return_targetInst,
+      targetContainer,
+    );
+    if (allowReplay) {
+      clearIfContinuousEvent(domEventName, nativeEvent);
+    }
+    return;
+  }
+
+  if (allowReplay) {
+    if (isDiscreteEventThatRequiresHydration(domEventName)) {
+      // This this to be replayed later once the target is available.
+      queueDiscreteEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
+      return;
+    }
+    if (
+      queueIfContinuousEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      )
+    ) {
+      return;
+    }
+    // We need to clear only if we didn't queue because
+    // queueing is accumulative.
+    clearIfContinuousEvent(domEventName, nativeEvent);
+  }
+
+  // This is not replayable so we'll invoke it but without a target,
+  // in case the event system needs to trace it.
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    null,
+    targetContainer,
+  );
+}
+
+function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
+  nativeEvent: AnyNativeEvent,
+) {
   // TODO: replaying capture phase events is currently broken
   // because we used to do it during top-level native bubble handlers
   // but now we use different bubble and capture handlers.
@@ -202,20 +314,6 @@ export function dispatchEvent(
 
   if (allowReplay) {
     if (
-      !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-      isDiscreteEventThatRequiresHydration(domEventName)
-    ) {
-      // This this to be replayed later once the target is available.
-      queueDiscreteEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      );
-      return;
-    }
-    if (
       queueIfContinuousEvent(
         blockedOn,
         domEventName,
@@ -232,7 +330,6 @@ export function dispatchEvent(
   }
 
   if (
-    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
     eventSystemFlags & IS_CAPTURE_PHASE &&
     isDiscreteEventThatRequiresHydration(domEventName)
   ) {
