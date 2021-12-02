@@ -472,15 +472,26 @@ function attemptReplayContinuousQueuedEvent(
       queuedEvent.nativeEvent,
     );
     if (nextBlockedOn === null) {
-      setReplayingEvent(queuedEvent.nativeEvent);
-      dispatchEventForPluginEventSystem(
-        queuedEvent.domEventName,
-        queuedEvent.eventSystemFlags,
-        queuedEvent.nativeEvent,
-        return_targetInst,
-        targetContainer,
-      );
-      resetReplayingEvent();
+      if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+        const nativeEvent = queuedEvent.nativeEvent;
+        const nativeEventClone = new nativeEvent.constructor(
+          nativeEvent.type,
+          (nativeEvent: any),
+        );
+        setReplayingEvent(nativeEventClone);
+        nativeEvent.target.dispatchEvent(nativeEventClone);
+        resetReplayingEvent();
+      } else {
+        setReplayingEvent(queuedEvent.nativeEvent);
+        dispatchEventForPluginEventSystem(
+          queuedEvent.domEventName,
+          queuedEvent.eventSystemFlags,
+          queuedEvent.nativeEvent,
+          return_targetInst,
+          targetContainer,
+        );
+        resetReplayingEvent();
+      }
     } else {
       // We're still blocked. Try again later.
       const fiber = getInstanceFromNode(nextBlockedOn);
@@ -532,6 +543,8 @@ function replayUnblockedEvents() {
           nextDiscreteEvent.nativeEvent,
         );
         if (nextBlockedOn === null) {
+          // This whole function is in !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+          // so we don't need the new replay behavior code branch.
           setReplayingEvent(nextDiscreteEvent.nativeEvent);
           dispatchEventForPluginEventSystem(
             nextDiscreteEvent.domEventName,
