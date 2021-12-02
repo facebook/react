@@ -267,31 +267,6 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ) {
-  // TODO: replaying capture phase events is currently broken
-  // because we used to do it during top-level native bubble handlers
-  // but now we use different bubble and capture handlers.
-  // In eager mode, we attach capture listeners early, so we need
-  // to filter them out until we fix the logic to handle them correctly.
-  const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
-
-  if (
-    allowReplay &&
-    hasQueuedDiscreteEvents() &&
-    isDiscreteEventThatRequiresHydration(domEventName)
-  ) {
-    // If we already have a queue of discrete events, and this is another discrete
-    // event, then we can't dispatch it regardless of its target, since they
-    // need to dispatch in order.
-    queueDiscreteEvent(
-      null, // Flags that we're not actually blocked on anything as far as we know.
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent,
-    );
-    return;
-  }
-
   let blockedOn = findInstanceBlockingEvent(
     domEventName,
     eventSystemFlags,
@@ -306,28 +281,25 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
       return_targetInst,
       targetContainer,
     );
-    if (allowReplay) {
-      clearIfContinuousEvent(domEventName, nativeEvent);
-    }
+    clearIfContinuousEvent(domEventName, nativeEvent);
     return;
   }
 
-  if (allowReplay) {
-    if (
-      queueIfContinuousEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      )
-    ) {
-      return;
-    }
-    // We need to clear only if we didn't queue because
-    // queueing is accumulative.
-    clearIfContinuousEvent(domEventName, nativeEvent);
+  if (
+    queueIfContinuousEvent(
+      blockedOn,
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    )
+  ) {
+    nativeEvent.stopPropagation();
+    return;
   }
+  // We need to clear only if we didn't queue because
+  // queueing is accumulative.
+  clearIfContinuousEvent(domEventName, nativeEvent);
 
   if (
     eventSystemFlags & IS_CAPTURE_PHASE &&
@@ -358,10 +330,10 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
       }
       blockedOn = nextBlockedOn;
     }
-    if (blockedOn) {
+    if (blockedOn !== null) {
       nativeEvent.stopPropagation();
-      return;
     }
+    return;
   }
 
   // This is not replayable so we'll invoke it but without a target,
