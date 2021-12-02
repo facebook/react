@@ -443,7 +443,7 @@ export function createElement(
   if (__DEV__) {
     if (namespaceURI === HTML_NAMESPACE) {
       if (
-        !isCustomComponentTag &&
+        !isCustomComponentTag && type !== type.toLowerCase() &&
         Object.prototype.toString.call(domElement) ===
           '[object HTMLUnknownElement]' &&
         !hasOwnProperty.call(warnedUnknownTags, type)
