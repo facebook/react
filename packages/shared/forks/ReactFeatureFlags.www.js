@@ -93,8 +93,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
 
-export const enableRecursiveCommitTraversal = false;
-
 export const allowConcurrentByDefault = true;
 
 export const deletedTreeCleanUpLevel = 3;

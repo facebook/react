@@ -68,7 +68,6 @@ export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 export const warnAboutCallbackRefReturningFunction = false;
 
-export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
