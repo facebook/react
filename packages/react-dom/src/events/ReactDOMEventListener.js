@@ -202,7 +202,7 @@ function dispatchEventOriginal(
     return;
   }
 
-  let blockedOn = findInstanceBlockingEvent(
+  const blockedOn = findInstanceBlockingEvent(
     domEventName,
     eventSystemFlags,
     targetContainer,
@@ -223,10 +223,7 @@ function dispatchEventOriginal(
   }
 
   if (allowReplay) {
-    if (
-      !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-      isDiscreteEventThatRequiresHydration(domEventName)
-    ) {
+    if (isDiscreteEventThatRequiresHydration(domEventName)) {
       // This this to be replayed later once the target is available.
       queueDiscreteEvent(
         blockedOn,
@@ -251,42 +248,6 @@ function dispatchEventOriginal(
     // We need to clear only if we didn't queue because
     // queueing is accumulative.
     clearIfContinuousEvent(domEventName, nativeEvent);
-  }
-
-  if (
-    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-    eventSystemFlags & IS_CAPTURE_PHASE &&
-    isDiscreteEventThatRequiresHydration(domEventName)
-  ) {
-    while (blockedOn !== null) {
-      const fiber = getInstanceFromNode(blockedOn);
-      if (fiber !== null) {
-        attemptSynchronousHydration(fiber);
-      }
-      const nextBlockedOn = findInstanceBlockingEvent(
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      );
-      if (nextBlockedOn === null) {
-        dispatchEventForPluginEventSystem(
-          domEventName,
-          eventSystemFlags,
-          nativeEvent,
-          return_targetInst,
-          targetContainer,
-        );
-      }
-      if (nextBlockedOn === blockedOn) {
-        break;
-      }
-      blockedOn = nextBlockedOn;
-    }
-    if (blockedOn) {
-      nativeEvent.stopPropagation();
-      return;
-    }
   }
 
   // This is not replayable so we'll invoke it but without a target,
@@ -353,20 +314,6 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
 
   if (allowReplay) {
     if (
-      !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-      isDiscreteEventThatRequiresHydration(domEventName)
-    ) {
-      // This this to be replayed later once the target is available.
-      queueDiscreteEvent(
-        blockedOn,
-        domEventName,
-        eventSystemFlags,
-        targetContainer,
-        nativeEvent,
-      );
-      return;
-    }
-    if (
       queueIfContinuousEvent(
         blockedOn,
         domEventName,
@@ -383,7 +330,6 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
   }
 
   if (
-    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
     eventSystemFlags & IS_CAPTURE_PHASE &&
     isDiscreteEventThatRequiresHydration(domEventName)
   ) {
