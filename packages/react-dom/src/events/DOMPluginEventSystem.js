@@ -27,6 +27,7 @@ import {
   IS_EVENT_HANDLE_NON_MANAGED_NODE,
   IS_NON_DELEGATED,
 } from './EventSystemFlags';
+import {isReplayingEvent} from './CurrentReplayingEvent';
 
 import {
   HostRoot,
@@ -557,7 +558,8 @@ export function dispatchEventForPluginEventSystem(
       // for legacy FB support, where the expected behavior was to
       // match React < 16 behavior of delegated clicks to the doc.
       domEventName === 'click' &&
-      (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0
+      (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0 &&
+      !isReplayingEvent(nativeEvent)
     ) {
       deferClickToDocumentForLegacyFBSupport(domEventName, targetContainer);
       return;

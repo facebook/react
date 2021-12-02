@@ -31,6 +31,7 @@ import {
   findInstanceBlockingEvent,
   return_targetInst,
 } from './ReactDOMEventListener';
+import {setReplayingEvent, resetReplayingEvent} from './CurrentReplayingEvent';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   getInstanceFromNode,
@@ -90,8 +91,6 @@ type PointerEvent = Event & {
   relatedTarget: EventTarget | null,
   ...
 };
-
-import {IS_REPLAYED} from './EventSystemFlags';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -180,7 +179,7 @@ function createQueuedReplayableEvent(
   return {
     blockedOn,
     domEventName,
-    eventSystemFlags: eventSystemFlags | IS_REPLAYED,
+    eventSystemFlags,
     nativeEvent,
     targetContainers: [targetContainer],
   };
@@ -473,6 +472,7 @@ function attemptReplayContinuousQueuedEvent(
       queuedEvent.nativeEvent,
     );
     if (nextBlockedOn === null) {
+      setReplayingEvent(queuedEvent.nativeEvent);
       dispatchEventForPluginEventSystem(
         queuedEvent.domEventName,
         queuedEvent.eventSystemFlags,
@@ -480,6 +480,7 @@ function attemptReplayContinuousQueuedEvent(
         return_targetInst,
         targetContainer,
       );
+      resetReplayingEvent();
     } else {
       // We're still blocked. Try again later.
       const fiber = getInstanceFromNode(nextBlockedOn);
@@ -531,6 +532,7 @@ function replayUnblockedEvents() {
           nextDiscreteEvent.nativeEvent,
         );
         if (nextBlockedOn === null) {
+          setReplayingEvent(nextDiscreteEvent.nativeEvent);
           dispatchEventForPluginEventSystem(
             nextDiscreteEvent.domEventName,
             nextDiscreteEvent.eventSystemFlags,
@@ -538,6 +540,7 @@ function replayUnblockedEvents() {
             return_targetInst,
             targetContainer,
           );
+          resetReplayingEvent();
         } else {
           // We're still blocked. Try again later.
           nextDiscreteEvent.blockedOn = nextBlockedOn;
