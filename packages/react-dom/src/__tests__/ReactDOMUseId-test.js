@@ -94,7 +94,7 @@ describe('useId', () => {
 
   function normalizeTreeIdForTesting(id) {
     const [serverClientPrefix, base32, hookIndex] = id.split(':');
-    if (serverClientPrefix === 'r') {
+    if (serverClientPrefix.endsWith('r')) {
       // Client ids aren't stable. For testing purposes, strip out the counter.
       return (
         'CLIENT_GENERATED_ID' +
@@ -568,5 +568,67 @@ describe('useId', () => {
     `);
     // Should have hydrated successfully
     expect(span.current).toBe(dehydratedSpan);
+  });
+
+  test('identifierPrefix option', async () => {
+    function Child() {
+      const id = useId();
+      return <div>{id}</div>;
+    }
+
+    function App({showMore}) {
+      return (
+        <>
+          <Child />
+          <Child />
+          {showMore && <Child />}
+        </>
+      );
+    }
+
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />, {
+        identifierPrefix: 'custom-prefix-',
+      });
+      pipe(writable);
+    });
+    let root;
+    await clientAct(async () => {
+      root = ReactDOM.hydrateRoot(container, <App />, {
+        identifierPrefix: 'custom-prefix-',
+      });
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          custom-prefix-R:1
+        </div>
+        <div>
+          custom-prefix-R:2
+        </div>
+      </div>
+    `);
+
+    // Mount a new, client-only id
+    await clientAct(async () => {
+      root.render(<App showMore={true} />);
+    });
+    expect(container).toMatchInlineSnapshot(`
+      <div
+        id="container"
+      >
+        <div>
+          custom-prefix-R:1
+        </div>
+        <div>
+          custom-prefix-R:2
+        </div>
+        <div>
+          custom-prefix-r:0
+        </div>
+      </div>
+    `);
   });
 });

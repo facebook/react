@@ -2035,12 +2035,20 @@ export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
 function mountId(): string {
   const hook = mountWorkInProgressHook();
 
+  const root = ((getWorkInProgressRoot(): any): FiberRoot);
+  // TODO: In Fizz, id generation is specific to each server config. Maybe we
+  // should do this in Fiber, too? Deferring this decision for now because
+  // there's no other place to store the prefix except for an internal field on
+  // the public createRoot object, which the fiber tree does not currently have
+  // a reference to.
+  const identifierPrefix = root.identifierPrefix;
+
   let id;
   if (getIsHydrating()) {
     const treeId = getTreeId();
 
     // Use a captial R prefix for server-generated ids.
-    id = 'R:' + treeId;
+    id = identifierPrefix + 'R:' + treeId;
 
     // Unless this is the first id at this level, append a number at the end
     // that represents the position of this useId hook among all the useId
@@ -2052,7 +2060,7 @@ function mountId(): string {
   } else {
     // Use a lowercase r prefix for client-generated ids.
     const globalClientId = globalClientIdCounter++;
-    id = 'r:' + globalClientId.toString(32);
+    id = identifierPrefix + 'r:' + globalClientId.toString(32);
   }
 
   hook.memoizedState = id;

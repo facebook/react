@@ -32,6 +32,7 @@ export type CreateRootOptions = {
   // END OF TODO
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
+  identifierPrefix?: string,
   ...
 };
 
@@ -43,6 +44,7 @@ export type HydrateRootOptions = {
   // Options for all roots
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
+  identifierPrefix?: string,
   ...
 };
 
@@ -158,13 +160,22 @@ export function createRoot(
     null;
   // END TODO
 
-  const isStrictMode = options != null && options.unstable_strictMode === true;
-  let concurrentUpdatesByDefaultOverride = null;
-  if (allowConcurrentByDefault) {
-    concurrentUpdatesByDefaultOverride =
-      options != null && options.unstable_concurrentUpdatesByDefault != null
-        ? options.unstable_concurrentUpdatesByDefault
-        : null;
+  let isStrictMode = false;
+  let concurrentUpdatesByDefaultOverride = false;
+  let identifierPrefix = '';
+  if (options !== null && options !== undefined) {
+    if (options.unstable_strictMode === true) {
+      isStrictMode = true;
+    }
+    if (
+      allowConcurrentByDefault &&
+      options.unstable_concurrentUpdatesByDefault === true
+    ) {
+      concurrentUpdatesByDefaultOverride = true;
+    }
+    if (options.identifierPrefix !== undefined) {
+      identifierPrefix = options.identifierPrefix;
+    }
   }
 
   const root = createContainer(
@@ -174,6 +185,7 @@ export function createRoot(
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
+    identifierPrefix,
   );
   markContainerAsRoot(root.current, container);
 
@@ -217,15 +229,25 @@ export function hydrateRoot(
   // For now we reuse the whole bag of options since they contain
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
+  // TODO: Delete this option
   const mutableSources = (options != null && options.hydratedSources) || null;
-  const isStrictMode = options != null && options.unstable_strictMode === true;
 
-  let concurrentUpdatesByDefaultOverride = null;
-  if (allowConcurrentByDefault) {
-    concurrentUpdatesByDefaultOverride =
-      options != null && options.unstable_concurrentUpdatesByDefault != null
-        ? options.unstable_concurrentUpdatesByDefault
-        : null;
+  let isStrictMode = false;
+  let concurrentUpdatesByDefaultOverride = false;
+  let identifierPrefix = '';
+  if (options !== null && options !== undefined) {
+    if (options.unstable_strictMode === true) {
+      isStrictMode = true;
+    }
+    if (
+      allowConcurrentByDefault &&
+      options.unstable_concurrentUpdatesByDefault === true
+    ) {
+      concurrentUpdatesByDefaultOverride = true;
+    }
+    if (options.identifierPrefix !== undefined) {
+      identifierPrefix = options.identifierPrefix;
+    }
   }
 
   const root = createContainer(
@@ -235,6 +257,7 @@ export function hydrateRoot(
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
+    identifierPrefix,
   );
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.

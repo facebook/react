@@ -64,6 +64,7 @@ export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
+  idPrefix: string,
   nextSuspenseID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
@@ -125,6 +126,7 @@ export function createResponseState(
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
+    idPrefix: idPrefix + 'R:',
     nextSuspenseID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
@@ -227,6 +229,25 @@ export function assignSuspenseBoundaryID(
   return stringToPrecomputedChunk(
     responseState.boundaryPrefix + generatedID.toString(16),
   );
+}
+
+export function makeId(
+  responseState: ResponseState,
+  treeId: string,
+  localId: number,
+): string {
+  const idPrefix = responseState.idPrefix;
+
+  let id = idPrefix + treeId;
+
+  // Unless this is the first id at this level, append a number at the end
+  // that represents the position of this useId hook among all the useId
+  // hooks for this fiber.
+  if (localId > 0) {
+    id += ':' + localId.toString(32);
+  }
+
+  return id;
 }
 
 function encodeHTMLTextNode(text: string): string {
