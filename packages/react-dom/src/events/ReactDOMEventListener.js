@@ -186,7 +186,7 @@ export function dispatchEvent(
     targetContainer,
     nativeEvent,
   );
-  if (return_shouldDispatch) {
+  if (blockedOn === null) {
     dispatchEventForPluginEventSystem(
       domEventName,
       eventSystemFlags,
@@ -194,9 +194,6 @@ export function dispatchEvent(
       return_targetInst,
       targetContainer,
     );
-  }
-  if (blockedOn === null) {
-    // We successfully dispatched this event.
     if (allowReplay) {
       clearIfContinuousEvent(domEventName, nativeEvent);
     }
@@ -250,7 +247,7 @@ export function dispatchEvent(
         targetContainer,
         nativeEvent,
       );
-      if (return_shouldDispatch) {
+      if (nextBlockedOn === null) {
         dispatchEventForPluginEventSystem(
           domEventName,
           eventSystemFlags,
@@ -281,21 +278,19 @@ export function dispatchEvent(
   );
 }
 
-export let return_shouldDispatch = false;
 export let return_targetInst = null;
 
 // Returns a SuspenseInstance or Container if it's blocked.
-// The two fields above are conceptually part of the return value.
+// The return_targetInst field above is conceptually part of the return value.
 export function findInstanceBlockingEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
-  return_shouldDispatch = false;
-  return_targetInst = null;
-
   // TODO: Warn if _enabled is false.
+
+  return_targetInst = null;
 
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
@@ -338,7 +333,6 @@ export function findInstanceBlockingEvent(
     }
   }
   return_targetInst = targetInst;
-  return_shouldDispatch = true;
   // We're not blocked on anything.
   return null;
 }

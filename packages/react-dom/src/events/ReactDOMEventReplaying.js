@@ -30,7 +30,6 @@ import {
 import {
   findInstanceBlockingEvent,
   return_targetInst,
-  return_shouldDispatch,
 } from './ReactDOMEventListener';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
@@ -473,7 +472,7 @@ function attemptReplayContinuousQueuedEvent(
       targetContainer,
       queuedEvent.nativeEvent,
     );
-    if (return_shouldDispatch) {
+    if (nextBlockedOn === null) {
       dispatchEventForPluginEventSystem(
         queuedEvent.domEventName,
         queuedEvent.eventSystemFlags,
@@ -481,8 +480,7 @@ function attemptReplayContinuousQueuedEvent(
         return_targetInst,
         targetContainer,
       );
-    }
-    if (nextBlockedOn !== null) {
+    } else {
       // We're still blocked. Try again later.
       const fiber = getInstanceFromNode(nextBlockedOn);
       if (fiber !== null) {
@@ -532,7 +530,7 @@ function replayUnblockedEvents() {
           targetContainer,
           nextDiscreteEvent.nativeEvent,
         );
-        if (return_shouldDispatch) {
+        if (nextBlockedOn === null) {
           dispatchEventForPluginEventSystem(
             nextDiscreteEvent.domEventName,
             nextDiscreteEvent.eventSystemFlags,
@@ -540,8 +538,7 @@ function replayUnblockedEvents() {
             return_targetInst,
             targetContainer,
           );
-        }
-        if (nextBlockedOn !== null) {
+        } else {
           // We're still blocked. Try again later.
           nextDiscreteEvent.blockedOn = nextBlockedOn;
           break;
