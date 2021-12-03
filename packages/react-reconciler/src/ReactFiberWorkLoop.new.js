@@ -899,7 +899,7 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
     ) {
       // There was a render phase update during this render. Some internal React
       // implementation details may use this as a trick to schedule another
-      // render pass. To protect against an inifinite loop, eventually
+      // render pass. To protect against an infinite loop, eventually
       // we'll give up.
       continue;
     }
