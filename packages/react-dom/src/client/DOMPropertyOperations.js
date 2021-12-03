@@ -167,6 +167,17 @@ export function setValueForProperty(
     if (typeof prevValue === 'function') {
       node.removeEventListener(eventName, prevValue, useCapture)
     }
+    if (typeof prevValue !== 'function'
+      && prevValue !== null
+      && typeof value === 'function') {
+      // If we previously assigned a non-function type into this node, then
+      // remove it when switching to event listener mode.
+      if (name in (node: any)) {
+        (node: any)[name] = null;
+      } else if (node.hasAttribute(name)) {
+        node.removeAttribute(name);
+      }
+    }
     if (typeof value === 'function') {
       node.addEventListener(eventName, value, useCapture);
       return;
