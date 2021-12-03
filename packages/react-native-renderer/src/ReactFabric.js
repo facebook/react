@@ -213,6 +213,7 @@ function render(
       null,
       false,
       null,
+      '',
     );
     roots.set(containerTag, root);
   }

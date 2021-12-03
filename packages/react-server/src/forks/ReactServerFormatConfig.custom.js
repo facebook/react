@@ -35,6 +35,7 @@ export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
 export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID =
   $$$hostConfig.UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
 export const assignSuspenseBoundaryID = $$$hostConfig.assignSuspenseBoundaryID;
+export const makeId = $$$hostConfig.makeId;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;
 export const pushStartInstance = $$$hostConfig.pushStartInstance;
 export const pushEndInstance = $$$hostConfig.pushEndInstance;

@@ -107,6 +107,14 @@ export function assignSuspenseBoundaryID(
   return responseState.nextSuspenseID++;
 }
 
+export function makeId(
+  responseState: ResponseState,
+  treeId: string,
+  localId: number,
+): string {
+  throw new Error('Not implemented');
+}
+
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
 
 export function pushTextInstance(
