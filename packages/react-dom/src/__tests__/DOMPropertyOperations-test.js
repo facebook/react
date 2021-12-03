@@ -369,7 +369,10 @@ describe('DOMPropertyOperations', () => {
       expect(customelement.getAttribute('oncustomevent')).toBe('foo');
 
       // string => event listener
-      ReactDOM.render(<my-custom-element oncustomevent={oncustomevent} />, container);
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
       customelement.dispatchEvent(new Event('customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
       expect(customelement.oncustomevent).toBe(undefined);
@@ -390,7 +393,10 @@ describe('DOMPropertyOperations', () => {
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
 
       // nothing => event listener
-      ReactDOM.render(<my-custom-element oncustomevent={oncustomevent} />, container);
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
       customelement.dispatchEvent(new Event('customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(2);
       expect(customelement.oncustomevent).toBe(undefined);
@@ -407,13 +413,20 @@ describe('DOMPropertyOperations', () => {
       const customelement = container.querySelector('my-custom-element');
       // Install a setter to activate the `in` heuristic
       Object.defineProperty(customelement, 'oncustomevent', {
-        set: function(x) { this._oncustomevent = x; },
-        get: function() { return this._oncustomevent; }
+        set: function(x) {
+          this._oncustomevent = x;
+        },
+        get: function() {
+          return this._oncustomevent;
+        },
       });
       expect(customelement.oncustomevent).toBe(undefined);
 
       // nothing => event listener
-      ReactDOM.render(<my-custom-element oncustomevent={oncustomevent} />, container);
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
       customelement.dispatchEvent(new Event('customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(1);
       expect(customelement.oncustomevent).toBe(null);
@@ -427,7 +440,10 @@ describe('DOMPropertyOperations', () => {
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
 
       // string => event listener
-      ReactDOM.render(<my-custom-element oncustomevent={oncustomevent} />, container);
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
       customelement.dispatchEvent(new Event('customevent'));
       expect(oncustomevent).toHaveBeenCalledTimes(2);
       expect(customelement.oncustomevent).toBe(null);
