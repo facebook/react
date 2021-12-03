@@ -68,6 +68,10 @@ type ACTION_GO_TO_NEXT_SEARCH_RESULT = {|
 type ACTION_GO_TO_PREVIOUS_SEARCH_RESULT = {|
   type: 'GO_TO_PREVIOUS_SEARCH_RESULT',
 |};
+type ACTION_SELECT_SEARCH_RESULT = {|
+  type: 'ACTION_SELECT_SEARCH_RESULT',
+  payload: number,
+|};
 type ACTION_HANDLE_STORE_MUTATION = {|
   type: 'HANDLE_STORE_MUTATION',
   payload: [Array<number>, Map<number, number>],
@@ -510,6 +514,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
             searchIndex + 1 < numPrevSearchResults ? searchIndex + 1 : 0;
         }
         break;
+        ;
       case 'GO_TO_PREVIOUS_SEARCH_RESULT':
         if (numPrevSearchResults > 0) {
           didRequestSearch = true;
@@ -517,6 +522,12 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
             ((searchIndex: any): number) > 0
               ? ((searchIndex: any): number) - 1
               : numPrevSearchResults - 1;
+        }
+        break;
+      case 'ACTION_SELECT_SEARCH_RESULT':
+        if (numPrevSearchResults > 0) {
+          didRequestSearch = true;
+          searchIndex = action.payload;
         }
         break;
       case 'HANDLE_STORE_MUTATION':
@@ -851,6 +862,7 @@ function TreeContextController({
       switch (type) {
         case 'GO_TO_NEXT_SEARCH_RESULT':
         case 'GO_TO_PREVIOUS_SEARCH_RESULT':
+        case 'ACTION_SELECT_SEARCH_RESULT':
         case 'HANDLE_STORE_MUTATION':
         case 'RESET_OWNER_STACK':
         case 'SELECT_ELEMENT_AT_INDEX':

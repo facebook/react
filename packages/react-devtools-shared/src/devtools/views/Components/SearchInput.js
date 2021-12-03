@@ -47,6 +47,33 @@ export default function SearchInput(props: Props) {
     [dispatch],
   );
 
+  const handleSearchIndexChange = event => {
+    const value = parseInt(event.currentTarget.value, 10);
+    if (!isNaN(value)) {
+       const filteredIndex = Math.min(
+         Math.max(value - 1, 0),
+         searchResults.length - 1,
+       );
+
+      dispatch({type: 'ACTION_SELECT_SEARCH_RESULT', payload: filteredIndex});
+    }
+  };
+
+  const handleKeyDown = useCallback((event) => {
+    switch (event.key) {
+      case 'ArrowDown':
+        dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'});
+        event.stopPropagation();
+        break;
+      case 'ArrowUp':
+        dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'});
+        event.stopPropagation();
+        break;
+      default:
+        break;
+    }
+  }, [dispatch])
+
   // Auto-focus search input
   useEffect(() => {
     if (inputRef.current === null) {
@@ -87,8 +114,17 @@ export default function SearchInput(props: Props) {
       {!!searchText && (
         <React.Fragment>
           <span className={styles.IndexLabel}>
-            {Math.min(searchIndex + 1, searchResults.length)} |{' '}
-            {searchResults.length}
+            <input
+              className={styles.NumericInput}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={Math.min(searchIndex + 1, searchResults.length)}
+              size={searchResults.length}
+              onKeyDown={handleKeyDown}
+              onChange={handleSearchIndexChange}
+            />{' '}
+            | {searchResults.length}
           </span>
           <div className={styles.LeftVRule} />
           <Button

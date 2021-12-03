@@ -5,8 +5,7 @@
 }
 
 .Input {
-  flex: 1 1 100px;
-  width: 100px;
+  flex: 1 1 0px;
   font-size: var(--font-size-sans-large);
   outline: none;
   border: none;
@@ -23,10 +22,26 @@
 }
 
 .IndexLabel {
-  color: var(--color-dim);
-  font-size: var(--font-size-sans-normal);
-  white-space: pre;
+  flex: 0 0 auto;
+  font-family: var(--font-family-monospace);
+  margin-left: 0.25rem;
 }
+
+.NumericInput {
+  background: none;
+  font-size: var(--font-size-sans-normal);
+  text-align: right;
+  border: 1px solid transparent;
+  border-radius: 0.125rem;
+  padding: 0.125rem;
+  color: var(--color-attribute-editable-value);
+}
+
+.NumericInput:focus {
+  background-color: var(--color-button-background-focus);
+  outline: none;
+}
+
 
 .LeftVRule,
 .RightVRule {
