@@ -75,7 +75,7 @@ export default function SearchInput({
     ownerDocument.addEventListener('keydown', handleKeyDown);
 
     return () => ownerDocument.removeEventListener('keydown', handleKeyDown);
-  }, [inputRef]);
+  }, []);
 
   return (
     <div className={styles.SearchInput}>

@@ -175,16 +175,19 @@ function AutoSizedCanvas({
     TimelineSearchContext,
   );
 
+  // This effect searches timeline data and scrolls to the next match wen search criteria change.
   useLayoutEffect(() => {
     viewState.updateSearchRegExpState(searchRegExp);
 
-    const componentMeasure =
+    const componentMeasureSearchResult =
       searchResults.length > 0 ? searchResults[searchIndex] : null;
-    if (componentMeasure != null) {
+    if (componentMeasureSearchResult != null) {
       const scrollState = moveStateToRange({
         state: viewState.horizontalScrollState,
-        rangeStart: componentMeasure.timestamp,
-        rangeEnd: componentMeasure.timestamp + componentMeasure.duration,
+        rangeStart: componentMeasureSearchResult.timestamp,
+        rangeEnd:
+          componentMeasureSearchResult.timestamp +
+          componentMeasureSearchResult.duration,
         contentLength: data.duration,
         minContentLength: data.duration * MIN_ZOOM_LEVEL,
         maxContentLength: data.duration * MAX_ZOOM_LEVEL,
