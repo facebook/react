@@ -92,7 +92,6 @@ export default function SearchInput(props: Props) {
           </span>
           <div className={styles.LeftVRule} />
           <Button
-            className={styles.IconButton}
             disabled={!searchText}
             onClick={() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'})}
             title={
@@ -104,7 +103,6 @@ export default function SearchInput(props: Props) {
             <ButtonIcon type="up" />
           </Button>
           <Button
-            className={styles.IconButton}
             disabled={!searchText}
             onClick={() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'})}
             title={
@@ -115,7 +113,6 @@ export default function SearchInput(props: Props) {
             <ButtonIcon type="down" />
           </Button>
           <Button
-            className={styles.IconButton}
             disabled={!searchText}
             onClick={resetSearch}
             title="Reset search">

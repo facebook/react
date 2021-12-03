@@ -46,9 +46,3 @@
   color: var(--color-button-disabled);
   cursor: default;
 }
-
-.Input {
-  width: 0;
-  margin: 0;
-  opacity: 0;
-}

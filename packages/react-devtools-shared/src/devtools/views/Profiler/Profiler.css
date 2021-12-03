@@ -87,31 +87,6 @@
   flex: 1;
 }
 
-.StopRecordingButton {
-  font-size: var(--font-size-sans-large);
-  padding: 0.5rem;
-}
-
-.ContentFallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-sans-large);
-  color: var(--color-dim);
-}
-
-.SnapshotSelectorFallback {
-  height: 100%;
-  padding-left: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-sans-large);
-  color: var(--color-dim);
-}
-
 .Link {
   color: var(--color-button);
 }
