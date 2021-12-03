@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {DataResource} from './createDataResourceFromImportedFile';
 import type {ViewState} from './types';
 
 import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
@@ -25,13 +24,14 @@ import {updateColorsToMatchTheme} from './content-views/constants';
 import {TimelineContext} from './TimelineContext';
 import ImportButton from './ImportButton';
 import CanvasPage from './CanvasPage';
+import {importFile} from './timelineCache';
+import TimelineSearchInput from './TimelineSearchInput';
+import {TimelineSearchContextController} from './TimelineSearchContext';
 
 import styles from './Timeline.css';
 
 export function Timeline(_: {||}) {
-  const {importTimelineData, timelineData, viewState} = useContext(
-    TimelineContext,
-  );
+  const {file, setFile, viewState} = useContext(TimelineContext);
 
   const ref = useRef(null);
 
@@ -62,17 +62,17 @@ export function Timeline(_: {||}) {
 
   return (
     <div className={styles.Content} ref={ref}>
-      {timelineData ? (
+      {file ? (
         <Suspense fallback={<ProcessingData />}>
-          <DataResourceComponent
-            dataResource={timelineData}
+          <FileLoader
+            file={file}
             key={key}
-            onFileSelect={importTimelineData}
+            onFileSelect={setFile}
             viewState={viewState}
           />
         </Suspense>
       ) : (
-        <Welcome onFileSelect={importTimelineData} />
+        <Welcome onFileSelect={setFile} />
       )}
     </div>
   );
@@ -143,20 +143,32 @@ const CouldNotLoadProfile = ({error, onFileSelect}) => (
   </div>
 );
 
-const DataResourceComponent = ({
-  dataResource,
+const FileLoader = ({
+  file,
   onFileSelect,
   viewState,
 }: {|
-  dataResource: DataResource,
+  file: File | null,
   onFileSelect: (file: File) => void,
   viewState: ViewState,
 |}) => {
-  const dataOrError = dataResource.read();
+  if (file === null) {
+    return null;
+  }
+
+  const dataOrError = importFile(file);
   if (dataOrError instanceof Error) {
     return (
       <CouldNotLoadProfile error={dataOrError} onFileSelect={onFileSelect} />
     );
   }
-  return <CanvasPage profilerData={dataOrError} viewState={viewState} />;
+
+  return (
+    <TimelineSearchContextController
+      profilerData={dataOrError}
+      viewState={viewState}>
+      <TimelineSearchInput />
+      <CanvasPage profilerData={dataOrError} viewState={viewState} />
+    </TimelineSearchContextController>
+  );
 };

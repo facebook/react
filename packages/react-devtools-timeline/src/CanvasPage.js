@@ -62,6 +62,7 @@ import ContextMenuItem from 'react-devtools-shared/src/devtools/ContextMenu/Cont
 import useContextMenu from 'react-devtools-shared/src/devtools/ContextMenu/useContextMenu';
 import {getBatchRange} from './utils/getBatchRange';
 import {MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL} from './view-base/constants';
+import {TimelineSearchContext} from './TimelineSearchContext';
 
 import styles from './CanvasPage.css';
 
@@ -169,6 +170,35 @@ function AutoSizedCanvas({
     () => setHoveredEvent(EMPTY_CONTEXT_INFO),
     [],
   );
+
+  const {searchIndex, searchRegExp, searchResults} = useContext(
+    TimelineSearchContext,
+  );
+
+  // This effect searches timeline data and scrolls to the next match wen search criteria change.
+  useLayoutEffect(() => {
+    viewState.updateSearchRegExpState(searchRegExp);
+
+    const componentMeasureSearchResult =
+      searchResults.length > 0 ? searchResults[searchIndex] : null;
+    if (componentMeasureSearchResult != null) {
+      const scrollState = moveStateToRange({
+        state: viewState.horizontalScrollState,
+        rangeStart: componentMeasureSearchResult.timestamp,
+        rangeEnd:
+          componentMeasureSearchResult.timestamp +
+          componentMeasureSearchResult.duration,
+        contentLength: data.duration,
+        minContentLength: data.duration * MIN_ZOOM_LEVEL,
+        maxContentLength: data.duration * MAX_ZOOM_LEVEL,
+        containerLength: width,
+      });
+
+      viewState.updateHorizontalScrollState(scrollState);
+    }
+
+    surfaceRef.current.displayIfNeeded();
+  }, [searchIndex, searchRegExp, searchResults, viewState]);
 
   const surfaceRef = useRef(new Surface(resetHoveredEvent));
   const userTimingMarksViewRef = useRef(null);
@@ -334,6 +364,7 @@ function AutoSizedCanvas({
         surface,
         defaultFrame,
         data,
+        viewState,
       );
       componentMeasuresViewRef.current = componentMeasuresView;
       componentMeasuresViewWrapper = createViewHelper(

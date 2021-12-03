@@ -170,6 +170,9 @@ export type Flamechart = FlamechartStackLayer[];
 export type HorizontalScrollStateChangeCallback = (
   scrollState: ScrollState,
 ) => void;
+export type SearchRegExpStateChangeCallback = (
+  searchRegExp: RegExp | null,
+) => void;
 
 // Imperative view state that corresponds to profiler data.
 // This state lives outside of React's lifecycle
@@ -179,7 +182,12 @@ export type ViewState = {|
   onHorizontalScrollStateChange: (
     callback: HorizontalScrollStateChangeCallback,
   ) => void,
+  onSearchRegExpStateChange: (
+    callback: SearchRegExpStateChangeCallback,
+  ) => void,
+  searchRegExp: RegExp | null,
   updateHorizontalScrollState: (scrollState: ScrollState) => void,
+  updateSearchRegExpState: (searchRegExp: RegExp | null) => void,
   viewToMutableViewStateMap: Map<string, mixed>,
 |};
 

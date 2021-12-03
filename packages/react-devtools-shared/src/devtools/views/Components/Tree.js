@@ -27,7 +27,7 @@ import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Element from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
-import SearchInput from './SearchInput';
+import ComponentSearchInput from './ComponentSearchInput';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
@@ -343,7 +343,7 @@ export default function Tree(props: Props) {
             </Fragment>
           )}
           <Suspense fallback={<Loading />}>
-            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
+            {ownerID !== null ? <OwnersStack /> : <ComponentSearchInput />}
           </Suspense>
           {showInlineWarningsAndErrors &&
             ownerID === null &&

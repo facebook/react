@@ -28,6 +28,7 @@ import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import portaledContent from '../portaledContent';
 import {StoreContext} from '../context';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 import styles from './Profiler.css';
 
@@ -43,19 +44,19 @@ function Profiler(_: {||}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
+  const {searchInputContainerRef} = useContext(TimelineContext);
+
   const {supportsTimeline} = useContext(StoreContext);
 
-  let isLegacyProfilerSelected = false;
+  const isLegacyProfilerSelected = selectedTabID !== 'timeline';
 
   let view = null;
   if (didRecordCommits || selectedTabID === 'timeline') {
     switch (selectedTabID) {
       case 'flame-chart':
-        isLegacyProfilerSelected = true;
         view = <CommitFlamegraph />;
         break;
       case 'ranked-chart':
-        isLegacyProfilerSelected = true;
         view = <CommitRanked />;
         break;
       case 'timeline':
@@ -121,6 +122,12 @@ function Profiler(_: {||}) {
             />
             <RootSelector />
             <div className={styles.Spacer} />
+            {!isLegacyProfilerSelected && (
+              <div
+                ref={searchInputContainerRef}
+                className={styles.TimlineSearchInputContainer}
+              />
+            )}
             <SettingsModalContextToggle />
             {isLegacyProfilerSelected && didRecordCommits && (
               <Fragment>
