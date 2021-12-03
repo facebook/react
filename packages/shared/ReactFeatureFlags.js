@@ -103,7 +103,7 @@ export const warnOnSubscriptionInsideStartTransition = false;
 
 export const enableSuspenseAvoidThisFallback = false;
 
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 
 export const enableClientRenderFallbackOnHydrationMismatch = true;
 
