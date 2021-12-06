@@ -308,6 +308,12 @@ describe('DOMPropertyOperations', () => {
       const customElement = container.querySelector('my-custom-element');
       expect(customElement.getAttribute('innerHTML')).toBe(null);
       expect(customElement.hasChildNodes()).toBe(false);
+
+      // Render again to verify the update codepath doesn't accidentally let
+      // something through.
+      ReactDOM.render(<my-custom-element innerHTML="bar" />, container);
+      expect(customElement.getAttribute('innerHTML')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
     });
 
     // @gate enableCustomElementPropertySupport
@@ -317,6 +323,12 @@ describe('DOMPropertyOperations', () => {
       const customElement = container.querySelector('my-custom-element');
       expect(customElement.getAttribute('innerText')).toBe(null);
       expect(customElement.hasChildNodes()).toBe(false);
+
+      // Render again to verify the update codepath doesn't accidentally let
+      // something through.
+      ReactDOM.render(<my-custom-element innerText="bar" />, container);
+      expect(customElement.getAttribute('innerText')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
     });
 
     // @gate enableCustomElementPropertySupport
@@ -324,6 +336,12 @@ describe('DOMPropertyOperations', () => {
       const container = document.createElement('div');
       ReactDOM.render(<my-custom-element textContent="foo" />, container);
       const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('textContent')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+
+      // Render again to verify the update codepath doesn't accidentally let
+      // something through.
+      ReactDOM.render(<my-custom-element textContent="bar" />, container);
       expect(customElement.getAttribute('textContent')).toBe(null);
       expect(customElement.hasChildNodes()).toBe(false);
     });
