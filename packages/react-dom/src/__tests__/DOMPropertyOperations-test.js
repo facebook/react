@@ -247,6 +247,13 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('onarray')).toBe('one,two');
       expect(customElement.getAttribute('ontrue')).toBe('true');
       expect(customElement.getAttribute('onfalse')).toBe('false');
+
+      // Dispatch the corresponding event names to make sure that nothing crashes.
+      customElement.dispatchEvent(new Event('string'));
+      customElement.dispatchEvent(new Event('obj'));
+      customElement.dispatchEvent(new Event('array'));
+      customElement.dispatchEvent(new Event('true'));
+      customElement.dispatchEvent(new Event('false'));
     });
 
     it('custom elements should still have onClick treated like regular elements', () => {
