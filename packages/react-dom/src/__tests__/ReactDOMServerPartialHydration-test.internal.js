@@ -3014,4 +3014,67 @@ describe('ReactDOMServerPartialHydration', () => {
   );
 
   itHydratesWithoutMismatch('an empty string in class component', TestAppClass);
+
+  // @gate enableClientRenderFallbackOnHydrationMismatch
+  it('fallback to client render on hydration mismatch at root', async () => {
+    let isClient = false;
+    let suspend = true;
+    let resolve;
+    const promise = new Promise((res, rej) => {
+      resolve = () => {
+        suspend = false;
+        res();
+      };
+    });
+    function App() {
+      return (
+        <>
+          <Suspense fallback={<div>Loading</div>}>
+            <ChildThatSuspends id={1} />
+          </Suspense>
+          {isClient ? <span>client</span> : <div>server</div>}
+          <Suspense fallback={<div>Loading</div>}>
+            <ChildThatSuspends id={2} />
+          </Suspense>
+        </>
+      );
+    }
+    function ChildThatSuspends({id}) {
+      if (isClient && suspend) {
+        throw promise;
+      }
+      return <div>{id}</div>;
+    }
+
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    container.innerHTML = finalHTML;
+    isClient = true;
+
+    expect(() => {
+      act(() => {
+        ReactDOM.hydrateRoot(container, <App />);
+      });
+    }).toErrorDev(
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
+      {withoutStack: true},
+    );
+
+    // We show fallback state when mismatch happens at root
+    expect(container.innerHTML).toEqual(
+      '<div>Loading</div><span>client</span><div>Loading</div>',
+    );
+
+    await act(async () => {
+      resolve();
+      await promise;
+    });
+
+    expect(container.innerHTML).toEqual(
+      '<div>1</div><span>client</span><div>2</div>',
+    );
+  });
 });
