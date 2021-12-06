@@ -660,9 +660,8 @@ export function clearContainer(container: Container): void {
   if (container.nodeType === ELEMENT_NODE) {
     ((container: any): Element).textContent = '';
   } else if (container.nodeType === DOCUMENT_NODE) {
-    const body = ((container: any): Document).body;
-    if (body != null) {
-      body.textContent = '';
+    while (container.firstElementChild) {
+      container.removeChild(container.firstElementChild);
     }
   }
 }

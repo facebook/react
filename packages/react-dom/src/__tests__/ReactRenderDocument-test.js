@@ -13,6 +13,8 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 
+let act;
+
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
   doc.open();
@@ -31,6 +33,8 @@ describe('rendering React components at document', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+
+    act = require('jest-react').act;
   });
 
   describe('with new explicit hydration API', () => {
@@ -241,6 +245,38 @@ describe('rendering React components at document', () => {
       const component = ReactDOM.hydrate(tree, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
       expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
+    });
+
+    // @gate enableClientRenderFallbackOnHydrationMismatch
+    it('should client render as fallback after root hydration mismatch', () => {
+      function App({isServer}) {
+        return (
+          <html>
+            <head>
+              <title>Hello World</title>
+            </head>
+            <body>{isServer ? <div>Server</div> : <span>Client</span>}</body>
+          </html>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(<App isServer={true} />);
+      expect(markup).not.toContain('DOCTYPE');
+      const testDocument = getTestDocument(markup);
+      const body = testDocument.body;
+
+      expect(testDocument.body.innerHTML).toBe('<div>Server</div>');
+
+      expect(() => {
+        act(() => {
+          ReactDOM.hydrateRoot(testDocument, <App isServer={false} />);
+        });
+      }).toErrorDev(
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>',
+        {withoutStack: true},
+      );
+
+      expect(testDocument.body.innerHTML).toBe('<span>Client</span>');
     });
   });
 });
