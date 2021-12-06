@@ -3063,6 +3063,7 @@ describe('ReactDOMServerPartialHydration', () => {
       {withoutStack: true},
     );
 
+    // We show fallback state when mismatch happens at root
     expect(container.innerHTML).toEqual(
       '<div>Loading</div><span>client</span><div>Loading</div>',
     );
