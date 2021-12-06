@@ -1705,6 +1705,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(triggeredChild).toBe(false);
   });
 
+  // @gate enableClientRenderFallbackOnHydrationMismatch
   it('fallback to client render on hydration mismatch at root', async () => {
     let isClient = false;
     let suspend = true;
