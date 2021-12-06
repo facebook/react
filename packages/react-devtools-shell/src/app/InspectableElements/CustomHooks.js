@@ -70,6 +70,8 @@ const ContextA = createContext('A');
 const ContextB = createContext('B');
 
 function FunctionWithHooks(props: any, ref: React$Ref<any>) {
+  const {id} = props;
+  const componentId = `customHooksButton${id ?? ''}`;
   const [count, updateCount] = useState(0);
   // eslint-disable-next-line no-unused-vars
   const contextValueA = useContext(ContextA);
@@ -98,14 +100,18 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   // Verify deep nesting doesn't break
   useDeepHookA();
 
-  return <button onClick={onClick}>Count: {debouncedCount}</button>;
+  return (
+    <button id={componentId} onClick={onClick}>
+      Count: {debouncedCount}
+    </button>
+  );
 }
 const MemoWithHooks = memo(FunctionWithHooks);
 const ForwardRefWithHooks = forwardRef(FunctionWithHooks);
 
 function wrapWithHoc(Component) {
   function Hoc() {
-    return <Component />;
+    return <Component id="withHoc" />;
   }
   // $FlowFixMe
   const displayName = Component.displayName || Component.name;
@@ -118,8 +124,8 @@ export default function CustomHooks() {
   return (
     <Fragment>
       <FunctionWithHooks />
-      <MemoWithHooks />
-      <ForwardRefWithHooks />
+      <MemoWithHooks id="Memo" />
+      <ForwardRefWithHooks id="ForwardRef" />
       <HocWithHooks />
     </Fragment>
   );

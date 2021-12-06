@@ -4,15 +4,22 @@ const {test, expect} = require('@playwright/test');
 const config = require('../../playwright.config');
 test.use(config);
 
-test.describe('Testing Todo-List App', () => {
+test.describe.serial('Testing Todo-List App', () => {
   let page, frameElementHandle, frame;
+  const inspectButtonSelector = '[class^=ToggleContent]';
   test.beforeAll(async ({browser}) => {
-    page = await browser.newPage();
+    const context = await browser.newContext();
+    page = await context.newPage();
+    // page = await browser.newPage();
     await page.goto('http://localhost:8080/', {waitUntil: 'domcontentloaded'});
     await page.waitForSelector('iframe#target');
     frameElementHandle = await page.$('#target');
     frame = await frameElementHandle.contentFrame();
   });
+
+  // test.afterAll(async ({ browser }) => {
+  //   await browser.close();
+  // });
 
   test('The Todo List should contain 3 items by default', async () => {
     const list = frame.locator('.listitem');
@@ -40,9 +47,9 @@ test.describe('Testing Todo-List App', () => {
     // click on the list item to quickly navigate to the list item component in devtools
     // comparing displayed props with the array of props.
     for (let i = 1; i <= countOfItems; ++i) {
-      await page.click('[class^=ToggleContent]', {delay: 100});
+      await page.click(inspectButtonSelector, {delay: 100});
       await frame.click(`.listitem:nth-child(${i})`, {delay: 50});
-      await page.waitForSelector('span.Value___tNzum');
+      await page.waitForSelector('span[class^=Value]');
       const text = await page.innerText('span[class^=Value]');
       await expect(text).toEqual(listItemsProps[i]);
     }

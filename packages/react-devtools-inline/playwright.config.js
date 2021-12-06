@@ -6,6 +6,7 @@ const config = {
       slowMo: 100,
     },
   },
+  workers: 1,
 };
 
 module.exports = config;
