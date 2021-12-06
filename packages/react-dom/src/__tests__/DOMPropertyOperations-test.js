@@ -428,6 +428,7 @@ describe('DOMPropertyOperations', () => {
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
     });
 
+    // @gate enableCustomElementPropertySupport
     it('custom element custom event handlers assign multiple types with setter', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
