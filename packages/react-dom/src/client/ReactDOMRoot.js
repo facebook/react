@@ -144,6 +144,13 @@ export function createRoot(
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   if (options !== null && options !== undefined) {
+    if (__DEV__) {
+      if (options.hydrate) {
+        console.warn(
+          'hydrate through createRoot is deprecated. Use ReactDOM.hydrateRoot(container, <App />) instead.',
+        );
+      }
+    }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
     }
