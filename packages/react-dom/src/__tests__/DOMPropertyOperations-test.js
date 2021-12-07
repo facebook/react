@@ -482,6 +482,28 @@ describe('DOMPropertyOperations', () => {
       expect(customelement.oncustomevent).toBe(null);
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
     });
+
+    // @gate enableCustomElementPropertySupport
+    it('assigning to a custom element property should not remove attributes', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element foo="one" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('foo')).toBe('one');
+
+      // Install a setter to activate the `in` heuristic
+      Object.defineProperty(customElement, 'foo', {
+        set: function(x) {
+          this._foo = x;
+        },
+        get: function() {
+          return this._foo;
+        },
+      });
+      ReactDOM.render(<my-custom-element foo="two" />, container);
+      expect(customElement.foo).toBe('two');
+      expect(customElement.getAttribute('foo')).toBe('one');
+    });
   });
 
   describe('deleteValueForProperty', () => {
