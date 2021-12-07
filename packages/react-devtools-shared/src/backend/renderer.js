@@ -82,7 +82,10 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 import {format} from './utils';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import {
+  enableProfilerChangedHookIndices,
+  enableStyleXFeatures,
+} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -3238,8 +3241,10 @@ export function attach(
     const modifiedProps = {
       ...memoizedProps,
     };
-    if (modifiedProps.hasOwnProperty('xstyle')) {
-      modifiedProps.xstyle = getStyleXValues(modifiedProps.xstyle);
+    if (enableStyleXFeatures) {
+      if (modifiedProps.hasOwnProperty('xstyle')) {
+        modifiedProps.xstyle = getStyleXValues(modifiedProps.xstyle);
+      }
     }
 
     return {
