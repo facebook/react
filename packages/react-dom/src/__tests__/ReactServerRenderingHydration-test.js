@@ -559,6 +559,7 @@ describe('ReactDOMServerHydration', () => {
     });
   });
 
+  // @gate enableCustomElementPropertySupport
   it('should not re-assign properties on hydration', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
