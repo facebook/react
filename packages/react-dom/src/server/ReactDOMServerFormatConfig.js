@@ -385,7 +385,6 @@ function pushAttribute(
     return;
   }
 
-  // is this where i should do stuff?
   const propertyInfo = getPropertyInfo(name);
   if (propertyInfo !== null) {
     // shouldRemoveAttribute
