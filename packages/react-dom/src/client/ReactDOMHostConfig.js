@@ -483,7 +483,7 @@ export function appendChild(
       doc = ((parentInstance.parentElement: any): Document);
       documentElement = parentInstance;
     }
-    copyAttributes(parentInstance, child);
+    copyAttributes(documentElement, child);
 
     const newHead = child.getElementsByTagName('head')[0];
     if (newHead) {
