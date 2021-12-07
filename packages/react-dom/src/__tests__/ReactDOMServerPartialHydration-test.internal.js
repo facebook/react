@@ -155,7 +155,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -1205,10 +1205,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
 
-    const root = ReactDOM.hydrateRoot(
-      container,
-      <App text="Hello" className="hello" />,
-    );
+    ReactDOM.hydrateRoot(container, <App text="Hello" className="hello" />);
 
     await act(async () => {
       suspend = true;
@@ -1438,7 +1435,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -1493,7 +1490,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
@@ -1553,7 +1550,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
@@ -1861,7 +1858,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const container = document.createElement('div');
     container.innerHTML = html;
 
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     suspend = true;
     Scheduler.unstable_flushAll();
@@ -1919,7 +1916,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[1];
 
     suspend = false;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -1961,7 +1958,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -2105,7 +2102,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -2192,7 +2189,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     isServerRendering = false;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // We'll do one click before hydrating.
     a.click();
@@ -2282,7 +2279,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // We'll do one click before hydrating.
     await act(async () => {
@@ -2377,7 +2374,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     isServerRendering = false;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // We'll do one click before hydrating.
     a.click();
@@ -2464,7 +2461,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -2552,7 +2549,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     // Hydrate asynchronously.
-    const root = ReactDOM.hydrateRoot(childContainer, <App />);
+    ReactDOM.hydrateRoot(childContainer, <App />);
     jest.runAllTimers();
     Scheduler.unstable_flushAll();
 
@@ -2650,7 +2647,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend1 = true;
     suspend2 = true;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -2822,7 +2819,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -2887,7 +2884,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.innerHTML).toBe('Hidden child');
 
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
@@ -2916,7 +2913,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.innerHTML).toBe('Hidden child');
 
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(span.innerHTML).toBe('Hidden child');
@@ -2941,7 +2938,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     const span = container.getElementsByTagName('span')[0];
 
-    const root = ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);
     expect(ref.current.innerHTML).toBe('Hidden child');

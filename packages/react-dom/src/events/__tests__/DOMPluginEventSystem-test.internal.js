@@ -629,7 +629,7 @@ describe('DOMPluginEventSystem', () => {
           suspend = true;
 
           // Hydrate asynchronously.
-          const root = ReactDOM.hydrateRoot(childContainer, <App />);
+          ReactDOM.hydrateRoot(childContainer, <App />);
           jest.runAllTimers();
           Scheduler.unstable_flushAll();
 

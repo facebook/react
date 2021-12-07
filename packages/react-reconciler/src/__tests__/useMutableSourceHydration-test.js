@@ -417,7 +417,6 @@ describe('useMutableSourceHydration', () => {
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
       expect(Scheduler).toHaveYielded([2, 'a:two']);
     } else {
-      // Not sure about this...
       expect(Scheduler).toHaveYielded(['a:two']);
     }
   });
