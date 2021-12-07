@@ -29,7 +29,7 @@ export default function ProfilingImportExportButtons() {
   const {isProfiling, profilingData, rootID, selectedTabID} = useContext(
     ProfilerContext,
   );
-  const {importTimelineData} = useContext(TimelineContext);
+  const {setFile} = useContext(TimelineContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;
 
@@ -111,7 +111,8 @@ export default function ProfilingImportExportButtons() {
   const importTimelineDataWrapper = event => {
     const input = inputRef.current;
     if (input !== null && input.files.length > 0) {
-      importTimelineData(input.files[0]);
+      const file = input.files[0];
+      setFile(file);
     }
   };
 
@@ -122,6 +123,7 @@ export default function ProfilingImportExportButtons() {
         ref={inputRef}
         className={styles.Input}
         type="file"
+        accept=".json"
         onChange={
           selectedTabID === 'timeline'
             ? importTimelineDataWrapper

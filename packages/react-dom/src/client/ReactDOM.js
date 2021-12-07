@@ -56,7 +56,6 @@ import {
   setAttemptDiscreteHydration,
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
-  queueExplicitHydrationTarget,
   setGetCurrentUpdatePriority,
   setAttemptHydrationAtPriority,
 } from '../events/ReactDOMEventReplaying';
@@ -114,12 +113,6 @@ function createPortal(
   // TODO: pass ReactDOM portal implementation as third argument
   // $FlowFixMe The Flow type is opaque but there's no way to actually create it.
   return createPortalImpl(children, container, null, key);
-}
-
-function scheduleHydration(target: Node) {
-  if (target) {
-    queueExplicitHydrationTarget(target);
-  }
 }
 
 function renderSubtreeIntoContainer(
@@ -196,7 +189,6 @@ export {
   createRoot,
   hydrateRoot,
   flushControlled as unstable_flushControlled,
-  scheduleHydration as unstable_scheduleHydration,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI

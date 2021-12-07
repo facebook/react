@@ -55,7 +55,7 @@ const config = {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-devtools-feature-flags': resolveFeatureFlags('shell'),
-      'react-dom': resolve(builtModulesDir, 'react-dom'),
+      'react-dom': resolve(builtModulesDir, 'react-dom/unstable_testing'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
@@ -107,7 +107,7 @@ const config = {
             options: {
               sourceMap: true,
               modules: true,
-              localIdentName: '[local]___[hash:base64:5]',
+              localIdentName: '[local]',
             },
           },
         ],

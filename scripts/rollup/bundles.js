@@ -249,7 +249,7 @@ const bundles = [
   /******* React DOM - www - Testing *******/
   {
     moduleType: RENDERER,
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, NODE_DEV, NODE_PROD],
     entry: 'react-dom/testing',
     global: 'ReactDOMTesting',
     minifyWithProdErrorCodes: true,

@@ -34,8 +34,10 @@ const MAX_TOOLTIP_TEXT_LENGTH = 60;
 type Props = {|
   canvasRef: {|current: HTMLCanvasElement | null|},
   data: ReactProfilerData,
+  height: number,
   hoveredEvent: ReactHoverContextInfo | null,
   origin: Point,
+  width: number,
 |};
 
 function getSchedulingEventLabel(event: SchedulingEvent): string | null {
@@ -71,8 +73,10 @@ function getReactMeasureLabel(type): string | null {
 export default function EventTooltip({
   canvasRef,
   data,
+  height,
   hoveredEvent,
   origin,
+  width,
 }: Props) {
   const ref = useSmartTooltip({
     canvasRef,
@@ -111,7 +115,9 @@ export default function EventTooltip({
       <TooltipSchedulingEvent data={data} schedulingEvent={schedulingEvent} />
     );
   } else if (snapshot !== null) {
-    content = <TooltipSnapshot snapshot={snapshot} />;
+    content = (
+      <TooltipSnapshot height={height} snapshot={snapshot} width={width} />
+    );
   } else if (suspenseEvent !== null) {
     content = <TooltipSuspenseEvent suspenseEvent={suspenseEvent} />;
   } else if (measure !== null) {
@@ -333,12 +339,34 @@ const TooltipSchedulingEvent = ({
   );
 };
 
-const TooltipSnapshot = ({snapshot}: {|snapshot: Snapshot|}) => {
+const TooltipSnapshot = ({
+  height,
+  snapshot,
+  width,
+}: {|
+  height: number,
+  snapshot: Snapshot,
+  width: number,
+|}) => {
+  const aspectRatio = snapshot.width / snapshot.height;
+
+  // Zoomed in view should not be any bigger than the DevTools viewport.
+  let safeWidth = snapshot.width;
+  let safeHeight = snapshot.height;
+  if (safeWidth > width) {
+    safeWidth = width;
+    safeHeight = safeWidth / aspectRatio;
+  }
+  if (safeHeight > height) {
+    safeHeight = height;
+    safeWidth = safeHeight * aspectRatio;
+  }
+
   return (
     <img
       className={styles.Image}
       src={snapshot.imageSource}
-      style={{width: snapshot.width / 2, height: snapshot.height / 2}}
+      style={{height: safeHeight, width: safeWidth}}
     />
   );
 };

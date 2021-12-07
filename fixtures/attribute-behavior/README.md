@@ -8,7 +8,7 @@
 
 ## Instructions
 
-`cd fixtures/attribute-behavior && yarn install && yarn start`
+`yarn build --type=UMD_DEV react/index,react-dom && cd fixtures/attribute-behavior && yarn install && yarn start`
 
 ## Interpretation
 
@@ -16,9 +16,8 @@ Each row is an attribute which could be set on some DOM component. Some of
 them are invalid or mis-capitalized or mixed up versions of real ones.
 Each column is a value which can be passed to that attribute.
 Every cell has a box on the left and a box on the right.
-The left box shows the property (or attribute) assigned by React 15.\*, and the
-right box shows the property (or attribute) assigned by the latest version of
-React 16.
+The left box shows the property (or attribute) assigned by the latest stable release of React, and the
+right box shows the property (or attribute) assigned by the locally built version of React.
 
 Right now, we use a purple outline to call out cases where the assigned property
 (or attribute) has changed between React 15 and 16.

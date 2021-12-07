@@ -121,6 +121,7 @@ function legacyCreateRootFromDOMContainer(
     null, // hydrationCallbacks
     false, // isStrictMode
     false, // concurrentUpdatesByDefaultOverride,
+    '', // identiferPrefix
   );
   markContainerAsRoot(root.current, container);
 

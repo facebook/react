@@ -33,6 +33,7 @@ export const {
   enableSyncDefaultUpdates,
   warnOnSubscriptionInsideStartTransition,
   enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+  enableClientRenderFallbackOnHydrationMismatch,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -91,8 +92,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
-
-export const enableRecursiveCommitTraversal = false;
 
 export const allowConcurrentByDefault = true;
 

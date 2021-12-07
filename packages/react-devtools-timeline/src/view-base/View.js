@@ -197,7 +197,9 @@ export class View {
       !sizeIsEmpty(this.visibleArea.size)
     ) {
       this.layoutSubviews();
-      if (this._needsDisplay) this._needsDisplay = false;
+      if (this._needsDisplay) {
+        this._needsDisplay = false;
+      }
       if (this._subviewsNeedDisplay) this._subviewsNeedDisplay = false;
 
       // Clip anything drawn by the view to prevent it from overflowing its visible area.

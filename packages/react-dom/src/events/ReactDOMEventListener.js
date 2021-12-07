@@ -154,7 +154,29 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
+  if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+  } else {
+    dispatchEventOriginal(
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    );
+  }
+}
 
+function dispatchEventOriginal(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
+  nativeEvent: AnyNativeEvent,
+) {
   // TODO: replaying capture phase events is currently broken
   // because we used to do it during top-level native bubble handlers
   // but now we use different bubble and capture handlers.
@@ -180,15 +202,20 @@ export function dispatchEvent(
     return;
   }
 
-  let blockedOn = attemptToDispatchEvent(
+  const blockedOn = findInstanceBlockingEvent(
     domEventName,
     eventSystemFlags,
     targetContainer,
     nativeEvent,
   );
-
   if (blockedOn === null) {
-    // We successfully dispatched this event.
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      return_targetInst,
+      targetContainer,
+    );
     if (allowReplay) {
       clearIfContinuousEvent(domEventName, nativeEvent);
     }
@@ -196,10 +223,7 @@ export function dispatchEvent(
   }
 
   if (allowReplay) {
-    if (
-      !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
-      isDiscreteEventThatRequiresHydration(domEventName)
-    ) {
+    if (isDiscreteEventThatRequiresHydration(domEventName)) {
       // This this to be replayed later once the target is available.
       queueDiscreteEvent(
         blockedOn,
@@ -226,8 +250,58 @@ export function dispatchEvent(
     clearIfContinuousEvent(domEventName, nativeEvent);
   }
 
+  // This is not replayable so we'll invoke it but without a target,
+  // in case the event system needs to trace it.
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    null,
+    targetContainer,
+  );
+}
+
+function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
+  domEventName: DOMEventName,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
+  nativeEvent: AnyNativeEvent,
+) {
+  let blockedOn = findInstanceBlockingEvent(
+    domEventName,
+    eventSystemFlags,
+    targetContainer,
+    nativeEvent,
+  );
+  if (blockedOn === null) {
+    dispatchEventForPluginEventSystem(
+      domEventName,
+      eventSystemFlags,
+      nativeEvent,
+      return_targetInst,
+      targetContainer,
+    );
+    clearIfContinuousEvent(domEventName, nativeEvent);
+    return;
+  }
+
   if (
-    enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay &&
+    queueIfContinuousEvent(
+      blockedOn,
+      domEventName,
+      eventSystemFlags,
+      targetContainer,
+      nativeEvent,
+    )
+  ) {
+    nativeEvent.stopPropagation();
+    return;
+  }
+  // We need to clear only if we didn't queue because
+  // queueing is accumulative.
+  clearIfContinuousEvent(domEventName, nativeEvent);
+
+  if (
     eventSystemFlags & IS_CAPTURE_PHASE &&
     isDiscreteEventThatRequiresHydration(domEventName)
   ) {
@@ -236,21 +310,30 @@ export function dispatchEvent(
       if (fiber !== null) {
         attemptSynchronousHydration(fiber);
       }
-      const nextBlockedOn = attemptToDispatchEvent(
+      const nextBlockedOn = findInstanceBlockingEvent(
         domEventName,
         eventSystemFlags,
         targetContainer,
         nativeEvent,
       );
+      if (nextBlockedOn === null) {
+        dispatchEventForPluginEventSystem(
+          domEventName,
+          eventSystemFlags,
+          nativeEvent,
+          return_targetInst,
+          targetContainer,
+        );
+      }
       if (nextBlockedOn === blockedOn) {
         break;
       }
       blockedOn = nextBlockedOn;
     }
-    if (blockedOn) {
+    if (blockedOn !== null) {
       nativeEvent.stopPropagation();
-      return;
     }
+    return;
   }
 
   // This is not replayable so we'll invoke it but without a target,
@@ -264,14 +347,19 @@ export function dispatchEvent(
   );
 }
 
-// Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
-export function attemptToDispatchEvent(
+export let return_targetInst = null;
+
+// Returns a SuspenseInstance or Container if it's blocked.
+// The return_targetInst field above is conceptually part of the return value.
+export function findInstanceBlockingEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): null | Container | SuspenseInstance {
   // TODO: Warn if _enabled is false.
+
+  return_targetInst = null;
 
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
@@ -313,13 +401,7 @@ export function attemptToDispatchEvent(
       }
     }
   }
-  dispatchEventForPluginEventSystem(
-    domEventName,
-    eventSystemFlags,
-    nativeEvent,
-    targetInst,
-    targetContainer,
-  );
+  return_targetInst = targetInst;
   // We're not blocked on anything.
   return null;
 }

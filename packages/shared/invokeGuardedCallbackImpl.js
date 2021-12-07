@@ -81,7 +81,7 @@ if (__DEV__) {
       // when we call document.createEvent(). However this can cause confusing
       // errors: https://github.com/facebook/create-react-app/issues/3482
       // So we preemptively throw with a better message instead.
-      if (typeof document === 'undefined') {
+      if (typeof document === 'undefined' || document === null) {
         throw new Error(
           'The `document` global was defined when React was initialized, but is not ' +
             'defined anymore. This can happen in a test environment if a component ' +

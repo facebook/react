@@ -51,13 +51,13 @@ export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseAvoidThisFallback = false;
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 export const warnAboutCallbackRefReturningFunction = false;
 
-export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
