@@ -21,7 +21,6 @@ export type RootType = {
 };
 
 export type CreateRootOptions = {
-  // END OF TODO
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   identifierPrefix?: string,
