@@ -465,8 +465,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App isClient={true} />);
+    ReactDOM.hydrateRoot(container, <App isClient={true} />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -629,8 +628,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -701,8 +699,7 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App showMore={false} />);
+    const root = ReactDOM.hydrateRoot(container, <App showMore={false} />);
     Scheduler.unstable_flushAll();
 
     // We're not hydrated yet.
@@ -769,8 +766,7 @@ describe('ReactDOMFizzServer', () => {
     // We're still showing a fallback.
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -1459,8 +1455,7 @@ describe('ReactDOMFizzServer', () => {
     // We're still showing a fallback.
 
     // Attempt to hydrate the content.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App isClient={true} />);
+    ReactDOM.hydrateRoot(container, <App isClient={true} />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.

@@ -403,8 +403,7 @@ describe('ReactDOMServerHydration', () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<div />);
+    const root = ReactDOM.hydrateRoot(container, <div />);
     Scheduler.unstable_flushAll();
     root.render(null);
     Scheduler.unstable_flushAll();

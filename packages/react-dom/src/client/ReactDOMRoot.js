@@ -21,15 +21,6 @@ export type RootType = {
 };
 
 export type CreateRootOptions = {
-  // TODO: Remove these options.
-  hydrate?: boolean,
-  hydrationOptions?: {
-    onHydrated?: (suspenseNode: Comment) => void,
-    onDeleted?: (suspenseNode: Comment) => void,
-    mutableSources?: Array<MutableSource<any>>,
-    ...
-  },
-  // END OF TODO
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   identifierPrefix?: string,
@@ -149,21 +140,17 @@ export function createRoot(
 
   warnIfReactDOMContainerInDEV(container);
 
-  // TODO: Delete these options
-  const hydrate = options != null && options.hydrate === true;
-  const hydrationCallbacks =
-    (options != null && options.hydrationOptions) || null;
-  const mutableSources =
-    (options != null &&
-      options.hydrationOptions != null &&
-      options.hydrationOptions.mutableSources) ||
-    null;
-  // END TODO
-
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   if (options !== null && options !== undefined) {
+    if (__DEV__) {
+      if ((options: any).hydrate) {
+        console.warn(
+          'hydrate through createRoot is deprecated. Use ReactDOM.hydrateRoot(container, <App />) instead.',
+        );
+      }
+    }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
     }
@@ -181,8 +168,8 @@ export function createRoot(
   const root = createContainer(
     container,
     ConcurrentRoot,
-    hydrate,
-    hydrationCallbacks,
+    false,
+    null,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
@@ -192,15 +179,6 @@ export function createRoot(
   const rootContainerElement =
     container.nodeType === COMMENT_NODE ? container.parentNode : container;
   listenToAllSupportedEvents(rootContainerElement);
-
-  // TODO: Delete this path
-  if (mutableSources) {
-    for (let i = 0; i < mutableSources.length; i++) {
-      const mutableSource = mutableSources[i];
-      registerMutableSourceForHydration(root, mutableSource);
-    }
-  }
-  // END TODO
 
   return new ReactDOMRoot(root);
 }

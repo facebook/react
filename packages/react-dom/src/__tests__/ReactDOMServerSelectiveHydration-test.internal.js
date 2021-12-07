@@ -165,8 +165,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     const span = container.getElementsByTagName('span')[1];
 
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -244,8 +243,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -343,8 +341,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -443,9 +440,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     isServerRendering = false;
 
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -530,8 +525,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -629,8 +623,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -739,8 +732,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -1373,8 +1365,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
+    ReactDOM.hydrateRoot(container, <App />);
 
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
@@ -1489,10 +1480,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanB = container.getElementsByTagName('span')[2];
     const spanC = container.getElementsByTagName('span')[4];
 
-    const root = ReactDOM.createRoot(container, {hydrate: true});
     act(() => {
-      root.render(<App a="A" />);
-
+      const root = ReactDOM.hydrateRoot(container, <App a="A" />);
       // Hydrate the shell.
       expect(Scheduler).toFlushAndYieldThrough(['App', 'Commit']);
 
