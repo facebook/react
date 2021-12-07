@@ -293,7 +293,7 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  appendChild(parentInstance, child);
 }
 
 export function finalizeInitialChildren(
@@ -465,7 +465,44 @@ export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  const isDocumentParentNode = parentInstance.nodeType === DOCUMENT_NODE;
+  if (
+    child.tagName === 'HTML' &&
+    (isDocumentParentNode || parentInstance.tagName === 'HTML')
+  ) {
+    child = ((child: any): Instance);
+    if (isDocumentParentNode) {
+      const doc = ((parentInstance: any): Document);
+      if (!doc.documentElement) {
+        doc.write('<html><head></head><body></body></html>');
+      }
+      parentInstance = ((doc.documentElement: any): Instance);
+    }
+    copyAttributes(parentInstance, child);
+
+    const newHead = child.getElementsByTagName('head')[0];
+    if (newHead) {
+      const existingHead = parentInstance.getElementsByTagName('head')[0];
+      if (existingHead) {
+        copyAttributes(existingHead, newHead);
+      } else {
+        parentInstance.appendChild(newHead);
+      }
+    }
+
+    const newBody = child.getElementsByTagName('body')[0];
+    if (newBody) {
+      const existingBody = parentInstance.getElementsByTagName('body')[0];
+      if (existingBody) {
+        copyAttributes(existingBody, newBody);
+        existingBody.innerHTML = newBody.innerHTML;
+      } else {
+        parentInstance.appendChild(newBody);
+      }
+    }
+  } else {
+    parentInstance.appendChild(child);
+  }
 }
 
 export function appendChildToContainer(
@@ -477,8 +514,8 @@ export function appendChildToContainer(
     parentNode = (container.parentNode: any);
     parentNode.insertBefore(child, container);
   } else {
-    parentNode = container;
-    parentNode.appendChild(child);
+    parentNode = (container: any);
+    appendChild(container, child);
   }
   // This container might be used for a portal.
   // If something inside a portal is clicked, that click should bubble
@@ -515,6 +552,21 @@ export function insertInContainerBefore(
     (container.parentNode: any).insertBefore(child, beforeChild);
   } else {
     container.insertBefore(child, beforeChild);
+  }
+}
+
+function copyAttributes(existingNode: Instance, newNode: Instance) {
+  const existingAttributes = existingNode.attributes;
+  const newAttributes = newNode.attributes;
+  for (const key in existingAttributes) {
+    if (Object.prototype.hasOwnProperty.call(existingAttributes, key)) {
+      existingNode.removeAttribute(key);
+    }
+  }
+  for (const key in newAttributes) {
+    if (Object.prototype.hasOwnProperty.call(newAttributes, key)) {
+      existingNode.setAttribute(key, (newAttributes[key]: any));
+    }
   }
 }
 
