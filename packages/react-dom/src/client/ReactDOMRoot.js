@@ -145,7 +145,7 @@ export function createRoot(
   let identifierPrefix = '';
   if (options !== null && options !== undefined) {
     if (__DEV__) {
-      if (options.hydrate) {
+      if ((options: any).hydrate) {
         console.warn(
           'hydrate through createRoot is deprecated. Use ReactDOM.hydrateRoot(container, <App />) instead.',
         );
