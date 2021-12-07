@@ -471,33 +471,38 @@ export function appendChild(
     (isDocumentParentNode || parentInstance.tagName === 'HTML')
   ) {
     child = ((child: any): Instance);
+    let doc;
+    let documentElement;
     if (isDocumentParentNode) {
-      const doc = ((parentInstance: any): Document);
+      doc = ((parentInstance: any): Document);
       if (!doc.documentElement) {
         doc.write('<html><head></head><body></body></html>');
       }
-      parentInstance = ((doc.documentElement: any): Instance);
+      documentElement = ((doc.documentElement: any): Instance);
+    } else {
+      doc = ((parentInstance.parentElement: any): Document);
+      documentElement = parentInstance;
     }
     copyAttributes(parentInstance, child);
 
     const newHead = child.getElementsByTagName('head')[0];
     if (newHead) {
-      const existingHead = parentInstance.getElementsByTagName('head')[0];
+      const existingHead = doc.head;
       if (existingHead) {
         copyAttributes(existingHead, newHead);
       } else {
-        parentInstance.appendChild(newHead);
+        documentElement.appendChild(newHead);
       }
     }
 
     const newBody = child.getElementsByTagName('body')[0];
     if (newBody) {
-      const existingBody = parentInstance.getElementsByTagName('body')[0];
+      const existingBody = doc.body;
       if (existingBody) {
         copyAttributes(existingBody, newBody);
         existingBody.innerHTML = newBody.innerHTML;
       } else {
-        parentInstance.appendChild(newBody);
+        documentElement.appendChild(newBody);
       }
     }
   } else {
@@ -565,7 +570,7 @@ function copyAttributes(existingNode: Instance, newNode: Instance) {
   }
   for (const key in newAttributes) {
     if (Object.prototype.hasOwnProperty.call(newAttributes, key)) {
-      existingNode.setAttribute(key, (newAttributes[key]: any));
+      existingNode.setAttribute(key, (newAttributes.getNamedItem(key): any));
     }
   }
 }
