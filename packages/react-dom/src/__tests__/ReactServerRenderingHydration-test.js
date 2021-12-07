@@ -558,4 +558,42 @@ describe('ReactDOMServerHydration', () => {
       }
     });
   });
+
+  it('should not re-assign properties on hydration', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const jsx = React.createElement('my-custom-element', {
+      str: 'string',
+      obj: {foo: 'bar'},
+    });
+
+    container.innerHTML = ReactDOMServer.renderToString(jsx);
+    const customElement = container.querySelector('my-custom-element');
+
+    // Install setters to activate `in` check
+    Object.defineProperty(customElement, 'str', {
+      set: function(x) {
+        this._str = x;
+      },
+      get: function() {
+        return this._str;
+      },
+    });
+    Object.defineProperty(customElement, 'obj', {
+      set: function(x) {
+        this._obj = x;
+      },
+      get: function() {
+        return this._obj;
+      },
+    });
+
+    ReactDOM.hydrate(jsx, container);
+
+    expect(customElement.getAttribute('str')).toBe('string');
+    expect(customElement.getAttribute('obj')).toBe(null);
+    expect(customElement.str).toBe(undefined);
+    expect(customElement.obj).toBe(undefined);
+  });
 });

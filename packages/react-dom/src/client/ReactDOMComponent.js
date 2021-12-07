@@ -1110,7 +1110,15 @@ export function diffHydratedProperties(
           serverValue = getValueForAttribute(domElement, propKey, nextProp);
         }
 
-        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
+        const dontWarnCustomElement =
+          enableCustomElementPropertySupport &&
+          isCustomComponentTag &&
+          (typeof nextProp === 'function' || typeof nextProp === 'object');
+        if (
+          !dontWarnCustomElement &&
+          nextProp !== serverValue &&
+          !isMismatchDueToBadCasing
+        ) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       }
