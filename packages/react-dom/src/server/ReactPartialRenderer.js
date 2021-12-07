@@ -23,7 +23,6 @@ import {
   disableModulePatternComponents,
   enableSuspenseServerRenderer,
   enableScopeAPI,
-  enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 import {
   checkPropStringCoercion,
@@ -379,16 +378,12 @@ function createOpenTagMarkup(
       propValue = createMarkupForStyles(propValue);
     }
     let markup = null;
-    if (enableCustomElementPropertySupport) {
-      markup = createMarkupForProperty(propKey, propValue, isCustomComponent);
-    } else {
-      if (isCustomComponent) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          markup = createMarkupForCustomAttribute(propKey, propValue);
-        }
-      } else {
-        markup = createMarkupForProperty(propKey, propValue, false);
+    if (isCustomComponent) {
+      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        markup = createMarkupForCustomAttribute(propKey, propValue);
       }
+    } else {
+      markup = createMarkupForProperty(propKey, propValue);
     }
     if (markup) {
       ret += ' ' + markup;

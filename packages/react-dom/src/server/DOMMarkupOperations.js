@@ -18,7 +18,6 @@ import {
 import sanitizeURL from '../shared/sanitizeURL';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
-import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
 
 /**
  * Operations for dealing with DOM properties.
@@ -31,33 +30,12 @@ import {enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
  * @param {*} value
  * @return {?string} Markup string, or null if the property was invalid.
  */
-export function createMarkupForProperty(
-  name: string,
-  value: mixed,
-  isCustomComponent: boolean,
-): string {
-  const propertyInfo =
-    enableCustomElementPropertySupport && isCustomComponent
-      ? null
-      : getPropertyInfo(name);
-  if (
-    name !== 'style' &&
-    shouldIgnoreAttribute(
-      name,
-      propertyInfo,
-      isCustomComponent && enableCustomElementPropertySupport,
-    )
-  ) {
+export function createMarkupForProperty(name: string, value: mixed): string {
+  const propertyInfo = getPropertyInfo(name);
+  if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, false)) {
     return '';
   }
-  if (
-    shouldRemoveAttribute(
-      name,
-      value,
-      propertyInfo,
-      isCustomComponent && enableCustomElementPropertySupport,
-    )
-  ) {
+  if (shouldRemoveAttribute(name, value, propertyInfo, false)) {
     return '';
   }
   if (propertyInfo !== null) {

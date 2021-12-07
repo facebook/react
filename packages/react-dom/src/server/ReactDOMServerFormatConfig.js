@@ -385,6 +385,7 @@ function pushAttribute(
     return;
   }
 
+  // is this where i should do stuff?
   const propertyInfo = getPropertyInfo(name);
   if (propertyInfo !== null) {
     // shouldRemoveAttribute
@@ -1101,6 +1102,15 @@ function pushStartCustomElement(
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
       if (propValue == null) {
+        continue;
+      }
+      if (
+        enableCustomElementPropertySupport &&
+        (typeof propValue === 'function' || typeof propValue === 'object')
+      ) {
+        // It is normal to render functions and objects on custom elements when
+        // client rendering, but when server rendering the output isn't useful,
+        // so skip it.
         continue;
       }
       if (enableCustomElementPropertySupport && propKey === 'className') {
