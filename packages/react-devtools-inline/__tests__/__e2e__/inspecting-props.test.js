@@ -4,22 +4,21 @@ const {test, expect} = require('@playwright/test');
 const config = require('../../playwright.config');
 test.use(config);
 
-test.describe.serial('Testing Todo-List App', () => {
-  let page, frameElementHandle, frame;
+test.describe('Testing Todo-List App', () => {
+  let page, frameElementHandle, frame, context;
   const inspectButtonSelector = '[class^=ToggleContent]';
   test.beforeAll(async ({browser}) => {
-    const context = await browser.newContext();
+    context = await browser.newContext();
     page = await context.newPage();
-    // page = await browser.newPage();
     await page.goto('http://localhost:8080/', {waitUntil: 'domcontentloaded'});
     await page.waitForSelector('iframe#target');
     frameElementHandle = await page.$('#target');
     frame = await frameElementHandle.contentFrame();
   });
 
-  // test.afterAll(async ({ browser }) => {
-  //   await browser.close();
-  // });
+  test.afterAll(async () => {
+    context.close();
+  });
 
   test('The Todo List should contain 3 items by default', async () => {
     const list = frame.locator('.listitem');

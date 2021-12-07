@@ -140,7 +140,7 @@ function DeepHooks(props: any) {
   const bar = useOuterBar();
   const baz = useOuterBaz();
   return (
-    <ul>
+    <ul id={'DeepHooks'}>
       <li>foo: {foo}</li>
       <li>bar: {bar}</li>
       <li>baz: {baz}</li>

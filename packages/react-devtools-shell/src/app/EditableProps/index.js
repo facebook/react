@@ -48,7 +48,7 @@ function StatefulFunction({name}: StatefulFunctionProps) {
   );
 
   return (
-    <ul>
+    <ul id={'StatefulFunction'}>
       <li>Name: {name}</li>
       <li>
         <button onClick={handleUpdateCountClick}>

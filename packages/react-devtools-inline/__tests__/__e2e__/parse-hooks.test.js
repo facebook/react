@@ -4,23 +4,22 @@ const {test, expect} = require('@playwright/test');
 const config = require('../../playwright.config');
 test.use(config);
 
-test.describe.serial('Parsing Hook Names from React Components', () => {
-  let page, frameElementHandle, frame;
+test.describe('Parsing Hook Names from React Components', () => {
+  let page, frameElementHandle, frame, context;
   const inspectButtonSelector = '[class^=ToggleContent]';
   const parseHookNamesSelector = 'button[class^=ToggleOff].null';
   test.beforeAll(async ({browser}) => {
-    const context = await browser.newContext();
+    context = await browser.newContext();
     page = await context.newPage();
-    // page = await browser.newPage();
     await page.goto('http://localhost:8080/', {waitUntil: 'domcontentloaded'});
     await page.waitForSelector('iframe#target');
     frameElementHandle = await page.$('#target');
     frame = await frameElementHandle.contentFrame();
   });
 
-  // test.afterAll(async ({ browser }) => {
-  //   await browser.close();
-  // });
+  test.afterAll(async () => {
+    context.close();
+  });
 
   const extractHookNames = async selector => {
     await page.click(inspectButtonSelector, {delay: 100});
@@ -79,5 +78,41 @@ test.describe.serial('Parsing Hook Names from React Components', () => {
       const devToolsHooks = await extractHookNames('#customHooksButtonwithHoc');
       expect(devToolsHooks).toEqual(customHooks);
     });
+  });
+
+  test('Parse Hooks in DeepHooks component', async () => {
+    const DeepHooks = [
+      '(foo)',
+      '(foo)',
+      '(value)',
+      '(bar)',
+      '(bar)',
+      '(count)',
+      '(baz)',
+      '(count)',
+    ];
+    const devtoolsHooks = await extractHookNames('ul#DeepHooks');
+    expect(devtoolsHooks).toEqual(DeepHooks);
+  });
+
+  test('Parse Hooks in StatefulFunction component', async () => {
+    const StatefulFunctionHooks = [
+      '(count)',
+      '(debouncedCount)',
+      '(debouncedValue)',
+      '(handleUpdateCountClick)',
+      '(data)',
+      '(handleUpdateReducerClick)',
+    ];
+    const devtoolsHooks = await extractHookNames('ul#StatefulFunction');
+    expect(devtoolsHooks).toEqual(StatefulFunctionHooks);
+  });
+
+  test('Parse Hooks in ReactNativeWeb', async () => {
+    const ReactNativeWebHooks = ['(backgroundColor)'];
+    const devtoolsHooks = await extractHookNames(
+      'h1:has-text("ReactNativeWeb")'
+    );
+    expect(devtoolsHooks).toEqual(ReactNativeWebHooks);
   });
 });
