@@ -838,6 +838,8 @@ export function attach(
       rootType: null,
       rendererPackageName: null,
       rendererVersion: null,
+
+      plugins: [],
     };
   }
 

@@ -64,6 +64,14 @@ export type InspectedElementResponseType =
   | 'no-change'
   | 'not-found';
 
+// For now, let's only support a hard-coded set of plugins.
+type PluginType = 'stylex';
+
+export type Plugin = {
+  type: PluginType,
+  data: any,
+};
+
 export type InspectedElement = {|
   id: number,
 
@@ -114,6 +122,9 @@ export type InspectedElement = {|
   // Meta information about the renderer that created this element.
   rendererPackageName: string | null,
   rendererVersion: string | null,
+
+  // Array of UI plugins/visualizations for the inspected element.
+  plugins: Array<Plugin>,
 |};
 
 // TODO: Add profiling type

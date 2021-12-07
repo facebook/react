@@ -8,7 +8,7 @@
  */
 
 describe('Stylex plugin utils', () => {
-  let getStyleXValues;
+  let getStyleXData;
   let styleElements;
 
   function defineStyles(style) {
@@ -22,7 +22,7 @@ describe('Stylex plugin utils', () => {
   }
 
   beforeEach(() => {
-    getStyleXValues = require('../utils').getStyleXValues;
+    getStyleXData = require('../utils').getStyleXData;
 
     styleElements = [];
   });
@@ -47,16 +47,25 @@ describe('Stylex plugin utils', () => {
     `);
 
     expect(
-      getStyleXValues({
+      getStyleXData({
+        // The source/module styles are defined in
+        Example__style: 'Example__style',
+
+        // Map of CSS style to StyleX class name, booleans, or nested structures
         display: 'foo',
         flexDirection: 'baz',
         alignItems: 'bar',
       }),
     ).toMatchInlineSnapshot(`
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "center",
+        "resolvedStyles": Object {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "center",
+        },
+        "sources": Array [
+          "Example__style",
+        ],
       }
     `);
   });
@@ -75,15 +84,25 @@ describe('Stylex plugin utils', () => {
     `);
 
     expect(
-      getStyleXValues([
-        {display: 'foo'},
-        {flexDirection: 'baz', alignItems: 'bar'},
+      getStyleXData([
+        {Example1__style: 'Example1__style', display: 'foo'},
+        {
+          Example2__style: 'Example2__style',
+          flexDirection: 'baz',
+          alignItems: 'bar',
+        },
       ]),
     ).toMatchInlineSnapshot(`
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "center",
+        "resolvedStyles": Object {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "center",
+        },
+        "sources": Array [
+          "Example1__style",
+          "Example2__style",
+        ],
       }
     `);
   });
@@ -102,19 +121,29 @@ describe('Stylex plugin utils', () => {
     `);
 
     expect(
-      getStyleXValues([
+      getStyleXData([
         false,
-        {display: 'foo'},
+        {Example1__style: 'Example1__style', display: 'foo'},
         false,
         false,
-        {flexDirection: 'baz', alignItems: 'bar'},
+        {
+          Example2__style: 'Example2__style',
+          flexDirection: 'baz',
+          alignItems: 'bar',
+        },
         false,
       ]),
     ).toMatchInlineSnapshot(`
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "center",
+        "resolvedStyles": Object {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "center",
+        },
+        "sources": Array [
+          "Example1__style",
+          "Example2__style",
+        ],
       }
     `);
   });
@@ -133,7 +162,11 @@ describe('Stylex plugin utils', () => {
     `);
 
     expect(
-      getStyleXValues({
+      getStyleXData({
+        // The source/module styles are defined in
+        Example__style: 'Example__style',
+
+        // Map of CSS style to StyleX class name, booleans, or nested structures
         color: 'foo',
         ':hover': {
           color: 'bar',
@@ -142,11 +175,16 @@ describe('Stylex plugin utils', () => {
       }),
     ).toMatchInlineSnapshot(`
       Object {
-        ":hover": Object {
-          "color": "blue",
-          "textDecoration": "none",
+        "resolvedStyles": Object {
+          ":hover": Object {
+            "color": "blue",
+            "textDecoration": "none",
+          },
+          "color": "black",
         },
-        "color": "black",
+        "sources": Array [
+          "Example__style",
+        ],
       }
     `);
   });
@@ -165,17 +203,28 @@ describe('Stylex plugin utils', () => {
     `);
 
     expect(
-      getStyleXValues([
-        {display: 'foo'},
+      getStyleXData([
+        {Example1__style: 'Example1__style', display: 'foo'},
         false,
-        [false, {flexDirection: 'baz'}, {alignItems: 'bar'}],
+        [
+          false,
+          {Example2__style: 'Example2__style', flexDirection: 'baz'},
+          {Example3__style: 'Example3__style', alignItems: 'bar'},
+        ],
         false,
       ]),
     ).toMatchInlineSnapshot(`
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "center",
+        "resolvedStyles": Object {
+          "alignItems": "center",
+          "display": "flex",
+          "flexDirection": "center",
+        },
+        "sources": Array [
+          "Example1__style",
+          "Example2__style",
+          "Example3__style",
+        ],
       }
     `);
   });

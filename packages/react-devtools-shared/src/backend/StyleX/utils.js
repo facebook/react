@@ -7,34 +7,66 @@
  * @flow
  */
 
+export type StyleXData = {|
+  sources: Array<string>,
+  resolvedStyles: Object,
+|};
+
 const cachedStyleNameToValueMap: Map<string, string> = new Map();
 
-export function getStyleXValues(data: any, mappedStyles: Object = {}) {
+export function getStyleXData(data: any): StyleXData {
+  const sources = new Set();
+  const resolvedStyles = {};
+
+  crawlData(data, sources, resolvedStyles);
+
+  return {
+    sources: Array.from(sources).sort(),
+    resolvedStyles,
+  };
+}
+
+export function crawlData(
+  data: any,
+  sources: Set<string>,
+  resolvedStyles: Object,
+): void {
   if (Array.isArray(data)) {
     data.forEach(entry => {
       if (Array.isArray(entry)) {
-        getStyleXValues(entry, mappedStyles);
+        crawlData(entry, sources, resolvedStyles);
       } else {
-        crawlObjectProperties(entry, mappedStyles);
+        crawlObjectProperties(entry, sources, resolvedStyles);
       }
     });
   } else {
-    crawlObjectProperties(data, mappedStyles);
+    crawlObjectProperties(data, sources, resolvedStyles);
   }
 
-  return Object.fromEntries<string, any>(Object.entries(mappedStyles).sort());
+  resolvedStyles = Object.fromEntries<string, any>(
+    Object.entries(resolvedStyles).sort(),
+  );
 }
 
-function crawlObjectProperties(entry: Object, mappedStyles: Object) {
+function crawlObjectProperties(
+  entry: Object,
+  sources: Set<string>,
+  resolvedStyles: Object,
+): void {
   const keys = Object.keys(entry);
   keys.forEach(key => {
     const value = entry[key];
     if (typeof value === 'string') {
-      mappedStyles[key] = getPropertyValueForStyleName(value);
+      if (key === value) {
+        // Special case; this key is the name of the style's source/file/module.
+        sources.add(key);
+      } else {
+        resolvedStyles[key] = getPropertyValueForStyleName(value);
+      }
     } else {
       const nestedStyle = {};
-      mappedStyles[key] = nestedStyle;
-      getStyleXValues([value], nestedStyle);
+      resolvedStyles[key] = nestedStyle;
+      crawlData([value], sources, nestedStyle);
     }
   });
 }

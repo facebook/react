@@ -89,7 +89,7 @@ import {
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
-import {getStyleXValues} from './StyleX/utils';
+import {getStyleXData} from './StyleX/utils';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -102,6 +102,7 @@ import type {
   NativeType,
   PathFrame,
   PathMatch,
+  Plugin,
   ProfilingDataBackend,
   ProfilingDataForRootBackend,
   ReactRenderer,
@@ -3238,12 +3239,14 @@ export function attach(
       targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
     }
 
-    const modifiedProps = {
-      ...memoizedProps,
-    };
+    const plugins: Array<Plugin> = [];
+
     if (enableStyleXFeatures) {
-      if (modifiedProps.hasOwnProperty('xstyle')) {
-        modifiedProps.xstyle = getStyleXValues(modifiedProps.xstyle);
+      if (memoizedProps.hasOwnProperty('xstyle')) {
+        plugins.push({
+          type: 'stylex',
+          data: getStyleXData(memoizedProps.xstyle),
+        });
       }
     }
 
@@ -3292,7 +3295,7 @@ export function attach(
       // TODO Review sanitization approach for the below inspectable values.
       context,
       hooks,
-      props: modifiedProps,
+      props: memoizedProps,
       state: showState ? memoizedState : null,
       errors: Array.from(errors.entries()),
       warnings: Array.from(warnings.entries()),
@@ -3306,6 +3309,8 @@ export function attach(
       rootType,
       rendererPackageName: renderer.rendererPackageName,
       rendererVersion: renderer.version,
+
+      plugins,
     };
   }
 
