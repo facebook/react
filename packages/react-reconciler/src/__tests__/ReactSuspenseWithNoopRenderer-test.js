@@ -2340,7 +2340,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('C'), span('B')]);
   });
 
-  // @gate enableCache && enableSuspenseAvoidThisFallback
+  // @gate enableCache
   it('favors showing the inner fallback for nested top level avoided fallback', async () => {
     function Foo({showB}) {
       Scheduler.unstable_yieldValue('Foo');
