@@ -688,7 +688,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  // @gate enableSuspenseList
+  // @gate enableSuspenseList && enableSuspenseAvoidThisFallback
   it('avoided boundaries can be coordinate with SuspenseList', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
