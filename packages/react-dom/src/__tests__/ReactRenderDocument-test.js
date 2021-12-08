@@ -284,58 +284,6 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe('<span>Client</span>');
     });
 
-    // @gate enableClientRenderFallbackOnHydrationMismatch
-    it('should client render as fallback after root hydration mismatch when hydrating documentElement', () => {
-      function ServerApp() {
-        return (
-          <html>
-            <head>
-              <title>Hello Server</title>
-            </head>
-            <body>
-              <div>Server</div>
-            </body>
-          </html>
-        );
-      }
-
-      const markup = ReactDOMServer.renderToString(<ServerApp />);
-      expect(markup).not.toContain('DOCTYPE');
-      const testDocument = getTestDocument(markup);
-      const body = testDocument.body;
-
-      expect(testDocument.head.innerHTML).toBe('<title>Hello Server</title>');
-      expect(testDocument.body.innerHTML).toBe('<div>Server</div>');
-
-      function ClientApp() {
-        return (
-          <>
-            <head>
-              <title>Hello Client</title>
-            </head>
-            <body>
-              <span>Client</span>
-            </body>
-          </>
-        );
-      }
-
-      expect(() => {
-        act(() => {
-          ReactDOM.hydrateRoot(testDocument.documentElement, <ClientApp />);
-        });
-      }).toErrorDev(
-        [
-          'Warning: Text content did not match. Server: "Hello Server" Client: "Hello Client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <html>',
-        ],
-        {withoutStack: 1},
-      );
-
-      expect(testDocument.head.innerHTML).toBe('<title>Hello Client</title>');
-      expect(testDocument.body.innerHTML).toBe('<span>Client</span>');
-    });
-
     it('should client render as fallback after root hydration mismatch and be able to clear head and body if missing', () => {
       function ServerApp() {
         return (
