@@ -22,7 +22,7 @@ const ReactVersion = '18.0.0-rc.0';
 
 // The label used by the @next channel. Represents the upcoming release's
 // stability. Could be "alpha", "beta", "rc", etc.
-const nextChannelLabel = 'rc';
+const nextChannelLabel = 'next';
 
 const stablePackages = {
   'create-subscription': ReactVersion,
