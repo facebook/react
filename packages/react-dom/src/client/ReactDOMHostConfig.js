@@ -477,8 +477,7 @@ export function appendChildToContainer(
     parentNode = (container.parentNode: any);
     parentNode.insertBefore(child, container);
   } else {
-    const isDocumentContainer = container.nodeType === DOCUMENT_NODE;
-    if (child.tagName === 'HTML' && isDocumentContainer) {
+    if (child.tagName === 'HTML' && container.nodeType === DOCUMENT_NODE) {
       child = ((child: any): Instance);
       const doc = ((container: any): Document);
       let documentElement;
