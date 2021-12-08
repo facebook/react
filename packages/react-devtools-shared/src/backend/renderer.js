@@ -102,7 +102,6 @@ import type {
   NativeType,
   PathFrame,
   PathMatch,
-  Plugin,
   ProfilingDataBackend,
   ProfilingDataForRootBackend,
   ReactRenderer,
@@ -113,6 +112,7 @@ import type {
 import type {
   ComponentFilter,
   ElementType,
+  Plugins,
 } from 'react-devtools-shared/src/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
@@ -3239,14 +3239,13 @@ export function attach(
       targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
     }
 
-    const plugins: Array<Plugin> = [];
+    const plugins: Plugins = {
+      stylex: null,
+    };
 
     if (enableStyleXFeatures) {
       if (memoizedProps.hasOwnProperty('xstyle')) {
-        plugins.push({
-          type: 'stylex',
-          data: getStyleXData(memoizedProps.xstyle),
-        });
+        plugins.stylex = getStyleXData(memoizedProps.xstyle);
       }
     }
 

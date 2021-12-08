@@ -7,14 +7,11 @@
  * @flow
  */
 
-export type StyleXData = {|
-  sources: Array<string>,
-  resolvedStyles: Object,
-|};
+import type {StyleXPlugin} from 'react-devtools-shared/src/types';
 
 const cachedStyleNameToValueMap: Map<string, string> = new Map();
 
-export function getStyleXData(data: any): StyleXData {
+export function getStyleXData(data: any): StyleXPlugin {
   const sources = new Set();
   const resolvedStyles = {};
 

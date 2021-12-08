@@ -839,7 +839,9 @@ export function attach(
       rendererPackageName: null,
       rendererVersion: null,
 
-      plugins: [],
+      plugins: {
+        stylex: null,
+      },
     };
   }
 

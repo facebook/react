@@ -12,6 +12,7 @@ import KeyValue from './KeyValue';
 import Store from '../../store';
 import sharedStyles from './InspectedElementSharedStyles.css';
 import styles from './InspectedElementStyleXPlugin.css';
+import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -30,14 +31,16 @@ export default function InspectedElementStyleXPlugin({
   inspectedElement,
   store,
 }: Props) {
-  const styleXPlugin = inspectedElement.plugins.find(
-    ({type}) => type === 'stylex',
-  );
-  if (styleXPlugin == null || styleXPlugin.data == null) {
+  if (!enableStyleXFeatures) {
     return null;
   }
 
-  const {resolvedStyles, sources} = styleXPlugin.data;
+  const styleXPlugin = inspectedElement.plugins.stylex;
+  if (styleXPlugin == null) {
+    return null;
+  }
+
+  const {resolvedStyles, sources} = styleXPlugin;
 
   return (
     <div className={sharedStyles.InspectedElementTree}>

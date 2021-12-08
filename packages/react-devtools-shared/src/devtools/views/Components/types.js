@@ -12,7 +12,7 @@ import type {
   Dehydrated,
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType, Plugins} from 'react-devtools-shared/src/types';
 
 // Each element on the frontend corresponds to a Fiber on the backend.
 // Some of its information (e.g. id, type, displayName) come from the backend.
@@ -63,14 +63,6 @@ export type InspectedElementResponseType =
   | 'hydrated-path'
   | 'no-change'
   | 'not-found';
-
-// For now, let's only support a hard-coded set of plugins.
-type PluginType = 'stylex';
-
-export type Plugin = {
-  type: PluginType,
-  data: any,
-};
 
 export type InspectedElement = {|
   id: number,
@@ -123,8 +115,8 @@ export type InspectedElement = {|
   rendererPackageName: string | null,
   rendererVersion: string | null,
 
-  // Array of UI plugins/visualizations for the inspected element.
-  plugins: Array<Plugin>,
+  // UI plugins/visualizations for the inspected element.
+  plugins: Plugins,
 |};
 
 // TODO: Add profiling type

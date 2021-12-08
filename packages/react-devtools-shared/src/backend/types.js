@@ -13,6 +13,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
   ElementType,
+  Plugins,
 } from 'react-devtools-shared/src/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
@@ -213,14 +214,6 @@ export type OwnersList = {|
   owners: Array<SerializedElement> | null,
 |};
 
-// For now, let's only support a hard-coded set of plugins.
-type PluginType = 'stylex';
-
-export type Plugin = {
-  type: PluginType,
-  data: any,
-};
-
 export type InspectedElement = {|
   id: number,
 
@@ -274,8 +267,8 @@ export type InspectedElement = {|
   rendererPackageName: string | null,
   rendererVersion: string | null,
 
-  // Array of UI plugins/visualizations for the inspected element.
-  plugins: Array<Plugin>,
+  // UI plugins/visualizations for the inspected element.
+  plugins: Plugins,
 |};
 
 export const InspectElementErrorType = 'error';
