@@ -1812,7 +1812,7 @@ describe('ReactErrorBoundaries', () => {
       elements.push(<MaybeBrokenRender key={100} />);
 
       let currentIndex = elements.length;
-      while (0 !== currentIndex) {
+      while (currentIndex !== 0) {
         const randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex -= 1;
         const temporaryValue = elements[currentIndex];
