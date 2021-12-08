@@ -477,8 +477,44 @@ export function appendChildToContainer(
     parentNode = (container.parentNode: any);
     parentNode.insertBefore(child, container);
   } else {
-    parentNode = container;
-    parentNode.appendChild(child);
+    const isDocumentContainer = container.nodeType === DOCUMENT_NODE;
+    if (
+      child.tagName === 'HTML' &&
+      (isDocumentContainer || container.tagName === 'HTML')
+    ) {
+      child = ((child: any): Instance);
+      let doc;
+      let documentElement;
+      if (isDocumentContainer) {
+        doc = ((container: any): Document);
+        if (!doc.documentElement) {
+          doc.write('<html><head></head><body></body></html>');
+        }
+        documentElement = ((doc.documentElement: any): Instance);
+      } else {
+        doc = ((container.parentNode: any): Document);
+        documentElement = container;
+      }
+      parentNode = documentElement;
+      copyAttributes(documentElement, child);
+
+      const newHead = child.getElementsByTagName('head')[0];
+      if (newHead) {
+        transferHead(doc, newHead);
+      } else if (doc.head) {
+        doc.head.innerHTML = '';
+      }
+
+      const newBody = child.getElementsByTagName('body')[0];
+      if (newBody) {
+        transferBody(doc, newBody);
+      } else if (doc.body) {
+        doc.body.innerHTML = '';
+      }
+    } else {
+      parentNode = container;
+      parentNode.appendChild(child);
+    }
   }
   // This container might be used for a portal.
   // If something inside a portal is clicked, that click should bubble
@@ -515,6 +551,41 @@ export function insertInContainerBefore(
     (container.parentNode: any).insertBefore(child, beforeChild);
   } else {
     container.insertBefore(child, beforeChild);
+  }
+}
+
+function transferBody(doc: Document, body: Instance) {
+  const existingBody = doc.body;
+  if (existingBody) {
+    copyAttributes(existingBody, body);
+    existingBody.innerHTML = body.innerHTML;
+  } else {
+    doc.body = (body: any);
+  }
+}
+
+function transferHead(doc: Document, head: Instance) {
+  const existingHead = doc.head;
+  if (existingHead) {
+    copyAttributes(existingHead, head);
+    existingHead.innerHTML = head.innerHTML;
+  } else {
+    doc.head = (head: any);
+  }
+}
+
+function copyAttributes(existingNode: Instance, newNode: Instance) {
+  const existingAttributes = existingNode.attributes;
+  const newAttributes = newNode.attributes;
+  for (const key in existingAttributes) {
+    if (Object.prototype.hasOwnProperty.call(existingAttributes, key)) {
+      existingNode.removeAttribute(key);
+    }
+  }
+  for (const key in newAttributes) {
+    if (Object.prototype.hasOwnProperty.call(newAttributes, key)) {
+      existingNode.setAttribute(key, (newAttributes.getNamedItem(key): any));
+    }
   }
 }
 
