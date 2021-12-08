@@ -480,12 +480,10 @@ export function appendChildToContainer(
     if (child.tagName === 'HTML' && container.nodeType === DOCUMENT_NODE) {
       child = ((child: any): Instance);
       const doc = ((container: any): Document);
-      let documentElement;
-
       if (!doc.documentElement) {
         doc.write('<html><head></head><body></body></html>');
       }
-      documentElement = ((doc.documentElement: any): Instance);
+      const documentElement = ((doc.documentElement: any): Instance);
 
       parentNode = documentElement;
       copyAttributes(documentElement, child);
