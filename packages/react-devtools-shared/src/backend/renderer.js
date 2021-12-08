@@ -82,10 +82,14 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 import {format} from './utils';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import {
+  enableProfilerChangedHookIndices,
+  enableStyleXFeatures,
+} from 'react-devtools-feature-flags';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import {getStyleXData} from './StyleX/utils';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -108,6 +112,7 @@ import type {
 import type {
   ComponentFilter,
   ElementType,
+  Plugins,
 } from 'react-devtools-shared/src/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
@@ -3234,6 +3239,16 @@ export function attach(
       targetErrorBoundaryID = getNearestErrorBoundaryID(fiber);
     }
 
+    const plugins: Plugins = {
+      stylex: null,
+    };
+
+    if (enableStyleXFeatures) {
+      if (memoizedProps.hasOwnProperty('xstyle')) {
+        plugins.stylex = getStyleXData(memoizedProps.xstyle);
+      }
+    }
+
     return {
       id,
 
@@ -3293,6 +3308,8 @@ export function attach(
       rootType,
       rendererPackageName: renderer.rendererPackageName,
       rendererVersion: renderer.version,
+
+      plugins,
     };
   }
 

@@ -13,8 +13,9 @@
  * It should always be imported from "react-devtools-feature-flags".
  ************************************************************************/
 
-export const enableProfilerChangedHookIndices = true;
-export const isInternalFacebookBuild = false;
-export const enableNamedHooksFeature = true;
-export const enableLogger = false;
 export const consoleManagedByDevToolsDuringStrictMode = true;
+export const enableLogger = false;
+export const enableNamedHooksFeature = true;
+export const enableProfilerChangedHookIndices = true;
+export const enableStyleXFeatures = false;
+export const isInternalFacebookBuild = false;

@@ -13,6 +13,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
   ElementType,
+  Plugins,
 } from 'react-devtools-shared/src/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
@@ -265,6 +266,9 @@ export type InspectedElement = {|
   // Meta information about the renderer that created this element.
   rendererPackageName: string | null,
   rendererVersion: string | null,
+
+  // UI plugins/visualizations for the inspected element.
+  plugins: Plugins,
 |};
 
 export const InspectElementErrorType = 'error';
