@@ -299,6 +299,7 @@ apps.push(
 // This component, with the version prop, helps organize DevTools at a glance.
 function TopLevelWrapperForDevTools({version}) {
   let header = <h1>React {version}</h1>;
+  // I'll remove this too ? or shall I replace it with next ? But the newer 18 version does not include next in its version.
   if (version.includes('canary')) {
     const commitSha = version.match(/.+canary-(.+)/)[1];
     header = (
@@ -310,6 +311,7 @@ function TopLevelWrapperForDevTools({version}) {
       </h1>
     );
   } else if (version.includes('alpha')) {
+    // I'll remove this as well ?
     header = <h1>React next</h1>;
   }
 
