@@ -29,6 +29,7 @@ import type {
 import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
+import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 
@@ -1154,7 +1155,8 @@ function completeWork(
           // should be able to immediately restart from within throwException.
           const hasInvisibleChildContext =
             current === null &&
-            workInProgress.memoizedProps.unstable_avoidThisFallback !== true;
+            (workInProgress.memoizedProps.unstable_avoidThisFallback !== true ||
+              !enableSuspenseAvoidThisFallback);
           if (
             hasInvisibleChildContext ||
             hasSuspenseContext(

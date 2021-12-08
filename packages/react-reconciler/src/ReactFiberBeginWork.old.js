@@ -29,6 +29,7 @@ import type {
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
+import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 
 import checkPropTypes from 'shared/checkPropTypes';
 import {
@@ -1997,7 +1998,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       // Mark this subtree context as having at least one invisible parent that could
       // handle the fallback state.
       // Avoided boundaries are not considered since they cannot handle preferred fallback states.
-      if (nextProps.unstable_avoidThisFallback !== true) {
+      if (
+        !enableSuspenseAvoidThisFallback ||
+        nextProps.unstable_avoidThisFallback !== true
+      ) {
         suspenseContext = addSubtreeSuspenseContext(
           suspenseContext,
           InvisibleParentSuspenseContext,
