@@ -478,23 +478,16 @@ export function appendChildToContainer(
     parentNode.insertBefore(child, container);
   } else {
     const isDocumentContainer = container.nodeType === DOCUMENT_NODE;
-    if (
-      child.tagName === 'HTML' &&
-      (isDocumentContainer || container.tagName === 'HTML')
-    ) {
+    if (child.tagName === 'HTML' && isDocumentContainer) {
       child = ((child: any): Instance);
-      let doc;
+      const doc = ((container: any): Document);
       let documentElement;
-      if (isDocumentContainer) {
-        doc = ((container: any): Document);
-        if (!doc.documentElement) {
-          doc.write('<html><head></head><body></body></html>');
-        }
-        documentElement = ((doc.documentElement: any): Instance);
-      } else {
-        doc = ((container.parentNode: any): Document);
-        documentElement = container;
+
+      if (!doc.documentElement) {
+        doc.write('<html><head></head><body></body></html>');
       }
+      documentElement = ((doc.documentElement: any): Instance);
+
       parentNode = documentElement;
       copyAttributes(documentElement, child);
 
