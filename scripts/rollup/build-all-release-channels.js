@@ -98,6 +98,14 @@ function buildForChannel(channel, nodeTotal, nodeIndex) {
 
 function processStable(buildDir) {
   if (fs.existsSync(buildDir + '/node_modules')) {
+    // Identical to `oss-stable` but with real, semver versions. This is what
+    // will get published to @latest.
+    spawnSync('cp', [
+      '-r',
+      buildDir + '/node_modules',
+      buildDir + '/oss-stable-semver',
+    ]);
+
     const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();
     for (const moduleName in stablePackages) {
@@ -116,13 +124,7 @@ function processStable(buildDir) {
     );
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
 
-    // Identical to `oss-stable` but with real, semver versions. This is what
-    // will get published to @latest.
-    spawnSync('cp', [
-      '-r',
-      buildDir + '/oss-stable',
-      buildDir + '/oss-stable-semver',
-    ]);
+    // Now do the semver ones
     const semverVersionsMap = new Map();
     for (const moduleName in stablePackages) {
       const version = stablePackages[moduleName];
