@@ -64,6 +64,7 @@ export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = false;
 export const enablePersistentOffscreenHostContainer = false;
+export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableUseMutableSource = false;

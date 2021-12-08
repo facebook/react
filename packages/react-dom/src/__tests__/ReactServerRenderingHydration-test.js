@@ -530,4 +530,70 @@ describe('ReactDOMServerHydration', () => {
       'Warning: Did not expect server HTML to contain a <p> in <div>',
     );
   });
+
+  it('should warn when hydrating read-only properties', () => {
+    const readOnlyProperties = [
+      'offsetParent',
+      'offsetTop',
+      'offsetLeft',
+      'offsetWidth',
+      'offsetHeight',
+      'isContentEditable',
+      'outerText',
+      'outerHTML',
+    ];
+    readOnlyProperties.forEach(readOnlyProperty => {
+      const props = {};
+      props[readOnlyProperty] = 'hello';
+      const jsx = React.createElement('my-custom-element', props);
+      const element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(jsx);
+      if (gate(flags => flags.enableCustomElementPropertySupport)) {
+        expect(() => ReactDOM.hydrate(jsx, element)).toErrorDev(
+          `Warning: Assignment to read-only property will result in a no-op: \`${readOnlyProperty}\``,
+        );
+      } else {
+        ReactDOM.hydrate(jsx, element);
+      }
+    });
+  });
+
+  // @gate enableCustomElementPropertySupport
+  it('should not re-assign properties on hydration', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const jsx = React.createElement('my-custom-element', {
+      str: 'string',
+      obj: {foo: 'bar'},
+    });
+
+    container.innerHTML = ReactDOMServer.renderToString(jsx);
+    const customElement = container.querySelector('my-custom-element');
+
+    // Install setters to activate `in` check
+    Object.defineProperty(customElement, 'str', {
+      set: function(x) {
+        this._str = x;
+      },
+      get: function() {
+        return this._str;
+      },
+    });
+    Object.defineProperty(customElement, 'obj', {
+      set: function(x) {
+        this._obj = x;
+      },
+      get: function() {
+        return this._obj;
+      },
+    });
+
+    ReactDOM.hydrate(jsx, container);
+
+    expect(customElement.getAttribute('str')).toBe('string');
+    expect(customElement.getAttribute('obj')).toBe(null);
+    expect(customElement.str).toBe(undefined);
+    expect(customElement.obj).toBe(undefined);
+  });
 });

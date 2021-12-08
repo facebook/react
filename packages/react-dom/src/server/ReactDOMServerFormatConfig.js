@@ -17,7 +17,10 @@ import {
 
 import {Children} from 'react';
 
-import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
+import {
+  enableFilterEmptyStringAttributesDOM,
+  enableCustomElementPropertySupport,
+} from 'shared/ReactFeatureFlags';
 
 import type {
   Destination,
@@ -1115,11 +1118,25 @@ function pushStartCustomElement(
 
   let children = null;
   let innerHTML = null;
-  for (const propKey in props) {
+  for (let propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
       if (propValue == null) {
         continue;
+      }
+      if (
+        enableCustomElementPropertySupport &&
+        (typeof propValue === 'function' || typeof propValue === 'object')
+      ) {
+        // It is normal to render functions and objects on custom elements when
+        // client rendering, but when server rendering the output isn't useful,
+        // so skip it.
+        continue;
+      }
+      if (enableCustomElementPropertySupport && propKey === 'className') {
+        // className gets rendered as class on the client, so it should be
+        // rendered as class on the server.
+        propKey = 'class';
       }
       switch (propKey) {
         case 'children':

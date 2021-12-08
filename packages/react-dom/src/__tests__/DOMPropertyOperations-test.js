@@ -155,6 +155,355 @@ describe('DOMPropertyOperations', () => {
       // Regression test for https://github.com/facebook/react/issues/6119
       expect(container.firstChild.hasAttribute('value')).toBe(false);
     });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom element custom events lowercase', () => {
+      const oncustomevent = jest.fn();
+      function Test() {
+        return <my-custom-element oncustomevent={oncustomevent} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container
+        .querySelector('my-custom-element')
+        .dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom element custom events uppercase', () => {
+      const oncustomevent = jest.fn();
+      function Test() {
+        return <my-custom-element onCustomevent={oncustomevent} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container
+        .querySelector('my-custom-element')
+        .dispatchEvent(new Event('Customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom element custom event with dash in name', () => {
+      const oncustomevent = jest.fn();
+      function Test() {
+        return <my-custom-element oncustom-event={oncustomevent} />;
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container
+        .querySelector('my-custom-element')
+        .dispatchEvent(new Event('custom-event'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom element remove event handler', () => {
+      const oncustomevent = jest.fn();
+      function Test(props) {
+        return <my-custom-element oncustomevent={props.handler} />;
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<Test handler={oncustomevent} />, container);
+      const customElement = container.querySelector('my-custom-element');
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<Test handler={false} />, container);
+      // Make sure that the second render didn't create a new element. We want
+      // to make sure removeEventListener actually gets called on the same element.
+      expect(customElement).toBe(customElement);
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<Test handler={oncustomevent} />, container);
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(2);
+
+      const oncustomevent2 = jest.fn();
+      ReactDOM.render(<Test handler={oncustomevent2} />, container);
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(2);
+      expect(oncustomevent2).toHaveBeenCalledTimes(1);
+    });
+
+    it('custom elements shouldnt have non-functions for on* attributes treated as event listeners', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <my-custom-element
+          onstring={'hello'}
+          onobj={{hello: 'world'}}
+          onarray={['one', 'two']}
+          ontrue={true}
+          onfalse={false}
+        />,
+        container,
+      );
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('onstring')).toBe('hello');
+      expect(customElement.getAttribute('onobj')).toBe('[object Object]');
+      expect(customElement.getAttribute('onarray')).toBe('one,two');
+      expect(customElement.getAttribute('ontrue')).toBe('true');
+      expect(customElement.getAttribute('onfalse')).toBe('false');
+
+      // Dispatch the corresponding event names to make sure that nothing crashes.
+      customElement.dispatchEvent(new Event('string'));
+      customElement.dispatchEvent(new Event('obj'));
+      customElement.dispatchEvent(new Event('array'));
+      customElement.dispatchEvent(new Event('true'));
+      customElement.dispatchEvent(new Event('false'));
+    });
+
+    it('custom elements should still have onClick treated like regular elements', () => {
+      let syntheticClickEvent = null;
+      const syntheticEventHandler = jest.fn(
+        event => (syntheticClickEvent = event),
+      );
+      let nativeClickEvent = null;
+      const nativeEventHandler = jest.fn(event => (nativeClickEvent = event));
+      function Test() {
+        return <my-custom-element onClick={syntheticEventHandler} />;
+      }
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<Test />, container);
+
+      const customElement = container.querySelector('my-custom-element');
+      customElement.onclick = nativeEventHandler;
+      container.querySelector('my-custom-element').click();
+
+      expect(nativeEventHandler).toHaveBeenCalledTimes(1);
+      expect(syntheticEventHandler).toHaveBeenCalledTimes(1);
+      expect(syntheticClickEvent.nativeEvent).toBe(nativeClickEvent);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom elements should allow custom events with capture event listeners', () => {
+      const oncustomeventCapture = jest.fn();
+      const oncustomevent = jest.fn();
+      function Test() {
+        return (
+          <my-custom-element
+            oncustomeventCapture={oncustomeventCapture}
+            oncustomevent={oncustomevent}>
+            <div />
+          </my-custom-element>
+        );
+      }
+      const container = document.createElement('div');
+      ReactDOM.render(<Test />, container);
+      container
+        .querySelector('my-custom-element > div')
+        .dispatchEvent(new Event('customevent', {bubbles: false}));
+      expect(oncustomeventCapture).toHaveBeenCalledTimes(1);
+      expect(oncustomevent).toHaveBeenCalledTimes(0);
+    });
+
+    it('innerHTML should not work on custom elements', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-custom-element innerHTML="foo" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('innerHTML')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+
+      // Render again to verify the update codepath doesn't accidentally let
+      // something through.
+      ReactDOM.render(<my-custom-element innerHTML="bar" />, container);
+      expect(customElement.getAttribute('innerHTML')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('innerText should not work on custom elements', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-custom-element innerText="foo" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('innerText')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+
+      // Render again to verify the update codepath doesn't accidentally let
+      // something through.
+      ReactDOM.render(<my-custom-element innerText="bar" />, container);
+      expect(customElement.getAttribute('innerText')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('textContent should not work on custom elements', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-custom-element textContent="foo" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('textContent')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+
+      // Render again to verify the update codepath doesn't accidentally let
+      // something through.
+      ReactDOM.render(<my-custom-element textContent="bar" />, container);
+      expect(customElement.getAttribute('textContent')).toBe(null);
+      expect(customElement.hasChildNodes()).toBe(false);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('values should not be converted to booleans when assigning into custom elements', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element />, container);
+      const customElement = container.querySelector('my-custom-element');
+      customElement.foo = null;
+
+      // true => string
+      ReactDOM.render(<my-custom-element foo={true} />, container);
+      expect(customElement.foo).toBe(true);
+      ReactDOM.render(<my-custom-element foo="bar" />, container);
+      expect(customElement.foo).toBe('bar');
+
+      // false => string
+      ReactDOM.render(<my-custom-element foo={false} />, container);
+      expect(customElement.foo).toBe(false);
+      ReactDOM.render(<my-custom-element foo="bar" />, container);
+      expect(customElement.foo).toBe('bar');
+
+      // true => null
+      ReactDOM.render(<my-custom-element foo={true} />, container);
+      expect(customElement.foo).toBe(true);
+      ReactDOM.render(<my-custom-element foo={null} />, container);
+      expect(customElement.foo).toBe(null);
+
+      // false => null
+      ReactDOM.render(<my-custom-element foo={false} />, container);
+      expect(customElement.foo).toBe(false);
+      ReactDOM.render(<my-custom-element foo={null} />, container);
+      expect(customElement.foo).toBe(null);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom element custom event handlers assign multiple types', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const oncustomevent = jest.fn();
+
+      // First render with string
+      ReactDOM.render(<my-custom-element oncustomevent={'foo'} />, container);
+      const customelement = container.querySelector('my-custom-element');
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(0);
+      expect(customelement.oncustomevent).toBe(undefined);
+      expect(customelement.getAttribute('oncustomevent')).toBe('foo');
+
+      // string => event listener
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+      expect(customelement.oncustomevent).toBe(undefined);
+      expect(customelement.getAttribute('oncustomevent')).toBe(null);
+
+      // event listener => string
+      ReactDOM.render(<my-custom-element oncustomevent={'foo'} />, container);
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+      expect(customelement.oncustomevent).toBe(undefined);
+      expect(customelement.getAttribute('oncustomevent')).toBe('foo');
+
+      // string => nothing
+      ReactDOM.render(<my-custom-element />, container);
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+      expect(customelement.oncustomevent).toBe(undefined);
+      expect(customelement.getAttribute('oncustomevent')).toBe(null);
+
+      // nothing => event listener
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(2);
+      expect(customelement.oncustomevent).toBe(undefined);
+      expect(customelement.getAttribute('oncustomevent')).toBe(null);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom element custom event handlers assign multiple types with setter', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const oncustomevent = jest.fn();
+
+      // First render with nothing
+      ReactDOM.render(<my-custom-element />, container);
+      const customelement = container.querySelector('my-custom-element');
+      // Install a setter to activate the `in` heuristic
+      Object.defineProperty(customelement, 'oncustomevent', {
+        set: function(x) {
+          this._oncustomevent = x;
+        },
+        get: function() {
+          return this._oncustomevent;
+        },
+      });
+      expect(customelement.oncustomevent).toBe(undefined);
+
+      // nothing => event listener
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+      expect(customelement.oncustomevent).toBe(null);
+      expect(customelement.getAttribute('oncustomevent')).toBe(null);
+
+      // event listener => string
+      ReactDOM.render(<my-custom-element oncustomevent={'foo'} />, container);
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(1);
+      expect(customelement.oncustomevent).toBe('foo');
+      expect(customelement.getAttribute('oncustomevent')).toBe(null);
+
+      // string => event listener
+      ReactDOM.render(
+        <my-custom-element oncustomevent={oncustomevent} />,
+        container,
+      );
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(2);
+      expect(customelement.oncustomevent).toBe(null);
+      expect(customelement.getAttribute('oncustomevent')).toBe(null);
+
+      // event listener => nothing
+      ReactDOM.render(<my-custom-element />, container);
+      customelement.dispatchEvent(new Event('customevent'));
+      expect(oncustomevent).toHaveBeenCalledTimes(2);
+      expect(customelement.oncustomevent).toBe(null);
+      expect(customelement.getAttribute('oncustomevent')).toBe(null);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('assigning to a custom element property should not remove attributes', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element foo="one" />, container);
+      const customElement = container.querySelector('my-custom-element');
+      expect(customElement.getAttribute('foo')).toBe('one');
+
+      // Install a setter to activate the `in` heuristic
+      Object.defineProperty(customElement, 'foo', {
+        set: function(x) {
+          this._foo = x;
+        },
+        get: function() {
+          return this._foo;
+        },
+      });
+      ReactDOM.render(<my-custom-element foo="two" />, container);
+      expect(customElement.foo).toBe('two');
+      expect(customElement.getAttribute('foo')).toBe('one');
+    });
   });
 
   describe('deleteValueForProperty', () => {
