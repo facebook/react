@@ -250,14 +250,14 @@ function updatePackageVersions(
           // we don't override to the latest version. We should figure out some
           // better way to handle this.
           // TODO: Remove this special case.
-          continue;
-        }
-        for (const dep of Object.keys(packageInfo.peerDependencies)) {
-          const depVersion = versionsMap.get(dep);
-          if (depVersion !== undefined) {
-            packageInfo.peerDependencies[dep] = pinToExactVersion
-              ? depVersion
-              : '^' + depVersion;
+        } else {
+          for (const dep of Object.keys(packageInfo.peerDependencies)) {
+            const depVersion = versionsMap.get(dep);
+            if (depVersion !== undefined) {
+              packageInfo.peerDependencies[dep] = pinToExactVersion
+                ? depVersion
+                : '^' + depVersion;
+            }
           }
         }
       }
