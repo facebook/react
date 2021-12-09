@@ -429,28 +429,6 @@ const bundles = [
     externals: ['fs', 'path', 'url', 'neo-async'],
   },
 
-  /******* React Server DOM Vite Node.js Loader *******/
-  {
-    bundleTypes: [NODE_ESM],
-    moduleType: RENDERER_UTILS,
-    entry: 'react-server-dom-vite/node-loader',
-    global: 'ReactServerWebpackNodeLoader',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['acorn'],
-  },
-
-  /******* React Server DOM Vite Node.js CommonJS Loader *******/
-  {
-    bundleTypes: [NODE_ES2015],
-    moduleType: RENDERER_UTILS,
-    entry: 'react-server-dom-vite/node-register',
-    global: 'ReactFlightWebpackNodeRegister',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['url', 'module'],
-  },
-
   /******* React Server DOM Relay Writer *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],

@@ -14,28 +14,20 @@
     "build-info.json",
     "index.js",
     "plugin.js",
-    "writer.js",
     "writer.browser.server.js",
     "writer.node.server.js",
-    "node-register.js",
     "cjs/",
-    "umd/",
-    "esm/"
+    "umd/"
   ],
   "exports": {
     ".": "./index.js",
     "./plugin": "./plugin.js",
     "./writer": {
-      "react-server": {
-        "node": "./writer.node.server.js",
-        "browser": "./writer.browser.server.js"
-      },
-      "default": "./writer.js"
+      "node": "./writer.node.server.js",
+      "default": "./writer.browser.server.js"
     },
     "./writer.node.server": "./writer.node.server.js",
     "./writer.browser.server": "./writer.browser.server.js",
-    "./node-loader": "./esm/react-server-dom-vite-node-loader.js",
-    "./node-register": "./node-register.js",
     "./package.json": "./package.json"
   },
   "main": "index.js",
