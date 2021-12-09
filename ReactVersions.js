@@ -48,6 +48,7 @@ const experimentalPackages = [
   'react-fs',
   'react-pg',
   'react-server-dom-webpack',
+  'react-server-dom-vite',
 ];
 
 module.exports = {

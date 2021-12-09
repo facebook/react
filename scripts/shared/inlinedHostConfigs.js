@@ -67,6 +67,49 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-vite',
+    entryPoints: [
+      'react-dom',
+      'react-dom/testing',
+      'react-dom/src/server/ReactDOMFizzServerNode',
+      'react-server-dom-vite/writer.node.server',
+      'react-server-dom-vite',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-server-dom-vite',
+      'react-server-dom-vite/writer',
+      'react-server-dom-vite/writer.node.server',
+      'react-server-dom-vite/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-interactions',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-browser-vite',
+    entryPoints: [
+      'react-dom',
+      'react-dom/testing',
+      'react-dom/src/server/ReactDOMFizzServerBrowser',
+      'react-server-dom-vite/writer.browser.server',
+      'react-server-dom-vite',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/testing',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
+      'react-server-dom-vite',
+      'react-server-dom-vite/writer.browser.server',
+      'react-server-dom-vite/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'art',
     entryPoints: ['react-art'],
     paths: ['react-art'],

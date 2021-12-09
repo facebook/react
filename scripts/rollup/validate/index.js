@@ -32,6 +32,8 @@ function getFormat(filepath) {
     if (
       filepath.includes('react-server-dom-webpack-plugin') ||
       filepath.includes('react-server-dom-webpack-node-register') ||
+      filepath.includes('react-server-dom-vite-plugin') ||
+      filepath.includes('react-server-dom-vite-node-register') ||
       filepath.includes('react-suspense-test-utils')
     ) {
       return 'cjs2015';

@@ -144,6 +144,7 @@ module.exports = {
         'packages/react-fs/**/*.js',
         'packages/react-refresh/**/*.js',
         'packages/react-server-dom-webpack/**/*.js',
+        'packages/react-server-dom-vite/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
         'packages/react-devtools-extensions/**/*.js',
@@ -250,6 +251,13 @@ module.exports = {
     },
     {
       files: ['packages/react-server-dom-webpack/**/*.js'],
+      globals: {
+        __webpack_chunk_load__: 'readonly',
+        __webpack_require__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/react-server-dom-vite/**/*.js'],
       globals: {
         __webpack_chunk_load__: 'readonly',
         __webpack_require__: 'readonly',
