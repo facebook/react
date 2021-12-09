@@ -569,7 +569,9 @@ function copyAttributes(existingNode: Instance, newNode: Instance) {
   const newAttributes = newNode.attributes;
   for (const key in existingAttributes) {
     if (Object.prototype.hasOwnProperty.call(existingAttributes, key)) {
-      existingNode.removeAttribute(key);
+      if (!newAttributes.getNamedItem(key)) {
+        existingNode.removeAttribute(key);
+      }
     }
   }
   for (const key in newAttributes) {
