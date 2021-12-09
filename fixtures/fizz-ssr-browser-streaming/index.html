@@ -25,7 +25,7 @@
       let stream = ReactDOMServer.renderToReadableStream(
         <html>
           <body>
-            <p>Success</p>
+            <p>This is successful if you see at least one "Success" below:</p>
 
             {/**
               * With a single Suspense boundary, you'll probably see this error in the browser console:
@@ -38,9 +38,9 @@
               * If you uncomment the following to add another Suspense boundary, you'll probably see this error in the browser console:
               * "Aborted, errored or already flushed boundaries should not be flushed again. This is a bug in React."
               */}
-            {/* <React.Suspense fallback="Loading more...">
+            {/**<React.Suspense fallback="Loading more...">
               <SuspendedData />
-            </React.Suspense> */}
+            </React.Suspense>*/}
 
           </body>
         </html>,
@@ -62,7 +62,7 @@
       function useData() {
         serverData.read();
 
-        return 'Hi';
+        return 'Success';
       }
 
       function data() {
@@ -107,6 +107,8 @@
           iframe.contentWindow.document.write(output);
           debugOutput += output;
         }
+
+        iframe.contentWindow.document.close();
 
         console.log(
           `DEBUG OUTPUT:\n\n` +
