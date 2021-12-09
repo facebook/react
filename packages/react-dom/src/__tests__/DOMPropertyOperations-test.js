@@ -256,6 +256,7 @@ describe('DOMPropertyOperations', () => {
       customElement.dispatchEvent(new Event('false'));
     });
 
+    // @gate enableCustomElementPropertySupport
     it('custom elements should still have onClick treated like regular elements', () => {
       let syntheticClickEvent = null;
       const syntheticEventHandler = jest.fn(
@@ -277,7 +278,92 @@ describe('DOMPropertyOperations', () => {
 
       expect(nativeEventHandler).toHaveBeenCalledTimes(1);
       expect(syntheticEventHandler).toHaveBeenCalledTimes(1);
-      expect(syntheticClickEvent.nativeEvent).toBe(nativeClickEvent);
+      expect(syntheticClickEvent).toBe(nativeClickEvent);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom elements should have working onChange event listeners', () => {
+      let reactChangeEvent = null;
+      const eventHandler = jest.fn(event => (reactChangeEvent = event));
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(
+        <my-custom-element
+          foo="bar"
+          onChange={eventHandler}
+          oncustomevent={() => console.log('customevent')}
+        />,
+        container,
+      );
+
+      const customElement = container.querySelector('my-custom-element');
+      const changeEvent = new Event('change');
+      customElement.dispatchEvent(changeEvent);
+
+      expect(eventHandler).toHaveBeenCalledTimes(1);
+      expect(reactChangeEvent).toBe(changeEvent);
+
+      // Also make sure that removing and re-adding the event listener works
+
+      ReactDOM.render(<my-custom-element />, container);
+      customElement.dispatchEvent(new Event('change'));
+      expect(eventHandler).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<my-custom-element onChange={eventHandler} />, container);
+      customElement.dispatchEvent(new Event('change'));
+      expect(eventHandler).toHaveBeenCalledTimes(2);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom elements should have working onInput event listeners', () => {
+      let reactInputEvent = null;
+      const eventHandler = jest.fn(event => (reactInputEvent = event));
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element onInput={eventHandler} />, container);
+
+      const customElement = container.querySelector('my-custom-element');
+      const inputEvent = new Event('input');
+      customElement.dispatchEvent(inputEvent);
+
+      expect(eventHandler).toHaveBeenCalledTimes(1);
+      expect(reactInputEvent).toBe(inputEvent);
+
+      // Also make sure that removing and re-adding the event listener works
+
+      ReactDOM.render(<my-custom-element />, container);
+      customElement.dispatchEvent(new Event('input'));
+      expect(eventHandler).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<my-custom-element onInput={eventHandler} />, container);
+      customElement.dispatchEvent(new Event('input'));
+      expect(eventHandler).toHaveBeenCalledTimes(2);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom elements should be able to remove and re-add custom event listeners', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const eventHandler = jest.fn();
+      ReactDOM.render(
+        <my-custom-element oncustomevent={eventHandler} />,
+        container,
+      );
+
+      const customElement = container.querySelector('my-custom-element');
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(eventHandler).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(<my-custom-element />, container);
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(eventHandler).toHaveBeenCalledTimes(1);
+
+      ReactDOM.render(
+        <my-custom-element oncustomevent={eventHandler} />,
+        container,
+      );
+      customElement.dispatchEvent(new Event('customevent'));
+      expect(eventHandler).toHaveBeenCalledTimes(2);
     });
 
     // @gate enableCustomElementPropertySupport

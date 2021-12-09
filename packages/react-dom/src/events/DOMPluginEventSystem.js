@@ -52,6 +52,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -71,6 +72,7 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
+import isCustomComponent from '../shared/isCustomComponent';
 
 type DispatchListener = {|
   instance: null | Fiber,
@@ -540,6 +542,15 @@ export function dispatchEventForPluginEventSystem(
   targetInst: null | Fiber,
   targetContainer: EventTarget,
 ): void {
+  if (
+    enableCustomElementPropertySupport &&
+    targetInst &&
+    isCustomComponent(targetInst.elementType, targetInst.pendingProps)
+  ) {
+    // Don't fire events on custom elements, they have a separate event system.
+    return;
+  }
+
   let ancestorInst = targetInst;
   if (
     (eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE) === 0 &&

@@ -321,7 +321,10 @@ function setInitialDOMProperties(
       // We could have excluded it in the property list instead of
       // adding a special case here, but then it wouldn't be emitted
       // on server rendering (but we *do* want to emit it in SSR).
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+    } else if (
+      registrationNameDependencies.hasOwnProperty(propKey) &&
+      (!enableCustomElementPropertySupport || !isCustomComponentTag)
+    ) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
@@ -675,7 +678,11 @@ export function diffProperties(
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // Noop. It doesn't work on updates anyway.
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+    } else if (
+      registrationNameDependencies.hasOwnProperty(propKey) &&
+      (!enableCustomElementPropertySupport ||
+        !isCustomComponent(domElement.tagName, lastRawProps))
+    ) {
       // This is a special case. If any listener updates we need to ensure
       // that the "current" fiber pointer gets updated so we need a commit
       // to update this element.
@@ -761,7 +768,11 @@ export function diffProperties(
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
       // Noop
-    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
+    } else if (
+      registrationNameDependencies.hasOwnProperty(propKey) &&
+      (!enableCustomElementPropertySupport ||
+        !isCustomComponent(domElement.tagName, lastRawProps))
+    ) {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
         if (__DEV__ && typeof nextProp !== 'function') {
