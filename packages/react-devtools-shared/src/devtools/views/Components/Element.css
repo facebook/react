@@ -43,19 +43,6 @@
   --color-expand-collapse-toggle: var(--color-component-name-inverted);
 }
 
-.SelectedElement.StrictModeNonCompliantElement {
-  background-color: var(--color-warning-background);
-  color: var(--color-text-selected);
-}
-.InactiveSelectedElement.StrictModeNonCompliantElement {
-  background-color: var(--color-error-background);
-  color: var(--color-text-selected);
-}
-
-.SelectedElement .StrictModeNonCompliantMarker {
-  color: var(--color-text);
-}
-
 .KeyName {
   color: var(--color-attribute-name);
 }

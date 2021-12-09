@@ -30,10 +30,11 @@ export type IconType =
 
 type Props = {|
   className?: string,
+  title?: string,
   type: IconType,
 |};
 
-export default function Icon({className = '', type}: Props) {
+export default function Icon({className = '', title = '', type}: Props) {
   let pathData = null;
   switch (type) {
     case 'arrow':
@@ -96,6 +97,7 @@ export default function Icon({className = '', type}: Props) {
       width="24"
       height="24"
       viewBox="0 0 24 24">
+      {title && <title>{title}</title>}
       <path d="M0 0h24v24H0z" fill="none" />
       <path fill="currentColor" d={pathData} />
     </svg>

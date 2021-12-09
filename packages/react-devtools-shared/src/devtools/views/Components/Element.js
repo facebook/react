@@ -127,10 +127,6 @@ export default function Element({data, index, style}: Props) {
     className = styles.HoveredElement;
   }
 
-  if (isStrictModeNonCompliant) {
-    className += ' ' + styles.StrictModeNonCompliantElement;
-  }
-
   return (
     <div
       className={className}
@@ -204,6 +200,7 @@ export default function Element({data, index, style}: Props) {
                 ? styles.StrictModeContrast
                 : styles.StrictMode
             }
+            title="This component is not running in StrictMode."
             type="strict-mode-non-compliant"
           />
         )}
