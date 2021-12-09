@@ -66,3 +66,8 @@
   font-style: italic;
   border-left: 1px solid var(--color-border);
 }
+
+.StrictModeNonCompliant {
+  margin-right: 0.25rem;
+  color: var(--color-console-error-icon);
+}

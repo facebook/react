@@ -113,6 +113,7 @@ export default function Element({data, index, style}: Props) {
     depth,
     displayName,
     hocDisplayNames,
+    isStrictModeNonCompliant,
     key,
     type,
   } = ((element: any): ElementType);
@@ -124,6 +125,10 @@ export default function Element({data, index, style}: Props) {
       : styles.InactiveSelectedElement;
   } else if (isHovered && !isNavigatingWithKeyboard) {
     className = styles.HoveredElement;
+  }
+
+  if (isStrictModeNonCompliant) {
+    className += ' ' + styles.StrictModeNonCompliantElement;
   }
 
   return (
@@ -146,7 +151,9 @@ export default function Element({data, index, style}: Props) {
         {ownerID === null ? (
           <ExpandCollapseToggle element={element} store={store} />
         ) : null}
+
         <DisplayName displayName={displayName} id={((id: any): number)} />
+
         {key && (
           <Fragment>
             &nbsp;<span className={styles.KeyName}>key</span>="
@@ -188,6 +195,16 @@ export default function Element({data, index, style}: Props) {
                 ? styles.WarningIconContrast
                 : styles.WarningIcon
             }
+          />
+        )}
+        {isStrictModeNonCompliant && (
+          <Icon
+            className={
+              isSelected && treeFocused
+                ? styles.StrictModeContrast
+                : styles.StrictMode
+            }
+            type="strict-mode-non-compliant"
           />
         )}
       </div>

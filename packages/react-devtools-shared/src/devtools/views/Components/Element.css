@@ -43,6 +43,19 @@
   --color-expand-collapse-toggle: var(--color-component-name-inverted);
 }
 
+.SelectedElement.StrictModeNonCompliantElement {
+  background-color: var(--color-warning-background);
+  color: var(--color-text-selected);
+}
+.InactiveSelectedElement.StrictModeNonCompliantElement {
+  background-color: var(--color-error-background);
+  color: var(--color-text-selected);
+}
+
+.SelectedElement .StrictModeNonCompliantMarker {
+  color: var(--color-text);
+}
+
 .KeyName {
   color: var(--color-attribute-name);
 }
@@ -76,6 +89,8 @@
 
 .ErrorIcon,
 .ErrorIconContrast,
+.StrictMode,
+.StrictModeContrast,
 .WarningIcon,
 .WarningIconContrast {
   height: 0.75rem !important;
@@ -85,9 +100,15 @@
 .ErrorIcon {
   color: var(--color-console-error-icon);
 }
+.StrictMode {
+  color: var(--color-dimmer);
+}
 .WarningIcon {
   color: var(--color-console-warning-icon);
 }
 .ErrorIconContrast, .WarningIconContrast {
   color: var(--color-component-name);
+}
+.StrictModeContrast {
+  color: var(--color-text);
 }

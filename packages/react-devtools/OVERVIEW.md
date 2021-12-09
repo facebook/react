@@ -63,7 +63,9 @@ For example, adding a root fiber with an id of 1:
   1, // add operation
   1, // fiber id
   11, // ElementTypeRoot
+  1, // this root is StrictMode enabled
   1, // this root's renderer supports profiling
+  1, // this root's renderer supports StrictMode
   1, // this root has owner metadata
 ]
 ```

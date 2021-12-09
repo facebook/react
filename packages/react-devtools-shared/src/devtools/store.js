@@ -14,6 +14,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
@@ -33,6 +34,7 @@ import {
   BRIDGE_PROTOCOL,
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
+import {StrictMode} from 'react-devtools-shared/src/types';
 
 import type {Element} from './views/Components/types';
 import type {ComponentFilter, ElementType} from '../types';
@@ -72,6 +74,7 @@ type Config = {|
 export type Capabilities = {|
   hasOwnerMetadata: boolean,
   supportsProfiling: boolean,
+  supportsStrictMode: boolean,
 |};
 
 /**
@@ -812,6 +815,20 @@ export default class Store extends EventEmitter<{|
     }
   };
 
+  _recursivelyUpdateSubtree(
+    id: number,
+    callback: (element: Element) => void,
+  ): void {
+    const element = this._idToElement.get(id);
+    if (element) {
+      callback(element);
+
+      element.children.forEach(child =>
+        this._recursivelyUpdateSubtree(child, callback),
+      );
+    }
+  }
+
   onBridgeNativeStyleEditorSupported = ({
     isSupported,
     validAttributes,
@@ -883,7 +900,13 @@ export default class Store extends EventEmitter<{|
               debug('Add', `new root node ${id}`);
             }
 
+            const isStrictModeCompliant = operations[i] > 0;
+            i++;
+
             const supportsProfiling = operations[i] > 0;
+            i++;
+
+            const supportsStrictMode = operations[i] > 0;
             i++;
 
             const hasOwnerMetadata = operations[i] > 0;
@@ -894,7 +917,13 @@ export default class Store extends EventEmitter<{|
             this._rootIDToCapabilities.set(id, {
               hasOwnerMetadata,
               supportsProfiling,
+              supportsStrictMode,
             });
+
+            // Not all roots support StrictMode;
+            // don't flag a root as non-compliant unless it also supports StrictMode.
+            const isStrictModeNonCompliant =
+              !isStrictModeCompliant && supportsStrictMode;
 
             this._idToElement.set(id, {
               children: [],
@@ -903,6 +932,7 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
+              isStrictModeNonCompliant,
               key: null,
               ownerID: 0,
               parentID: 0,
@@ -958,9 +988,10 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames,
               id,
               isCollapsed: this._collapseNodesByDefault,
+              isStrictModeNonCompliant: parentElement.isStrictModeNonCompliant,
               key,
               ownerID,
-              parentID: parentElement.id,
+              parentID,
               type,
               weight: 1,
             };
@@ -1050,6 +1081,7 @@ export default class Store extends EventEmitter<{|
               haveErrorsOrWarningsChanged = true;
             }
           }
+
           break;
         }
         case TREE_OPERATION_REMOVE_ROOT: {
@@ -1121,6 +1153,28 @@ export default class Store extends EventEmitter<{|
 
           if (__DEBUG__) {
             debug('Re-order', `Node ${id} children ${children.join(',')}`);
+          }
+          break;
+        }
+        case TREE_OPERATION_SET_SUBTREE_MODE: {
+          const id = operations[i + 1];
+          const mode = operations[i + 2];
+
+          i += 3;
+
+          // If elements have already been mounted in this subtree, update them.
+          // (In practice, this likely only applies to the root element.)
+          if (mode === StrictMode) {
+            this._recursivelyUpdateSubtree(id, element => {
+              element.isStrictModeNonCompliant = false;
+            });
+          }
+
+          if (__DEBUG__) {
+            debug(
+              'Subtree mode',
+              `Subtree with root ${id} set to mode ${mode}`,
+            );
           }
           break;
         }
