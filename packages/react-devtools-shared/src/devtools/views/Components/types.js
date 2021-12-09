@@ -12,7 +12,7 @@ import type {
   Dehydrated,
   Unserializable,
 } from 'react-devtools-shared/src/hydration';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType, Plugins} from 'react-devtools-shared/src/types';
 
 // Each element on the frontend corresponds to a Fiber on the backend.
 // Some of its information (e.g. id, type, displayName) come from the backend.
@@ -114,6 +114,9 @@ export type InspectedElement = {|
   // Meta information about the renderer that created this element.
   rendererPackageName: string | null,
   rendererVersion: string | null,
+
+  // UI plugins/visualizations for the inspected element.
+  plugins: Plugins,
 |};
 
 // TODO: Add profiling type

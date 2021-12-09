@@ -40,8 +40,8 @@ export const disableModulePatternComponents = true;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const warnOnSubscriptionInsideStartTransition = false;
-export const enableSuspenseAvoidThisFallback = false;
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+export const enableSuspenseAvoidThisFallback = true;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;
@@ -59,12 +59,12 @@ export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 export const warnAboutCallbackRefReturningFunction = false;
 
-export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
+export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 

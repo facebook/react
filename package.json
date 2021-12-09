@@ -145,7 +145,8 @@
     "publish-prereleases": "node ./scripts/release/publish-using-ci-workflow.js",
     "download-build": "node ./scripts/release/download-experimental-build.js",
     "download-build-for-head": "node ./scripts/release/download-experimental-build.js --commit=$(git rev-parse HEAD)",
-    "download-build-in-codesandbox-ci": "cd scripts/release && yarn install && cd ../../ && yarn download-build-for-head || yarn build-combined --type=node react/index react-dom scheduler"
+    "download-build-in-codesandbox-ci": "cd scripts/release && yarn install && cd ../../ && yarn download-build-for-head || yarn build-combined --type=node react/index react-dom scheduler",
+    "check-release-dependencies": "node ./scripts/release/check-release-dependencies"
   },
   "resolutions": {
     "react-is": "npm:react-is"

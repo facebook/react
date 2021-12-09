@@ -27,7 +27,12 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {attemptToDispatchEvent} from './ReactDOMEventListener';
+import {
+  findInstanceBlockingEvent,
+  return_targetInst,
+} from './ReactDOMEventListener';
+import {setReplayingEvent, resetReplayingEvent} from './CurrentReplayingEvent';
+import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
@@ -86,8 +91,6 @@ type PointerEvent = Event & {
   relatedTarget: EventTarget | null,
   ...
 };
-
-import {IS_REPLAYED} from './EventSystemFlags';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -176,7 +179,7 @@ function createQueuedReplayableEvent(
   return {
     blockedOn,
     domEventName,
-    eventSystemFlags: eventSystemFlags | IS_REPLAYED,
+    eventSystemFlags,
     nativeEvent,
     targetContainers: [targetContainer],
   };
@@ -389,7 +392,7 @@ export function queueIfContinuousEvent(
 function attemptExplicitHydrationTarget(
   queuedTarget: QueuedHydrationTarget,
 ): void {
-  // TODO: This function shares a lot of logic with attemptToDispatchEvent.
+  // TODO: This function shares a lot of logic with findInstanceBlockingEvent.
   // Try to unify them. It's a bit tricky since it would require two return
   // values.
   const targetInst = getClosestInstanceFromNode(queuedTarget.target);
@@ -462,13 +465,34 @@ function attemptReplayContinuousQueuedEvent(
   const targetContainers = queuedEvent.targetContainers;
   while (targetContainers.length > 0) {
     const targetContainer = targetContainers[0];
-    const nextBlockedOn = attemptToDispatchEvent(
+    const nextBlockedOn = findInstanceBlockingEvent(
       queuedEvent.domEventName,
       queuedEvent.eventSystemFlags,
       targetContainer,
       queuedEvent.nativeEvent,
     );
-    if (nextBlockedOn !== null) {
+    if (nextBlockedOn === null) {
+      if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+        const nativeEvent = queuedEvent.nativeEvent;
+        const nativeEventClone = new nativeEvent.constructor(
+          nativeEvent.type,
+          (nativeEvent: any),
+        );
+        setReplayingEvent(nativeEventClone);
+        nativeEvent.target.dispatchEvent(nativeEventClone);
+        resetReplayingEvent();
+      } else {
+        setReplayingEvent(queuedEvent.nativeEvent);
+        dispatchEventForPluginEventSystem(
+          queuedEvent.domEventName,
+          queuedEvent.eventSystemFlags,
+          queuedEvent.nativeEvent,
+          return_targetInst,
+          targetContainer,
+        );
+        resetReplayingEvent();
+      }
+    } else {
       // We're still blocked. Try again later.
       const fiber = getInstanceFromNode(nextBlockedOn);
       if (fiber !== null) {
@@ -512,13 +536,25 @@ function replayUnblockedEvents() {
       const targetContainers = nextDiscreteEvent.targetContainers;
       while (targetContainers.length > 0) {
         const targetContainer = targetContainers[0];
-        const nextBlockedOn = attemptToDispatchEvent(
+        const nextBlockedOn = findInstanceBlockingEvent(
           nextDiscreteEvent.domEventName,
           nextDiscreteEvent.eventSystemFlags,
           targetContainer,
           nextDiscreteEvent.nativeEvent,
         );
-        if (nextBlockedOn !== null) {
+        if (nextBlockedOn === null) {
+          // This whole function is in !enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+          // so we don't need the new replay behavior code branch.
+          setReplayingEvent(nextDiscreteEvent.nativeEvent);
+          dispatchEventForPluginEventSystem(
+            nextDiscreteEvent.domEventName,
+            nextDiscreteEvent.eventSystemFlags,
+            nextDiscreteEvent.nativeEvent,
+            return_targetInst,
+            targetContainer,
+          );
+          resetReplayingEvent();
+        } else {
           // We're still blocked. Try again later.
           nextDiscreteEvent.blockedOn = nextBlockedOn;
           break;

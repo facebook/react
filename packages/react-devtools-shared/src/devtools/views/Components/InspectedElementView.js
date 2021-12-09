@@ -23,6 +23,7 @@ import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWa
 import InspectedElementHooksTree from './InspectedElementHooksTree';
 import InspectedElementPropsTree from './InspectedElementPropsTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
+import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
 import Badge from './Badge';
@@ -31,6 +32,7 @@ import {
   copyInspectedElementPath as copyInspectedElementPathAPI,
   storeAsGlobal as storeAsGlobalAPI,
 } from 'react-devtools-shared/src/backendAPI';
+import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
 import styles from './InspectedElementView.css';
 
@@ -123,6 +125,15 @@ export default function InspectedElementView({
           inspectedElement={inspectedElement}
           store={store}
         />
+
+        {enableStyleXFeatures && (
+          <InspectedElementStyleXPlugin
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        )}
 
         <InspectedElementErrorsAndWarningsTree
           bridge={bridge}

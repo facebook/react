@@ -168,14 +168,10 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     act(() => {
-      root.render(<TestComponent />);
+      ReactDOM.hydrateRoot(container, <TestComponent />, {
+        mutableSources: [mutableSource],
+      });
     });
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(1);
@@ -205,22 +201,16 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['only:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     expect(() => {
       act(() => {
-        root.render(<TestComponent />);
+        ReactDOM.hydrateRoot(container, <TestComponent />, {
+          mutableSources: [mutableSource],
+        });
 
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: An error occurred during hydration. ' +
-        'The server HTML was replaced with client content in <div>.',
-      {withoutStack: true},
+      'Warning: Text content did not match. Server: "only:one" Client: "only:two"',
     );
     expect(Scheduler).toHaveYielded(['only:two']);
     expect(source.listenerCount).toBe(1);
@@ -258,20 +248,18 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded(['a:one', 'b:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     expect(() => {
       act(() => {
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
           React.startTransition(() => {
-            root.render(<TestComponent />);
+            ReactDOM.hydrateRoot(container, <TestComponent />, {
+              mutableSources: [mutableSource],
+            });
           });
         } else {
-          root.render(<TestComponent />);
+          ReactDOM.hydrateRoot(container, <TestComponent />, {
+            mutableSources: [mutableSource],
+          });
         }
         expect(Scheduler).toFlushAndYieldThrough(['a:one']);
         source.value = 'two';
@@ -318,50 +306,34 @@ describe('useMutableSourceHydration', () => {
     container.innerHTML = htmlString;
     expect(Scheduler).toHaveYielded(['0:a:one', '1:b:one']);
 
-    const root = ReactDOM.createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
     expect(() => {
       act(() => {
+        const fragment = (
+          <>
+            <Component
+              label="0"
+              getSnapshot={getSnapshotA}
+              mutableSource={mutableSource}
+              subscribe={subscribeA}
+            />
+            <Component
+              label="1"
+              getSnapshot={getSnapshotB}
+              mutableSource={mutableSource}
+              subscribe={subscribeB}
+            />
+          </>
+        );
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
           React.startTransition(() => {
-            root.render(
-              <>
-                <Component
-                  label="0"
-                  getSnapshot={getSnapshotA}
-                  mutableSource={mutableSource}
-                  subscribe={subscribeA}
-                />
-                <Component
-                  label="1"
-                  getSnapshot={getSnapshotB}
-                  mutableSource={mutableSource}
-                  subscribe={subscribeB}
-                />
-              </>,
-            );
+            ReactDOM.hydrateRoot(container, fragment, {
+              mutableSources: [mutableSource],
+            });
           });
         } else {
-          root.render(
-            <>
-              <Component
-                label="0"
-                getSnapshot={getSnapshotA}
-                mutableSource={mutableSource}
-                subscribe={subscribeA}
-              />
-              <Component
-                label="1"
-                getSnapshot={getSnapshotB}
-                mutableSource={mutableSource}
-                subscribe={subscribeB}
-              />
-            </>,
-          );
+          ReactDOM.hydrateRoot(container, fragment, {
+            mutableSources: [mutableSource],
+          });
         }
         expect(Scheduler).toFlushAndYieldThrough(['0:a:one']);
         source.valueB = 'b:two';
@@ -409,21 +381,19 @@ describe('useMutableSourceHydration', () => {
     expect(Scheduler).toHaveYielded([1, 'a:one']);
     expect(source.listenerCount).toBe(0);
 
-    const root = ReactDOM.createRoot(container, {
-      hydrate: true,
-      hydrationOptions: {
-        mutableSources: [mutableSource],
-      },
-    });
-
     expect(() => {
       act(() => {
+        let root;
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
           React.startTransition(() => {
-            root.render(<TestComponent flag={1} />);
+            root = ReactDOM.hydrateRoot(container, <TestComponent flag={1} />, {
+              mutableSources: [mutableSource],
+            });
           });
         } else {
-          root.render(<TestComponent flag={1} />);
+          root = ReactDOM.hydrateRoot(container, <TestComponent flag={1} />, {
+            mutableSources: [mutableSource],
+          });
         }
         expect(Scheduler).toFlushAndYieldThrough([1]);
 
@@ -438,19 +408,16 @@ describe('useMutableSourceHydration', () => {
         dispatchAndSetCurrentEvent(arbitraryElement, mouseOverEvent);
 
         expect(Scheduler).toFlushAndYieldThrough([2]);
-
         source.value = 'two';
       });
     }).toErrorDev(
-      [
-        'Warning: An error occurred during hydration. ' +
-          'The server HTML was replaced with client content in <div>.',
-
-        'Warning: Text content did not match. Server: "1" Client: "2"',
-      ],
-      {withoutStack: 1},
+      'Warning: Text content did not match. Server: "1" Client: "2"',
     );
-    expect(Scheduler).toHaveYielded([2, 'a:two']);
     expect(source.listenerCount).toBe(1);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      expect(Scheduler).toHaveYielded([2, 'a:two']);
+    } else {
+      expect(Scheduler).toHaveYielded(['a:two']);
+    }
   });
 });

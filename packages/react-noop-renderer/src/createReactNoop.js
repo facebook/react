@@ -973,6 +973,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         null,
         null,
+        false,
+        '',
       );
       return {
         _Scheduler: Scheduler,
@@ -1000,6 +1002,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         null,
         null,
+        false,
+        '',
       );
       return {
         _Scheduler: Scheduler,

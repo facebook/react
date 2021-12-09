@@ -239,6 +239,13 @@ type BaseFiberRootProperties = {|
 
   pooledCache: Cache | null,
   pooledCacheLanes: Lanes,
+
+  // TODO: In Fizz, id generation is specific to each server config. Maybe we
+  // should do this in Fiber, too? Deferring this decision for now because
+  // there's no other place to store the prefix except for an internal field on
+  // the public createRoot object, which the fiber tree does not currently have
+  // a reference to.
+  identifierPrefix: string,
 |};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

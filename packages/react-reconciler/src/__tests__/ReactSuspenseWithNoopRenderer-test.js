@@ -2234,7 +2234,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
   });
 
-  // @gate enableCache
+  // @gate enableCache && enableSuspenseAvoidThisFallback
   it('shows the parent fallback if the inner fallback should be avoided', async () => {
     function Foo({showC}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -2372,7 +2372,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
   });
 
-  // @gate enableCache
+  // @gate enableCache && enableSuspenseAvoidThisFallback
   it('keeps showing an avoided parent fallback if it is already showing', async () => {
     function Foo({showB}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -2865,7 +2865,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
-  // @gate enableCache
+  // @gate enableCache && enableSuspenseAvoidThisFallback
   it('do not show placeholder when updating an avoided boundary with startTransition', async () => {
     function App({page}) {
       return (
@@ -2909,7 +2909,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  // @gate enableCache
+  // @gate enableCache && enableSuspenseAvoidThisFallback
   it('do not show placeholder when mounting an avoided boundary with startTransition', async () => {
     function App({page}) {
       return (

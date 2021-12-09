@@ -103,7 +103,7 @@ export const warnOnSubscriptionInsideStartTransition = false;
 
 export const enableSuspenseAvoidThisFallback = false;
 
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = false;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 
 export const enableClientRenderFallbackOnHydrationMismatch = true;
 
@@ -140,6 +140,12 @@ export const deletedTreeCleanUpLevel = 3;
 // Note that this should be an uncommon use case and can be avoided by using the transition API.
 export const enableSuspenseLayoutEffectSemantics = true;
 
+// Changes the behavior for rendering custom elements in both server rendering
+// and client rendering, mostly to allow JSX attributes to apply to the custom
+// element's object properties instead of only HTML attributes.
+// https://github.com/facebook/react/issues/11347
+export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
@@ -173,8 +179,6 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableUseRefAccessWarning = false;
 
 export const warnAboutCallbackRefReturningFunction = false;
-
-export const enableRecursiveCommitTraversal = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 

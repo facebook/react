@@ -74,6 +74,8 @@ describe('ReactFiberHostContext', () => {
       ConcurrentRoot,
       false,
       null,
+      false,
+      '',
     );
     act(() => {
       Renderer.updateContainer(
@@ -135,6 +137,8 @@ describe('ReactFiberHostContext', () => {
       ConcurrentRoot,
       false,
       null,
+      false,
+      '',
     );
     act(() => {
       Renderer.updateContainer(

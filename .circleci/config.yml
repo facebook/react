@@ -205,10 +205,23 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
+      - attach_workspace:
+          at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn lint-build
+
+  yarn_check_release_dependencies:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run: yarn check-release-dependencies
+
 
   check_error_codes:
     docker: *docker
@@ -427,6 +440,9 @@ workflows:
       - yarn_lint_build:
           requires:
             - yarn_build_combined
+      - yarn_check_release_dependencies:
+          requires:
+            - yarn_build_combined
       - check_error_codes:
           requires:
             - yarn_build_combined
@@ -464,7 +480,7 @@ workflows:
             - setup
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: stable
-          dist_tag: "next,beta"
+          dist_tag: "next"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
@@ -496,7 +512,7 @@ workflows:
             - setup
           commit_sha: << pipeline.git.revision >>
           release_channel: stable
-          dist_tag: "next,beta"
+          dist_tag: "next"
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
