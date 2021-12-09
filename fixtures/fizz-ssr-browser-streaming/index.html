@@ -99,22 +99,26 @@
         let decoder = new TextDecoder();
         let debugOutput = '';
 
-        while (!done) {
-          const chunk = await reader.read();
-          done = chunk.done;
+        try {
+          while (!done) {
+            const chunk = await reader.read();
+            done = chunk.done;
 
-          let output = decoder.decode(chunk.value);
-          iframe.contentWindow.document.write(output);
-          debugOutput += output;
+            let output = decoder.decode(chunk.value);
+            iframe.contentWindow.document.write(output);
+            debugOutput += output;
+          }
+        } catch (e) {
+          //
+        } finally {
+          iframe.contentWindow.document.close();
+
+          console.log(
+            `DEBUG OUTPUT:\n\n` +
+            `👀 Notice the invalid HTML chunk '<div hidden id="<div' 👀 \n\n` +
+            debugOutput
+          );
         }
-
-        iframe.contentWindow.document.close();
-
-        console.log(
-          `DEBUG OUTPUT:\n\n` +
-          `👀 Notice the invalid HTML chunk '<div hidden id="<div' 👀 \n\n` +
-          debugOutput
-        );
       }
     </script>
   </body>
