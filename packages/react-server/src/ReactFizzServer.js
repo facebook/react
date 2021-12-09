@@ -154,6 +154,7 @@ const COMPLETED = 1;
 const FLUSHED = 2;
 const ABORTED = 3;
 const ERRORED = 4;
+const FLUSHING = 5;
 
 type Root = null;
 
@@ -178,7 +179,7 @@ export opaque type Request = {
   destination: null | Destination,
   +responseState: ResponseState,
   +progressiveChunkSize: number,
-  status: 0 | 1 | 2,
+  status: 0 | 1 | 2 | 5,
   fatalError: mixed,
   nextSegmentId: number,
   allPendingTasks: number, // when it reaches zero, we can close the connection.
@@ -1820,6 +1821,11 @@ function flushCompletedQueues(
   request: Request,
   destination: Destination,
 ): void {
+  if (request.status === FLUSHING) {
+    return;
+  }
+  request.status = FLUSHING;
+
   beginWriting(destination);
   try {
     // The structure of this is to go through each queue one by one and write
@@ -1907,6 +1913,7 @@ function flushCompletedQueues(
   } finally {
     completeWriting(destination);
     flushBuffered(destination);
+    request.status = OPEN;
     if (
       request.allPendingTasks === 0 &&
       request.pingedTasks.length === 0 &&
