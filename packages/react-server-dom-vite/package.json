@@ -17,7 +17,8 @@
     "writer.browser.server.js",
     "writer.node.server.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ],
   "exports": {
     ".": "./index.js",
@@ -28,6 +29,7 @@
     },
     "./writer.node.server": "./writer.node.server.js",
     "./writer.browser.server": "./writer.browser.server.js",
+    "./client-proxy": "./esm/react-server-dom-vite-client-proxy.js",
     "./package.json": "./package.json"
   },
   "main": "index.js",
@@ -42,17 +44,9 @@
   "peerDependencies": {
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "webpack": "^5.59.0"
+    "vite": "^2.7.1"
   },
   "dependencies": {
-    "acorn": "^6.2.1",
-    "neo-async": "^2.6.1",
-    "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.1"
-  },
-  "browserify": {
-    "transform": [
-      "loose-envify"
-    ]
+    "es-module-lexer": "^0.9.3"
   }
 }

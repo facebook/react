@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {default} from './src/ReactFlightVitePlugin';
+export * from '../src/ClientProxy.js';
