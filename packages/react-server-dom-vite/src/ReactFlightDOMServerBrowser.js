@@ -8,7 +8,6 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
-import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 
 import {
   createRequest,
@@ -22,12 +21,11 @@ type Options = {
 
 function renderToReadableStream(
   model: ReactModel,
-  webpackMap: BundlerConfig,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
     model,
-    webpackMap,
+    {}, // Manifest, not used
     options ? options.onError : undefined,
   );
   const stream = new ReadableStream({

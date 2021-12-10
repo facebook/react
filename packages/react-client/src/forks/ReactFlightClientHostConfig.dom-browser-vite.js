@@ -9,4 +9,4 @@
 
 export * from 'react-client/src/ReactFlightClientHostConfigBrowser';
 export * from 'react-client/src/ReactFlightClientHostConfigStream';
-export * from 'react-server-dom-vite/src/ReactFlightClientWebpackBundlerConfig';
+export * from 'react-server-dom-vite/src/ReactFlightClientViteBundlerConfig';

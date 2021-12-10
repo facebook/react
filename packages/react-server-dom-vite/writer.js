@@ -7,5 +7,4 @@
  * @flow
  */
 
-export * from '../ReactFlightServerConfigStream';
-export * from 'react-server-dom-vite/src/ReactFlightServerViteBundlerConfig';
+module.exports = require('./writer.node.server.js');

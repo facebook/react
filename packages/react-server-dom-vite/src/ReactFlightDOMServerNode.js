@@ -8,7 +8,6 @@
  */
 
 import type {ReactModel} from 'react-server/src/ReactFlightServer';
-import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 import type {Writable} from 'stream';
 
 import {
@@ -31,12 +30,11 @@ type Controls = {|
 
 function renderToPipeableStream(
   model: ReactModel,
-  webpackMap: BundlerConfig,
   options?: Options,
 ): Controls {
   const request = createRequest(
     model,
-    webpackMap,
+    {}, // Manifest, not used
     options ? options.onError : undefined,
   );
   let hasStartedFlowing = false;

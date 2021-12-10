@@ -7,13 +7,7 @@
  * @flow
  */
 
-type WebpackMap = {
-  [filepath: string]: {
-    [name: string]: ModuleMetaData,
-  },
-};
-
-export type BundlerConfig = WebpackMap;
+export type BundlerConfig = {};
 
 // eslint-disable-next-line no-unused-vars
 export type ModuleReference<T> = {
@@ -24,7 +18,6 @@ export type ModuleReference<T> = {
 
 export type ModuleMetaData = {
   id: string,
-  chunks: Array<string>,
   name: string,
 };
 
@@ -37,12 +30,15 @@ export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
 }
 
 export function isModuleReference(reference: Object): boolean {
-  return reference.$$typeof === MODULE_TAG;
+  return (reference.$$typeof_rsc || reference.$$typeof) === MODULE_TAG;
 }
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
   moduleReference: ModuleReference<T>,
 ): ModuleMetaData {
-  return config[moduleReference.filepath][moduleReference.name];
+  return {
+    id: moduleReference.filepath,
+    name: moduleReference.name,
+  };
 }
