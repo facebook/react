@@ -100,3 +100,5 @@ export type StyleXPlugin = {|
 export type Plugins = {|
   stylex: StyleXPlugin | null,
 |};
+
+export const StrictMode = 1;

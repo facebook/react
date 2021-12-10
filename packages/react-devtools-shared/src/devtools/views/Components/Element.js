@@ -113,6 +113,7 @@ export default function Element({data, index, style}: Props) {
     depth,
     displayName,
     hocDisplayNames,
+    isStrictModeNonCompliant,
     key,
     type,
   } = ((element: any): ElementType);
@@ -146,7 +147,9 @@ export default function Element({data, index, style}: Props) {
         {ownerID === null ? (
           <ExpandCollapseToggle element={element} store={store} />
         ) : null}
+
         <DisplayName displayName={displayName} id={((id: any): number)} />
+
         {key && (
           <Fragment>
             &nbsp;<span className={styles.KeyName}>key</span>="
@@ -188,6 +191,17 @@ export default function Element({data, index, style}: Props) {
                 ? styles.WarningIconContrast
                 : styles.WarningIcon
             }
+          />
+        )}
+        {isStrictModeNonCompliant && (
+          <Icon
+            className={
+              isSelected && treeFocused
+                ? styles.StrictModeContrast
+                : styles.StrictMode
+            }
+            title="This component is not running in StrictMode."
+            type="strict-mode-non-compliant"
           />
         )}
       </div>

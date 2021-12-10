@@ -13,6 +13,7 @@ import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Icon from '../Icon';
 import {ModalDialogContext} from '../ModalDialog';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
@@ -235,9 +236,25 @@ export default function InspectedElementWrapper(_: Props) {
     );
   }
 
+  let strictModeBadge = null;
+  if (element.isStrictModeNonCompliant) {
+    strictModeBadge = (
+      <a
+        className={styles.StrictModeNonCompliant}
+        href="https://fb.me/devtools-strict-mode"
+        rel="noopener noreferrer"
+        target="_blank"
+        title="This component is not running in StrictMode. Click to learn more.">
+        <Icon type="strict-mode-non-compliant" />
+      </a>
+    );
+  }
+
   return (
     <div className={styles.InspectedElement}>
       <div className={styles.TitleRow}>
+        {strictModeBadge}
+
         {element.key && (
           <>
             <div className={styles.Key} title={`key "${element.key}"`}>
@@ -248,7 +265,13 @@ export default function InspectedElementWrapper(_: Props) {
         )}
 
         <div className={styles.SelectedComponentName}>
-          <div className={styles.Component} title={element.displayName}>
+          <div
+            className={
+              element.isStrictModeNonCompliant
+                ? styles.StrictModeNonCompliantComponent
+                : styles.Component
+            }
+            title={element.displayName}>
             {element.displayName}
           </div>
         </div>
