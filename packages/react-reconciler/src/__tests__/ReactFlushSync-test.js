@@ -92,7 +92,7 @@ describe('ReactFlushSync', () => {
           // startTransition is closer.
           setState(1);
           ReactNoop.flushSync(() => {
-            // This should be async even though startTransition is on the stack,
+            // This should be sync even though startTransition is on the stack,
             // because flushSync is closer.
             setSyncState(1);
           });
