@@ -1,0 +1,90 @@
+name: "🐛 Bug report"
+description: "Report a reproducible bug or regression"
+title: "[Bug]: "
+labels: ["Type: Bug", "Status: Unconfirmed"]
+body:
+- type: markdown
+  attributes:
+    value: |
+      Thank you for reporting an issue :pray:
+
+      This issue tracker is for reporting reproducible bugs or regression's found in React (https://github.com/facebook/react)
+      For support questions, refer to the React community's help and discussion forums: https://reactjs.org/community/support.html
+
+      Before submitting a new bug/issue, please check the links below to see if there is a solution or question posted there already:
+        - React's Issue's tab: https://github.com/facebook/react/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc
+        - React's Closed Issue's tab: https://github.com/facebook/react/issues?q=is%3Aissue+sort%3Aupdated-desc+is%3Aclosed
+
+- type: input
+  attributes:
+    label: Website or app
+    description: |
+      Which website or app were you using when the bug happened?
+      Note:
+      - Your bug will may get fixed much faster if we can run your code and it doesn't have dependencies other than React.
+      - To create a shareable code example visit CodeSandbox (https://codesandbox.io/s/new). Please no localhost URLs.
+      - Please read these tips for providing a minimal example: https://stackoverflow.com/help/mcve.
+    placeholder: |
+      e.g. Code Sandbox app, Github Repo or website URL
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Steps to Reproduce
+    description: |
+      What were you doing on the website or app when the bug happened? Detailed information helps maintainers reproduce and fix bugs.
+      Issues without reproduction steps or code examples may be immediately closed as not actionable.
+    placeholder: |
+      Example bug report:
+      1. Log in with username/password
+      2. Click "Messages" on the left menu
+      3. Open any message in the list
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: What is the Current & Expected Behavior?
+    placeholder: |
+      Current Behavior:
+      - It should ....
+      Expected Behavior:
+      - It should ....
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: How often does this bug happen?
+    description: |
+      Following the repro steps above, how easily are you able to reproduce this bug?
+    options:
+      - Every time
+      - Often
+      - Sometimes
+      - Only once
+  validations:
+    required: true
+- type: textarea
+  id: screenshots_or_videos
+  attributes:
+    label: Screenshots or Videos
+    description: |
+      If applicable, add screenshots or a video to help explain your problem.
+      For more information on the supported file image/file types and the file size limits, please refer
+      to the following link: https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/attaching-files
+    placeholder: |
+      You can drag your video or image files inside of this editor ↓:
+- type: textarea
+  id: platform
+  attributes:
+    label: Platform
+    value: |
+      - OS: [e.g. macOS, Windows, Linux]
+      - Browser: [e.g. Chrome, Safari, Firefox]
+      - Version: [e.g. 91.1]
+  validations:
+    required: true
+- type: textarea
+  id: additional
+  attributes:
+    label: Additional context
+    description: Add any other context about the problem here.
