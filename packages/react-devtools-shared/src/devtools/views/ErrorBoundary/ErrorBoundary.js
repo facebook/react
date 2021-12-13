@@ -74,12 +74,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: any, {componentStack}: any) {
-    logEvent({
-      event_name: 'error',
-      error_message: error.message ?? null,
-      error_stack: error.stack ?? null,
-      error_component_stack: componentStack ?? null,
-    });
+    this._logError(error, componentStack);
     this.setState({
       componentStack,
     });
@@ -146,6 +141,15 @@ export default class ErrorBoundary extends Component<Props, State> {
     return children;
   }
 
+  _logError = (error: any, componentStack: string | null) => {
+    logEvent({
+      event_name: 'error',
+      error_message: error.message ?? null,
+      error_stack: error.stack ?? null,
+      error_component_stack: componentStack ?? null,
+    });
+  };
+
   _dismissError = () => {
     const onBeforeDismissCallback = this.props.onBeforeDismissCallback;
     if (typeof onBeforeDismissCallback === 'function') {
@@ -157,6 +161,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   _onStoreError = (error: Error) => {
     if (!this.state.hasError) {
+      this._logError(error, null);
       this.setState({
         ...ErrorBoundary.getDerivedStateFromError(error),
         canDismiss: true,
