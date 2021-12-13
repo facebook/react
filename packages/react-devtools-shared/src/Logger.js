@@ -14,6 +14,12 @@ export type LogEvent =
       +event_name: 'loaded-dev-tools',
     |}
   | {|
+      +event_name: 'error',
+      +error_message: string | null,
+      +error_stack: string | null,
+      +error_component_stack: string | null,
+    |}
+  | {|
       +event_name: 'selected-components-tab',
     |}
   | {|

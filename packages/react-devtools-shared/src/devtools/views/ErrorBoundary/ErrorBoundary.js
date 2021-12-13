@@ -15,6 +15,7 @@ import SearchingGitHubIssues from './SearchingGitHubIssues';
 import SuspendingErrorView from './SuspendingErrorView';
 import TimeoutView from './TimeoutView';
 import TimeoutError from 'react-devtools-shared/src/TimeoutError';
+import {logEvent} from 'react-devtools-shared/src/Logger';
 
 type Props = {|
   children: React$Node,
@@ -73,6 +74,12 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: any, {componentStack}: any) {
+    logEvent({
+      event_name: 'error',
+      error_message: error.message ?? null,
+      error_stack: error.stack ?? null,
+      error_component_stack: componentStack ?? null,
+    });
     this.setState({
       componentStack,
     });
