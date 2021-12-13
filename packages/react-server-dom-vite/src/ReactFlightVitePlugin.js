@@ -34,12 +34,6 @@ export default function ReactFlightVitePlugin({
 
     enforce: 'pre',
 
-    config: () => ({
-      optimizeDeps: {
-        include: ['react-server-dom-vite', 'react-server-dom-vite/writer'],
-      },
-    }),
-
     configResolved(_config: any) {
       config = _config;
     },
