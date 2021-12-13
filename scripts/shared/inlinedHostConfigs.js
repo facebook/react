@@ -103,7 +103,8 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-server-dom-vite',
       'react-server-dom-vite/writer.browser.server',
-      'react-server-dom-vite/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
+      'react-server-dom-vite/src/ReactFlightDOMServerBrowser.js', // react-server-dom-vite/writer.browser.server
+      'react-server-dom-vite/esm/react-server-dom-vite-writer.browser.server.js',
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,

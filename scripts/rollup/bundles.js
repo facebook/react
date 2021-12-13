@@ -389,7 +389,7 @@ const bundles = [
 
   /******* React Server DOM Vite Writer *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_ESM, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-vite/writer.browser.server',
     global: 'ReactServerDOMViteWriter',
@@ -398,7 +398,7 @@ const bundles = [
     externals: ['react'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_ESM, NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-vite/writer.node.server',
     global: 'ReactServerDOMViteWriter',
@@ -409,7 +409,7 @@ const bundles = [
 
   /******* React Server DOM Vite Reader *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_ESM, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-server-dom-vite',
     global: 'ReactServerDOMViteReader',
@@ -420,7 +420,7 @@ const bundles = [
 
   /******* React Server DOM Vite Plugin *******/
   {
-    bundleTypes: [NODE_ES2015],
+    bundleTypes: [NODE_ESM, NODE_ES2015],
     moduleType: RENDERER_UTILS,
     entry: 'react-server-dom-vite/plugin',
     global: 'ReactServerVitePlugin',

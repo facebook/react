@@ -21,14 +21,27 @@
     "esm/"
   ],
   "exports": {
-    ".": "./index.js",
-    "./plugin": "./plugin.js",
-    "./writer": {
-      "node": "./writer.node.server.js",
-      "default": "./writer.browser.server.js"
+    ".": {
+      "require": "./index.js",
+      "import": "./esm/react-server-dom-vite.js"
     },
-    "./writer.node.server": "./writer.node.server.js",
-    "./writer.browser.server": "./writer.browser.server.js",
+    "./plugin": {
+      "require": "./plugin.js",
+      "import": "./esm/react-server-dom-vite-plugin.js"
+    },
+    "./writer": {
+      "require": "./writer.node.server.js",
+      "node": "./esm/react-server-dom-vite-writer.node.server.js",
+      "default": "./esm/react-server-dom-vite-writer.browser.server.js"
+    },
+    "./writer.node.server": {
+      "require": "./writer.node.server.js",
+      "import": "./esm/react-server-dom-vite-writer.node.server.js"
+    },
+    "./writer.browser.server":  {
+      "require": "./writer.browser.server.js",
+      "import": "./esm/react-server-dom-vite-writer.browser.server.js"
+    },
     "./client-proxy": "./esm/react-server-dom-vite-client-proxy.js",
     "./package.json": "./package.json"
   },
