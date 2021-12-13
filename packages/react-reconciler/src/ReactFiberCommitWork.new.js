@@ -128,6 +128,8 @@ import {
   prepareScopeUpdate,
   prepareForCommit,
   beforeActiveInstanceBlur,
+  commitEffectsBegin,
+  commitEffectsComplete,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -2151,6 +2153,9 @@ export function commitMutationEffects(
 }
 
 function commitMutationEffects_begin(root: FiberRoot) {
+  if (typeof commitEffectsBegin === 'function') {
+    commitEffectsBegin();
+  }
   while (nextEffect !== null) {
     const fiber = nextEffect;
 
@@ -2174,6 +2179,9 @@ function commitMutationEffects_begin(root: FiberRoot) {
       nextEffect = child;
     } else {
       commitMutationEffects_complete(root);
+      if (typeof commitEffectsComplete === 'function') {
+        commitEffectsComplete();
+      }
     }
   }
 }
