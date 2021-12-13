@@ -16,12 +16,20 @@ type ClientProxy = {
   component: mixed,
 };
 
+function isReactComponent(component: any) {
+  if (component) {
+    return (
+      typeof component === 'function' ||
+      typeof component.render === 'function' ||
+      component.$$typeof === Symbol.for('react.element')
+    );
+  }
+
+  return false;
+}
+
 export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
-  if (
-    !component ||
-    (typeof component !== 'function' &&
-      !Object.prototype.hasOwnProperty.call(component, 'render'))
-  ) {
+  if (!isReactComponent(component)) {
     // This is not a React component, return it as is.
     return component;
   }
@@ -31,6 +39,10 @@ export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
   const render = {
     [name]: (props: any) => createElement(component, props),
   }[name];
+
+  if (__DEV__) {
+    render.displayName = name;
+  }
 
   // React accesses the `render` function directly when encountring this type
   const componentRef = Object.create(null);
