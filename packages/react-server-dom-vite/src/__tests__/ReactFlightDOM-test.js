@@ -26,6 +26,7 @@ let React;
 let ReactDOM;
 let ReactServerDOMWriter;
 let ReactServerDOMReader;
+let ClientProxy;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
@@ -36,6 +37,7 @@ describe('ReactFlightDOM', () => {
     ReactDOM = require('react-dom');
     ReactServerDOMWriter = require('react-server-dom-vite/writer.node.server');
     ReactServerDOMReader = require('react-server-dom-vite');
+    ClientProxy = require('react-server-dom-vite/esm/react-server-dom-vite-client-proxy');
 
     // Reset modules
     viteModules = global.allClientComponents;
@@ -67,8 +69,12 @@ describe('ReactFlightDOM', () => {
         default: moduleExport,
       });
 
-    const MODULE_TAG = Symbol.for('react.module.reference');
-    return {$$typeof: MODULE_TAG, filepath: idx, name: 'default'};
+    return ClientProxy.wrapInClientProxy({
+      component: moduleExport,
+      id: idx,
+      name: 'default',
+      named: false,
+    });
   }
 
   async function waitForSuspense(fn) {
