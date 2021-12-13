@@ -32,9 +32,12 @@ describe('ReactFlightDOMClientProxy', () => {
 
     expect(typeof result).toEqual('object');
     expect(typeof result.render).toEqual('function');
-    expect(result.render.displayName).toEqual(name);
     expect(result.filepath).toEqual(id);
     expect(result.name).toEqual('default');
+
+    if (process.env.NODE_ENV !== 'production') {
+      expect(result.render.displayName).toEqual(name);
+    }
   });
 
   it('should not wrap anything that is not a React component', () => {
