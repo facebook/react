@@ -105,7 +105,7 @@ export default function ReactFlightVitePlugin({
 
         const importers = [[userGlob, userPrefix]];
 
-        for (const componentPath of clientComponentPaths) {
+        clientComponentPaths.forEach(componentPath => {
           const libPrefix = componentPath + path.sep;
           const libGlob = path.join(
             path.relative(importerPath, componentPath),
@@ -113,7 +113,7 @@ export default function ReactFlightVitePlugin({
           );
 
           importers.push([libGlob, libPrefix]);
-        }
+        });
 
         const injectedGlobs = `Object.assign(Object.create(null), ${importers
           .map(
@@ -159,7 +159,7 @@ export async function proxyClientComponent(id: string, src?: string) {
   // Classify exports in components to wrap vs. everything else (e.g. GQL Fragments)
   const otherExports: string[] = [];
   const componentExports: string[] = [];
-  for (const key of exportStatements) {
+  exportStatements.forEach(key => {
     if (
       key !== DEFAULT_EXPORT &&
       /^use[A-Z]|Fragment$|Context$|^[A-Z_]+$/.test(key)
@@ -168,7 +168,7 @@ export async function proxyClientComponent(id: string, src?: string) {
     } else {
       componentExports.push(key);
     }
-  }
+  });
 
   if (componentExports.length === 0) {
     return `export * from '${importFrom}';\n`;
@@ -196,9 +196,10 @@ export async function proxyClientComponent(id: string, src?: string) {
 
     proxyCode += `export ${
       isDefault ? DEFAULT_EXPORT : `const ${componentName} =`
-    } wrapInClientProxy({ name: '${componentName}', id: '${id}', component: allImports['${key}'], named: ${String(
-      !isDefault,
-    )} });\n`;
+    } wrapInClientProxy({ name: '${componentName}', id: '${id}', component: allImports['${key}'], named: ${
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      String(!isDefault)
+    } });\n`;
   });
 
   return proxyCode;
