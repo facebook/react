@@ -42,8 +42,11 @@ const config = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'cheap-source-map' : 'source-map',
   entry: {
-    app: './src/app/index.js',
-    devtools: './src/devtools.js',
+    'app-index': './src/app/index.js',
+    'app-devtools': './src/app/devtools.js',
+    'multi-left': './src/multi/left.js',
+    'multi-devtools': './src/multi/devtools.js',
+    'multi-right': './src/multi/right.js',
   },
   node: {
     // source-maps package has a dependency on 'fs'
