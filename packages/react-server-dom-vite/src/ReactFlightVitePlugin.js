@@ -53,8 +53,9 @@ export default function ReactFlightVitePlugin({
       if (
         /\.server(\.[jt]sx?)?$/.test(source) &&
         !(
-          /\.server\.[jt]sx?$/.test(importer) ||
-          isServerComponentImporterAllowed(importer, source)
+          /(\.server\.[jt]sx?|entry-server\.[jt]sx?|\/index\.html)$/.test(
+            importer,
+          ) || isServerComponentImporterAllowed(importer, source)
         )
       ) {
         throw new Error(
