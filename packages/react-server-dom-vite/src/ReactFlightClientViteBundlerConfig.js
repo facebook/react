@@ -26,7 +26,13 @@ const allClientComponents: any = {
   __INJECTED_CLIENT_IMPORTERS__: null,
 };
 
-export function importClientComponent(moduleId: string): Promise<any> {
+// Mock client component imports during testing
+declare var jest: {};
+if (typeof jest !== 'undefined') {
+  global.allClientComponents = allClientComponents;
+}
+
+function importClientComponent(moduleId: string): Promise<any> {
   const modImport = allClientComponents[moduleId];
 
   if (!modImport) {

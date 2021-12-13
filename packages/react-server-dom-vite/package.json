@@ -61,5 +61,8 @@
   },
   "dependencies": {
     "es-module-lexer": "^0.9.3"
+  },
+  "devDependencies": {
+    "vite": "^2.7.1"
   }
 }

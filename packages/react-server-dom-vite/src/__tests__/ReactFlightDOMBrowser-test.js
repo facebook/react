@@ -14,12 +14,8 @@ global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStr
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
-let webpackModuleIdx = 0;
-let webpackModules = {};
-let webpackMap = {};
-global.__webpack_require__ = function(id) {
-  return webpackModules[id];
-};
+let viteModuleIdx = 0;
+let viteModules = {};
 
 let act;
 let React;
@@ -30,29 +26,27 @@ let ReactServerDOMReader;
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
-    webpackModules = {};
-    webpackMap = {};
+    viteModules = {};
     act = require('jest-react').act;
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactServerDOMWriter = require('react-server-dom-webpack/writer.browser.server');
-    ReactServerDOMReader = require('react-server-dom-webpack');
+    ReactServerDOMWriter = require('react-server-dom-vite/writer.browser.server');
+    ReactServerDOMReader = require('react-server-dom-vite');
+
+    // Reset modules
+    viteModules = global.allClientComponents;
+    Object.keys(viteModules).forEach(key => delete viteModules[key]);
   });
 
   function moduleReference(moduleExport) {
-    const idx = webpackModuleIdx++;
-    webpackModules[idx] = {
-      d: moduleExport,
-    };
-    webpackMap['path/' + idx] = {
-      default: {
-        id: '' + idx,
-        chunks: [],
-        name: 'd',
-      },
-    };
+    const idx = viteModuleIdx++;
+    viteModules[idx] = () =>
+      Promise.resolve({
+        default: moduleExport,
+      });
+
     const MODULE_TAG = Symbol.for('react.module.reference');
-    return {$$typeof: MODULE_TAG, filepath: 'path/' + idx, name: 'default'};
+    return {$$typeof: MODULE_TAG, filepath: idx, name: 'default'};
   }
 
   async function waitForSuspense(fn) {
@@ -258,15 +252,11 @@ describe('ReactFlightDOMBrowser', () => {
       return response.readRoot().rootContent;
     }
 
-    const stream = ReactServerDOMWriter.renderToReadableStream(
-      model,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-        },
+    const stream = ReactServerDOMWriter.renderToReadableStream(model, {
+      onError(x) {
+        reportedErrors.push(x);
       },
-    );
+    });
     const response = ReactServerDOMReader.createFromReadableStream(stream);
 
     const container = document.createElement('div');

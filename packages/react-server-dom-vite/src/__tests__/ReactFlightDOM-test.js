@@ -17,12 +17,8 @@ global.TextDecoder = require('util').TextDecoder;
 // TODO: we can replace this with FlightServer.act().
 global.setImmediate = cb => cb();
 
-let webpackModuleIdx = 0;
-let webpackModules = {};
-let webpackMap = {};
-global.__webpack_require__ = function(id) {
-  return webpackModules[id];
-};
+let viteModuleIdx = 0;
+let viteModules = {};
 
 let act;
 let Stream;
@@ -34,14 +30,16 @@ let ReactServerDOMReader;
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
-    webpackModules = {};
-    webpackMap = {};
     act = require('jest-react').act;
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
-    ReactServerDOMReader = require('react-server-dom-webpack');
+    ReactServerDOMWriter = require('react-server-dom-vite/writer.node.server');
+    ReactServerDOMReader = require('react-server-dom-vite');
+
+    // Reset modules
+    viteModules = global.allClientComponents;
+    Object.keys(viteModules).forEach(key => delete viteModules[key]);
   });
 
   function getTestStream() {
@@ -63,19 +61,14 @@ describe('ReactFlightDOM', () => {
   }
 
   function moduleReference(moduleExport) {
-    const idx = webpackModuleIdx++;
-    webpackModules[idx] = {
-      d: moduleExport,
-    };
-    webpackMap['path/' + idx] = {
-      default: {
-        id: '' + idx,
-        chunks: [],
-        name: 'd',
-      },
-    };
+    const idx = viteModuleIdx++;
+    viteModules[idx] = () =>
+      Promise.resolve({
+        default: moduleExport,
+      });
+
     const MODULE_TAG = Symbol.for('react.module.reference');
-    return {$$typeof: MODULE_TAG, filepath: 'path/' + idx, name: 'default'};
+    return {$$typeof: MODULE_TAG, filepath: idx, name: 'default'};
   }
 
   async function waitForSuspense(fn) {
@@ -113,10 +106,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
-      <App />,
-      webpackMap,
-    );
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(<App />);
     pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
     await waitForSuspense(() => {
@@ -166,10 +156,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
-    );
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(<RootModel />);
     pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
@@ -204,10 +191,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
-    );
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(<RootModel />);
     pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
@@ -240,10 +224,7 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
-      <RootModel />,
-      webpackMap,
-    );
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(<RootModel />);
     pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
@@ -375,15 +356,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
-      model,
-      webpackMap,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-        },
+    const {pipe} = ReactServerDOMWriter.renderToPipeableStream(model, {
+      onError(x) {
+        reportedErrors.push(x);
       },
-    );
+    });
     pipe(writable);
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
@@ -492,7 +469,6 @@ describe('ReactFlightDOM', () => {
     const stream1 = getTestStream();
     const {pipe} = ReactServerDOMWriter.renderToPipeableStream(
       <App color="red" />,
-      webpackMap,
     );
     pipe(stream1.writable);
     const response1 = ReactServerDOMReader.createFromReadableStream(
@@ -520,7 +496,6 @@ describe('ReactFlightDOM', () => {
     const stream2 = getTestStream();
     const {pipe: pipe2} = ReactServerDOMWriter.renderToPipeableStream(
       <App color="blue" />,
-      webpackMap,
     );
     pipe2(stream2.writable);
     const response2 = ReactServerDOMReader.createFromReadableStream(
