@@ -257,13 +257,6 @@ module.exports = {
       },
     },
     {
-      files: ['packages/react-server-dom-vite/**/*.js'],
-      globals: {
-        __webpack_chunk_load__: 'readonly',
-        __webpack_require__: 'readonly',
-      },
-    },
-    {
       files: ['packages/scheduler/**/*.js'],
       globals: {
         TaskController: 'readonly',
