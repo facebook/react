@@ -11,14 +11,7 @@
   "bin": {
     "react-devtools": "./bin.js"
   },
-  "files": [
-    "bin.js",
-    "build-info.json",
-    "app.html",
-    "app.js",
-    "index.js",
-    "icons"
-  ],
+  "files": [],
   "scripts": {
     "start": "node bin.js"
   },

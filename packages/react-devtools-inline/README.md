@@ -56,7 +56,7 @@ const iframe = document.getElementById(frameID);
 const contentWindow = iframe.contentWindow;
 
 // This returns a React component that can be rendered into your app.
-// <DevTools {...props} />
+// e.g. render(<DevTools {...props} />);
 const DevTools = initialize(contentWindow);
 ```
 
@@ -177,32 +177,47 @@ Below is an example of an advanced integration with a website like [Replay.io](h
 
 ```js
 import {
-  createBridge,
+  activate as activateBackend,
+  createBridge as createBackendBridge,
+  initialize as initializeBackend,
+} from 'react-devtools-inline/backend';
+import {
+  createBridge as createFrontendBridge,
   createStore,
   initialize as createDevTools,
-} from "react-devtools-inline/frontend";
+} from 'react-devtools-inline/frontend';
 
-// Custom Wall implementation enables serializing data
-// using an API other than window.postMessage()
+// DevTools uses "message" events and window.postMessage() by default,
+// but we can override this behavior by creating a custom "Wall" object.
 // For example...
 const wall = {
-  emit() {},
+  _listeners: [],
   listen(listener) {
-    wall._listener = listener;
+    wall._listeners.push(listener);
   },
-  async send(event, payload) {
-    const response = await fetch(...).json();
-    wall._listener(response);
+  send(event, payload) {
+    wall._listeners.forEach(listener => listener({event, payload}));
   },
 };
 
-// Create a Bridge and Store that use the custom Wall.
+// Initialize the DevTools backend before importing React (or any other packages that might import React).
+initializeBackend(contentWindow);
+
+// Prepare DevTools for rendering.
+// To use the custom Wall we've created, we need to also create our own "Bridge" and "Store" objects.
 const bridge = createBridge(target, wall);
 const store = createStore(bridge);
 const DevTools = createDevTools(target, { bridge, store });
 
-// Render DevTools with it.
-<DevTools {...otherProps} />;
+// You can render DevTools now:
+const root = createRoot(container);
+root.render(<DevTools {...otherProps} />);
+
+// Lastly, let the DevTools backend know that the frontend is ready.
+// To use the custom Wall we've created, we need to also pass in the "Bridge".
+activateBackend(contentWindow, {
+  bridge: createBackendBridge(contentWindow, wall),
+});
 ```
 
 ## Local development

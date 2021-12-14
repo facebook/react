@@ -3,9 +3,9 @@
   "name": "react-devtools-shell",
   "version": "0.0.0",
   "scripts": {
-    "build": "cross-env NODE_ENV=development cross-env TARGET=remote webpack --config webpack.config.js",
-    "deploy": "yarn run build && now deploy && now alias react-devtools-experimental",
-    "start": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open"
+    "start": "yarn start:app",
+    "start:app": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open-page app.html",
+    "start:multi": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open-page multi.html"
   },
   "dependencies": {
     "immutable": "^4.0.0-rc.12",
