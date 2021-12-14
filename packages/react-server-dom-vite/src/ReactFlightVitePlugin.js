@@ -156,35 +156,12 @@ export async function proxyClientComponent(id: string, src?: string) {
   const {code} = await transformWithEsbuild(src, id);
   const [, exportStatements] = parse(code);
 
-  // Classify exports in components to wrap vs. everything else (e.g. GQL Fragments)
-  const otherExports: string[] = [];
-  const componentExports: string[] = [];
-  exportStatements.forEach(key => {
-    if (
-      key !== DEFAULT_EXPORT &&
-      /^use[A-Z]|Fragment$|Context$|^[A-Z_]+$/.test(key)
-    ) {
-      otherExports.push(key);
-    } else {
-      componentExports.push(key);
-    }
-  });
-
-  if (componentExports.length === 0) {
-    return `export * from '${importFrom}';\n`;
-  }
-
   let proxyCode =
     `import {wrapInClientProxy} from 'react-server-dom-vite/client-proxy';\n` +
     `import * as allImports from '${importFrom}';\n\n`;
 
-  // Re-export other stuff directly without wrapping
-  if (otherExports.length > 0) {
-    proxyCode += `export {${otherExports.join(', ')}} from '${importFrom}';\n`;
-  }
-
   // Wrap components in Client Proxy
-  componentExports.forEach(key => {
+  exportStatements.forEach(key => {
     const isDefault = key === DEFAULT_EXPORT;
     const componentName = isDefault
       ? id

@@ -61,28 +61,4 @@ export default wrapInClientProxy({ name: 'Counter', id: '/path/to/Counter.client
 export const Clicker = wrapInClientProxy({ name: 'Clicker', id: '/path/to/Counter.client.jsx', component: allImports['Clicker'], named: true });
 `);
   });
-
-  it('does not wrap non-component exports', async () => {
-    expect(
-      await proxyClientComponent(
-        '/path/to/Counter.client.jsx',
-        `export default function() {}\nexport const MyFragment = 'fragment myFragment on MyQuery { id }';`,
-      ),
-    )
-      .toBe(`import {wrapInClientProxy} from 'react-server-dom-vite/client-proxy';
-import * as allImports from '/path/to/Counter.client.jsx?no-proxy';
-
-export {MyFragment} from '/path/to/Counter.client.jsx?no-proxy';
-export default wrapInClientProxy({ name: 'Counter', id: '/path/to/Counter.client.jsx', component: allImports['default'], named: false });
-`);
-  });
-
-  it('can export non-component only', async () => {
-    expect(
-      await proxyClientComponent(
-        '/path/to/Counter.client.jsx',
-        `export const LocalizationContext = {}; export const useMyStuff = () => {}; export const MY_CONSTANT = 42;`,
-      ),
-    ).toBe(`export * from '/path/to/Counter.client.jsx?no-proxy';\n`);
-  });
 });
