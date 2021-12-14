@@ -323,7 +323,6 @@ export default class Agent extends EventEmitter<{|
   }
 
   getBridgeProtocol = () => {
-    console.log('[agent] getBridgeProtocol -> bridge.send("bridgeProtocol")');
     this._bridge.send('bridgeProtocol', currentBridgeProtocol);
   };
 
