@@ -18,10 +18,8 @@ Because React Native embeds a copy of the React DevTools "backend" ([`react-devt
 * Advocate for StrictMode usage within Components tree ([@bvaughn](https://github.com/bvaughn) in [#22886](https://github.com/facebook/react/pull/22886))
 * StyleX plug-in for resolving atomic styles to values for props.xstyle ([@bvaughn](https://github.com/bvaughn) in [#22808](https://github.com/facebook/react/pull/22808))
 * Timeline search ([@bvaughn](https://github.com/bvaughn) in [#22799](https://github.com/facebook/react/pull/22799))
-* Add test selectors to experimental build ([@bvaughn](https://github.com/bvaughn) in [#22760](https://github.com/facebook/react/pull/22760))
 * Timeline: Improved snapshot view ([@bvaughn](https://github.com/bvaughn) in [#22706](https://github.com/facebook/react/pull/22706))
 * Display root type for root updates in "what caused this update?" ([@eps1lon](https://github.com/eps1lon) in [#22599](https://github.com/facebook/react/pull/22599))
-* Add open in editor for fb ([@ezzak](https://github.com/ezzak) in [#22649](https://github.com/facebook/react/pull/22649))
 
 #### Bugfix
 * DevTools should inject itself for XHTML pages too (not just HTML) ([@bvaughn](https://github.com/bvaughn) in [#22932](https://github.com/facebook/react/pull/22932))
@@ -32,14 +30,8 @@ Because React Native embeds a copy of the React DevTools "backend" ([`react-devt
 * Expose css vars to reach-ui portal components ([@jyash97](https://github.com/jyash97) in [#22716](https://github.com/facebook/react/pull/22716))
 * Fix DevTools advanced tooltip display conditional check ([@bvaughn](https://github.com/bvaughn) in [#22669](https://github.com/facebook/react/pull/22669))
 
-
 #### Misc
-* Internally log errors occurring or reported to the frontend ([@jstejada](https://github.com/jstejada) in [#22948](https://github.com/facebook/react/pull/22948))
 * Emit new event when DevTools connects in standalone app ([@jstejada](https://github.com/jstejada) in [#22848](https://github.com/facebook/react/pull/22848))
-* DevTools: Log version in internal logger ([@jstejada](https://github.com/jstejada) in [#22825](https://github.com/facebook/react/pull/22825))
-* Proof of Concept for E2E tests using playwright ([@akgupta0777](https://github.com/akgupta0777) in [#22754](https://github.com/facebook/react/pull/22754))
-* Add internal link to Scheduling Profiler ([@bvaughn](https://github.com/bvaughn) in [#22730](https://github.com/facebook/react/pull/22730))
-
 
 ## 4.21.0 (October 31, 2021)
 
