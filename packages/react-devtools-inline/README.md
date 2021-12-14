@@ -56,7 +56,7 @@ const iframe = document.getElementById(frameID);
 const contentWindow = iframe.contentWindow;
 
 // This returns a React component that can be rendered into your app.
-// <DevTools {...props} />
+// e.g. render(<DevTools {...props} />);
 const DevTools = initialize(contentWindow);
 ```
 

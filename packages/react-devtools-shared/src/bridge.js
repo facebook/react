@@ -176,10 +176,19 @@ type UpdateConsolePatchSettingsParams = {|
   browserTheme: BrowserTheme,
 |};
 
+type SavedPreferencesParams = {|
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+  componentFilters: Array<ComponentFilter>,
+  showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+|};
+
 export type BackendEvents = {|
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
+  getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   isSynchronousXHRSupported: [boolean],
@@ -223,6 +232,7 @@ type FrontendEvents = {|
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
   renamePath: [RenamePath],
+  savedPreferences: [SavedPreferencesParams],
   selectFiber: [number],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
@@ -277,7 +287,9 @@ class Bridge<
 
     this._wallUnlisten =
       wall.listen((message: Message) => {
-        (this: any).emit(message.event, message.payload);
+        if (message && message.event) {
+          (this: any).emit(message.event, message.payload);
+        }
       }) || null;
 
     // Temporarily support older standalone front-ends sending commands to newer embedded backends.
