@@ -81,7 +81,7 @@ module.exports = [
       'react-server-dom-vite',
       'react-server-dom-vite/writer',
       'react-server-dom-vite/writer.node.server',
-      'react-server-dom-vite/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
+      'react-server-dom-vite/src/ReactFlightDOMServerNode.js', // react-server-dom-vite/writer.node.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-interactions',
     ],

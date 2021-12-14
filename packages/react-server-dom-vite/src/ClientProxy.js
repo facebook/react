@@ -58,9 +58,9 @@ export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
   return new Proxy(componentRef, {
     get: (target, prop) =>
       // 1. Let React access the element/ref and type in SSR
-      (target: any)[prop] ??
+      (target: any)[prop] ||
       // 2. Check descriptor properties for RSC requests
-      (rscDescriptor: any)[prop] ??
+      (rscDescriptor: any)[prop] ||
       // 3. Fallback to custom component properties such as `ImageComponent.Fragment`
       (component: any)[prop],
   });
