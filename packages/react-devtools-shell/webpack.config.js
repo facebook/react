@@ -44,6 +44,8 @@ const config = {
   entry: {
     'app-index': './src/app/index.js',
     'app-devtools': './src/app/devtools.js',
+    'e2e-app': './src/e2e/app.js',
+    'e2e-devtools': './src/e2e/devtools.js',
     'multi-left': './src/multi/left.js',
     'multi-devtools': './src/multi/devtools.js',
     'multi-right': './src/multi/right.js',

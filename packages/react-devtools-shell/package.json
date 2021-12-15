@@ -3,9 +3,7 @@
   "name": "react-devtools-shell",
   "version": "0.0.0",
   "scripts": {
-    "start": "yarn start:app",
-    "start:app": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open-page app.html",
-    "start:multi": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open-page multi.html"
+    "start": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server"
   },
   "dependencies": {
     "immutable": "^4.0.0-rc.12",
