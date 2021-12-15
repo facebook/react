@@ -2,6 +2,11 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.22.1 (December 14, 2021)
+
+* Fix invalid `require()` statements in `react-devtools-inline` ([bvaughn](https://github.com/bvaughn) in [#22961](https://github.com/facebook/react/pull/22961))
+* Fix invalid `files` array in `react-devtools` `package.json` ([bvaughn](https://github.com/bvaughn) in [#22960](https://github.com/facebook/react/pull/22960))
+
 ## 4.22.0 (December 13, 2021)
 
 #### A note for React Native users
