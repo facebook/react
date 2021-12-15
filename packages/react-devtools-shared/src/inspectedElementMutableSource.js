@@ -32,7 +32,7 @@ import type {
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
 // When the frontend polls the backend for an update on the element that's currently inspected,
 // the backend will send a "no-change" message if the element hasn't updated (rendered) since the last time it was asked.
-// In thid case, the frontend cache should reuse the previous (cached) value.
+// In this case, the frontend cache should reuse the previous (cached) value.
 // Using a WeakMap keyed on Element generally works well for this, since Elements are mutable and stable in the Store.
 // This doens't work properly though when component filters are changed,
 // because this will cause the Store to dump all roots and re-initialize the tree (recreating the Element objects).
