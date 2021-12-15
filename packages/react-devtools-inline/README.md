@@ -173,7 +173,7 @@ iframe.onload = () => {
 
 ### Advanced integration with custom "wall"
 
-Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/).
+Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/) or Code Sandbox's Sandpack (where more than one DevTools instance may be rendered per page).
 
 ```js
 import {
@@ -205,9 +205,9 @@ initializeBackend(contentWindow);
 
 // Prepare DevTools for rendering.
 // To use the custom Wall we've created, we need to also create our own "Bridge" and "Store" objects.
-const bridge = createBridge(target, wall);
+const bridge = createFrontendBridge(contentWindow, wall);
 const store = createStore(bridge);
-const DevTools = createDevTools(target, { bridge, store });
+const DevTools = createDevTools(contentWindow, { bridge, store });
 
 // You can render DevTools now:
 const root = createRoot(container);
@@ -218,6 +218,23 @@ root.render(<DevTools {...otherProps} />);
 activateBackend(contentWindow, {
   bridge: createBackendBridge(contentWindow, wall),
 });
+```
+
+Alternately, if your code can't share the same `wall` object, you can still provide a custom Wall that connects a specific DevTools frontend to a specific backend like so:
+```js
+const uid = "some-unique-string-shared-between-both-pieces";
+const wall = {
+  listen(listener) {
+    window.addEventListener("message", (event) => {
+      if (event.data.uid === uid) {
+        listener(event.data);
+      }
+    });
+  },
+  send(event, payload) {
+    window.postMessage({ event, payload, uid }, "*");
+  },
+};
 ```
 
 ## Local development
