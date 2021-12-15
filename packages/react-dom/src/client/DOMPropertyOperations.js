@@ -161,14 +161,6 @@ export function setValueForProperty(
     // Detect and remove trailing "Capture"
     let eventName = name.replace(/Capture$/, '');
     const useCapture = name !== eventName;
-
-    // Infer correct casing for DOM built-in events
-    // TODO maybe this should be pulled from a static list instead...?
-    if (eventName.toLowerCase() in node) {
-      eventName = eventName.toLowerCase();
-    }
-
-    // Remove the leading "on"
     eventName = eventName.slice(2);
 
     const prevProps = getFiberCurrentPropsFromNode(node);

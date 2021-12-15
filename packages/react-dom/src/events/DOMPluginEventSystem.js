@@ -52,7 +52,6 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -72,7 +71,6 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
-import isCustomComponent from '../shared/isCustomComponent';
 
 type DispatchListener = {|
   instance: null | Fiber,
@@ -308,6 +306,13 @@ export function listenToNonDelegatedEvent(
       );
     }
   }
+  listenToNonDelegatedEventForCustomElement(domEventName, targetElement);
+}
+
+export function listenToNonDelegatedEventForCustomElement(
+  domEventName: DOMEventName,
+  targetElement: Element,
+): void {
   const isCapturePhaseListener = false;
   const listenerSet = getEventListenerSet(targetElement);
   const listenerSetKey = getListenerSetKey(
@@ -420,6 +425,10 @@ function addTrappedEventListener(
   isCapturePhaseListener: boolean,
   isDeferredListenerForLegacyFBSupport?: boolean,
 ) {
+  /*console.log('addTrappedEventListener'
+    + '\n  targetContainer: ' + targetContainer
+    + '\n  domEventName: ' + domEventName
+    + '\n  isCapturePhaseListener: ' + isCapturePhaseListener);*/
   let listener = createEventListenerWrapperWithPriority(
     targetContainer,
     domEventName,
@@ -542,15 +551,6 @@ export function dispatchEventForPluginEventSystem(
   targetInst: null | Fiber,
   targetContainer: EventTarget,
 ): void {
-  if (
-    enableCustomElementPropertySupport &&
-    targetInst &&
-    isCustomComponent(targetInst.elementType, targetInst.pendingProps)
-  ) {
-    // Don't fire events on custom elements, they have a separate event system.
-    return;
-  }
-
   let ancestorInst = targetInst;
   if (
     (eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE) === 0 &&

@@ -256,7 +256,6 @@ describe('DOMPropertyOperations', () => {
       customElement.dispatchEvent(new Event('false'));
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements should still have onClick treated like regular elements', () => {
       let syntheticClickEvent = null;
       const syntheticEventHandler = jest.fn(
@@ -278,7 +277,7 @@ describe('DOMPropertyOperations', () => {
 
       expect(nativeEventHandler).toHaveBeenCalledTimes(1);
       expect(syntheticEventHandler).toHaveBeenCalledTimes(1);
-      expect(syntheticClickEvent).toBe(nativeClickEvent);
+      expect(syntheticClickEvent.nativeEvent).toBe(nativeClickEvent);
     });
 
     // @gate enableCustomElementPropertySupport
@@ -287,21 +286,15 @@ describe('DOMPropertyOperations', () => {
       const eventHandler = jest.fn(event => (reactChangeEvent = event));
       const container = document.createElement('div');
       document.body.appendChild(container);
-      ReactDOM.render(
-        <my-custom-element
-          foo="bar"
-          onChange={eventHandler}
-          oncustomevent={() => console.log('customevent')}
-        />,
-        container,
-      );
+      ReactDOM.render(<my-custom-element onChange={eventHandler} />, container);
 
       const customElement = container.querySelector('my-custom-element');
-      const changeEvent = new Event('change');
+      // TODO const changeEvent = new Event('change');
+      const changeEvent = new Event('change', {bubbles: true});
       customElement.dispatchEvent(changeEvent);
 
       expect(eventHandler).toHaveBeenCalledTimes(1);
-      expect(reactChangeEvent).toBe(changeEvent);
+      expect(reactChangeEvent.nativeEvent).toBe(changeEvent);
 
       // Also make sure that removing and re-adding the event listener works
 
@@ -327,7 +320,7 @@ describe('DOMPropertyOperations', () => {
       customElement.dispatchEvent(inputEvent);
 
       expect(eventHandler).toHaveBeenCalledTimes(1);
-      expect(reactInputEvent).toBe(inputEvent);
+      expect(reactInputEvent.nativeEvent).toBe(inputEvent);
 
       // Also make sure that removing and re-adding the event listener works
 
