@@ -147,8 +147,8 @@ export function getHookName(
         originalSourceLineNumber,
       );
 
-      const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
-      return nodeLocationCheck && hookDeclaractionCheck;
+      const hookDeclarationCheck = isConfirmedHookDeclaration(node);
+      return nodeLocationCheck && hookDeclarationCheck;
     });
 
     if (matchingNodes.length === 1) {
@@ -162,8 +162,8 @@ export function getHookName(
         originalSourceColumnNumber,
       );
 
-      const hookDeclaractionCheck = isConfirmedHookDeclaration(node);
-      return nodeLocationCheck && hookDeclaractionCheck;
+      const hookDeclarationCheck = isConfirmedHookDeclaration(node);
+      return nodeLocationCheck && hookDeclarationCheck;
     });
   }
 
@@ -398,7 +398,7 @@ export function getHookNamesMappingFromAST(
           // If it doesn't, we immediately use the declared variable name
           // as the Hook name. We do this because for any other Hooks that
           // aren't the built-in Hooks that return a tuple, we can't reliably
-          // extract a Hook name from other variable declartions derived from
+          // extract a Hook name from other variable declarations derived from
           // this one, since we don't know which of the declared variables
           // are the relevant ones to track and show in dev tools.
           if (!isBuiltInHookThatReturnsTuple(path)) {
@@ -455,7 +455,7 @@ export function getHookNamesMappingFromAST(
                 case AST_NODE_TYPES.MEMBER_EXPRESSION: {
                   // When encountering a MemberExpression inside the new
                   // variable declaration, we only want to extract the variable
-                  // name if we're assinging the value of the first member,
+                  // name if we're assigning the value of the first member,
                   // which is handled by `filterMemberWithHookVariableName`.
                   // E.g.
                   //    const countState = useState(0);
