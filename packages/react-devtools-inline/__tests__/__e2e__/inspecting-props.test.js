@@ -8,9 +8,11 @@ test.describe('Testing Todo-List App', () => {
   let page, frameElementHandle, frame;
   test.beforeAll(async ({browser}) => {
     page = await browser.newPage();
-    await page.goto('http://localhost:8080/', {waitUntil: 'domcontentloaded'});
-    await page.waitForSelector('iframe#target');
-    frameElementHandle = await page.$('#target');
+    await page.goto('http://localhost:8080/e2e.html', {
+      waitUntil: 'domcontentloaded',
+    });
+    await page.waitForSelector('iframe#iframe');
+    frameElementHandle = await page.$('#iframe');
     frame = await frameElementHandle.contentFrame();
   });
 
@@ -42,7 +44,7 @@ test.describe('Testing Todo-List App', () => {
     for (let i = 1; i <= countOfItems; ++i) {
       await page.click('[class^=ToggleContent]', {delay: 100});
       await frame.click(`.listitem:nth-child(${i})`, {delay: 50});
-      await page.waitForSelector('span.Value___tNzum');
+      await page.waitForSelector('span[class^=Value]');
       const text = await page.innerText('span[class^=Value]');
       await expect(text).toEqual(listItemsProps[i]);
     }
