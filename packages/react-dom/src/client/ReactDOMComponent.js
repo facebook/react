@@ -327,13 +327,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (enableCustomElementPropertySupport && isCustomComponentTag) {
-          console.log('doing the thing!'
-            + '\n  registrationName...: ' + registrationNameDependencies[propKey]);
-          for (const eventName of registrationNameDependencies[propKey]) {
-            listenToNonDelegatedEventForCustomElement(eventName, domElement);
-          }
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
@@ -774,12 +768,7 @@ export function diffProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (enableCustomElementPropertySupport &&
-            isCustomComponent(domElement.tagName, lastRawProps)) {
-          for (const eventName of registrationNameDependencies[propKey]) {
-            listenToNonDelegatedEventForCustomElement(eventName, domElement);
-          }
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
@@ -1002,11 +991,7 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (enableCustomElementPropertySupport && isCustomComponentTag) {
-          for (const eventName of registrationNameDependencies[propKey]) {
-            listenToNonDelegatedEventForCustomElement(eventName, domElement);
-          }
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
