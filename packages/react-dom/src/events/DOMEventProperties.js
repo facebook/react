@@ -44,6 +44,7 @@ const simpleEventPluginEvents = [
   'contextMenu',
   'copy',
   'cut',
+  // no this makes everything blow up 'change',
   'drag',
   'dragEnd',
   'dragEnter',

@@ -52,6 +52,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableCustomElementPropertySupport,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -71,6 +72,7 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
+import isCustomComponent from '../shared/isCustomComponent';
 
 type DispatchListener = {|
   instance: null | Fiber,
@@ -135,7 +137,12 @@ function extractEvents(
   // could alter all these plugins to work in such ways, but
   // that might cause other unknown side-effects that we
   // can't foresee right now.
-  if (shouldProcessPolyfillPlugins) {
+  // i think this should be true for custom elements
+  let proceed = shouldProcessPolyfillPlugins;
+  if (enableCustomElementPropertySupport && targetInst) {
+    proceed = proceed || isCustomComponent(targetInst.elementType, targetInst.pendingProps);
+  }
+  if (proceed) {
     EnterLeaveEventPlugin.extractEvents(
       dispatchQueue,
       domEventName,
@@ -306,7 +313,21 @@ export function listenToNonDelegatedEvent(
       );
     }
   }
-  listenToNonDelegatedEventForCustomElement(domEventName, targetElement);
+  const isCapturePhaseListener = false;
+  const listenerSet = getEventListenerSet(targetElement);
+  const listenerSetKey = getListenerSetKey(
+    domEventName,
+    isCapturePhaseListener,
+  );
+  if (!listenerSet.has(listenerSetKey)) {
+    addTrappedEventListener(
+      targetElement,
+      domEventName,
+      IS_NON_DELEGATED,
+      isCapturePhaseListener,
+    );
+    listenerSet.add(listenerSetKey);
+  }
 }
 
 export function listenToNonDelegatedEventForCustomElement(
@@ -323,7 +344,7 @@ export function listenToNonDelegatedEventForCustomElement(
     addTrappedEventListener(
       targetElement,
       domEventName,
-      IS_NON_DELEGATED,
+      IS_NON_DELEGATED & SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS,
       isCapturePhaseListener,
     );
     listenerSet.add(listenerSetKey);

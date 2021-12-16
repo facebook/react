@@ -60,6 +60,7 @@ function extractEvents(
 ): void {
   const reactName = topLevelEventsToReactNames.get(domEventName);
   if (reactName === undefined) {
+    // onChange handler isn't getting called because of this check? but also ChangeEventPlugin isn't getting called either....
     return;
   }
   let SyntheticEventCtor = SyntheticEvent;
