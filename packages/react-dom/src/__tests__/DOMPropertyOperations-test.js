@@ -287,24 +287,29 @@ describe('DOMPropertyOperations', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
       ReactDOM.render(<my-custom-element onChange={eventHandler} />, container);
-
       const customElement = container.querySelector('my-custom-element');
-      // TODO const changeEvent = new Event('change');
-      const changeEvent = new Event('change', {bubbles: true});
-      customElement.dispatchEvent(changeEvent);
 
-      expect(eventHandler).toHaveBeenCalledTimes(1);
+      let expectedHandlerCallCount = 0;
+      const changeEvent = new Event('change');
+      customElement.dispatchEvent(changeEvent);
+      expectedHandlerCallCount++;
+      expect(eventHandler).toHaveBeenCalledTimes(expectedHandlerCallCount);
       expect(reactChangeEvent.nativeEvent).toBe(changeEvent);
 
       // Also make sure that removing and re-adding the event listener works
-
       ReactDOM.render(<my-custom-element />, container);
       customElement.dispatchEvent(new Event('change'));
-      expect(eventHandler).toHaveBeenCalledTimes(1);
-
+      expect(eventHandler).toHaveBeenCalledTimes(expectedHandlerCallCount);
       ReactDOM.render(<my-custom-element onChange={eventHandler} />, container);
       customElement.dispatchEvent(new Event('change'));
-      expect(eventHandler).toHaveBeenCalledTimes(2);
+      expectedHandlerCallCount++;
+      expect(eventHandler).toHaveBeenCalledTimes(expectedHandlerCallCount);
+
+      // Also make sure that when the event bubbles, the event handler is only called once
+      const changeEventBubble = new Event('change', {bubbles: true});
+      customElement.dispatchEvent(changeEventBubble);
+      expectedHandlerCallCount++;
+      expect(eventHandler).toHaveBeenCalledTimes(expectedHandlerCallCount);
     });
 
     // @gate enableCustomElementPropertySupport
