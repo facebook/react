@@ -554,9 +554,9 @@ export function higherPriorityLane(a: Lane, b: Lane) {
 export function createLaneMap<T>(initial: T): LaneMap<T> {
   // Intentionally pushing one by one.
   // https://v8.dev/blog/elements-kinds#avoid-creating-holes
-  const laneMap = [];
+  const laneMap = new Array(TotalLanes);
   for (let i = 0; i < TotalLanes; i++) {
-    laneMap.push(initial);
+    laneMap[i] = initial;
   }
   return laneMap;
 }
