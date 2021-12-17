@@ -86,7 +86,6 @@ import {
   cancelTimeout,
   noTimeout,
   afterActiveInstanceBlur,
-  clearContainer,
   getCurrentEventPriority,
   supportsMicrotasks,
   errorHydratingContainer,
@@ -885,7 +884,6 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
     if (__DEV__) {
       errorHydratingContainer(root.containerInfo);
     }
-    clearContainer(root.containerInfo);
   }
 
   let exitStatus;
