@@ -373,5 +373,68 @@ describe('rendering React components at document', () => {
       expect(testDocument.head).toBe(null);
       expect(testDocument.body).toBe(null);
     });
+
+    // @gate enableClientRenderFallbackOnHydrationMismatch
+    it('should be able to update the html, head and body after hydration errors', () => {
+      function ServerApp() {
+        return (
+          <html>
+            <head>
+              <title>Hello Server</title>
+            </head>
+            <body>
+              <div>Server</div>
+            </body>
+          </html>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(<ServerApp />);
+      expect(markup).not.toContain('DOCTYPE');
+      const testDocument = getTestDocument(markup);
+      const body = testDocument.body;
+
+      expect(testDocument.head.innerHTML).toBe('<title>Hello Server</title>');
+      expect(testDocument.body.innerHTML).toBe('<div>Server</div>');
+
+      function ClientApp({lang}) {
+        return (
+          <html lang={lang}>
+            <head>
+              <title>Hello Client</title>
+            </head>
+            <body lang={lang}>
+              <p>Client</p>
+            </body>
+          </html>
+        );
+      }
+
+      let root;
+      expect(() => {
+        act(() => {
+          root = ReactDOM.hydrateRoot(testDocument, <ClientApp lang="en" />);
+        });
+      }).toErrorDev(
+        [
+          'An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
+          'Warning: Text content did not match. Server: "Hello Server" Client: "Hello Client"',
+        ],
+        {withoutStack: 1},
+      );
+
+      expect(testDocument.documentElement.lang).toBe('en');
+      expect(testDocument.body.lang).toBe('en');
+
+      expect(testDocument.head.innerHTML).toBe('<title>Hello Client</title>');
+      expect(testDocument.body.innerHTML).toBe('<p>Client</p>');
+
+      act(() => {
+        root.render(<ClientApp lang="es" />);
+      });
+
+      expect(testDocument.documentElement.lang).toBe('es');
+      expect(testDocument.body.lang).toBe('es');
+    });
   });
 });
