@@ -391,7 +391,10 @@ export function createElement(
       }
     }
 
-    if (type === 'script') {
+    if (type === 'html') {
+      domElement = (ownerDocument.documentElement: any);
+      domElement.textContent = '';
+    } else if (type === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');

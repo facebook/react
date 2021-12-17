@@ -476,6 +476,9 @@ export function appendChildToContainer(
   if (container.nodeType === COMMENT_NODE) {
     parentNode = (container.parentNode: any);
     parentNode.insertBefore(child, container);
+  } else if (container.nodeType === DOCUMENT_NODE) {
+    parentNode = container;
+    // We don't do anything for documents;
   } else {
     parentNode = container;
     parentNode.appendChild(child);
@@ -659,11 +662,6 @@ export function unhideTextInstance(
 export function clearContainer(container: Container): void {
   if (container.nodeType === ELEMENT_NODE) {
     ((container: any): Element).textContent = '';
-  } else if (container.nodeType === DOCUMENT_NODE) {
-    const body = ((container: any): Document).body;
-    if (body != null) {
-      body.textContent = '';
-    }
   }
 }
 
