@@ -968,7 +968,7 @@ type MutableSourceMemoizedState<Source, Snapshot> = {|
     setSnapshot: Snapshot => void,
   },
   source: MutableSource<any>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source>,
 |};
 
 function readFromUnsubscribedMutableSource<Source, Snapshot>(
@@ -1062,7 +1062,7 @@ function useMutableSource<Source, Snapshot>(
   hook: Hook,
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source>,
 ): Snapshot {
   if (!enableUseMutableSource) {
     return (undefined: any);
@@ -1227,7 +1227,7 @@ function useMutableSource<Source, Snapshot>(
 function mountMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source>,
 ): Snapshot {
   if (!enableUseMutableSource) {
     return (undefined: any);
@@ -1248,7 +1248,7 @@ function mountMutableSource<Source, Snapshot>(
 function updateMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source>,
 ): Snapshot {
   if (!enableUseMutableSource) {
     return (undefined: any);
@@ -2624,7 +2624,7 @@ if (__DEV__) {
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+      subscribe: MutableSourceSubscribeFn<Source>,
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       mountHookTypesDev();
@@ -2908,7 +2908,7 @@ if (__DEV__) {
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+      subscribe: MutableSourceSubscribeFn<Source>,
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
@@ -3051,7 +3051,7 @@ if (__DEV__) {
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+      subscribe: MutableSourceSubscribeFn<Source>,
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       updateHookTypesDev();
@@ -3207,7 +3207,7 @@ if (__DEV__) {
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+      subscribe: MutableSourceSubscribeFn<Source>,
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       warnInvalidHookAccess();
@@ -3366,7 +3366,7 @@ if (__DEV__) {
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
       getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+      subscribe: MutableSourceSubscribeFn<Source>,
     ): Snapshot {
       currentHookNameInDev = 'useMutableSource';
       warnInvalidHookAccess();

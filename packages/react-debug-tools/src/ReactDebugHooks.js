@@ -257,7 +257,7 @@ function useMemo<T>(
 function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source>,
 ): Snapshot {
   // useMutableSource() composes multiple hooks internally.
   // Advance the current hook index the same number of times
