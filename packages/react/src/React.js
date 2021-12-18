@@ -24,12 +24,7 @@ import {
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
-import {
-  createElement as createElementProd,
-  createFactory as createFactoryProd,
-  cloneElement as cloneElementProd,
-  isValidElement,
-} from './ReactElement';
+import {isValidElement} from './ReactElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
@@ -56,19 +51,14 @@ import {
   useCacheRefresh,
 } from './ReactHooks';
 import {
-  createElementWithValidation,
-  createFactoryWithValidation,
-  cloneElementWithValidation,
-} from './ReactElementValidator';
+  createElement,
+  cloneElement,
+  createFactory,
+} from './ReactElementCreator';
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
-
-// TODO: Move this branching into the other module instead and just re-export.
-const createElement = __DEV__ ? createElementWithValidation : createElementProd;
-const cloneElement = __DEV__ ? cloneElementWithValidation : cloneElementProd;
-const createFactory = __DEV__ ? createFactoryWithValidation : createFactoryProd;
 
 const Children = {
   map,
