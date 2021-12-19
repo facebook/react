@@ -1267,21 +1267,22 @@ function ChildReconciler(shouldTrackSideEffects) {
     // If the top level item is an array, we treat it as a set of children,
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
-
+    // Handle object types
+    let isObject = typeof newChild === 'object' && newChild !== null;
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     const isUnkeyedTopLevelFragment =
-      typeof newChild === 'object' &&
-      newChild !== null &&
+      isObject &&
       newChild.type === REACT_FRAGMENT_TYPE &&
       newChild.key === null;
     if (isUnkeyedTopLevelFragment) {
       newChild = newChild.props.children;
+      isObject = typeof newChild === 'object' && newChild !== null;
     }
 
     // Handle object types
-    if (typeof newChild === 'object' && newChild !== null) {
+    if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(
