@@ -3,7 +3,7 @@
 const {resolve} = require('path');
 const {readFileSync} = require('fs');
 const {bundleTypes, moduleTypes} = require('./bundles');
-const reactVersion = require('../../package.json').version;
+const reactVersion = require('../../packages/react-dom/package.json').version;
 
 const {
   NODE_ES2015,
