@@ -40,7 +40,7 @@ class RadioGroupFixture extends React.Component {
           Radio 1
         </label>
         <label>
-          <input name="foo" type="radio" onChange={this.handleChange} />
+          <input name="secondRadio" type="radio" onChange={this.handleChange} />
           Radio 2
         </label>{' '}
         <p style={{color}}>

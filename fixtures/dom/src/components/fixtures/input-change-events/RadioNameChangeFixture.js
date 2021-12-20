@@ -1,5 +1,18 @@
 const React = window.React;
-const noop = n => n;
+const noop = n => {
+  if(n.name == "firstName")
+  {
+    this.setState(state => {
+      return {updated: true};
+    });
+  }
+  else
+  {
+    this.setState(state => {
+      return {updated: false};
+    });
+  }
+};
 
 class RadioNameChangeFixture extends React.Component {
   state = {

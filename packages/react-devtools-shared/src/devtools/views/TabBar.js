@@ -113,6 +113,7 @@ export default function TabBar({
               name={groupName}
               value={id}
               onChange={onChange}
+              name={id}
             />
             <Icon
               className={`${
