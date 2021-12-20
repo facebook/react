@@ -197,7 +197,7 @@ class TextInputFixtures extends React.Component {
 
           <Fixture>
             <SuspendyTree>
-              <input type="text" />
+              <input type="text" minLength={3}/>
             </SuspendyTree>
           </Fixture>
         </TestCase>

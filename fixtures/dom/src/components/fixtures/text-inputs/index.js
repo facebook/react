@@ -26,7 +26,7 @@ class TextInputFixtures extends React.Component {
             <div className="control-box">
               <fieldset>
                 <legend>Value as number</legend>
-                <input value={2} onChange={() => {}} />
+                <input value={2} onChange={() => {}} minLength={3} />
               </fieldset>
 
               <fieldset>

@@ -25,7 +25,7 @@ class ReplaceEmailInput extends React.Component {
             {!this.state.formSubmitted ? (
               <input type="email" />
             ) : (
-              <input type="text" disabled={true} />
+              <input type="text" disabled={true} minLength={3} />
             )}
           </fieldset>
         </form>

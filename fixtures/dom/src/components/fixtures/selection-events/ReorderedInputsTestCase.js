@@ -17,8 +17,8 @@ export default class ReorderedInputsTestCase extends React.Component {
 
   renderInputs() {
     const inputs = [
-      <input key={1} defaultValue="Foo" />,
-      <input key={2} defaultValue="Bar" />,
+      <input key={1} defaultValue="Foo"  minLength={3} />,
+      <input key={2} defaultValue="Bar" minLength={3} />,
     ];
     if (this.state.count % 2 === 0) {
       inputs.reverse();

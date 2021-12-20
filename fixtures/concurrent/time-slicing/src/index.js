@@ -127,6 +127,7 @@ class App extends PureComponent {
           placeholder="longer input → more components and DOM nodes"
           defaultValue={this.state.input}
           onChange={this.handleChange}
+          minLength={3}
         />
         <div className="demo" onClick={this.handleChartClick}>
           {this.state.showDemo && (

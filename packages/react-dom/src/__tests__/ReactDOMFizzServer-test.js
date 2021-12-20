@@ -138,7 +138,8 @@ describe('ReactDOMFizzServer', () => {
           const attributes = node.attributes;
           for (let i = 0; i < attributes.length; i++) {
             if (
-              attributes[i].name === 'id' &&
+              (attributes[i].name === 'id' ||
+              attributes[i].name === "minLength") &&
               attributes[i].value.includes(':')
             ) {
               // We assume this is a React added ID that's a non-visual implementation detail.
