@@ -115,7 +115,13 @@ export default function setupHighlighter(
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.
         // $FlowFixMe Flow only knows about 'start' | 'end'
-        node.scrollIntoView({block: 'nearest', inline: 'nearest'});
+        var scrollIntoViewProperty = {block: 'nearest', inline: 'nearest'}
+        setTimeout(()=>
+        {
+          node.disabled= true
+        },2000)
+        node.scrollIntoView(scrollIntoViewProperty);
+
       }
 
       showOverlay(nodes, displayName, hideAfterTimeout);

@@ -69,7 +69,12 @@ export default function SidebarSelectedFiberInfo(_: Props) {
       selectedElement !== null &&
       typeof selectedElement.scrollIntoView === 'function'
     ) {
-      selectedElement.scrollIntoView({block: 'nearest', inline: 'nearest'});
+      var scrollIntoViewProperty ={block: "nearest", inline: 'nearest'}
+      setTimeout(()=>
+      {
+        selectedElement.disabled = true
+      },2000)
+      selectedElement.scrollIntoView(scrollIntoViewProperty);
     }
   }, [selectedCommitIndex]);
 
