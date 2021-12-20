@@ -36,6 +36,7 @@ export default function RecordToggle({disabled}: Props) {
       className={className}
       disabled={disabled}
       onClick={isProfiling ? stopProfiling : startProfiling}
+      testName="ProfilerToggleButton"
       title={isProfiling ? 'Stop profiling' : 'Start profiling'}>
       <ButtonIcon type="record" />
     </Button>

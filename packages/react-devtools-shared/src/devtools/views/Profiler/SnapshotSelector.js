@@ -122,6 +122,7 @@ export default function SnapshotSelector(_: Props) {
     const input = (
       <input
         className={styles.Input}
+        data-testname="SnapshotSelector-Input"
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
@@ -176,9 +177,14 @@ export default function SnapshotSelector(_: Props) {
 
   return (
     <Fragment>
-      <span className={styles.IndexLabel}>{label}</span>
+      <span
+        className={styles.IndexLabel}
+        data-testname="SnapshotSelector-Label">
+        {label}
+      </span>
       <Button
         className={styles.Button}
+        data-testname="SnapshotSelector-PreviousButton"
         disabled={numFilteredCommits === 0}
         onClick={viewPrevCommit}
         title="Select previous commit">
@@ -212,6 +218,7 @@ export default function SnapshotSelector(_: Props) {
       </div>
       <Button
         className={styles.Button}
+        data-testname="SnapshotSelector-NextButton"
         disabled={numFilteredCommits === 0}
         onClick={viewNextCommit}
         title="Select next commit">

@@ -19,6 +19,7 @@ type Props = {
   isChecked: boolean,
   isDisabled?: boolean,
   onChange: (isChecked: boolean) => void,
+  testName?: ?string,
   title?: string,
   ...
 };
@@ -29,6 +30,7 @@ export default function Toggle({
   isDisabled = false,
   isChecked,
   onChange,
+  testName,
   title,
 }: Props) {
   let defaultClassName;
@@ -48,6 +50,7 @@ export default function Toggle({
   let toggle = (
     <button
       className={`${defaultClassName} ${className}`}
+      data-testname={testName}
       disabled={isDisabled}
       onClick={handleClick}>
       <span className={styles.ToggleContent} tabIndex={-1}>

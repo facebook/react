@@ -15,6 +15,7 @@ import Tooltip from './Components/reach-ui/tooltip';
 type Props = {
   children: React$Node,
   className?: string,
+  testName?: ?string,
   title: React$Node,
   ...
 };
@@ -22,11 +23,15 @@ type Props = {
 export default function Button({
   children,
   className = '',
+  testName,
   title,
   ...rest
 }: Props) {
   let button = (
-    <button className={`${styles.Button} ${className}`} {...rest}>
+    <button
+      className={`${styles.Button} ${className}`}
+      data-testname={testName}
+      {...rest}>
       <span className={`${styles.ButtonContent} ${className}`} tabIndex={-1}>
         {children}
       </span>

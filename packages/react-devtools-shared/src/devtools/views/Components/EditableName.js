@@ -93,6 +93,7 @@ export default function EditableName({
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       placeholder="new entry"
+      testName="EditableName"
       type="text"
       value={editableName}
     />

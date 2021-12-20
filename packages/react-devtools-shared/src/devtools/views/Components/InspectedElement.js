@@ -252,7 +252,7 @@ export default function InspectedElementWrapper(_: Props) {
 
   return (
     <div className={styles.InspectedElement}>
-      <div className={styles.TitleRow}>
+      <div className={styles.TitleRow} data-testname="InspectedElement-Title">
         {strictModeBadge}
 
         {element.key && (

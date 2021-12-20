@@ -74,7 +74,7 @@ export default function Element({data, index, style}: Props) {
     }
   };
 
-  const handleMouseDown = ({metaKey}) => {
+  const handleClick = ({metaKey}) => {
     if (id !== null) {
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
@@ -132,9 +132,10 @@ export default function Element({data, index, style}: Props) {
       className={className}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onMouseDown={handleMouseDown}
+      onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       style={style}
+      data-testname="ComponentTreeListItem"
       data-depth={depth}>
       {/* This wrapper is used by Tree for measurement purposes. */}
       <div
