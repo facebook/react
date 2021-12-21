@@ -2,12 +2,8 @@
 
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
-import {createElement} from 'react';
-import {
-  // $FlowFixMe Flow does not yet know about createRoot()
-  createRoot,
-} from 'react-dom';
-import ToDoList from '../app/ToDoList';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 
 const container = document.createElement('div');
 
@@ -15,6 +11,11 @@ const container = document.createElement('div');
 
 // TODO We may want to parameterize this app
 // so that it can load things other than just ToDoList.
+const App = require('./apps/ListApp').default;
 
-const root = createRoot(container);
-root.render(createElement(ToDoList));
+// $FlowFixMe Flow doesn't know about createRoot() yet.
+const root = ReactDOM.createRoot(container);
+root.render(<App />);
+
+// ReactDOM Test Selector APIs used by Playwright e2e tests
+window.parent.REACT_DOM_APP = ReactDOM;

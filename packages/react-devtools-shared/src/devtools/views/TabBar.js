@@ -102,6 +102,7 @@ export default function TabBar({
               disabled ? styles.TabDisabled : styles.Tab,
               !disabled && currentTab === id ? styles.TabCurrent : '',
             ].join(' ')}
+            data-testname={`TabBarButton-${id}`}
             key={id}
             onKeyDown={handleKeyDown}
             onMouseDown={() => selectTab(id)}>

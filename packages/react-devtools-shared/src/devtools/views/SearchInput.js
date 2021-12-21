@@ -23,6 +23,7 @@ type Props = {|
   searchIndex: number,
   searchResultsCount: number,
   searchText: string,
+  testName?: ?string,
 |};
 
 export default function SearchInput({
@@ -33,6 +34,7 @@ export default function SearchInput({
   searchIndex,
   searchResultsCount,
   searchText,
+  testName,
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -78,9 +80,10 @@ export default function SearchInput({
   }, []);
 
   return (
-    <div className={styles.SearchInput}>
+    <div className={styles.SearchInput} data-testname={testName}>
       <Icon className={styles.InputIcon} type="search" />
       <input
+        data-testname={testName ? `${testName}-Input` : undefined}
         className={styles.Input}
         onChange={handleChange}
         onKeyPress={handleKeyPress}
@@ -90,12 +93,15 @@ export default function SearchInput({
       />
       {!!searchText && (
         <React.Fragment>
-          <span className={styles.IndexLabel}>
+          <span
+            className={styles.IndexLabel}
+            data-testname={testName ? `${testName}-ResultsCount` : undefined}>
             {Math.min(searchIndex + 1, searchResultsCount)} |{' '}
             {searchResultsCount}
           </span>
           <div className={styles.LeftVRule} />
           <Button
+            data-testname={testName ? `${testName}-PreviousButton` : undefined}
             className={styles.IconButton}
             disabled={!searchText}
             onClick={goToPreviousResult}
@@ -108,6 +114,7 @@ export default function SearchInput({
             <ButtonIcon type="up" />
           </Button>
           <Button
+            data-testname={testName ? `${testName}-NextButton` : undefined}
             className={styles.IconButton}
             disabled={!searchText}
             onClick={goToNextResult}
@@ -119,6 +126,7 @@ export default function SearchInput({
             <ButtonIcon type="down" />
           </Button>
           <Button
+            data-testname={testName ? `${testName}-ResetButton` : undefined}
             className={styles.IconButton}
             disabled={!searchText}
             onClick={resetSearch}

@@ -33,6 +33,7 @@ export default function ComponentSearchInput(props: Props) {
       searchIndex={searchIndex}
       searchResultsCount={searchResults.length}
       searchText={searchText}
+      testName="ComponentSearchInput"
     />
   );
 }
