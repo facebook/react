@@ -118,14 +118,9 @@ export default function Element({data, index, style}: Props) {
     type,
   } = ((element: any): ElementType);
 
-  let showStrictModeBadge = isStrictModeNonCompliant;
-  if (depth > 0) {
-    const parent =
-      element.parentID !== null ? store.getElementByID(element.parentID) : null;
-    if (parent !== null && parent.isStrictModeNonCompliant) {
-      showStrictModeBadge = false;
-    }
-  }
+  // Only show strict mode non-compliance badges for top level elements.
+  // Showing an inline badge for every element in the tree would be noisy.
+  const showStrictModeBadge = isStrictModeNonCompliant && depth === 0;
 
   let className = styles.Element;
   if (isSelected) {
