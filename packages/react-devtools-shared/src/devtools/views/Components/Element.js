@@ -118,6 +118,10 @@ export default function Element({data, index, style}: Props) {
     type,
   } = ((element: any): ElementType);
 
+  // Only show strict mode non-compliance badges for top level elements.
+  // Showing an inline badge for every element in the tree would be noisy.
+  const showStrictModeBadge = isStrictModeNonCompliant && depth === 0;
+
   let className = styles.Element;
   if (isSelected) {
     className = treeFocused
@@ -194,7 +198,7 @@ export default function Element({data, index, style}: Props) {
             }
           />
         )}
-        {isStrictModeNonCompliant && (
+        {showStrictModeBadge && (
           <Icon
             className={
               isSelected && treeFocused
