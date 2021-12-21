@@ -118,6 +118,15 @@ export default function Element({data, index, style}: Props) {
     type,
   } = ((element: any): ElementType);
 
+  let showStrictModeBadge = isStrictModeNonCompliant;
+  if (depth > 0) {
+    const parent =
+      element.parentID !== null ? store.getElementByID(element.parentID) : null;
+    if (parent !== null && parent.isStrictModeNonCompliant) {
+      showStrictModeBadge = false;
+    }
+  }
+
   let className = styles.Element;
   if (isSelected) {
     className = treeFocused
@@ -194,7 +203,7 @@ export default function Element({data, index, style}: Props) {
             }
           />
         )}
-        {isStrictModeNonCompliant && (
+        {showStrictModeBadge && (
           <Icon
             className={
               isSelected && treeFocused
