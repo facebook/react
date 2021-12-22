@@ -127,9 +127,13 @@ type OverrideError = {|
   forceError: boolean,
 |};
 
-type OverrideSuspense = {|
+type OverrideSuspenseParams = {|
   ...ElementAndRendererID,
   forceFallback: boolean,
+|};
+
+type ToggleStrictModeParams = {|
+  ...ElementAndRendererID,
 |};
 
 type CopyElementPathParams = {|
@@ -227,7 +231,7 @@ type FrontendEvents = {|
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
   overrideError: [OverrideError],
-  overrideSuspense: [OverrideSuspense],
+  overrideSuspense: [OverrideSuspenseParams],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
@@ -241,6 +245,7 @@ type FrontendEvents = {|
   stopInspectingNative: [boolean],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
+  toggleStrictMode: [ToggleStrictModeParams],
   updateComponentFilters: [Array<ComponentFilter>],
   updateConsolePatchSettings: [UpdateConsolePatchSettingsParams],
   viewAttributeSource: [ViewAttributeSourceParams],

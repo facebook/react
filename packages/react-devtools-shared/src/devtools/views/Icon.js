@@ -26,6 +26,7 @@ export type IconType =
   | 'settings'
   | 'store-as-global-variable'
   | 'strict-mode-non-compliant'
+  | 'strict-mode-compliant'
   | 'warning';
 
 type Props = {|
@@ -78,6 +79,9 @@ export default function Icon({className = '', title = '', type}: Props) {
       break;
     case 'store-as-global-variable':
       pathData = PATH_STORE_AS_GLOBAL_VARIABLE;
+      break;
+    case 'strict-mode-compliant':
+      pathData = PATH_STRICT_MODE_COMPLIANT;
       break;
     case 'strict-mode-non-compliant':
       pathData = PATH_STRICT_MODE_NON_COMPLIANT;
@@ -176,9 +180,13 @@ const PATH_STORE_AS_GLOBAL_VARIABLE = `
   8h-4v-2h4v2zm0-4h-4v-2h4v2z
 `;
 
+const PATH_STRICT_MODE_COMPLIANT = `
+  M6.59,3.41L2,8L6.59,12.6L8,11.18L4.82,8L8,4.82L6.59,3.41M12.41,3.41L11,4.82L14.18,8L11,11.18L12.41,12.6L17,
+  8L12.41,3.41M21.59,11.59L13.5,19.68L9.83,16L8.42,17.41L13.5,22.5L23,13L21.59,11.59Z
+`;
+
 const PATH_STRICT_MODE_NON_COMPLIANT = `
-  M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3zM12
-  14c-.55 0-1-.45-1-1v-2c0-.55.45-1 1-1s1 .45 1 1v2c0 .55-.45 1-1 1zm1 4h-2v-2h2v2z
+  M13 13H11V7H13M11 15H13V17H11M15.73 3H8.27L3 8.27V15.73L8.27 21H15.73L21 15.73V8.27L15.73 3Z
 `;
 
 const PATH_WARNING = `M12 1l-12 22h24l-12-22zm-1 8h2v7h-2v-7zm1 11.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z`;

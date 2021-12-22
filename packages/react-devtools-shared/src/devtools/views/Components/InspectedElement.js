@@ -22,6 +22,7 @@ import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
 import {getOpenInEditorURL} from '../../../utils';
+import Tooltip from '../Components/reach-ui/tooltip';
 import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
 
 import styles from './InspectedElement.css';
@@ -238,15 +239,62 @@ export default function InspectedElementWrapper(_: Props) {
 
   let strictModeBadge = null;
   if (element.isStrictModeNonCompliant) {
+    if (inspectedElement?.canToggleStrictMode) {
+      const toggleStrictModeOn = event => {
+        if (inspectedElementID !== null) {
+          const rendererID = store.getRendererIDForElement(inspectedElementID);
+          if (rendererID !== null) {
+            bridge.send('toggleStrictMode', {
+              id: inspectedElementID,
+              rendererID,
+            });
+          }
+
+          // HACK: Disable the button for immediate user feedback.
+          // Once we re-render, StrictMode will be enabled anyway
+          // and the button won't even be rendered.
+          event.target.disabled = true;
+        }
+      };
+
+      strictModeBadge = (
+        <Tooltip label="Click to enable StrictMode temporarily (for the current session).">
+          <button
+            className={styles.StrictModeNonCompliantButton}
+            onClick={toggleStrictModeOn}>
+            <span className={styles.StrictModeText}>strict</span>
+            <div className={styles.StrictModeNonCompliantToggleOuter}>
+              <div className={styles.StrictModeNonCompliantToggleInner} />
+            </div>
+          </button>
+        </Tooltip>
+      );
+    } else {
+      strictModeBadge = (
+        <Tooltip label="This component is not running in StrictMode. Click to learn more.">
+          <a
+            className={styles.StrictModeNonCompliantLink}
+            href="https://fb.me/devtools-strict-mode"
+            rel="noopener noreferrer"
+            target="_blank">
+            <span className={styles.StrictModeText}>strict</span>
+            <Icon
+              className={styles.StrictModeCompliantIcon}
+              type="strict-mode-non-compliant"
+            />
+          </a>
+        </Tooltip>
+      );
+    }
+  } else {
     strictModeBadge = (
-      <a
-        className={styles.StrictModeNonCompliant}
-        href="https://fb.me/devtools-strict-mode"
-        rel="noopener noreferrer"
-        target="_blank"
-        title="This component is not running in StrictMode. Click to learn more.">
-        <Icon type="strict-mode-non-compliant" />
-      </a>
+      <div className={styles.StrictModeCompliantBadge}>
+        <span className={styles.StrictModeText}>strict</span>
+        <Icon
+          className={styles.StrictModeCompliantIcon}
+          type="strict-mode-compliant"
+        />
+      </div>
     );
   }
 
@@ -265,13 +313,7 @@ export default function InspectedElementWrapper(_: Props) {
         )}
 
         <div className={styles.SelectedComponentName}>
-          <div
-            className={
-              element.isStrictModeNonCompliant
-                ? styles.StrictModeNonCompliantComponent
-                : styles.Component
-            }
-            title={element.displayName}>
+          <div className={styles.Component} title={element.displayName}>
             {element.displayName}
           </div>
         </div>

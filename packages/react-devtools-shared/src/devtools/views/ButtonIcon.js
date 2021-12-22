@@ -20,6 +20,7 @@ export type IconType =
   | 'delete'
   | 'down'
   | 'editor'
+  | 'error'
   | 'expanded'
   | 'export'
   | 'filter'
@@ -34,7 +35,6 @@ export type IconType =
   | 'save'
   | 'search'
   | 'settings'
-  | 'error'
   | 'suspend'
   | 'undo'
   | 'up'
@@ -75,6 +75,9 @@ export default function ButtonIcon({className = '', type}: Props) {
       break;
     case 'editor':
       pathData = PATH_EDITOR;
+      break;
+    case 'error':
+      pathData = PATH_ERROR;
       break;
     case 'expanded':
       pathData = PATH_EXPANDED;
@@ -117,9 +120,6 @@ export default function ButtonIcon({className = '', type}: Props) {
       break;
     case 'settings':
       pathData = PATH_SETTINGS;
-      break;
-    case 'error':
-      pathData = PATH_ERROR;
       break;
     case 'suspend':
       pathData = PATH_SUSPEND;
@@ -187,6 +187,9 @@ const PATH_DELETE = `
 
 const PATH_DOWN = 'M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z';
 
+const PATH_ERROR =
+  'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z';
+
 const PATH_EXPANDED = 'M7 10l5 5 5-5z';
 
 const PATH_EXPORT = 'M15.82,2.14v7H21l-9,9L3,9.18H8.18v-7ZM3,20.13H21v1.73H3Z';
@@ -247,9 +250,6 @@ const PATH_SETTINGS = `
   1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5
   3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z
 `;
-
-const PATH_ERROR =
-  'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z';
 
 const PATH_SUSPEND = `
   M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97

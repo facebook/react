@@ -67,7 +67,60 @@
   border-left: 1px solid var(--color-border);
 }
 
-.StrictModeNonCompliant {
+.StrictModeCompliantBadge,
+.StrictModeNonCompliantButton,
+.StrictModeNonCompliantLink {
+  height: 1.25rem;
+  line-height: 1.25rem;
+  display: flex;
+  align-items: center;
   margin-right: 0.25rem;
-  color: var(--color-console-error-icon);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  color: var(--color-strict-mode-text);
+  font-family: var(--font-family-sans);
+  user-select: none;
+}
+.StrictModeCompliantBadge {
+  background-color: var(--color-strict-mode-compliant-background);
+}
+.StrictModeNonCompliantButton {
+  background-color: var(--color-strict-mode-non-compliant-background);
+  cursor: pointer;
+  border: none;
+}
+.StrictModeNonCompliantButton:disabled {
+  background-color: var(--color-strict-mode-non-compliant-background-disabled);
+  color: var(--color-strict-mode-text-disabled);
+}
+.StrictModeNonCompliantLink {
+  background-color: var(--color-strict-mode-non-compliant-background);
+  text-decoration: none;
+}
+
+.StrictModeText {
+  font-size: 10px;
+  margin-right: 3px;
+}
+
+.StrictModeCompliantIcon {
+  color: var(--color-strict-mode-icon);
+}
+
+.StrictModeNonCompliantToggleOuter {
+  border-radius: 0.75rem;
+  width: 1rem;
+  height: 0.625rem;
+  display: flex;
+  align-items: center;
+  padding: 0.125rem;
+  background-color: var(--color-strict-mode-toggle-background);
+  justify-content: flex-start;
+}
+
+.StrictModeNonCompliantToggleInner {
+  border-radius: 0.375rem;
+  width: 0.375rem;
+  height: 0.375rem;
+  background-color: var(--color-strict-mode-toggle-foreground);
 }

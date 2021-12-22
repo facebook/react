@@ -136,6 +136,11 @@ type OverrideSuspenseParams = {|
   forceFallback: boolean,
 |};
 
+type ToggleStrictModeParams = {|
+  id: number,
+  rendererID: number,
+|};
+
 type PersistedSelection = {|
   rendererID: number,
   path: Array<PathFrame>,
@@ -205,6 +210,7 @@ export default class Agent extends EventEmitter<{|
       this.syncSelectionFromNativeElementsPanel,
     );
     bridge.addListener('shutdown', this.shutdown);
+    bridge.addListener('toggleStrictMode', this.toggleStrictMode);
     bridge.addListener(
       'updateConsolePatchSettings',
       this.updateConsolePatchSettings,
@@ -634,6 +640,15 @@ export default class Agent extends EventEmitter<{|
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.storeAsGlobal(id, path, count);
+    }
+  };
+
+  toggleStrictMode = ({id, rendererID}: ToggleStrictModeParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      renderer.toggleStrictMode(id);
     }
   };
 

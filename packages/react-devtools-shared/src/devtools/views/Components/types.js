@@ -92,6 +92,9 @@ export type InspectedElement = {|
   // Can view component source location.
   canViewSource: boolean,
 
+  // Can StrictMode be toggled on for this component (subtree)?
+  canToggleStrictMode: boolean,
+
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
 
