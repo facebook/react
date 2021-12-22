@@ -261,6 +261,7 @@ export default function InspectedElementWrapper(_: Props) {
         <Tooltip label="Click to enable StrictMode temporarily (for the current session).">
           <button
             className={styles.StrictModeNonCompliantButton}
+            data-testname="StrictModeNonCompliantToggleButton"
             onClick={toggleStrictModeOn}>
             <span className={styles.StrictModeText}>strict</span>
             <div className={styles.StrictModeNonCompliantToggleOuter}>
@@ -288,7 +289,9 @@ export default function InspectedElementWrapper(_: Props) {
     }
   } else {
     strictModeBadge = (
-      <div className={styles.StrictModeCompliantBadge}>
+      <div
+        className={styles.StrictModeCompliantBadge}
+        data-testname="StrictModeCompliantBadge">
         <span className={styles.StrictModeText}>strict</span>
         <Icon
           className={styles.StrictModeCompliantIcon}
