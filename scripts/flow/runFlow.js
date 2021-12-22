@@ -10,15 +10,12 @@
 const chalk = require('chalk');
 const {spawn} = require('child_process');
 const fs = require('fs');
-
-// TODO: This generates all the renderer configs at once. Originally this was
-// to allow the possibility of running multiple Flow processes in parallel, but
-// that never happened. If we did, we'd probably do this in CI, anyway, and run
-// on multiple machines. So instead we could remove this intermediate step and
-// generate only the config for the specified renderer.
-require('./createFlowConfigs');
+const generateFlowConfig = require('./createFlowConfigs');
 
 async function runFlow(renderer, args) {
+
+  generateFlowConfig(renderer);
+
   return new Promise(resolve => {
     let cmd = __dirname + '/../../node_modules/.bin/flow';
     if (process.platform === 'win32') {

@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @flow
  */
 
 'use strict';
@@ -85,14 +83,15 @@ ${disclaimer}
   }
 }
 
-// Write multiple configs in different folders
-// so that we can run those checks in parallel if we want.
-inlinedHostConfigs.forEach(rendererInfo => {
-  if (rendererInfo.isFlowTyped) {
-    writeConfig(
-      rendererInfo.shortName,
-      rendererInfo,
-      rendererInfo.isServerSupported,
-    );
-  }
-});
+/**
+ * Generate flow config for specific renderer
+ * @param {string} rendererShortName
+ */
+function generateFlowConfig(rendererShortName) {
+  const renderer = inlinedHostConfigs.find(
+    info => info.isFlowTyped && info.shortName === rendererShortName,
+  );
+  writeConfig(renderer.shortName, renderer, renderer.isServerSupported);
+}
+
+module.exports = generateFlowConfig;
