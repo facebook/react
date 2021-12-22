@@ -13,7 +13,6 @@ const fs = require('fs');
 const generateFlowConfig = require('./createFlowConfigs');
 
 async function runFlow(renderer, args) {
-
   generateFlowConfig(renderer);
 
   return new Promise(resolve => {
