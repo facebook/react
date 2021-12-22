@@ -613,7 +613,7 @@ export function getDataType(data: Object): DataType {
       } else if (typeof data[Symbol.iterator] === 'function') {
         const iterator = data[Symbol.iterator]();
         if (!iterator) {
-          // Proxies might break assumptoins about iterators.
+          // Proxies might break assumptions about iterators.
           // See github.com/facebook/react/issues/21654
         } else {
           return iterator === data ? 'opaque_iterator' : 'iterator';
