@@ -200,6 +200,28 @@ jobs:
       - store_artifacts:
           path: ./build/devtools.tgz
 
+  run_devtools_e2e_tests:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run:
+          name: Playwright install deps
+          command: |
+            npx playwright install
+            sudo npx playwright install-deps
+      - run:
+          environment:
+            RELEASE_CHANNEL: experimental
+          command: ./scripts/circleci/run_devtools_e2e_tests.js
+
   yarn_lint_build:
     docker: *docker
     environment: *environment
@@ -452,6 +474,9 @@ workflows:
       - build_devtools_and_process_artifacts:
           requires:
             - yarn_build_combined
+      - run_devtools_e2e_tests:
+          requires:
+            - build_devtools_and_process_artifacts
 
   fuzz_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
