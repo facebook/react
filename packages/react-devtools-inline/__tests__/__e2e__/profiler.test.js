@@ -41,7 +41,7 @@ test.describe('Profiler', () => {
       });
     }
 
-    async function clickButtonAndVerifySnapshotSelecetorText(
+    async function clickButtonAndVerifySnapshotSelectorText(
       buttonTagName,
       expectedText
     ) {
@@ -72,31 +72,31 @@ test.describe('Profiler', () => {
     const text = await getSnapshotSelectorText();
     expect(text).toBe('1 / 3');
 
-    await clickButtonAndVerifySnapshotSelecetorText(
+    await clickButtonAndVerifySnapshotSelectorText(
       'SnapshotSelector-NextButton',
       '2 / 3'
     );
-    await clickButtonAndVerifySnapshotSelecetorText(
+    await clickButtonAndVerifySnapshotSelectorText(
       'SnapshotSelector-NextButton',
       '3 / 3'
     );
-    await clickButtonAndVerifySnapshotSelecetorText(
+    await clickButtonAndVerifySnapshotSelectorText(
       'SnapshotSelector-NextButton',
       '1 / 3'
     );
-    await clickButtonAndVerifySnapshotSelecetorText(
+    await clickButtonAndVerifySnapshotSelectorText(
       'SnapshotSelector-PreviousButton',
       '3 / 3'
     );
-    await clickButtonAndVerifySnapshotSelecetorText(
+    await clickButtonAndVerifySnapshotSelectorText(
       'SnapshotSelector-PreviousButton',
       '2 / 3'
     );
-    await clickButtonAndVerifySnapshotSelecetorText(
+    await clickButtonAndVerifySnapshotSelectorText(
       'SnapshotSelector-PreviousButton',
       '1 / 3'
     );
-    await clickButtonAndVerifySnapshotSelecetorText(
+    await clickButtonAndVerifySnapshotSelectorText(
       'SnapshotSelector-PreviousButton',
       '3 / 3'
     );
