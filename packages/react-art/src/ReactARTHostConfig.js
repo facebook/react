@@ -11,6 +11,7 @@ import Mode from 'art/modes/current';
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {Instance} from 'chalk';
 
 const pooledTransform = new Transform();
 
