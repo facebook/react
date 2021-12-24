@@ -108,7 +108,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
       </LegacyProvider>,
       3,
     );
-    expect(e.textContent).toBe('{}undefinedundefined');
+    expect(e.textContent).toBe('{}undefined');
     expect(lifecycleContextLog).toEqual([]);
   });
 
