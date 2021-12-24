@@ -330,27 +330,6 @@ export function listenToNonDelegatedEvent(
   }
 }
 
-export function listenToNonDelegatedEventForCustomElement(
-  domEventName: DOMEventName,
-  targetElement: Element,
-): void {
-  const isCapturePhaseListener = false;
-  const listenerSet = getEventListenerSet(targetElement);
-  const listenerSetKey = getListenerSetKey(
-    domEventName,
-    isCapturePhaseListener,
-  );
-  if (!listenerSet.has(listenerSetKey)) {
-    addTrappedEventListener(
-      targetElement,
-      domEventName,
-      IS_NON_DELEGATED & SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS,
-      isCapturePhaseListener,
-    );
-    listenerSet.add(listenerSetKey);
-  }
-}
-
 export function listenToNativeEvent(
   domEventName: DOMEventName,
   isCapturePhaseListener: boolean,
@@ -446,10 +425,6 @@ function addTrappedEventListener(
   isCapturePhaseListener: boolean,
   isDeferredListenerForLegacyFBSupport?: boolean,
 ) {
-  /*console.log('addTrappedEventListener'
-    + '\n  targetContainer: ' + targetContainer
-    + '\n  domEventName: ' + domEventName
-    + '\n  isCapturePhaseListener: ' + isCapturePhaseListener);*/
   let listener = createEventListenerWrapperWithPriority(
     targetContainer,
     domEventName,

@@ -76,7 +76,6 @@ import {
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
-  listenToNonDelegatedEventForCustomElement,
 } from '../events/DOMPluginEventSystem';
 
 let didWarnInvalidHydration = false;

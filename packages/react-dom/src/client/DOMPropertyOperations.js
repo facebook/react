@@ -158,7 +158,6 @@ export function setValueForProperty(
     name[0] === 'o' &&
     name[1] === 'n'
   ) {
-    // Detect and remove trailing "Capture"
     let eventName = name.replace(/Capture$/, '');
     const useCapture = name !== eventName;
     eventName = eventName.slice(2);

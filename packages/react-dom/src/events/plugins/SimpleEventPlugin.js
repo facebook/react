@@ -26,7 +26,6 @@ import {
   SyntheticWheelEvent,
   SyntheticClipboardEvent,
   SyntheticPointerEvent,
-  SyntheticCustomElementEvent,
 } from '../../events/SyntheticEvent';
 
 import {
@@ -55,14 +54,6 @@ import {
 
 import isCustomComponent from '../../shared/isCustomComponent';
 
-const customElementTopLevelEventsToReactNames: Map<
-  DOMEventName,
-  string | null,
-> = new Map([
-  ['change', 'onChange'],
-  //['input', 'onInput'],
-]);
-
 function extractEvents(
   dispatchQueue: DispatchQueue,
   domEventName: DOMEventName,
@@ -72,23 +63,19 @@ function extractEvents(
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
 ): void {
-  let debug = false;
   let reactName = topLevelEventsToReactNames.get(domEventName);
   if (reactName === undefined) {
-    if (enableCustomElementPropertySupport && targetInst &&
+    if (domEventName === 'change' && enableCustomElementPropertySupport && targetInst &&
       isCustomComponent(targetInst.elementType, targetInst.pendingProps)) {
-      debug = true;
       // This will fix it if the change event is targeting the custom element,
       // but if a change event bubbles through a custom element that is
       // targeted at something inside, then this won't work...
       reactName = customElementTopLevelEventsToReactNames.get(domEventName);
-      console.log('set react name for custom element: ' + reactName);
     }
   }
   if (reactName === undefined) {
     return;
   }
-
   let SyntheticEventCtor = SyntheticEvent;
   let reactEventType: string = domEventName;
   switch (domEventName) {
@@ -197,7 +184,6 @@ function extractEvents(
       targetContainer,
       inCapturePhase,
     );
-    if (debug) console.log('listeners.length: ' + listeners.length);
     if (listeners.length > 0) {
       // Intentionally create event lazily.
       const event = new SyntheticEventCtor(
@@ -230,7 +216,6 @@ function extractEvents(
       accumulateTargetOnly,
       nativeEvent,
     );
-    if (debug) console.log('2listeners.length: ' + listeners.length);
     if (listeners.length > 0) {
       // Intentionally create event lazily.
       const event = new SyntheticEventCtor(
