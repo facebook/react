@@ -65,9 +65,13 @@ function extractEvents(
 ): void {
   let reactName = topLevelEventsToReactNames.get(domEventName);
   if (reactName === undefined) {
-    if (domEventName === 'change' && enableCustomElementPropertySupport && targetInst &&
-      isCustomComponent(targetInst.elementType, targetInst.pendingProps)) {
-      reactName = customElementTopLevelEventsToReactNames.get(domEventName);
+    if (
+      domEventName === 'change' &&
+      enableCustomElementPropertySupport &&
+      targetInst &&
+      isCustomComponent(targetInst.elementType, targetInst.pendingProps)
+    ) {
+      reactName = 'onChange';
     }
   }
   if (reactName === undefined) {

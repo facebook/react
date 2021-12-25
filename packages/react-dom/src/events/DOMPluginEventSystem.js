@@ -148,8 +148,12 @@ function extractEvents(
       targetContainer,
     );
   }
-  if (shouldProcessPolyfillPlugins ||
-    (enableCustomElementPropertySupport && targetInst && isCustomComponent(targetInst.elementType, targetInst.pendingProps))) {
+  if (
+    shouldProcessPolyfillPlugins ||
+    (enableCustomElementPropertySupport &&
+      targetInst &&
+      isCustomComponent(targetInst.elementType, targetInst.pendingProps))
+  ) {
     ChangeEventPlugin.extractEvents(
       dispatchQueue,
       domEventName,

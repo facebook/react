@@ -23,7 +23,10 @@ import {updateValueIfChanged} from '../../client/inputValueTracking';
 import {setDefaultValue} from '../../client/ReactDOMInput';
 import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 
-import {disableInputAttributeSyncing, enableCustomElementPropertySupport} from 'shared/ReactFeatureFlags';
+import {
+  disableInputAttributeSyncing,
+  enableCustomElementPropertySupport,
+} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
 import {
   processDispatchQueue,
@@ -283,7 +286,10 @@ function extractEvents(
 
   let isCustomComponentTag = false;
   if (enableCustomElementPropertySupport && targetInst) {
-    isCustomComponentTag = isCustomComponent(targetInst.elementType, targetInst.pendingProps);
+    isCustomComponentTag = isCustomComponent(
+      targetInst.elementType,
+      targetInst.pendingProps,
+    );
   }
 
   let getTargetInstFunc, handleEventFunc;
