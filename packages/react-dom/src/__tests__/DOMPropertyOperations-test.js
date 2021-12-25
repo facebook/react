@@ -306,7 +306,6 @@ describe('DOMPropertyOperations', () => {
       expect(eventHandler).toHaveBeenCalledTimes(expectedHandlerCallCount);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements should have working onInput event listeners', () => {
       let reactInputEvent = null;
       const eventHandler = jest.fn(event => (reactInputEvent = event));
