@@ -16,12 +16,12 @@ import {UNSUPPORTED_VERSION_URL} from 'react-devtools-shared/src/constants';
 
 import styles from './UnsupportedVersionDialog.css';
 
-type DAILOG_STATE = 'dialog-not-shown' | 'show-dialog' | 'dialog-shown';
+type DIALOG_STATE = 'dialog-not-shown' | 'show-dialog' | 'dialog-shown';
 
 export default function UnsupportedVersionDialog(_: {||}) {
   const {dispatch} = useContext(ModalDialogContext);
   const store = useContext(StoreContext);
-  const [state, setState] = useState<DAILOG_STATE>('dialog-not-shown');
+  const [state, setState] = useState<DIALOG_STATE>('dialog-not-shown');
 
   useEffect(() => {
     if (state === 'dialog-not-shown') {

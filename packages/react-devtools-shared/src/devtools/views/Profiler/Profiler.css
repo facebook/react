@@ -116,7 +116,7 @@
   color: var(--color-button);
 }
 
-.TimlineSearchInputContainer {
+.TimelineSearchInputContainer {
   flex: 1 1;
   display: flex;
   align-items: center;
