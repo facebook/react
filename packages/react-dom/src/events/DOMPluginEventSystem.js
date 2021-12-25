@@ -137,12 +137,7 @@ function extractEvents(
   // could alter all these plugins to work in such ways, but
   // that might cause other unknown side-effects that we
   // can't foresee right now.
-  // i think this should be true for custom elements
-  let proceed = shouldProcessPolyfillPlugins;
-  if (enableCustomElementPropertySupport && targetInst) {
-    proceed = proceed || isCustomComponent(targetInst.elementType, targetInst.pendingProps);
-  }
-  if (proceed) {
+  if (shouldProcessPolyfillPlugins) {
     EnterLeaveEventPlugin.extractEvents(
       dispatchQueue,
       domEventName,
@@ -152,6 +147,9 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
+  }
+  if (shouldProcessPolyfillPlugins ||
+    (enableCustomElementPropertySupport && targetInst && isCustomComponent(targetInst.elementType, targetInst.pendingProps))) {
     ChangeEventPlugin.extractEvents(
       dispatchQueue,
       domEventName,
@@ -161,6 +159,8 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
+  }
+  if (shouldProcessPolyfillPlugins) {
     SelectEventPlugin.extractEvents(
       dispatchQueue,
       domEventName,

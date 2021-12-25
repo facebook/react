@@ -67,9 +67,6 @@ function extractEvents(
   if (reactName === undefined) {
     if (domEventName === 'change' && enableCustomElementPropertySupport && targetInst &&
       isCustomComponent(targetInst.elementType, targetInst.pendingProps)) {
-      // This will fix it if the change event is targeting the custom element,
-      // but if a change event bubbles through a custom element that is
-      // targeted at something inside, then this won't work...
       reactName = customElementTopLevelEventsToReactNames.get(domEventName);
     }
   }

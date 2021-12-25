@@ -282,12 +282,12 @@ function extractEvents(
   const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
   let isCustomComponentTag = false;
-  /*if (enableCustomElementPropertySupport && targetInst) {
+  if (enableCustomElementPropertySupport && targetInst) {
     isCustomComponentTag = isCustomComponent(targetInst.elementType, targetInst.pendingProps);
-  }*/
+  }
 
   let getTargetInstFunc, handleEventFunc;
-  if (shouldUseChangeEvent(targetNode) /*|| isCustomComponentTag*/) {
+  if (shouldUseChangeEvent(targetNode) || isCustomComponentTag) {
     getTargetInstFunc = getTargetInstForChangeEvent;
   } else if (isTextInputElement(((targetNode: any): HTMLElement))) {
     if (isInputEventSupported) {
