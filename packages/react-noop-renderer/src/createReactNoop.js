@@ -470,6 +470,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     logRecoverableError() {
       // no-op
     },
+
+    commitMutationEffectsBegin() {
+      // NO-OP
+    },
+
+    commitMutationEffectsComplete() {
+      // NO-OP
+    },
   };
 
   const hostConfig = useMutation
