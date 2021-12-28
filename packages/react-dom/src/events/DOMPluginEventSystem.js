@@ -13,6 +13,9 @@ import {
   SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE,
   IS_LEGACY_FB_SUPPORT_MODE,
   SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS,
+  IS_CAPTURE_PHASE,
+  IS_EVENT_HANDLE_NON_MANAGED_NODE,
+  IS_NON_DELEGATED,
 } from './EventSystemFlags';
 import type {AnyNativeEvent} from './PluginModuleType';
 import type {
@@ -22,11 +25,6 @@ import type {
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {allNativeEvents} from './EventRegistry';
-import {
-  IS_CAPTURE_PHASE,
-  IS_EVENT_HANDLE_NON_MANAGED_NODE,
-  IS_NON_DELEGATED,
-} from './EventSystemFlags';
 
 import {
   HostRoot,
@@ -42,7 +40,7 @@ import {
   getEventListenerSet,
   getEventHandlerListeners,
 } from '../client/ReactDOMComponentTree';
-import {COMMENT_NODE} from '../shared/HTMLNodeType';
+import {COMMENT_NODE, DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {batchedEventUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
@@ -56,7 +54,6 @@ import {
   invokeGuardedCallbackAndCatchFirstError,
   rethrowCaughtError,
 } from 'shared/ReactErrorUtils';
-import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {
   removeEventListener,
