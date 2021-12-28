@@ -504,6 +504,35 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.foo).toBe('two');
       expect(customElement.getAttribute('foo')).toBe('one');
     });
+
+    // @gate enableCustomElementPropertySupport
+    it('custom element properties should accept functions', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element />, container);
+      const customElement = container.querySelector('my-custom-element');
+
+      // Install a setter to activate the `in` heuristic
+      Object.defineProperty(customElement, 'foo', {
+        set: function(x) {
+          this._foo = x;
+        },
+        get: function() {
+          return this._foo;
+        },
+      });
+      function myFunction() {
+        return 'this is myFunction';
+      }
+      ReactDOM.render(<my-custom-element foo={myFunction} />, container);
+      expect(customElement.foo).toBe(myFunction);
+
+      // Also remove and re-add the property for good measure
+      ReactDOM.render(<my-custom-element />, container);
+      expect(customElement.foo).toBe(null);
+      ReactDOM.render(<my-custom-element foo={myFunction} />, container);
+      expect(customElement.foo).toBe(myFunction);
+    });
   });
 
   describe('deleteValueForProperty', () => {
