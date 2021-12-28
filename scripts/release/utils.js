@@ -72,7 +72,9 @@ const getBuildInfo = async () => {
   const branch = await execRead('git branch | grep \\* | cut -d " " -f2', {
     cwd,
   });
-  const commit = await execRead('git show -s --no-show-signature --format=%h', {cwd});
+  const commit = await execRead('git show -s --no-show-signature --format=%h', {
+    cwd,
+  });
   const checksum = await getChecksumForCurrentRevision(cwd);
   const dateString = await getDateStringForCommit(commit);
   const version = isExperimental
