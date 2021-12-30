@@ -299,17 +299,24 @@ function setInitialDOMProperties(
         setInnerHTML(domElement, nextHtml);
       }
     } else if (propKey === CHILDREN) {
-      if (typeof nextProp === 'string') {
-        // Avoid setting initial textContent when the text is empty. In IE11 setting
-        // textContent on a <textarea> will cause the placeholder to not
-        // show within the <textarea> until it has been focused and blurred again.
-        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-        const canSetTextContent = tag !== 'textarea' || nextProp !== '';
-        if (canSetTextContent) {
-          setTextContent(domElement, nextProp);
+      //  Handle custom element
+      //  If it is a customElement,
+      //  Pass the child object to it
+      if (tag && window.customElements.get(tag) && nextProp) {
+        setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
+      } else {
+        if (typeof nextProp === 'string') {
+          // Avoid setting initial textContent when the text is empty. In IE11 setting
+          // textContent on a <textarea> will cause the placeholder to not
+          // show within the <textarea> until it has been focused and blurred again.
+          // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+          const canSetTextContent = tag !== 'textarea' || nextProp !== '';
+          if (canSetTextContent) {
+            setTextContent(domElement, nextProp);
+          }
+        } else if (typeof nextProp === 'number') {
+          setTextContent(domElement, '' + nextProp);
         }
-      } else if (typeof nextProp === 'number') {
-        setTextContent(domElement, '' + nextProp);
       }
     } else if (
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||

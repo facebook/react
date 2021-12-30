@@ -148,6 +148,13 @@ export function setValueForProperty(
   isCustomComponentTag: boolean,
 ) {
   const propertyInfo = getPropertyInfo(name);
+
+  //customElements retain data types
+  if (node.tagName && window.customElements.get(node.tagName.toLowerCase())) {
+    node.setAttribute(name, value);
+    return;
+  }
+
   if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
     return;
   }
@@ -184,10 +191,6 @@ export function setValueForProperty(
     }
   }
 
-  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
-    value = null;
-  }
-
   if (
     enableCustomElementPropertySupport &&
     isCustomComponentTag &&
@@ -195,6 +198,10 @@ export function setValueForProperty(
   ) {
     (node: any)[name] = value;
     return;
+  }
+
+  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
+    value = null;
   }
 
   // If the prop isn't in the special list, treat it as a simple attribute.
