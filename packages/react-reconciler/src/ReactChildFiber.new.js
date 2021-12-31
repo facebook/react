@@ -42,6 +42,7 @@ import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
 import {pushTreeFork} from './ReactFiberTreeContext.new';
+import isWebComponent from 'react-dom/src/shared/isWebComponent';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -74,7 +75,7 @@ if (__DEV__) {
     if (typeof child._store !== 'object') {
       throw new Error(
         'React Component in warnForMissingKey should have a _store. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+          'This error is likely caused by a bug in React. Please file an issue.',
       );
     }
 
@@ -89,8 +90,8 @@ if (__DEV__) {
 
     console.error(
       'Each child in a list should have a unique ' +
-      '"key" prop. See https://reactjs.org/link/warning-keys for ' +
-      'more information.',
+        '"key" prop. See https://reactjs.org/link/warning-keys for ' +
+        'more information.',
     );
   };
 }
@@ -126,20 +127,20 @@ function coerceRef(
           if (warnAboutStringRefs) {
             console.error(
               'Component "%s" contains the string ref "%s". Support for string refs ' +
-              'will be removed in a future major release. We recommend using ' +
-              'useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://reactjs.org/link/strict-mode-string-ref',
+                'will be removed in a future major release. We recommend using ' +
+                'useRef() or createRef() instead. ' +
+                'Learn more about using refs safely here: ' +
+                'https://reactjs.org/link/strict-mode-string-ref',
               componentName,
               mixedRef,
             );
           } else {
             console.error(
               'A string ref, "%s", has been found within a strict mode tree. ' +
-              'String refs are a source of potential bugs and should be avoided. ' +
-              'We recommend using useRef() or createRef() instead. ' +
-              'Learn more about using refs safely here: ' +
-              'https://reactjs.org/link/strict-mode-string-ref',
+                'String refs are a source of potential bugs and should be avoided. ' +
+                'We recommend using useRef() or createRef() instead. ' +
+                'Learn more about using refs safely here: ' +
+                'https://reactjs.org/link/strict-mode-string-ref',
               mixedRef,
             );
           }
@@ -157,9 +158,9 @@ function coerceRef(
         if (ownerFiber.tag !== ClassComponent) {
           throw new Error(
             'Function components cannot have string refs. ' +
-            'We recommend using useRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref',
+              'We recommend using useRef() instead. ' +
+              'Learn more about using refs safely here: ' +
+              'https://reactjs.org/link/strict-mode-string-ref',
           );
         }
 
@@ -169,7 +170,7 @@ function coerceRef(
       if (!inst) {
         throw new Error(
           `Missing owner for string ref ${mixedRef}. This error is likely caused by a ` +
-          'bug in React. Please file an issue.',
+            'bug in React. Please file an issue.',
         );
       }
       // Assigning this to a const so Flow knows it won't change in the closure
@@ -212,11 +213,11 @@ function coerceRef(
       if (!element._owner) {
         throw new Error(
           `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
-          ' the following reasons:\n' +
-          '1. You may be adding a ref to a function component\n' +
-          "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-          '3. You have multiple copies of React loaded\n' +
-          'See https://reactjs.org/link/refs-must-have-owner for more information.',
+            ' the following reasons:\n' +
+            '1. You may be adding a ref to a function component\n' +
+            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+            '3. You have multiple copies of React loaded\n' +
+            'See https://reactjs.org/link/refs-must-have-owner for more information.',
         );
       }
     }
@@ -233,8 +234,8 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
         ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
         : childString
     }). ` +
-    'If you meant to render a collection of children, use an array ' +
-    'instead.',
+      'If you meant to render a collection of children, use an array ' +
+      'instead.',
   );
 }
 
@@ -249,8 +250,8 @@ function warnOnFunctionType(returnFiber: Fiber) {
 
     console.error(
       'Functions are not valid as a React child. This may happen if ' +
-      'you return a Component instead of <Component /> from render. ' +
-      'Or maybe you meant to call this function rather than return it.',
+        'you return a Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.',
     );
   }
 }
@@ -724,10 +725,10 @@ function ChildReconciler(shouldTrackSideEffects) {
           }
           console.error(
             'Encountered two children with the same key, `%s`. ' +
-            'Keys should be unique so that components maintain their identity ' +
-            'across updates. Non-unique keys may cause children to be ' +
-            'duplicated and/or omitted — the behavior is unsupported and ' +
-            'could change in a future version.',
+              'Keys should be unique so that components maintain their identity ' +
+              'across updates. Non-unique keys may cause children to be ' +
+              'duplicated and/or omitted — the behavior is unsupported and ' +
+              'could change in a future version.',
             key,
           );
           break;
@@ -928,7 +929,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (typeof iteratorFn !== 'function') {
       throw new Error(
         'An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
+          'React. Please file an issue.',
       );
     }
 
@@ -943,10 +944,10 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (!didWarnAboutGenerators) {
           console.error(
             'Using Generators as children is unsupported and will likely yield ' +
-            'unexpected results because enumerating a generator mutates it. ' +
-            'You may convert it to an array with `Array.from()` or the ' +
-            '`[...spread]` operator before rendering. Keep in mind ' +
-            'you might need to polyfill these features for older browsers.',
+              'unexpected results because enumerating a generator mutates it. ' +
+              'You may convert it to an array with `Array.from()` or the ' +
+              '`[...spread]` operator before rendering. Keep in mind ' +
+              'you might need to polyfill these features for older browsers.',
           );
         }
         didWarnAboutGenerators = true;
@@ -957,7 +958,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (!didWarnAboutMaps) {
           console.error(
             'Using Maps as children is not supported. ' +
-            'Use an array of keyed ReactElements instead.',
+              'Use an array of keyed ReactElements instead.',
           );
         }
         didWarnAboutMaps = true;
@@ -1280,11 +1281,13 @@ function ChildReconciler(shouldTrackSideEffects) {
       newChild = newChild.props.children;
     }
 
-    //  Handle custom element
-    //  If it is a customElement,
-    //  rendering is skipped and control of rendering is handed over to the customElement
-    const type = returnFiber?.elementType || '';
-    if (type && typeof type === 'string' && window?.customElements?.get(type)) {
+    //  Handle webComponent
+    //  If it is a webComponent,
+    //  rendering is skipped and control of rendering is handed over to the webComponent
+    if (
+      typeof returnFiber.elementType === 'string' &&
+      isWebComponent(returnFiber.elementType)
+    ) {
       newChild = null;
     }
 

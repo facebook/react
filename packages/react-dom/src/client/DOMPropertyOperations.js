@@ -25,6 +25,7 @@ import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
+import isWebComponent from '../shared/isWebComponent';
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
@@ -150,7 +151,7 @@ export function setValueForProperty(
   const propertyInfo = getPropertyInfo(name);
 
   //customElements retain data types
-  if (node.tagName && window.customElements.get(node.tagName.toLowerCase())) {
+  if (isWebComponent(node.tagName.toLowerCase())) {
     node.setAttribute(name, value);
     return;
   }
@@ -191,6 +192,10 @@ export function setValueForProperty(
     }
   }
 
+  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
+    value = null;
+  }
+
   if (
     enableCustomElementPropertySupport &&
     isCustomComponentTag &&
@@ -198,10 +203,6 @@ export function setValueForProperty(
   ) {
     (node: any)[name] = value;
     return;
-  }
-
-  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
-    value = null;
   }
 
   // If the prop isn't in the special list, treat it as a simple attribute.

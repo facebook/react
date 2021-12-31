@@ -77,6 +77,7 @@ import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
+import isWebComponent from '../shared/isWebComponent';
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
@@ -299,11 +300,16 @@ function setInitialDOMProperties(
         setInnerHTML(domElement, nextHtml);
       }
     } else if (propKey === CHILDREN) {
-      //  Handle custom element
-      //  If it is a customElement,
+      //  Handle webComponent
+      //  If it is a webComponent,
       //  Pass the child object to it
-      if (tag && window.customElements.get(tag) && nextProp) {
-        setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
+      if (tag && isWebComponent(tag)) {
+        setValueForProperty(
+          domElement,
+          propKey,
+          nextProp,
+          isCustomComponentTag,
+        );
       } else {
         if (typeof nextProp === 'string') {
           // Avoid setting initial textContent when the text is empty. In IE11 setting
