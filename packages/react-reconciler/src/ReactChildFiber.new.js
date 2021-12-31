@@ -42,6 +42,7 @@ import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
 import {pushTreeFork} from './ReactFiberTreeContext.new';
+import isWebComponent from 'react-dom/src/shared/isWebComponent';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -1278,6 +1279,16 @@ function ChildReconciler(shouldTrackSideEffects) {
       newChild.key === null;
     if (isUnkeyedTopLevelFragment) {
       newChild = newChild.props.children;
+    }
+
+    //  Handle webComponent
+    //  If it is a webComponent,
+    //  rendering is skipped and control of rendering is handed over to the webComponent
+    if (
+      typeof returnFiber.elementType === 'string' &&
+      isWebComponent(returnFiber.elementType)
+    ) {
+      newChild = null;
     }
 
     // Handle object types

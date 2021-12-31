@@ -504,6 +504,45 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.foo).toBe('two');
       expect(customElement.getAttribute('foo')).toBe('one');
     });
+
+    it('assigning to a webComponent property should preserve data type , and the child element should be passed to A and rendered inside ', () => {
+      if (typeof customElements !== 'undefined') {
+        customElements.define(
+          'my-element',
+          class extends HTMLElement {
+            $children: any;
+            constructor() {
+              super();
+              this._attachShadow = this.attachShadow({mode: 'closed'});
+            }
+
+            setAttribute(qualifiedName, value: any) {
+              //Because the children field is reserved,
+              // so the test is changed to $children fields first
+              qualifiedName =
+                qualifiedName === 'children' ? '$children' : qualifiedName;
+              this[qualifiedName] = value;
+            }
+
+            connectedCallback() {
+              // this._attachShadow.innerHTML = '<slot></slot>'
+            }
+          },
+        );
+        const options = {a: 'b'};
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+        ReactDOM.render(
+          <my-element options={options}>
+            <div>a</div>
+          </my-element>,
+          container,
+        );
+        const customElement = container.querySelector('my-element');
+        expect(customElement.options).toEqual(options);
+        expect(customElement.$children).toHaveProperty('type');
+      }
+    });
   });
 
   describe('deleteValueForProperty', () => {

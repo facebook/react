@@ -25,6 +25,7 @@ import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
+import isWebComponent from '../shared/isWebComponent';
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
@@ -148,6 +149,13 @@ export function setValueForProperty(
   isCustomComponentTag: boolean,
 ) {
   const propertyInfo = getPropertyInfo(name);
+
+  //customElements retain data types
+  if (isWebComponent(node.tagName.toLowerCase())) {
+    node.setAttribute(name, value);
+    return;
+  }
+
   if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
     return;
   }
