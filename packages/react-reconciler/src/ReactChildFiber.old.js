@@ -10,7 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.new';
+import type {Lanes} from './ReactFiberLane.old';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {Placement, ChildDeletion, Forked} from './ReactFiberFlags';
@@ -36,12 +36,12 @@ import {
   createFiberFromFragment,
   createFiberFromText,
   createFiberFromPortal,
-} from './ReactFiber.new';
-import {emptyRefsObject} from './ReactFiberClassComponent.new';
-import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
+} from './ReactFiber.old';
+import {emptyRefsObject} from './ReactFiberClassComponent.old';
+import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
 import {StrictLegacyMode} from './ReactTypeOfMode';
-import {getIsHydrating} from './ReactFiberHydrationContext.new';
-import {pushTreeFork} from './ReactFiberTreeContext.new';
+import {getIsHydrating} from './ReactFiberHydrationContext.old';
+import {pushTreeFork} from './ReactFiberTreeContext.old';
 import isWebComponent from 'shared/isWebComponent';
 
 let didWarnAboutMaps;
