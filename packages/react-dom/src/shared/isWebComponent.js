@@ -7,7 +7,7 @@
  * @flow
  */
 
-export default function isWebComponent(tag) {
+export default function isWebComponent(tag?: string) {
   if (tag && global.customElements) {
     return !!global.customElements.get(tag);
   }

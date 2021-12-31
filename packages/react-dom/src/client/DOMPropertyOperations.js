@@ -152,7 +152,7 @@ export function setValueForProperty(
 
   //customElements retain data types
   if (isWebComponent(node.tagName.toLowerCase())) {
-    node.setAttribute(name, value);
+    node.setAttribute(name, (value: any));
     return;
   }
 
