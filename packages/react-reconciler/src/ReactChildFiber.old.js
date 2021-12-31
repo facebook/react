@@ -10,7 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.old';
+import type {Lanes} from './ReactFiberLane.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {Placement, ChildDeletion, Forked} from './ReactFiberFlags';
@@ -36,12 +36,13 @@ import {
   createFiberFromFragment,
   createFiberFromText,
   createFiberFromPortal,
-} from './ReactFiber.old';
-import {emptyRefsObject} from './ReactFiberClassComponent.old';
-import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
+} from './ReactFiber.new';
+import {emptyRefsObject} from './ReactFiberClassComponent.new';
+import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
 import {StrictLegacyMode} from './ReactTypeOfMode';
-import {getIsHydrating} from './ReactFiberHydrationContext.old';
-import {pushTreeFork} from './ReactFiberTreeContext.old';
+import {getIsHydrating} from './ReactFiberHydrationContext.new';
+import {pushTreeFork} from './ReactFiberTreeContext.new';
+import isWebComponent from 'shared/isWebComponent';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -1278,6 +1279,16 @@ function ChildReconciler(shouldTrackSideEffects) {
       newChild.key === null;
     if (isUnkeyedTopLevelFragment) {
       newChild = newChild.props.children;
+    }
+
+    //  Handle webComponent
+    //  If it is a webComponent,
+    //  rendering is skipped and control of rendering is handed over to the webComponent
+    if (
+      typeof returnFiber.elementType === 'string' &&
+      isWebComponent(returnFiber.elementType)
+    ) {
+      newChild = null;
     }
 
     // Handle object types
