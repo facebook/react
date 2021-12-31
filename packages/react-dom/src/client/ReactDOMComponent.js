@@ -77,7 +77,7 @@ import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
-import isWebComponent from '../shared/isWebComponent';
+import isWebComponent from 'shared/isWebComponent';
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;

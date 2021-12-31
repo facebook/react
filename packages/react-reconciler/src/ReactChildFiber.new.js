@@ -42,7 +42,7 @@ import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {getIsHydrating} from './ReactFiberHydrationContext.new';
 import {pushTreeFork} from './ReactFiberTreeContext.new';
-import isWebComponent from 'react-dom/src/shared/isWebComponent';
+import isWebComponent from 'shared/isWebComponent';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;

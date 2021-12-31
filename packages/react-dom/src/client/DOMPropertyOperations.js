@@ -25,7 +25,7 @@ import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
-import isWebComponent from '../shared/isWebComponent';
+import isWebComponent from 'shared/isWebComponent';
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
