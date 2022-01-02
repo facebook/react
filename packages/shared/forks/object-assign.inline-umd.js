@@ -1,8 +1,7 @@
 /**
  * Copyright 2004-present Facebook. All Rights Reserved.
  */
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 const _assign = function(to, from) {
   for (const key in from) {
