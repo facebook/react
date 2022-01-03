@@ -743,7 +743,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     //    <offscreen hidden={true}>
     //      <span>A</span>
     //      <span>B</span>
-    //    </offscren>
+    //    </offscreen>
     //
     // And turns it into this:
     //

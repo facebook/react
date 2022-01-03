@@ -3719,7 +3719,7 @@ function beginWork(
     didReceiveUpdate = false;
 
     if (getIsHydrating() && isForkedChild(workInProgress)) {
-      // Check if this child belongs to a list of muliple children in
+      // Check if this child belongs to a list of multiple children in
       // its parent.
       //
       // In a true multi-threaded implementation, we would render children on

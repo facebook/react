@@ -1045,7 +1045,7 @@ function readFromUnsubscribedMutableSource<Source, Snapshot>(
     // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
     markSourceAsDirty(source);
 
-    // Intentioally throw an error to force React to retry synchronously. During
+    // Intentionally throw an error to force React to retry synchronously. During
     // the synchronous retry, it will block interleaved mutations, so we should
     // get a consistent read. Therefore, the following error should never be
     // visible to the user.
@@ -1389,7 +1389,7 @@ function updateSyncExternalStore<T>(
   if (
     inst.getSnapshot !== getSnapshot ||
     snapshotChanged ||
-    // Check if the susbcribe function changed. We can save some memory by
+    // Check if the subscribe function changed. We can save some memory by
     // checking whether we scheduled a subscription effect above.
     (workInProgressHook !== null &&
       workInProgressHook.memoizedState.tag & HookHasEffect)
@@ -2047,7 +2047,7 @@ function mountId(): string {
   if (getIsHydrating()) {
     const treeId = getTreeId();
 
-    // Use a captial R prefix for server-generated ids.
+    // Use a capital R prefix for server-generated ids.
     id = identifierPrefix + 'R:' + treeId;
 
     // Unless this is the first id at this level, append a number at the end
