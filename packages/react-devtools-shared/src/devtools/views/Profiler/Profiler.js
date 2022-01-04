@@ -125,7 +125,7 @@ function Profiler(_: {||}) {
             {!isLegacyProfilerSelected && (
               <div
                 ref={searchInputContainerRef}
-                className={styles.TimlineSearchInputContainer}
+                className={styles.TimelineSearchInputContainer}
               />
             )}
             <SettingsModalContextToggle />
