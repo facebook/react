@@ -86,7 +86,7 @@ function runTestShell() {
   });
   serverProcess.stderr.on('data', data => {
     if (`${data}`.includes('EADDRINUSE')) {
-      // Something is occuprying this port;
+      // Something is occupying this port;
       // We could kill the process and restart but probably better to prompt the user to do this.
 
       logError('Free up the port and re-run tests:');
