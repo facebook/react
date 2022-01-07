@@ -7,7 +7,7 @@
     "glamor": "^2.20.40",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
-    "react-scripts": "1.0.11",
+    "ansi-regex":"6.0.1"
     "react-virtualized": "^9.9.0"
   },
   "scripts": {
