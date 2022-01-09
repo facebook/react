@@ -14,10 +14,9 @@ import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane.old';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseInstance, Props} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
-import invariant from 'shared/invariant';
 import {
   createRootStrictEffectsByDefault,
   enableCache,
@@ -27,6 +26,10 @@ import {
   enableSyncDefaultUpdates,
   allowConcurrentByDefault,
 } from 'shared/ReactFeatureFlags';
+import {
+  supportsPersistence,
+  getOffscreenContainerType,
+} from './ReactFiberHostConfig';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
 import {
@@ -108,8 +111,6 @@ if (__DEV__) {
   }
 }
 
-let debugCounter = 1;
-
 function FiberNode(
   tag: WorkTag,
   pendingProps: mixed,
@@ -178,7 +179,7 @@ function FiberNode(
 
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
-    this._debugID = debugCounter++;
+
     this._debugSource = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
@@ -261,7 +262,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
     if (__DEV__) {
       // DEV-only fields
-      workInProgress._debugID = current._debugID;
+
       workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
@@ -422,27 +423,20 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
 export function createHostRootFiber(
   tag: RootTag,
-  strictModeLevelOverride: null | number,
+  isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
 ): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode;
-    if (strictModeLevelOverride !== null) {
-      if (strictModeLevelOverride >= 1) {
-        mode |= StrictLegacyMode;
-      }
+    if (isStrictMode === true) {
+      mode |= StrictLegacyMode;
+
       if (enableStrictEffects) {
-        if (strictModeLevelOverride >= 2) {
-          mode |= StrictEffectsMode;
-        }
+        mode |= StrictEffectsMode;
       }
-    } else {
-      if (enableStrictEffects && createRootStrictEffectsByDefault) {
-        mode |= StrictLegacyMode | StrictEffectsMode;
-      } else {
-        mode |= StrictLegacyMode;
-      }
+    } else if (enableStrictEffects && createRootStrictEffectsByDefault) {
+      mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
       // We only use this flag for our repo tests to check both behaviors.
@@ -501,20 +495,10 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-
-        // Legacy strict mode (<StrictMode> without any level prop) defaults to level 1.
-        const level =
-          pendingProps.unstable_level == null ? 1 : pendingProps.unstable_level;
-
-        // Levels cascade; higher levels inherit all lower level modes.
-        // It is explicitly not supported to lower a mode with nesting, only to increase it.
-        if (level >= 1) {
-          mode |= StrictLegacyMode;
-        }
-        if (enableStrictEffects) {
-          if (level >= 2) {
-            mode |= StrictEffectsMode;
-          }
+        mode |= StrictLegacyMode;
+        if (enableStrictEffects && (mode & ConcurrentMode) !== NoMode) {
+          // Strict effects should never run on legacy roots
+          mode |= StrictEffectsMode;
         }
         break;
       case REACT_PROFILER_TYPE:
@@ -580,13 +564,11 @@ export function createFiberFromTypeAndProps(
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
         }
-        invariant(
-          false,
+
+        throw new Error(
           'Element type is invalid: expected a string (for built-in ' +
             'components) or a class/function (for composite components) ' +
-            'but got: %s.%s',
-          type == null ? type : typeof type,
-          info,
+            `but got: ${type == null ? type : typeof type}.${info}`,
         );
       }
     }
@@ -602,6 +584,25 @@ export function createFiberFromTypeAndProps(
   }
 
   return fiber;
+}
+
+export function createOffscreenHostContainerFiber(
+  props: Props,
+  fiberMode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+): Fiber {
+  if (supportsPersistence) {
+    const type = getOffscreenContainerType();
+    const fiber = createFiber(HostComponent, props, key, fiberMode);
+    fiber.elementType = type;
+    fiber.type = type;
+    fiber.lanes = lanes;
+    return fiber;
+  } else {
+    // Only implemented in persistent mode
+    throw new Error('Not implemented.');
+  }
 }
 
 export function createFiberFromElement(
@@ -830,7 +831,7 @@ export function assignFiberPropertiesInDEV(
     target.selfBaseDuration = source.selfBaseDuration;
     target.treeBaseDuration = source.treeBaseDuration;
   }
-  target._debugID = source._debugID;
+
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugNeedsRemount = source._debugNeedsRemount;

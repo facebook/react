@@ -12,7 +12,7 @@ const testPackagingFixture = require('./shared-commands/test-packaging-fixture')
 
 const run = async () => {
   try {
-    addDefaultParamValue(null, '--commit', 'master');
+    addDefaultParamValue(null, '--commit', 'main');
 
     const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
@@ -23,7 +23,8 @@ const run = async () => {
       await testPackagingFixture(params);
     }
 
-    await printPrereleaseSummary(params, false);
+    const isLatestRelease = params.releaseChannel === 'latest';
+    await printPrereleaseSummary(params, isLatestRelease);
   } catch (error) {
     handleError(error);
   }

@@ -115,7 +115,9 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    ReactDOMServer.renderToString(<Component />);
+    expect(() => ReactDOMServer.renderToString(<Component />)).toErrorDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+    );
   });
 
   it('should update instance.state with value returned from getDerivedStateFromProps', () => {
@@ -279,8 +281,8 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
-      'componentWillMount has been renamed',
+    expect(() => ReactDOMServer.renderToString(<Component />)).toErrorDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.',
     );
   });
 

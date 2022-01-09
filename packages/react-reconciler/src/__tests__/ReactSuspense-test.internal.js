@@ -9,8 +9,6 @@ let act;
 let TextResource;
 let textResourceShouldFail;
 
-// Additional tests can be found in ReactSuspenseWithNoopRenderer. Plan is
-// to gradually migrate those to this file.
 describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -19,7 +17,7 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
 
@@ -96,7 +94,6 @@ describe('ReactSuspense', () => {
     }
   }
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('suspends rendering and continues later', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -128,7 +125,7 @@ describe('ReactSuspense', () => {
     // Navigate the shell to now render the child content.
     // This should suspend.
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(<Foo renderBar={true} />);
       });
     } else {
@@ -201,7 +198,6 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('interrupts current render if promise resolves before current render phase', () => {
     let didResolve = false;
     const listeners = [];
@@ -244,7 +240,7 @@ describe('ReactSuspense', () => {
 
     // The update will suspend.
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(
           <>
             <Suspense fallback={<Text text="Loading..." />}>
@@ -289,7 +285,6 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
-  // @gate experimental
   // @gate !enableSyncDefaultUpdates
   it(
     'interrupts current render when something suspends with a ' +
@@ -331,7 +326,7 @@ describe('ReactSuspense', () => {
 
       // Schedule another update. This will have lower priority because it's
       // a transition.
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.update(<App shouldSuspend={false} step={2} />);
       });
 
@@ -394,44 +389,10 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  it('only captures if `fallback` is defined', () => {
-    const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <Suspense>
-          <AsyncText text="Hi" ms={5000} />
-        </Suspense>
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-
-    expect(Scheduler).toFlushAndYield([
-      'Suspend! [Hi]',
-      // The outer fallback should be rendered, because the inner one does not
-      // have a `fallback` prop
-      'Loading...',
-    ]);
-    jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded([]);
-    expect(Scheduler).toFlushAndYield([]);
-    expect(root).toMatchRenderedOutput('Loading...');
-
-    jest.advanceTimersByTime(5000);
-    expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-    expect(Scheduler).toFlushAndYield(['Hi']);
-    expect(root).toMatchRenderedOutput('Hi');
-  });
-
-  it('throws if tree suspends and none of the Suspense ancestors have a fallback', () => {
-    ReactTestRenderer.create(
-      <Suspense>
-        <AsyncText text="Hi" ms={1000} />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
+  it('throws if tree suspends and none of the Suspense ancestors have a boundary', () => {
+    ReactTestRenderer.create(<AsyncText text="Hi" ms={1000} />, {
+      unstable_isConcurrent: true,
+    });
 
     expect(Scheduler).toFlushAndThrow(
       'AsyncText suspended while rendering, but no fallback UI was specified.',
@@ -664,6 +625,55 @@ describe('ReactSuspense', () => {
     expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
     expect(Scheduler).toFlushAndYield(['new value']);
     expect(root).toMatchRenderedOutput('new value');
+  });
+
+  // @gate enableSuspenseLayoutEffectSemantics
+  it('re-fires layout effects when re-showing Suspense', () => {
+    function TextWithLayout(props) {
+      Scheduler.unstable_yieldValue(props.text);
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('create layout');
+        return () => {
+          Scheduler.unstable_yieldValue('destroy layout');
+        };
+      }, []);
+      return props.text;
+    }
+
+    let _setShow;
+    function App(props) {
+      const [show, setShow] = React.useState(false);
+      _setShow = setShow;
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <TextWithLayout text="Child 1" />
+          {show && <AsyncText ms={1000} text="Child 2" />}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<App />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Child 1', 'create layout']);
+    expect(root).toMatchRenderedOutput('Child 1');
+
+    act(() => {
+      _setShow(true);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Child 1',
+      'Suspend! [Child 2]',
+      'Loading...',
+    ]);
+    jest.advanceTimersByTime(1000);
+    expect(Scheduler).toHaveYielded([
+      'destroy layout',
+      'Promise resolved [Child 2]',
+    ]);
+    expect(Scheduler).toFlushAndYield(['Child 1', 'Child 2', 'create layout']);
+    expect(root).toMatchRenderedOutput(['Child 1', 'Child 2'].join(''));
   });
 
   describe('outside concurrent mode', () => {

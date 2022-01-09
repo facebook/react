@@ -45,7 +45,6 @@ describe('ReactSuspenseList', () => {
     return Component;
   }
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('appends rendering tasks to the end of the priority queue', async () => {
     const A = createAsyncText('A');
     const B = createAsyncText('B');
@@ -65,7 +64,7 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield([]);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         root.render(<App show={true} />);
       });
     } else {

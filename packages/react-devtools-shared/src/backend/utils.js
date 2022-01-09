@@ -159,50 +159,54 @@ export function serializeToString(data: any): string {
 // based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
 // based on https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
 // Implements s, d, i and f placeholders
+// NOTE: KEEP IN SYNC with src/hook.js
 export function format(
   maybeMessage: any,
   ...inputArgs: $ReadOnlyArray<any>
 ): string {
-  if (typeof maybeMessage !== 'string') {
-    return [maybeMessage, ...inputArgs].join(' ');
-  }
-
-  const re = /(%?)(%([jds]))/g;
   const args = inputArgs.slice();
-  let formatted: string = maybeMessage;
 
-  if (args.length) {
-    formatted = formatted.replace(re, (match, escaped, ptn, flag) => {
-      let arg = args.shift();
-      switch (flag) {
-        case 's':
-          arg += '';
-          break;
-        case 'd':
-        case 'i':
-          arg = parseInt(arg, 10).toString();
-          break;
-        case 'f':
-          arg = parseFloat(arg).toString();
-          break;
-      }
-      if (!escaped) {
-        return arg;
-      }
-      args.unshift(arg);
-      return match;
-    });
+  let formatted: string = String(maybeMessage);
+
+  // If the first argument is a string, check for substitutions.
+  if (typeof maybeMessage === 'string') {
+    if (args.length) {
+      const REGEXP = /(%?)(%([jds]))/g;
+
+      formatted = formatted.replace(REGEXP, (match, escaped, ptn, flag) => {
+        let arg = args.shift();
+        switch (flag) {
+          case 's':
+            arg += '';
+            break;
+          case 'd':
+          case 'i':
+            arg = parseInt(arg, 10).toString();
+            break;
+          case 'f':
+            arg = parseFloat(arg).toString();
+            break;
+        }
+        if (!escaped) {
+          return arg;
+        }
+        args.unshift(arg);
+        return match;
+      });
+    }
   }
 
-  // arguments remain after formatting
+  // Arguments that remain after formatting.
   if (args.length) {
-    formatted += ' ' + args.join(' ');
+    for (let i = 0; i < args.length; i++) {
+      formatted += ' ' + String(args[i]);
+    }
   }
 
-  // update escaped %% values
+  // Update escaped %% values.
   formatted = formatted.replace(/%{2,2}/g, '%');
 
-  return '' + formatted;
+  return String(formatted);
 }
 
 export function isSynchronousXHRSupported(): boolean {

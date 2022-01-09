@@ -48,6 +48,21 @@ describe('ReactDOMServerFB', () => {
     expect(result).toMatchInlineSnapshot(`"<div>hello world</div>"`);
   });
 
+  it('should emit bootstrap script src at the end', () => {
+    const stream = ReactDOMServer.renderToStream(<div>hello world</div>, {
+      bootstrapScriptContent: 'INIT();',
+      bootstrapScripts: ['init.js'],
+      bootstrapModules: ['init.mjs'],
+      onError(x) {
+        console.error(x);
+      },
+    });
+    const result = readResult(stream);
+    expect(result).toMatchInlineSnapshot(
+      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+    );
+  });
+
   it('emits all HTML as one unit if we wait until the end to start', async () => {
     let hasLoaded = false;
     let resolve;

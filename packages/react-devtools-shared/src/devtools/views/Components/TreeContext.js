@@ -34,7 +34,7 @@ import {
   useMemo,
   useReducer,
   useRef,
-  unstable_startTransition as startTransition,
+  startTransition,
 } from 'react';
 import {createRegExp} from '../utils';
 import {BridgeContext, StoreContext} from '../context';
@@ -829,7 +829,7 @@ type Props = {|
   defaultSelectedElementIndex?: ?number,
 |};
 
-// TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
+// TODO Remove TreeContextController wrapper element once global Context.write API exists.
 function TreeContextController({
   children,
   defaultInspectedElementID,

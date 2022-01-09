@@ -35,9 +35,9 @@ import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
+import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
@@ -75,7 +75,6 @@ import {
 } from './ReactFiberWorkLoop.new';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
@@ -148,8 +147,7 @@ if (__DEV__) {
   Object.defineProperty(fakeInternalInstance, '_processChildContext', {
     enumerable: false,
     value: function() {
-      invariant(
-        false,
+      throw new Error(
         '_processChildContext is not available in React 16+. This likely ' +
           'means you have multiple copies of React and are attempting to nest ' +
           'a React 15 tree inside a React 16 tree using ' +
@@ -169,25 +167,20 @@ function applyDerivedStateFromProps(
   nextProps: any,
 ) {
   const prevState = workInProgress.memoizedState;
-
+  let partialState = getDerivedStateFromProps(nextProps, prevState);
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
         // Invoke the function an extra time to help detect side-effects.
-        getDerivedStateFromProps(nextProps, prevState);
+        partialState = getDerivedStateFromProps(nextProps, prevState);
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
-  }
-
-  const partialState = getDerivedStateFromProps(nextProps, prevState);
-
-  if (__DEV__) {
     warnOnUndefinedDerivedState(ctor, partialState);
   }
   // Merge the partial state and the previous state.
@@ -323,27 +316,28 @@ function checkShouldComponentUpdate(
 ) {
   const instance = workInProgress.stateNode;
   if (typeof instance.shouldComponentUpdate === 'function') {
+    let shouldUpdate = instance.shouldComponentUpdate(
+      newProps,
+      newState,
+      nextContext,
+    );
     if (__DEV__) {
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
-        disableLogs();
+        setIsStrictModeForDevtools(true);
         try {
           // Invoke the function an extra time to help detect side-effects.
-          instance.shouldComponentUpdate(newProps, newState, nextContext);
+          shouldUpdate = instance.shouldComponentUpdate(
+            newProps,
+            newState,
+            nextContext,
+          );
         } finally {
-          reenableLogs();
+          setIsStrictModeForDevtools(false);
         }
       }
-    }
-    const shouldUpdate = instance.shouldComponentUpdate(
-      newProps,
-      newState,
-      nextContext,
-    );
-
-    if (__DEV__) {
       if (shouldUpdate === undefined) {
         console.error(
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
@@ -659,22 +653,22 @@ function constructClassInstance(
       : emptyContextObject;
   }
 
+  let instance = new ctor(props, context);
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
-        new ctor(props, context); // eslint-disable-line no-new
+        instance = new ctor(props, context); // eslint-disable-line no-new
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
   }
 
-  const instance = new ctor(props, context);
   const state = (workInProgress.memoizedState =
     instance.state !== null && instance.state !== undefined
       ? instance.state
@@ -923,7 +917,6 @@ function mountClassInstance(
       enableStrictEffects &&
       (workInProgress.mode & StrictEffectsMode) !== NoMode
     ) {
-      // Never double-invoke effects for legacy roots.
       fiberFlags |= MountLayoutDev;
     }
     workInProgress.flags |= fiberFlags;
@@ -1005,7 +998,6 @@ function resumeMountClassInstance(
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
@@ -1060,7 +1052,6 @@ function resumeMountClassInstance(
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;
@@ -1078,7 +1069,6 @@ function resumeMountClassInstance(
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
         fiberFlags |= MountLayoutDev;
       }
       workInProgress.flags |= fiberFlags;

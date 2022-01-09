@@ -18,14 +18,23 @@ export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const skipUnmountedBoundaries = __VARIANT__;
-export const enableSuspenseLayoutEffectSemantics = __VARIANT__;
+export const enableUseRefAccessWarning = __VARIANT__;
+export const warnAboutCallbackRefReturningFunction = __VARIANT__;
+export const deletedTreeCleanUpLevel = __VARIANT__ ? 3 : 1;
+export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
+export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
+export const enableLazyContextPropagation = __VARIANT__;
+export const enableSyncDefaultUpdates = __VARIANT__;
+export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
+export const warnOnSubscriptionInsideStartTransition = __VARIANT__;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = __VARIANT__;
+export const enableClientRenderFallbackOnHydrationMismatch = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //
-// NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
+// NOTE: This feature will only work in DEV mode; all callsites are wrapped with __DEV__.
 export const enableDebugTracing = __EXPERIMENTAL__;
-export const enableUpdaterTracking = false;
 
 export const enableSchedulingProfiler = __VARIANT__;
 
@@ -41,7 +50,6 @@ export const deferRenderPhaseUpdateToNextBatch = !__VARIANT__;
 
 // These are already tested in both modes using the build type dimension,
 // so we don't need to use __VARIANT__ to get extra coverage.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
 // TODO: These flags are hard-coded to the default values used in open source.
@@ -50,14 +58,9 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const disableNativeComponentFrames = false;
-
 export const createRootStrictEffectsByDefault = false;
 export const enableStrictEffects = false;
-export const enableUseRefAccessWarning = __VARIANT__;
-export const deletedTreeCleanUpLevel = __VARIANT__ ? 3 : 1;
-
-export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
-export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
-export const enableLazyContextPropagation = __VARIANT__;
-export const enableSyncDefaultUpdates = __VARIANT__;
 export const allowConcurrentByDefault = true;
+export const enablePersistentOffscreenHostContainer = false;
+// You probably *don't* want to add more hardcoded ones.
+// Instead, try to add them above with the __VARIANT__ value.

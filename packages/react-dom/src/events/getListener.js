@@ -9,7 +9,6 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Props} from '../client/ReactDOMHostConfig';
 
-import invariant from 'shared/invariant';
 import {getFiberCurrentPropsFromNode} from '../client/ReactDOMComponentTree';
 
 function isInteractive(tag: string): boolean {
@@ -67,11 +66,12 @@ export default function getListener(
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;
   }
-  invariant(
-    !listener || typeof listener === 'function',
-    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
-    registrationName,
-    typeof listener,
-  );
+
+  if (listener && typeof listener !== 'function') {
+    throw new Error(
+      `Expected \`${registrationName}\` listener to be a function, instead got a value of \`${typeof listener}\` type.`,
+    );
+  }
+
   return listener;
 }

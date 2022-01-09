@@ -33,7 +33,6 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -51,19 +50,13 @@ import {
   requestUpdateLane,
   scheduleUpdateOnFiber,
   flushRoot,
-  batchedEventUpdates,
   batchedUpdates,
-  unbatchedUpdates,
   flushSync,
+  isAlreadyRendering,
   flushControlled,
   deferredUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
   flushPassiveEffects,
-  warnIfNotScopedWithMatchingAct,
-  warnIfUnmockedScheduler,
-  IsThisRendererActing,
-  act,
 } from './ReactFiberWorkLoop.new';
 import {
   createUpdate,
@@ -159,12 +152,11 @@ function findHostInstance(component: Object): PublicInstance | null {
   const fiber = getInstance(component);
   if (fiber === undefined) {
     if (typeof component.render === 'function') {
-      invariant(false, 'Unable to find node on an unmounted component.');
+      throw new Error('Unable to find node on an unmounted component.');
     } else {
-      invariant(
-        false,
-        'Argument appears to not be a ReactComponent. Keys: %s',
-        Object.keys(component),
+      const keys = Object.keys(component).join(',');
+      throw new Error(
+        `Argument appears to not be a ReactComponent. Keys: ${keys}`,
       );
     }
   }
@@ -183,12 +175,11 @@ function findHostInstanceWithWarning(
     const fiber = getInstance(component);
     if (fiber === undefined) {
       if (typeof component.render === 'function') {
-        invariant(false, 'Unable to find node on an unmounted component.');
+        throw new Error('Unable to find node on an unmounted component.');
       } else {
-        invariant(
-          false,
-          'Argument appears to not be a ReactComponent. Keys: %s',
-          Object.keys(component),
+        const keys = Object.keys(component).join(',');
+        throw new Error(
+          `Argument appears to not be a ReactComponent. Keys: ${keys}`,
         );
       }
     }
@@ -248,16 +239,18 @@ export function createContainer(
   tag: RootTag,
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
-  strictModeLevelOverride: null | number,
+  isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
+  identifierPrefix: string,
 ): OpaqueRoot {
   return createFiberRoot(
     containerInfo,
     tag,
     hydrate,
     hydrationCallbacks,
-    strictModeLevelOverride,
+    isStrictMode,
     concurrentUpdatesByDefaultOverride,
+    identifierPrefix,
   );
 }
 
@@ -272,13 +265,6 @@ export function updateContainer(
   }
   const current = container.current;
   const eventTime = requestEventTime();
-  if (__DEV__) {
-    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if ('undefined' !== typeof jest) {
-      warnIfUnmockedScheduler(current);
-      warnIfNotScopedWithMatchingAct(current);
-    }
-  }
   const lane = requestUpdateLane(current);
 
   if (enableSchedulingProfiler) {
@@ -338,17 +324,13 @@ export function updateContainer(
 }
 
 export {
-  batchedEventUpdates,
   batchedUpdates,
-  unbatchedUpdates,
   deferredUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
   flushControlled,
   flushSync,
+  isAlreadyRendering,
   flushPassiveEffects,
-  IsThisRendererActing,
-  act,
 };
 
 export function getPublicRootInstance(
@@ -370,7 +352,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
   switch (fiber.tag) {
     case HostRoot:
       const root: FiberRoot = fiber.stateNode;
-      if (root.hydrate) {
+      if (root.isDehydrated) {
         // Flush the first scheduled "update".
         const lanes = getHighestPriorityPendingLanes(root);
         flushRoot(root, lanes);
@@ -398,7 +380,7 @@ function markRetryLaneImpl(fiber: Fiber, retryLane: Lane) {
   }
 }
 
-// Increases the priority of thennables when they resolve within this boundary.
+// Increases the priority of thenables when they resolve within this boundary.
 function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   markRetryLaneImpl(fiber, retryLane);
   const alternate = fiber.alternate;
@@ -463,6 +445,12 @@ export function findHostInstanceWithNoPortals(
   return hostFiber.stateNode;
 }
 
+let shouldErrorImpl = fiber => null;
+
+export function shouldError(fiber: Fiber): ?boolean {
+  return shouldErrorImpl(fiber);
+}
+
 let shouldSuspendImpl = fiber => false;
 
 export function shouldSuspend(fiber: Fiber): boolean {
@@ -476,6 +464,7 @@ let overrideProps = null;
 let overridePropsDeletePath = null;
 let overridePropsRenamePath = null;
 let scheduleUpdate = null;
+let setErrorHandler = null;
 let setSuspenseHandler = null;
 
 if (__DEV__) {
@@ -690,6 +679,10 @@ if (__DEV__) {
     scheduleUpdateOnFiber(fiber, SyncLane, NoTimestamp);
   };
 
+  setErrorHandler = (newShouldErrorImpl: Fiber => ?boolean) => {
+    shouldErrorImpl = newShouldErrorImpl;
+  };
+
   setSuspenseHandler = (newShouldSuspendImpl: Fiber => boolean) => {
     shouldSuspendImpl = newShouldSuspendImpl;
   };
@@ -728,6 +721,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     overrideProps,
     overridePropsDeletePath,
     overridePropsRenamePath,
+    setErrorHandler,
     setSuspenseHandler,
     scheduleUpdate,
     currentDispatcherRef: ReactCurrentDispatcher,

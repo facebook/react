@@ -20,6 +20,8 @@ describe('React hooks DevTools integration', () => {
   let scheduleUpdate;
   let setSuspenseHandler;
 
+  global.IS_REACT_ACT_ENVIRONMENT = true;
+
   beforeEach(() => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       inject: injected => {
@@ -64,7 +66,7 @@ describe('React hooks DevTools integration', () => {
     expect(stateHook.isStateEditable).toBe(true);
 
     if (__DEV__) {
-      overrideHookState(fiber, stateHook.id, [], 10);
+      act(() => overrideHookState(fiber, stateHook.id, [], 10));
       expect(renderer.toJSON()).toEqual({
         type: 'div',
         props: {},
@@ -116,7 +118,7 @@ describe('React hooks DevTools integration', () => {
     expect(reducerHook.isStateEditable).toBe(true);
 
     if (__DEV__) {
-      overrideHookState(fiber, reducerHook.id, ['foo'], 'def');
+      act(() => overrideHookState(fiber, reducerHook.id, ['foo'], 'def'));
       expect(renderer.toJSON()).toEqual({
         type: 'div',
         props: {},
@@ -164,13 +166,12 @@ describe('React hooks DevTools integration', () => {
     expect(stateHook.isStateEditable).toBe(true);
 
     if (__DEV__) {
-      overrideHookState(fiber, stateHook.id, ['count'], 10);
+      act(() => overrideHookState(fiber, stateHook.id, ['count'], 10));
       expect(renderer.toJSON()).toEqual({
         type: 'div',
         props: {},
         children: ['count:', '10'],
       });
-
       act(() => setStateFn(state => ({count: state.count + 1})));
       expect(renderer.toJSON()).toEqual({
         type: 'div',
@@ -233,7 +234,8 @@ describe('React hooks DevTools integration', () => {
     }
   });
 
-  it('should support overriding suspense in concurrent mode', () => {
+  // @gate __DEV__
+  it('should support overriding suspense in concurrent mode', async () => {
     if (__DEV__) {
       // Lock the first render
       setSuspenseHandler(() => true);
@@ -243,13 +245,15 @@ describe('React hooks DevTools integration', () => {
       return 'Done';
     }
 
-    const renderer = ReactTestRenderer.create(
-      <div>
-        <React.Suspense fallback={'Loading'}>
-          <MyComponent />
-        </React.Suspense>
-      </div>,
-      {unstable_isConcurrent: true},
+    const renderer = await act(() =>
+      ReactTestRenderer.create(
+        <div>
+          <React.Suspense fallback={'Loading'}>
+            <MyComponent />
+          </React.Suspense>
+        </div>,
+        {unstable_isConcurrent: true},
+      ),
     );
 
     expect(Scheduler).toFlushAndYield([]);

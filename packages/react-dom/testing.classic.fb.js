@@ -9,7 +9,6 @@
 
 export * from './index.classic.fb.js';
 export {
-  act,
   createComponentSelector,
   createHasPseudoClassSelector,
   createRoleSelector,

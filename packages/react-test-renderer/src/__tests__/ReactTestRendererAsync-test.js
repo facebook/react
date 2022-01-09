@@ -73,7 +73,6 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2', 'C:2']);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('flushThrough flushes until the expected values is yielded', () => {
     function Child(props) {
       Scheduler.unstable_yieldValue(props.children);
@@ -91,7 +90,7 @@ describe('ReactTestRendererAsync', () => {
 
     let renderer;
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         renderer = ReactTestRenderer.create(<Parent step={1} />, {
           unstable_isConcurrent: true,
         });
@@ -112,7 +111,6 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('supports high priority interruptions', () => {
     function Child(props) {
       Scheduler.unstable_yieldValue(props.children);
@@ -138,7 +136,7 @@ describe('ReactTestRendererAsync', () => {
 
     let renderer;
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         renderer = ReactTestRenderer.create(<Example step={1} />, {
           unstable_isConcurrent: true,
         });

@@ -42,6 +42,10 @@ const environmentFlags = {
   // Similarly, should stable imply "classic"?
   stable: !__EXPERIMENTAL__,
 
+  variant: __VARIANT__,
+
+  persistent: global.__PERSISTENT__ === true,
+
   // Use this for tests that are known to be broken.
   FIXME: false,
 
@@ -55,11 +59,9 @@ function getTestFlags() {
   // These are required on demand because some of our tests mutate them. We try
   // not to but there are exceptions.
   const featureFlags = require('shared/ReactFeatureFlags');
+  const schedulerFeatureFlags = require('scheduler/src/SchedulerFeatureFlags');
 
-  // TODO: This is a heuristic to detect the release channel by checking a flag
-  // that is known to only be enabled in www. What we should do instead is set
-  // the release channel explicitly in the each test config file.
-  const www = featureFlags.enableSuspenseCallback === true;
+  const www = global.__WWW__ === true;
   const releaseChannel = www
     ? __EXPERIMENTAL__
       ? 'modern'
@@ -82,13 +84,17 @@ function getTestFlags() {
       source: !process.env.IS_BUILD,
       www,
 
+      // This isn't a flag, just a useful alias for tests.
+      enableUseSyncExternalStoreShim: !__VARIANT__,
+      enableSuspenseList: releaseChannel === 'experimental' || www,
+
+      // If there's a naming conflict between scheduler and React feature flags, the
+      // React ones take precedence.
+      // TODO: Maybe we should error on conflicts? Or we could namespace
+      // the flags
+      ...schedulerFeatureFlags,
       ...featureFlags,
       ...environmentFlags,
-
-      // FIXME: www-classic has enableCache on, but when running the source
-      // tests, Jest doesn't expose the API correctly. Fix then remove
-      // this override.
-      enableCache: __EXPERIMENTAL__,
     },
     {
       get(flags, flagName) {

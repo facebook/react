@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
@@ -18,7 +18,7 @@ export type OffscreenProps = {|
   //
   // Default mode is visible. Kind of a weird default for a component
   // called "Offscreen." Possible alt: <Visibility />?
-  mode?: 'hidden' | 'unstable-defer-without-hiding' | 'visible' | null | void,
+  mode?: OffscreenMode | null | void,
   children?: ReactNodeList,
 |};
 

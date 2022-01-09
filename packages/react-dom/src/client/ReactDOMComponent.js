@@ -14,6 +14,7 @@ import {
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
   getValueForAttribute,
@@ -29,7 +30,6 @@ import {
   restoreControlledState as ReactDOMInputRestoreControlledState,
 } from './ReactDOMInput';
 import {
-  getHostProps as ReactDOMOptionGetHostProps,
   postMountWrapper as ReactDOMOptionPostMountWrapper,
   validateProps as ReactDOMOptionValidateProps,
 } from './ReactDOMOption';
@@ -68,9 +68,11 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
-import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+import {
+  enableTrustedTypesIntegration,
+  enableCustomElementPropertySupport,
+} from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
   listenToNonDelegatedEvent,
@@ -140,6 +142,9 @@ if (__DEV__) {
   const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
   normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
+    if (__DEV__) {
+      checkHtmlStringCoercion(markup);
+    }
     const markupString =
       typeof markup === 'string' ? markup : '' + (markup: any);
     return markupString
@@ -535,7 +540,7 @@ export function setInitialProperties(
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
-      props = ReactDOMOptionGetHostProps(domElement, rawProps);
+      props = rawProps;
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
@@ -613,11 +618,6 @@ export function diffProperties(
     case 'input':
       lastProps = ReactDOMInputGetHostProps(domElement, lastRawProps);
       nextProps = ReactDOMInputGetHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-    case 'option':
-      lastProps = ReactDOMOptionGetHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMOptionGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
@@ -777,15 +777,6 @@ export function diffProperties(
         // to update this element.
         updatePayload = [];
       }
-    } else if (
-      typeof nextProp === 'object' &&
-      nextProp !== null &&
-      nextProp.$$typeof === REACT_OPAQUE_ID_TYPE
-    ) {
-      // If we encounter useOpaqueReference's opaque object, this means we are hydrating.
-      // In this case, call the opaque object's toString function which generates a new client
-      // ID so client and server IDs match and throws to rerender.
-      nextProp.toString();
     } else {
       // For any other property we always add it to the queue and then we
       // filter it out using the allowed property list during the commit.
@@ -947,9 +938,6 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is allowed
-        case 'data-reactroot':
-          break;
         // Controlled attributes are not validated
         // TODO: Only ignore them on controlled tags.
         case 'value':
@@ -1013,7 +1001,10 @@ export function diffHydratedProperties(
     ) {
       // Validate that the properties correspond to their expected values.
       let serverValue;
-      const propertyInfo = getPropertyInfo(propKey);
+      const propertyInfo =
+        isCustomComponentTag && enableCustomElementPropertySupport
+          ? null
+          : getPropertyInfo(propKey);
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
@@ -1046,7 +1037,27 @@ export function diffHydratedProperties(
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
         }
-      } else if (isCustomComponentTag) {
+      } else if (
+        enableCustomElementPropertySupport &&
+        isCustomComponentTag &&
+        (propKey === 'offsetParent' ||
+          propKey === 'offsetTop' ||
+          propKey === 'offsetLeft' ||
+          propKey === 'offsetWidth' ||
+          propKey === 'offsetHeight' ||
+          propKey === 'isContentEditable' ||
+          propKey === 'outerText' ||
+          propKey === 'outerHTML')
+      ) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames.delete(propKey.toLowerCase());
+        if (__DEV__) {
+          console.error(
+            'Assignment to read-only property will result in a no-op: `%s`',
+            propKey,
+          );
+        }
+      } else if (isCustomComponentTag && !enableCustomElementPropertySupport) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey.toLowerCase());
         serverValue = getValueForAttribute(domElement, propKey, nextProp);
@@ -1099,7 +1110,15 @@ export function diffHydratedProperties(
           serverValue = getValueForAttribute(domElement, propKey, nextProp);
         }
 
-        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
+        const dontWarnCustomElement =
+          enableCustomElementPropertySupport &&
+          isCustomComponentTag &&
+          (typeof nextProp === 'function' || typeof nextProp === 'object');
+        if (
+          !dontWarnCustomElement &&
+          nextProp !== serverValue &&
+          !isMismatchDueToBadCasing
+        ) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       }

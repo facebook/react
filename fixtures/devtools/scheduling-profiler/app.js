@@ -1,5 +1,5 @@
 const {createElement, useLayoutEffect, useState} = React;
-const {unstable_createRoot: createRoot} = ReactDOM;
+const {createRoot} = ReactDOM;
 
 function App() {
   const [isMounted, setIsMounted] = useState(false);

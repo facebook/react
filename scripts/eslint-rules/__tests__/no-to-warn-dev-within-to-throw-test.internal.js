@@ -10,7 +10,7 @@
 'use strict';
 
 const rule = require('../no-to-warn-dev-within-to-throw');
-const RuleTester = require('eslint').RuleTester;
+const {RuleTester} = require('eslint');
 const ruleTester = new RuleTester();
 
 ruleTester.run('eslint-rules/no-to-warn-dev-within-to-throw', rule, {

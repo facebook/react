@@ -160,7 +160,12 @@ export function dehydrate(
       };
 
     case 'string':
-      return data.length <= 500 ? data : data.slice(0, 500) + '...';
+      isPathAllowedCheck = isPathAllowed(path);
+      if (isPathAllowedCheck) {
+        return data;
+      } else {
+        return data.length <= 500 ? data : data.slice(0, 500) + '...';
+      }
 
     case 'bigint':
       cleaned.push(path);

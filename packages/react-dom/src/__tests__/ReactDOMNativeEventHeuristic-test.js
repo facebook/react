@@ -24,7 +24,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').unstable_concurrentAct;
+    act = require('jest-react').act;
 
     document.body.appendChild(container);
   });
@@ -42,7 +42,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
   }
 
-  // @gate experimental
   it('ignores discrete events on a pending removed element', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -66,7 +65,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     await act(() => {
       root.render(<Form />);
     });
@@ -77,9 +76,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Disable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    expect(() =>
-      dispatchAndSetCurrentEvent(disableButton, firstEvent),
-    ).toErrorDev(['An update to Form inside a test was not wrapped in act']);
+    dispatchAndSetCurrentEvent(disableButton, firstEvent);
 
     // Discrete events should be flushed in a microtask.
     // Verify that the second button was removed.
@@ -88,7 +85,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // We'll assume that the browser won't let the user click it.
   });
 
-  // @gate experimental
   it('ignores discrete events on a pending removed event listener', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -125,7 +121,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<Form />);
     // Flush
     Scheduler.unstable_flushAll();
@@ -136,9 +132,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Disable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    expect(() => {
-      dispatchAndSetCurrentEvent(disableButton, firstEvent);
-    }).toErrorDev(['An update to Form inside a test was not wrapped in act']);
+    dispatchAndSetCurrentEvent(disableButton, firstEvent);
 
     // There should now be a pending update to disable the form.
     // This should not have flushed yet since it's in concurrent mode.
@@ -157,7 +151,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(formSubmitted).toBe(false);
   });
 
-  // @gate experimental
   it('uses the newest discrete events on a pending changed event listener', async () => {
     const enableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -188,7 +181,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     root.render(<Form />);
     // Flush
     Scheduler.unstable_flushAll();
@@ -199,9 +192,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Enable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    expect(() => {
-      dispatchAndSetCurrentEvent(enableButton, firstEvent);
-    }).toErrorDev(['An update to Form inside a test was not wrapped in act']);
+    dispatchAndSetCurrentEvent(enableButton, firstEvent);
 
     // There should now be a pending update to enable the form.
     // This should not have flushed yet since it's in concurrent mode.
@@ -220,9 +211,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(formSubmitted).toBe(true);
   });
 
-  // @gate experimental
   it('mouse over should be user-blocking but not discrete', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -251,9 +241,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(container.textContent).toEqual('hovered');
   });
 
-  // @gate experimental
   it('mouse enter should be user-blocking but not discrete', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -284,9 +273,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(container.textContent).toEqual('hovered');
   });
 
-  // @gate experimental
   it('continuous native events flush as expected', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo({hovered}) {
@@ -324,9 +312,8 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(container.textContent).toEqual('hovered');
   });
 
-  // @gate experimental
   it('should batch inside native events', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     const target = React.createRef(null);
     function Foo() {
@@ -351,9 +338,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     });
     expect(container.textContent).toEqual('Count: 0');
 
-    // Ignore act warning. We can't use act because it forces batched updates.
-    spyOnDev(console, 'error');
-
     const pressEvent = document.createEvent('Event');
     pressEvent.initEvent('click', true, true);
     dispatchAndSetCurrentEvent(target.current, pressEvent);
@@ -362,22 +346,10 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     await null;
     // If this is 2, that means the `setCount` calls were not batched.
     expect(container.textContent).toEqual('Count: 1');
-
-    // Assert that the `act` warnings were the only ones that fired.
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'was not wrapped in act',
-      );
-      expect(console.error.calls.argsFor(1)[0]).toContain(
-        'was not wrapped in act',
-      );
-    }
   });
 
-  // @gate experimental
   it('should not flush discrete events at the end of outermost batchedUpdates', async () => {
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
 
     let target;
     function Foo() {

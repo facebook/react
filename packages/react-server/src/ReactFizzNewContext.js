@@ -11,8 +11,6 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import {isPrimaryRenderer} from './ReactServerFormatConfig';
 
-import invariant from 'shared/invariant';
-
 let rendererSigil;
 if (__DEV__) {
   // Use this to detect multiple renderers using the same context
@@ -67,15 +65,18 @@ function popToNearestCommonAncestor(
     const parentPrev = prev.parent;
     const parentNext = next.parent;
     if (parentPrev === null) {
-      invariant(
-        parentNext === null,
-        'The stacks must reach the root at the same time. This is a bug in React.',
-      );
+      if (parentNext !== null) {
+        throw new Error(
+          'The stacks must reach the root at the same time. This is a bug in React.',
+        );
+      }
     } else {
-      invariant(
-        parentNext !== null,
-        'The stacks must reach the root at the same time. This is a bug in React.',
-      );
+      if (parentNext === null) {
+        throw new Error(
+          'The stacks must reach the root at the same time. This is a bug in React.',
+        );
+      }
+
       popToNearestCommonAncestor(parentPrev, parentNext);
       // On the way back, we push the new ones that weren't common.
       pushNode(next);
@@ -105,10 +106,13 @@ function popPreviousToCommonLevel(
 ): void {
   popNode(prev);
   const parentPrev = prev.parent;
-  invariant(
-    parentPrev !== null,
-    'The depth must equal at least at zero before reaching the root. This is a bug in React.',
-  );
+
+  if (parentPrev === null) {
+    throw new Error(
+      'The depth must equal at least at zero before reaching the root. This is a bug in React.',
+    );
+  }
+
   if (parentPrev.depth === next.depth) {
     // We found the same level. Now we just need to find a shared ancestor.
     popToNearestCommonAncestor(parentPrev, next);
@@ -123,10 +127,13 @@ function popNextToCommonLevel(
   next: ContextNode<any>,
 ): void {
   const parentNext = next.parent;
-  invariant(
-    parentNext !== null,
-    'The depth must equal at least at zero before reaching the root. This is a bug in React.',
-  );
+
+  if (parentNext === null) {
+    throw new Error(
+      'The depth must equal at least at zero before reaching the root. This is a bug in React.',
+    );
+  }
+
   if (prev.depth === parentNext.depth) {
     // We found the same level. Now we just need to find a shared ancestor.
     popToNearestCommonAncestor(prev, parentNext);
@@ -221,10 +228,13 @@ export function pushProvider<T>(
 
 export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
   const prevSnapshot = currentActiveSnapshot;
-  invariant(
-    prevSnapshot !== null,
-    'Tried to pop a Context at the root of the app. This is a bug in React.',
-  );
+
+  if (prevSnapshot === null) {
+    throw new Error(
+      'Tried to pop a Context at the root of the app. This is a bug in React.',
+    );
+  }
+
   if (__DEV__) {
     if (prevSnapshot.context !== context) {
       console.error(

@@ -667,7 +667,7 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
-      // @gate experimental
+      // @gate experimental || www
       it("context consumer doesn't bail out inside hidden subtree", () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
@@ -828,7 +828,6 @@ describe('ReactNewContext', () => {
       );
     });
 
-    // @gate experimental || !enableSyncDefaultUpdates
     it('warns if multiple renderers concurrently render the same context', () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
@@ -848,7 +847,7 @@ describe('ReactNewContext', () => {
       }
 
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactNoop.render(<App value={1} />);
         });
       } else {
@@ -953,14 +952,7 @@ describe('ReactNewContext', () => {
           </App>
         </LegacyProvider>,
       );
-      expect(() => {
-        expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
-      }).toErrorDev(
-        'Legacy context API has been detected within a strict-mode tree.\n\n' +
-          'The old API will be supported in all 16.x releases, but applications ' +
-          'using it should migrate to the new version.\n\n' +
-          'Please update the following components: LegacyProvider',
-      );
+      expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
       expect(ReactNoop.getChildren()).toEqual([span('Child')]);
 
       // Update App with same value (should bail out)
@@ -1244,8 +1236,6 @@ describe('ReactNewContext', () => {
 
       ReactNoop.render(<Cls />);
       expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev([
-        'Context can only be read while React is rendering',
-        // A second warning comes from to setStates being added to the queue.
         'Context can only be read while React is rendering',
         'Cannot update during an existing state transition',
       ]);

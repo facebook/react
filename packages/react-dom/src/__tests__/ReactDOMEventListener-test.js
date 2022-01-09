@@ -388,6 +388,7 @@ describe('ReactDOMEventListener', () => {
       onPlaying() {},
       onProgress() {},
       onRateChange() {},
+      onResize() {},
       onSeeked() {},
       onSeeking() {},
       onStalled() {},
@@ -430,6 +431,7 @@ describe('ReactDOMEventListener', () => {
         case 'playing':
         case 'progress':
         case 'ratechange':
+        case 'resize':
         case 'seeked':
         case 'seeking':
         case 'stalled':

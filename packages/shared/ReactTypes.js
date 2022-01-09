@@ -166,3 +166,8 @@ export interface Thenable<+R> {
     onReject: (error: mixed) => void | Thenable<U> | U,
   ): void | Thenable<U>;
 }
+
+export type OffscreenMode =
+  | 'hidden'
+  | 'unstable-defer-without-hiding'
+  | 'visible';

@@ -10,6 +10,7 @@
 import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
 import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
 import Store from 'react-devtools-shared/src/devtools/store';
+import TimeoutError from 'react-devtools-shared/src/TimeoutError';
 
 import type {
   InspectedElement as InspectedElementBackend,
@@ -86,11 +87,13 @@ export function copyInspectedElementPath({
 
 export function inspectElement({
   bridge,
+  forceFullData,
   id,
   path,
   rendererID,
 }: {|
   bridge: FrontendBridge,
+  forceFullData: boolean,
   id: number,
   path: Array<string | number> | null,
   rendererID: number,
@@ -100,9 +103,11 @@ export function inspectElement({
     requestID,
     'inspectedElement',
     bridge,
+    `Timed out while inspecting element ${id}.`,
   );
 
   bridge.send('inspectElement', {
+    forceFullData,
     id,
     path,
     rendererID,
@@ -141,6 +146,7 @@ function getPromiseForRequestID<T>(
   requestID: number,
   eventType: $Keys<BackendEvents>,
   bridge: FrontendBridge,
+  timeoutMessage: string,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
@@ -158,7 +164,7 @@ function getPromiseForRequestID<T>(
 
     const onTimeout = () => {
       cleanup();
-      reject();
+      reject(new TimeoutError(timeoutMessage));
     };
 
     bridge.addListener(eventType, onInspectedElement);
@@ -190,6 +196,9 @@ export function convertInspectedElementBackendToFrontend(
     canEditHooks,
     canEditHooksAndDeletePaths,
     canEditHooksAndRenamePaths,
+    canToggleError,
+    isErrored,
+    targetErrorBoundaryID,
     canToggleSuspense,
     canViewSource,
     hasLegacyContext,
@@ -199,6 +208,7 @@ export function convertInspectedElementBackendToFrontend(
     owners,
     context,
     hooks,
+    plugins,
     props,
     rendererPackageName,
     rendererVersion,
@@ -216,11 +226,15 @@ export function convertInspectedElementBackendToFrontend(
     canEditHooks,
     canEditHooksAndDeletePaths,
     canEditHooksAndRenamePaths,
+    canToggleError,
+    isErrored,
+    targetErrorBoundaryID,
     canToggleSuspense,
     canViewSource,
     hasLegacyContext,
     id,
     key,
+    plugins,
     rendererPackageName,
     rendererVersion,
     rootType,

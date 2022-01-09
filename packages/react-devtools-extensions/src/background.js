@@ -117,14 +117,27 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender) => {
-  if (sender.tab) {
+  const tab = sender.tab;
+  if (tab) {
+    const id = tab.id;
     // This is sent from the hook content script.
     // It tells us a renderer has attached.
     if (request.hasDetectedReact) {
       // We use browserAction instead of pageAction because this lets us
       // display a custom default popup when React is *not* detected.
       // It is specified in the manifest.
-      setIconAndPopup(request.reactBuildType, sender.tab.id);
+      setIconAndPopup(request.reactBuildType, id);
+    } else {
+      switch (request.payload?.type) {
+        case 'fetch-file-with-cache-complete':
+        case 'fetch-file-with-cache-error':
+          // Forward the result of fetch-in-page requests back to the extension.
+          const devtools = ports[id]?.devtools;
+          if (devtools) {
+            devtools.postMessage(request);
+          }
+          break;
+      }
     }
   }
 });

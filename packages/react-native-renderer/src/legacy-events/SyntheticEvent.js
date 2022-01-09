@@ -7,8 +7,6 @@
 
 /* eslint valid-typeof: 0 */
 
-import invariant from 'shared/invariant';
-
 const EVENT_POOL_SIZE = 10;
 
 /**
@@ -325,10 +323,13 @@ function createOrGetPooledEvent(
 
 function releasePooledEvent(event) {
   const EventConstructor = this;
-  invariant(
-    event instanceof EventConstructor,
-    'Trying to release an event instance into a pool of a different type.',
-  );
+
+  if (!(event instanceof EventConstructor)) {
+    throw new Error(
+      'Trying to release an event instance into a pool of a different type.',
+    );
+  }
+
   event.destructor();
   if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
     EventConstructor.eventPool.push(event);

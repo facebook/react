@@ -16,6 +16,7 @@ import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import RootSelector from './RootSelector';
+import {Timeline} from 'react-devtools-timeline/src/Timeline';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
@@ -26,7 +27,8 @@ import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/Set
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import portaledContent from '../portaledContent';
-import Store from '../../store';
+import {StoreContext} from '../context';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 import styles from './Profiler.css';
 
@@ -42,14 +44,23 @@ function Profiler(_: {||}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
+  const {searchInputContainerRef} = useContext(TimelineContext);
+
+  const {supportsTimeline} = useContext(StoreContext);
+
+  const isLegacyProfilerSelected = selectedTabID !== 'timeline';
+
   let view = null;
-  if (didRecordCommits) {
+  if (didRecordCommits || selectedTabID === 'timeline') {
     switch (selectedTabID) {
       case 'flame-chart':
         view = <CommitFlamegraph />;
         break;
       case 'ranked-chart':
         view = <CommitRanked />;
+        break;
+      case 'timeline':
+        view = <Timeline />;
         break;
       default:
         break;
@@ -93,8 +104,12 @@ function Profiler(_: {||}) {
       <div className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
-            <RecordToggle disabled={!supportsProfiling} />
-            <ReloadAndProfileButton />
+            <RecordToggle
+              disabled={!supportsProfiling || selectedTabID === 'timeline'}
+            />
+            <ReloadAndProfileButton
+              disabled={selectedTabID === 'timeline' || !supportsProfiling}
+            />
             <ClearProfilingDataButton />
             <ProfilingImportExportButtons />
             <div className={styles.VRule} />
@@ -102,13 +117,19 @@ function Profiler(_: {||}) {
               currentTab={selectedTabID}
               id="Profiler"
               selectTab={selectTab}
-              tabs={tabs}
+              tabs={supportsTimeline ? tabsWithTimeline : tabs}
               type="profiler"
             />
             <RootSelector />
             <div className={styles.Spacer} />
+            {!isLegacyProfilerSelected && (
+              <div
+                ref={searchInputContainerRef}
+                className={styles.TimelineSearchInputContainer}
+              />
+            )}
             <SettingsModalContextToggle />
-            {didRecordCommits && (
+            {isLegacyProfilerSelected && didRecordCommits && (
               <Fragment>
                 <div className={styles.VRule} />
                 <SnapshotSelector />
@@ -120,7 +141,9 @@ function Profiler(_: {||}) {
             <ModalDialog />
           </div>
         </div>
-        <div className={styles.RightColumn}>{sidebar}</div>
+        {isLegacyProfilerSelected && (
+          <div className={styles.RightColumn}>{sidebar}</div>
+        )}
         <SettingsModal />
       </div>
     </SettingsModalContextController>
@@ -139,6 +162,17 @@ const tabs = [
     icon: 'ranked-chart',
     label: 'Ranked',
     title: 'Ranked chart',
+  },
+];
+
+const tabsWithTimeline = [
+  ...tabs,
+  null, // Divider/separator
+  {
+    id: 'timeline',
+    icon: 'timeline',
+    label: 'Timeline',
+    title: 'Timeline',
   },
 ];
 
@@ -188,10 +222,4 @@ const RecordingInProgress = () => (
   </div>
 );
 
-function onErrorRetry(store: Store) {
-  // If an error happened in the Profiler,
-  // we should clear data on retry (or it will just happen again).
-  store.profilerStore.profilingData = null;
-}
-
-export default portaledContent(Profiler, onErrorRetry);
+export default portaledContent(Profiler);

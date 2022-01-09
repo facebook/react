@@ -38,9 +38,10 @@ function shallowEqual(objA: mixed, objB: mixed): boolean {
 
   // Test for A's keys different from B.
   for (let i = 0; i < keysA.length; i++) {
+    const currentKey = keysA[i];
     if (
-      !hasOwnProperty.call(objB, keysA[i]) ||
-      !is(objA[keysA[i]], objB[keysA[i]])
+      !hasOwnProperty.call(objB, currentKey) ||
+      !is(objA[currentKey], objB[currentKey])
     ) {
       return false;
     }

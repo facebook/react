@@ -16,22 +16,19 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {ReactNodeList, Thenable} from 'shared/ReactTypes';
+import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {
   DefaultEventPriority,
   IdleEventPriority,
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
-
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import enqueueTask from 'shared/enqueueTask';
-const {IsSomeRendererActing} = ReactSharedInternals;
 
 type Container = {
   rootID: string,
@@ -52,6 +49,7 @@ type Props = {
 type Instance = {|
   type: string,
   id: number,
+  parent: number,
   children: Array<Instance | TextInstance>,
   text: string | null,
   prop: any,
@@ -61,6 +59,7 @@ type Instance = {|
 type TextInstance = {|
   text: string,
   id: number,
+  parent: number,
   hidden: boolean,
   context: HostContext,
 |};
@@ -84,6 +83,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance: Container | Instance,
     child: Instance | TextInstance,
   ): void {
+    const prevParent = child.parent;
+    if (prevParent !== -1 && prevParent !== parentInstance.id) {
+      throw new Error('Reparenting is not allowed');
+    }
+    child.parent = parentInstance.id;
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -212,9 +216,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     keepChildren: boolean,
     recyclableInstance: null | Instance,
   ): Instance {
+    if (__DEV__) {
+      checkPropStringCoercion(newProps.children, 'children');
+    }
     const clone = {
       id: instance.id,
       type: type,
+      parent: instance.parent,
       children: keepChildren ? instance.children : [],
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
@@ -225,6 +233,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     };
     Object.defineProperty(clone, 'id', {
       value: clone.id,
+      enumerable: false,
+    });
+    Object.defineProperty(clone, 'parent', {
+      value: clone.parent,
       enumerable: false,
     });
     Object.defineProperty(clone, 'text', {
@@ -262,6 +274,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       type: string,
       rootcontainerInstance: Container,
     ) {
+      if (type === 'offscreen') {
+        return parentHostContext;
+      }
       if (type === 'uppercase') {
         return UPPERCASE_CONTEXT;
       }
@@ -282,12 +297,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
+      if (__DEV__) {
+        // The `if` statement here prevents auto-disabling of the safe coercion
+        // ESLint rule, so we must manually disable it below.
+        if (shouldSetTextContent(type, props)) {
+          checkPropStringCoercion(props.children, 'children');
+        }
+      }
       const inst = {
         id: instanceCounter++,
         type: type,
         children: [],
+        parent: -1,
         text: shouldSetTextContent(type, props)
-          ? computeText((props.children: any) + '', hostContext)
+          ? // eslint-disable-next-line react-internal/safe-string-coercion
+            computeText((props.children: any) + '', hostContext)
           : null,
         prop: props.prop,
         hidden: !!props.hidden,
@@ -295,6 +319,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+      Object.defineProperty(inst, 'parent', {
+        value: inst.parent,
+        enumerable: false,
+      });
       Object.defineProperty(inst, 'text', {
         value: inst.text,
         enumerable: false,
@@ -314,6 +342,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       parentInstance: Instance,
       child: Instance | TextInstance,
     ): void {
+      const prevParent = child.parent;
+      if (prevParent !== -1 && prevParent !== parentInstance.id) {
+        throw new Error('Reparenting is not allowed');
+      }
+      child.parent = parentInstance.id;
       parentInstance.children.push(child);
     },
 
@@ -358,11 +391,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const inst = {
         text: text,
         id: instanceCounter++,
+        parent: -1,
         hidden: false,
         context: hostContext,
       };
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+      Object.defineProperty(inst, 'parent', {
+        value: inst.parent,
+        enumerable: false,
+      });
       Object.defineProperty(inst, 'context', {
         value: inst.context,
         enumerable: false,
@@ -455,6 +493,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance.prop = newProps.prop;
           instance.hidden = !!newProps.hidden;
           if (shouldSetTextContent(type, newProps)) {
+            if (__DEV__) {
+              checkPropStringCoercion(newProps.children, 'children');
+            }
             instance.text = computeText(
               (newProps.children: any) + '',
               instance.context,
@@ -543,6 +584,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           container.children = newChildren;
         },
 
+        getOffscreenContainerType(): string {
+          return 'offscreen';
+        },
+
+        getOffscreenContainerProps(
+          mode: OffscreenMode,
+          children: ReactNodeList,
+        ): Props {
+          return {
+            hidden: mode === 'hidden',
+            children,
+          };
+        },
+
         cloneHiddenInstance(
           instance: Instance,
           type: string,
@@ -570,13 +625,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ): TextInstance {
           const clone = {
             text: instance.text,
-            id: instanceCounter++,
+            id: instance.id,
+            parent: instance.parent,
             hidden: true,
             context: instance.context,
           };
           // Hide from unit tests
           Object.defineProperty(clone, 'id', {
             value: clone.id,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'parent', {
+            value: clone.parent,
             enumerable: false,
           });
           Object.defineProperty(clone, 'context', {
@@ -650,7 +710,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getChildren(root) {
     if (root) {
-      return root.children;
+      return useMutation
+        ? root.children
+        : removeOffscreenContainersFromChildren(root.children, false);
     } else {
       return null;
     }
@@ -658,10 +720,167 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getPendingChildren(root) {
     if (root) {
-      return root.pendingChildren;
+      return useMutation
+        ? root.children
+        : removeOffscreenContainersFromChildren(root.pendingChildren, false);
     } else {
       return null;
     }
+  }
+
+  function removeOffscreenContainersFromChildren(children, hideNearestNode) {
+    // Mutation mode and persistent mode have different outputs for Offscreen
+    // and Suspense trees. Persistent mode adds an additional host node wrapper,
+    // whereas mutation mode does not.
+    //
+    // This function removes the offscreen host wrappers so that the output is
+    // consistent. If the offscreen node is hidden, it transfers the hiddenness
+    // to the child nodes, to mimic how it works in mutation mode. That way our
+    // tests don't have to fork tree assertions.
+    //
+    // So, it takes a tree that looks like this:
+    //
+    //    <offscreen hidden={true}>
+    //      <span>A</span>
+    //      <span>B</span>
+    //    </offscren>
+    //
+    // And turns it into this:
+    //
+    //   <span hidden={true}>A</span>
+    //   <span hidden={true}>B</span>
+    //
+    // We don't mutate the original tree, but instead return a copy.
+    //
+    // This function is only used by our test assertions, via the `getChildren`
+    // and `getChildrenAsJSX` methods.
+    let didClone = false;
+    const newChildren = [];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const innerChildren = child.children;
+      if (innerChildren !== undefined) {
+        // This is a host instance instance
+        const instance: Instance = (child: any);
+        if (instance.type === 'offscreen') {
+          // This is an offscreen wrapper instance. Remove it from the tree
+          // and recursively return its children, as if it were a fragment.
+          didClone = true;
+          if (instance.text !== null) {
+            // If this offscreen tree contains only text, we replace it with
+            // a text child. Related to `shouldReplaceTextContent` feature.
+            const offscreenTextInstance: TextInstance = {
+              text: instance.text,
+              id: instanceCounter++,
+              parent: instance.parent,
+              hidden: hideNearestNode || instance.hidden,
+              context: instance.context,
+            };
+            // Hide from unit tests
+            Object.defineProperty(offscreenTextInstance, 'id', {
+              value: offscreenTextInstance.id,
+              enumerable: false,
+            });
+            Object.defineProperty(offscreenTextInstance, 'parent', {
+              value: offscreenTextInstance.parent,
+              enumerable: false,
+            });
+            Object.defineProperty(offscreenTextInstance, 'context', {
+              value: offscreenTextInstance.context,
+              enumerable: false,
+            });
+            newChildren.push(offscreenTextInstance);
+          } else {
+            // Skip the offscreen node and replace it with its children
+            const offscreenChildren = removeOffscreenContainersFromChildren(
+              innerChildren,
+              hideNearestNode || instance.hidden,
+            );
+            newChildren.push.apply(newChildren, offscreenChildren);
+          }
+        } else {
+          // This is a regular (non-offscreen) instance. If the nearest
+          // offscreen boundary is hidden, hide this node.
+          const hidden = hideNearestNode ? true : instance.hidden;
+          const clonedChildren = removeOffscreenContainersFromChildren(
+            instance.children,
+            // We never need to hide the children of this node, since if we're
+            // inside a hidden tree, then the hidden style will be applied to
+            // this node.
+            false,
+          );
+          if (
+            clonedChildren === instance.children &&
+            hidden === instance.hidden
+          ) {
+            // No changes. Reuse the original instance without cloning.
+            newChildren.push(instance);
+          } else {
+            didClone = true;
+            const clone: Instance = {
+              id: instance.id,
+              type: instance.type,
+              parent: instance.parent,
+              children: clonedChildren,
+              text: instance.text,
+              prop: instance.prop,
+              hidden: hideNearestNode ? true : instance.hidden,
+              context: instance.context,
+            };
+            Object.defineProperty(clone, 'id', {
+              value: clone.id,
+              enumerable: false,
+            });
+            Object.defineProperty(clone, 'parent', {
+              value: clone.parent,
+              enumerable: false,
+            });
+            Object.defineProperty(clone, 'text', {
+              value: clone.text,
+              enumerable: false,
+            });
+            Object.defineProperty(clone, 'context', {
+              value: clone.context,
+              enumerable: false,
+            });
+            newChildren.push(clone);
+          }
+        }
+      } else {
+        // This is a text instance
+        const textInstance: TextInstance = (child: any);
+        if (hideNearestNode) {
+          didClone = true;
+          const clone = {
+            text: textInstance.text,
+            id: textInstance.id,
+            parent: textInstance.parent,
+            hidden: textInstance.hidden || hideNearestNode,
+            context: textInstance.context,
+          };
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'parent', {
+            value: clone.parent,
+            enumerable: false,
+          });
+          Object.defineProperty(clone, 'context', {
+            value: clone.context,
+            enumerable: false,
+          });
+
+          newChildren.push(clone);
+        } else {
+          newChildren.push(textInstance);
+        }
+      }
+    }
+    // There are some tests that assume reference equality, so preserve it
+    // when possible. Alternatively, we could update the tests to compare the
+    // ids instead.
+    return didClone ? newChildren : children;
   }
 
   function getChildrenAsJSX(root) {
@@ -700,6 +919,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       };
     }
     return children;
+  }
+
+  function flushSync<R>(fn: () => R): R {
+    if (__DEV__) {
+      if (NoopRenderer.isAlreadyRendering()) {
+        console.error(
+          'flushSync was called from inside a lifecycle method. React cannot ' +
+            'flush when React is already rendering. Consider moving this call to ' +
+            'a scheduler task or micro task.',
+        );
+      }
+    }
+    return NoopRenderer.flushSync(fn);
   }
 
   let idCounter = 0;
@@ -741,6 +973,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         null,
         null,
+        false,
+        '',
       );
       return {
         _Scheduler: Scheduler,
@@ -768,6 +1002,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         null,
         null,
+        false,
+        '',
       );
       return {
         _Scheduler: Scheduler,
@@ -905,8 +1141,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     deferredUpdates: NoopRenderer.deferredUpdates,
 
-    unbatchedUpdates: NoopRenderer.unbatchedUpdates,
-
     discreteUpdates: NoopRenderer.discreteUpdates,
 
     idleUpdates<T>(fn: () => T): T {
@@ -919,15 +1153,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
-
-    flushSync(fn: () => mixed) {
-      NoopRenderer.flushSync(fn);
-    },
-
+    flushSync,
     flushPassiveEffects: NoopRenderer.flushPassiveEffects,
-
-    act: noopAct,
 
     // Logs the current state of the tree.
     dumpTree(rootID: string = DEFAULT_ROOT_ID) {
@@ -1041,121 +1268,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return roots.get(rootID);
     },
   };
-
-  // This version of `act` is only used by our tests. Unlike the public version
-  // of `act`, it's designed to work identically in both production and
-  // development. It may have slightly different behavior from the public
-  // version, too, since our constraints in our test suite are not the same as
-  // those of developers using React — we're testing React itself, as opposed to
-  // building an app with React.
-
-  const {batchedUpdates, IsThisRendererActing} = NoopRenderer;
-  let actingUpdatesScopeDepth = 0;
-
-  function noopAct(scope: () => Thenable<mixed> | void) {
-    if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
-      throw Error(
-        'This version of `act` requires a special mock build of Scheduler.',
-      );
-    }
-    if (setTimeout._isMockFunction !== true) {
-      throw Error(
-        "This version of `act` requires Jest's timer mocks " +
-          '(i.e. jest.useFakeTimers).',
-      );
-    }
-
-    const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    const previousIsSomeRendererActing = IsSomeRendererActing.current;
-    const previousIsThisRendererActing = IsThisRendererActing.current;
-    IsSomeRendererActing.current = true;
-    IsThisRendererActing.current = true;
-    actingUpdatesScopeDepth++;
-
-    const unwind = () => {
-      actingUpdatesScopeDepth--;
-      IsSomeRendererActing.current = previousIsSomeRendererActing;
-      IsThisRendererActing.current = previousIsThisRendererActing;
-
-      if (__DEV__) {
-        if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
-          // if it's _less than_ previousActingUpdatesScopeDepth, then we can
-          // assume the 'other' one has warned
-          console.error(
-            'You seem to have overlapping act() calls, this is not supported. ' +
-              'Be sure to await previous act() calls before making a new one. ',
-          );
-        }
-      }
-    };
-
-    // TODO: This would be way simpler if 1) we required a promise to be
-    // returned and 2) we could use async/await. Since it's only our used in
-    // our test suite, we should be able to.
-    try {
-      const thenable = batchedUpdates(scope);
-      if (
-        typeof thenable === 'object' &&
-        thenable !== null &&
-        typeof thenable.then === 'function'
-      ) {
-        return {
-          then(resolve: () => void, reject: (error: mixed) => void) {
-            thenable.then(
-              () => {
-                flushActWork(
-                  () => {
-                    unwind();
-                    resolve();
-                  },
-                  error => {
-                    unwind();
-                    reject(error);
-                  },
-                );
-              },
-              error => {
-                unwind();
-                reject(error);
-              },
-            );
-          },
-        };
-      } else {
-        try {
-          // TODO: Let's not support non-async scopes at all in our tests. Need to
-          // migrate existing tests.
-          let didFlushWork;
-          do {
-            didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
-          } while (didFlushWork);
-        } finally {
-          unwind();
-        }
-      }
-    } catch (error) {
-      unwind();
-      throw error;
-    }
-  }
-
-  function flushActWork(resolve, reject) {
-    // Flush suspended fallbacks
-    // $FlowFixMe: Flow doesn't know about global Jest object
-    jest.runOnlyPendingTimers();
-    enqueueTask(() => {
-      try {
-        const didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
-        if (didFlushWork) {
-          flushActWork(resolve, reject);
-        } else {
-          resolve();
-        }
-      } catch (error) {
-        reject(error);
-      }
-    });
-  }
 
   return ReactNoop;
 }

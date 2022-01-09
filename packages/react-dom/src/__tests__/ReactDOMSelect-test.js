@@ -442,10 +442,15 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
-    expect(markup).not.toContain('<option selected="" value="gorilla"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(false);
   });
 
   it('should support server-side rendering with defaultValue', () => {
@@ -456,10 +461,15 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
-    expect(markup).not.toContain('<option selected="" value="gorilla"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(false);
   });
 
   it('should support server-side rendering with dangerouslySetInnerHTML', () => {
@@ -487,10 +497,15 @@ describe('ReactDOMSelect', () => {
         />
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
-    expect(markup).not.toContain('<option selected="" value="gorilla"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(false);
   });
 
   it('should support server-side rendering with multiple', () => {
@@ -501,10 +516,15 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const markup = ReactDOMServer.renderToString(stub);
-    expect(markup).toContain('<option selected="" value="giraffe"');
-    expect(markup).toContain('<option selected="" value="gorilla"');
-    expect(markup).not.toContain('<option selected="" value="monkey"');
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(stub);
+    const options = container.firstChild.options;
+    expect(options[0].value).toBe('monkey');
+    expect(options[0].selected).toBe(false);
+    expect(options[1].value).toBe('giraffe');
+    expect(options[1].selected).toBe(true);
+    expect(options[2].value).toBe('gorilla');
+    expect(options[2].selected).toBe(true);
   });
 
   it('should not control defaultValue if re-adding options', () => {
@@ -997,6 +1017,270 @@ describe('ReactDOMSelect', () => {
       );
 
       expect(node.value).toBe('');
+    });
+  });
+
+  describe('When given a Temporal.PlainDate-like value', () => {
+    class TemporalLike {
+      valueOf() {
+        // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+        // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+        throw new TypeError('prod message');
+      }
+      toString() {
+        return '2020-01-01';
+      }
+    }
+
+    it('throws when given a Temporal.PlainDate-like value (select)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like value (option)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value="2020-01-01">
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like value (both)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like value (select)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value="monkey">
+          <option value="2020-01-01">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like value (option)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value="2020-01-01">
+          <option value="donkey">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value="2020-01-01">
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like value (both)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value="donkey">
+          <option value="donkey">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like defaultValue (select)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like defaultValue (option)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue="2020-01-01">
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws when given a Temporal.PlainDate-like value (both)', () => {
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like defaultValue (select)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} defaultValue="monkey">
+          <option value="2020-01-01">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} defaultValue={new TemporalLike()}>
+            <option value="2020-01-01">like a Temporal.PlainDate</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Form field values (value, checked, defaultValue, or defaultChecked props)' +
+          ' must be strings, not TemporalLike. ' +
+          'This value must be coerced to a string before before using it here.',
+      );
+    });
+
+    it('throws with updated Temporal.PlainDate-like defaultValue (both)', () => {
+      ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} defaultValue="monkey">
+          <option value="donkey">like a Temporal.PlainDate</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+      const test = () => {
+        ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={new TemporalLike()}>
+            <option value={new TemporalLike()}>
+              like a Temporal.PlainDate
+            </option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      };
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'The provided `value` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
     });
   });
 });

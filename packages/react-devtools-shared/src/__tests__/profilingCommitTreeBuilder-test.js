@@ -15,12 +15,15 @@ describe('commit tree', () => {
   let ReactDOM;
   let Scheduler;
   let TestRenderer: TestRendererType;
+  let legacyRender;
   let store: Store;
   let utils;
 
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
+
+    legacyRender = utils.legacyRender;
 
     store = global.store;
     store.collapseNodesByDefault = false;
@@ -47,10 +50,10 @@ describe('commit tree', () => {
     const container = document.createElement('div');
 
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => ReactDOM.render(<Parent count={1} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={3} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={2} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={0} />, container));
+    utils.act(() => legacyRender(<Parent count={1} />, container));
+    utils.act(() => legacyRender(<Parent count={3} />, container));
+    utils.act(() => legacyRender(<Parent count={2} />, container));
+    utils.act(() => legacyRender(<Parent count={0} />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
     let renderFinished = false;
@@ -108,16 +111,10 @@ describe('commit tree', () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() =>
-        ReactDOM.render(<App renderChildren={true} />, container),
-      );
+      utils.act(() => legacyRender(<App renderChildren={true} />, container));
       await Promise.resolve();
-      utils.act(() =>
-        ReactDOM.render(<App renderChildren={true} />, container),
-      );
-      utils.act(() =>
-        ReactDOM.render(<App renderChildren={false} />, container),
-      );
+      utils.act(() => legacyRender(<App renderChildren={true} />, container));
+      utils.act(() => legacyRender(<App renderChildren={false} />, container));
       utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
@@ -149,7 +146,7 @@ describe('commit tree', () => {
 
     it('should support Lazy components (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => root.render(<App renderChildren={true} />));
@@ -189,12 +186,8 @@ describe('commit tree', () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() =>
-        ReactDOM.render(<App renderChildren={true} />, container),
-      );
-      utils.act(() =>
-        ReactDOM.render(<App renderChildren={false} />, container),
-      );
+      utils.act(() => legacyRender(<App renderChildren={true} />, container));
+      utils.act(() => legacyRender(<App renderChildren={false} />, container));
       utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
@@ -226,7 +219,7 @@ describe('commit tree', () => {
 
     it('should support Lazy components that are unmounted before resolving (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() => root.render(<App renderChildren={true} />));

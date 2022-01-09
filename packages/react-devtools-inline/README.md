@@ -56,13 +56,30 @@ const iframe = document.getElementById(frameID);
 const contentWindow = iframe.contentWindow;
 
 // This returns a React component that can be rendered into your app.
-// <DevTools {...props} />
+// e.g. render(<DevTools {...props} />);
 const DevTools = initialize(contentWindow);
 ```
 
 <sup>3</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using either `ReactDOM.createRoot` or `ReactDOM.createSyncRoot`. **It should not be rendered with `ReactDOM.render`.**
 
 ## Examples
+
+### Supporting named hooks
+
+DevTools can display hook "names" for an inspected component, although determining the "names" requires loading the source (and source-maps), parsing the code, and inferring the names based on which variables hook values get assigned to. Because the code for this is non-trivial, it's lazy-loaded only if the feature is enabled.
+
+To configure this package to support this functionality, you'll need to provide a prop that dynamically imports the extra functionality:
+```js
+// Follow code examples above to configure the backend and frontend.
+// When rendering DevTools, the important part is to pass a 'hookNamesModuleLoaderFunction' prop.
+const hookNamesModuleLoaderFunction = () => import('react-devtools-inline/hookNames');
+
+// Render:
+<DevTools
+  hookNamesModuleLoaderFunction={hookNamesModuleLoaderFunction}
+  {...otherProps}
+/>;
+```
 
 ### Configuring a same-origin `iframe`
 
@@ -83,13 +100,14 @@ const { contentWindow } = iframe;
 // This must be called before React is loaded into that frame.
 initializeBackend(contentWindow);
 
+// Initialize DevTools UI to listen to the hook we just installed.
+// This returns a React component we can render anywhere in the parent window.
+// This also must be called before React is loaded into the iframe
+const DevTools = initializeFrontend(contentWindow);
+
 // React application can be injected into <iframe> at any time now...
 // Note that this would need to be done via <script> tag injection,
 // as setting the src of the <iframe> would load a new page (without the injected backend).
-
-// Initialize DevTools UI to listen to the hook we just installed.
-// This returns a React component we can render anywhere in the parent window.
-const DevTools = initializeFrontend(contentWindow);
 
 // <DevTools /> interface can be rendered in the parent window at any time now...
 // Be sure to use either ReactDOM.createRoot()
@@ -155,36 +173,68 @@ iframe.onload = () => {
 
 ### Advanced integration with custom "wall"
 
-Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/).
+Below is an example of an advanced integration with a website like [Replay.io](https://replay.io/) or Code Sandbox's Sandpack (where more than one DevTools instance may be rendered per page).
 
 ```js
 import {
-  createBridge,
+  activate as activateBackend,
+  createBridge as createBackendBridge,
+  initialize as initializeBackend,
+} from 'react-devtools-inline/backend';
+import {
+  createBridge as createFrontendBridge,
   createStore,
   initialize as createDevTools,
-} from "react-devtools-inline/frontend";
+} from 'react-devtools-inline/frontend';
 
-// Custom Wall implementation enables serializing data
-// using an API other than window.postMessage()
+// DevTools uses "message" events and window.postMessage() by default,
+// but we can override this behavior by creating a custom "Wall" object.
 // For example...
 const wall = {
-  emit() {},
+  _listeners: [],
   listen(listener) {
-    wall._listener = listener;
+    wall._listeners.push(listener);
   },
-  async send(event, payload) {
-    const response = await fetch(...).json();
-    wall._listener(response);
+  send(event, payload) {
+    wall._listeners.forEach(listener => listener({event, payload}));
   },
 };
 
-// Create a Bridge and Store that use the custom Wall.
-const bridge = createBridge(target, wall);
-const store = createStore(bridge);
-const DevTools = createDevTools(target, { bridge, store });
+// Initialize the DevTools backend before importing React (or any other packages that might import React).
+initializeBackend(contentWindow);
 
-// Render DevTools with it.
-<DevTools {...otherProps} />;
+// Prepare DevTools for rendering.
+// To use the custom Wall we've created, we need to also create our own "Bridge" and "Store" objects.
+const bridge = createFrontendBridge(contentWindow, wall);
+const store = createStore(bridge);
+const DevTools = createDevTools(contentWindow, { bridge, store });
+
+// You can render DevTools now:
+const root = createRoot(container);
+root.render(<DevTools {...otherProps} />);
+
+// Lastly, let the DevTools backend know that the frontend is ready.
+// To use the custom Wall we've created, we need to also pass in the "Bridge".
+activateBackend(contentWindow, {
+  bridge: createBackendBridge(contentWindow, wall),
+});
+```
+
+Alternately, if your code can't share the same `wall` object, you can still provide a custom Wall that connects a specific DevTools frontend to a specific backend like so:
+```js
+const uid = "some-unique-string-shared-between-both-pieces";
+const wall = {
+  listen(listener) {
+    window.addEventListener("message", (event) => {
+      if (event.data.uid === uid) {
+        listener(event.data);
+      }
+    });
+  },
+  send(event, payload) {
+    window.postMessage({ event, payload, uid }, "*");
+  },
+};
 ```
 
 ## Local development
@@ -211,4 +261,4 @@ Once the above packages have been built or downloaded, you can watch for changes
 yarn start
 ```
 
-To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/master/packages/react-devtools-shell/README.md).
+To test package changes, refer to the [`react-devtools-shell` README](https://github.com/facebook/react/blob/main/packages/react-devtools-shell/README.md).

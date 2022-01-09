@@ -39,7 +39,6 @@ import {
   NeedsPropagation,
 } from './ReactFiberFlags';
 
-import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
 import {createUpdate, ForceUpdate} from './ReactUpdateQueue.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
@@ -193,7 +192,7 @@ function propagateContextChange_eager<T>(
   context: ReactContext<T>,
   renderLanes: Lanes,
 ): void {
-  // Only used by eager implemenation
+  // Only used by eager implementation
   if (enableLazyContextPropagation) {
     return;
   }
@@ -270,10 +269,13 @@ function propagateContextChange_eager<T>(
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates.
       const parentSuspense = fiber.return;
-      invariant(
-        parentSuspense !== null,
-        'We just came from a parent so we must have had a parent. This is a bug in React.',
-      );
+
+      if (parentSuspense === null) {
+        throw new Error(
+          'We just came from a parent so we must have had a parent. This is a bug in React.',
+        );
+      }
+
       parentSuspense.lanes = mergeLanes(parentSuspense.lanes, renderLanes);
       const alternate = parentSuspense.alternate;
       if (alternate !== null) {
@@ -331,7 +333,7 @@ function propagateContextChanges<T>(
   renderLanes: Lanes,
   forcePropagateEntireTree: boolean,
 ): void {
-  // Only used by lazy implemenation
+  // Only used by lazy implementation
   if (!enableLazyContextPropagation) {
     return;
   }
@@ -360,7 +362,7 @@ function propagateContextChanges<T>(
           if (dependency.context === context) {
             // Match! Schedule an update on this fiber.
 
-            // In the lazy implemenation, don't mark a dirty flag on the
+            // In the lazy implementation, don't mark a dirty flag on the
             // dependency itself. Not all changes are propagated, so we can't
             // rely on the propagation function alone to determine whether
             // something has changed; the consumer will check. In the future, we
@@ -407,10 +409,13 @@ function propagateContextChanges<T>(
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates.
       const parentSuspense = fiber.return;
-      invariant(
-        parentSuspense !== null,
-        'We just came from a parent so we must have had a parent. This is a bug in React.',
-      );
+
+      if (parentSuspense === null) {
+        throw new Error(
+          'We just came from a parent so we must have had a parent. This is a bug in React.',
+        );
+      }
+
       parentSuspense.lanes = mergeLanes(parentSuspense.lanes, renderLanes);
       const alternate = parentSuspense.alternate;
       if (alternate !== null) {
@@ -512,10 +517,11 @@ function propagateParentContextChanges(
 
     if (parent.tag === ContextProvider) {
       const currentParent = parent.alternate;
-      invariant(
-        currentParent !== null,
-        'Should have a current fiber. This is a bug in React.',
-      );
+
+      if (currentParent === null) {
+        throw new Error('Should have a current fiber. This is a bug in React.');
+      }
+
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
         const providerType: ReactProviderType<any> = parent.type;
@@ -650,22 +656,20 @@ export function readContext<T>(context: ReactContext<T>): T {
     };
 
     if (lastContextDependency === null) {
-      invariant(
-        currentlyRenderingFiber !== null,
-        'Context can only be read while React is rendering. ' +
-          'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
-          'In function components, you can read it directly in the function body, but not ' +
-          'inside Hooks like useReducer() or useMemo().',
-      );
+      if (currentlyRenderingFiber === null) {
+        throw new Error(
+          'Context can only be read while React is rendering. ' +
+            'In classes, you can read it in the render method or getDerivedStateFromProps. ' +
+            'In function components, you can read it directly in the function body, but not ' +
+            'inside Hooks like useReducer() or useMemo().',
+        );
+      }
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
       currentlyRenderingFiber.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
-
-        // TODO: This is an old field. Delete it.
-        responders: null,
       };
       if (enableLazyContextPropagation) {
         currentlyRenderingFiber.flags |= NeedsPropagation;

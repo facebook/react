@@ -9,7 +9,6 @@
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import invariant from 'shared/invariant';
 import checkPropTypes from 'shared/checkPropTypes';
 
 let warnedAboutMissingGetChildContext;
@@ -77,12 +76,12 @@ export function processChildContext(
 
     const childContext = instance.getChildContext();
     for (const contextKey in childContext) {
-      invariant(
-        contextKey in childContextTypes,
-        '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-        getComponentNameFromType(type) || 'Unknown',
-        contextKey,
-      );
+      if (!(contextKey in childContextTypes)) {
+        throw new Error(
+          `${getComponentNameFromType(type) ||
+            'Unknown'}.getChildContext(): key "${contextKey}" is not defined in childContextTypes.`,
+        );
+      }
     }
     if (__DEV__) {
       const name = getComponentNameFromType(type) || 'Unknown';

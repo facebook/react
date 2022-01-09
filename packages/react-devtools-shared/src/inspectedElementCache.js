@@ -8,8 +8,8 @@
  */
 
 import {
-  unstable_getCacheForType,
-  unstable_startTransition as startTransition,
+  unstable_getCacheForType as getCacheForType,
+  startTransition,
 } from 'react';
 import Store from './devtools/store';
 import {inspectElement as inspectElementMutableSource} from './inspectedElementMutableSource';
@@ -38,7 +38,7 @@ type ResolvedRecord<T> = {|
 
 type RejectedRecord = {|
   status: 2,
-  value: string,
+  value: Error | string,
 |};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
@@ -60,7 +60,7 @@ function createMap(): InspectedElementMap {
 }
 
 function getRecordMap(): WeakMap<Element, Record<InspectedElementFrontend>> {
-  return unstable_getCacheForType(createMap);
+  return getCacheForType(createMap);
 }
 
 function createCacheSeed(
@@ -88,14 +88,17 @@ export function inspectElement(
 ): InspectedElementFrontend | null {
   const map = getRecordMap();
   let record = map.get(element);
-
   if (!record) {
     const callbacks = new Set();
     const wakeable: Wakeable = {
       then(callback) {
         callbacks.add(callback);
       },
+
+      // Optional property used by Timeline:
+      displayName: `Inspecting ${element.displayName || 'Unknown'}`,
     };
+
     const wake = () => {
       // This assumes they won't throw.
       callbacks.forEach(callback => callback());
@@ -110,7 +113,9 @@ export function inspectElement(
     if (rendererID == null) {
       const rejectedRecord = ((newRecord: any): RejectedRecord);
       rejectedRecord.status = Rejected;
-      rejectedRecord.value = `Could not inspect element with id ${element.id}`;
+      rejectedRecord.value = new Error(
+        `Could not inspect element with id "${element.id}". No renderer found.`,
+      );
 
       map.set(element, record);
 
@@ -127,16 +132,18 @@ export function inspectElement(
         const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
         resolvedRecord.status = Resolved;
         resolvedRecord.value = inspectedElement;
+
         wake();
       },
 
       error => {
-        if (newRecord.status === Pending) {
-          const rejectedRecord = ((newRecord: any): RejectedRecord);
-          rejectedRecord.status = Rejected;
-          rejectedRecord.value = `Could not inspect element with id ${element.id}`;
-          wake();
-        }
+        console.error(error);
+
+        const rejectedRecord = ((newRecord: any): RejectedRecord);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.value = error;
+
+        wake();
       },
     );
     map.set(element, record);
@@ -187,6 +194,19 @@ export function checkForUpdate({
           });
         }
       },
+
+      // There isn't much to do about errors in this case,
+      // but we should at least log them so they aren't silent.
+      error => {
+        console.error(error);
+      },
     );
   }
+}
+
+export function clearCacheBecauseOfError(refresh: RefreshFunction): void {
+  startTransition(() => {
+    const map = createMap();
+    refresh(createMap, map);
+  });
 }

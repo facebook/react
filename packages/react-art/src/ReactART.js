@@ -66,7 +66,15 @@ class Surface extends React.Component {
 
     this._surface = Mode.Surface(+width, +height, this._tagRef);
 
-    this._mountNode = createContainer(this._surface, LegacyRoot, false, null);
+    this._mountNode = createContainer(
+      this._surface,
+      LegacyRoot,
+      false,
+      null,
+      false,
+      false,
+      '',
+    );
     updateContainer(this.props.children, this._mountNode, this);
   }
 

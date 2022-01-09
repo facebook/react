@@ -8,7 +8,6 @@
  */
 
 import * as React from 'react';
-import invariant from 'shared/invariant';
 
 type Unsubscribe = () => void;
 
@@ -128,10 +127,12 @@ export function createSubscription<Property, Value>(
 
         // Store the unsubscribe method for later (in case the subscribable prop changes).
         const unsubscribe = subscribe(source, callback);
-        invariant(
-          typeof unsubscribe === 'function',
-          'A subscription must return an unsubscribe function.',
-        );
+
+        if (typeof unsubscribe !== 'function') {
+          throw new Error(
+            'A subscription must return an unsubscribe function.',
+          );
+        }
 
         // It's safe to store unsubscribe on the instance because
         // We only read or write that property during the "commit" phase.

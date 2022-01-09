@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.unstable_concurrentAct;
+    act = require('jest-react').act;
     Scheduler = require('scheduler');
   });
 
@@ -1300,7 +1300,7 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
     const container = document.createElement('div');
 
@@ -1332,7 +1332,7 @@ describe('ReactUpdates', () => {
       );
     }
 
-    const root = ReactDOM.unstable_createRoot(container);
+    const root = ReactDOM.createRoot(container);
     let hiddenDiv;
     act(() => {
       root.render(<Foo />);
@@ -1594,6 +1594,7 @@ describe('ReactUpdates', () => {
     });
   });
 
+  // TODO: Replace this branch with @gate pragmas
   if (__DEV__) {
     it('warns about a deferred infinite update loop with useEffect', () => {
       function NonTerminating() {
@@ -1684,4 +1685,35 @@ describe('ReactUpdates', () => {
       expect(container.textContent).toBe('1000');
     });
   }
+
+  it('prevents infinite update loop triggered by synchronous updates in useEffect', () => {
+    // Ignore flushSync warning
+    spyOnDev(console, 'error');
+
+    function NonTerminating() {
+      const [step, setStep] = React.useState(0);
+      React.useEffect(() => {
+        // Other examples of synchronous updates in useEffect are imperative
+        // event dispatches like `el.focus`, or `useSyncExternalStore`, which
+        // may schedule a synchronous update upon subscribing if it detects
+        // that the store has been mutated since the initial render.
+        //
+        // (Originally I wrote this test using `el.focus` but those errors
+        // get dispatched in a JSDOM event and I don't know how to "catch" those
+        // so that they don't fail the test.)
+        ReactDOM.flushSync(() => {
+          setStep(step + 1);
+        });
+      }, [step]);
+      return step;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+    expect(() => {
+      ReactDOM.flushSync(() => {
+        root.render(<NonTerminating />);
+      });
+    }).toThrow('Maximum update depth exceeded');
+  });
 });

@@ -19,13 +19,17 @@ import {
   prepareProfilingDataFrontendFromExport,
 } from './utils';
 import {downloadFile} from '../utils';
+import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 import styles from './ProfilingImportExportButtons.css';
 
 import type {ProfilingDataExport} from './types';
 
 export default function ProfilingImportExportButtons() {
-  const {isProfiling, profilingData, rootID} = useContext(ProfilerContext);
+  const {isProfiling, profilingData, rootID, selectedTabID} = useContext(
+    ProfilerContext,
+  );
+  const {setFile} = useContext(TimelineContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;
 
@@ -64,13 +68,13 @@ export default function ProfilingImportExportButtons() {
     }
   }, [rootID, profilingData]);
 
-  const uploadData = useCallback(() => {
+  const clickInputElement = useCallback(() => {
     if (inputRef.current !== null) {
       inputRef.current.click();
     }
   }, []);
 
-  const handleFiles = useCallback(() => {
+  const importProfilerData = useCallback(() => {
     const input = inputRef.current;
     if (input !== null && input.files.length > 0) {
       const fileReader = new FileReader();
@@ -104,6 +108,14 @@ export default function ProfilingImportExportButtons() {
     }
   }, [modalDialogDispatch, profilerStore]);
 
+  const importTimelineDataWrapper = event => {
+    const input = inputRef.current;
+    if (input !== null && input.files.length > 0) {
+      const file = input.files[0];
+      setFile(file);
+    }
+  };
+
   return (
     <Fragment>
       <div className={styles.VRule} />
@@ -111,18 +123,27 @@ export default function ProfilingImportExportButtons() {
         ref={inputRef}
         className={styles.Input}
         type="file"
-        onChange={handleFiles}
+        accept=".json"
+        onChange={
+          selectedTabID === 'timeline'
+            ? importTimelineDataWrapper
+            : importProfilerData
+        }
         tabIndex={-1}
       />
       <a ref={downloadRef} className={styles.Input} />
       <Button
         disabled={isProfiling}
-        onClick={uploadData}
+        onClick={clickInputElement}
         title="Load profile...">
         <ButtonIcon type="import" />
       </Button>
       <Button
-        disabled={isProfiling || !profilerStore.didRecordCommits}
+        disabled={
+          isProfiling ||
+          !profilerStore.didRecordCommits ||
+          selectedTabID === 'timeline'
+        }
         onClick={downloadData}
         title="Save profile...">
         <ButtonIcon type="export" />

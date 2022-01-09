@@ -16,8 +16,8 @@ export const enableSchedulingProfiler = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = false;
-export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerCommitHooks = __PROFILE__;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = false;
 export const enableSuspenseServerRenderer = false;
@@ -29,7 +29,6 @@ export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
-export const warnAboutUnmockedScheduler = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
@@ -40,26 +39,35 @@ export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
+export const warnOnSubscriptionInsideStartTransition = false;
+export const enableSuspenseAvoidThisFallback = false;
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 3;
 export const enableSuspenseLayoutEffectSemantics = false;
-
+export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableNewReconciler = false;
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
+export const warnAboutCallbackRefReturningFunction = false;
 
-export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = false;
+export const enablePersistentOffscreenHostContainer = false;
+export const enableCustomElementPropertySupport = false;
+
+export const consoleManagedByDevToolsDuringStrictMode = false;
+export const enableUseMutableSource = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

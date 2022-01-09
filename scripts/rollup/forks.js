@@ -481,6 +481,24 @@ const forks = Object.freeze({
         return null;
     }
   },
+
+  'use-sync-external-store/src/useSyncExternalStore': (bundleType, entry) => {
+    if (entry.startsWith('use-sync-external-store/shim')) {
+      return 'use-sync-external-store/src/forks/useSyncExternalStore.forward-to-shim';
+    }
+    if (entry !== 'use-sync-external-store') {
+      // Internal modules that aren't shims should use the native API from the
+      // react package.
+      return 'use-sync-external-store/src/forks/useSyncExternalStore.forward-to-built-in';
+    }
+    return null;
+  },
+
+  'use-sync-external-store/src/isServerEnvironment': (bundleType, entry) => {
+    if (entry.endsWith('.native')) {
+      return 'use-sync-external-store/src/forks/isServerEnvironment.native';
+    }
+  },
 });
 
 module.exports = forks;

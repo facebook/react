@@ -1,6 +1,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 let Suspense;
 let useState;
 let textCache;
@@ -16,6 +17,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     Suspense = React.Suspense;
     useState = React.useState;
 
@@ -123,7 +125,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
       expect(Scheduler).toFlushUntilNextPaint(['Outer', 'Loading...']);
       expect(root).toMatchRenderedOutput(
@@ -165,7 +167,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Initial mount
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     // Inner contents finish in separate commit from outer
@@ -178,7 +180,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
 
     // Update
-    await ReactNoop.act(async () => {
+    await act(async () => {
       setCount(1);
     });
     // Entire update finishes in a single commit
@@ -208,7 +210,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
       expect(Scheduler).toFlushUntilNextPaint(['Outer', 'Loading...']);
       expect(root).toMatchRenderedOutput(
@@ -228,7 +230,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
 
     // Resolve the data and finish rendering
-    await ReactNoop.act(async () => {
+    await act(async () => {
       await resolveText('Inner');
     });
     expect(Scheduler).toHaveYielded(['Inner']);
@@ -264,7 +266,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(<App />);
     });
     // Each level commits separately

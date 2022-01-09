@@ -16,7 +16,6 @@ import './ReactFabricInjection';
 import {
   findHostInstance,
   findHostInstanceWithWarning,
-  batchedEventUpdates,
   batchedUpdates as batchedUpdatesImpl,
   discreteUpdates,
   createContainer,
@@ -24,6 +23,7 @@ import {
   injectIntoDevTools,
   getPublicRootInstance,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
@@ -40,7 +40,7 @@ import {
   getInspectorDataForViewTag,
   getInspectorDataForViewAtPoint,
 } from './ReactNativeFiberInspector';
-import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {LegacyRoot, ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 
@@ -161,16 +161,14 @@ function dispatchCommand(handle: any, command: string, args: Array<any>) {
           'native component. Use React.forwardRef to get access to the underlying native component',
       );
     }
-
     return;
   }
 
-  if (handle._internalInstanceHandle) {
-    nativeFabricUIManager.dispatchCommand(
-      handle._internalInstanceHandle.stateNode.node,
-      command,
-      args,
-    );
+  if (handle._internalInstanceHandle != null) {
+    const {stateNode} = handle._internalInstanceHandle;
+    if (stateNode != null) {
+      nativeFabricUIManager.dispatchCommand(stateNode.node, command, args);
+    }
   } else {
     UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
   }
@@ -187,11 +185,11 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
     return;
   }
 
-  if (handle._internalInstanceHandle) {
-    nativeFabricUIManager.sendAccessibilityEvent(
-      handle._internalInstanceHandle.stateNode.node,
-      eventType,
-    );
+  if (handle._internalInstanceHandle != null) {
+    const {stateNode} = handle._internalInstanceHandle;
+    if (stateNode != null) {
+      nativeFabricUIManager.sendAccessibilityEvent(stateNode.node, eventType);
+    }
   } else {
     legacySendAccessibilityEvent(handle._nativeTag, eventType);
   }
@@ -201,13 +199,22 @@ function render(
   element: Element<ElementType>,
   containerTag: number,
   callback: ?() => void,
+  concurrentRoot: ?boolean,
 ): ?ElementRef<ElementType> {
   let root = roots.get(containerTag);
 
   if (!root) {
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
-    root = createContainer(containerTag, LegacyRoot, false, null, null, null);
+    root = createContainer(
+      containerTag,
+      concurrentRoot ? ConcurrentRoot : LegacyRoot,
+      false,
+      null,
+      false,
+      null,
+      '',
+    );
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
@@ -238,11 +245,7 @@ function createPortal(
   return createPortalImpl(children, containerTag, null, key);
 }
 
-setBatchingImplementation(
-  batchedUpdatesImpl,
-  discreteUpdates,
-  batchedEventUpdates,
-);
+setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
 
 const roots = new Map();
 
@@ -259,6 +262,9 @@ export {
   unmountComponentAtNode,
   stopSurface,
   createPortal,
+  // This export is typically undefined in production builds.
+  // See the "enableGetInspectorDataForInstanceInProduction" flag.
+  getInspectorDataForInstance,
 };
 
 injectIntoDevTools({

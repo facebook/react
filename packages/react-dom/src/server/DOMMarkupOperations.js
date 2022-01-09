@@ -8,7 +8,6 @@
  */
 
 import {
-  ROOT_ATTRIBUTE_NAME,
   BOOLEAN,
   OVERLOADED_BOOLEAN,
   getPropertyInfo,
@@ -17,15 +16,12 @@ import {
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 
 /**
  * Operations for dealing with DOM properties.
  */
-
-export function createMarkupForRoot(): string {
-  return ROOT_ATTRIBUTE_NAME + '=""';
-}
 
 /**
  * Creates markup for a property.
@@ -49,6 +45,9 @@ export function createMarkupForProperty(name: string, value: mixed): string {
       return attributeName + '=""';
     } else {
       if (propertyInfo.sanitizeURL) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(value, attributeName);
+        }
         value = '' + (value: any);
         sanitizeURL(value);
       }

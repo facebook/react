@@ -10,12 +10,13 @@
 import * as React from 'react';
 import {
   createContext,
-  unstable_startTransition as startTransition,
+  startTransition,
   unstable_useCacheRefresh as useCacheRefresh,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import {TreeStateContext} from './TreeContext';
@@ -24,7 +25,18 @@ import {
   checkForUpdate,
   inspectElement,
 } from 'react-devtools-shared/src/inspectedElementCache';
+import {
+  clearHookNamesCache,
+  hasAlreadyLoadedHookNames,
+  loadHookNames,
+} from 'react-devtools-shared/src/hookNamesCache';
+import {loadModule} from 'react-devtools-shared/src/dynamicImportCache';
+import FetchFileWithCachingContext from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
+import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
+import {SettingsContext} from '../Settings/SettingsContext';
+import {enableNamedHooksFeature} from 'react-devtools-feature-flags';
 
+import type {HookNames} from 'react-devtools-shared/src/types';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Element,
@@ -33,10 +45,14 @@ import type {
 
 type Path = Array<string | number>;
 type InspectPathFunction = (path: Path) => void;
+export type ToggleParseHookNames = () => void;
 
 type Context = {|
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement | null,
   inspectPaths: InspectPathFunction,
+  parseHookNames: boolean,
+  toggleParseHookNames: ToggleParseHookNames,
 |};
 
 export const InspectedElementContext = createContext<Context>(
@@ -51,8 +67,16 @@ export type Props = {|
 
 export function InspectedElementContextController({children}: Props) {
   const {selectedElementID} = useContext(TreeStateContext);
+  const fetchFileWithCaching = useContext(FetchFileWithCachingContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
+
+  // parseHookNames has a lot of code.
+  // Embedding it into a build makes the build large.
+  // This function enables DevTools to make use of Suspense to lazily import() it only if the feature will be used.
+  // TODO (Webpack 5) Hopefully we can remove this indirection once the Webpack 5 upgrade is completed.
+  const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
 
   const refresh = useCacheRefresh();
 
@@ -71,6 +95,16 @@ export function InspectedElementContextController({children}: Props) {
   const element =
     selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
 
+  const alreadyLoadedHookNames =
+    element != null && hasAlreadyLoadedHookNames(element);
+
+  // Parse the currently inspected element's hook names.
+  // This may be enabled by default (for all elements)
+  // or it may be opted into on a per-element basis (if it's too slow to be on by default).
+  const [parseHookNames, setParseHookNames] = useState<boolean>(
+    parseHookNamesByDefault || alreadyLoadedHookNames,
+  );
+
   const elementHasChanged = element !== null && element !== state.element;
 
   // Reset the cached inspected paths when a new element is selected.
@@ -79,13 +113,54 @@ export function InspectedElementContextController({children}: Props) {
       element,
       path: null,
     });
+
+    setParseHookNames(parseHookNamesByDefault || alreadyLoadedHookNames);
   }
 
+  const purgeCachedMetadataRef = useRef(null);
+
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
+  let hookNames: HookNames | null = null;
   let inspectedElement = null;
   if (!elementHasChanged && element !== null) {
     inspectedElement = inspectElement(element, state.path, store, bridge);
+
+    if (enableNamedHooksFeature) {
+      if (typeof hookNamesModuleLoader === 'function') {
+        if (parseHookNames || alreadyLoadedHookNames) {
+          const hookNamesModule = loadModule(hookNamesModuleLoader);
+          if (hookNamesModule !== null) {
+            const {
+              parseHookNames: loadHookNamesFunction,
+              purgeCachedMetadata,
+            } = hookNamesModule;
+
+            purgeCachedMetadataRef.current = purgeCachedMetadata;
+
+            if (
+              inspectedElement !== null &&
+              inspectedElement.hooks !== null &&
+              loadHookNamesFunction !== null
+            ) {
+              hookNames = loadHookNames(
+                element,
+                inspectedElement.hooks,
+                loadHookNamesFunction,
+                fetchFileWithCaching,
+              );
+            }
+          }
+        }
+      }
+    }
   }
+
+  const toggleParseHookNames: ToggleParseHookNames = useCallback<ToggleParseHookNames>(() => {
+    startTransition(() => {
+      setParseHookNames(value => !value);
+      refresh();
+    });
+  }, [setParseHookNames]);
 
   const inspectPaths: InspectPathFunction = useCallback<InspectPathFunction>(
     (path: Path) => {
@@ -99,6 +174,34 @@ export function InspectedElementContextController({children}: Props) {
     },
     [setState, state],
   );
+
+  const inspectedElementRef = useRef(null);
+  useEffect(() => {
+    if (
+      inspectedElement !== null &&
+      inspectedElement.hooks !== null &&
+      inspectedElementRef.current !== inspectedElement
+    ) {
+      inspectedElementRef.current = inspectedElement;
+    }
+  }, [inspectedElement]);
+
+  useEffect(() => {
+    const purgeCachedMetadata = purgeCachedMetadataRef.current;
+    if (typeof purgeCachedMetadata === 'function') {
+      // When Fast Refresh updates a component, any cached AST metadata may be invalid.
+      const fastRefreshScheduled = () => {
+        startTransition(() => {
+          clearHookNamesCache();
+          purgeCachedMetadata();
+          refresh();
+        });
+      };
+      bridge.addListener('fastRefreshScheduled', fastRefreshScheduled);
+      return () =>
+        bridge.removeListener('fastRefreshScheduled', fastRefreshScheduled);
+    }
+  }, [bridge]);
 
   // Reset path now that we've asked the backend to hydrate it.
   // The backend is stateful, so we don't need to remember this path the next time we inspect.
@@ -125,6 +228,7 @@ export function InspectedElementContextController({children}: Props) {
     }
   }, [
     element,
+    hookNames,
     // Reset this timer any time the element we're inspecting gets a new response.
     // No sense to ping right away after e.g. inspecting/hydrating a path.
     inspectedElement,
@@ -133,10 +237,19 @@ export function InspectedElementContextController({children}: Props) {
 
   const value = useMemo<Context>(
     () => ({
+      hookNames,
       inspectedElement,
       inspectPaths,
+      parseHookNames,
+      toggleParseHookNames,
     }),
-    [inspectedElement, inspectPaths],
+    [
+      hookNames,
+      inspectedElement,
+      inspectPaths,
+      parseHookNames,
+      toggleParseHookNames,
+    ],
   );
 
   return (

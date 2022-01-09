@@ -16,8 +16,8 @@ export const enableFilterEmptyStringAttributesDOM = false;
 export const enableDebugTracing = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
-// for an experimental scheduling profiler tool.
-export const enableSchedulingProfiler = __PROFILE__ && __EXPERIMENTAL__;
+// for an experimental timeline tool.
+export const enableSchedulingProfiler = __PROFILE__;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in StrictLegacyMode.
@@ -25,7 +25,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
 // this feature flag only impacts StrictEffectsMode.
-export const enableStrictEffects = false;
+export const enableStrictEffects = __DEV__;
 
 // If TRUE, trees rendered with createRoot will be StrictEffectsMode.
 // If FALSE, these trees will be StrictLegacyMode.
@@ -42,10 +42,10 @@ export const warnAboutDeprecatedLifecycles = true;
 export const enableProfilerTimer = __PROFILE__;
 
 // Record durations for commit and passive effects phases.
-export const enableProfilerCommitHooks = false;
+export const enableProfilerCommitHooks = __PROFILE__;
 
 // Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
-export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 
 // Profiler API accepts a function to be called when a nested update is scheduled.
 // This callback accepts the component type (class instance or function) the update is scheduled for.
@@ -55,11 +55,11 @@ export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
 
 // SSR experiments
-export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
-export const enableSelectiveHydration = __EXPERIMENTAL__;
+export const enableSuspenseServerRenderer = true;
+export const enableSelectiveHydration = true;
 
 // Flight experiments
-export const enableLazyElements = __EXPERIMENTAL__;
+export const enableLazyElements = true;
 export const enableCache = __EXPERIMENTAL__;
 
 // Only used in www builds.
@@ -78,7 +78,6 @@ export const enableCreateEventHandleAPI = false;
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
 // Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
-export const warnAboutUnmockedScheduler = false;
 
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
@@ -100,11 +99,22 @@ export const enableTrustedTypesIntegration = false;
 // a deprecated pattern we want to get rid of in the future
 export const warnAboutSpreadingKeyToJSX = false;
 
+export const warnOnSubscriptionInsideStartTransition = false;
+
+export const enableSuspenseAvoidThisFallback = false;
+
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+
+export const enableClientRenderFallbackOnHydrationMismatch = true;
+
 export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
 
 export const disableNativeComponentFrames = false;
+
+// Internal only.
+export const enableGetInspectorDataForInstanceInProduction = false;
 
 // Errors that are thrown while unmounting (or after in the case of passive effects)
 // should bypass any error boundaries that are also unmounting (or have unmounted)
@@ -123,12 +133,18 @@ export const skipUnmountedBoundaries = false;
 //
 // It's an enum so that we can experiment with different levels of
 // aggressiveness.
-export const deletedTreeCleanUpLevel = 1;
+export const deletedTreeCleanUpLevel = 3;
 
 // Destroy layout effects for components that are hidden because something suspended in an update
 // and recreate them when they are shown again (after the suspended boundary has resolved).
 // Note that this should be an uncommon use case and can be avoided by using the transition API.
-export const enableSuspenseLayoutEffectSemantics = false;
+export const enableSuspenseLayoutEffectSemantics = true;
+
+// Changes the behavior for rendering custom elements in both server rendering
+// and client rendering, mostly to allow JSX attributes to apply to the custom
+// element's object properties instead of only HTML attributes.
+// https://github.com/facebook/react/issues/11347
+export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
 // --------------------------
 // Future APIs to be deprecated
@@ -158,11 +174,11 @@ export const enableLegacyFBSupport = false;
 // not currently rendering. We treat them the same as if they came from an
 // interleaved event. Remove this flag once we have migrated to the
 // new behavior.
-export const deferRenderPhaseUpdateToNextBatch = true;
+export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableUseRefAccessWarning = false;
 
-export const enableRecursiveCommitTraversal = false;
+export const warnAboutCallbackRefReturningFunction = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 
@@ -171,3 +187,10 @@ export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 
 export const allowConcurrentByDefault = false;
+
+export const enablePersistentOffscreenHostContainer = false;
+
+export const consoleManagedByDevToolsDuringStrictMode = true;
+
+// Only enabled in www builds
+export const enableUseMutableSource = false;

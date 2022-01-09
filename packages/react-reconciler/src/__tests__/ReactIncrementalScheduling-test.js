@@ -13,6 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
+let act;
 
 describe('ReactIncrementalScheduling', () => {
   beforeEach(() => {
@@ -21,6 +22,7 @@ describe('ReactIncrementalScheduling', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
   });
 
   function span(prop) {
@@ -85,7 +87,6 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop).toMatchRenderedOutput(<span prop={5} />);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('works on deferred roots in the order they were scheduled', () => {
     const {useEffect} = React;
     function Text({text}) {
@@ -95,7 +96,7 @@ describe('ReactIncrementalScheduling', () => {
       return text;
     }
 
-    ReactNoop.act(() => {
+    act(() => {
       ReactNoop.renderToRootWithID(<Text text="a:1" />, 'a');
       ReactNoop.renderToRootWithID(<Text text="b:1" />, 'b');
       ReactNoop.renderToRootWithID(<Text text="c:1" />, 'c');
@@ -107,9 +108,9 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:1');
 
     // Schedule deferred work in the reverse order
-    ReactNoop.act(() => {
+    act(() => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
           ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');
         });
@@ -126,7 +127,7 @@ describe('ReactIncrementalScheduling', () => {
       // Schedule last bit of work, it will get processed the last
 
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.unstable_startTransition(() => {
+        React.startTransition(() => {
           ReactNoop.renderToRootWithID(<Text text="a:2" />, 'a');
         });
       } else {
@@ -146,7 +147,6 @@ describe('ReactIncrementalScheduling', () => {
     });
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('schedules sync updates when inside componentDidMount/Update', () => {
     let instance;
 
@@ -186,7 +186,7 @@ describe('ReactIncrementalScheduling', () => {
     }
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo />);
       });
     } else {
@@ -206,7 +206,7 @@ describe('ReactIncrementalScheduling', () => {
     ]);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         instance.setState({tick: 2});
       });
     } else {
@@ -224,14 +224,13 @@ describe('ReactIncrementalScheduling', () => {
     ]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('can opt-in to async scheduling inside componentDidMount/Update', () => {
     let instance;
     class Foo extends React.Component {
       state = {tick: 0};
 
       componentDidMount() {
-        ReactNoop.deferredUpdates(() => {
+        React.startTransition(() => {
           Scheduler.unstable_yieldValue(
             'componentDidMount (before setState): ' + this.state.tick,
           );
@@ -243,7 +242,7 @@ describe('ReactIncrementalScheduling', () => {
       }
 
       componentDidUpdate() {
-        ReactNoop.deferredUpdates(() => {
+        React.startTransition(() => {
           Scheduler.unstable_yieldValue(
             'componentDidUpdate: ' + this.state.tick,
           );
@@ -281,41 +280,23 @@ describe('ReactIncrementalScheduling', () => {
     expect(Scheduler).toFlushAndYield(['render: 1', 'componentDidUpdate: 1']);
     expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
 
-    // Increment the tick to 2. This will trigger an update inside cDU. Flush
-    // the first update without flushing the second one.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
-        instance.setState({tick: 2});
-      });
-
-      // TODO: why does this flush sync?
-      expect(Scheduler).toFlushAndYieldThrough([
-        'render: 2',
-        'componentDidUpdate: 2',
-        'componentDidUpdate (before setState): 2',
-        'componentDidUpdate (after setState): 2',
-        'render: 3',
-        'componentDidUpdate: 3',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
-    } else {
+    React.startTransition(() => {
       instance.setState({tick: 2});
+    });
 
-      expect(Scheduler).toFlushAndYieldThrough([
-        'render: 2',
-        'componentDidUpdate: 2',
-        'componentDidUpdate (before setState): 2',
-        'componentDidUpdate (after setState): 2',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
+    expect(Scheduler).toFlushUntilNextPaint([
+      'render: 2',
+      'componentDidUpdate: 2',
+      'componentDidUpdate (before setState): 2',
+      'componentDidUpdate (after setState): 2',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
 
-      // Now flush the cDU update.
-      expect(Scheduler).toFlushAndYield(['render: 3', 'componentDidUpdate: 3']);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
-    }
+    // Now flush the cDU update.
+    expect(Scheduler).toFlushAndYield(['render: 3', 'componentDidUpdate: 3']);
+    expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('performs Task work even after time runs out', () => {
     class Foo extends React.Component {
       state = {step: 1};
@@ -334,7 +315,7 @@ describe('ReactIncrementalScheduling', () => {
       }
     }
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo />);
       });
     } else {
@@ -350,64 +331,5 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.flushNextYield();
     // The updates should all be flushed with Task priority
     expect(ReactNoop).toMatchRenderedOutput(<span prop={5} />);
-  });
-
-  it('can opt-out of batching using unbatchedUpdates', () => {
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<span prop={0} />);
-      expect(ReactNoop.getChildren()).toEqual([]);
-      // Should not have flushed yet because we're still batching
-
-      // unbatchedUpdates reverses the effect of batchedUpdates, so sync
-      // updates are not batched
-      ReactNoop.unbatchedUpdates(() => {
-        ReactNoop.render(<span prop={1} />);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
-        ReactNoop.render(<span prop={2} />);
-        expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
-      });
-
-      ReactNoop.render(<span prop={3} />);
-      expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
-    });
-    // Remaining update is now flushed
-    expect(ReactNoop).toMatchRenderedOutput(<span prop={3} />);
-  });
-
-  it('nested updates are always deferred, even inside unbatchedUpdates', () => {
-    let instance;
-    class Foo extends React.Component {
-      state = {step: 0};
-      componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate: ' + this.state.step);
-        if (this.state.step === 1) {
-          ReactNoop.unbatchedUpdates(() => {
-            // This is a nested state update, so it should not be
-            // flushed synchronously, even though we wrapped it
-            // in unbatchedUpdates.
-            this.setState({step: 2});
-          });
-          expect(Scheduler).toHaveYielded([
-            'render: 1',
-            'componentDidUpdate: 1',
-          ]);
-          expect(ReactNoop).toMatchRenderedOutput(<span prop={1} />);
-        }
-      }
-      render() {
-        Scheduler.unstable_yieldValue('render: ' + this.state.step);
-        instance = this;
-        return <span prop={this.state.step} />;
-      }
-    }
-    ReactNoop.render(<Foo />);
-    expect(Scheduler).toFlushAndYield(['render: 0']);
-    expect(ReactNoop).toMatchRenderedOutput(<span prop={0} />);
-
-    ReactNoop.flushSync(() => {
-      instance.setState({step: 1});
-    });
-    expect(Scheduler).toHaveYielded(['render: 2', 'componentDidUpdate: 2']);
-    expect(ReactNoop).toMatchRenderedOutput(<span prop={2} />);
   });
 });

@@ -28,17 +28,22 @@ export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
-export opaque type OpaqueIDType = mixed;
 
 export const isPrimaryRenderer = false;
 
 export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
-export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
-export const makeServerID = $$$hostConfig.makeServerID;
-export const pushEmpty = $$$hostConfig.pushEmpty;
+export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID =
+  $$$hostConfig.UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
+export const assignSuspenseBoundaryID = $$$hostConfig.assignSuspenseBoundaryID;
+export const makeId = $$$hostConfig.makeId;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;
 export const pushStartInstance = $$$hostConfig.pushStartInstance;
 export const pushEndInstance = $$$hostConfig.pushEndInstance;
+export const pushStartCompletedSuspenseBoundary =
+  $$$hostConfig.pushStartCompletedSuspenseBoundary;
+export const pushEndCompletedSuspenseBoundary =
+  $$$hostConfig.pushEndCompletedSuspenseBoundary;
+export const writeCompletedRoot = $$$hostConfig.writeCompletedRoot;
 export const writePlaceholder = $$$hostConfig.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =
   $$$hostConfig.writeStartCompletedSuspenseBoundary;
@@ -46,7 +51,12 @@ export const writeStartPendingSuspenseBoundary =
   $$$hostConfig.writeStartPendingSuspenseBoundary;
 export const writeStartClientRenderedSuspenseBoundary =
   $$$hostConfig.writeStartClientRenderedSuspenseBoundary;
-export const writeEndSuspenseBoundary = $$$hostConfig.writeEndSuspenseBoundary;
+export const writeEndCompletedSuspenseBoundary =
+  $$$hostConfig.writeEndCompletedSuspenseBoundary;
+export const writeEndPendingSuspenseBoundary =
+  $$$hostConfig.writeEndPendingSuspenseBoundary;
+export const writeEndClientRenderedSuspenseBoundary =
+  $$$hostConfig.writeEndClientRenderedSuspenseBoundary;
 export const writeStartSegment = $$$hostConfig.writeStartSegment;
 export const writeEndSegment = $$$hostConfig.writeEndSegment;
 export const writeCompletedSegmentInstruction =

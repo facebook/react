@@ -8,15 +8,14 @@
 import assign from 'object-assign';
 import * as Scheduler from 'scheduler';
 import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
+import ReactCurrentActQueue from '../ReactCurrentActQueue';
 import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
-import IsSomeRendererActing from '../IsSomeRendererActing';
 import ReactCurrentBatchConfig from '../ReactCurrentBatchConfig';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  IsSomeRendererActing,
   ReactCurrentBatchConfig,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
@@ -30,6 +29,7 @@ const ReactSharedInternals = {
 };
 
 if (__DEV__) {
+  ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
   ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
 }
 

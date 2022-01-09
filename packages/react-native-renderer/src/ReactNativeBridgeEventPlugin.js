@@ -10,7 +10,6 @@
 import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
-import invariant from 'shared/invariant';
 
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
@@ -148,11 +147,14 @@ const ReactNativeBridgeEventPlugin = {
     }
     const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     const directDispatchConfig = customDirectEventTypes[topLevelType];
-    invariant(
-      bubbleDispatchConfig || directDispatchConfig,
-      'Unsupported top level event type "%s" dispatched',
-      topLevelType,
-    );
+
+    if (!bubbleDispatchConfig && !directDispatchConfig) {
+      throw new Error(
+        // $FlowFixMe - Flow doesn't like this string coercion because DOMTopLevelEventType is opaque
+        `Unsupported top level event type "${topLevelType}" dispatched`,
+      );
+    }
+
     const event = SyntheticEvent.getPooled(
       bubbleDispatchConfig || directDispatchConfig,
       targetInst,

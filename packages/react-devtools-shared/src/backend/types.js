@@ -13,6 +13,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
   ElementType,
+  Plugins,
 } from 'react-devtools-shared/src/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
@@ -142,6 +143,10 @@ export type ReactRenderer = {
   ComponentTree?: any,
   // Present for React DOM v12 (possibly earlier) through v15.
   Mount?: any,
+  // Only injected by React v17.0.3+ in DEV mode
+  setErrorHandler?: ?(shouldError: (fiber: Object) => ?boolean) => void,
+  // Intentionally opaque type to avoid coupling DevTools to different Fast Refresh versions.
+  scheduleRefresh?: Function,
   ...
 };
 
@@ -224,6 +229,11 @@ export type InspectedElement = {|
   canEditFunctionPropsDeletePaths: boolean,
   canEditFunctionPropsRenamePaths: boolean,
 
+  // Is this Error, and can its value be overridden now?
+  canToggleError: boolean,
+  isErrored: boolean,
+  targetErrorBoundaryID: ?number,
+
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
 
@@ -256,11 +266,23 @@ export type InspectedElement = {|
   // Meta information about the renderer that created this element.
   rendererPackageName: string | null,
   rendererVersion: string | null,
+
+  // UI plugins/visualizations for the inspected element.
+  plugins: Plugins,
 |};
 
+export const InspectElementErrorType = 'error';
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
+
+export type InspectElementError = {|
+  id: number,
+  responseID: number,
+  type: 'error',
+  message: string,
+  stack: string,
+|};
 
 export type InspectElementFullData = {|
   id: number,
@@ -290,6 +312,7 @@ export type InspectElementNotFound = {|
 |};
 
 export type InspectedElementPayload =
+  | InspectElementError
   | InspectElementFullData
   | InspectElementHydratedPath
   | InspectElementNoChange
@@ -330,8 +353,10 @@ export type RendererInterface = {
     requestID: number,
     id: number,
     inspectedPaths: Object,
+    forceFullData: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
+  overrideError: (id: number, forceError: boolean) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   overrideValueAtPath: (
     type: Type,
@@ -340,6 +365,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     value: any,
   ) => void,
+  patchConsoleForStrictMode: () => void,
   prepareViewAttributeSource: (
     id: number,
     path: Array<string | number>,
@@ -362,6 +388,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
   ...
 };
@@ -396,5 +423,13 @@ export type DevToolsHook = {
     // Added in v16.9 to support Fast Refresh
     didError?: boolean,
   ) => void,
+
+  // Timeline internal module filtering
+  getInternalModuleRanges: () => Array<[string, string]>,
+  registerInternalModuleStart: (moduleStartError: Error) => void,
+  registerInternalModuleStop: (moduleStopError: Error) => void,
+
+  // Testing
+  dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
   ...
 };

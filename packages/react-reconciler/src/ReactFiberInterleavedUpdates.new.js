@@ -12,7 +12,7 @@ import type {SharedQueue as ClassQueue} from './ReactUpdateQueue.new';
 
 // An array of all update queues that received updates during the current
 // render. When this render exits, either because it finishes or because it is
-// interrupted, the interleaved updates will be transfered onto the main part
+// interrupted, the interleaved updates will be transferred onto the main part
 // of the queue.
 let interleavedQueues: Array<
   HookQueue<any, any> | ClassQueue<any>,

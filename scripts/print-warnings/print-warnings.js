@@ -12,7 +12,7 @@ const through = require('through2');
 const traverse = require('@babel/traverse').default;
 const gs = require('glob-stream');
 
-const evalToString = require('../shared/evalToString');
+const {evalStringConcat} = require('../shared/evalToString');
 
 const parserOptions = {
   sourceType: 'module',
@@ -64,7 +64,7 @@ function transform(file, enc, cb) {
             // warning messages can be concatenated (`+`) at runtime, so here's
             // a trivial partial evaluator that interprets the literal value
             try {
-              const warningMsgLiteral = evalToString(node.arguments[0]);
+              const warningMsgLiteral = evalStringConcat(node.arguments[0]);
               warnings.add(JSON.stringify(warningMsgLiteral));
             } catch (error) {
               console.error(

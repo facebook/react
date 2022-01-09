@@ -10,14 +10,14 @@ Object {
       "props": null,
       "state": null,
     },
-    3 => Object {
+    4 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
-    5 => Object {
+    6 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -30,21 +30,21 @@ Object {
   "fiberActualDurations": Map {
     1 => 16,
     2 => 16,
-    3 => 1,
-    5 => 1,
+    4 => 1,
+    6 => 1,
   },
   "fiberSelfDurations": Map {
     1 => 0,
     2 => 10,
-    3 => 1,
-    5 => 1,
+    4 => 1,
+    6 => 1,
   },
   "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 16,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -73,7 +73,7 @@ Object {
     },
   },
   "duration": 15,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     1 => 15,
     2 => 15,
@@ -86,12 +86,12 @@ Object {
     3 => 3,
     4 => 2,
   },
-  "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "passiveEffectDuration": 0,
+  "priorityLevel": "Immediate",
   "timestamp": 15,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -104,7 +104,7 @@ Object {
 exports[`ProfilingCache should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 2`] = `
 Object {
   "changeDescriptions": Map {
-    5 => Object {
+    7 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -113,21 +113,21 @@ Object {
     },
   },
   "duration": 3,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
-    5 => 3,
+    7 => 3,
     3 => 3,
   },
   "fiberSelfDurations": Map {
-    5 => 3,
+    7 => 3,
     3 => 0,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 18,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -147,13 +147,6 @@ Object {
       "props": null,
       "state": null,
     },
-    3 => Object {
-      "context": null,
-      "didHooksChange": false,
-      "isFirstMount": true,
-      "props": null,
-      "state": null,
-    },
     4 => Object {
       "context": null,
       "didHooksChange": false,
@@ -168,29 +161,36 @@ Object {
       "props": null,
       "state": null,
     },
+    6 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "isFirstMount": true,
+      "props": null,
+      "state": null,
+    },
   },
   "duration": 12,
   "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 12,
     2 => 12,
-    3 => 0,
-    4 => 1,
+    4 => 0,
     5 => 1,
+    6 => 1,
   },
   "fiberSelfDurations": Map {
     1 => 0,
     2 => 10,
-    3 => 0,
-    4 => 1,
+    4 => 0,
     5 => 1,
+    6 => 1,
   },
   "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 12,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -203,21 +203,23 @@ Object {
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 1 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
-      "didHooksChange": false,
-      "isFirstMount": false,
-      "props": Array [],
-      "state": null,
-    },
     4 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
-    6 => Object {
+    5 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "hooks": null,
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+    7 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -227,6 +229,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -237,16 +240,16 @@ Object {
   "duration": 13,
   "effectDuration": null,
   "fiberActualDurations": Map {
-    3 => 0,
-    4 => 1,
-    6 => 2,
+    4 => 0,
+    5 => 1,
+    7 => 2,
     2 => 13,
     1 => 13,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
-    4 => 1,
-    6 => 2,
+    4 => 0,
+    5 => 1,
+    7 => 2,
     2 => 10,
     1 => 0,
   },
@@ -255,7 +258,7 @@ Object {
   "timestamp": 25,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -268,9 +271,10 @@ Object {
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 2 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
+    4 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -278,6 +282,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -286,23 +291,23 @@ Object {
     },
   },
   "duration": 10,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
-    3 => 0,
+    4 => 0,
     2 => 10,
     1 => 10,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
+    4 => 0,
     2 => 10,
     1 => 0,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 35,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -318,6 +323,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -326,7 +332,7 @@ Object {
     },
   },
   "duration": 10,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     2 => 10,
     1 => 10,
@@ -335,12 +341,12 @@ Object {
     2 => 10,
     1 => 0,
   },
-  "passiveEffectDuration": null,
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 45,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -368,16 +374,6 @@ Object {
               },
             ],
             Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
               4,
               Object {
                 "context": null,
@@ -389,6 +385,16 @@ Object {
             ],
             Array [
               5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+            Array [
+              6,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -410,15 +416,15 @@ Object {
               12,
             ],
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              5,
+              6,
               1,
             ],
           ],
@@ -432,24 +438,24 @@ Object {
               10,
             ],
             Array [
-              3,
-              0,
-            ],
-            Array [
               4,
-              1,
+              0,
             ],
             Array [
               5,
               1,
             ],
+            Array [
+              6,
+              1,
+            ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 12,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -460,27 +466,29 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
               4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
               },
             ],
             Array [
-              6,
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -494,6 +502,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -506,15 +515,15 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -528,15 +537,15 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -553,7 +562,7 @@ Object {
           "timestamp": 25,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -564,10 +573,11 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -578,6 +588,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -587,10 +598,10 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -604,7 +615,7 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -616,12 +627,12 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 35,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -636,6 +647,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -645,7 +657,7 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -666,12 +678,12 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 45,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -707,6 +719,8 @@ Object {
           1,
           1,
           11,
+          0,
+          1,
           1,
           1,
           4,
@@ -723,34 +737,34 @@ Object {
           2,
           12000,
           1,
-          3,
+          4,
           5,
           2,
           2,
           2,
           3,
           4,
-          3,
+          4,
           0,
           1,
-          4,
+          5,
           5,
           2,
           2,
           2,
           4,
           4,
-          4,
+          5,
           1000,
           1,
-          5,
+          6,
           8,
           2,
           2,
           2,
           0,
           4,
-          5,
+          6,
           1000,
         ],
         Array [
@@ -766,14 +780,14 @@ Object {
           1,
           50,
           1,
-          6,
+          7,
           5,
           2,
           2,
           1,
           2,
           4,
-          6,
+          7,
           2000,
           4,
           2,
@@ -781,10 +795,10 @@ Object {
           3,
           2,
           4,
-          3,
           4,
-          6,
           5,
+          7,
+          6,
           4,
           1,
           14000,
@@ -795,16 +809,16 @@ Object {
           0,
           2,
           2,
-          6,
-          4,
+          7,
+          5,
           4,
           2,
           11000,
           3,
           2,
           2,
-          3,
-          5,
+          4,
+          6,
           4,
           1,
           11000,
@@ -815,7 +829,7 @@ Object {
           0,
           2,
           1,
-          3,
+          4,
         ],
       ],
       "rootID": 1,
@@ -834,28 +848,28 @@ Array [
 ]
 `;
 
-exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 3 1`] = `
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 4 1`] = `
 Array [
   0,
   1,
   2,
-]
-`;
-
-exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 4 1`] = `
-Array [
-  0,
 ]
 `;
 
 exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 5 1`] = `
 Array [
+  0,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 6 1`] = `
+Array [
   1,
   2,
 ]
 `;
 
-exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 6 1`] = `
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 7 1`] = `
 Array [
   2,
 ]
@@ -879,7 +893,7 @@ Object {
               },
             ],
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -889,7 +903,7 @@ Object {
               },
             ],
             Array [
-              4,
+              5,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -911,11 +925,11 @@ Object {
               11,
             ],
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
           ],
@@ -929,20 +943,20 @@ Object {
               10,
             ],
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 11,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -953,17 +967,18 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
               },
             ],
             Array [
-              5,
+              6,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -977,6 +992,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -989,11 +1005,11 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              5,
+              6,
               1,
             ],
             Array [
@@ -1007,11 +1023,11 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              5,
+              6,
               1,
             ],
             Array [
@@ -1028,7 +1044,7 @@ Object {
           "timestamp": 22,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1039,20 +1055,11 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
-              5,
-              Object {
-                "context": null,
-                "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -1060,6 +1067,17 @@ Object {
             ],
             Array [
               6,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -1073,6 +1091,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1085,15 +1104,15 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              5,
+              6,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -1107,15 +1126,15 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              5,
+              6,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -1132,7 +1151,7 @@ Object {
           "timestamp": 35,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1166,6 +1185,8 @@ Object {
           1,
           1,
           11,
+          0,
+          1,
           1,
           1,
           4,
@@ -1182,24 +1203,24 @@ Object {
           2,
           11000,
           1,
-          3,
+          4,
           5,
           2,
           2,
           2,
           3,
           4,
-          3,
+          4,
           0,
           1,
-          4,
+          5,
           8,
           2,
           2,
           2,
           0,
           4,
-          4,
+          5,
           1000,
         ],
         Array [
@@ -1215,14 +1236,14 @@ Object {
           1,
           49,
           1,
-          5,
+          6,
           5,
           2,
           2,
           1,
           2,
           4,
-          5,
+          6,
           1000,
           4,
           2,
@@ -1230,9 +1251,9 @@ Object {
           3,
           2,
           3,
-          3,
-          5,
           4,
+          6,
+          5,
           4,
           1,
           12000,
@@ -1250,14 +1271,14 @@ Object {
           1,
           50,
           1,
-          6,
+          7,
           5,
           2,
           2,
           1,
           2,
           4,
-          6,
+          7,
           2000,
           4,
           2,
@@ -1265,10 +1286,10 @@ Object {
           3,
           2,
           4,
-          3,
-          5,
-          6,
           4,
+          6,
+          7,
+          5,
           4,
           1,
           14000,
@@ -1287,21 +1308,23 @@ Object {
   "commitData": Array [
     Object {
       "changeDescriptions": Map {
-        3 => Object {
-          "context": null,
-          "didHooksChange": false,
-          "isFirstMount": false,
-          "props": Array [],
-          "state": null,
-        },
         4 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [],
           "state": null,
         },
-        10 => Object {
+        5 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        12 => Object {
           "context": null,
           "didHooksChange": false,
           "isFirstMount": true,
@@ -1311,6 +1334,7 @@ Object {
         2 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1321,16 +1345,16 @@ Object {
       "duration": 13,
       "effectDuration": null,
       "fiberActualDurations": Map {
-        3 => 0,
-        4 => 1,
-        10 => 2,
+        4 => 0,
+        5 => 1,
+        12 => 2,
         2 => 13,
         1 => 13,
       },
       "fiberSelfDurations": Map {
-        3 => 0,
-        4 => 1,
-        10 => 2,
+        4 => 0,
+        5 => 1,
+        12 => 2,
         2 => 10,
         1 => 0,
       },
@@ -1339,7 +1363,7 @@ Object {
       "timestamp": 13,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -1349,9 +1373,10 @@ Object {
     },
     Object {
       "changeDescriptions": Map {
-        3 => Object {
+        4 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [],
           "state": null,
@@ -1359,6 +1384,7 @@ Object {
         2 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1367,23 +1393,23 @@ Object {
         },
       },
       "duration": 10,
-      "effectDuration": null,
+      "effectDuration": 0,
       "fiberActualDurations": Map {
-        3 => 0,
+        4 => 0,
         2 => 10,
         1 => 10,
       },
       "fiberSelfDurations": Map {
-        3 => 0,
+        4 => 0,
         2 => 10,
         1 => 0,
       },
-      "passiveEffectDuration": null,
+      "passiveEffectDuration": 0,
       "priorityLevel": "Immediate",
       "timestamp": 34,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -1396,6 +1422,7 @@ Object {
         2 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1404,7 +1431,7 @@ Object {
         },
       },
       "duration": 10,
-      "effectDuration": null,
+      "effectDuration": 0,
       "fiberActualDurations": Map {
         2 => 10,
         1 => 10,
@@ -1413,12 +1440,12 @@ Object {
         2 => 10,
         1 => 0,
       },
-      "passiveEffectDuration": null,
+      "passiveEffectDuration": 0,
       "priorityLevel": "Immediate",
       "timestamp": 44,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -1431,9 +1458,9 @@ Object {
   "initialTreeBaseDurations": Map {
     1 => 12,
     2 => 12,
-    3 => 0,
-    4 => 1,
+    4 => 0,
     5 => 1,
+    6 => 1,
   },
   "operations": Array [
     Array [
@@ -1449,14 +1476,14 @@ Object {
       1,
       50,
       1,
-      10,
+      12,
       5,
       2,
       2,
       1,
       2,
       4,
-      10,
+      12,
       2000,
       4,
       2,
@@ -1464,10 +1491,10 @@ Object {
       3,
       2,
       4,
-      3,
       4,
-      10,
       5,
+      12,
+      6,
       4,
       1,
       14000,
@@ -1478,16 +1505,16 @@ Object {
       0,
       2,
       2,
-      10,
-      4,
+      12,
+      5,
       4,
       2,
       11000,
       3,
       2,
       2,
-      3,
-      5,
+      4,
+      6,
       4,
       1,
       11000,
@@ -1498,7 +1525,7 @@ Object {
       0,
       2,
       1,
-      3,
+      4,
     ],
   ],
   "rootID": 1,
@@ -1515,9 +1542,9 @@ Object {
     },
     2 => Object {
       "children": Array [
-        3,
         4,
         5,
+        6,
       ],
       "displayName": "Parent",
       "hocDisplayNames": null,
@@ -1525,29 +1552,29 @@ Object {
       "key": null,
       "type": 5,
     },
-    3 => Object {
-      "children": Array [],
-      "displayName": "Child",
-      "hocDisplayNames": null,
-      "id": 3,
-      "key": "0",
-      "type": 5,
-    },
     4 => Object {
       "children": Array [],
       "displayName": "Child",
       "hocDisplayNames": null,
       "id": 4,
-      "key": "1",
+      "key": "0",
       "type": 5,
     },
     5 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 5,
+      "key": "1",
+      "type": 5,
+    },
+    6 => Object {
+      "children": Array [],
+      "displayName": "Child",
       "hocDisplayNames": Array [
         "Memo",
       ],
-      "id": 5,
+      "id": 6,
       "key": null,
       "type": 8,
     },
@@ -1560,21 +1587,21 @@ Object {
   "commitData": Array [
     Object {
       "changeDescriptions": Map {
-        12 => Object {
-          "context": null,
-          "didHooksChange": false,
-          "isFirstMount": true,
-          "props": null,
-          "state": null,
-        },
-        13 => Object {
-          "context": null,
-          "didHooksChange": false,
-          "isFirstMount": true,
-          "props": null,
-          "state": null,
-        },
         14 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        16 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        17 => Object {
           "context": null,
           "didHooksChange": false,
           "isFirstMount": true,
@@ -1585,25 +1612,25 @@ Object {
       "duration": 11,
       "effectDuration": null,
       "fiberActualDurations": Map {
-        11 => 11,
-        12 => 11,
-        13 => 0,
-        14 => 1,
+        13 => 11,
+        14 => 11,
+        16 => 0,
+        17 => 1,
       },
       "fiberSelfDurations": Map {
-        11 => 0,
-        12 => 10,
         13 => 0,
-        14 => 1,
+        14 => 10,
+        16 => 0,
+        17 => 1,
       },
       "passiveEffectDuration": null,
-      "priorityLevel": "Normal",
+      "priorityLevel": "Immediate",
       "timestamp": 24,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
-          "id": 11,
+          "id": 13,
           "key": null,
           "type": 11,
         },
@@ -1615,7 +1642,7 @@ Object {
   "operations": Array [
     Array [
       1,
-      11,
+      13,
       15,
       6,
       80,
@@ -1633,135 +1660,49 @@ Object {
       1,
       48,
       1,
-      11,
-      11,
-      1,
-      1,
-      4,
-      11,
-      11000,
-      1,
-      12,
-      5,
-      11,
-      0,
-      1,
-      0,
-      4,
-      12,
-      11000,
-      1,
       13,
+      11,
+      0,
+      1,
+      1,
+      1,
+      4,
+      13,
+      11000,
+      1,
+      14,
       5,
-      12,
-      12,
+      13,
+      0,
+      1,
+      0,
+      4,
+      14,
+      11000,
+      1,
+      16,
+      5,
+      14,
+      14,
       2,
       3,
       4,
-      13,
+      16,
       0,
       1,
-      14,
+      17,
       8,
-      12,
-      12,
+      14,
+      14,
       2,
       0,
       4,
-      14,
+      17,
       1000,
     ],
   ],
-  "rootID": 11,
+  "rootID": 13,
   "snapshots": Map {},
-}
-`;
-
-exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): Data for root Parent 3`] = `
-Object {
-  "commitData": Array [
-    Object {
-      "changeDescriptions": Map {},
-      "duration": 0,
-      "effectDuration": null,
-      "fiberActualDurations": Map {},
-      "fiberSelfDurations": Map {},
-      "passiveEffectDuration": null,
-      "priorityLevel": "Normal",
-      "timestamp": 34,
-      "updaters": Array [
-        Object {
-          "displayName": "Anonymous",
-          "hocDisplayNames": null,
-          "id": 6,
-          "key": null,
-          "type": 11,
-        },
-      ],
-    },
-  ],
-  "displayName": "Parent",
-  "initialTreeBaseDurations": Map {
-    6 => 11,
-    7 => 11,
-    8 => 0,
-    9 => 1,
-  },
-  "operations": Array [
-    Array [
-      1,
-      6,
-      0,
-      2,
-      4,
-      9,
-      8,
-      7,
-      6,
-    ],
-  ],
-  "rootID": 6,
-  "snapshots": Map {
-    6 => Object {
-      "children": Array [
-        7,
-      ],
-      "displayName": null,
-      "hocDisplayNames": null,
-      "id": 6,
-      "key": null,
-      "type": 11,
-    },
-    7 => Object {
-      "children": Array [
-        8,
-        9,
-      ],
-      "displayName": "Parent",
-      "hocDisplayNames": null,
-      "id": 7,
-      "key": null,
-      "type": 5,
-    },
-    8 => Object {
-      "children": Array [],
-      "displayName": "Child",
-      "hocDisplayNames": null,
-      "id": 8,
-      "key": "0",
-      "type": 5,
-    },
-    9 => Object {
-      "children": Array [],
-      "displayName": "Child",
-      "hocDisplayNames": Array [
-        "Memo",
-      ],
-      "id": 9,
-      "key": null,
-      "type": 8,
-    },
-  },
 }
 `;
 
@@ -1773,27 +1714,29 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
               4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
               },
             ],
             Array [
-              10,
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              12,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -1807,6 +1750,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1819,15 +1763,15 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              10,
+              12,
               2,
             ],
             Array [
@@ -1841,15 +1785,15 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              10,
+              12,
               2,
             ],
             Array [
@@ -1866,7 +1810,7 @@ Object {
           "timestamp": 13,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1877,10 +1821,11 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -1891,6 +1836,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1900,10 +1846,10 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -1917,7 +1863,7 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -1929,12 +1875,12 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 34,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -1949,6 +1895,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1958,7 +1905,7 @@ Object {
             ],
           ],
           "duration": 10,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -1979,12 +1926,12 @@ Object {
               0,
             ],
           ],
-          "passiveEffectDuration": null,
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 44,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -2004,15 +1951,15 @@ Object {
           12,
         ],
         Array [
-          3,
+          4,
           0,
         ],
         Array [
-          4,
+          5,
           1,
         ],
         Array [
-          5,
+          6,
           1,
         ],
       ],
@@ -2030,14 +1977,14 @@ Object {
           1,
           50,
           1,
-          10,
+          12,
           5,
           2,
           2,
           1,
           2,
           4,
-          10,
+          12,
           2000,
           4,
           2,
@@ -2045,10 +1992,10 @@ Object {
           3,
           2,
           4,
-          3,
           4,
-          10,
           5,
+          12,
+          6,
           4,
           1,
           14000,
@@ -2059,16 +2006,16 @@ Object {
           0,
           2,
           2,
-          10,
-          4,
+          12,
+          5,
           4,
           2,
           11000,
           3,
           2,
           2,
-          3,
-          5,
+          4,
+          6,
           4,
           1,
           11000,
@@ -2079,7 +2026,7 @@ Object {
           0,
           2,
           1,
-          3,
+          4,
         ],
       ],
       "rootID": 1,
@@ -2101,25 +2048,14 @@ Object {
           2,
           Object {
             "children": Array [
-              3,
               4,
               5,
+              6,
             ],
             "displayName": "Parent",
             "hocDisplayNames": null,
             "id": 2,
             "key": null,
-            "type": 5,
-          },
-        ],
-        Array [
-          3,
-          Object {
-            "children": Array [],
-            "displayName": "Child",
-            "hocDisplayNames": null,
-            "id": 3,
-            "key": "0",
             "type": 5,
           },
         ],
@@ -2130,7 +2066,7 @@ Object {
             "displayName": "Child",
             "hocDisplayNames": null,
             "id": 4,
-            "key": "1",
+            "key": "0",
             "type": 5,
           },
         ],
@@ -2139,10 +2075,21 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
+            "id": 5,
+            "key": "1",
+            "type": 5,
+          },
+        ],
+        Array [
+          6,
+          Object {
+            "children": Array [],
+            "displayName": "Child",
             "hocDisplayNames": Array [
               "Memo",
             ],
-            "id": 5,
+            "id": 6,
             "key": null,
             "type": 8,
           },
@@ -2154,27 +2101,27 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              12,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              13,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
               14,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+            Array [
+              16,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+            Array [
+              17,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -2188,48 +2135,48 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              11,
-              11,
-            ],
-            Array [
-              12,
-              11,
-            ],
-            Array [
               13,
-              0,
+              11,
             ],
             Array [
               14,
+              11,
+            ],
+            Array [
+              16,
+              0,
+            ],
+            Array [
+              17,
               1,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              11,
-              0,
-            ],
-            Array [
-              12,
-              10,
-            ],
-            Array [
               13,
               0,
             ],
             Array [
               14,
+              10,
+            ],
+            Array [
+              16,
+              0,
+            ],
+            Array [
+              17,
               1,
             ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 24,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
-              "id": 11,
+              "id": 13,
               "key": null,
               "type": 11,
             },
@@ -2241,7 +2188,7 @@ Object {
       "operations": Array [
         Array [
           1,
-          11,
+          13,
           15,
           6,
           80,
@@ -2259,156 +2206,49 @@ Object {
           1,
           48,
           1,
-          11,
-          11,
-          1,
-          1,
-          4,
-          11,
-          11000,
-          1,
-          12,
-          5,
-          11,
-          0,
-          1,
-          0,
-          4,
-          12,
-          11000,
-          1,
           13,
+          11,
+          0,
+          1,
+          1,
+          1,
+          4,
+          13,
+          11000,
+          1,
+          14,
           5,
-          12,
-          12,
+          13,
+          0,
+          1,
+          0,
+          4,
+          14,
+          11000,
+          1,
+          16,
+          5,
+          14,
+          14,
           2,
           3,
           4,
-          13,
+          16,
           0,
           1,
-          14,
+          17,
           8,
-          12,
-          12,
+          14,
+          14,
           2,
           0,
           4,
-          14,
+          17,
           1000,
         ],
       ],
-      "rootID": 11,
+      "rootID": 13,
       "snapshots": Array [],
-    },
-    Object {
-      "commitData": Array [
-        Object {
-          "changeDescriptions": Array [],
-          "duration": 0,
-          "effectDuration": null,
-          "fiberActualDurations": Array [],
-          "fiberSelfDurations": Array [],
-          "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
-          "timestamp": 34,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 6,
-              "key": null,
-              "type": 11,
-            },
-          ],
-        },
-      ],
-      "displayName": "Parent",
-      "initialTreeBaseDurations": Array [
-        Array [
-          6,
-          11,
-        ],
-        Array [
-          7,
-          11,
-        ],
-        Array [
-          8,
-          0,
-        ],
-        Array [
-          9,
-          1,
-        ],
-      ],
-      "operations": Array [
-        Array [
-          1,
-          6,
-          0,
-          2,
-          4,
-          9,
-          8,
-          7,
-          6,
-        ],
-      ],
-      "rootID": 6,
-      "snapshots": Array [
-        Array [
-          6,
-          Object {
-            "children": Array [
-              7,
-            ],
-            "displayName": null,
-            "hocDisplayNames": null,
-            "id": 6,
-            "key": null,
-            "type": 11,
-          },
-        ],
-        Array [
-          7,
-          Object {
-            "children": Array [
-              8,
-              9,
-            ],
-            "displayName": "Parent",
-            "hocDisplayNames": null,
-            "id": 7,
-            "key": null,
-            "type": 5,
-          },
-        ],
-        Array [
-          8,
-          Object {
-            "children": Array [],
-            "displayName": "Child",
-            "hocDisplayNames": null,
-            "id": 8,
-            "key": "0",
-            "type": 5,
-          },
-        ],
-        Array [
-          9,
-          Object {
-            "children": Array [],
-            "displayName": "Child",
-            "hocDisplayNames": Array [
-              "Memo",
-            ],
-            "id": 9,
-            "key": null,
-            "type": 8,
-          },
-        ],
-      ],
     },
   ],
   "version": 5,
@@ -2431,11 +2271,11 @@ Object {
         2 => 0,
       },
       "passiveEffectDuration": null,
-      "priorityLevel": "Normal",
+      "priorityLevel": "Immediate",
       "timestamp": 0,
       "updaters": Array [
         Object {
-          "displayName": "Anonymous",
+          "displayName": "render()",
           "hocDisplayNames": null,
           "id": 1,
           "key": null,
@@ -2463,6 +2303,8 @@ Object {
       1,
       1,
       11,
+      0,
+      1,
       1,
       1,
       1,
@@ -2485,7 +2327,7 @@ Object {
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 0 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
+    4 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -2494,23 +2336,25 @@ Object {
     },
   },
   "duration": 0,
-  "effectDuration": null,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     1 => 0,
     2 => 0,
     3 => 0,
+    4 => 0,
   },
   "fiberSelfDurations": Map {
     1 => 0,
     2 => 0,
     3 => 0,
+    4 => 0,
   },
-  "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "passiveEffectDuration": 0,
+  "priorityLevel": "Immediate",
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -2523,9 +2367,10 @@ Object {
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 1 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": false,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -2536,11 +2381,13 @@ Object {
   "duration": 0,
   "effectDuration": null,
   "fiberActualDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
   },
   "fiberSelfDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
@@ -2550,7 +2397,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -2563,9 +2410,12 @@ Object {
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 2 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": false,
       "didHooksChange": true,
+      "hooks": Array [
+        1,
+      ],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2574,10 +2424,10 @@ Object {
   "duration": 0,
   "effectDuration": null,
   "fiberActualDurations": Map {
-    3 => 0,
+    4 => 0,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
+    4 => 0,
   },
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
@@ -2586,7 +2436,7 @@ Object {
     Object {
       "displayName": "Component",
       "hocDisplayNames": null,
-      "id": 3,
+      "id": 4,
       "key": null,
       "type": 5,
     },
@@ -2597,9 +2447,12 @@ Object {
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 3 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": false,
       "didHooksChange": true,
+      "hooks": Array [
+        0,
+      ],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2608,10 +2461,10 @@ Object {
   "duration": 0,
   "effectDuration": null,
   "fiberActualDurations": Map {
-    3 => 0,
+    4 => 0,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
+    4 => 0,
   },
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
@@ -2620,7 +2473,7 @@ Object {
     Object {
       "displayName": "Component",
       "hocDisplayNames": null,
-      "id": 3,
+      "id": 4,
       "key": null,
       "type": 5,
     },
@@ -2631,9 +2484,10 @@ Object {
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 4 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": true,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2642,11 +2496,13 @@ Object {
   "duration": 0,
   "effectDuration": null,
   "fiberActualDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
   },
   "fiberSelfDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
@@ -2656,7 +2512,48 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 5 1`] = `
+Object {
+  "changeDescriptions": Map {
+    4 => Object {
+      "context": true,
+      "didHooksChange": false,
+      "hooks": Array [],
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "effectDuration": null,
+  "fiberActualDurations": Map {
+    4 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    4 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "passiveEffectDuration": null,
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -2674,7 +2571,7 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -2685,7 +2582,7 @@ Object {
             ],
           ],
           "duration": 0,
-          "effectDuration": null,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -2697,6 +2594,10 @@ Object {
             ],
             Array [
               3,
+              0,
+            ],
+            Array [
+              4,
               0,
             ],
           ],
@@ -2713,13 +2614,17 @@ Object {
               3,
               0,
             ],
+            Array [
+              4,
+              0,
+            ],
           ],
-          "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "passiveEffectDuration": 0,
+          "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -2730,10 +2635,11 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": false,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -2746,6 +2652,10 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
+              4,
+              0,
+            ],
+            Array [
               3,
               0,
             ],
@@ -2759,6 +2669,10 @@ Object {
             ],
           ],
           "fiberSelfDurations": Array [
+            Array [
+              4,
+              0,
+            ],
             Array [
               3,
               0,
@@ -2777,7 +2691,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -2788,10 +2702,13 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": false,
                 "didHooksChange": true,
+                "hooks": Array [
+                  1,
+                ],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2802,13 +2719,13 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
@@ -2819,7 +2736,7 @@ Object {
             Object {
               "displayName": "Component",
               "hocDisplayNames": null,
-              "id": 3,
+              "id": 4,
               "key": null,
               "type": 5,
             },
@@ -2828,10 +2745,13 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": false,
                 "didHooksChange": true,
+                "hooks": Array [
+                  0,
+                ],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2842,13 +2762,13 @@ Object {
           "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
@@ -2859,7 +2779,7 @@ Object {
             Object {
               "displayName": "Component",
               "hocDisplayNames": null,
-              "id": 3,
+              "id": 4,
               "key": null,
               "type": 5,
             },
@@ -2868,10 +2788,11 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": true,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2881,6 +2802,10 @@ Object {
           "duration": 0,
           "effectDuration": null,
           "fiberActualDurations": Array [
+            Array [
+              4,
+              0,
+            ],
             Array [
               3,
               0,
@@ -2895,6 +2820,10 @@ Object {
             ],
           ],
           "fiberSelfDurations": Array [
+            Array [
+              4,
+              0,
+            ],
             Array [
               3,
               0,
@@ -2913,7 +2842,72 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              4,
+              Object {
+                "context": true,
+                "didHooksChange": false,
+                "hooks": Array [],
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 0,
+          "effectDuration": null,
+          "fiberActualDurations": Array [
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -2959,6 +2953,8 @@ Object {
           1,
           1,
           11,
+          0,
+          1,
           1,
           1,
           1,
@@ -2973,13 +2969,28 @@ Object {
           0,
           1,
           3,
+          2,
+          2,
+          0,
+          1,
+          0,
+          4,
+          3,
+          0,
+          1,
+          4,
           5,
-          2,
+          3,
           0,
           2,
           0,
           4,
-          3,
+          4,
+          0,
+        ],
+        Array [
+          1,
+          1,
           0,
         ],
         Array [
@@ -3071,11 +3082,11 @@ Object {
     7 => 0,
   },
   "passiveEffectDuration": null,
-  "priorityLevel": "Normal",
+  "priorityLevel": "Immediate",
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3091,6 +3102,9 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": true,
+      "hooks": Array [
+        0,
+      ],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -3100,6 +3114,7 @@ Object {
     4 => Object {
       "context": true,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3107,6 +3122,9 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": true,
+      "hooks": Array [
+        0,
+      ],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -3118,6 +3136,7 @@ Object {
         "count",
       ],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3125,6 +3144,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": Array [
@@ -3171,6 +3191,7 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3178,6 +3199,7 @@ Object {
     4 => Object {
       "context": false,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3185,6 +3207,7 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3192,6 +3215,7 @@ Object {
     6 => Object {
       "context": Array [],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3199,6 +3223,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "foo",
@@ -3231,7 +3256,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3247,6 +3272,7 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3254,6 +3280,7 @@ Object {
     4 => Object {
       "context": false,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3261,6 +3288,7 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3268,6 +3296,7 @@ Object {
     6 => Object {
       "context": Array [],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3275,6 +3304,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "foo",
@@ -3308,7 +3338,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3324,6 +3354,7 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3331,6 +3362,7 @@ Object {
     4 => Object {
       "context": false,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3338,6 +3370,7 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3345,6 +3378,7 @@ Object {
     6 => Object {
       "context": Array [],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -3352,6 +3386,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "bar",
@@ -3384,7 +3419,7 @@ Object {
   "timestamp": 0,
   "updaters": Array [
     Object {
-      "displayName": "Anonymous",
+      "displayName": "render()",
       "hocDisplayNames": null,
       "id": 1,
       "key": null,
@@ -3515,11 +3550,11 @@ Object {
             ],
           ],
           "passiveEffectDuration": null,
-          "priorityLevel": "Normal",
+          "priorityLevel": "Immediate",
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -3534,6 +3569,9 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": true,
+                "hooks": Array [
+                  0,
+                ],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -3546,6 +3584,7 @@ Object {
               Object {
                 "context": true,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3556,6 +3595,9 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": true,
+                "hooks": Array [
+                  0,
+                ],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -3570,6 +3612,7 @@ Object {
                   "count",
                 ],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3580,6 +3623,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": Array [
@@ -3662,6 +3706,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3672,6 +3717,7 @@ Object {
               Object {
                 "context": false,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3682,6 +3728,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3692,6 +3739,7 @@ Object {
               Object {
                 "context": Array [],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3702,6 +3750,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "foo",
@@ -3777,7 +3826,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -3792,6 +3841,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3802,6 +3852,7 @@ Object {
               Object {
                 "context": false,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3812,6 +3863,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3822,6 +3874,7 @@ Object {
               Object {
                 "context": Array [],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3832,6 +3885,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "foo",
@@ -3908,7 +3962,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -3923,6 +3977,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3933,6 +3988,7 @@ Object {
               Object {
                 "context": false,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3943,6 +3999,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3953,6 +4010,7 @@ Object {
               Object {
                 "context": Array [],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3963,6 +4021,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "bar",
@@ -4038,7 +4097,7 @@ Object {
           "timestamp": 0,
           "updaters": Array [
             Object {
-              "displayName": "Anonymous",
+              "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
               "key": null,
@@ -4167,6 +4226,8 @@ Object {
           1,
           1,
           11,
+          0,
+          1,
           1,
           1,
           1,

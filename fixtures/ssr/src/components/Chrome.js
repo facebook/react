@@ -46,7 +46,6 @@ export default class Chrome extends Component {
               __html: `assetManifest = ${JSON.stringify(assets)};`,
             }}
           />
-          <script src={assets['main.js']} />
         </body>
       </html>
     );

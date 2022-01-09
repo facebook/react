@@ -52,6 +52,7 @@ export default function checkPropTypes(
           // This is intentionally an invariant that gets caught. It's the same
           // behavior as without this statement except with a better message.
           if (typeof typeSpecs[typeSpecName] !== 'function') {
+            // eslint-disable-next-line react-internal/prod-error-codes
             const err = Error(
               (componentName || 'React class') +
                 ': ' +

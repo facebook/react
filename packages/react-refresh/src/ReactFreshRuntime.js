@@ -554,7 +554,9 @@ export function injectIntoGlobalHook(globalObject: any): void {
         if (alternate !== null) {
           const wasMounted =
             alternate.memoizedState != null &&
-            alternate.memoizedState.element != null;
+            alternate.memoizedState.element != null &&
+            mountedRoots.has(root);
+
           const isMounted =
             current.memoizedState != null &&
             current.memoizedState.element != null;

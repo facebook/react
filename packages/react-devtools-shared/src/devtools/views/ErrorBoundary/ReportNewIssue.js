@@ -9,7 +9,17 @@
 
 import * as React from 'react';
 import Icon from '../Icon';
+import {searchGitHubIssuesURL} from './githubAPI';
 import styles from './shared.css';
+
+const LABELS = [
+  'Component: Developer Tools',
+  'Type: Bug',
+  'Status: Unconfirmed',
+];
+
+// This must match the filename in ".github/ISSUE_TEMPLATE/"
+const TEMPLATE = 'devtools_bug_report.yml';
 
 type Props = {|
   callStack: string | null,
@@ -27,27 +37,24 @@ export default function ReportNewIssue({
     return null;
   }
 
-  const title = `Error: "${errorMessage || ''}"`;
-  const label = 'Component: Developer Tools';
+  const gitHubAPISearch =
+    errorMessage !== null ? searchGitHubIssuesURL(errorMessage) : '(none)';
 
-  let body = 'Describe what you were doing when the bug occurred:';
-  body += '\n1. ';
-  body += '\n2. ';
-  body += '\n3. ';
-  body += '\n\n---------------------------------------------';
-  body += '\nPlease do not remove the text below this line';
-  body += '\n---------------------------------------------';
-  body += `\n\nDevTools version: ${process.env.DEVTOOLS_VERSION || ''}`;
-  if (callStack) {
-    body += `\n\nCall stack: ${callStack.trim()}`;
-  }
-  if (componentStack) {
-    body += `\n\nComponent stack: ${componentStack.trim()}`;
-  }
+  const title = `[DevTools Bug] ${errorMessage || ''}`;
 
-  bugURL += `/issues/new?labels=${encodeURI(label)}&title=${encodeURI(
-    title,
-  )}&body=${encodeURI(body)}`;
+  const parameters = [
+    `template=${TEMPLATE}`,
+    `labels=${encodeURIComponent(LABELS.join(','))}`,
+    `title=${encodeURIComponent(title)}`,
+    `automated_package=${process.env.DEVTOOLS_PACKAGE || ''}`,
+    `automated_version=${process.env.DEVTOOLS_VERSION || ''}`,
+    `automated_error_message=${encodeURIComponent(errorMessage || '')}`,
+    `automated_call_stack=${encodeURIComponent(callStack || '')}`,
+    `automated_component_stack=${encodeURIComponent(componentStack || '')}`,
+    `automated_github_query_string=${gitHubAPISearch}`,
+  ];
+
+  bugURL += `/issues/new?${parameters.join('&')}`;
 
   return (
     <div className={styles.GitHubLinkRow}>

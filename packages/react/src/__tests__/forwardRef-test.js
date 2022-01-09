@@ -217,14 +217,12 @@ describe('forwardRef', () => {
     );
   });
 
-  it('should honor a displayName if set on the forwardRef wrapper in warnings', () => {
+  it('should fall back to showing something meaningful if no displayName or name are present', () => {
     const Component = props => <div {...props} />;
 
     const RefForwardingComponent = React.forwardRef((props, ref) => (
       <Component {...props} forwardedRef={ref} />
     ));
-
-    RefForwardingComponent.displayName = 'Foo';
 
     RefForwardingComponent.propTypes = {
       optional: PropTypes.string,
@@ -241,8 +239,67 @@ describe('forwardRef', () => {
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
     ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`Foo`, but its value is `undefined`.\n' +
-        '    in Foo (at **)',
+        '`ForwardRef`, but its value is `undefined`.',
+      // There's no component stack in this warning because the inner function is anonymous.
+      // If we wanted to support this (for the Error frames / source location)
+      // we could do this by updating ReactComponentStackFrame.
+      {withoutStack: true},
+    );
+  });
+
+  it('should honor a displayName if set on the forwardRef wrapper in warnings', () => {
+    const Component = props => <div {...props} />;
+
+    const RefForwardingComponent = React.forwardRef(function Inner(props, ref) {
+      <Component {...props} forwardedRef={ref} />;
+    });
+    RefForwardingComponent.displayName = 'Custom';
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toErrorDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`Custom`, but its value is `undefined`.\n' +
+        '    in Inner (at **)',
+    );
+  });
+
+  it('should pass displayName to an anonymous inner component so it shows up in component stacks', () => {
+    const Component = props => <div {...props} />;
+
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
+      <Component {...props} forwardedRef={ref} />
+    ));
+    RefForwardingComponent.displayName = 'Custom';
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toErrorDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`Custom`, but its value is `undefined`.\n' +
+        '    in Custom (at **)',
     );
   });
 
@@ -250,7 +307,7 @@ describe('forwardRef', () => {
     const Component = props => <div {...props} />;
 
     const inner = (props, ref) => <Component {...props} forwardedRef={ref} />;
-    inner.displayName = 'Foo';
+    inner.displayName = 'Inner';
     const RefForwardingComponent = React.forwardRef(inner);
 
     RefForwardingComponent.propTypes = {
@@ -268,8 +325,36 @@ describe('forwardRef', () => {
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
     ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`ForwardRef(Foo)`, but its value is `undefined`.\n' +
-        '    in Foo (at **)',
+        '`ForwardRef(Inner)`, but its value is `undefined`.\n' +
+        '    in Inner (at **)',
+    );
+  });
+
+  it('should honor a outer displayName when wrapped component and memo component set displayName at the same time.', () => {
+    const Component = props => <div {...props} />;
+
+    const inner = (props, ref) => <Component {...props} forwardedRef={ref} />;
+    inner.displayName = 'Inner';
+    const RefForwardingComponent = React.forwardRef(inner);
+    RefForwardingComponent.displayName = 'Outer';
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toErrorDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`Outer`, but its value is `undefined`.\n' +
+        '    in Inner (at **)',
     );
   });
 
@@ -287,11 +372,11 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
   });
 
   it('should bailout if forwardRef is wrapped in memo', () => {
@@ -310,13 +395,13 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     expect(ref.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     const differentRef = React.createRef();
 
@@ -324,14 +409,14 @@ describe('forwardRef', () => {
       <RefForwardingComponent ref={differentRef} optional="foo" />,
     );
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
 
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="bar" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 6 : 3);
+    expect(renderCount).toBe(3);
   });
 
   it('should custom memo comparisons to compose', () => {
@@ -351,19 +436,19 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="0" c="1" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 2 : 1);
+    expect(renderCount).toBe(1);
 
     expect(ref.current.type).toBe('div');
 
     // Changing either a or b rerenders
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="1" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
 
     // Changing c doesn't rerender
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="2" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 4 : 2);
+    expect(renderCount).toBe(2);
 
     const ComposedMemo = React.memo(
       RefForwardingComponent,
@@ -372,29 +457,29 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="0" c="0" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 6 : 3);
+    expect(renderCount).toBe(3);
 
     // Changing just b no longer updates
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="1" c="0" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 6 : 3);
+    expect(renderCount).toBe(3);
 
     // Changing just a and c updates
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="2" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 8 : 4);
+    expect(renderCount).toBe(4);
 
     // Changing just c does not update
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="3" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 8 : 4);
+    expect(renderCount).toBe(4);
 
     // Changing ref still rerenders
     const differentRef = React.createRef();
 
     ReactNoop.render(<ComposedMemo ref={differentRef} a="2" b="2" c="3" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(__DEV__ ? 10 : 5);
+    expect(renderCount).toBe(5);
 
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');

@@ -179,6 +179,14 @@ declare var nativeFabricUIManager: {
     locationY: number,
     callback: (Fiber) => void,
   ) => void,
+  setIsJSResponder: (
+    node: Node,
+    isJsResponder: boolean,
+    blockNativeResponder: boolean,
+  ) => void,
+  unstable_DefaultEventPriority: number,
+  unstable_DiscreteEventPriority: number,
+  unstable_getCurrentEventPriority: () => number,
   ...
 };
 

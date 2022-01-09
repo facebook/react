@@ -8146,4 +8146,18 @@ describe('react-hooks', () => {
       ...testsTypescriptEslintParser.invalid,
     ],
   });
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v5'),
+    parserOptions,
+  }).run('parser: @typescript-eslint/parser@^5.0.0-0', ReactHooksESLintRule, {
+    valid: [
+      ...testsTypescriptEslintParserV4.valid,
+      ...testsTypescriptEslintParser.valid,
+    ],
+    invalid: [
+      ...testsTypescriptEslintParserV4.invalid,
+      ...testsTypescriptEslintParser.invalid,
+    ],
+  });
 });

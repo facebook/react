@@ -25,8 +25,8 @@ function normalizeCodeLocInfo(str) {
 
 describe('component stack', () => {
   let React;
-  let ReactDOM;
   let act;
+  let legacyRender;
   let mockError;
   let mockWarn;
 
@@ -44,9 +44,9 @@ describe('component stack', () => {
 
     const utils = require('./utils');
     act = utils.act;
+    legacyRender = utils.legacyRender;
 
     React = require('react');
-    ReactDOM = require('react-dom');
   });
 
   it('should log the current component stack along with an error or warning', () => {
@@ -60,7 +60,7 @@ describe('component stack', () => {
 
     const container = document.createElement('div');
 
-    act(() => ReactDOM.render(<Grandparent />, container));
+    act(() => legacyRender(<Grandparent />, container));
 
     expect(mockError).toHaveBeenCalledWith(
       'Test error.',
@@ -93,7 +93,7 @@ describe('component stack', () => {
     };
 
     const container = document.createElement('div');
-    act(() => ReactDOM.render(<Example test="abc" />, container));
+    act(() => legacyRender(<Example test="abc" />, container));
 
     expect(useEffectCount).toBe(1);
 

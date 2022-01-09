@@ -14,6 +14,7 @@ describe('Store', () => {
   let act;
   let bridge;
   let getRendererID;
+  let legacyRender;
   let store;
   let withErrorsOrWarningsIgnored;
 
@@ -28,6 +29,7 @@ describe('Store', () => {
     const utils = require('./utils');
     act = utils.act;
     getRendererID = utils.getRendererID;
+    legacyRender = utils.legacyRender;
     withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
   });
 
@@ -35,7 +37,7 @@ describe('Store', () => {
     const Component = () => <div>Hi</div>;
 
     act(() =>
-      ReactDOM.render(<Component count={4} />, document.createElement('div')),
+      legacyRender(<Component count={4} />, document.createElement('div')),
     );
     expect(store).toMatchSnapshot('1: mount');
 
@@ -53,11 +55,111 @@ describe('Store', () => {
 
     const container = document.createElement('div');
 
-    act(() => ReactDOM.render(<Root>{null}</Root>, container));
+    act(() => legacyRender(<Root>{null}</Root>, container));
     expect(store).toMatchSnapshot('1: mount');
 
-    act(() => ReactDOM.render(<div />, container));
+    act(() => legacyRender(<div />, container));
     expect(store).toMatchSnapshot('2: add host nodes');
+  });
+
+  // This test is not the same cause as what's reported on GitHub,
+  // but the resulting behavior (owner mounting after descendant) is the same.
+  // Thec ase below is admittedly contrived and relies on side effects.
+  // I'mnot yet sure of how to reduce the GitHub reported production case to a test though.
+  // See https://github.com/facebook/react/issues/21445
+  it('should handle when a component mounts before its owner', () => {
+    const promise = new Promise(resolve => {});
+
+    let Dynamic = null;
+    const Owner = () => {
+      Dynamic = <Child />;
+      throw promise;
+    };
+    const Parent = () => {
+      return Dynamic;
+    };
+    const Child = () => null;
+
+    const container = document.createElement('div');
+
+    act(() =>
+      legacyRender(
+        <>
+          <React.Suspense fallback="Loading...">
+            <Owner />
+          </React.Suspense>
+          <Parent />
+        </>,
+        container,
+      ),
+    );
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <Suspense>
+        ▾ <Parent>
+            <Child>
+    `);
+  });
+
+  it('should handle multibyte character strings', () => {
+    const Component = () => null;
+    Component.displayName = '🟩💜🔵';
+
+    const container = document.createElement('div');
+
+    act(() => legacyRender(<Component />, container));
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+          <🟩💜🔵>
+    `);
+  });
+
+  describe('StrictMode compliance', () => {
+    it('should mark strict root elements as strict', () => {
+      const App = () => <Component />;
+      const Component = () => null;
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container, {unstable_strictMode: true});
+      act(() => {
+        root.render(<App />);
+      });
+
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(false);
+      expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(false);
+    });
+
+    it('should mark non strict root elements as not strict', () => {
+      const App = () => <Component />;
+      const Component = () => null;
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      act(() => {
+        root.render(<App />);
+      });
+
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(true);
+      expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(true);
+    });
+
+    it('should mark StrictMode subtree elements as strict', () => {
+      const App = () => (
+        <React.StrictMode>
+          <Component />
+        </React.StrictMode>
+      );
+      const Component = () => null;
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      act(() => {
+        root.render(<App />);
+      });
+
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(true);
+      expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(false);
+    });
   });
 
   describe('collapseNodesByDefault:false', () => {
@@ -78,10 +180,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() => ReactDOM.render(<Grandparent count={4} />, container));
+      act(() => legacyRender(<Grandparent count={4} />, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() => ReactDOM.render(<Grandparent count={2} />, container));
+      act(() => legacyRender(<Grandparent count={2} />, container));
       expect(store).toMatchSnapshot('2: update');
 
       act(() => ReactDOM.unmountComponentAtNode(container));
@@ -97,14 +199,14 @@ describe('Store', () => {
       const containerB = document.createElement('div');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={3} />, containerA);
-        ReactDOM.render(<Parent key="B" count={2} />, containerB);
+        legacyRender(<Parent key="A" count={3} />, containerA);
+        legacyRender(<Parent key="B" count={2} />, containerB);
       });
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={4} />, containerA);
-        ReactDOM.render(<Parent key="B" count={1} />, containerB);
+        legacyRender(<Parent key="A" count={4} />, containerA);
+        legacyRender(<Parent key="B" count={1} />, containerB);
       });
       expect(store).toMatchSnapshot('2: update');
 
@@ -132,10 +234,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={4} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={4} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
     });
@@ -162,11 +261,11 @@ describe('Store', () => {
       );
 
       const container = document.createElement('div');
-      act(() => ReactDOM.render(<Wrapper shouldSuspense={true} />, container));
+      act(() => legacyRender(<Wrapper shouldSuspense={true} />, container));
       expect(store).toMatchSnapshot('1: loading');
 
       act(() => {
-        ReactDOM.render(<Wrapper shouldSuspense={false} />, container);
+        legacyRender(<Wrapper shouldSuspense={false} />, container);
       });
       expect(store).toMatchSnapshot('2: resolved');
     });
@@ -212,7 +311,7 @@ describe('Store', () => {
 
       const container = document.createElement('div');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -223,7 +322,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('1: third child is suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -234,7 +333,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('2: first and third child are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -245,7 +344,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('3: second and third child are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -256,7 +355,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('4: first and third child are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={true}
             suspendFirst={true}
@@ -267,7 +366,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('5: parent is suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -278,7 +377,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('6: all children are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -307,7 +406,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('9: parent is suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={true}
@@ -334,7 +433,7 @@ describe('Store', () => {
       );
       expect(store).toMatchSnapshot('12: all children are suspended');
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper
             suspendParent={false}
             suspendFirst={false}
@@ -356,18 +455,18 @@ describe('Store', () => {
       };
       const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
-          <React.unstable_SuspenseList revealOrder="forwards" tail="collapsed">
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
             <Component key="A" />
             <React.Suspense fallback={<Loading />}>
               {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
             </React.Suspense>
             <Component key="C" />
-          </React.unstable_SuspenseList>
+          </React.SuspenseList>
         </React.Fragment>
       );
 
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       act(() => {
         root.render(<Wrapper shouldSuspense={true} />);
       });
@@ -391,10 +490,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={2} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={2} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -429,10 +525,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() => ReactDOM.render(<Root>{[foo, bar]}</Root>, container));
+      act(() => legacyRender(<Root>{[foo, bar]}</Root>, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
+      act(() => legacyRender(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), true));
@@ -456,7 +552,7 @@ describe('Store', () => {
       const container = document.createElement('div');
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Parent count={1} />
             <Parent count={3} />
@@ -467,7 +563,7 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('1: mount');
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Parent count={2} />
             <Parent count={1} />
@@ -490,14 +586,14 @@ describe('Store', () => {
       const containerB = document.createElement('div');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={3} />, containerA);
-        ReactDOM.render(<Parent key="B" count={2} />, containerB);
+        legacyRender(<Parent key="A" count={3} />, containerA);
+        legacyRender(<Parent key="B" count={2} />, containerB);
       });
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => {
-        ReactDOM.render(<Parent key="A" count={4} />, containerA);
-        ReactDOM.render(<Parent key="B" count={1} />, containerB);
+        legacyRender(<Parent key="A" count={4} />, containerA);
+        legacyRender(<Parent key="B" count={1} />, containerB);
       });
       expect(store).toMatchSnapshot('2: update');
 
@@ -525,10 +621,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={4} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={4} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -561,7 +654,7 @@ describe('Store', () => {
       );
 
       const container = document.createElement('div');
-      act(() => ReactDOM.render(<Wrapper shouldSuspense={true} />, container));
+      act(() => legacyRender(<Wrapper shouldSuspense={true} />, container));
       expect(store).toMatchSnapshot('1: loading');
 
       // This test isn't meaningful unless we expand the suspended tree
@@ -570,7 +663,7 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('2: expand Wrapper and Suspense');
 
       act(() => {
-        ReactDOM.render(<Wrapper shouldSuspense={false} />, container);
+        legacyRender(<Wrapper shouldSuspense={false} />, container);
       });
       expect(store).toMatchSnapshot('2: resolved');
     });
@@ -587,10 +680,7 @@ describe('Store', () => {
       const Child = () => <div>Hi!</div>;
 
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={2} />,
-          document.createElement('div'),
-        ),
+        legacyRender(<Grandparent count={2} />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -632,7 +722,7 @@ describe('Store', () => {
       const ref = React.createRef();
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <Wrapper forwardedRef={ref} />,
           document.createElement('div'),
         ),
@@ -672,10 +762,10 @@ describe('Store', () => {
 
       const container = document.createElement('div');
 
-      act(() => ReactDOM.render(<Root>{[foo, bar]}</Root>, container));
+      act(() => legacyRender(<Root>{[foo, bar]}</Root>, container));
       expect(store).toMatchSnapshot('1: mount');
 
-      act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
+      act(() => legacyRender(<Root>{[bar, foo]}</Root>, container));
       expect(store).toMatchSnapshot('3: reorder children');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
@@ -704,9 +794,7 @@ describe('Store', () => {
       const Parent = () => <Child />;
       const Child = () => null;
 
-      act(() =>
-        ReactDOM.render(<SuspenseTree />, document.createElement('div')),
-      );
+      act(() => legacyRender(<SuspenseTree />, document.createElement('div')));
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
@@ -751,9 +839,7 @@ describe('Store', () => {
       const Parent = () => <Child />;
       const Child = () => null;
 
-      act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div')),
-      );
+      act(() => legacyRender(<Grandparent />, document.createElement('div')));
 
       for (let i = 0; i < store.numElements; i++) {
         expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
@@ -766,8 +852,8 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() => {
-        ReactDOM.render(<Grandparent />, document.createElement('div'));
-        ReactDOM.render(<Grandparent />, document.createElement('div'));
+        legacyRender(<Grandparent />, document.createElement('div'));
+        legacyRender(<Grandparent />, document.createElement('div'));
       });
 
       for (let i = 0; i < store.numElements; i++) {
@@ -781,7 +867,7 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() =>
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Grandparent />
             <Grandparent />
@@ -801,14 +887,14 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() => {
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Grandparent />
             <Grandparent />
           </React.Fragment>,
           document.createElement('div'),
         );
-        ReactDOM.render(
+        legacyRender(
           <React.Fragment>
             <Grandparent />
             <Grandparent />
@@ -831,10 +917,10 @@ describe('Store', () => {
 
     expect(store.supportsProfiling).toBe(false);
 
-    act(() => ReactDOM.render(<Component />, containerA));
+    act(() => legacyRender(<Component />, containerA));
     expect(store.supportsProfiling).toBe(true);
 
-    act(() => ReactDOM.render(<Component />, containerB));
+    act(() => legacyRender(<Component />, containerB));
     act(() => ReactDOM.unmountComponentAtNode(containerA));
     expect(store.supportsProfiling).toBe(true);
 
@@ -849,7 +935,7 @@ describe('Store', () => {
     // This is pretty hacky.
     const fauxElement = Object.assign({}, <Child />, {key: 123});
 
-    act(() => ReactDOM.render([fauxElement], document.createElement('div')));
+    act(() => legacyRender([fauxElement], document.createElement('div')));
     expect(store).toMatchSnapshot('1: mount');
   });
 
@@ -879,6 +965,17 @@ describe('Store', () => {
       FakeHigherOrderComponent,
     );
 
+    const MemoizedFakeHigherOrderComponentWithDisplayNameOverride = React.memo(
+      FakeHigherOrderComponent,
+    );
+    MemoizedFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'memoRefOverride';
+    const ForwardRefFakeHigherOrderComponentWithDisplayNameOverride = React.forwardRef(
+      FakeHigherOrderComponent,
+    );
+    ForwardRefFakeHigherOrderComponentWithDisplayNameOverride.displayName =
+      'forwardRefOverride';
+
     const App = () => (
       <React.Fragment>
         <MyComponent />
@@ -891,20 +988,39 @@ describe('Store', () => {
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
         <React.unstable_Cache />
+        <MemoizedFakeHigherOrderComponentWithDisplayNameOverride />
+        <ForwardRefFakeHigherOrderComponentWithDisplayNameOverride />
       </React.Fragment>
     );
 
     const container = document.createElement('div');
 
     // Render once to start fetching the lazy component
-    act(() => ReactDOM.render(<App />, container));
+    act(() => legacyRender(<App />, container));
 
     await Promise.resolve();
 
     // Render again after it resolves
-    act(() => ReactDOM.render(<App />, container));
+    act(() => legacyRender(<App />, container));
 
-    expect(store).toMatchSnapshot();
+    expect(store).toMatchInlineSnapshot(`
+      [root]
+        ▾ <App>
+            <MyComponent>
+            <MyComponent> [ForwardRef]
+          ▾ <Anonymous> [ForwardRef]
+              <MyComponent2>
+            <Custom> [ForwardRef]
+            <MyComponent4> [Memo]
+          ▾ <MyComponent> [Memo]
+              <MyComponent> [ForwardRef]
+            <Baz> [withFoo][withBar]
+            <Baz> [Memo][withFoo][withBar]
+            <Baz> [ForwardRef][withFoo][withBar]
+            <Cache>
+            <memoRefOverride> [Memo]
+            <forwardRefOverride> [ForwardRef]
+    `);
   });
 
   describe('Lazy', () => {
@@ -935,26 +1051,26 @@ describe('Store', () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
-      act(() => ReactDOM.render(<App renderChildren={true} />, container));
+      act(() => legacyRender(<App renderChildren={true} />, container));
 
       expect(store).toMatchSnapshot('1: mounted + loading');
 
       await Promise.resolve();
 
       // Render again after it resolves
-      act(() => ReactDOM.render(<App renderChildren={true} />, container));
+      act(() => legacyRender(<App renderChildren={true} />, container));
 
       expect(store).toMatchSnapshot('2: mounted + loaded');
 
       // Render again to unmount it
-      act(() => ReactDOM.render(<App renderChildren={false} />, container));
+      act(() => legacyRender(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('3: unmounted');
     });
 
     it('should support Lazy components in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));
@@ -978,19 +1094,19 @@ describe('Store', () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
-      act(() => ReactDOM.render(<App renderChildren={true} />, container));
+      act(() => legacyRender(<App renderChildren={true} />, container));
 
       expect(store).toMatchSnapshot('1: mounted + loading');
 
       // Render again to unmount it before it finishes loading
-      act(() => ReactDOM.render(<App renderChildren={false} />, container));
+      act(() => legacyRender(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('2: unmounted');
     });
 
     it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
 
       // Render once to start fetching the lazy component
       act(() => root.render(<App renderChildren={true} />));
@@ -1014,7 +1130,7 @@ describe('Store', () => {
       const container = document.createElement('div');
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example />, container));
+        act(() => legacyRender(<Example />, container));
       });
 
       expect(store).toMatchInlineSnapshot(`
@@ -1024,7 +1140,7 @@ describe('Store', () => {
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example rerender={1} />, container));
+        act(() => legacyRender(<Example rerender={1} />, container));
       });
 
       expect(store).toMatchInlineSnapshot(`
@@ -1045,7 +1161,7 @@ describe('Store', () => {
       const container = document.createElement('div');
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example />, container));
+        act(() => legacyRender(<Example />, container));
       });
 
       expect(store).toMatchInlineSnapshot(`
@@ -1055,7 +1171,7 @@ describe('Store', () => {
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example rerender={1} />, container));
+        act(() => legacyRender(<Example rerender={1} />, container));
       });
 
       expect(store).toMatchInlineSnapshot(`
@@ -1087,7 +1203,7 @@ describe('Store', () => {
 
         withErrorsOrWarningsIgnored(['test-only:'], () => {
           act(() => {
-            ReactDOM.render(<Example />, container);
+            legacyRender(<Example />, container);
           }, false);
         });
         flushPendingBridgeOperations();
@@ -1125,7 +1241,7 @@ describe('Store', () => {
 
         withErrorsOrWarningsIgnored(['test-only:'], () => {
           act(() => {
-            ReactDOM.render(
+            legacyRender(
               <>
                 <Example />
               </>,
@@ -1140,7 +1256,7 @@ describe('Store', () => {
 
           // Before warnings and errors have flushed, flush another commit.
           act(() => {
-            ReactDOM.render(
+            legacyRender(
               <>
                 <Example />
                 <Noop />
@@ -1183,7 +1299,7 @@ describe('Store', () => {
       withErrorsOrWarningsIgnored(
         ['Warning: Each child in a list should have a unique "key" prop'],
         () => {
-          act(() => ReactDOM.render(<Example />, container));
+          act(() => legacyRender(<Example />, container));
         },
       );
 
@@ -1204,7 +1320,7 @@ describe('Store', () => {
       const container = document.createElement('div');
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Example />
               <Example />
@@ -1245,7 +1361,7 @@ describe('Store', () => {
       const container = document.createElement('div');
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Example />
               <Example />
@@ -1290,7 +1406,7 @@ describe('Store', () => {
       const container = document.createElement('div');
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <Example />
               <Example />
@@ -1343,7 +1459,7 @@ describe('Store', () => {
       const container = document.createElement('div');
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <ComponentWithError />
               <ComponentWithWarning />
@@ -1363,7 +1479,7 @@ describe('Store', () => {
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <ComponentWithWarning />
               <ComponentWithWarningAndError />
@@ -1381,7 +1497,7 @@ describe('Store', () => {
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() =>
-          ReactDOM.render(
+          legacyRender(
             <React.Fragment>
               <ComponentWithWarning />
             </React.Fragment>,
@@ -1396,7 +1512,7 @@ describe('Store', () => {
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<React.Fragment />, container));
+        act(() => legacyRender(<React.Fragment />, container));
       });
       expect(store).toMatchInlineSnapshot(`[root]`);
       expect(store.errorCount).toBe(0);

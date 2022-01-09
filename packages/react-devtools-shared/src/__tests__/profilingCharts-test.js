@@ -12,9 +12,9 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('profiling charts', () => {
   let React;
-  let ReactDOM;
   let Scheduler;
   let TestRenderer: TestRendererType;
+  let legacyRender;
   let store: Store;
   let utils;
 
@@ -22,12 +22,13 @@ describe('profiling charts', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
+    legacyRender = utils.legacyRender;
+
     store = global.store;
     store.collapseNodesByDefault = false;
     store.recordChangeDescriptions = true;
 
     React = require('react');
-    ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
     TestRenderer = utils.requireTestRenderer();
   });
@@ -54,8 +55,8 @@ describe('profiling charts', () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() => ReactDOM.render(<Parent />, container));
-      utils.act(() => ReactDOM.render(<Parent />, container));
+      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => legacyRender(<Parent />, container));
       utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
@@ -120,8 +121,8 @@ describe('profiling charts', () => {
       const container = document.createElement('div');
 
       utils.act(() => store.profilerStore.startProfiling());
-      utils.act(() => ReactDOM.render(<Parent />, container));
-      utils.act(() => ReactDOM.render(<Parent />, container));
+      utils.act(() => legacyRender(<Parent />, container));
+      utils.act(() => legacyRender(<Parent />, container));
       utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;

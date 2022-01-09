@@ -41,7 +41,7 @@ If you're using React Native 0.43 or higher, it should connect to your simulator
 
 ### Integration with React Native Inspector
 
-You can open the [in-app developer menu](https://reactnative.dev/docs/debugging.html#accessing-the-in-app-developer-menu) and choose "Show Inspector". It will bring up an overlay that lets you tap on any UI element and see information about it:
+You can open the [in-app developer menu](https://reactnative.dev/docs/debugging#accessing-the-in-app-developer-menu) and choose "Show Inspector". It will bring up an overlay that lets you tap on any UI element and see information about it:
 
 ![React Native Inspector](https://i.imgur.com/ReFhREb.gif)
 
@@ -56,7 +56,7 @@ You can choose "Hide Inspector" in the same menu to exit this mode.
 
 When debugging JavaScript in Chrome, you can inspect the props and state of the React components in the browser console.
 
-First, follow the [instructions for debugging in Chrome](https://reactnative.dev/docs/debugging.html#chrome-developer-tools) to open the Chrome console.
+First, follow the [instructions for debugging in Chrome](https://reactnative.dev/docs/debugging#chrome-developer-tools) to open the Chrome console.
 
 Make sure that the dropdown in the top left corner of the Chrome console says `debuggerWorker.js`. **This step is essential.**
 
@@ -105,7 +105,7 @@ Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.c
 
 **If your app is inside of CodePen**, make sure you are registered. Then press Fork (if it's not your pen), and then choose Change View > Debug. The Debug view is inspectable with DevTools because it doesn't use an iframe.
 
-**If your app is inside an iframe, a Chrome extension, React Native, or in another unusual environment**, try [the standalone version instead](https://github.com/facebook/react/tree/master/packages/react-devtools). Chrome apps are currently not inspectable.
+**If your app is inside an iframe, a Chrome extension, React Native, or in another unusual environment**, try [the standalone version instead](https://github.com/facebook/react/tree/main/packages/react-devtools). Chrome apps are currently not inspectable.
 
 **If you still have issues** please [report them](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools). Don't forget to specify your OS, browser version, extension version, and the exact instructions to reproduce the issue with a screenshot.
 

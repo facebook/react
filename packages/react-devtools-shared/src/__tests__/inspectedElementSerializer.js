@@ -10,10 +10,12 @@ export function test(maybeInspectedElement) {
   const hasOwnProperty = Object.prototype.hasOwnProperty.bind(
     maybeInspectedElement,
   );
+
   return (
     hasOwnProperty('canEditFunctionProps') &&
     hasOwnProperty('canEditHooks') &&
     hasOwnProperty('canToggleSuspense') &&
+    hasOwnProperty('canToggleError') &&
     hasOwnProperty('canViewSource')
   );
 }
@@ -28,6 +30,7 @@ export function print(inspectedElement, serialize, indent) {
     id: inspectedElement.id,
     owners: inspectedElement.owners,
     props: inspectedElement.props,
+    rootType: inspectedElement.rootType,
     state: inspectedElement.state,
   });
 }

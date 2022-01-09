@@ -43,7 +43,6 @@ import {
 } from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
 type ReactJSONValue =
@@ -72,7 +71,9 @@ type Segment = {
 };
 
 export type Request = {
-  destination: Destination,
+  status: 0 | 1 | 2,
+  fatalError: mixed,
+  destination: null | Destination,
   bundlerConfig: BundlerConfig,
   cache: Map<Function, mixed>,
   nextChunkId: number,
@@ -84,25 +85,30 @@ export type Request = {
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
   onError: (error: mixed) => void,
-  flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 function defaultErrorHandler(error: mixed) {
-  console['error'](error); // Don't transform to our wrapper
+  console['error'](error);
+  // Don't transform to our wrapper
 }
+
+const OPEN = 0;
+const CLOSING = 1;
+const CLOSED = 2;
 
 export function createRequest(
   model: ReactModel,
-  destination: Destination,
   bundlerConfig: BundlerConfig,
-  onError: (error: mixed) => void = defaultErrorHandler,
+  onError: void | ((error: mixed) => void),
 ): Request {
   const pingedSegments = [];
   const request = {
-    destination,
+    status: OPEN,
+    fatalError: null,
+    destination: null,
     bundlerConfig,
     cache: new Map(),
     nextChunkId: 0,
@@ -113,8 +119,7 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
-    onError,
-    flowing: false,
+    onError: onError === undefined ? defaultErrorHandler : onError,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
     },
@@ -135,8 +140,7 @@ function attemptResolveElement(
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.
-    invariant(
-      false,
+    throw new Error(
       'Refs cannot be used in server components, nor passed to client components.',
     );
   }
@@ -172,10 +176,8 @@ function attemptResolveElement(
       }
     }
   }
-  invariant(
-    false,
-    'Unsupported server component type: %s',
-    describeValueForErrorMessage(type),
+  throw new Error(
+    `Unsupported server component type: ${describeValueForErrorMessage(type)}`,
   );
 }
 
@@ -296,7 +298,7 @@ function describeValueForErrorMessage(value: ReactModel): string {
     case 'function':
       return 'function';
     default:
-      // eslint-disable-next-line
+      // eslint-disable-next-line react-internal/safe-string-coercion
       return String(value);
   }
 }
@@ -389,8 +391,7 @@ export function resolveModelToJSON(
     case REACT_ELEMENT_TYPE:
       return '$';
     case REACT_LAZY_TYPE:
-      invariant(
-        false,
+      throw new Error(
         'React Lazy Components are not yet supported on the server.',
       );
   }
@@ -531,23 +532,25 @@ export function resolveModelToJSON(
 
   if (typeof value === 'function') {
     if (/^on[A-Z]/.test(key)) {
-      invariant(
-        false,
+      throw new Error(
         'Event handlers cannot be passed to client component props. ' +
-          'Remove %s from these props if possible: %s\n' +
+          `Remove ${describeKeyForErrorMessage(
+            key,
+          )} from these props if possible: ${describeObjectForErrorMessage(
+            parent,
+          )}
+` +
           'If you need interactivity, consider converting part of this to a client component.',
-        describeKeyForErrorMessage(key),
-        describeObjectForErrorMessage(parent),
       );
     } else {
-      invariant(
-        false,
+      throw new Error(
         'Functions cannot be passed directly to client components ' +
           "because they're not serializable. " +
-          'Remove %s (%s) from this object, or avoid the entire object: %s',
-        describeKeyForErrorMessage(key),
-        value.displayName || value.name || 'function',
-        describeObjectForErrorMessage(parent),
+          `Remove ${describeKeyForErrorMessage(key)} (${value.displayName ||
+            value.name ||
+            'function'}) from this object, or avoid the entire object: ${describeObjectForErrorMessage(
+            parent,
+          )}`,
       );
     }
   }
@@ -559,15 +562,19 @@ export function resolveModelToJSON(
       return serializeByValueID(existingId);
     }
     const name = value.description;
-    invariant(
-      Symbol.for(name) === value,
-      'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
-        'The symbol Symbol.for(%s) cannot be found among global symbols. ' +
-        'Remove %s from this object, or avoid the entire object: %s',
-      value.description,
-      describeKeyForErrorMessage(key),
-      describeObjectForErrorMessage(parent),
-    );
+
+    if (Symbol.for(name) !== value) {
+      throw new Error(
+        'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
+          `The symbol Symbol.for(${value.description}) cannot be found among global symbols. ` +
+          `Remove ${describeKeyForErrorMessage(
+            key,
+          )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
+            parent,
+          )}`,
+      );
+    }
+
     request.pendingChunks++;
     const symbolId = request.nextChunkId++;
     emitSymbolChunk(request, symbolId, name);
@@ -577,23 +584,23 @@ export function resolveModelToJSON(
 
   // $FlowFixMe: bigint isn't added to Flow yet.
   if (typeof value === 'bigint') {
-    invariant(
-      false,
-      'BigInt (%s) is not yet supported in client component props. ' +
-        'Remove %s from this object or use a plain number instead: %s',
-      value,
-      describeKeyForErrorMessage(key),
-      describeObjectForErrorMessage(parent),
+    throw new Error(
+      `BigInt (${value}) is not yet supported in client component props. ` +
+        `Remove ${describeKeyForErrorMessage(
+          key,
+        )} from this object or use a plain number instead: ${describeObjectForErrorMessage(
+          parent,
+        )}`,
     );
   }
 
-  invariant(
-    false,
-    'Type %s is not supported in client component props. ' +
-      'Remove %s from this object, or avoid the entire object: %s',
-    typeof value,
-    describeKeyForErrorMessage(key),
-    describeObjectForErrorMessage(parent),
+  throw new Error(
+    `Type ${typeof value} is not supported in client component props. ` +
+      `Remove ${describeKeyForErrorMessage(
+        key,
+      )} from this object, or avoid the entire object: ${describeObjectForErrorMessage(
+        parent,
+      )}`,
   );
 }
 
@@ -604,7 +611,13 @@ function reportError(request: Request, error: mixed): void {
 
 function fatalError(request: Request, error: mixed): void {
   // This is called outside error handling code such as if an error happens in React internals.
-  closeWithError(request.destination, error);
+  if (request.destination !== null) {
+    request.status = CLOSED;
+    closeWithError(request.destination, error);
+  } else {
+    request.status = CLOSING;
+    request.fatalError = error;
+  }
 }
 
 function emitErrorChunk(request: Request, id: number, error: mixed): void {
@@ -615,8 +628,10 @@ function emitErrorChunk(request: Request, id: number, error: mixed): void {
   let stack = '';
   try {
     if (error instanceof Error) {
-      message = '' + error.message;
-      stack = '' + error.stack;
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      stack = String(error.stack);
     } else {
       message = 'Error: ' + (error: any);
     }
@@ -692,8 +707,8 @@ function performWork(request: Request): void {
       const segment = pingedSegments[i];
       retrySegment(request, segment);
     }
-    if (request.flowing) {
-      flushCompletedChunks(request);
+    if (request.destination !== null) {
+      flushCompletedChunks(request, request.destination);
     }
   } catch (error) {
     reportError(request, error);
@@ -704,13 +719,10 @@ function performWork(request: Request): void {
   }
 }
 
-let reentrant = false;
-function flushCompletedChunks(request: Request): void {
-  if (reentrant) {
-    return;
-  }
-  reentrant = true;
-  const destination = request.destination;
+function flushCompletedChunks(
+  request: Request,
+  destination: Destination,
+): void {
   beginWriting(destination);
   try {
     // We emit module chunks first in the stream so that
@@ -721,7 +733,7 @@ function flushCompletedChunks(request: Request): void {
       request.pendingChunks--;
       const chunk = moduleChunks[i];
       if (!writeChunk(destination, chunk)) {
-        request.flowing = false;
+        request.destination = null;
         i++;
         break;
       }
@@ -734,7 +746,7 @@ function flushCompletedChunks(request: Request): void {
       request.pendingChunks--;
       const chunk = jsonChunks[i];
       if (!writeChunk(destination, chunk)) {
-        request.flowing = false;
+        request.destination = null;
         i++;
         break;
       }
@@ -749,14 +761,13 @@ function flushCompletedChunks(request: Request): void {
       request.pendingChunks--;
       const chunk = errorChunks[i];
       if (!writeChunk(destination, chunk)) {
-        request.flowing = false;
+        request.destination = null;
         i++;
         break;
       }
     }
     errorChunks.splice(0, i);
   } finally {
-    reentrant = false;
     completeWriting(destination);
   }
   flushBuffered(destination);
@@ -767,14 +778,21 @@ function flushCompletedChunks(request: Request): void {
 }
 
 export function startWork(request: Request): void {
-  request.flowing = true;
   scheduleWork(() => performWork(request));
 }
 
-export function startFlowing(request: Request): void {
-  request.flowing = true;
+export function startFlowing(request: Request, destination: Destination): void {
+  if (request.status === CLOSING) {
+    request.status = CLOSED;
+    closeWithError(destination, request.fatalError);
+    return;
+  }
+  if (request.status === CLOSED) {
+    return;
+  }
+  request.destination = destination;
   try {
-    flushCompletedChunks(request);
+    flushCompletedChunks(request, destination);
   } catch (error) {
     reportError(request, error);
     fatalError(request, error);
@@ -782,14 +800,15 @@ export function startFlowing(request: Request): void {
 }
 
 function unsupportedHook(): void {
-  invariant(false, 'This Hook is not supported in Server Components.');
+  throw new Error('This Hook is not supported in Server Components.');
 }
 
 function unsupportedRefresh(): void {
-  invariant(
-    currentCache,
-    'Refreshing the cache is not supported in Server Components.',
-  );
+  if (!currentCache) {
+    throw new Error(
+      'Refreshing the cache is not supported in Server Components.',
+    );
+  }
 }
 
 let currentCache: Map<Function, mixed> | null = null;
@@ -805,10 +824,10 @@ const Dispatcher: DispatcherType = {
   useDeferredValue: (unsupportedHook: any),
   useTransition: (unsupportedHook: any),
   getCacheForType<T>(resourceType: () => T): T {
-    invariant(
-      currentCache,
-      'Reading the cache is only supported while rendering.',
-    );
+    if (!currentCache) {
+      throw new Error('Reading the cache is only supported while rendering.');
+    }
+
     let entry: T | void = (currentCache.get(resourceType): any);
     if (entry === undefined) {
       entry = resourceType();
@@ -822,11 +841,13 @@ const Dispatcher: DispatcherType = {
   useReducer: (unsupportedHook: any),
   useRef: (unsupportedHook: any),
   useState: (unsupportedHook: any),
+  useInsertionEffect: (unsupportedHook: any),
   useLayoutEffect: (unsupportedHook: any),
   useImperativeHandle: (unsupportedHook: any),
   useEffect: (unsupportedHook: any),
-  useOpaqueIdentifier: (unsupportedHook: any),
+  useId: (unsupportedHook: any),
   useMutableSource: (unsupportedHook: any),
+  useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;
   },

@@ -14,8 +14,13 @@ import asyncLib from 'neo-async';
 
 import ModuleDependency from 'webpack/lib/dependencies/ModuleDependency';
 import NullDependency from 'webpack/lib/dependencies/NullDependency';
-import AsyncDependenciesBlock from 'webpack/lib/AsyncDependenciesBlock';
 import Template from 'webpack/lib/Template';
+import {
+  sources,
+  WebpackError,
+  Compilation,
+  AsyncDependenciesBlock,
+} from 'webpack';
 
 import isArray from 'shared/isArray';
 
@@ -34,6 +39,7 @@ class ClientReferenceDependency extends ModuleDependency {
 // We use the Flight client implementation because you can't get to these
 // without the client runtime so it's the first time in the loading sequence
 // you might want them.
+const clientImportName = 'react-server-dom-webpack';
 const clientFileName = require.resolve('../');
 
 type ClientReferenceSearchPath = {
@@ -97,33 +103,35 @@ export default class ReactFlightWebpackPlugin {
   }
 
   apply(compiler: any) {
+    const _this = this;
     let resolvedClientReferences;
-    const run = (params, callback) => {
-      // First we need to find all client files on the file system. We do this early so
-      // that we have them synchronously available later when we need them. This might
-      // not be needed anymore since we no longer need to compile the module itself in
-      // a special way. So it's probably better to do this lazily and in parallel with
-      // other compilation.
-      const contextResolver = compiler.resolverFactory.get('context', {});
-      this.resolveAllClientFiles(
-        compiler.context,
-        contextResolver,
-        compiler.inputFileSystem,
-        compiler.createContextModuleFactory(),
-        (err, resolvedClientRefs) => {
-          if (err) {
-            callback(err);
-            return;
-          }
-          resolvedClientReferences = resolvedClientRefs;
-          callback();
-        },
-      );
-    };
+    let clientFileNameFound = false;
 
-    compiler.hooks.run.tapAsync(PLUGIN_NAME, run);
-    compiler.hooks.watchRun.tapAsync(PLUGIN_NAME, run);
-    compiler.hooks.compilation.tap(
+    // Find all client files on the file system
+    compiler.hooks.beforeCompile.tapAsync(
+      PLUGIN_NAME,
+      ({contextModuleFactory}, callback) => {
+        const contextResolver = compiler.resolverFactory.get('context', {});
+
+        _this.resolveAllClientFiles(
+          compiler.context,
+          contextResolver,
+          compiler.inputFileSystem,
+          contextModuleFactory,
+          function(err, resolvedClientRefs) {
+            if (err) {
+              callback(err);
+              return;
+            }
+
+            resolvedClientReferences = resolvedClientRefs;
+            callback();
+          },
+        );
+      },
+    );
+
+    compiler.hooks.thisCompilation.tap(
       PLUGIN_NAME,
       (compilation, {normalModuleFactory}) => {
         compilation.dependencyFactories.set(
@@ -135,86 +143,140 @@ export default class ReactFlightWebpackPlugin {
           new NullDependency.Template(),
         );
 
-        compilation.hooks.buildModule.tap(PLUGIN_NAME, module => {
+        const handler = parser => {
           // We need to add all client references as dependency of something in the graph so
           // Webpack knows which entries need to know about the relevant chunks and include the
           // map in their runtime. The things that actually resolves the dependency is the Flight
           // client runtime. So we add them as a dependency of the Flight client runtime.
           // Anything that imports the runtime will be made aware of these chunks.
-          // TODO: Warn if we don't find this file anywhere in the compilation.
-          if (module.resource !== clientFileName) {
-            return;
-          }
-          if (resolvedClientReferences) {
-            for (let i = 0; i < resolvedClientReferences.length; i++) {
-              const dep = resolvedClientReferences[i];
-              const chunkName = this.chunkName
-                .replace(/\[index\]/g, '' + i)
-                .replace(/\[request\]/g, Template.toPath(dep.userRequest));
+          parser.hooks.program.tap(PLUGIN_NAME, () => {
+            const module = parser.state.module;
 
-              const block = new AsyncDependenciesBlock(
-                {
-                  name: chunkName,
-                },
-                module,
-                null,
-                dep.require,
-              );
-              block.addDependency(dep);
-              module.addBlock(block);
+            if (module.resource !== clientFileName) {
+              return;
             }
-          }
-        });
+
+            clientFileNameFound = true;
+
+            if (resolvedClientReferences) {
+              for (let i = 0; i < resolvedClientReferences.length; i++) {
+                const dep = resolvedClientReferences[i];
+
+                const chunkName = _this.chunkName
+                  .replace(/\[index\]/g, '' + i)
+                  .replace(/\[request\]/g, Template.toPath(dep.userRequest));
+
+                const block = new AsyncDependenciesBlock(
+                  {
+                    name: chunkName,
+                  },
+                  null,
+                  dep.request,
+                );
+
+                block.addDependency(dep);
+                module.addBlock(block);
+              }
+            }
+          });
+        };
+
+        normalModuleFactory.hooks.parser
+          .for('javascript/auto')
+          .tap('HarmonyModulesPlugin', handler);
+
+        normalModuleFactory.hooks.parser
+          .for('javascript/esm')
+          .tap('HarmonyModulesPlugin', handler);
+
+        normalModuleFactory.hooks.parser
+          .for('javascript/dynamic')
+          .tap('HarmonyModulesPlugin', handler);
       },
     );
 
-    compiler.hooks.emit.tap(PLUGIN_NAME, compilation => {
-      const json = {};
-      compilation.chunkGroups.forEach(chunkGroup => {
-        const chunkIds = chunkGroup.chunks.map(c => c.id);
-
-        function recordModule(id, mod) {
-          // TODO: Hook into deps instead of the target module.
-          // That way we know by the type of dep whether to include.
-          // It also resolves conflicts when the same module is in multiple chunks.
-          if (!/\.client\.js$/.test(mod.resource)) {
+    compiler.hooks.make.tap(PLUGIN_NAME, compilation => {
+      compilation.hooks.processAssets.tap(
+        {
+          name: PLUGIN_NAME,
+          stage: Compilation.PROCESS_ASSETS_STAGE_REPORT,
+        },
+        function() {
+          if (clientFileNameFound === false) {
+            compilation.warnings.push(
+              new WebpackError(
+                `Client runtime at ${clientImportName} was not found. React Server Components module map file ${_this.manifestFilename} was not created.`,
+              ),
+            );
             return;
           }
-          const moduleExports = {};
-          ['', '*'].concat(mod.buildMeta.providedExports).forEach(name => {
-            moduleExports[name] = {
-              id: id,
-              chunks: chunkIds,
-              name: name,
-            };
-          });
-          const href = pathToFileURL(mod.resource).href;
-          if (href !== undefined) {
-            json[href] = moduleExports;
-          }
-        }
 
-        chunkGroup.chunks.forEach(chunk => {
-          chunk.getModules().forEach(mod => {
-            recordModule(mod.id, mod);
-            // If this is a concatenation, register each child to the parent ID.
-            if (mod.modules) {
-              mod.modules.forEach(concatenatedMod => {
-                recordModule(mod.id, concatenatedMod);
-              });
+          const json = {};
+          compilation.chunkGroups.forEach(function(chunkGroup) {
+            const chunkIds = chunkGroup.chunks.map(function(c) {
+              return c.id;
+            });
+
+            function recordModule(id, module) {
+              // TODO: Hook into deps instead of the target module.
+              // That way we know by the type of dep whether to include.
+              // It also resolves conflicts when the same module is in multiple chunks.
+
+              if (!/\.client\.(js|ts)x?$/.test(module.resource)) {
+                return;
+              }
+
+              const moduleProvidedExports = compilation.moduleGraph
+                .getExportsInfo(module)
+                .getProvidedExports();
+
+              const moduleExports = {};
+              ['', '*']
+                .concat(
+                  Array.isArray(moduleProvidedExports)
+                    ? moduleProvidedExports
+                    : [],
+                )
+                .forEach(function(name) {
+                  moduleExports[name] = {
+                    id,
+                    chunks: chunkIds,
+                    name: name,
+                  };
+                });
+              const href = pathToFileURL(module.resource).href;
+
+              if (href !== undefined) {
+                json[href] = moduleExports;
+              }
             }
+
+            chunkGroup.chunks.forEach(function(chunk) {
+              const chunkModules = compilation.chunkGraph.getChunkModulesIterable(
+                chunk,
+              );
+
+              Array.from(chunkModules).forEach(function(module) {
+                const moduleId = compilation.chunkGraph.getModuleId(module);
+
+                recordModule(moduleId, module);
+                // If this is a concatenation, register each child to the parent ID.
+                if (module.modules) {
+                  module.modules.forEach(concatenatedMod => {
+                    recordModule(moduleId, concatenatedMod);
+                  });
+                }
+              });
+            });
           });
-        });
-      });
-      const output = JSON.stringify(json, null, 2);
-      compilation.assets[this.manifestFilename] = {
-        source() {
-          return output;
+
+          const output = JSON.stringify(json, null, 2);
+          compilation.emitAsset(
+            _this.manifestFilename,
+            new sources.RawSource(output, false),
+          );
         },
-        size() {
-          return output.length;
-        },
-      };
+      );
     });
   }
 
@@ -268,7 +330,8 @@ export default class ReactFlightWebpackPlugin {
               (err2: null | Error, deps: Array<ModuleDependency>) => {
                 if (err2) return cb(err2);
                 const clientRefDeps = deps.map(dep => {
-                  const request = join(resolvedDirectory, dep.request);
+                  // use userRequest instead of request. request always end with undefined which is wrong
+                  const request = join(resolvedDirectory, dep.userRequest);
                   const clientRefDep = new ClientReferenceDependency(request);
                   clientRefDep.userRequest = dep.userRequest;
                   return clientRefDep;

@@ -50,7 +50,7 @@ export function flushSyncCallbacksOnlyInLegacyMode() {
 
 export function flushSyncCallbacks() {
   if (!isFlushingSyncQueue && syncQueue !== null) {
-    // Prevent re-entrancy.
+    // Prevent re-entrance.
     isFlushingSyncQueue = true;
     let i = 0;
     const previousUpdatePriority = getCurrentUpdatePriority();

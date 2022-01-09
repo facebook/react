@@ -11,6 +11,7 @@ const {join} = require('path');
 const createLogger = require('progress-estimator');
 const prompt = require('prompt-promise');
 const theme = require('./theme');
+const {stablePackages, experimentalPackages} = require('../../ReactVersions');
 
 // https://www.npmjs.com/package/progress-estimator#configuration
 const logger = createLogger({
@@ -48,9 +49,9 @@ const execRead = async (command, options) => {
 };
 
 const extractCommitFromVersionNumber = version => {
-  // Support stable version format e.g. "0.0.0-0e526bcec"
-  // and experimental version format e.g. "0.0.0-experimental-0e526bcec"
-  const match = version.match(/0\.0\.0\-([a-z]+\-){0,1}(.+)/);
+  // Support stable version format e.g. "0.0.0-0e526bcec-20210202"
+  // and experimental version format e.g. "0.0.0-experimental-0e526bcec-20210202"
+  const match = version.match(/0\.0\.0\-([a-z]+\-){0,1}([^-]+).+/);
   if (match === null) {
     throw Error(`Could not extra commit from version "${version}"`);
   }
@@ -73,9 +74,10 @@ const getBuildInfo = async () => {
   });
   const commit = await execRead('git show -s --format=%h', {cwd});
   const checksum = await getChecksumForCurrentRevision(cwd);
+  const dateString = await getDateStringForCommit(commit);
   const version = isExperimental
-    ? `0.0.0-experimental-${commit}`
-    : `0.0.0-${commit}`;
+    ? `0.0.0-experimental-${commit}-${dateString}`
+    : `0.0.0-${commit}-${dateString}`;
 
   // Only available for Circle CI builds.
   // https://circleci.com/docs/2.0/env-vars/
@@ -87,8 +89,8 @@ const getBuildInfo = async () => {
     join(cwd, 'packages', 'react', 'package.json')
   );
   const reactVersion = isExperimental
-    ? `${packageJSON.version}-experimental-${commit}`
-    : `${packageJSON.version}-${commit}`;
+    ? `${packageJSON.version}-experimental-${commit}-${dateString}`
+    : `${packageJSON.version}-${commit}-${dateString}`;
 
   return {branch, buildNumber, checksum, commit, reactVersion, version};
 };
@@ -102,6 +104,19 @@ const getChecksumForCurrentRevision = async cwd => {
   return hashedPackages.hash.slice(0, 7);
 };
 
+const getDateStringForCommit = async commit => {
+  let dateString = await execRead(
+    `git show -s --format=%cd --date=format:%Y%m%d ${commit}`
+  );
+
+  // On CI environment, this string is wrapped with quotes '...'s
+  if (dateString.startsWith("'")) {
+    dateString = dateString.substr(1, 8);
+  }
+
+  return dateString;
+};
+
 const getCommitFromCurrentBuild = async () => {
   const cwd = join(__dirname, '..', '..');
 
@@ -110,7 +125,7 @@ const getCommitFromCurrentBuild = async () => {
   // This is important to make the build reproducible (e.g. by Mozilla reviewers).
   const buildInfoJSON = join(
     cwd,
-    'build2',
+    'build',
     'oss-experimental',
     'react',
     'build-info.json'
@@ -121,7 +136,7 @@ const getCommitFromCurrentBuild = async () => {
   } else {
     const packageJSON = join(
       cwd,
-      'build2',
+      'build',
       'oss-experimental',
       'react',
       'package.json'
@@ -132,41 +147,11 @@ const getCommitFromCurrentBuild = async () => {
 };
 
 const getPublicPackages = isExperimental => {
+  const packageNames = Object.keys(stablePackages);
   if (isExperimental) {
-    return [
-      'create-subscription',
-      'eslint-plugin-react-hooks',
-      'jest-react',
-      'react',
-      'react-art',
-      'react-dom',
-      'react-is',
-      'react-reconciler',
-      'react-refresh',
-      'react-test-renderer',
-      'use-subscription',
-      'scheduler',
-      'react-fetch',
-      'react-fs',
-      'react-pg',
-      'react-server-dom-webpack',
-    ];
-  } else {
-    return [
-      'create-subscription',
-      'eslint-plugin-react-hooks',
-      'jest-react',
-      'react',
-      'react-art',
-      'react-dom',
-      'react-is',
-      'react-reconciler',
-      'react-refresh',
-      'react-test-renderer',
-      'use-subscription',
-      'scheduler',
-    ];
+    packageNames.push(...experimentalPackages);
   }
+  return packageNames;
 };
 
 const handleError = error => {
@@ -223,10 +208,10 @@ const splitCommaParams = array => {
 // This method is used by both local Node release scripts and Circle CI bash scripts.
 // It updates version numbers in package JSONs (both the version field and dependencies),
 // As well as the embedded renderer version in "packages/shared/ReactVersion".
-// Canaries version numbers use the format of 0.0.0-<sha> to be easily recognized (e.g. 0.0.0-01974a867).
+// Canaries version numbers use the format of 0.0.0-<sha>-<date> to be easily recognized (e.g. 0.0.0-01974a867-20200129).
 // A separate "React version" is used for the embedded renderer version to support DevTools,
 // since it needs to distinguish between different version ranges of React.
-// It is based on the version of React in the local package.json (e.g. 16.12.0-01974a867).
+// It is based on the version of React in the local package.json (e.g. 16.12.0-01974a867-20200129).
 // Both numbers will be replaced if the "next" release is promoted to a stable release.
 const updateVersionsForNext = async (cwd, reactVersion, version) => {
   const isExperimental = reactVersion.includes('experimental');
@@ -287,6 +272,7 @@ module.exports = {
   getBuildInfo,
   getChecksumForCurrentRevision,
   getCommitFromCurrentBuild,
+  getDateStringForCommit,
   getPublicPackages,
   handleError,
   logPromise,

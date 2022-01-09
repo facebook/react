@@ -12,7 +12,7 @@ import {
   // $FlowFixMe Flow does not yet know about flushSync()
   flushSync,
   // $FlowFixMe Flow does not yet know about createRoot()
-  unstable_createRoot as createRoot,
+  createRoot,
 } from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
@@ -21,26 +21,45 @@ import {
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
   getShowInlineWarningsAndErrors,
+  getHideConsoleLogsInStrictMode,
 } from 'react-devtools-shared/src/utils';
+import {registerDevToolsEventLogger} from 'react-devtools-shared/src/registerDevToolsEventLogger';
 import {Server} from 'ws';
 import {join} from 'path';
 import {readFileSync} from 'fs';
 import {installHook} from 'react-devtools-shared/src/hook';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {doesFilePathExist, launchEditor} from './editor';
-import {__DEBUG__} from 'react-devtools-shared/src/constants';
+import {
+  __DEBUG__,
+  LOCAL_STORAGE_DEFAULT_TAB_KEY,
+} from 'react-devtools-shared/src/constants';
+import {localStorageSetItem} from '../../react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 installHook(window);
 
-export type StatusListener = (message: string) => void;
+export type StatusTypes = 'server-connected' | 'devtools-connected' | 'error';
+export type StatusListener = (message: string, status: StatusTypes) => void;
+export type OnDisconnectedCallback = () => void;
 
 let node: HTMLElement = ((null: any): HTMLElement);
 let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
-let statusListener: StatusListener = (message: string) => {};
+let statusListener: StatusListener = (
+  message: string,
+  status?: StatusTypes,
+) => {};
+let disconnectedCallback: OnDisconnectedCallback = () => {};
+
+// TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
+function hookNamesModuleLoaderFunction() {
+  return import(
+    /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
+  );
+}
 
 function setContentDOMNode(value: HTMLElement) {
   node = value;
@@ -57,6 +76,11 @@ function setProjectRoots(value: Array<string>) {
 
 function setStatusListener(value: StatusListener) {
   statusListener = value;
+  return DevtoolsUI;
+}
+
+function setDisconnectedCallback(value: OnDisconnectedCallback) {
+  disconnectedCallback = value;
   return DevtoolsUI;
 }
 
@@ -99,6 +123,7 @@ function reload() {
       createElement(DevTools, {
         bridge: ((bridge: any): FrontendBridge),
         canViewElementSourceFunction,
+        hookNamesModuleLoaderFunction,
         showTabBar: true,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
@@ -139,6 +164,8 @@ function onDisconnected() {
   safeUnmount();
 
   node.innerHTML = nodeWaitingToConnectHTML;
+
+  disconnectedCallback();
 }
 
 function onError({code, message}) {
@@ -167,6 +194,20 @@ function onError({code, message}) {
       </div>
     `;
   }
+}
+
+function openProfiler() {
+  // Mocked up bridge and store to allow the DevTools to be rendered
+  bridge = new Bridge({listen: () => {}, send: () => {}});
+  store = new Store(bridge, {});
+
+  // Ensure the Profiler tab is shown initially.
+  localStorageSetItem(
+    LOCAL_STORAGE_DEFAULT_TAB_KEY,
+    JSON.stringify('profiler'),
+  );
+
+  reload();
 }
 
 function initialize(socket: WebSocket) {
@@ -223,6 +264,7 @@ function initialize(socket: WebSocket) {
   });
 
   log('Connected');
+  statusListener('DevTools initialized.', 'devtools-connected');
   reload();
 }
 
@@ -246,16 +288,23 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-type ServerOptions = {
+type ServerOptions = {|
   key?: string,
   cert?: string,
-};
+|};
+
+type LoggerOptions = {|
+  surface?: ?string,
+|};
 
 function startServer(
   port?: number = 8097,
   host?: string = 'localhost',
   httpsOptions?: ServerOptions,
+  loggerOptions?: LoggerOptions,
 ) {
+  registerDevToolsEventLogger(loggerOptions?.surface ?? 'standalone');
+
   const useHttps = !!httpsOptions;
   const httpServer = useHttps
     ? require('https').createServer(httpsOptions)
@@ -310,6 +359,9 @@ function startServer(
       )};
       window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = ${JSON.stringify(
         getShowInlineWarningsAndErrors(),
+      )};
+      window.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = ${JSON.stringify(
+        getHideConsoleLogsInStrictMode(),
       )};`;
 
     response.end(
@@ -325,12 +377,15 @@ function startServer(
 
   httpServer.on('error', event => {
     onError(event);
-    statusListener('Failed to start the server.');
+    statusListener('Failed to start the server.', 'error');
     startServerTimeoutID = setTimeout(() => startServer(port), 1000);
   });
 
   httpServer.listen(port, () => {
-    statusListener('The server is listening on the port ' + port + '.');
+    statusListener(
+      'The server is listening on the port ' + port + '.',
+      'server-connected',
+    );
   });
 
   return {
@@ -351,7 +406,9 @@ const DevtoolsUI = {
   setContentDOMNode,
   setProjectRoots,
   setStatusListener,
+  setDisconnectedCallback,
   startServer,
+  openProfiler,
 };
 
 export default DevtoolsUI;

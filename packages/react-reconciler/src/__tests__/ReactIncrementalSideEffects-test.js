@@ -384,7 +384,6 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('does not update child nodes if a flush is aborted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -411,7 +410,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo text="World" />);
       });
     } else {
@@ -425,7 +424,7 @@ describe('ReactIncrementalSideEffects', () => {
     ]);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('preserves a previously rendered node when deprioritized', () => {
     function Middle(props) {
       Scheduler.unstable_yieldValue('Middle');
@@ -476,7 +475,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('can reuse side-effects after being preempted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -556,7 +555,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('can reuse side-effects after being preempted, if shouldComponentUpdate is false', () => {
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -640,14 +639,13 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
-  // @gate experimental || !enableSyncDefaultUpdates
   it('can update a completed tree before it has a chance to commit', () => {
     function Foo(props) {
       Scheduler.unstable_yieldValue('Foo');
       return <span prop={props.step} />;
     }
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={1} />);
       });
     } else {
@@ -662,7 +660,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={2} />);
       });
     } else {
@@ -675,7 +673,7 @@ describe('ReactIncrementalSideEffects', () => {
     // new props
 
     if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.unstable_startTransition(() => {
+      React.startTransition(() => {
         ReactNoop.render(<Foo step={3} />);
       });
     } else {
@@ -692,7 +690,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={3} />);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('updates a child even though the old props is empty', () => {
     function Foo(props) {
       return (
@@ -932,7 +930,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ops).toEqual(['Bar', 'Baz', 'Bar', 'Bar']);
   });
 
-  // @gate experimental
+  // @gate experimental || www
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
     const barInstances = [];
 
@@ -1308,9 +1306,7 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo />);
-    expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-      'Warning: A string ref, "bar", has been found within a strict mode tree.',
-    );
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(fooInstance.refs.bar.test).toEqual('test');
   });

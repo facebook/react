@@ -5,14 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'shared/invariant';
-
 // Provided by www
 const ReactFbErrorUtils = require('ReactFbErrorUtils');
-invariant(
-  typeof ReactFbErrorUtils.invokeGuardedCallback === 'function',
-  'Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.',
-);
+
+if (typeof ReactFbErrorUtils.invokeGuardedCallback !== 'function') {
+  throw new Error(
+    'Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.',
+  );
+}
 
 const invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(
   name: string | null,

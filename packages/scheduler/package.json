@@ -26,7 +26,6 @@
     "build-info.json",
     "index.js",
     "unstable_mock.js",
-    "unstable_no_dom.js",
     "unstable_post_task.js",
     "cjs/",
     "umd/"

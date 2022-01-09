@@ -12,8 +12,7 @@
 
 import {BatchedBridge} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-// TODO @sema: Adjust types
-import type {ReactNativeType} from './ReactNativeTypes';
+import type {ReactFabricType} from './ReactNativeTypes';
 
 let ReactFabric;
 
@@ -29,4 +28,4 @@ if (global.RN$Bridgeless) {
   BatchedBridge.registerCallableModule('ReactFabric', ReactFabric);
 }
 
-module.exports = (ReactFabric: ReactNativeType);
+module.exports = (ReactFabric: ReactFabricType);

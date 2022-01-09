@@ -13,15 +13,20 @@ import type {
   Destination,
 } from './ReactFlightNativeRelayServerHostConfig';
 
-import {createRequest, startWork} from 'react-server/src/ReactFlightServer';
+import {
+  createRequest,
+  startWork,
+  startFlowing,
+} from 'react-server/src/ReactFlightServer';
 
 function render(
   model: ReactModel,
   destination: Destination,
   config: BundlerConfig,
 ): void {
-  const request = createRequest(model, destination, config);
+  const request = createRequest(model, config);
   startWork(request);
+  startFlowing(request, destination);
 }
 
 export {render};

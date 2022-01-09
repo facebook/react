@@ -10,13 +10,17 @@
 import {emptyContextObject} from './ReactFizzContext';
 import {readContext} from './ReactFizzNewContext';
 
-import {disableLegacyContext} from 'shared/ReactFeatureFlags';
+import {
+  disableLegacyContext,
+  warnAboutDeprecatedLifecycles,
+} from 'shared/ReactFeatureFlags';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 import isArray from 'shared/isArray';
 
 const didWarnAboutNoopUpdateForComponent = {};
+const didWarnAboutDeprecatedWillMount = {};
 
 let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
@@ -531,6 +535,28 @@ function callComponentWillMount(type, instance) {
   const oldState = instance.state;
 
   if (typeof instance.componentWillMount === 'function') {
+    if (__DEV__) {
+      if (
+        warnAboutDeprecatedLifecycles &&
+        instance.componentWillMount.__suppressDeprecationWarning !== true
+      ) {
+        const componentName = getComponentNameFromType(type) || 'Unknown';
+
+        if (!didWarnAboutDeprecatedWillMount[componentName]) {
+          console.warn(
+            // keep this warning in sync with ReactStrictModeWarning.js
+            'componentWillMount has been renamed, and is not recommended for use. ' +
+              'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
+              '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
+              'or the constructor.\n' +
+              '\nPlease update the following components: %s',
+            componentName,
+          );
+          didWarnAboutDeprecatedWillMount[componentName] = true;
+        }
+      }
+    }
+
     instance.componentWillMount();
   }
   if (typeof instance.UNSAFE_componentWillMount === 'function') {

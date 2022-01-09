@@ -7,4 +7,4 @@
 
 'use strict';
 
-export * from './src/forks/SchedulerDOM';
+export * from './src/forks/Scheduler';

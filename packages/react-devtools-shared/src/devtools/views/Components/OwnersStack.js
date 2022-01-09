@@ -16,8 +16,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import Tooltip from '@reach/tooltip';
-import {Menu, MenuList, MenuButton, MenuItem} from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
@@ -26,6 +24,13 @@ import {OwnersListContext} from './OwnersListContext';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {useIsOverflowing} from '../hooks';
 import {StoreContext} from '../context';
+import Tooltip from '../Components/reach-ui/tooltip';
+import {
+  Menu,
+  MenuList,
+  MenuButton,
+  MenuItem,
+} from '../Components/reach-ui/menu-button';
 
 import type {SerializedElement} from './types';
 

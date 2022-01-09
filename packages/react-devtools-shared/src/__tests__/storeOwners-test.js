@@ -11,8 +11,8 @@ const {printOwnersList} = require('../devtools/utils');
 
 describe('Store owners list', () => {
   let React;
-  let ReactDOM;
   let act;
+  let legacyRender;
   let store;
 
   beforeEach(() => {
@@ -20,8 +20,10 @@ describe('Store owners list', () => {
     store.collapseNodesByDefault = false;
 
     React = require('react');
-    ReactDOM = require('react-dom');
-    act = require('./utils').act;
+
+    const utils = require('./utils');
+    act = utils.act;
+    legacyRender = utils.legacyRender;
   });
 
   it('should drill through intermediate components', () => {
@@ -36,7 +38,7 @@ describe('Store owners list', () => {
     const Leaf = () => <div>Leaf</div>;
     const Intermediate = ({children}) => <Wrapper>{children}</Wrapper>;
 
-    act(() => ReactDOM.render(<Root />, document.createElement('div')));
+    act(() => legacyRender(<Root />, document.createElement('div')));
     expect(store).toMatchSnapshot('1: mount');
 
     const rootID = store.getElementIDAtIndex(0);
@@ -64,7 +66,7 @@ describe('Store owners list', () => {
       <Wrapper key="wrapper">{children}</Wrapper>,
     ];
 
-    act(() => ReactDOM.render(<Root />, document.createElement('div')));
+    act(() => legacyRender(<Root />, document.createElement('div')));
     expect(store).toMatchSnapshot('1: mount');
 
     const rootID = store.getElementIDAtIndex(0);
@@ -96,7 +98,7 @@ describe('Store owners list', () => {
     const container = document.createElement('div');
 
     act(() =>
-      ReactDOM.render(
+      legacyRender(
         <Root includeDirect={false} includeIndirect={true} />,
         container,
       ),
@@ -109,7 +111,7 @@ describe('Store owners list', () => {
     ).toMatchSnapshot('2: components owned by <Root>');
 
     act(() =>
-      ReactDOM.render(
+      legacyRender(
         <Root includeDirect={true} includeIndirect={true} />,
         container,
       ),
@@ -121,7 +123,7 @@ describe('Store owners list', () => {
     ).toMatchSnapshot('4: components owned by <Root>');
 
     act(() =>
-      ReactDOM.render(
+      legacyRender(
         <Root includeDirect={true} includeIndirect={false} />,
         container,
       ),
@@ -133,7 +135,7 @@ describe('Store owners list', () => {
     ).toMatchSnapshot('6: components owned by <Root>');
 
     act(() =>
-      ReactDOM.render(
+      legacyRender(
         <Root includeDirect={false} includeIndirect={false} />,
         container,
       ),
@@ -153,7 +155,7 @@ describe('Store owners list', () => {
     const Leaf = () => <div>Leaf</div>;
 
     const container = document.createElement('div');
-    act(() => ReactDOM.render(<Root ascending={true} />, container));
+    act(() => legacyRender(<Root ascending={true} />, container));
     expect(store).toMatchSnapshot('1: mount (ascending)');
 
     const rootID = store.getElementIDAtIndex(0);
@@ -161,7 +163,7 @@ describe('Store owners list', () => {
       printOwnersList(store.getOwnersListForElement(rootID)),
     ).toMatchSnapshot('2: components owned by <Root>');
 
-    act(() => ReactDOM.render(<Root ascending={false} />, container));
+    act(() => legacyRender(<Root ascending={false} />, container));
     expect(store).toMatchSnapshot('3: update (descending)');
 
     expect(

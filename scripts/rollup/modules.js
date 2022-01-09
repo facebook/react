@@ -21,6 +21,7 @@ const importSideEffects = Object.freeze({
   'react-fetch/node': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   url: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  ReactNativeInternalFeatureFlags: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
@@ -31,6 +32,7 @@ const knownGlobals = Object.freeze({
   'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
   'scheduler/unstable_mock': 'SchedulerMock',
+  ReactNativeInternalFeatureFlags: 'ReactNativeInternalFeatureFlags',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

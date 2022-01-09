@@ -23,11 +23,11 @@ import {FixedSizeList} from 'react-window';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import Icon from '../Icon';
 import {SettingsContext} from '../Settings/SettingsContext';
-import {BridgeContext, StoreContext} from '../context';
+import {BridgeContext, StoreContext, OptionsContext} from '../context';
 import Element from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
-import SearchInput from './SearchInput';
+import ComponentSearchInput from './ComponentSearchInput';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
@@ -62,6 +62,7 @@ export default function Tree(props: Props) {
   } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const {hideSettings} = useContext(OptionsContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
     false,
   );
@@ -342,13 +343,13 @@ export default function Tree(props: Props) {
             </Fragment>
           )}
           <Suspense fallback={<Loading />}>
-            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
+            {ownerID !== null ? <OwnersStack /> : <ComponentSearchInput />}
           </Suspense>
-          <div className={styles.VRule} />
           {showInlineWarningsAndErrors &&
             ownerID === null &&
             (errors > 0 || warnings > 0) && (
               <React.Fragment>
+                <div className={styles.VRule} />
                 {errors > 0 && (
                   <div className={styles.IconAndCount}>
                     <Icon className={styles.ErrorIcon} type="error" />
@@ -376,10 +377,14 @@ export default function Tree(props: Props) {
                   title="Clear all errors and warnings">
                   <ButtonIcon type="clear" />
                 </Button>
-                <div className={styles.VRule} />
               </React.Fragment>
             )}
-          <SettingsModalContextToggle />
+          {!hideSettings && (
+            <Fragment>
+              <div className={styles.VRule} />
+              <SettingsModalContextToggle />
+            </Fragment>
+          )}
         </div>
         <div
           className={styles.AutoSizerWrapper}

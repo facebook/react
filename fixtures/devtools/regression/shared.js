@@ -32,7 +32,7 @@ if (typeof SchedulerTracing !== 'undefined') {
   trace = (_, __, callback) => callback();
 }
 
-// https://github.com/facebook/react/blob/master/CHANGELOG.md
+// https://github.com/facebook/react/blob/main/CHANGELOG.md
 switch (major) {
   case 16:
     switch (minor) {

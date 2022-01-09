@@ -7,7 +7,6 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
 /**
@@ -27,10 +26,11 @@ function accumulateInto<T>(
   current: ?(Array<T> | T),
   next: T | Array<T>,
 ): T | Array<T> {
-  invariant(
-    next != null,
-    'accumulateInto(...): Accumulated items must not be null or undefined.',
-  );
+  if (next == null) {
+    throw new Error(
+      'accumulateInto(...): Accumulated items must not be null or undefined.',
+    );
+  }
 
   if (current == null) {
     return next;

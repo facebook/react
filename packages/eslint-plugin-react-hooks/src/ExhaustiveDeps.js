@@ -15,11 +15,11 @@ export default {
     docs: {
       description:
         'verifies the list of dependencies for Hooks like useEffect and similar',
-      category: 'Best Practices',
       recommended: true,
       url: 'https://github.com/facebook/react/issues/14920',
     },
     fixable: 'code',
+    hasSuggestions: true,
     schema: [
       {
         type: 'object',
@@ -753,7 +753,7 @@ export default {
             if (
               isUsedOutsideOfHook &&
               construction.type === 'Variable' &&
-              // Objects may be mutated ater construction, which would make this
+              // Objects may be mutated after construction, which would make this
               // fix unsafe. Functions _probably_ won't be mutated, so we'll
               // allow this fix for them.
               depType === 'function'

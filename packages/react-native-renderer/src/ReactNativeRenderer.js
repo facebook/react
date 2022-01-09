@@ -17,7 +17,6 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
   batchedUpdates as batchedUpdatesImpl,
-  batchedEventUpdates,
   discreteUpdates,
   createContainer,
   updateContainer,
@@ -37,6 +36,7 @@ import {
   UIManager,
   legacySendAccessibilityEvent,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {getInspectorDataForInstance} from './ReactNativeFiberInspector';
 
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {
@@ -161,12 +161,11 @@ function dispatchCommand(handle: any, command: string, args: Array<any>) {
     return;
   }
 
-  if (handle._internalInstanceHandle) {
-    nativeFabricUIManager.dispatchCommand(
-      handle._internalInstanceHandle.stateNode.node,
-      command,
-      args,
-    );
+  if (handle._internalInstanceHandle != null) {
+    const {stateNode} = handle._internalInstanceHandle;
+    if (stateNode != null) {
+      nativeFabricUIManager.dispatchCommand(stateNode.node, command, args);
+    }
   } else {
     UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
   }
@@ -183,11 +182,11 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
     return;
   }
 
-  if (handle._internalInstanceHandle) {
-    nativeFabricUIManager.sendAccessibilityEvent(
-      handle._internalInstanceHandle.stateNode.node,
-      eventType,
-    );
+  if (handle._internalInstanceHandle != null) {
+    const {stateNode} = handle._internalInstanceHandle;
+    if (stateNode != null) {
+      nativeFabricUIManager.sendAccessibilityEvent(stateNode.node, eventType);
+    }
   } else {
     legacySendAccessibilityEvent(handle._nativeTag, eventType);
   }
@@ -203,7 +202,15 @@ function render(
   if (!root) {
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
-    root = createContainer(containerTag, LegacyRoot, false, null, null, null);
+    root = createContainer(
+      containerTag,
+      LegacyRoot,
+      false,
+      null,
+      false,
+      null,
+      '',
+    );
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
@@ -237,11 +244,7 @@ function createPortal(
   return createPortalImpl(children, containerTag, null, key);
 }
 
-setBatchingImplementation(
-  batchedUpdatesImpl,
-  discreteUpdates,
-  batchedEventUpdates,
-);
+setBatchingImplementation(batchedUpdatesImpl, discreteUpdates);
 
 function computeComponentStackForErrorReporting(reactTag: number): string {
   const fiber = getClosestInstanceFromNode(reactTag);
@@ -270,6 +273,9 @@ export {
   createPortal,
   batchedUpdates as unstable_batchedUpdates,
   Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  // This export is typically undefined in production builds.
+  // See the "enableGetInspectorDataForInstanceInProduction" flag.
+  getInspectorDataForInstance,
 };
 
 injectIntoDevTools({

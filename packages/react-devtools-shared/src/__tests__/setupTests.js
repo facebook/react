@@ -7,10 +7,30 @@
  * @flow
  */
 
+import {CustomConsole} from '@jest/console';
+
 import type {
   BackendBridge,
   FrontendBridge,
 } from 'react-devtools-shared/src/bridge';
+
+// Argument is serialized when passed from jest-cli script through to setupTests.
+const compactConsole = process.env.compactConsole === 'true';
+if (compactConsole) {
+  const formatter = (type, message) => {
+    switch (type) {
+      case 'error':
+        return '\x1b[31m' + message + '\x1b[0m';
+      case 'warn':
+        return '\x1b[33m' + message + '\x1b[0m';
+      case 'log':
+      default:
+        return message;
+    }
+  };
+
+  global.console = new CustomConsole(process.stdout, process.stderr, formatter);
+}
 
 const env = jasmine.getEnv();
 env.beforeEach(() => {
@@ -122,6 +142,16 @@ env.beforeEach(() => {
   global.agent = agent;
   global.bridge = bridge;
   global.store = store;
+
+  const readFileSync = require('fs').readFileSync;
+  async function mockFetch(url) {
+    return {
+      ok: true,
+      status: 200,
+      text: async () => readFileSync(__dirname + url, 'utf-8'),
+    };
+  }
+  global.fetch = mockFetch;
 });
 env.afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;

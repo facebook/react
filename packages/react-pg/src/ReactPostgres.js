@@ -12,7 +12,6 @@ import type {Wakeable} from 'shared/ReactTypes';
 import {unstable_getCacheForType} from 'react';
 import {Pool as PostgresPool} from 'pg';
 import {prepareValue} from 'pg/lib/utils';
-import invariant from 'shared/invariant';
 
 const Pending = 0;
 const Resolved = 1;
@@ -92,8 +91,7 @@ Pool.prototype.query = function(query: string, values?: Array<mixed>) {
         nextMap = new Map();
         innerMap.set(key, nextMap);
       } else if (!(nextMap instanceof Map)) {
-        invariant(
-          false,
+        throw new Error(
           'This query has received more parameters than the last time ' +
             'the same query was used. Always pass the exact number of ' +
             'parameters that the query needs.',
@@ -113,8 +111,7 @@ Pool.prototype.query = function(query: string, values?: Array<mixed>) {
     record = createRecordFromThenable(thenable);
     innerMap.set(key, record);
   } else if (record instanceof Map) {
-    invariant(
-      false,
+    throw new Error(
       'This query has received fewer parameters than the last time ' +
         'the same query was used. Always pass the exact number of ' +
         'parameters that the query needs.',

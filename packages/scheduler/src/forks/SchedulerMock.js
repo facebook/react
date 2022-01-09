@@ -7,6 +7,7 @@
  */
 
 /* eslint-disable no-var */
+/* eslint-disable react-internal/prod-error-codes */
 
 import {
   enableSchedulerDebugging,
@@ -62,7 +63,7 @@ var isSchedulerPaused = false;
 var currentTask = null;
 var currentPriorityLevel = NormalPriority;
 
-// This is set while performing work, to prevent re-entrancy.
+// This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
 
 var isHostCallbackScheduled = false;
@@ -78,6 +79,12 @@ let didStop: boolean = false;
 let isFlushing: boolean = false;
 let needsPaint: boolean = false;
 let shouldYieldForPaint: boolean = false;
+
+var disableYieldValue = false;
+
+function setDisableYieldValue(newValue) {
+  disableYieldValue = newValue;
+}
 
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
@@ -570,7 +577,7 @@ function unstable_flushAll(): void {
 
 function unstable_yieldValue(value: mixed): void {
   // eslint-disable-next-line react-internal/no-production-logging
-  if (console.log.name === 'disabledLog') {
+  if (console.log.name === 'disabledLog' || disableYieldValue) {
     // If console.log has been patched, we assume we're in render
     // replaying and we ignore any values yielding in the second pass.
     return;
@@ -584,7 +591,7 @@ function unstable_yieldValue(value: mixed): void {
 
 function unstable_advanceTime(ms: number) {
   // eslint-disable-next-line react-internal/no-production-logging
-  if (console.log.name === 'disabledLog') {
+  if (console.log.name === 'disabledLog' || disableYieldValue) {
     // If console.log has been patched, we assume we're in render
     // replaying and we ignore any time advancing in the second pass.
     return;
@@ -629,6 +636,7 @@ export {
   unstable_yieldValue,
   unstable_advanceTime,
   reset,
+  setDisableYieldValue as unstable_setDisableYieldValue,
 };
 
 export const unstable_Profiling = enableProfiling

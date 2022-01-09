@@ -11,7 +11,7 @@ const theme = require('../theme');
 const run = async ({build, cwd, releaseChannel}) => {
   const artifacts = await getArtifactsList(build);
   const buildArtifacts = artifacts.find(entry =>
-    entry.path.endsWith('build2.tgz')
+    entry.path.endsWith('build.tgz')
   );
 
   if (!buildArtifacts) {
@@ -22,7 +22,7 @@ const run = async ({build, cwd, releaseChannel}) => {
   }
 
   // Download and extract artifact
-  await exec(`rm -rf ./build2`, {cwd});
+  await exec(`rm -rf ./build`, {cwd});
   await exec(
     `curl -L $(fwdproxy-config curl) ${buildArtifacts.url} | tar -xvz`,
     {
@@ -39,20 +39,29 @@ const run = async ({build, cwd, releaseChannel}) => {
     await exec(`rm -rf ./build/node_modules`, {cwd});
   }
   let sourceDir;
+  // TODO: Rename release channel to `next`
   if (releaseChannel === 'stable') {
     sourceDir = 'oss-stable';
   } else if (releaseChannel === 'experimental') {
     sourceDir = 'oss-experimental';
+  } else if (releaseChannel === 'latest') {
+    sourceDir = 'oss-stable-semver';
   } else {
     console.error('Internal error: Invalid release channel: ' + releaseChannel);
     process.exit(releaseChannel);
   }
-  await exec(`cp -r ./build2/${sourceDir} ./build/node_modules`, {cwd});
+  await exec(`cp -r ./build/${sourceDir} ./build/node_modules`, {cwd});
 };
 
 module.exports = async ({build, commit, cwd, releaseChannel}) => {
+  let buildLabel;
+  if (commit !== null) {
+    buildLabel = theme`commit {commit ${commit}} (build {build ${build}})`;
+  } else {
+    buildLabel = theme`build {build ${build}}`;
+  }
   return logPromise(
     run({build, cwd, releaseChannel}),
-    theme`Downloading artifacts from Circle CI for commit {commit ${commit}} (build {build ${build}})`
+    theme`Downloading artifacts from Circle CI for ${buildLabel}`
   );
 };

@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {createContext, Component, useContext} from 'react';
+import {createContext, Component, useContext, useState} from 'react';
 import PropTypes from 'prop-types';
 
 function someNamedFunction() {}
@@ -73,6 +73,43 @@ class LegacyContextConsumer extends Component<any> {
   }
 }
 
+class LegacyContextProviderWithUpdates extends Component<any> {
+  constructor(props) {
+    super(props);
+    this.state = {type: 'desktop'};
+  }
+
+  getChildContext() {
+    return {type: this.state.type};
+  }
+
+  handleChange = event => {
+    this.setState({type: event.target.value});
+  };
+
+  render() {
+    return (
+      <>
+        <LegacyFunctionalContextConsumer />
+        <div>
+          <input value={this.state.type} onChange={this.handleChange} />
+        </div>
+      </>
+    );
+  }
+}
+
+LegacyContextProviderWithUpdates.childContextTypes = {
+  type: PropTypes.string,
+};
+
+function LegacyFunctionalContextConsumer(props, context) {
+  return formatContextForDisplay('LegacyFunctionContextConsumer', context.type);
+}
+LegacyFunctionalContextConsumer.contextTypes = {
+  type: PropTypes.string,
+};
+
 const ModernContext = createContext();
 ModernContext.displayName = 'ModernContext';
 const ArrayContext = createContext(contextData.array);
@@ -105,6 +142,101 @@ function FunctionalContextConsumer() {
   return formatContextForDisplay('FunctionalContextConsumer', value);
 }
 
+const StringContextWithUpdates = createContext({
+  string: contextData.string,
+  setString: (string: string) => {},
+});
+const StringContextWithUpdates2 = createContext({
+  string2: contextData.string,
+  setString2: (string: string) => {},
+});
+
+function FunctionalContextProviderWithContextUpdates() {
+  const [string, setString] = useState(contextData.string);
+  const [string2, setString2] = useState(contextData.string);
+  const value = {string, setString};
+  const value2 = {string2, setString2};
+
+  return (
+    <StringContextWithUpdates.Provider value={value}>
+      <StringContextWithUpdates2.Provider value={value2}>
+        <FunctionalContextConsumerWithContextUpdates />
+      </StringContextWithUpdates2.Provider>
+    </StringContextWithUpdates.Provider>
+  );
+}
+
+function FunctionalContextConsumerWithContextUpdates() {
+  const {string, setString} = useContext(StringContextWithUpdates);
+  const {string2, setString2} = useContext(StringContextWithUpdates2);
+  const [state, setState] = useState('state');
+
+  const handleChange = e => setString(e.target.value);
+  const handleChange2 = e => setString2(e.target.value);
+
+  return (
+    <>
+      {formatContextForDisplay(
+        'FunctionalContextConsumerWithUpdates',
+        `context: ${string}, context 2: ${string2}`,
+      )}
+      <div>
+        context: <input value={string} onChange={handleChange} />
+      </div>
+      <div>
+        context 2: <input value={string2} onChange={handleChange2} />
+      </div>
+      <div>
+        {state}
+        <div>
+          test state:{' '}
+          <input value={state} onChange={e => setState(e.target.value)} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+class ModernClassContextProviderWithUpdates extends Component<any> {
+  constructor(props) {
+    super(props);
+    this.setString = string => {
+      this.setState({string});
+    };
+
+    this.state = {
+      string: contextData.string,
+      setString: this.setString,
+    };
+  }
+
+  render() {
+    return (
+      <StringContextWithUpdates.Provider value={this.state}>
+        <ModernClassContextConsumerWithUpdates />
+      </StringContextWithUpdates.Provider>
+    );
+  }
+}
+
+class ModernClassContextConsumerWithUpdates extends Component<any> {
+  render() {
+    return (
+      <StringContextWithUpdates.Consumer>
+        {({string, setString}) => (
+          <>
+            {formatContextForDisplay(
+              'ModernClassContextConsumerWithUpdates',
+              string,
+            )}
+            <input value={string} onChange={e => setString(e.target.value)} />
+          </>
+        )}
+      </StringContextWithUpdates.Consumer>
+    );
+  }
+}
+
 export default function Contexts() {
   return (
     <div>
@@ -113,6 +245,7 @@ export default function Contexts() {
         <LegacyContextProvider>
           <LegacyContextConsumer />
         </LegacyContextProvider>
+        <LegacyContextProviderWithUpdates />
         <ModernContext.Provider value={contextData}>
           <ModernContext.Consumer>
             {value => formatContextForDisplay('ModernContext.Consumer', value)}
@@ -120,6 +253,8 @@ export default function Contexts() {
           <ModernContextType />
         </ModernContext.Provider>
         <FunctionalContextConsumer />
+        <FunctionalContextProviderWithContextUpdates />
+        <ModernClassContextProviderWithUpdates />
         <ArrayContext.Consumer>
           {value => formatContextForDisplay('ArrayContext.Consumer', value)}
         </ArrayContext.Consumer>

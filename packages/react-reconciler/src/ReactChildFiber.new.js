@@ -13,7 +13,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {Placement, ChildDeletion} from './ReactFiberFlags';
+import {Placement, ChildDeletion, Forked} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -21,21 +21,13 @@ import {
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import {
-  FunctionComponent,
-  ClassComponent,
-  HostText,
-  HostPortal,
-  ForwardRef,
-  Fragment,
-  SimpleMemoComponent,
-} from './ReactWorkTags';
-import invariant from 'shared/invariant';
+import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
 import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
   enableLazyElements,
 } from 'shared/ReactFeatureFlags';
+import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
 import {
   createWorkInProgress,
@@ -48,6 +40,8 @@ import {
 import {emptyRefsObject} from './ReactFiberClassComponent.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
 import {StrictLegacyMode} from './ReactTypeOfMode';
+import {getIsHydrating} from './ReactFiberHydrationContext.new';
+import {pushTreeFork} from './ReactFiberTreeContext.new';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
@@ -76,11 +70,14 @@ if (__DEV__) {
     if (!child._store || child._store.validated || child.key != null) {
       return;
     }
-    invariant(
-      typeof child._store === 'object',
-      'React Component in warnForMissingKey should have a _store. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
+
+    if (typeof child._store !== 'object') {
+      throw new Error(
+        'React Component in warnForMissingKey should have a _store. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
+
     child._store.validated = true;
 
     const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
@@ -156,21 +153,31 @@ function coerceRef(
       let inst;
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
-        invariant(
-          ownerFiber.tag === ClassComponent,
-          'Function components cannot have string refs. ' +
-            'We recommend using useRef() instead. ' +
-            'Learn more about using refs safely here: ' +
-            'https://reactjs.org/link/strict-mode-string-ref',
-        );
+
+        if (ownerFiber.tag !== ClassComponent) {
+          throw new Error(
+            'Function components cannot have string refs. ' +
+              'We recommend using useRef() instead. ' +
+              'Learn more about using refs safely here: ' +
+              'https://reactjs.org/link/strict-mode-string-ref',
+          );
+        }
+
         inst = ownerFiber.stateNode;
       }
-      invariant(
-        inst,
-        'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
-        mixedRef,
-      );
+
+      if (!inst) {
+        throw new Error(
+          `Missing owner for string ref ${mixedRef}. This error is likely caused by a ` +
+            'bug in React. Please file an issue.',
+        );
+      }
+      // Assigning this to a const so Flow knows it won't change in the closure
+      const resolvedInst = inst;
+
+      if (__DEV__) {
+        checkPropStringCoercion(mixedRef, 'ref');
+      }
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
       if (
@@ -182,10 +189,10 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        let refs = inst.refs;
+        let refs = resolvedInst.refs;
         if (refs === emptyRefsObject) {
           // This is a lazy pooled frozen object, so we need to initialize.
-          refs = inst.refs = {};
+          refs = resolvedInst.refs = {};
         }
         if (value === null) {
           delete refs[stringRef];
@@ -196,20 +203,22 @@ function coerceRef(
       ref._stringRef = stringRef;
       return ref;
     } else {
-      invariant(
-        typeof mixedRef === 'string',
-        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
-      );
-      invariant(
-        element._owner,
-        'Element ref was specified as a string (%s) but no owner was set. This could happen for one of' +
-          ' the following reasons:\n' +
-          '1. You may be adding a ref to a function component\n' +
-          "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-          '3. You have multiple copies of React loaded\n' +
-          'See https://reactjs.org/link/refs-must-have-owner for more information.',
-        mixedRef,
-      );
+      if (typeof mixedRef !== 'string') {
+        throw new Error(
+          'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+        );
+      }
+
+      if (!element._owner) {
+        throw new Error(
+          `Element ref was specified as a string (${mixedRef}) but no owner was set. This could happen for one of` +
+            ' the following reasons:\n' +
+            '1. You may be adding a ref to a function component\n' +
+            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+            '3. You have multiple copies of React loaded\n' +
+            'See https://reactjs.org/link/refs-must-have-owner for more information.',
+        );
+      }
     }
   }
   return mixedRef;
@@ -217,14 +226,15 @@ function coerceRef(
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   const childString = Object.prototype.toString.call(newChild);
-  invariant(
-    false,
-    'Objects are not valid as a React child (found: %s). ' +
+
+  throw new Error(
+    `Objects are not valid as a React child (found: ${
+      childString === '[object Object]'
+        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+        : childString
+    }). ` +
       'If you meant to render a collection of children, use an array ' +
       'instead.',
-    childString === '[object Object]'
-      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-      : childString,
   );
 }
 
@@ -326,7 +336,9 @@ function ChildReconciler(shouldTrackSideEffects) {
   ): number {
     newFiber.index = newIndex;
     if (!shouldTrackSideEffects) {
-      // Noop.
+      // During hydration, the useId algorithm needs to know which fibers are
+      // part of a list of children (arrays, iterators).
+      newFiber.flags |= Forked;
       return lastPlacedIndex;
     }
     const current = newFiber.alternate;
@@ -480,7 +492,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     newChild: any,
     lanes: Lanes,
   ): Fiber | null {
-    if (typeof newChild === 'string' || typeof newChild === 'number') {
+    if (
+      (typeof newChild === 'string' && newChild !== '') ||
+      typeof newChild === 'number'
+    ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
@@ -556,7 +571,10 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     const key = oldFiber !== null ? oldFiber.key : null;
 
-    if (typeof newChild === 'string' || typeof newChild === 'number') {
+    if (
+      (typeof newChild === 'string' && newChild !== '') ||
+      typeof newChild === 'number'
+    ) {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
@@ -618,7 +636,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     newChild: any,
     lanes: Lanes,
   ): Fiber | null {
-    if (typeof newChild === 'string' || typeof newChild === 'number') {
+    if (
+      (typeof newChild === 'string' && newChild !== '') ||
+      typeof newChild === 'number'
+    ) {
       // Text nodes don't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
       const matchedFiber = existingChildren.get(newIdx) || null;
@@ -815,6 +836,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (newIdx === newChildren.length) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
+      }
       return resultingFirstChild;
     }
 
@@ -834,6 +859,10 @@ function ChildReconciler(shouldTrackSideEffects) {
           previousNewFiber.sibling = newFiber;
         }
         previousNewFiber = newFiber;
+      }
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
       }
       return resultingFirstChild;
     }
@@ -878,6 +907,10 @@ function ChildReconciler(shouldTrackSideEffects) {
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
 
+    if (getIsHydrating()) {
+      const numberOfForks = newIdx;
+      pushTreeFork(returnFiber, numberOfForks);
+    }
     return resultingFirstChild;
   }
 
@@ -891,11 +924,13 @@ function ChildReconciler(shouldTrackSideEffects) {
     // but using the iterator instead.
 
     const iteratorFn = getIteratorFn(newChildrenIterable);
-    invariant(
-      typeof iteratorFn === 'function',
-      'An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
-    );
+
+    if (typeof iteratorFn !== 'function') {
+      throw new Error(
+        'An object is not an iterable. This error is likely caused by a bug in ' +
+          'React. Please file an issue.',
+      );
+    }
 
     if (__DEV__) {
       // We don't support rendering Generators because it's a mutation.
@@ -942,7 +977,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     const newChildren = iteratorFn.call(newChildrenIterable);
-    invariant(newChildren != null, 'An iterable object provided no iterator.');
+
+    if (newChildren == null) {
+      throw new Error('An iterable object provided no iterator.');
+    }
 
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
@@ -1000,6 +1038,10 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (step.done) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
+      }
       return resultingFirstChild;
     }
 
@@ -1019,6 +1061,10 @@ function ChildReconciler(shouldTrackSideEffects) {
           previousNewFiber.sibling = newFiber;
         }
         previousNewFiber = newFiber;
+      }
+      if (getIsHydrating()) {
+        const numberOfForks = newIdx;
+        pushTreeFork(returnFiber, numberOfForks);
       }
       return resultingFirstChild;
     }
@@ -1063,6 +1109,10 @@ function ChildReconciler(shouldTrackSideEffects) {
       existingChildren.forEach(child => deleteChild(returnFiber, child));
     }
 
+    if (getIsHydrating()) {
+      const numberOfForks = newIdx;
+      pushTreeFork(returnFiber, numberOfForks);
+    }
     return resultingFirstChild;
   }
 
@@ -1286,7 +1336,10 @@ function ChildReconciler(shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
-    if (typeof newChild === 'string' || typeof newChild === 'number') {
+    if (
+      (typeof newChild === 'string' && newChild !== '') ||
+      typeof newChild === 'number'
+    ) {
       return placeSingleChild(
         reconcileSingleTextNode(
           returnFiber,
@@ -1300,36 +1353,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (__DEV__) {
       if (typeof newChild === 'function') {
         warnOnFunctionType(returnFiber);
-      }
-    }
-    if (typeof newChild === 'undefined' && !isUnkeyedTopLevelFragment) {
-      // If the new child is undefined, and the return fiber is a composite
-      // component, throw an error. If Fiber return types are disabled,
-      // we already threw above.
-      switch (returnFiber.tag) {
-        case ClassComponent: {
-          if (__DEV__) {
-            const instance = returnFiber.stateNode;
-            if (instance.render._isMockFunction) {
-              // We allow auto-mocks to proceed as if they're returning null.
-              break;
-            }
-          }
-        }
-        // Intentionally fall through to the next case, which handles both
-        // functions and classes
-        // eslint-disable-next-lined no-fallthrough
-        case FunctionComponent:
-        case ForwardRef:
-        case SimpleMemoComponent: {
-          invariant(
-            false,
-            '%s(...): Nothing was returned from render. This usually means a ' +
-              'return statement is missing. Or, to render nothing, ' +
-              'return null.',
-            getComponentNameFromFiber(returnFiber) || 'Component',
-          );
-        }
       }
     }
 
@@ -1347,10 +1370,9 @@ export function cloneChildFibers(
   current: Fiber | null,
   workInProgress: Fiber,
 ): void {
-  invariant(
-    current === null || workInProgress.child === current.child,
-    'Resuming work not yet implemented.',
-  );
+  if (current !== null && workInProgress.child !== current.child) {
+    throw new Error('Resuming work not yet implemented.');
+  }
 
   if (workInProgress.child === null) {
     return;

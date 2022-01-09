@@ -11,6 +11,7 @@ import {
   getDisplayName,
   getDisplayNameForReactElement,
 } from 'react-devtools-shared/src/utils';
+import {format} from 'react-devtools-shared/src/backend/utils';
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
@@ -45,6 +46,7 @@ describe('utils', () => {
       expect(getDisplayName(FauxComponent, 'Fallback')).toEqual('Fallback');
     });
   });
+
   describe('getDisplayNameForReactElement', () => {
     it('should return correct display name for an element with function type', () => {
       function FauxComponent() {}
@@ -54,29 +56,58 @@ describe('utils', () => {
         'OverrideDisplayName',
       );
     });
+
     it('should return correct display name for an element with a type of StrictMode', () => {
       const element = createElement(StrictMode);
       expect(getDisplayNameForReactElement(element)).toEqual('StrictMode');
     });
+
     it('should return correct display name for an element with a type of SuspenseList', () => {
       const element = createElement(SuspenseList);
       expect(getDisplayNameForReactElement(element)).toEqual('SuspenseList');
     });
+
     it('should return NotImplementedInDevtools for an element with invalid symbol type', () => {
       const element = createElement(Symbol('foo'));
       expect(getDisplayNameForReactElement(element)).toEqual(
         'NotImplementedInDevtools',
       );
     });
+
     it('should return NotImplementedInDevtools for an element with invalid type', () => {
       const element = createElement(true);
       expect(getDisplayNameForReactElement(element)).toEqual(
         'NotImplementedInDevtools',
       );
     });
+
     it('should return Element for null type', () => {
       const element = createElement();
       expect(getDisplayNameForReactElement(element)).toEqual('Element');
+    });
+  });
+
+  describe('format', () => {
+    it('should format simple strings', () => {
+      expect(format('a', 'b', 'c')).toEqual('a b c');
+    });
+
+    it('should format multiple argument types', () => {
+      expect(format('abc', 123, true)).toEqual('abc 123 true');
+    });
+
+    it('should support string substitutions', () => {
+      expect(format('a %s b %s c', 123, true)).toEqual('a 123 b true c');
+    });
+
+    it('should gracefully handle Symbol types', () => {
+      expect(format(Symbol('a'), 'b', Symbol('c'))).toEqual(
+        'Symbol(a) b Symbol(c)',
+      );
+    });
+
+    it('should gracefully handle Symbol type for the first argument', () => {
+      expect(format(Symbol('abc'), 123)).toEqual('Symbol(abc) 123');
     });
   });
 });

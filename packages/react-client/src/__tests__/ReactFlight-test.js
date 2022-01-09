@@ -26,7 +26,7 @@ describe('ReactFlight', () => {
     ReactNoop = require('react-noop-renderer');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
-    act = ReactNoop.act;
+    act = require('jest-react').act;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};

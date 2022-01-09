@@ -19,7 +19,8 @@ import {StoreContext} from '../context';
 
 import type {ProfilingDataFrontend} from './types';
 
-export type TabID = 'flame-chart' | 'ranked-chart';
+// TODO (timeline) Should this be its own context?
+export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
 export type Context = {|
   // Which tab is selected in the Profiler UI?
@@ -211,7 +212,10 @@ function ProfilerContextController({children}: Props) {
   const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
     null,
   );
-  const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
+  const [selectedTabID, selectTab] = useLocalStorage<TabID>(
+    'React::DevTools::Profiler::defaultTab',
+    'flame-chart',
+  );
 
   if (isProfiling) {
     batchedUpdates(() => {
