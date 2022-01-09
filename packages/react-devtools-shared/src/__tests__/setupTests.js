@@ -32,6 +32,9 @@ if (compactConsole) {
   global.console = new CustomConsole(process.stdout, process.stderr, formatter);
 }
 
+let originalConsoleError;
+let originalConsoleWarn;
+
 const env = jasmine.getEnv();
 env.beforeEach(() => {
   global.mockClipboardCopy = jest.fn();
@@ -71,7 +74,7 @@ env.beforeEach(() => {
     });
   }
 
-  const originalConsoleError = console.error;
+  originalConsoleError = console.error;
   // $FlowFixMe
   console.error = (...args) => {
     const firstArg = args[0];
@@ -94,7 +97,7 @@ env.beforeEach(() => {
     }
     originalConsoleError.apply(console, args);
   };
-  const originalConsoleWarn = console.warn;
+  originalConsoleWarn = console.warn;
   // $FlowFixMe
   console.warn = (...args) => {
     if (shouldIgnoreConsoleErrorOrWarn(args)) {
@@ -161,4 +164,7 @@ env.afterEach(() => {
   // It's also important to reset after tests, rather than before,
   // so that we don't disconnect the ReactCurrentDispatcher ref.
   jest.resetModules();
+
+  console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
 });
