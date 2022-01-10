@@ -9,7 +9,10 @@
 
 import type {Container} from './ReactDOMHostConfig';
 import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  FiberRoot,
+  TransitionTracingCallbacks,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
 
@@ -25,6 +28,7 @@ export type CreateRootOptions = {
   unstable_concurrentUpdatesByDefault?: boolean,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
+  transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
@@ -158,6 +162,8 @@ export function createRoot(
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onRecoverableError = defaultOnRecoverableError;
+  let transitionCallbacks = null;
+
   if (options !== null && options !== undefined) {
     if (__DEV__) {
       if ((options: any).hydrate) {
@@ -181,6 +187,9 @@ export function createRoot(
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
+    if (options.transitionCallbacks !== undefined) {
+      transitionCallbacks = options.transitionCallbacks;
+    }
   }
 
   const root = createContainer(
@@ -192,6 +201,7 @@ export function createRoot(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
+    transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
 
@@ -260,6 +270,8 @@ export function hydrateRoot(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
+    // TODO(luna) Support hydration later
+    null,
   );
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.

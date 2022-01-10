@@ -127,7 +127,8 @@ function legacyCreateRootFromDOMContainer(
     false, // isStrictMode
     false, // concurrentUpdatesByDefaultOverride,
     '', // identifierPrefix
-    noopOnRecoverableError,
+    noopOnRecoverableError, // onRecoverableError
+    null, // transitionCallbacks
   );
   markContainerAsRoot(root.current, container);
 

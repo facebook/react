@@ -14,7 +14,10 @@
  * environment.
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  Fiber,
+  TransitionTracingCallbacks,
+} from 'react-reconciler/src/ReactInternalTypes';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
@@ -64,6 +67,10 @@ type TextInstance = {|
   context: HostContext,
 |};
 type HostContext = Object;
+type CreateRootOptions = {
+  transitionCallbacks?: TransitionTracingCallbacks,
+  ...
+};
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -980,7 +987,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     // TODO: Replace ReactNoop.render with createRoot + root.render
-    createRoot() {
+    createRoot(options?: CreateRootOptions) {
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
@@ -995,6 +1002,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
+        options && options.transitionCallbacks
+          ? options.transitionCallbacks
+          : null,
       );
       return {
         _Scheduler: Scheduler,
