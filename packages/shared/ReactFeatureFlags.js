@@ -194,3 +194,5 @@ export const consoleManagedByDevToolsDuringStrictMode = true;
 
 // Only enabled in www builds
 export const enableUseMutableSource = false;
+
+export const enableTransitionTracing = false;
