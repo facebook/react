@@ -189,3 +189,11 @@ export const didNotFindHydratableTextInstance =
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
 export const errorHydratingContainer = $$$hostConfig.errorHydratingContainer;
+
+// -------------------
+//      Transition Tracing
+//     (optional)
+// -------------------
+export const getCurrentEventStartTime = $$$hostConfig.getCurrentEventStartTime;
+export const scheduleTransitionCallbacks =
+  $$$hostConfig.scheduleTransitionCallbacks;

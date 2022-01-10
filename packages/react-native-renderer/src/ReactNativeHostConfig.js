@@ -513,3 +513,15 @@ export function preparePortalMount(portalInstance: Instance): void {
 export function detachDeletedInstance(node: Instance): void {
   // noop
 }
+
+export function getCurrentEventStartTime() {
+  // noop
+}
+
+export function scheduleTransitionCallbacks(
+  callback,
+  pendingTransitions,
+  callbacks,
+) {
+  // noop
+}

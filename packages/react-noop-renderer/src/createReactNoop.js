@@ -21,6 +21,7 @@ import type {
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
+import type {TransitionCallbackObject} from 'react-reconciler/src/ReactFiberTracingMarkerComponent.new';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -476,6 +477,25 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     logRecoverableError() {
       // no-op
+    },
+
+    getCurrentEventStartTime(): number {
+      return Scheduler.unstable_now();
+    },
+
+    scheduleTransitionCallbacks(
+      callback: (
+        Array<TransitionCallbackObject>,
+        endTime: number,
+        callbacks: TransitionTracingCallbacks,
+      ) => void,
+      pendingTransitions: Array<TransitionCallbackObject>,
+      callbacks: TransitionTracingCallbacks,
+    ): void {
+      const endTime = Scheduler.unstable_now();
+      Scheduler.unstable_scheduleCallback(Scheduler.unstable_IdlePriority, () =>
+        callback(pendingTransitions, endTime, callbacks),
+      );
     },
   };
 

@@ -8,13 +8,18 @@
  */
 
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  Fiber,
+  FiberRoot,
+  TransitionTracingCallbacks,
+} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   BoundingRect,
   IntersectionObserverOptions,
   ObserveVisibleRectsCallback,
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {TransitionCallbackObject} from 'react-reconciler/src/ReactFiberTracingMarkerComponent.new';
 
 import {
   precacheFiberNode,
@@ -70,6 +75,11 @@ import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+import {
+  now,
+  scheduleCallback,
+  IdlePriority,
+} from 'react-reconciler/src/Scheduler';
 
 export type Type = string;
 export type Props = {
@@ -1242,4 +1252,43 @@ export function setupIntersectionObserver(
       observer.unobserve((target: any));
     },
   };
+}
+
+let currentFrameTime = null;
+export function getCurrentEventStartTime(): number {
+  const event = window.event;
+  if (event != null) {
+    return event.timeStamp;
+  }
+
+  if (currentFrameTime === null) {
+    currentFrameTime = performance.now();
+
+    setTimeout(() => {
+      currentFrameTime = null;
+    }, 0);
+  }
+
+  return currentFrameTime;
+}
+
+// TODO(luna) Fix this because rAF doesn't actually do
+// what you want here
+export function scheduleTransitionCallbacks(
+  callback: (
+    Array<TransitionCallbackObject>,
+    endTime: number,
+    callbacks: TransitionTracingCallbacks,
+  ) => void,
+  // TODO(luna) Figure out type of this
+  pendingTransitions: Array<TransitionCallbackObject>,
+  callbacks: TransitionTracingCallbacks,
+): void {
+  window.requestAnimationFrame(() => {
+    const endTime = now();
+
+    scheduleCallback(IdlePriority, () => {
+      callback(pendingTransitions, endTime, callbacks);
+    });
+  });
 }
