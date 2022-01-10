@@ -18,6 +18,10 @@
     "umd/"
   ],
   "main": "runtime.js",
+  "exports": {
+    ".": "./runtime.js",
+    "./babel": "./babel.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
