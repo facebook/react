@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {FiberRoot} from './ReactInternalTypes';
+import type {FiberRoot, Transition} from './ReactInternalTypes';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -20,6 +20,7 @@ import {
   enableSchedulingProfiler,
   enableUpdaterTracking,
   allowConcurrentByDefault,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -790,5 +791,24 @@ export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
     }
 
     lanes &= ~lane;
+  }
+}
+
+export function addTransitionToLanesMap(
+  root: FiberRoot,
+  transition: Transition,
+  lane: Lane,
+) {
+  if (enableTransitionTracing) {
+    const transitionLanesMap = root.transitionLanes;
+    const index = laneToIndex(lane);
+    const transitions = transitionLanesMap[index];
+    if (transitions !== null) {
+      transitions.add(transition);
+    } else {
+      console.error(
+        `React Bug: transition lanes accessed out of bounds index: ${index}`,
+      );
+    }
   }
 }

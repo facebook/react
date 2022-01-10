@@ -12,6 +12,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
@@ -31,6 +32,7 @@ import {
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -111,6 +113,7 @@ import {
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 import {getTreeId} from './ReactFiberTreeContext.new';
+import {getCurrentEventStartTime} from './ReactFiberHostConfig';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1929,10 +1932,21 @@ function mountDeferredValue<T>(value: T): T {
   mountEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
     ReactCurrentBatchConfig.transition = 1;
+
+    let prevTransitionInfo = null;
+    if (enableTransitionTracing) {
+      prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
+
     try {
       setValue(value);
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
+
+      if (enableTransitionTracing) {
+        ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+      }
     }
   }, [value]);
   return prevValue;
@@ -1943,10 +1957,21 @@ function updateDeferredValue<T>(value: T): T {
   updateEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
     ReactCurrentBatchConfig.transition = 1;
+
+    let prevTransitionInfo = null;
+    if (enableTransitionTracing) {
+      prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
+
     try {
       setValue(value);
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
+
+      if (enableTransitionTracing) {
+        ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+      }
     }
   }, [value]);
   return prevValue;
@@ -1957,16 +1982,27 @@ function rerenderDeferredValue<T>(value: T): T {
   updateEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
     ReactCurrentBatchConfig.transition = 1;
+
+    let prevTransitionInfo = null;
+    if (enableTransitionTracing) {
+      prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
+
     try {
       setValue(value);
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
+
+      if (enableTransitionTracing) {
+        ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+      }
     }
   }, [value]);
   return prevValue;
 }
 
-function startTransition(setPending, callback) {
+function startTransition(setPending, callback, options) {
   const previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority),
@@ -1976,12 +2012,31 @@ function startTransition(setPending, callback) {
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
+
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+    if (options !== undefined && options.name !== undefined) {
+      ReactCurrentBatchConfig.transitionInfo = {
+        name: options.name,
+        startTime: getCurrentEventStartTime(),
+      };
+    } else {
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
+  }
+
   try {
     setPending(false);
     callback();
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
+
     if (__DEV__) {
       if (
         prevTransition !== 1 &&
@@ -2002,7 +2057,10 @@ function startTransition(setPending, callback) {
   }
 }
 
-function mountTransition(): [boolean, (() => void) => void] {
+function mountTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending, setPending] = mountState(false);
   // The `start` method never changes.
   const start = startTransition.bind(null, setPending);
@@ -2011,14 +2069,20 @@ function mountTransition(): [boolean, (() => void) => void] {
   return [isPending, start];
 }
 
-function updateTransition(): [boolean, (() => void) => void] {
+function updateTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending] = updateState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
   return [isPending, start];
 }
 
-function rerenderTransition(): [boolean, (() => void) => void] {
+function rerenderTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending] = rerenderState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;

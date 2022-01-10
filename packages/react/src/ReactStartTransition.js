@@ -6,17 +6,43 @@
  *
  * @flow
  */
+import type {StartTransitionOptions} from 'shared/ReactTypes';
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
-import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
+import {
+  warnOnSubscriptionInsideStartTransition,
+  enableTransitionTracing,
+} from 'shared/ReactFeatureFlags';
 
-export function startTransition(scope: () => void) {
+export function startTransition(
+  scope: () => void,
+  options?: StartTransitionOptions,
+) {
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
+
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+    if (options !== undefined && options.name !== undefined) {
+      ReactCurrentBatchConfig.transitionInfo = {
+        name: options.name,
+        startTime: -1,
+      };
+    } else {
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
+  }
+
   try {
     scope();
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
+
     if (__DEV__) {
       if (
         prevTransition !== 1 &&

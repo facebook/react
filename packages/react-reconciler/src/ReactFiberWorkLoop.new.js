@@ -34,6 +34,7 @@ import {
   enableUpdaterTracking,
   warnOnSubscriptionInsideStartTransition,
   enableCache,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -77,6 +78,7 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  getCurrentEventStartTime,
 } from './ReactFiberHostConfig';
 
 import {
@@ -140,6 +142,7 @@ import {
   getHighestPriorityLane,
   addFiberToLanesMap,
   movePendingFibersToMemoized,
+  addTransitionToLanesMap,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
@@ -514,6 +517,17 @@ export function scheduleUpdateOnFiber(
             current = current.return;
           }
         }
+      }
+    }
+
+    if (enableTransitionTracing) {
+      const transition = ReactCurrentBatchConfig.transitionInfo;
+      if (transition !== null) {
+        if (transition.startTime === -1) {
+          transition.startTime = getCurrentEventStartTime();
+        }
+
+        addTransitionToLanesMap(root, transition, lane);
       }
     }
 
@@ -1198,13 +1212,27 @@ export function getExecutionContext(): ExecutionContext {
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+  }
+
   try {
     ReactCurrentBatchConfig.transition = 0;
+
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
+
     setCurrentUpdatePriority(DefaultEventPriority);
     return fn();
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
   }
 }
 
@@ -1237,13 +1265,24 @@ export function discreteUpdates<A, B, C, D, R>(
 ): R {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+  }
+
   try {
     ReactCurrentBatchConfig.transition = 0;
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
     setCurrentUpdatePriority(DiscreteEventPriority);
     return fn(a, b, c, d);
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
     if (executionContext === NoContext) {
       resetRenderTimer();
     }
@@ -1272,8 +1311,16 @@ export function flushSync(fn) {
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+  }
+
   try {
     ReactCurrentBatchConfig.transition = 0;
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
     setCurrentUpdatePriority(DiscreteEventPriority);
     if (fn) {
       return fn();
@@ -1283,6 +1330,10 @@ export function flushSync(fn) {
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
+
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
@@ -1307,13 +1358,24 @@ export function flushControlled(fn: () => mixed): void {
   executionContext |= BatchedContext;
   const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+  }
   try {
     ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
+
     fn();
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
 
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1845,13 +1907,25 @@ function commitRoot(root: FiberRoot, recoverableErrors: null | Array<mixed>) {
   // layout phases. Should be able to remove.
   const previousUpdateLanePriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+  }
+
   try {
     ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
     commitRootImpl(root, recoverableErrors, previousUpdateLanePriority);
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
   }
 
   return null;
@@ -1984,6 +2058,11 @@ function commitRootImpl(
     ReactCurrentBatchConfig.transition = 0;
     const previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
+    let prevTransitionInfo = null;
+    if (enableTransitionTracing) {
+      prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+      ReactCurrentBatchConfig.transitionInfo = null;
+    }
 
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
@@ -2066,6 +2145,9 @@ function commitRootImpl(
     // Reset the priority to the previous non-sync value.
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
   } else {
     // No effects.
     root.current = finishedWork;
@@ -2235,13 +2317,24 @@ export function flushPassiveEffects(): boolean {
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
     const previousPriority = getCurrentUpdatePriority();
+    let prevTransitionInfo = null;
+    if (enableTransitionTracing) {
+      prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+    }
+
     try {
       ReactCurrentBatchConfig.transition = 0;
       setCurrentUpdatePriority(priority);
+      if (enableTransitionTracing) {
+        ReactCurrentBatchConfig.transitionInfo = null;
+      }
       return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdatePriority(previousPriority);
       ReactCurrentBatchConfig.transition = prevTransition;
+      if (enableTransitionTracing) {
+        ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+      }
 
       // Once passive effects have run for the tree - giving components a
       // chance to retain cache instances they use - release the pooled

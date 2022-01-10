@@ -8,10 +8,12 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Transition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent.new';
 
 type BatchConfig = {
   transition: number,
   _updatedFibers?: Set<Fiber>,
+  transitionInfo: Transition | null,
 };
 /**
  * Keeps track of the current batch's configuration such as how long an update
@@ -19,6 +21,7 @@ type BatchConfig = {
  */
 const ReactCurrentBatchConfig: BatchConfig = {
   transition: 0,
+  transitionInfo: null,
 };
 
 if (__DEV__) {

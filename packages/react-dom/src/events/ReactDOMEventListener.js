@@ -11,7 +11,10 @@ import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
-import {enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay} from 'shared/ReactFeatureFlags';
+import {
+  enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay,
+  enableTransitionTracing,
+} from 'shared/ReactFeatureFlags';
 import {
   isDiscreteEventThatRequiresHydration,
   queueDiscreteEvent,
@@ -118,12 +121,23 @@ function dispatchDiscreteEvent(
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 0;
+
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+    ReactCurrentBatchConfig.transitionInfo = null;
+  }
+
   try {
     setCurrentUpdatePriority(DiscreteEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
   }
 }
 
@@ -136,12 +150,23 @@ function dispatchContinuousEvent(
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 0;
+
+  let prevTransitionInfo = null;
+  if (enableTransitionTracing) {
+    prevTransitionInfo = ReactCurrentBatchConfig.transitionInfo;
+    ReactCurrentBatchConfig.transitionInfo = null;
+  }
+
   try {
     setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (enableTransitionTracing) {
+      ReactCurrentBatchConfig.transitionInfo = prevTransitionInfo;
+    }
   }
 }
 
