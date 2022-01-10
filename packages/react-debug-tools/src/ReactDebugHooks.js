@@ -13,6 +13,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -291,7 +292,10 @@ function useSyncExternalStore<T>(
   return value;
 }
 
-function useTransition(): [boolean, (() => void) => void] {
+function useTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.

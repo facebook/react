@@ -15,6 +15,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceVersion,
   MutableSource,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
@@ -25,6 +26,7 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Cache} from './ReactFiberCacheComponent.old';
+import type {Transitions} from './ReactFiberTracingMarkerComponent.new';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -320,6 +322,7 @@ export type TransitionTracingCallbacks = {
 // The following fields are only used in transition tracing in Profile builds
 type TransitionTracingOnlyFiberRootProperties = {|
   transitionCallbacks: null | TransitionTracingCallbacks,
+  transitionLanes: Array<Transitions>,
 |};
 
 // Exported FiberRoot type includes all properties,
@@ -369,7 +372,10 @@ export type Dispatcher = {|
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useDeferredValue<T>(value: T): T,
-  useTransition(): [boolean, (() => void) => void],
+  useTransition(): [
+    boolean,
+    (callback: () => void, options?: StartTransitionOptions) => void,
+  ],
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,

@@ -32,6 +32,7 @@ import {
   enableStrictEffects,
   enableUpdaterTracking,
   enableCache,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import is from 'shared/objectIs';
@@ -75,6 +76,7 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  getCurrentEventStartTime,
 } from './ReactFiberHostConfig';
 
 import {
@@ -138,6 +140,7 @@ import {
   getHighestPriorityLane,
   addFiberToLanesMap,
   movePendingFibersToMemoized,
+  addTransitionToLanesMap,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
@@ -512,6 +515,17 @@ export function scheduleUpdateOnFiber(
             current = current.return;
           }
         }
+      }
+    }
+
+    if (enableTransitionTracing) {
+      const transition = ReactCurrentBatchConfig.transition;
+      if (transition !== null) {
+        if (transition.startTime === -1) {
+          transition.startTime = getCurrentEventStartTime();
+        }
+
+        addTransitionToLanesMap(root, transition, lane);
       }
     }
 
@@ -1244,6 +1258,7 @@ export function getExecutionContext(): ExecutionContext {
 export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+
   try {
     ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DefaultEventPriority);
@@ -1318,6 +1333,7 @@ export function flushSync(fn) {
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
+
   try {
     ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
@@ -1329,6 +1345,7 @@ export function flushSync(fn) {
   } finally {
     setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
+
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
@@ -1896,6 +1913,7 @@ function commitRoot(root: FiberRoot, recoverableErrors: null | Array<mixed>) {
   // layout phases. Should be able to remove.
   const previousUpdateLanePriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
+
   try {
     ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
@@ -2286,6 +2304,7 @@ export function flushPassiveEffects(): boolean {
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
     const previousPriority = getCurrentUpdatePriority();
+
     try {
       ReactCurrentBatchConfig.transition = null;
       setCurrentUpdatePriority(priority);

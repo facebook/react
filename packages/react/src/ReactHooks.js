@@ -13,6 +13,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
@@ -158,7 +159,10 @@ export function useDebugValue<T>(
 
 export const emptyObject = {};
 
-export function useTransition(): [boolean, (() => void) => void] {
+export function useTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useTransition();
 }

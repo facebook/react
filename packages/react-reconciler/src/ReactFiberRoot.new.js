@@ -85,6 +85,10 @@ function FiberRootNode(
 
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
+    const transitionLanesMap = (this.transitionLanes = []);
+    for (let i = 0; i < TotalLanes; i++) {
+      transitionLanesMap.push(new Set());
+    }
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
