@@ -61,6 +61,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -93,6 +94,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableSchedulingProfiler,
   enablePersistentOffscreenHostContainer,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -891,6 +893,21 @@ function updateCacheComponent(
         propagateContextChange(workInProgress, CacheContext, renderLanes);
       }
     }
+  }
+
+  const nextChildren = workInProgress.pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
+// This should only be called if the name changes
+function updateTracingMarkerComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  if (!enableTransitionTracing) {
+    return null;
   }
 
   const nextChildren = workInProgress.pendingProps.children;
@@ -3897,6 +3914,16 @@ function beginWork(
     case CacheComponent: {
       if (enableCache) {
         return updateCacheComponent(current, workInProgress, renderLanes);
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        return updateTracingMarkerComponent(
+          current,
+          workInProgress,
+          renderLanes,
+        );
       }
       break;
     }

@@ -24,6 +24,7 @@ import {
   ElementTypeRoot,
   ElementTypeSuspense,
   ElementTypeSuspenseList,
+  ElementTypeTracingMarker,
   StrictMode,
 } from 'react-devtools-shared/src/types';
 import {
@@ -247,6 +248,8 @@ export function getInternalReactConstants(
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
       SuspenseListComponent: 19, // Experimental
+      TracingMarkerComponent: 25, // Experimental - This is technically in 18 but we don't
+      // want to fork again so we're adding it here instead
       YieldComponent: -1, // Removed
     };
   } else if (gte(version, '17.0.0-alpha')) {
@@ -277,6 +280,7 @@ export function getInternalReactConstants(
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
       SuspenseListComponent: 19, // Experimental
+      TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
     };
   } else if (gte(version, '16.6.0-beta.0')) {
@@ -307,6 +311,7 @@ export function getInternalReactConstants(
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
       SuspenseListComponent: 19, // Experimental
+      TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
     };
   } else if (gte(version, '16.4.3-alpha')) {
@@ -337,6 +342,7 @@ export function getInternalReactConstants(
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
       SuspenseListComponent: -1, // Doesn't exist yet
+      TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: -1, // Removed
     };
   } else {
@@ -367,6 +373,7 @@ export function getInternalReactConstants(
       SimpleMemoComponent: -1, // Doesn't exist yet
       SuspenseComponent: 16,
       SuspenseListComponent: -1, // Doesn't exist yet
+      TracingMarkerComponent: -1, // Doesn't exist yet
       YieldComponent: 9,
     };
   }
@@ -405,6 +412,7 @@ export function getInternalReactConstants(
     SimpleMemoComponent,
     SuspenseComponent,
     SuspenseListComponent,
+    TracingMarkerComponent,
   } = ReactTypeOfWork;
 
   function resolveFiberType(type: any) {
@@ -484,6 +492,8 @@ export function getInternalReactConstants(
         return 'SuspenseList';
       case Profiler:
         return 'Profiler';
+      case TracingMarkerComponent:
+        return 'TracingMarker';
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -583,6 +593,7 @@ export function attach(
     SimpleMemoComponent,
     SuspenseComponent,
     SuspenseListComponent,
+    TracingMarkerComponent,
   } = ReactTypeOfWork;
   const {
     ImmediatePriority,
@@ -1044,6 +1055,8 @@ export function attach(
         return ElementTypeSuspense;
       case SuspenseListComponent:
         return ElementTypeSuspenseList;
+      case TracingMarkerComponent:
+        return ElementTypeTracingMarker;
       default:
         const typeSymbol = getTypeSymbol(type);
 

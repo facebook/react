@@ -34,6 +34,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
@@ -103,7 +104,8 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
       return 'Suspense';
     case SuspenseListComponent:
       return 'SuspenseList';
-
+    case TracingMarkerComponent:
+      return 'TracingMarker';
     // The display name for this tags come from the user-provided type:
     case ClassComponent:
     case FunctionComponent:

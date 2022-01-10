@@ -23,8 +23,13 @@ import {
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_CACHE_TYPE,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
-import {enableScopeAPI, enableCache} from './ReactFeatureFlags';
+import {
+  enableScopeAPI,
+  enableCache,
+  enableTransitionTracing,
+} from './ReactFeatureFlags';
 
 let REACT_MODULE_REFERENCE: number | Symbol = 0;
 if (typeof Symbol === 'function') {
@@ -47,7 +52,8 @@ export default function isValidElementType(type: mixed) {
     type === REACT_LEGACY_HIDDEN_TYPE ||
     type === REACT_OFFSCREEN_TYPE ||
     (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
-    (enableCache && type === REACT_CACHE_TYPE)
+    (enableCache && type === REACT_CACHE_TYPE) ||
+    (enableTransitionTracing && type === REACT_TRACING_MARKER_TYPE)
   ) {
     return true;
   }
