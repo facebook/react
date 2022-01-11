@@ -72,7 +72,9 @@ const getBuildInfo = async () => {
   const branch = await execRead('git branch | grep \\* | cut -d " " -f2', {
     cwd,
   });
-  const commit = await execRead('git show -s --format=%h', {cwd});
+  const commit = await execRead('git show -s --no-show-signature --format=%h', {
+    cwd,
+  });
   const checksum = await getChecksumForCurrentRevision(cwd);
   const dateString = await getDateStringForCommit(commit);
   const version = isExperimental
@@ -106,7 +108,7 @@ const getChecksumForCurrentRevision = async cwd => {
 
 const getDateStringForCommit = async commit => {
   let dateString = await execRead(
-    `git show -s --format=%cd --date=format:%Y%m%d ${commit}`
+    `git show -s --no-show-signature --format=%cd --date=format:%Y%m%d ${commit}`
   );
 
   // On CI environment, this string is wrapped with quotes '...'s
