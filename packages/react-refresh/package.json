@@ -20,6 +20,7 @@
   "main": "runtime.js",
   "exports": {
     ".": "./runtime.js",
+    "./runtime": "./runtime.js",
     "./babel": "./babel.js",
     "./package.json": "./package.json"
   },
