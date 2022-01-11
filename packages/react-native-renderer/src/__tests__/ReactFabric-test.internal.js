@@ -41,6 +41,8 @@ describe('ReactFabric', () => {
       .ReactNativeViewConfigRegistry.register;
 
     act = require('jest-react').act;
+
+    delete global.debugInvalidTextStrings;
   });
 
   it('should be able to create and render a native component', () => {
@@ -538,26 +540,42 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    expect(() => {
-      act(() => {
-        ReactFabric.render(<View>this should warn</View>, 11);
-      });
-    }).toErrorDev([
-      'Text string "this should warn" must be rendered within a <Text> component.',
-    ]);
+    // Test both global conditions.
+    [
+      {
+        debugInvalidTextStrings: true,
+        errors: [
+          'Text string "this should warn" must be rendered within a <Text> component.',
+          'Text string "hi hello hi" must be rendered within a <Text> component.',
+        ],
+      },
+      {
+        debugInvalidTextStrings: false,
+        errors: [
+          'Text strings must be rendered within a <Text> component.',
+          'Text strings must be rendered within a <Text> component.',
+        ],
+      },
+    ].forEach(({debugInvalidTextStrings, errors}) => {
+      global.debugInvalidTextStrings = debugInvalidTextStrings;
 
-    expect(() => {
-      act(() => {
-        ReactFabric.render(
-          <Text>
-            <ScrollView>hi hello hi</ScrollView>
-          </Text>,
-          11,
-        );
-      });
-    }).toErrorDev([
-      'Text string "hi hello hi" must be rendered within a <Text> component.',
-    ]);
+      expect(() => {
+        act(() => {
+          ReactFabric.render(<View>this should warn</View>, 11);
+        });
+      }).toErrorDev([errors[0]]);
+
+      expect(() => {
+        act(() => {
+          ReactFabric.render(
+            <Text>
+              <ScrollView>hi hello hi</ScrollView>
+            </Text>,
+            11,
+          );
+        });
+      }).toErrorDev([errors[1]]);
+    });
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {

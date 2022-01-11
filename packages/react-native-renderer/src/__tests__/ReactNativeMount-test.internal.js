@@ -40,6 +40,8 @@ describe('ReactNative', () => {
       .ReactNativeViewConfigRegistry.register;
     TextInputState = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .TextInputState;
+
+    delete global.debugInvalidTextStrings;
   });
 
   it('should be able to create and render a native component', () => {
@@ -487,20 +489,38 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    expect(() => ReactNative.render(<View>this should warn</View>, 11)).toThrow(
-      'Text string "this should warn" must be rendered within a <Text> component.',
-    );
+    // Test both global conditions.
+    [
+      {
+        debugInvalidTextStrings: true,
+        errors: [
+          'Text string "this should warn" must be rendered within a <Text> component.',
+          'Text string "hi hello hi" must be rendered within a <Text> component.',
+        ],
+      },
+      {
+        debugInvalidTextStrings: false,
+        errors: [
+          'Text strings must be rendered within a <Text> component.',
+          'Text strings must be rendered within a <Text> component.',
+        ],
+      },
+    ].forEach(({debugInvalidTextStrings, errors}) => {
+      global.debugInvalidTextStrings = debugInvalidTextStrings;
 
-    expect(() =>
-      ReactNative.render(
-        <Text>
-          <ScrollView>hi hello hi</ScrollView>
-        </Text>,
-        11,
-      ),
-    ).toThrow(
-      'Text string "hi hello hi" must be rendered within a <Text> component.',
-    );
+      expect(() =>
+        ReactNative.render(<View>this should warn</View>, 11),
+      ).toThrow(errors[0]);
+
+      expect(() =>
+        ReactNative.render(
+          <Text>
+            <ScrollView>hi hello hi</ScrollView>
+          </Text>,
+          11,
+        ),
+      ).toThrow(errors[1]);
+    });
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {
