@@ -2760,7 +2760,7 @@ function scheduleWorkOnFiber(fiber: Fiber, renderLanes: Lanes) {
   if (alternate !== null) {
     alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
   }
-  scheduleWorkOnParentPath(fiber.return, renderLanes);
+  scheduleWorkOnParentPath(fiber.return, renderLanes, null);
 }
 
 function propagateSuspenseContextChange(

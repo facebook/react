@@ -1543,7 +1543,9 @@ describe('ReactSuspense', () => {
         return (
           <ValueContext.Consumer>
             {value => {
-              Scheduler.unstable_yieldValue(`Received context value [${value}]`);
+              Scheduler.unstable_yieldValue(
+                `Received context value [${value}]`,
+              );
               if (value === 'default') return <Text text="default" />;
               throw promiseThatNeverResolves;
             }}
@@ -1573,15 +1575,24 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />);
-      expect(Scheduler).toHaveYielded(['Received context value [default]', 'default']);
+      expect(Scheduler).toHaveYielded([
+        'Received context value [default]',
+        'default',
+      ]);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
-      expect(Scheduler).toHaveYielded(['Received context value [new value]', 'Loading...']);
+      expect(Scheduler).toHaveYielded([
+        'Received context value [new value]',
+        'Loading...',
+      ]);
       expect(root).toMatchRenderedOutput('Loading...');
 
       act(() => setValue('default'));
-      expect(Scheduler).toHaveYielded(['Received context value [default]', 'default']);
+      expect(Scheduler).toHaveYielded([
+        'Received context value [default]',
+        'default',
+      ]);
       expect(root).toMatchRenderedOutput('default');
     });
   });
