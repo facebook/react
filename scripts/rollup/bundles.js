@@ -742,7 +742,7 @@ const bundles = [
     global: 'ReactIs',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
-    externals: [],
+    externals: ['ReactNativeInternalFeatureFlags'],
   },
 
   /******* React Debug Tools *******/
