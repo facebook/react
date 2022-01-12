@@ -733,13 +733,16 @@ const bundles = [
       FB_WWW_PROD,
       UMD_DEV,
       UMD_PROD,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'react-is',
     global: 'ReactIs',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
-    externals: [],
+    externals: ['ReactNativeInternalFeatureFlags'],
   },
 
   /******* React Debug Tools *******/
