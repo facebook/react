@@ -18,6 +18,8 @@ import type {Wakeable} from 'shared/ReactTypes';
 import isArray from 'shared/isArray';
 import {SCHEDULING_PROFILER_VERSION} from 'react-devtools-timeline/src/constants';
 
+let performanceTarget: Performance | null = null;
+
 // If performance exists and supports the subset of the User Timing API that we require.
 let supportsUserTiming =
   typeof performance !== 'undefined' &&
@@ -47,35 +49,24 @@ if (supportsUserTiming) {
   }
 }
 
-type ClearFn = (markName: string) => void;
-type MarkFn = (markName: string) => void;
-
-let mark: MarkFn | null = supportsUserTimingV3 ? performance.mark : null;
-let clearMarks: ClearFn | null = supportsUserTimingV3
-  ? performance.clearMarks
-  : null;
-
-type PerformanceMock = {|
-  mark: MarkFn,
-  clearMarks: ClearFn,
-|};
-
-// Mocking the Performance Object (and User Timing v3) for testing is fragile.
-export function setPerformanceMock_ONLY_FOR_TESTING(
-  performanceMock: PerformanceMock | null,
-) {
-  supportsUserTiming = performanceMock !== null;
-  supportsUserTimingV3 = performanceMock !== null;
-
-  mark = performanceMock !== null ? performanceMock.mark : null;
-  clearMarks = performanceMock !== null ? performanceMock.clearMarks : null;
+if (supportsUserTimingV3) {
+  performanceTarget = performance;
 }
 
-function markAndClear(name) {
-  // This method won't be called unless these functions are defined,
-  // so we can skip the extra typeof check.
-  ((mark: any): MarkFn)(name);
-  ((clearMarks: any): ClearFn)(name);
+// Mocking the Performance Object (and User Timing APIs) for testing is fragile.
+// This API allows tests to directly override the User Timing APIs.
+export function setPerformanceMock_ONLY_FOR_TESTING(
+  performanceMock: Performance | null,
+) {
+  performanceTarget = performanceMock;
+  supportsUserTiming = performanceMock !== null;
+  supportsUserTimingV3 = performanceMock !== null;
+}
+
+function markAndClear(markName) {
+  // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
+  ((performanceTarget: any): Performance).mark(markName);
+  ((performanceTarget: any): Performance).clearMarks(markName);
 }
 
 export function createProfilingHooks({
