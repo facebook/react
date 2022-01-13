@@ -29,12 +29,16 @@ describe('Timeline profiler', () => {
     clearedMarks = [];
     marks = [];
 
-    // Remove file-system specific bits of information from the module range marks.
-    function filterModuleRanges(markName) {
+    // Remove file-system specific bits or version-specific bits of information from the module range marks.
+    function filterMarkData(markName) {
       if (markName.startsWith('--react-internal-module-start')) {
         return `${markName.substr(0, 29)}-<filtered-file-system-path>`;
       } else if (markName.startsWith('--react-internal-module-stop')) {
         return `${markName.substr(0, 28)}-<filtered-file-system-path>`;
+      } else if (markName.startsWith('--react-version')) {
+        return `${markName.substr(0, 15)}-<filtered-version>`;
+      } else {
+        return markName;
       }
     }
 
@@ -42,17 +46,13 @@ describe('Timeline profiler', () => {
     // Reference: https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API
     return {
       clearMarks(markName) {
-        if (markName.startsWith('--react-internal-module')) {
-          markName = filterModuleRanges(markName);
-        }
+        markName = filterMarkData(markName);
 
         clearedMarks.push(markName);
         marks = marks.filter(mark => mark !== markName);
       },
       mark(markName, markOptions) {
-        if (markName.startsWith('--react-internal-module')) {
-          markName = filterModuleRanges(markName);
-        }
+        markName = filterMarkData(markName);
 
         if (featureDetectionMarkName === null) {
           featureDetectionMarkName = markName;
@@ -127,7 +127,7 @@ describe('Timeline profiler', () => {
         "--render-start-1",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -157,7 +157,7 @@ describe('Timeline profiler', () => {
         "--render-start-16",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -219,7 +219,7 @@ describe('Timeline profiler', () => {
         "--suspense-suspend-0-Example-mount-1-",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -261,7 +261,7 @@ describe('Timeline profiler', () => {
         "--suspense-suspend-0-Example-mount-1-",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -308,7 +308,7 @@ describe('Timeline profiler', () => {
         "--suspense-suspend-0-Example-mount-16-",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -359,7 +359,7 @@ describe('Timeline profiler', () => {
         "--suspense-suspend-0-Example-mount-16-",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -410,7 +410,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -423,7 +423,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -463,7 +463,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -476,7 +476,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -528,7 +528,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -581,7 +581,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -621,7 +621,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -636,7 +636,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -670,7 +670,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -688,7 +688,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -720,7 +720,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -770,7 +770,7 @@ describe('Timeline profiler', () => {
         "--error-ExampleThatThrows-mount-Expected error",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -784,7 +784,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -850,7 +850,7 @@ describe('Timeline profiler', () => {
         "--error-ExampleThatThrows-mount-Expected error",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -863,7 +863,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -929,7 +929,7 @@ describe('Timeline profiler', () => {
         "--component-render-stop",
         "--render-stop",
         "--commit-start-16",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -985,7 +985,7 @@ describe('Timeline profiler', () => {
         "--render-start-1",
         "--render-stop",
         "--commit-start-1",
-        "--react-version-17.0.3",
+        "--react-version-<filtered-version>",
         "--profiler-version-1",
         "--react-internal-module-start-<filtered-file-system-path>",
         "--react-internal-module-stop-<filtered-file-system-path>",
@@ -1019,7 +1019,7 @@ describe('Timeline profiler', () => {
           "--render-start-1",
           "--render-stop",
           "--commit-start-1",
-          "--react-version-17.0.3",
+          "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-<filtered-file-system-path>",
           "--react-internal-module-stop-<filtered-file-system-path>",
@@ -1069,7 +1069,7 @@ describe('Timeline profiler', () => {
           "--component-render-stop",
           "--render-stop",
           "--commit-start-1",
-          "--react-version-17.0.3",
+          "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-<filtered-file-system-path>",
           "--react-internal-module-stop-<filtered-file-system-path>",
@@ -1109,7 +1109,7 @@ describe('Timeline profiler', () => {
           "--component-render-stop",
           "--render-stop",
           "--commit-start-4",
-          "--react-version-17.0.3",
+          "--react-version-<filtered-version>",
           "--profiler-version-1",
           "--react-internal-module-start-<filtered-file-system-path>",
           "--react-internal-module-stop-<filtered-file-system-path>",

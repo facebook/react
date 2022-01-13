@@ -26,12 +26,16 @@ describe('Timeline profiler', () => {
     clearedMarks = [];
     marks = [];
 
-    // Remove file-system specific bits of information from the module range marks.
-    function filterModuleRanges(markName) {
+    // Remove file-system specific bits or version-specific bits of information from the module range marks.
+    function filterMarkData(markName) {
       if (markName.startsWith('--react-internal-module-start')) {
         return `${markName.substr(0, 29)}-<filtered-file-system-path>`;
       } else if (markName.startsWith('--react-internal-module-stop')) {
         return `${markName.substr(0, 28)}-<filtered-file-system-path>`;
+      } else if (markName.startsWith('--react-version')) {
+        return `${markName.substr(0, 15)}-0.0.0`;
+      } else {
+        return markName;
       }
     }
 
@@ -39,17 +43,13 @@ describe('Timeline profiler', () => {
     // Reference: https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API
     return {
       clearMarks(markName) {
-        if (markName.startsWith('--react-internal-module')) {
-          markName = filterModuleRanges(markName);
-        }
+        markName = filterMarkData(markName);
 
         clearedMarks.push(markName);
         marks = marks.filter(mark => mark !== markName);
       },
       mark(markName, markOptions) {
-        if (markName.startsWith('--react-internal-module')) {
-          markName = filterModuleRanges(markName);
-        }
+        markName = filterMarkData(markName);
 
         if (featureDetectionMarkName === null) {
           featureDetectionMarkName = markName;
@@ -173,10 +173,9 @@ describe('Timeline profiler', () => {
     }
 
     function createReactVersionEntry() {
-      const REACT_VERSION = require('shared/ReactVersion').default;
       return createUserTimingEntry({
         cat: 'blink.user_timing',
-        name: '--react-version-' + REACT_VERSION,
+        name: '--react-version-0.0.0',
       });
     }
 
@@ -385,7 +384,7 @@ describe('Timeline profiler', () => {
         "nativeEvents": Array [],
         "networkMeasures": Array [],
         "otherUserTimingMarks": Array [],
-        "reactVersion": "17.0.3",
+        "reactVersion": "0.0.0",
         "schedulingEvents": Array [],
         "snapshotHeight": 0,
         "snapshots": Array [],
@@ -593,7 +592,7 @@ describe('Timeline profiler', () => {
         "nativeEvents": Array [],
         "networkMeasures": Array [],
         "otherUserTimingMarks": Array [],
-        "reactVersion": "17.0.3",
+        "reactVersion": "0.0.0",
         "schedulingEvents": Array [
           Object {
             "lanes": Array [
@@ -791,7 +790,7 @@ describe('Timeline profiler', () => {
         "nativeEvents": Array [],
         "networkMeasures": Array [],
         "otherUserTimingMarks": Array [],
-        "reactVersion": "17.0.3",
+        "reactVersion": "0.0.0",
         "schedulingEvents": Array [
           Object {
             "lanes": Array [
@@ -1151,7 +1150,7 @@ describe('Timeline profiler', () => {
         "nativeEvents": Array [],
         "networkMeasures": Array [],
         "otherUserTimingMarks": Array [],
-        "reactVersion": "17.0.3",
+        "reactVersion": "0.0.0",
         "schedulingEvents": Array [
           Object {
             "lanes": Array [
