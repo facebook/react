@@ -23,12 +23,16 @@ import {updateValueIfChanged} from '../../client/inputValueTracking';
 import {setDefaultValue} from '../../client/ReactDOMInput';
 import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 
-import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+import {
+  disableInputAttributeSyncing,
+  enableCustomElementPropertySupport,
+} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
 import {
   processDispatchQueue,
   accumulateTwoPhaseListeners,
 } from '../DOMPluginEventSystem';
+import isCustomComponent from '../../shared/isCustomComponent';
 
 function registerEvents() {
   registerTwoPhaseEvent('onChange', [
@@ -280,8 +284,16 @@ function extractEvents(
 ) {
   const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
+  let isCustomComponentTag = false;
+  if (enableCustomElementPropertySupport && targetInst) {
+    isCustomComponentTag = isCustomComponent(
+      targetInst.elementType,
+      targetInst.pendingProps,
+    );
+  }
+
   let getTargetInstFunc, handleEventFunc;
-  if (shouldUseChangeEvent(targetNode)) {
+  if (shouldUseChangeEvent(targetNode) || isCustomComponentTag) {
     getTargetInstFunc = getTargetInstForChangeEvent;
   } else if (isTextInputElement(((targetNode: any): HTMLElement))) {
     if (isInputEventSupported) {

@@ -47,12 +47,7 @@ import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
 import getEventCharCode from '../getEventCharCode';
 import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 
-import {
-  enableCreateEventHandleAPI,
-  enableCustomElementPropertySupport,
-} from 'shared/ReactFeatureFlags';
-
-import isCustomComponent from '../../shared/isCustomComponent';
+import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -63,17 +58,7 @@ function extractEvents(
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
 ): void {
-  let reactName = topLevelEventsToReactNames.get(domEventName);
-  if (reactName === undefined) {
-    if (
-      domEventName === 'change' &&
-      enableCustomElementPropertySupport &&
-      targetInst &&
-      isCustomComponent(targetInst.elementType, targetInst.pendingProps)
-    ) {
-      reactName = 'onChange';
-    }
-  }
+  const reactName = topLevelEventsToReactNames.get(domEventName);
   if (reactName === undefined) {
     return;
   }
