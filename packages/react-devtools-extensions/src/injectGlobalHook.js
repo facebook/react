@@ -135,14 +135,18 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 // We need to inject this code because content scripts (ie injectGlobalHook.js) don't have access
 // to the webpage's window, so in order to access front end settings
 // and communicate with React, we must inject this code into the webpage
-if ('text/html' === document.contentType) {
-  injectCode(
-    ';(' +
-      installHook.toString() +
-      '(window))' +
-      saveNativeValues +
-      detectReact,
-  );
+switch (document.contentType) {
+  case 'text/html':
+  case 'application/xhtml+xml': {
+    injectCode(
+      ';(' +
+        installHook.toString() +
+        '(window))' +
+        saveNativeValues +
+        detectReact,
+    );
+    break;
+  }
 }
 
 if (typeof exportFunction === 'function') {

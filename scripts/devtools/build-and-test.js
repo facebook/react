@@ -210,7 +210,7 @@ async function downloadLatestReactBuild() {
   const buildID = match[1];
 
   console.log('');
-  console.log(`Downloaded artiacts for CI build ${chalk.bold(buildID)}.`);
+  console.log(`Downloaded artifacts for CI build ${chalk.bold(buildID)}.`);
 
   return buildID;
 }

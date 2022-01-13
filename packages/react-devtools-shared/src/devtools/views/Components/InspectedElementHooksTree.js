@@ -85,7 +85,9 @@ export function InspectedElementHooksTree({
     return null;
   } else {
     return (
-      <div className={styles.HooksTreeView}>
+      <div
+        className={styles.HooksTreeView}
+        data-testname="InspectedElementHooksTree">
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>hooks</div>
           {enableNamedHooksFeature &&
@@ -96,6 +98,7 @@ export function InspectedElementHooksTree({
                 isChecked={parseHookNamesOptimistic}
                 isDisabled={parseHookNamesOptimistic || hookParsingFailed}
                 onChange={handleChange}
+                testName="LoadHookNamesButton"
                 title={toggleTitle}>
                 <ButtonIcon type="parse-hook-names" />
               </Toggle>

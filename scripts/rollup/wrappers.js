@@ -3,7 +3,6 @@
 const {resolve} = require('path');
 const {readFileSync} = require('fs');
 const {bundleTypes, moduleTypes} = require('./bundles');
-const reactVersion = require('../../package.json').version;
 
 const {
   NODE_ES2015,
@@ -54,7 +53,8 @@ const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
 const wrappers = {
   /***************** NODE_ES2015 *****************/
   [NODE_ES2015](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -67,7 +67,8 @@ ${source}`;
 
   /***************** NODE_ESM *****************/
   [NODE_ESM](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+* @license React
  * ${filename}
  *
 ${license}
@@ -78,7 +79,8 @@ ${source}`;
 
   /***************** UMD_DEV *****************/
   [UMD_DEV](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -88,7 +90,8 @@ ${source}`;
 
   /***************** UMD_PROD *****************/
   [UMD_PROD](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -98,7 +101,8 @@ ${license}
 
   /***************** UMD_PROFILING *****************/
   [UMD_PROFILING](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -108,7 +112,8 @@ ${license}
 
   /***************** NODE_DEV *****************/
   [NODE_DEV](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -125,7 +130,8 @@ ${source}
 
   /***************** NODE_PROD *****************/
   [NODE_PROD](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -135,7 +141,8 @@ ${source}`;
 
   /***************** NODE_PROFILING *****************/
   [NODE_PROFILING](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -294,7 +301,8 @@ ${source}`;
 const reconcilerWrappers = {
   /***************** NODE_DEV (reconciler only) *****************/
   [NODE_DEV](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -313,7 +321,8 @@ ${source}
 
   /***************** NODE_PROD (reconciler only) *****************/
   [NODE_PROD](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}
@@ -327,7 +336,8 @@ ${source}
 
   /***************** NODE_PROFILING (reconciler only) *****************/
   [NODE_PROFILING](source, globalName, filename, moduleType) {
-    return `/** @license React v${reactVersion}
+    return `/**
+ * @license React
  * ${filename}
  *
 ${license}

@@ -57,6 +57,12 @@ export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
   {
     version: 1,
     minNpmVersion: '4.13.0',
+    maxNpmVersion: '4.21.0',
+  },
+  // Version 2 adds a StrictMode-enabled and supports-StrictMode bits to add-root operation.
+  {
+    version: 2,
+    minNpmVersion: '4.22.0',
     maxNpmVersion: null,
   },
 ];
@@ -170,10 +176,19 @@ type UpdateConsolePatchSettingsParams = {|
   browserTheme: BrowserTheme,
 |};
 
+type SavedPreferencesParams = {|
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+  componentFilters: Array<ComponentFilter>,
+  showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+|};
+
 export type BackendEvents = {|
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
+  getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   isSynchronousXHRSupported: [boolean],
@@ -217,6 +232,7 @@ type FrontendEvents = {|
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
   renamePath: [RenamePath],
+  savedPreferences: [SavedPreferencesParams],
   selectFiber: [number],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
@@ -271,7 +287,9 @@ class Bridge<
 
     this._wallUnlisten =
       wall.listen((message: Message) => {
-        (this: any).emit(message.event, message.payload);
+        if (message && message.event) {
+          (this: any).emit(message.event, message.payload);
+        }
       }) || null;
 
     // Temporarily support older standalone front-ends sending commands to newer embedded backends.

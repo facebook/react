@@ -225,6 +225,9 @@ export default class Agent extends EventEmitter<{|
       bridge.send('profilingStatus', true);
     }
 
+    // Send the Bridge protocol after initialization in case the frontend has already requested it.
+    this._bridge.send('bridgeProtocol', currentBridgeProtocol);
+
     // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
     // If not, features like reload-and-profile will not work correctly and must be disabled.
     let isBackendStorageAPISupported = false;

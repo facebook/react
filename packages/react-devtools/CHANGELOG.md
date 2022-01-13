@@ -2,6 +2,42 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.22.1 (December 14, 2021)
+
+* Fix invalid `require()` statements in `react-devtools-inline` ([bvaughn](https://github.com/bvaughn) in [#22961](https://github.com/facebook/react/pull/22961))
+* Fix invalid `files` array in `react-devtools` `package.json` ([bvaughn](https://github.com/bvaughn) in [#22960](https://github.com/facebook/react/pull/22960))
+
+## 4.22.0 (December 13, 2021)
+
+#### A note for React Native users
+React DevTools has [two main pieces](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md#overview):
+* The *frontend* users interact with (the Components tree, the Profiler, etc.).
+* The *backend* which runs in the same context as React itself. (In the web page with React DOM or shipped on the device with the React Native runtime.)
+
+This release updates the [**protocol** that DevTools uses](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md#serializing-the-tree) to communicate between the "frontend" and "backend" components.
+
+Because React Native embeds a copy of the React DevTools "backend" ([`react-devtools-core/backend`](https://www.npmjs.com/package/react-devtools-core)), the "frontend" (UI) needs to match. This means you may be prompted to upgrade (or downgrade) your React DevTools based on which version of React Native your app uses.
+
+#### Features
+* Support multiple DevTools instances per page ([@bvaughn](https://github.com/bvaughn) in [#22949](https://github.com/facebook/react/pull/22949))
+* Advocate for StrictMode usage within Components tree ([@bvaughn](https://github.com/bvaughn) in [#22886](https://github.com/facebook/react/pull/22886))
+* StyleX plug-in for resolving atomic styles to values for props.xstyle ([@bvaughn](https://github.com/bvaughn) in [#22808](https://github.com/facebook/react/pull/22808))
+* Timeline search ([@bvaughn](https://github.com/bvaughn) in [#22799](https://github.com/facebook/react/pull/22799))
+* Timeline: Improved snapshot view ([@bvaughn](https://github.com/bvaughn) in [#22706](https://github.com/facebook/react/pull/22706))
+* Display root type for root updates in "what caused this update?" ([@eps1lon](https://github.com/eps1lon) in [#22599](https://github.com/facebook/react/pull/22599))
+
+#### Bugfix
+* DevTools should inject itself for XHTML pages too (not just HTML) ([@bvaughn](https://github.com/bvaughn) in [#22932](https://github.com/facebook/react/pull/22932))
+* Don't restore profiling data if we're profling ([@eps1lon](https://github.com/eps1lon) in [#22753](https://github.com/facebook/react/pull/22753))
+* DevTools should properly report re-renders due to (use)context changes ([@bvaughn](https://github.com/bvaughn) in [#22746](https://github.com/facebook/react/pull/22746))
+* Filter empty commits (all Fibers bailed out) from Profiler ([@bvaughn](https://github.com/bvaughn) in [#22745](https://github.com/facebook/react/pull/22745))
+* Accept json file in import fileinput ([@jyash97](https://github.com/jyash97) in [#22717](https://github.com/facebook/react/pull/22717))
+* Expose css vars to reach-ui portal components ([@jyash97](https://github.com/jyash97) in [#22716](https://github.com/facebook/react/pull/22716))
+* Fix DevTools advanced tooltip display conditional check ([@bvaughn](https://github.com/bvaughn) in [#22669](https://github.com/facebook/react/pull/22669))
+
+#### Misc
+* Emit new event when DevTools connects in standalone app ([@jstejada](https://github.com/jstejada) in [#22848](https://github.com/facebook/react/pull/22848))
+
 ## 4.21.0 (October 31, 2021)
 
 #### Features

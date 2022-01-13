@@ -13,6 +13,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from 'react-devtools-shared/src/constants';
@@ -179,7 +180,7 @@ function updateTree(
     const operation = operations[i];
 
     switch (operation) {
-      case TREE_OPERATION_ADD:
+      case TREE_OPERATION_ADD: {
         id = ((operations[i + 1]: any): number);
         const type = ((operations[i + 2]: any): ElementType);
 
@@ -192,7 +193,9 @@ function updateTree(
         }
 
         if (type === ElementTypeRoot) {
+          i++; // isStrictModeCompliant
           i++; // supportsProfiling flag
+          i++; // supportsStrictMode flag
           i++; // hasOwnerMetadata flag
 
           if (__DEBUG__) {
@@ -250,6 +253,7 @@ function updateTree(
         }
 
         break;
+      }
       case TREE_OPERATION_REMOVE: {
         const removeLength = ((operations[i + 1]: any): number);
         i += 2;
@@ -307,6 +311,17 @@ function updateTree(
 
         break;
       }
+      case TREE_OPERATION_SET_SUBTREE_MODE: {
+        id = operations[i + 1];
+        const mode = operations[i + 1];
+
+        i += 3;
+
+        if (__DEBUG__) {
+          debug('Subtree mode', `Subtree with root ${id} set to mode ${mode}`);
+        }
+        break;
+      }
       case TREE_OPERATION_UPDATE_TREE_BASE_DURATION: {
         id = operations[i + 1];
 
@@ -323,7 +338,7 @@ function updateTree(
         i += 3;
         break;
       }
-      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS: {
         id = operations[i + 1];
         const numErrors = operations[i + 2];
         const numWarnings = operations[i + 3];
@@ -337,6 +352,7 @@ function updateTree(
           );
         }
         break;
+      }
 
       default:
         throw Error(`Unsupported Bridge operation "${operation}"`);

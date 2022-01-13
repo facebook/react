@@ -28,6 +28,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
@@ -211,7 +212,9 @@ export function printOperationsArray(operations: Array<number>) {
         if (type === ElementTypeRoot) {
           logs.push(`Add new root node ${id}`);
 
+          i++; // isStrictModeCompliant
           i++; // supportsProfiling
+          i++; // supportsStrictMode
           i++; // hasOwnerMetadata
         } else {
           const parentID = ((operations[i]: any): number);
@@ -247,6 +250,15 @@ export function printOperationsArray(operations: Array<number>) {
         i += 1;
 
         logs.push(`Remove root ${rootID}`);
+        break;
+      }
+      case TREE_OPERATION_SET_SUBTREE_MODE: {
+        const id = operations[i + 1];
+        const mode = operations[i + 1];
+
+        i += 3;
+
+        logs.push(`Mode ${mode} set for subtree with root ${id}`);
         break;
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
