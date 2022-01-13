@@ -332,6 +332,26 @@ describe('DOMPropertyOperations', () => {
     });
 
     // @gate enableCustomElementPropertySupport
+    it('custom elements should have separate onInput and onChange handling', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const inputEventHandler = jest.fn();
+      const changeEventHandler = jest.fn();
+      ReactDOM.render(<my-custom-element
+        onInput={inputEventHandler}
+        onChange={changeEventHandler} />, container);
+      const customElement = container.querySelector('my-custom-element');
+
+      customElement.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(inputEventHandler).toHaveBeenCalledTimes(1);
+      expect(changeEventHandler).toHaveBeenCalledTimes(0);
+
+      customElement.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(inputEventHandler).toHaveBeenCalledTimes(1);
+      expect(changeEventHandler).toHaveBeenCalledTimes(1);
+    });
+
+    // @gate enableCustomElementPropertySupport
     it('custom elements should be able to remove and re-add custom event listeners', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
