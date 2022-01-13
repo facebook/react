@@ -337,9 +337,13 @@ describe('DOMPropertyOperations', () => {
       document.body.appendChild(container);
       const inputEventHandler = jest.fn();
       const changeEventHandler = jest.fn();
-      ReactDOM.render(<my-custom-element
-        onInput={inputEventHandler}
-        onChange={changeEventHandler} />, container);
+      ReactDOM.render(
+        <my-custom-element
+          onInput={inputEventHandler}
+          onChange={changeEventHandler}
+        />,
+        container,
+      );
       const customElement = container.querySelector('my-custom-element');
 
       customElement.dispatchEvent(new Event('input', {bubbles: true}));
