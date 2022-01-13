@@ -35,7 +35,8 @@ import checkPropTypes from 'shared/checkPropTypes';
 import {
   markComponentRenderStarted,
   markComponentRenderStopped,
-} from './SchedulingProfiler';
+  setIsStrictModeForDevtools,
+} from './ReactFiberDevToolsHook.new';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -240,7 +241,6 @@ import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.new';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.new';
 import is from 'shared/objectIs';
-import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
 import {
   getForksAtLevel,
   isForkedChild,

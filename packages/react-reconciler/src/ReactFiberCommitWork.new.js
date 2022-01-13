@@ -86,8 +86,6 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
-import {onCommitUnmount} from './ReactFiberDevToolsHook.new';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
   isCurrentUpdateNested,
@@ -147,6 +145,7 @@ import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {doesFiberContain} from './ReactFiberTreeReflection';
 import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 import {
+  isDevToolsPresent,
   markComponentPassiveEffectMountStarted,
   markComponentPassiveEffectMountStopped,
   markComponentPassiveEffectUnmountStarted,
@@ -155,7 +154,8 @@ import {
   markComponentLayoutEffectMountStopped,
   markComponentLayoutEffectUnmountStarted,
   markComponentLayoutEffectUnmountStopped,
-} from './SchedulingProfiler';
+  onCommitUnmount,
+} from './ReactFiberDevToolsHook.new';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;

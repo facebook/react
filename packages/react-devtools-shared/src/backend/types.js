@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext, Wakeable} from 'shared/ReactTypes';
 import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -87,6 +87,9 @@ export type ReactProviderType<T> = {
   ...
 };
 
+export type Lane = number;
+export type Lanes = number;
+
 export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
@@ -147,6 +150,9 @@ export type ReactRenderer = {
   setErrorHandler?: ?(shouldError: (fiber: Object) => ?boolean) => void,
   // Intentionally opaque type to avoid coupling DevTools to different Fast Refresh versions.
   scheduleRefresh?: Function,
+  // 18.0+
+  injectProfilingHooks?: (profilingHooks: DevToolsProfilingHooks) => void,
+  getLaneLabelMap?: () => Map<Lane, string>,
   ...
 };
 
@@ -390,10 +396,55 @@ export type RendererInterface = {
   ) => void,
   unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+
+  // Timeline profiler interface
+
   ...
 };
 
 export type Handler = (data: any) => void;
+
+// Renderers use these APIs to report profiling data to DevTools at runtime.
+// They get passed from the DevTools backend to the reconciler during injection.
+export type DevToolsProfilingHooks = {|
+  // Scheduling methods:
+  markRenderScheduled: (lane: Lane) => void,
+  markStateUpdateScheduled: (fiber: Fiber, lane: Lane) => void,
+  markForceUpdateScheduled: (fiber: Fiber, lane: Lane) => void,
+
+  // Work loop level methods:
+  markRenderStarted: (lanes: Lanes) => void,
+  markRenderYielded: () => void,
+  markRenderStopped: () => void,
+  markCommitStarted: (lanes: Lanes) => void,
+  markCommitStopped: () => void,
+  markLayoutEffectsStarted: (lanes: Lanes) => void,
+  markLayoutEffectsStopped: () => void,
+  markPassiveEffectsStarted: (lanes: Lanes) => void,
+  markPassiveEffectsStopped: () => void,
+
+  // Fiber level methods:
+  markComponentRenderStarted: (fiber: Fiber) => void,
+  markComponentRenderStopped: () => void,
+  markComponentErrored: (
+    fiber: Fiber,
+    thrownValue: mixed,
+    lanes: Lanes,
+  ) => void,
+  markComponentSuspended: (
+    fiber: Fiber,
+    wakeable: Wakeable,
+    lanes: Lanes,
+  ) => void,
+  markComponentLayoutEffectMountStarted: (fiber: Fiber) => void,
+  markComponentLayoutEffectMountStopped: () => void,
+  markComponentLayoutEffectUnmountStarted: (fiber: Fiber) => void,
+  markComponentLayoutEffectUnmountStopped: () => void,
+  markComponentPassiveEffectMountStarted: (fiber: Fiber) => void,
+  markComponentPassiveEffectMountStopped: () => void,
+  markComponentPassiveEffectUnmountStarted: (fiber: Fiber) => void,
+  markComponentPassiveEffectUnmountStopped: () => void,
+|};
 
 export type DevToolsHook = {
   listeners: {[key: string]: Array<Handler>, ...},
@@ -431,5 +482,6 @@ export type DevToolsHook = {
 
   // Testing
   dangerous_setTargetConsoleForTesting?: (fakeConsole: Object) => void,
+
   ...
 };
