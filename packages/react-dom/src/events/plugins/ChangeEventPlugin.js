@@ -76,7 +76,14 @@ let activeElementInst = null;
 /**
  * SECTION: handle `change` event
  */
-function shouldUseChangeEvent(elem) {
+function shouldUseChangeEvent(elem, targetInst) {
+  if (
+    enableCustomElementPropertySupport &&
+    targetInst &&
+    isCustomComponent(targetInst.elementType, targetInst.pendingProps)
+  ) {
+    return true;
+  }
   const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' ||
@@ -284,16 +291,8 @@ function extractEvents(
 ) {
   const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
-  let isCustomComponentTag = false;
-  if (enableCustomElementPropertySupport && targetInst) {
-    isCustomComponentTag = isCustomComponent(
-      targetInst.elementType,
-      targetInst.pendingProps,
-    );
-  }
-
   let getTargetInstFunc, handleEventFunc;
-  if (shouldUseChangeEvent(targetNode) || isCustomComponentTag) {
+  if (shouldUseChangeEvent(targetNode, targetInst)) {
     getTargetInstFunc = getTargetInstForChangeEvent;
   } else if (isTextInputElement(((targetNode: any): HTMLElement))) {
     if (isInputEventSupported) {
