@@ -80,7 +80,7 @@ function shouldUseChangeEvent(elem, targetInst) {
   if (
     enableCustomElementPropertySupport &&
     targetInst &&
-    isCustomComponent(targetInst.elementType, targetInst.pendingProps)
+    isCustomComponent(targetInst.elementType, targetInst.memoizedProps)
   ) {
     return true;
   }
