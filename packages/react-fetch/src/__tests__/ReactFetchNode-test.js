@@ -118,4 +118,29 @@ describe('ReactFetchNode', () => {
       expect(err.message).toEqual('Invalid URL: BOOM');
     }
   });
+  // @gate experimental || www
+  it('handles different paths with json', async () => {
+    serverImpl = (req, res) => {
+      switch (req.url) {
+        case '/banana':
+          res.write('banana');
+          break;
+        case '/mango':
+          res.write('mango');
+          break;
+        case '/orange':
+          res.write('orange');
+          break;
+      }
+      res.end();
+    };
+    const outputs = await waitForSuspense(() => {
+      return [
+        fetch(serverEndpoint + 'banana').json(),
+        fetch(serverEndpoint + 'mango').json(),
+        fetch(serverEndpoint + 'orange').json(),
+      ];
+    });
+    expect(outputs).toMatchObject(['banana', 'mango', 'orange']);
+  });
 });
