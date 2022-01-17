@@ -142,7 +142,6 @@ export function popProvider(
 export function scheduleWorkOnParentPath(
   parent: Fiber | null,
   renderLanes: Lanes,
-  stopAt?: Fiber | null = null,
 ) {
   // Update the child lanes of all the ancestors, including the alternates.
   let node = parent;
@@ -161,11 +160,6 @@ export function scheduleWorkOnParentPath(
     } else {
       // Neither alternate was updated, which means the rest of the
       // ancestor path already has sufficient priority.
-      if (stopAt === null) {
-        break;
-      }
-    }
-    if (stopAt && node === stopAt) {
       break;
     }
     node = node.return;
@@ -299,7 +293,7 @@ function propagateContextChange_eager<T>(
     ) {
       // We don't know if it will have any context consumers in it.
       // Schedule this fiber as having work on its children.
-      scheduleWorkOnParentPath(fiber.child, renderLanes, workInProgress);
+      scheduleWorkOnParentPath(fiber.child, renderLanes);
       nextFiber = fiber.child;
     } else {
       // Traverse down.
@@ -387,11 +381,7 @@ function propagateContextChanges<T>(
               // on its children. We'll use the childLanes on
               // this fiber to indicate that a context has changed.
               const primaryChildFragment = workInProgress.child;
-              scheduleWorkOnParentPath(
-                primaryChildFragment,
-                renderLanes,
-                workInProgress,
-              );
+              scheduleWorkOnParentPath(primaryChildFragment, renderLanes);
             } else {
               scheduleWorkOnParentPath(consumer.return, renderLanes);
             }
