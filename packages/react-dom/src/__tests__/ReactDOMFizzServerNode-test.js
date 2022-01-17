@@ -349,7 +349,7 @@ describe('ReactDOMFizzServer', () => {
         return this.pending = new Promise(resolve => {
           setTimeout(() => {
             delete this.pending;
-            this.resolved = "OK";
+            this.resolved = 'OK';
             resolve();
           }, 500);
         });
@@ -360,10 +360,10 @@ describe('ReactDOMFizzServer', () => {
     const Component = () => {
       const client = React.useContext(DelayContext);
       if (!client) {
-        return "context not found.";
+        return 'context not found.';
       }
       const result = client.get();
-      if (typeof result === "string") {
+      if (typeof result === 'string') {
         return result;
       }
       throw result;
@@ -374,7 +374,7 @@ describe('ReactDOMFizzServer', () => {
     ReactDOMFizzServer.renderToPipeableStream(
       <DelayContext.Provider value={client}>
         <Suspense fallback="loading">
-          <Component/>
+          <Component />
         </Suspense>
       </DelayContext.Provider>
     ).pipe(writable);
@@ -400,7 +400,7 @@ describe('ReactDOMFizzServer', () => {
         return this.pending = new Promise(resolve => {
           setTimeout(() => {
             delete this.pending;
-            this.resolved = "OK";
+            this.resolved = 'OK';
             resolve();
           }, 500);
         });
@@ -410,10 +410,10 @@ describe('ReactDOMFizzServer', () => {
     const Component = () => {
       const client = React.useContext(DelayContext);
       if (!client) {
-        return "context never found";
+        return 'context never found';
       }
       const result = client.get();
-      if (typeof result === "string") {
+      if (typeof result === 'string') {
         return result;
       }
       throw result;
@@ -424,7 +424,7 @@ describe('ReactDOMFizzServer', () => {
     ReactDOMFizzServer.renderToPipeableStream(
       <DelayContext.Provider value={client0}>
         <Suspense fallback="loading">
-          <Component/>
+          <Component />
         </Suspense>
       </DelayContext.Provider>
     ).pipe(writable0);
@@ -434,7 +434,7 @@ describe('ReactDOMFizzServer', () => {
     ReactDOMFizzServer.renderToPipeableStream(
       <DelayContext.Provider value={client1}>
         <Suspense fallback="loading">
-          <Component/>
+          <Component />
         </Suspense>
       </DelayContext.Provider>
     ).pipe(writable1);
