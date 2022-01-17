@@ -92,6 +92,7 @@ import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
+import {createProfilingHooks} from './profilingHooks';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -590,6 +591,8 @@ export function attach(
   } = ReactPriorityLevels;
 
   const {
+    getLaneLabelMap,
+    injectProfilingHooks,
     overrideHookState,
     overrideHookStateDeletePath,
     overrideHookStateRenamePath,
@@ -622,6 +625,16 @@ export function attach(
         return scheduleRefresh(...args);
       }
     };
+  }
+
+  if (typeof injectProfilingHooks === 'function') {
+    injectProfilingHooks(
+      createProfilingHooks({
+        getDisplayNameForFiber,
+        getLaneLabelMap,
+        reactVersion: version,
+      }),
+    );
   }
 
   // Tracks Fibers with recently changed number of error/warning messages.

@@ -65,20 +65,6 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
-import {
-  markCommitStarted,
-  markCommitStopped,
-  markComponentRenderStopped,
-  markComponentSuspended,
-  markComponentErrored,
-  markLayoutEffectsStarted,
-  markLayoutEffectsStopped,
-  markPassiveEffectsStarted,
-  markPassiveEffectsStopped,
-  markRenderStarted,
-  markRenderYielded,
-  markRenderStopped,
-} from './SchedulingProfiler';
 
 import {
   resetAfterCommit,
@@ -224,9 +210,21 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {
+  isDevToolsPresent,
+  markCommitStarted,
+  markCommitStopped,
+  markComponentRenderStopped,
+  markComponentSuspended,
+  markComponentErrored,
+  markLayoutEffectsStarted,
+  markLayoutEffectsStopped,
+  markPassiveEffectsStarted,
+  markPassiveEffectsStopped,
+  markRenderStarted,
+  markRenderYielded,
+  markRenderStopped,
   onCommitRoot as onCommitRootDevTools,
   onPostCommitRoot as onPostCommitRootDevTools,
-  isDevToolsPresent,
 } from './ReactFiberDevToolsHook.old';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 import {releaseCache} from './ReactFiberCacheComponent.old';

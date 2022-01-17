@@ -75,6 +75,7 @@ function getBundleOutputPath(bundleType, filename, packageName) {
       switch (packageName) {
         case 'scheduler':
         case 'react':
+        case 'react-is':
         case 'react-test-renderer':
           return `build/facebook-react-native/${packageName}/cjs/${filename}`;
         case 'react-native-renderer':

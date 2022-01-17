@@ -19,12 +19,18 @@ const {
 // by configuring an environment variable.
 
 const sha = String(
-  spawnSync('git', ['show', '-s', '--format=%h']).stdout
+  spawnSync('git', ['show', '-s', '--no-show-signature', '--format=%h']).stdout
 ).trim();
 
 let dateString = String(
-  spawnSync('git', ['show', '-s', '--format=%cd', '--date=format:%Y%m%d', sha])
-    .stdout
+  spawnSync('git', [
+    'show',
+    '-s',
+    '--no-show-signature',
+    '--format=%cd',
+    '--date=format:%Y%m%d',
+    sha,
+  ]).stdout
 ).trim();
 
 // On CI environment, this string is wrapped with quotes '...'s

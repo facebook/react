@@ -9,13 +9,12 @@
  */
 
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
-
-import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
 declare var window: any;
 

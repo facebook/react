@@ -163,6 +163,10 @@ export function getRendererID(): number {
 }
 
 export function legacyRender(elements, container) {
+  if (container == null) {
+    container = document.createElement('div');
+  }
+
   const ReactDOM = require('react-dom');
   withErrorsOrWarningsIgnored(
     ['ReactDOM.render is no longer supported in React 18'],
@@ -170,6 +174,10 @@ export function legacyRender(elements, container) {
       ReactDOM.render(elements, container);
     },
   );
+
+  return () => {
+    ReactDOM.unmountComponentAtNode(container);
+  };
 }
 
 export function requireTestRenderer(): ReactTestRenderer {

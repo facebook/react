@@ -7,16 +7,22 @@
  * @flow
  */
 
+import type {Lane, Lanes} from './ReactFiberLane.new';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
+import type {EventPriority} from './ReactEventPriorities.new';
+import type {DevToolsProfilingHooks} from 'react-devtools-shared/src/backend/types';
+
+import {
+  getLabelForLane,
+  TotalLanes,
+} from 'react-reconciler/src/ReactFiberLane.new';
+import {DidCapture} from './ReactFiberFlags';
 import {
   consoleManagedByDevToolsDuringStrictMode,
   enableProfilerTimer,
+  enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
-
-import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {ReactNodeList} from 'shared/ReactTypes';
-import type {EventPriority} from './ReactEventPriorities.new';
-
-import {DidCapture} from './ReactFiberFlags';
 import {
   DiscreteEventPriority,
   ContinuousEventPriority,
@@ -38,6 +44,7 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
 let rendererID = null;
 let injectedHook = null;
+let injectedProfilingHooks: DevToolsProfilingHooks | null = null;
 let hasLoggedError = false;
 
 export const isDevToolsPresent =
@@ -67,7 +74,11 @@ export function injectInternals(internals: Object): boolean {
     return true;
   }
   try {
-    rendererID = hook.inject(internals);
+    rendererID = hook.inject({
+      ...internals,
+      getLaneLabelMap,
+      injectProfilingHooks,
+    });
     // We have successfully injected, so now it is safe to set up hooks.
     injectedHook = hook;
   } catch (err) {
@@ -209,6 +220,305 @@ export function setIsStrictModeForDevtools(newIsStrictMode: boolean) {
       disableLogs();
     } else {
       reenableLogs();
+    }
+  }
+}
+
+// Profiler API hooks
+
+function injectProfilingHooks(profilingHooks: DevToolsProfilingHooks): void {
+  injectedProfilingHooks = profilingHooks;
+}
+
+function getLaneLabelMap(): Map<Lane, string> {
+  const map: Map<Lane, string> = new Map();
+
+  let lane = 1;
+  for (let index = 0; index < TotalLanes; index++) {
+    const label = ((getLabelForLane(lane): any): string);
+    map.set(lane, label);
+    lane *= 2;
+  }
+
+  return map;
+}
+
+export function markCommitStarted(lanes: Lanes): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markCommitStarted === 'function'
+    ) {
+      injectedProfilingHooks.markCommitStarted(lanes);
+    }
+  }
+}
+
+export function markCommitStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markCommitStopped === 'function'
+    ) {
+      injectedProfilingHooks.markCommitStopped();
+    }
+  }
+}
+
+export function markComponentRenderStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentRenderStarted === 'function'
+    ) {
+      injectedProfilingHooks.markComponentRenderStarted(fiber);
+    }
+  }
+}
+
+export function markComponentRenderStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentRenderStopped === 'function'
+    ) {
+      injectedProfilingHooks.markComponentRenderStopped();
+    }
+  }
+}
+
+export function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectMountStarted ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectMountStarted(fiber);
+    }
+  }
+}
+
+export function markComponentPassiveEffectMountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectMountStopped ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectMountStopped();
+    }
+  }
+}
+
+export function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStarted ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectUnmountStarted(fiber);
+    }
+  }
+}
+
+export function markComponentPassiveEffectUnmountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentPassiveEffectUnmountStopped ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentPassiveEffectUnmountStopped();
+    }
+  }
+}
+
+export function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectMountStarted ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectMountStarted(fiber);
+    }
+  }
+}
+
+export function markComponentLayoutEffectMountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectMountStopped ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectMountStopped();
+    }
+  }
+}
+
+export function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStarted ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectUnmountStarted(fiber);
+    }
+  }
+}
+
+export function markComponentLayoutEffectUnmountStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentLayoutEffectUnmountStopped ===
+        'function'
+    ) {
+      injectedProfilingHooks.markComponentLayoutEffectUnmountStopped();
+    }
+  }
+}
+
+export function markComponentErrored(
+  fiber: Fiber,
+  thrownValue: mixed,
+  lanes: Lanes,
+): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentErrored === 'function'
+    ) {
+      injectedProfilingHooks.markComponentErrored(fiber, thrownValue, lanes);
+    }
+  }
+}
+
+export function markComponentSuspended(
+  fiber: Fiber,
+  wakeable: Wakeable,
+  lanes: Lanes,
+): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markComponentSuspended === 'function'
+    ) {
+      injectedProfilingHooks.markComponentSuspended(fiber, wakeable, lanes);
+    }
+  }
+}
+
+export function markLayoutEffectsStarted(lanes: Lanes): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markLayoutEffectsStarted === 'function'
+    ) {
+      injectedProfilingHooks.markLayoutEffectsStarted(lanes);
+    }
+  }
+}
+
+export function markLayoutEffectsStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markLayoutEffectsStopped === 'function'
+    ) {
+      injectedProfilingHooks.markLayoutEffectsStopped();
+    }
+  }
+}
+
+export function markPassiveEffectsStarted(lanes: Lanes): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markPassiveEffectsStarted === 'function'
+    ) {
+      injectedProfilingHooks.markPassiveEffectsStarted(lanes);
+    }
+  }
+}
+
+export function markPassiveEffectsStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markPassiveEffectsStopped === 'function'
+    ) {
+      injectedProfilingHooks.markPassiveEffectsStopped();
+    }
+  }
+}
+
+export function markRenderStarted(lanes: Lanes): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderStarted === 'function'
+    ) {
+      injectedProfilingHooks.markRenderStarted(lanes);
+    }
+  }
+}
+
+export function markRenderYielded(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderYielded === 'function'
+    ) {
+      injectedProfilingHooks.markRenderYielded();
+    }
+  }
+}
+
+export function markRenderStopped(): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderStopped === 'function'
+    ) {
+      injectedProfilingHooks.markRenderStopped();
+    }
+  }
+}
+
+export function markRenderScheduled(lane: Lane): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markRenderScheduled === 'function'
+    ) {
+      injectedProfilingHooks.markRenderScheduled(lane);
+    }
+  }
+}
+
+export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markForceUpdateScheduled === 'function'
+    ) {
+      injectedProfilingHooks.markForceUpdateScheduled(fiber, lane);
+    }
+  }
+}
+
+export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
+  if (enableSchedulingProfiler) {
+    if (
+      injectedProfilingHooks !== null &&
+      typeof injectedProfilingHooks.markStateUpdateScheduled === 'function'
+    ) {
+      injectedProfilingHooks.markStateUpdateScheduled(fiber, lane);
     }
   }
 }

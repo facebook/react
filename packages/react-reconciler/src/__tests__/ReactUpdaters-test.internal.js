@@ -51,6 +51,32 @@ describe('updaters', () => {
       onCommitUnmount: jest.fn(() => {}),
       onPostCommitRoot: jest.fn(() => {}),
       onScheduleRoot: jest.fn(() => {}),
+
+      // Profiling APIs
+      markCommitStarted: jest.fn(() => {}),
+      markCommitStopped: jest.fn(() => {}),
+      markComponentRenderStarted: jest.fn(() => {}),
+      markComponentRenderStopped: jest.fn(() => {}),
+      markComponentPassiveEffectMountStarted: jest.fn(() => {}),
+      markComponentPassiveEffectMountStopped: jest.fn(() => {}),
+      markComponentPassiveEffectUnmountStarted: jest.fn(() => {}),
+      markComponentPassiveEffectUnmountStopped: jest.fn(() => {}),
+      markComponentLayoutEffectMountStarted: jest.fn(() => {}),
+      markComponentLayoutEffectMountStopped: jest.fn(() => {}),
+      markComponentLayoutEffectUnmountStarted: jest.fn(() => {}),
+      markComponentLayoutEffectUnmountStopped: jest.fn(() => {}),
+      markComponentErrored: jest.fn(() => {}),
+      markComponentSuspended: jest.fn(() => {}),
+      markLayoutEffectsStarted: jest.fn(() => {}),
+      markLayoutEffectsStopped: jest.fn(() => {}),
+      markPassiveEffectsStarted: jest.fn(() => {}),
+      markPassiveEffectsStopped: jest.fn(() => {}),
+      markRenderStarted: jest.fn(() => {}),
+      markRenderYielded: jest.fn(() => {}),
+      markRenderStopped: jest.fn(() => {}),
+      markRenderScheduled: jest.fn(() => {}),
+      markForceUpdateScheduled: jest.fn(() => {}),
+      markStateUpdateScheduled: jest.fn(() => {}),
     };
 
     jest.mock(
