@@ -66,23 +66,20 @@ const {
 const {getFilename} = Bundles;
 
 function parseRequestedNames(names, toCase) {
-  let result = [];
-  for (let i = 0; i < names.length; i++) {
-    let splitNames = names[i].split(',');
-    for (let j = 0; j < splitNames.length; j++) {
-      let name = splitNames[j].trim();
-      if (!name) {
-        continue;
-      }
+  return names
+    .join()
+    .split(',')
+    .map(name => {
+      name = name.trim();
       if (toCase === 'uppercase') {
-        name = name.toUpperCase();
+        return name.toUpperCase();
       } else if (toCase === 'lowercase') {
-        name = name.toLowerCase();
+        return name.toLowerCase();
+      } else {
+        return name;
       }
-      result.push(name);
-    }
-  }
-  return result;
+    })
+    .filter(name => !!name);
 }
 
 const requestedBundleTypes = argv.type
