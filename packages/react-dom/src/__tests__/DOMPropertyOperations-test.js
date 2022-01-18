@@ -416,21 +416,30 @@ describe('DOMPropertyOperations', () => {
       expect(regularInput).not.toBe(customInput);
 
       regularInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       regularInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       regularInput.dispatchEvent(new Event('click', {bubbles: true}));
-      customInput.dispatchEvent(new Event('input', {bubbles: true}));
-      customInput.dispatchEvent(new Event('change', {bubbles: true}));
-      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
 
-      expect(customOnInputHandler).toHaveBeenCalledTimes(
-        regularOnInputHandler.mock.calls.length,
-      );
-      expect(customOnChangeHandler).toHaveBeenCalledTimes(
-        regularOnChangeHandler.mock.calls.length,
-      );
-      expect(customOnClickHandler).toHaveBeenCalledTimes(
-        regularOnClickHandler.mock.calls.length,
-      );
+      customInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+      customInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(1);
     });
 
     it('<input type=radio is=...> should have the same onChange/onInput/onClick behavior as <input type=radio>', () => {
@@ -470,21 +479,30 @@ describe('DOMPropertyOperations', () => {
       expect(regularInput).not.toBe(customInput);
 
       regularInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       regularInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       regularInput.dispatchEvent(new Event('click', {bubbles: true}));
-      customInput.dispatchEvent(new Event('input', {bubbles: true}));
-      customInput.dispatchEvent(new Event('change', {bubbles: true}));
-      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
 
-      expect(customOnInputHandler).toHaveBeenCalledTimes(
-        regularOnInputHandler.mock.calls.length,
-      );
-      expect(customOnChangeHandler).toHaveBeenCalledTimes(
-        regularOnChangeHandler.mock.calls.length,
-      );
-      expect(customOnClickHandler).toHaveBeenCalledTimes(
-        regularOnClickHandler.mock.calls.length,
-      );
+      customInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+      customInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(1);
     });
 
     it('<select is=...> should have the same onChange/onInput/onClick behavior as <select>', () => {
@@ -522,21 +540,30 @@ describe('DOMPropertyOperations', () => {
       expect(regularSelect).not.toBe(customSelect);
 
       regularSelect.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       regularSelect.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       regularSelect.dispatchEvent(new Event('click', {bubbles: true}));
-      customSelect.dispatchEvent(new Event('input', {bubbles: true}));
-      customSelect.dispatchEvent(new Event('change', {bubbles: true}));
-      customSelect.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
 
-      expect(customOnInputHandler).toHaveBeenCalledTimes(
-        regularOnInputHandler.mock.calls.length,
-      );
-      expect(customOnChangeHandler).toHaveBeenCalledTimes(
-        regularOnChangeHandler.mock.calls.length,
-      );
-      expect(customOnClickHandler).toHaveBeenCalledTimes(
-        regularOnClickHandler.mock.calls.length,
-      );
+      customSelect.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+      customSelect.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+      customSelect.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(1);
     });
 
     // @gate enableCustomElementPropertySupport
