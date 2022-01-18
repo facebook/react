@@ -714,6 +714,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
           // We don't support running callbacks in the middle of render
           // or commit so we need to check against that.
           if (executionContext === NoContext) {
+            // It's only safe to do this conditionally because we always
+            // check for pending work before we exit the task.
             flushSyncCallbacks();
           }
         });
