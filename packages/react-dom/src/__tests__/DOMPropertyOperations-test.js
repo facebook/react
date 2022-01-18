@@ -606,6 +606,37 @@ describe('DOMPropertyOperations', () => {
       expect(onClickHandler).toBeCalledTimes(3);
     });
 
+    it('custom element with event target child onChange/onInput/onClick', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const onChangeHandler = jest.fn();
+      const onInputHandler = jest.fn();
+      const onClickHandler = jest.fn();
+      ReactDOM.render(
+        <my-custom-element
+          onChange={onChangeHandler}
+          onInput={onInputHandler}
+          onClick={onClickHandler}>
+          <div />
+        </my-custom-element>,
+        container,
+      );
+
+      const div = container.querySelector('div');
+      div.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(0);
+      div.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+      div.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(1);
+    });
+
     // @gate enableCustomElementPropertySupport
     it('custom elements should allow custom events with capture event listeners', () => {
       const oncustomeventCapture = jest.fn();
