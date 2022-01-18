@@ -540,6 +540,72 @@ describe('DOMPropertyOperations', () => {
     });
 
     // @gate enableCustomElementPropertySupport
+    it('onChange/onInput/onClick on div with various types of children', () => {
+      const container = document.createElement('div');
+      const onChangeHandler = jest.fn();
+      const onInputHandler = jest.fn();
+      const onClickHandler = jest.fn();
+      ReactDOM.render(
+        <div
+          onChange={onChangeHandler}
+          onInput={onInputHandler}
+          onClick={onClickHandler}>
+          <my-custom-element />
+          <input />
+          <input is="my-custom-element" />
+        </div>,
+        container,
+      );
+      const customElement = container.querySelector('my-custom-element');
+      const regularInput = container.querySelector(
+        'input:not([is="my-custom-element"])',
+      );
+      const customInput = container.querySelector(
+        'input[is="my-custom-element"]',
+      );
+      expect(regularInput).not.toBe(customInput);
+
+      customElement.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(0);
+      customElement.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+      customElement.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+
+      regularInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+      regularInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(2);
+      expect(onClickHandler).toBeCalledTimes(0);
+      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(2);
+      expect(onClickHandler).toBeCalledTimes(0);
+
+      customInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(2);
+      expect(onClickHandler).toBeCalledTimes(0);
+      customInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(3);
+      expect(onClickHandler).toBeCalledTimes(0);
+      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(3);
+      expect(onClickHandler).toBeCalledTimes(0);
+    });
+
+    // @gate enableCustomElementPropertySupport
     it('custom elements should allow custom events with capture event listeners', () => {
       const oncustomeventCapture = jest.fn();
       const oncustomevent = jest.fn();
