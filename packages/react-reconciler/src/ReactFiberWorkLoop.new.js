@@ -708,7 +708,17 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
         // of `act`.
         ReactCurrentActQueue.current.push(flushSyncCallbacks);
       } else {
-        scheduleMicrotask(flushSyncCallbacks);
+        scheduleMicrotask(() => {
+          // In Safari, appending an iframe forces microtasks to run.
+          // https://github.com/facebook/react/issues/22459
+          // We don't support running callbacks in the middle of render
+          // or commit so we need to check against that.
+          if (executionContext === NoContext) {
+            // It's only safe to do this conditionally because we always
+            // check for pending work before we exit the task.
+            flushSyncCallbacks();
+          }
+        });
       }
     } else {
       // Flush the queue in an Immediate task.
