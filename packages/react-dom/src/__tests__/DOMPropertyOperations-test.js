@@ -381,6 +381,164 @@ describe('DOMPropertyOperations', () => {
       expect(eventHandler).toHaveBeenCalledTimes(2);
     });
 
+    it('<input is=...> should have the same onChange/onInput/onClick behavior as <input>', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const regularOnInputHandler = jest.fn();
+      const regularOnChangeHandler = jest.fn();
+      const regularOnClickHandler = jest.fn();
+      const customOnInputHandler = jest.fn();
+      const customOnChangeHandler = jest.fn();
+      const customOnClickHandler = jest.fn();
+      ReactDOM.render(
+        <div>
+          <input
+            onInput={regularOnInputHandler}
+            onChange={regularOnChangeHandler}
+            onClick={regularOnClickHandler}
+          />
+          <input
+            is="my-custom-element"
+            onInput={customOnInputHandler}
+            onChange={customOnChangeHandler}
+            onClick={customOnClickHandler}
+          />
+        </div>,
+        container,
+      );
+
+      const regularInput = container.querySelector(
+        'input:not([is=my-custom-element])',
+      );
+      const customInput = container.querySelector(
+        'input[is=my-custom-element]',
+      );
+      expect(regularInput).not.toBe(customInput);
+
+      regularInput.dispatchEvent(new Event('input', {bubbles: true}));
+      regularInput.dispatchEvent(new Event('change', {bubbles: true}));
+      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
+      customInput.dispatchEvent(new Event('input', {bubbles: true}));
+      customInput.dispatchEvent(new Event('change', {bubbles: true}));
+      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+
+      expect(customOnInputHandler).toHaveBeenCalledTimes(
+        regularOnInputHandler.mock.calls.length,
+      );
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(
+        regularOnChangeHandler.mock.calls.length,
+      );
+      expect(customOnClickHandler).toHaveBeenCalledTimes(
+        regularOnClickHandler.mock.calls.length,
+      );
+    });
+
+    it('<input type=radio is=...> should have the same onChange/onInput/onClick behavior as <input type=radio>', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const regularOnInputHandler = jest.fn();
+      const regularOnChangeHandler = jest.fn();
+      const regularOnClickHandler = jest.fn();
+      const customOnInputHandler = jest.fn();
+      const customOnChangeHandler = jest.fn();
+      const customOnClickHandler = jest.fn();
+      ReactDOM.render(
+        <div>
+          <input
+            type="radio"
+            onInput={regularOnInputHandler}
+            onChange={regularOnChangeHandler}
+            onClick={regularOnClickHandler}
+          />
+          <input
+            is="my-custom-element"
+            type="radio"
+            onInput={customOnInputHandler}
+            onChange={customOnChangeHandler}
+            onClick={customOnClickHandler}
+          />
+        </div>,
+        container,
+      );
+
+      const regularInput = container.querySelector(
+        'input:not([is=my-custom-element])',
+      );
+      const customInput = container.querySelector(
+        'input[is=my-custom-element]',
+      );
+      expect(regularInput).not.toBe(customInput);
+
+      regularInput.dispatchEvent(new Event('input', {bubbles: true}));
+      regularInput.dispatchEvent(new Event('change', {bubbles: true}));
+      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
+      customInput.dispatchEvent(new Event('input', {bubbles: true}));
+      customInput.dispatchEvent(new Event('change', {bubbles: true}));
+      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+
+      expect(customOnInputHandler).toHaveBeenCalledTimes(
+        regularOnInputHandler.mock.calls.length,
+      );
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(
+        regularOnChangeHandler.mock.calls.length,
+      );
+      expect(customOnClickHandler).toHaveBeenCalledTimes(
+        regularOnClickHandler.mock.calls.length,
+      );
+    });
+
+    it('<select is=...> should have the same onChange/onInput/onClick behavior as <select>', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const regularOnInputHandler = jest.fn();
+      const regularOnChangeHandler = jest.fn();
+      const regularOnClickHandler = jest.fn();
+      const customOnInputHandler = jest.fn();
+      const customOnChangeHandler = jest.fn();
+      const customOnClickHandler = jest.fn();
+      ReactDOM.render(
+        <div>
+          <select
+            onInput={regularOnInputHandler}
+            onChange={regularOnChangeHandler}
+            onClick={regularOnClickHandler}
+          />
+          <select
+            is="my-custom-element"
+            onInput={customOnInputHandler}
+            onChange={customOnChangeHandler}
+            onClick={customOnClickHandler}
+          />
+        </div>,
+        container,
+      );
+
+      const regularSelect = container.querySelector(
+        'select:not([is=my-custom-element])',
+      );
+      const customSelect = container.querySelector(
+        'select[is=my-custom-element]',
+      );
+      expect(regularSelect).not.toBe(customSelect);
+
+      regularSelect.dispatchEvent(new Event('input', {bubbles: true}));
+      regularSelect.dispatchEvent(new Event('change', {bubbles: true}));
+      regularSelect.dispatchEvent(new Event('click', {bubbles: true}));
+      customSelect.dispatchEvent(new Event('input', {bubbles: true}));
+      customSelect.dispatchEvent(new Event('change', {bubbles: true}));
+      customSelect.dispatchEvent(new Event('click', {bubbles: true}));
+
+      expect(customOnInputHandler).toHaveBeenCalledTimes(
+        regularOnInputHandler.mock.calls.length,
+      );
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(
+        regularOnChangeHandler.mock.calls.length,
+      );
+      expect(customOnClickHandler).toHaveBeenCalledTimes(
+        regularOnClickHandler.mock.calls.length,
+      );
+    });
+
     // @gate enableCustomElementPropertySupport
     it('custom elements should allow custom events with capture event listeners', () => {
       const oncustomeventCapture = jest.fn();
