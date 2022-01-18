@@ -542,6 +542,7 @@ describe('DOMPropertyOperations', () => {
     // @gate enableCustomElementPropertySupport
     it('onChange/onInput/onClick on div with various types of children', () => {
       const container = document.createElement('div');
+      document.body.appendChild(container);
       const onChangeHandler = jest.fn();
       const onInputHandler = jest.fn();
       const onClickHandler = jest.fn();
@@ -576,33 +577,33 @@ describe('DOMPropertyOperations', () => {
       customElement.dispatchEvent(new Event('click', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(1);
-      expect(onClickHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(1);
 
       regularInput.dispatchEvent(new Event('change', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(1);
-      expect(onClickHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(1);
       regularInput.dispatchEvent(new Event('input', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(2);
-      expect(onClickHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(1);
       regularInput.dispatchEvent(new Event('click', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(2);
-      expect(onClickHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(2);
 
       customInput.dispatchEvent(new Event('change', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(2);
-      expect(onClickHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(2);
       customInput.dispatchEvent(new Event('input', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(3);
-      expect(onClickHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(2);
       customInput.dispatchEvent(new Event('click', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(3);
-      expect(onClickHandler).toBeCalledTimes(0);
+      expect(onClickHandler).toBeCalledTimes(3);
     });
 
     // @gate enableCustomElementPropertySupport
