@@ -31,7 +31,7 @@
     "./package.json": "./package.json",
     "./jsx-runtime": "./jsx-runtime.js",
     "./jsx-dev-runtime": "./jsx-dev-runtime.js",
-    "./": "./"
+    "./*": "./*"
   },
   "repository": {
     "type": "git",

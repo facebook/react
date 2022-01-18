@@ -26,7 +26,8 @@
     },
     "./index.node.server": "./index.node.server.js",
     "./index.browser.server": "./index.browser.server.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./*": "./*"
   },
   "peerDependencies": {
     "react": "^17.0.0",
