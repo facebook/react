@@ -2754,13 +2754,15 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
-function scheduleContextWorkOnFiber(fiber: Fiber, renderLanes: Lanes) {
+function scheduleSuspenseWorkOnFiber(fiber: Fiber, renderLanes: Lanes) {
   fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
   const alternate = fiber.alternate;
   if (alternate !== null) {
     alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
   }
-  scheduleContextWorkOnParentPath(fiber.return, renderLanes, null);
+  // Guaranteed to be non-empty since the fiber is not a root.
+  const parentFiber: Fiber = (fiber.return: any);
+  scheduleContextWorkOnParentPath(parentFiber, renderLanes, parentFiber);
 }
 
 function propagateSuspenseContextChange(
@@ -2776,7 +2778,7 @@ function propagateSuspenseContextChange(
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        scheduleContextWorkOnFiber(node, renderLanes);
+        scheduleSuspenseWorkOnFiber(node, renderLanes);
       }
     } else if (node.tag === SuspenseListComponent) {
       // If the tail is hidden there might not be an Suspense boundaries
@@ -2784,7 +2786,7 @@ function propagateSuspenseContextChange(
       // list itself.
       // We don't have to traverse to the children of the list since
       // the list will propagate the change when it rerenders.
-      scheduleContextWorkOnFiber(node, renderLanes);
+      scheduleSuspenseWorkOnFiber(node, renderLanes);
     } else if (node.child !== null) {
       node.child.return = node;
       node = node.child;

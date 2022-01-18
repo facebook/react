@@ -141,7 +141,7 @@ export function popProvider(
 export function scheduleContextWorkOnParentPath(
   parent: Fiber | null,
   renderLanes: Lanes,
-  propagationRoot: Fiber | null,
+  propagationRoot: Fiber,
 ) {
   // Update the child lanes of all the ancestors, including the alternates.
   let node = parent;
@@ -169,7 +169,7 @@ export function scheduleContextWorkOnParentPath(
       break;
     }
     if (__DEV__) {
-      if (propagationRoot !== null && node === propagationRoot.alternate) {
+      if (node === propagationRoot.alternate) {
         console.error(
           'Did not expect to encounter a propagation root alternate when scheduling context work. ' +
             'This error is likely caused by a bug in React. Please file an issue.',
