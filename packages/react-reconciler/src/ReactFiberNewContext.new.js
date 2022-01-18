@@ -138,14 +138,13 @@ export function popProvider(
   }
 }
 
-export function scheduleWorkOnParentPath(
+export function scheduleContextWorkOnParentPath(
   parent: Fiber | null,
   renderLanes: Lanes,
-  stopAt: Fiber | null,
+  propagationRoot: Fiber | null,
 ) {
   // Update the child lanes of all the ancestors, including the alternates.
   let node = parent;
-  const stopAtAlternate = stopAt !== null ? stopAt.alternate : null;
   while (node !== null) {
     const alternate = node.alternate;
     if (!isSubsetOfLanes(node.childLanes, renderLanes)) {
@@ -166,8 +165,16 @@ export function scheduleWorkOnParentPath(
       // or fallback trees because childLanes may be inconsistent
       // with the surroundings. This is why we continue the loop.
     }
-    if (node === stopAt || node === stopAtAlternate) {
+    if (node === propagationRoot) {
       break;
+    }
+    if (__DEV__) {
+      if (propagationRoot !== null && node === propagationRoot.alternate) {
+        console.error(
+          'Did not expect to encounter a propagation root alternate when scheduling context work. ' +
+            'This error is likely caused by a bug in React. Please file an issue.',
+        );
+      }
     }
     node = node.return;
   }
@@ -254,7 +261,11 @@ function propagateContextChange_eager<T>(
           if (alternate !== null) {
             alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
           }
-          scheduleWorkOnParentPath(fiber.return, renderLanes, workInProgress);
+          scheduleContextWorkOnParentPath(
+            fiber.return,
+            renderLanes,
+            workInProgress,
+          );
 
           // Mark the updated lanes on the list, too.
           list.lanes = mergeLanes(list.lanes, renderLanes);
@@ -292,7 +303,11 @@ function propagateContextChange_eager<T>(
       // because we want to schedule this fiber as having work
       // on its children. We'll use the childLanes on
       // this fiber to indicate that a context has changed.
-      scheduleWorkOnParentPath(parentSuspense, renderLanes, workInProgress);
+      scheduleContextWorkOnParentPath(
+        parentSuspense,
+        renderLanes,
+        workInProgress,
+      );
       nextFiber = fiber.sibling;
     } else {
       // Traverse down.
@@ -373,7 +388,7 @@ function propagateContextChanges<T>(
             if (alternate !== null) {
               alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
             }
-            scheduleWorkOnParentPath(
+            scheduleContextWorkOnParentPath(
               consumer.return,
               renderLanes,
               workInProgress,
@@ -418,7 +433,11 @@ function propagateContextChanges<T>(
       // because we want to schedule this fiber as having work
       // on its children. We'll use the childLanes on
       // this fiber to indicate that a context has changed.
-      scheduleWorkOnParentPath(parentSuspense, renderLanes, workInProgress);
+      scheduleContextWorkOnParentPath(
+        parentSuspense,
+        renderLanes,
+        workInProgress,
+      );
       nextFiber = null;
     } else {
       // Traverse down.

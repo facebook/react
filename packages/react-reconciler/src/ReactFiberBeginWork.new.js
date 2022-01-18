@@ -173,7 +173,7 @@ import {
   checkIfContextChanged,
   readContext,
   prepareToReadContext,
-  scheduleWorkOnParentPath,
+  scheduleContextWorkOnParentPath,
 } from './ReactFiberNewContext.new';
 import {
   renderWithHooks,
@@ -2754,13 +2754,13 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
-function scheduleWorkOnFiber(fiber: Fiber, renderLanes: Lanes) {
+function scheduleContextWorkOnFiber(fiber: Fiber, renderLanes: Lanes) {
   fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
   const alternate = fiber.alternate;
   if (alternate !== null) {
     alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
   }
-  scheduleWorkOnParentPath(fiber.return, renderLanes, null);
+  scheduleContextWorkOnParentPath(fiber.return, renderLanes, null);
 }
 
 function propagateSuspenseContextChange(
@@ -2776,7 +2776,7 @@ function propagateSuspenseContextChange(
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        scheduleWorkOnFiber(node, renderLanes);
+        scheduleContextWorkOnFiber(node, renderLanes);
       }
     } else if (node.tag === SuspenseListComponent) {
       // If the tail is hidden there might not be an Suspense boundaries
@@ -2784,7 +2784,7 @@ function propagateSuspenseContextChange(
       // list itself.
       // We don't have to traverse to the children of the list since
       // the list will propagate the change when it rerenders.
-      scheduleWorkOnFiber(node, renderLanes);
+      scheduleContextWorkOnFiber(node, renderLanes);
     } else if (node.child !== null) {
       node.child.return = node;
       node = node.child;
