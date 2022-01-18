@@ -94,6 +94,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
 import {createProfilingHooks} from './profilingHooks';
 
+import type {ToggleProfilingStatus} from './profilingHooks';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
@@ -627,14 +628,20 @@ export function attach(
     };
   }
 
+  let toggleProfilingStatus: null | ToggleProfilingStatus = null;
   if (typeof injectProfilingHooks === 'function') {
-    injectProfilingHooks(
-      createProfilingHooks({
-        getDisplayNameForFiber,
-        getLaneLabelMap,
-        reactVersion: version,
-      }),
-    );
+    const response = createProfilingHooks({
+      getDisplayNameForFiber,
+      getIsProfiling: () => isProfiling,
+      getLaneLabelMap,
+      reactVersion: version,
+    });
+
+    // Pass the Profiling hooks to the reconciler for it to call during render.
+    injectProfilingHooks(response.profilingHooks);
+
+    // Hang onto this toggle so we can notify the external methods of profiling status changes.
+    toggleProfilingStatus = response.toggleProfilingStatus;
   }
 
   // Tracks Fibers with recently changed number of error/warning messages.
@@ -3989,11 +3996,19 @@ export function attach(
     isProfiling = true;
     profilingStartTime = getCurrentTime();
     rootToCommitProfilingMetadataMap = new Map();
+
+    if (toggleProfilingStatus !== null) {
+      toggleProfilingStatus(true);
+    }
   }
 
   function stopProfiling() {
     isProfiling = false;
     recordChangeDescriptions = false;
+
+    if (toggleProfilingStatus !== null) {
+      toggleProfilingStatus(false);
+    }
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".

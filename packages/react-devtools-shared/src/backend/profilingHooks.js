@@ -63,21 +63,26 @@ export function setPerformanceMock_ONLY_FOR_TESTING(
   supportsUserTimingV3 = performanceMock !== null;
 }
 
-function markAndClear(markName) {
-  // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
-  ((performanceTarget: any): Performance).mark(markName);
-  ((performanceTarget: any): Performance).clearMarks(markName);
-}
+export type ToggleProfilingStatus = (value: boolean) => void;
+
+type Response = {|
+  profilingHooks: DevToolsProfilingHooks,
+  toggleProfilingStatus: ToggleProfilingStatus,
+|};
 
 export function createProfilingHooks({
   getDisplayNameForFiber,
+  getIsProfiling,
   getLaneLabelMap,
   reactVersion,
 }: {|
   getDisplayNameForFiber: (fiber: Fiber) => string | null,
+  getIsProfiling: () => boolean,
   getLaneLabelMap?: () => Map<Lane, string> | null,
   reactVersion: string,
-|}): DevToolsProfilingHooks {
+|}): Response {
+  let isProfiling: boolean = false;
+
   function markMetadata() {
     markAndClear(`--react-version-${reactVersion}`);
     markAndClear(`--profiler-version-${SCHEDULING_PROFILER_VERSION}`);
@@ -113,6 +118,17 @@ export function createProfilingHooks({
         markAndClear(`--react-lane-labels-${labels}`);
       }
     }
+  }
+
+  function markAndClear(markName) {
+    // Only record User Timing marks if DevTools is profiling.
+    if (!isProfiling) {
+      return;
+    }
+
+    // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
+    ((performanceTarget: any): Performance).mark(markName);
+    ((performanceTarget: any): Performance).clearMarks(markName);
   }
 
   function markCommitStarted(lanes: Lanes): void {
@@ -337,30 +353,41 @@ export function createProfilingHooks({
     }
   }
 
+  function toggleProfilingStatus(value: boolean) {
+    isProfiling = value;
+
+    if (value) {
+      // TODO (timeline) Log metadata (e.g. profiler and React versions, lane labels).
+    }
+  }
+
   return {
-    markCommitStarted,
-    markCommitStopped,
-    markComponentRenderStarted,
-    markComponentRenderStopped,
-    markComponentPassiveEffectMountStarted,
-    markComponentPassiveEffectMountStopped,
-    markComponentPassiveEffectUnmountStarted,
-    markComponentPassiveEffectUnmountStopped,
-    markComponentLayoutEffectMountStarted,
-    markComponentLayoutEffectMountStopped,
-    markComponentLayoutEffectUnmountStarted,
-    markComponentLayoutEffectUnmountStopped,
-    markComponentErrored,
-    markComponentSuspended,
-    markLayoutEffectsStarted,
-    markLayoutEffectsStopped,
-    markPassiveEffectsStarted,
-    markPassiveEffectsStopped,
-    markRenderStarted,
-    markRenderYielded,
-    markRenderStopped,
-    markRenderScheduled,
-    markForceUpdateScheduled,
-    markStateUpdateScheduled,
+    profilingHooks: {
+      markCommitStarted,
+      markCommitStopped,
+      markComponentRenderStarted,
+      markComponentRenderStopped,
+      markComponentPassiveEffectMountStarted,
+      markComponentPassiveEffectMountStopped,
+      markComponentPassiveEffectUnmountStarted,
+      markComponentPassiveEffectUnmountStopped,
+      markComponentLayoutEffectMountStarted,
+      markComponentLayoutEffectMountStopped,
+      markComponentLayoutEffectUnmountStarted,
+      markComponentLayoutEffectUnmountStopped,
+      markComponentErrored,
+      markComponentSuspended,
+      markLayoutEffectsStarted,
+      markLayoutEffectsStopped,
+      markPassiveEffectsStarted,
+      markPassiveEffectsStopped,
+      markRenderStarted,
+      markRenderYielded,
+      markRenderStopped,
+      markRenderScheduled,
+      markForceUpdateScheduled,
+      markStateUpdateScheduled,
+    },
+    toggleProfilingStatus,
   };
 }

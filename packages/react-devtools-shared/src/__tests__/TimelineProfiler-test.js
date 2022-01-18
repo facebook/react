@@ -118,10 +118,17 @@ describe('Timeline profiler', () => {
     setPerformanceMock(null);
   });
 
-  it('should mark sync render without suspends or state updates', () => {
-    renderHelper(<div />);
+  describe('when profiling', () => {
+    beforeEach(() => {
+      const store = global.store;
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      utils.act(() => store.profilerStore.startProfiling());
+    });
+
+    it('should mark sync render without suspends or state updates', () => {
+      renderHelper(<div />);
+
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-1",
         "--render-start-1",
@@ -137,22 +144,22 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark concurrent render without suspends or state updates', () => {
-    renderRootHelper(<div />);
+    it('should mark concurrent render without suspends or state updates', () => {
+      renderRootHelper(<div />);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-16",
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--render-stop",
@@ -167,27 +174,27 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
-
-  it('should mark render yields', async () => {
-    function Bar() {
-      Scheduler.unstable_yieldValue('Bar');
-      return null;
-    }
-
-    function Foo() {
-      Scheduler.unstable_yieldValue('Foo');
-      return <Bar />;
-    }
-
-    React.startTransition(() => {
-      renderRootHelper(<Foo />);
     });
 
-    // Do one step of work.
-    expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+    it('should mark render yields', async () => {
+      function Bar() {
+        Scheduler.unstable_yieldValue('Bar');
+        return null;
+      }
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      function Foo() {
+        Scheduler.unstable_yieldValue('Foo');
+        return <Bar />;
+      }
+
+      React.startTransition(() => {
+        renderRootHelper(<Foo />);
+      });
+
+      // Do one step of work.
+      expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-64",
         "--render-start-64",
@@ -196,21 +203,21 @@ describe('Timeline profiler', () => {
         "--render-yield",
       ]
     `);
-  });
+    });
 
-  it('should mark sync render with suspense that resolves', async () => {
-    const fakeSuspensePromise = Promise.resolve(true);
-    function Example() {
-      throw fakeSuspensePromise;
-    }
+    it('should mark sync render with suspense that resolves', async () => {
+      const fakeSuspensePromise = Promise.resolve(true);
+      function Example() {
+        throw fakeSuspensePromise;
+      }
 
-    renderHelper(
-      <React.Suspense fallback={null}>
-        <Example />
-      </React.Suspense>,
-    );
+      renderHelper(
+        <React.Suspense fallback={null}>
+          <Example />
+        </React.Suspense>,
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-1",
         "--render-start-1",
@@ -230,29 +237,29 @@ describe('Timeline profiler', () => {
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    await fakeSuspensePromise;
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      await fakeSuspensePromise;
+      expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--suspense-resolved-0-Example",
         ]
     `);
-  });
+    });
 
-  it('should mark sync render with suspense that rejects', async () => {
-    const fakeSuspensePromise = Promise.reject(new Error('error'));
-    function Example() {
-      throw fakeSuspensePromise;
-    }
+    it('should mark sync render with suspense that rejects', async () => {
+      const fakeSuspensePromise = Promise.reject(new Error('error'));
+      function Example() {
+        throw fakeSuspensePromise;
+      }
 
-    renderHelper(
-      <React.Suspense fallback={null}>
-        <Example />
-      </React.Suspense>,
-    );
+      renderHelper(
+        <React.Suspense fallback={null}>
+          <Example />
+        </React.Suspense>,
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-1",
         "--render-start-1",
@@ -272,35 +279,35 @@ describe('Timeline profiler', () => {
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    await expect(fakeSuspensePromise).rejects.toThrow();
-    expect(clearedMarks).toContain(`--suspense-rejected-0-Example`);
-  });
+      await expect(fakeSuspensePromise).rejects.toThrow();
+      expect(clearedMarks).toContain(`--suspense-rejected-0-Example`);
+    });
 
-  it('should mark concurrent render with suspense that resolves', async () => {
-    const fakeSuspensePromise = Promise.resolve(true);
-    function Example() {
-      throw fakeSuspensePromise;
-    }
+    it('should mark concurrent render with suspense that resolves', async () => {
+      const fakeSuspensePromise = Promise.resolve(true);
+      function Example() {
+        throw fakeSuspensePromise;
+      }
 
-    renderRootHelper(
-      <React.Suspense fallback={null}>
-        <Example />
-      </React.Suspense>,
-    );
+      renderRootHelper(
+        <React.Suspense fallback={null}>
+          <Example />
+        </React.Suspense>,
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-16",
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-Example",
@@ -319,39 +326,39 @@ describe('Timeline profiler', () => {
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    await fakeSuspensePromise;
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      await fakeSuspensePromise;
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--suspense-resolved-0-Example",
       ]
     `);
-  });
+    });
 
-  it('should mark concurrent render with suspense that rejects', async () => {
-    const fakeSuspensePromise = Promise.reject(new Error('error'));
-    function Example() {
-      throw fakeSuspensePromise;
-    }
+    it('should mark concurrent render with suspense that rejects', async () => {
+      const fakeSuspensePromise = Promise.reject(new Error('error'));
+      function Example() {
+        throw fakeSuspensePromise;
+      }
 
-    renderRootHelper(
-      <React.Suspense fallback={null}>
-        <Example />
-      </React.Suspense>,
-    );
+      renderRootHelper(
+        <React.Suspense fallback={null}>
+          <Example />
+        </React.Suspense>,
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-16",
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-Example",
@@ -370,40 +377,40 @@ describe('Timeline profiler', () => {
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    await expect(fakeSuspensePromise).rejects.toThrow();
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      await expect(fakeSuspensePromise).rejects.toThrow();
+      expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--suspense-rejected-0-Example",
         ]
     `);
-  });
+    });
 
-  it('should mark cascading class component state updates', () => {
-    class Example extends React.Component {
-      state = {didMount: false};
-      componentDidMount() {
-        this.setState({didMount: true});
+    it('should mark cascading class component state updates', () => {
+      class Example extends React.Component {
+        state = {didMount: false};
+        componentDidMount() {
+          this.setState({didMount: true});
+        }
+        render() {
+          return null;
+        }
       }
-      render() {
-        return null;
-      }
-    }
 
-    renderRootHelper(<Example />);
+      renderRootHelper(<Example />);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-16",
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-Example",
@@ -432,31 +439,31 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark cascading class component force updates', () => {
-    class Example extends React.Component {
-      componentDidMount() {
-        this.forceUpdate();
+    it('should mark cascading class component force updates', () => {
+      class Example extends React.Component {
+        componentDidMount() {
+          this.forceUpdate();
+        }
+        render() {
+          return null;
+        }
       }
-      render() {
-        return null;
-      }
-    }
 
-    renderRootHelper(<Example />);
+      renderRootHelper(<Example />);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-render-16",
         ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-Example",
@@ -485,42 +492,42 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark render phase state updates for class component', () => {
-    class Example extends React.Component {
-      state = {didRender: false};
-      render() {
-        if (this.state.didRender === false) {
-          this.setState({didRender: true});
+    it('should mark render phase state updates for class component', () => {
+      class Example extends React.Component {
+        state = {didRender: false};
+        render() {
+          if (this.state.didRender === false) {
+            this.setState({didRender: true});
+          }
+          return null;
         }
-        return null;
       }
-    }
 
-    renderRootHelper(<Example />);
+      renderRootHelper(<Example />);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-render-16",
         ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    let errorMessage;
-    spyOn(console, 'error').and.callFake(message => {
-      errorMessage = message;
-    });
+      let errorMessage;
+      spyOn(console, 'error').and.callFake(message => {
+        errorMessage = message;
+      });
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(console.error).toHaveBeenCalledTimes(1);
-    expect(errorMessage).toContain(
-      'Cannot update during an existing state transition',
-    );
+      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(errorMessage).toContain(
+        'Cannot update during an existing state transition',
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-Example",
@@ -538,42 +545,42 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark render phase force updates for class component', () => {
-    class Example extends React.Component {
-      state = {didRender: false};
-      render() {
-        if (this.state.didRender === false) {
-          this.forceUpdate(() => this.setState({didRender: true}));
+    it('should mark render phase force updates for class component', () => {
+      class Example extends React.Component {
+        state = {didRender: false};
+        render() {
+          if (this.state.didRender === false) {
+            this.forceUpdate(() => this.setState({didRender: true}));
+          }
+          return null;
         }
-        return null;
       }
-    }
 
-    renderRootHelper(<Example />);
+      renderRootHelper(<Example />);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-render-16",
         ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    let errorMessage;
-    spyOn(console, 'error').and.callFake(message => {
-      errorMessage = message;
-    });
+      let errorMessage;
+      spyOn(console, 'error').and.callFake(message => {
+        errorMessage = message;
+      });
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(console.error).toHaveBeenCalledTimes(1);
-    expect(errorMessage).toContain(
-      'Cannot update during an existing state transition',
-    );
+      expect(console.error).toHaveBeenCalledTimes(1);
+      expect(errorMessage).toContain(
+        'Cannot update during an existing state transition',
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-Example",
@@ -591,30 +598,30 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark cascading layout updates', () => {
-    function Example() {
-      const [didMount, setDidMount] = React.useState(false);
-      React.useLayoutEffect(() => {
-        setDidMount(true);
-      }, []);
-      return didMount;
-    }
+    it('should mark cascading layout updates', () => {
+      function Example() {
+        const [didMount, setDidMount] = React.useState(false);
+        React.useLayoutEffect(() => {
+          setDidMount(true);
+        }, []);
+        return didMount;
+      }
 
-    renderRootHelper(<Example />);
+      renderRootHelper(<Example />);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-render-16",
         ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-Example",
@@ -645,24 +652,24 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  // This test is coupled to lane implementation details, so I'm disabling it in
-  // the new fork until it stabilizes so we don't have to repeatedly update it.
-  it('should mark cascading passive updates', () => {
-    function Example() {
-      const [didMount, setDidMount] = React.useState(false);
-      React.useEffect(() => {
-        setDidMount(true);
-      }, []);
-      return didMount;
-    }
+    // This test is coupled to lane implementation details, so I'm disabling it in
+    // the new fork until it stabilizes so we don't have to repeatedly update it.
+    it('should mark cascading passive updates', () => {
+      function Example() {
+        const [didMount, setDidMount] = React.useState(false);
+        React.useEffect(() => {
+          setDidMount(true);
+        }, []);
+        return didMount;
+      }
 
-    renderRootHelper(<Example />);
+      renderRootHelper(<Example />);
 
-    expect(Scheduler).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-16",
         "--render-start-16",
@@ -696,22 +703,22 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark render phase updates', () => {
-    function Example() {
-      const [didRender, setDidRender] = React.useState(false);
-      if (!didRender) {
-        setDidRender(true);
+    it('should mark render phase updates', () => {
+      function Example() {
+        const [didRender, setDidRender] = React.useState(false);
+        if (!didRender) {
+          setDidRender(true);
+        }
+        return didRender;
       }
-      return didRender;
-    }
 
-    renderRootHelper(<Example />);
+      renderRootHelper(<Example />);
 
-    expect(Scheduler).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-16",
         "--render-start-16",
@@ -730,35 +737,35 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark sync render that throws', async () => {
-    spyOn(console, 'error');
+    it('should mark sync render that throws', async () => {
+      spyOn(console, 'error');
 
-    class ErrorBoundary extends React.Component {
-      state = {error: null};
-      componentDidCatch(error) {
-        this.setState({error});
-      }
-      render() {
-        if (this.state.error) {
-          return null;
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        componentDidCatch(error) {
+          this.setState({error});
         }
-        return this.props.children;
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return this.props.children;
+        }
       }
-    }
 
-    function ExampleThatThrows() {
-      throw Error('Expected error');
-    }
+      function ExampleThatThrows() {
+        throw Error('Expected error');
+      }
 
-    renderHelper(
-      <ErrorBoundary>
-        <ExampleThatThrows />
-      </ErrorBoundary>,
-    );
+      renderHelper(
+        <ErrorBoundary>
+          <ExampleThatThrows />
+        </ErrorBoundary>,
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-1",
         "--render-start-1",
@@ -792,46 +799,46 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark concurrent render that throws', async () => {
-    spyOn(console, 'error');
+    it('should mark concurrent render that throws', async () => {
+      spyOn(console, 'error');
 
-    class ErrorBoundary extends React.Component {
-      state = {error: null};
-      componentDidCatch(error) {
-        this.setState({error});
-      }
-      render() {
-        if (this.state.error) {
-          return null;
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        componentDidCatch(error) {
+          this.setState({error});
         }
-        return this.props.children;
+        render() {
+          if (this.state.error) {
+            return null;
+          }
+          return this.props.children;
+        }
       }
-    }
 
-    function ExampleThatThrows() {
-      // eslint-disable-next-line no-throw-literal
-      throw 'Expected error';
-    }
+      function ExampleThatThrows() {
+        // eslint-disable-next-line no-throw-literal
+        throw 'Expected error';
+      }
 
-    renderRootHelper(
-      <ErrorBoundary>
-        <ExampleThatThrows />
-      </ErrorBoundary>,
-    );
+      renderRootHelper(
+        <ErrorBoundary>
+          <ExampleThatThrows />
+        </ErrorBoundary>,
+      );
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-render-16",
         ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushUntilNextPaint([]);
+      expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--render-start-16",
         "--component-render-start-ErrorBoundary",
@@ -872,56 +879,56 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  it('should mark passive and layout effects', async () => {
-    function ComponentWithEffects() {
-      React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('layout 1 mount');
-        return () => {
-          Scheduler.unstable_yieldValue('layout 1 unmount');
-        };
-      }, []);
+    it('should mark passive and layout effects', async () => {
+      function ComponentWithEffects() {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout 1 mount');
+          return () => {
+            Scheduler.unstable_yieldValue('layout 1 unmount');
+          };
+        }, []);
 
-      React.useEffect(() => {
-        Scheduler.unstable_yieldValue('passive 1 mount');
-        return () => {
-          Scheduler.unstable_yieldValue('passive 1 unmount');
-        };
-      }, []);
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive 1 mount');
+          return () => {
+            Scheduler.unstable_yieldValue('passive 1 unmount');
+          };
+        }, []);
 
-      React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('layout 2 mount');
-        return () => {
-          Scheduler.unstable_yieldValue('layout 2 unmount');
-        };
-      }, []);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout 2 mount');
+          return () => {
+            Scheduler.unstable_yieldValue('layout 2 unmount');
+          };
+        }, []);
 
-      React.useEffect(() => {
-        Scheduler.unstable_yieldValue('passive 2 mount');
-        return () => {
-          Scheduler.unstable_yieldValue('passive 2 unmount');
-        };
-      }, []);
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive 2 mount');
+          return () => {
+            Scheduler.unstable_yieldValue('passive 2 unmount');
+          };
+        }, []);
 
-      React.useEffect(() => {
-        Scheduler.unstable_yieldValue('passive 3 mount');
-        return () => {
-          Scheduler.unstable_yieldValue('passive 3 unmount');
-        };
-      }, []);
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive 3 mount');
+          return () => {
+            Scheduler.unstable_yieldValue('passive 3 unmount');
+          };
+        }, []);
 
-      return null;
-    }
+        return null;
+      }
 
-    const unmount = renderRootHelper(<ComponentWithEffects />);
+      const unmount = renderRootHelper(<ComponentWithEffects />);
 
-    expect(Scheduler).toFlushUntilNextPaint([
-      'layout 1 mount',
-      'layout 2 mount',
-    ]);
+      expect(Scheduler).toFlushUntilNextPaint([
+        'layout 1 mount',
+        'layout 2 mount',
+      ]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-16",
         "--render-start-16",
@@ -944,15 +951,15 @@ describe('Timeline profiler', () => {
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushAndYield([
-      'passive 1 mount',
-      'passive 2 mount',
-      'passive 3 mount',
-    ]);
+      expect(Scheduler).toFlushAndYield([
+        'passive 1 mount',
+        'passive 2 mount',
+        'passive 3 mount',
+      ]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--passive-effects-start-16",
         "--component-passive-effect-mount-start-ComponentWithEffects",
@@ -965,21 +972,21 @@ describe('Timeline profiler', () => {
       ]
     `);
 
-    clearPendingMarks();
+      clearPendingMarks();
 
-    expect(Scheduler).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield([]);
 
-    unmount();
+      unmount();
 
-    expect(Scheduler).toHaveYielded([
-      'layout 1 unmount',
-      'layout 2 unmount',
-      'passive 1 unmount',
-      'passive 2 unmount',
-      'passive 3 unmount',
-    ]);
+      expect(Scheduler).toHaveYielded([
+        'layout 1 unmount',
+        'layout 2 unmount',
+        'passive 1 unmount',
+        'passive 2 unmount',
+        'passive 3 unmount',
+      ]);
 
-    expect(clearedMarks).toMatchInlineSnapshot(`
+      expect(clearedMarks).toMatchInlineSnapshot(`
       Array [
         "--schedule-render-1",
         "--render-start-1",
@@ -1007,13 +1014,13 @@ describe('Timeline profiler', () => {
         "--commit-stop",
       ]
     `);
-  });
+    });
 
-  describe('lane labels', () => {
-    it('regression test SyncLane', () => {
-      renderHelper(<div />);
+    describe('lane labels', () => {
+      it('regression test SyncLane', () => {
+        renderHelper(<div />);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-render-1",
           "--render-start-1",
@@ -1029,39 +1036,39 @@ describe('Timeline profiler', () => {
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    it('regression test DefaultLane', () => {
-      renderRootHelper(<div />);
-      expect(clearedMarks).toMatchInlineSnapshot(`
+      it('regression test DefaultLane', () => {
+        renderRootHelper(<div />);
+        expect(clearedMarks).toMatchInlineSnapshot(`
           Array [
             "--schedule-render-16",
           ]
       `);
-    });
+      });
 
-    it('regression test InputDiscreteLane', async () => {
-      const targetRef = React.createRef(null);
+      it('regression test InputDiscreteLane', async () => {
+        const targetRef = React.createRef(null);
 
-      function App() {
-        const [count, setCount] = React.useState(0);
-        const handleClick = () => {
-          setCount(count + 1);
-        };
-        return <button ref={targetRef} onClick={handleClick} />;
-      }
+        function App() {
+          const [count, setCount] = React.useState(0);
+          const handleClick = () => {
+            setCount(count + 1);
+          };
+          return <button ref={targetRef} onClick={handleClick} />;
+        }
 
-      renderRootHelper(<App />);
-      expect(Scheduler).toFlushAndYield([]);
+        renderRootHelper(<App />);
+        expect(Scheduler).toFlushAndYield([]);
 
-      clearedMarks.splice(0);
+        clearedMarks.splice(0);
 
-      targetRef.current.click();
+        targetRef.current.click();
 
-      // Wait a frame, for React to process the "click" update.
-      await Promise.resolve();
+        // Wait a frame, for React to process the "click" update.
+        await Promise.resolve();
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-state-update-1-App",
           "--render-start-1",
@@ -1079,29 +1086,29 @@ describe('Timeline profiler', () => {
           "--commit-stop",
         ]
       `);
-    });
+      });
 
-    it('regression test InputContinuousLane', async () => {
-      const targetRef = React.createRef(null);
+      it('regression test InputContinuousLane', async () => {
+        const targetRef = React.createRef(null);
 
-      function App() {
-        const [count, setCount] = React.useState(0);
-        const handleMouseOver = () => setCount(count + 1);
-        return <div ref={targetRef} onMouseOver={handleMouseOver} />;
-      }
+        function App() {
+          const [count, setCount] = React.useState(0);
+          const handleMouseOver = () => setCount(count + 1);
+          return <div ref={targetRef} onMouseOver={handleMouseOver} />;
+        }
 
-      renderRootHelper(<App />);
-      expect(Scheduler).toFlushAndYield([]);
+        renderRootHelper(<App />);
+        expect(Scheduler).toFlushAndYield([]);
 
-      clearedMarks.splice(0);
+        clearedMarks.splice(0);
 
-      const event = document.createEvent('MouseEvents');
-      event.initEvent('mouseover', true, true);
-      dispatchAndSetCurrentEvent(targetRef.current, event);
+        const event = document.createEvent('MouseEvents');
+        event.initEvent('mouseover', true, true);
+        dispatchAndSetCurrentEvent(targetRef.current, event);
 
-      expect(Scheduler).toFlushAndYield([]);
+        expect(Scheduler).toFlushAndYield([]);
 
-      expect(clearedMarks).toMatchInlineSnapshot(`
+        expect(clearedMarks).toMatchInlineSnapshot(`
         Array [
           "--schedule-state-update-4-App",
           "--render-start-4",
@@ -1119,6 +1126,15 @@ describe('Timeline profiler', () => {
           "--commit-stop",
         ]
       `);
+      });
+    });
+  });
+
+  describe('when not profiling', () => {
+    it('should not log any marks', () => {
+      renderHelper(<div />);
+
+      expect(clearedMarks).toMatchInlineSnapshot(`Array []`);
     });
   });
 });
