@@ -168,14 +168,6 @@ export function scheduleContextWorkOnParentPath(
     if (node === propagationRoot) {
       break;
     }
-    if (__DEV__) {
-      if (node === propagationRoot.alternate) {
-        console.error(
-          'Did not expect to encounter a propagation root alternate when scheduling context work. ' +
-            'This error is likely caused by a bug in React. Please file an issue.',
-        );
-      }
-    }
     node = node.return;
   }
   if (__DEV__) {
