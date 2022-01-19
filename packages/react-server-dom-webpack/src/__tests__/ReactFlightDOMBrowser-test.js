@@ -69,6 +69,31 @@ describe('ReactFlightDOMBrowser', () => {
     }
   }
 
+  function makeDelayedText(Model) {
+    let error, _resolve, _reject;
+    let promise = new Promise((resolve, reject) => {
+      _resolve = () => {
+        promise = null;
+        resolve();
+      };
+      _reject = e => {
+        error = e;
+        promise = null;
+        reject(e);
+      };
+    });
+    function DelayedText({children}, data) {
+      if (promise) {
+        throw promise;
+      }
+      if (error) {
+        throw error;
+      }
+      return <Model>{children}</Model>;
+    }
+    return [DelayedText, _resolve, _reject];
+  }
+
   it('should resolve HTML using W3C streams', async () => {
     function Text({children}) {
       return <span>{children}</span>;
@@ -174,36 +199,11 @@ describe('ReactFlightDOMBrowser', () => {
       return children;
     }
 
-    function makeDelayedText() {
-      let error, _resolve, _reject;
-      let promise = new Promise((resolve, reject) => {
-        _resolve = () => {
-          promise = null;
-          resolve();
-        };
-        _reject = e => {
-          error = e;
-          promise = null;
-          reject(e);
-        };
-      });
-      function DelayedText({children}, data) {
-        if (promise) {
-          throw promise;
-        }
-        if (error) {
-          throw error;
-        }
-        return <Text>{children}</Text>;
-      }
-      return [DelayedText, _resolve, _reject];
-    }
-
-    const [Friends, resolveFriends] = makeDelayedText();
-    const [Name, resolveName] = makeDelayedText();
-    const [Posts, resolvePosts] = makeDelayedText();
-    const [Photos, resolvePhotos] = makeDelayedText();
-    const [Games, , rejectGames] = makeDelayedText();
+    const [Friends, resolveFriends] = makeDelayedText(Text);
+    const [Name, resolveName] = makeDelayedText(Text);
+    const [Posts, resolvePosts] = makeDelayedText(Text);
+    const [Photos, resolvePhotos] = makeDelayedText(Text);
+    const [Games, , rejectGames] = makeDelayedText(Text);
 
     // View
     function ProfileDetails({avatar}) {
@@ -339,5 +339,118 @@ describe('ReactFlightDOMBrowser', () => {
     );
 
     expect(reportedErrors).toEqual([]);
+  });
+
+  it('should close the stream upon completion when rendering to W3C streams', async () => {
+    const {Suspense} = React;
+
+    // Model
+    function Text({children}) {
+      return children;
+    }
+
+    const [Friends, resolveFriends] = makeDelayedText(Text);
+    const [Name, resolveName] = makeDelayedText(Text);
+    const [Posts, resolvePosts] = makeDelayedText(Text);
+    const [Photos, resolvePhotos] = makeDelayedText(Text);
+
+    // View
+    function ProfileDetails({avatar}) {
+      return (
+        <div>
+          <Name>:name:</Name>
+          {avatar}
+        </div>
+      );
+    }
+    function ProfileSidebar({friends}) {
+      return (
+        <div>
+          <Photos>:photos:</Photos>
+          {friends}
+        </div>
+      );
+    }
+    function ProfilePosts({posts}) {
+      return <div>{posts}</div>;
+    }
+
+    function ProfileContent() {
+      return (
+        <Suspense fallback="(loading everything)">
+          <ProfileDetails avatar={<Text>:avatar:</Text>} />
+          <Suspense fallback={<p>(loading sidebar)</p>}>
+            <ProfileSidebar friends={<Friends>:friends:</Friends>} />
+          </Suspense>
+          <Suspense fallback={<p>(loading posts)</p>}>
+            <ProfilePosts posts={<Posts>:posts:</Posts>} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    const model = {
+      rootContent: <ProfileContent />,
+    };
+
+    const stream = ReactServerDOMWriter.renderToReadableStream(
+      model,
+      webpackMap,
+    );
+
+    const reader = stream.getReader();
+    const decoder = new TextDecoder();
+
+    let flightResponse = '';
+    let isDone = false;
+
+    reader.read().then(function progress({done, value}) {
+      if (done) {
+        isDone = true;
+        return;
+      }
+
+      flightResponse += decoder.decode(value);
+
+      return reader.read().then(progress);
+    });
+
+    // Advance time enough to trigger a nested fallback.
+    jest.advanceTimersByTime(500);
+
+    await act(async () => {});
+
+    expect(flightResponse).toContain('(loading everything)');
+    expect(flightResponse).toContain('(loading sidebar)');
+    expect(flightResponse).toContain('(loading posts)');
+    expect(flightResponse).not.toContain(':friends:');
+    expect(flightResponse).not.toContain(':name:');
+
+    await act(async () => {
+      resolveFriends();
+    });
+
+    expect(flightResponse).toContain(':friends:');
+
+    await act(async () => {
+      resolveName();
+    });
+
+    expect(flightResponse).toContain(':name:');
+
+    await act(async () => {
+      resolvePhotos();
+    });
+
+    expect(flightResponse).toContain(':photos:');
+
+    await act(async () => {
+      resolvePosts();
+    });
+
+    expect(flightResponse).toContain(':posts:');
+
+    // Final pending chunk is written; stream should be closed.
+    expect(isDone).toBeTruthy();
   });
 });
