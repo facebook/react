@@ -22,6 +22,17 @@ describe('DOMPropertyOperations', () => {
     ReactDOM = require('react-dom');
   });
 
+  // Sets a value in a way that React doesn't see,
+  // so that a subsequent "change" event will trigger the event handler.
+  const setUntrackedValue = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    'value',
+  ).set;
+  const setUntrackedChecked = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    'checked',
+  ).set;
+
   describe('setValueForProperty', () => {
     it('should set values as properties by default', () => {
       const container = document.createElement('div');
@@ -390,6 +401,14 @@ describe('DOMPropertyOperations', () => {
       const customOnInputHandler = jest.fn();
       const customOnChangeHandler = jest.fn();
       const customOnClickHandler = jest.fn();
+      function clearMocks() {
+        regularOnInputHandler.mockClear();
+        regularOnChangeHandler.mockClear();
+        regularOnClickHandler.mockClear();
+        customOnInputHandler.mockClear();
+        customOnChangeHandler.mockClear();
+        customOnClickHandler.mockClear();
+      }
       ReactDOM.render(
         <div>
           <input
@@ -415,31 +434,53 @@ describe('DOMPropertyOperations', () => {
       );
       expect(regularInput).not.toBe(customInput);
 
+      // Typing should trigger onInput and onChange for both kinds of inputs.
+      clearMocks();
+      setUntrackedValue.call(regularInput, 'hello');
       regularInput.dispatchEvent(new Event('input', {bubbles: true}));
       expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
       expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
-      regularInput.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
-      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
-      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
-      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
-      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
-
+      setUntrackedValue.call(customInput, 'hello');
       customInput.dispatchEvent(new Event('input', {bubbles: true}));
       expect(customOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
       expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+
+      // The native change event itself does not produce extra React events.
+      clearMocks();
+      regularInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       customInput.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnInputHandler).toHaveBeenCalledTimes(0);
       expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
       expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+
+      // The click event is handled by both inputs.
+      clearMocks();
+      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
       customInput.dispatchEvent(new Event('click', {bubbles: true}));
-      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnInputHandler).toHaveBeenCalledTimes(0);
       expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
       expect(customOnClickHandler).toHaveBeenCalledTimes(1);
+
+      // Typing again should trigger onInput and onChange for both kinds of inputs.
+      clearMocks();
+      setUntrackedValue.call(regularInput, 'goodbye');
+      regularInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
+      setUntrackedValue.call(customInput, 'goodbye');
+      customInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
     });
 
     it('<input type=radio is=...> should have the same onChange/onInput/onClick behavior as <input type=radio>', () => {
@@ -451,6 +492,14 @@ describe('DOMPropertyOperations', () => {
       const customOnInputHandler = jest.fn();
       const customOnChangeHandler = jest.fn();
       const customOnClickHandler = jest.fn();
+      function clearMocks() {
+        regularOnInputHandler.mockClear();
+        regularOnChangeHandler.mockClear();
+        regularOnClickHandler.mockClear();
+        customOnInputHandler.mockClear();
+        customOnChangeHandler.mockClear();
+        customOnClickHandler.mockClear();
+      }
       ReactDOM.render(
         <div>
           <input
@@ -478,30 +527,41 @@ describe('DOMPropertyOperations', () => {
       );
       expect(regularInput).not.toBe(customInput);
 
+      // Clicking should trigger onClick and onChange on both inputs.
+      clearMocks();
+      setUntrackedChecked.call(regularInput, true);
+      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
+      setUntrackedChecked.call(customInput, true);
+      customInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(1);
+
+      // The native input event only produces a React onInput event.
+      clearMocks();
       regularInput.dispatchEvent(new Event('input', {bubbles: true}));
       expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
       expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
       expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
-      regularInput.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
-      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
-      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
-      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
-      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
-
       customInput.dispatchEvent(new Event('input', {bubbles: true}));
       expect(customOnInputHandler).toHaveBeenCalledTimes(1);
       expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
       expect(customOnClickHandler).toHaveBeenCalledTimes(0);
-      customInput.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
-      expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+
+      // Clicking again should trigger onClick and onChange on both inputs.
+      clearMocks();
+      setUntrackedChecked.call(regularInput, false);
+      regularInput.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
+      setUntrackedChecked.call(customInput, false);
       customInput.dispatchEvent(new Event('click', {bubbles: true}));
-      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
       expect(customOnClickHandler).toHaveBeenCalledTimes(1);
     });
 
@@ -514,6 +574,14 @@ describe('DOMPropertyOperations', () => {
       const customOnInputHandler = jest.fn();
       const customOnChangeHandler = jest.fn();
       const customOnClickHandler = jest.fn();
+      function clearMocks() {
+        regularOnInputHandler.mockClear();
+        regularOnChangeHandler.mockClear();
+        regularOnClickHandler.mockClear();
+        customOnInputHandler.mockClear();
+        customOnChangeHandler.mockClear();
+        customOnClickHandler.mockClear();
+      }
       ReactDOM.render(
         <div>
           <select
@@ -539,31 +607,38 @@ describe('DOMPropertyOperations', () => {
       );
       expect(regularSelect).not.toBe(customSelect);
 
+      // Clicking should only trigger onClick on both inputs.
+      clearMocks();
+      regularSelect.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
+      customSelect.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(customOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
+      expect(customOnClickHandler).toHaveBeenCalledTimes(1);
+
+      // Native input event should only trigger onInput on both inputs.
+      clearMocks();
       regularSelect.dispatchEvent(new Event('input', {bubbles: true}));
       expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
       expect(regularOnChangeHandler).toHaveBeenCalledTimes(0);
       expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
-      regularSelect.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
-      regularSelect.dispatchEvent(new Event('click', {bubbles: true}));
-      expect(regularOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
-      expect(regularOnClickHandler).toHaveBeenCalledTimes(1);
-
       customSelect.dispatchEvent(new Event('input', {bubbles: true}));
       expect(customOnInputHandler).toHaveBeenCalledTimes(1);
       expect(customOnChangeHandler).toHaveBeenCalledTimes(0);
       expect(customOnClickHandler).toHaveBeenCalledTimes(0);
+
+      // Native change event should trigger onChange.
+      clearMocks();
+      regularSelect.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(regularOnInputHandler).toHaveBeenCalledTimes(0);
+      expect(regularOnChangeHandler).toHaveBeenCalledTimes(1);
+      expect(regularOnClickHandler).toHaveBeenCalledTimes(0);
       customSelect.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
+      expect(customOnInputHandler).toHaveBeenCalledTimes(0);
       expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
       expect(customOnClickHandler).toHaveBeenCalledTimes(0);
-      customSelect.dispatchEvent(new Event('click', {bubbles: true}));
-      expect(customOnInputHandler).toHaveBeenCalledTimes(1);
-      expect(customOnChangeHandler).toHaveBeenCalledTimes(1);
-      expect(customOnClickHandler).toHaveBeenCalledTimes(1);
     });
 
     // @gate enableCustomElementPropertySupport
@@ -573,6 +648,11 @@ describe('DOMPropertyOperations', () => {
       const onChangeHandler = jest.fn();
       const onInputHandler = jest.fn();
       const onClickHandler = jest.fn();
+      function clearMocks() {
+        onChangeHandler.mockClear();
+        onInputHandler.mockClear();
+        onClickHandler.mockClear();
+      }
       ReactDOM.render(
         <div
           onChange={onChangeHandler}
@@ -593,11 +673,13 @@ describe('DOMPropertyOperations', () => {
       );
       expect(regularInput).not.toBe(customInput);
 
-      customElement.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(onChangeHandler).toBeCalledTimes(1);
-      expect(onInputHandler).toBeCalledTimes(0);
-      expect(onClickHandler).toBeCalledTimes(0);
+      // Custom element has no special logic for input/change.
+      clearMocks();
       customElement.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+      customElement.dispatchEvent(new Event('change', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(1);
       expect(onClickHandler).toBeCalledTimes(0);
@@ -606,34 +688,40 @@ describe('DOMPropertyOperations', () => {
       expect(onInputHandler).toBeCalledTimes(1);
       expect(onClickHandler).toBeCalledTimes(1);
 
+      // Regular input treats browser input as onChange.
+      clearMocks();
+      setUntrackedValue.call(regularInput, 'hello');
+      regularInput.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
       regularInput.dispatchEvent(new Event('change', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(1);
-      expect(onClickHandler).toBeCalledTimes(1);
-      regularInput.dispatchEvent(new Event('input', {bubbles: true}));
-      expect(onChangeHandler).toBeCalledTimes(1);
-      expect(onInputHandler).toBeCalledTimes(2);
-      expect(onClickHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
       regularInput.dispatchEvent(new Event('click', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
-      expect(onInputHandler).toBeCalledTimes(2);
-      expect(onClickHandler).toBeCalledTimes(2);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(1);
 
-      customInput.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(onChangeHandler).toBeCalledTimes(1);
-      expect(onInputHandler).toBeCalledTimes(2);
-      expect(onClickHandler).toBeCalledTimes(2);
+      // Custom input treats browser input as onChange.
+      clearMocks();
+      setUntrackedValue.call(customInput, 'hello');
       customInput.dispatchEvent(new Event('input', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
-      expect(onInputHandler).toBeCalledTimes(3);
-      expect(onClickHandler).toBeCalledTimes(2);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+      customInput.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
       customInput.dispatchEvent(new Event('click', {bubbles: true}));
       expect(onChangeHandler).toBeCalledTimes(1);
-      expect(onInputHandler).toBeCalledTimes(3);
-      expect(onClickHandler).toBeCalledTimes(3);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(1);
     });
 
-    it('custom element with event target child onChange/onInput/onClick', () => {
+    it('custom element onChange/onInput/onClick with event target input child', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
       const onChangeHandler = jest.fn();
@@ -644,22 +732,59 @@ describe('DOMPropertyOperations', () => {
           onChange={onChangeHandler}
           onInput={onInputHandler}
           onClick={onClickHandler}>
-          <div />
+          <input />
         </my-custom-element>,
         container,
       );
 
-      const div = container.querySelector('div');
-      div.dispatchEvent(new Event('change', {bubbles: true}));
-      expect(onChangeHandler).toBeCalledTimes(0);
-      expect(onInputHandler).toBeCalledTimes(0);
+      const input = container.querySelector('input');
+      setUntrackedValue.call(input, 'hello');
+      input.dispatchEvent(new Event('input', {bubbles: true}));
+      // Simulated onChange from the child's input event
+      // bubbles to the parent custom element.
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
       expect(onClickHandler).toBeCalledTimes(0);
-      div.dispatchEvent(new Event('input', {bubbles: true}));
+      // Consequently, the native change event is ignored.
+      input.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+      input.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(1);
+    });
+
+    it('custom element onChange/onInput/onClick with event target custom element child', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const onChangeHandler = jest.fn();
+      const onInputHandler = jest.fn();
+      const onClickHandler = jest.fn();
+      ReactDOM.render(
+        <my-custom-element
+          onChange={onChangeHandler}
+          onInput={onInputHandler}
+          onClick={onClickHandler}>
+          <other-custom-element />
+        </my-custom-element>,
+        container,
+      );
+
+      const customChild = container.querySelector('other-custom-element');
+      customChild.dispatchEvent(new Event('input', {bubbles: true}));
+      // There is no simulated onChange, only raw onInput is dispatched.
       expect(onChangeHandler).toBeCalledTimes(0);
       expect(onInputHandler).toBeCalledTimes(1);
       expect(onClickHandler).toBeCalledTimes(0);
-      div.dispatchEvent(new Event('click', {bubbles: true}));
-      expect(onChangeHandler).toBeCalledTimes(0);
+      // The native change event propagates to the parent as onChange.
+      customChild.dispatchEvent(new Event('change', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+      customChild.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(1);
       expect(onInputHandler).toBeCalledTimes(1);
       expect(onClickHandler).toBeCalledTimes(1);
     });
