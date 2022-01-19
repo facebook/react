@@ -76,6 +76,9 @@ module.exports = Object.assign({}, baseConfig, {
     require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/__serializers__/treeContextStateSerializer.js'
     ),
+    require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/numberToFixedSerializer.js'
+    ),
   ],
   setupFiles: [
     ...baseConfig.setupFiles,
