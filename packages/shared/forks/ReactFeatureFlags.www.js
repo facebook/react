@@ -67,7 +67,6 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
-export const warnAboutCallbackRefReturningFunction = true;
 
 export const enableLazyElements = true;
 export const enableCache = true;

@@ -56,7 +56,6 @@ export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
-export const warnAboutCallbackRefReturningFunction = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;

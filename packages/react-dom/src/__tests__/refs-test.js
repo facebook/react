@@ -352,7 +352,6 @@ describe('ref swapping', () => {
     );
   });
 
-  // @gate !__DEV__ || warnAboutCallbackRefReturningFunction
   it('should warn about callback refs returning a function', () => {
     const container = document.createElement('div');
     expect(() => {
