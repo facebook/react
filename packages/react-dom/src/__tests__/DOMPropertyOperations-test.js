@@ -721,7 +721,6 @@ describe('DOMPropertyOperations', () => {
       expect(onClickHandler).toBeCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element onChange/onInput/onClick with event target input child', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -757,7 +756,6 @@ describe('DOMPropertyOperations', () => {
       expect(onClickHandler).toBeCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element onChange/onInput/onClick with event target div child', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -828,6 +826,7 @@ describe('DOMPropertyOperations', () => {
       expect(onClickHandler).toBeCalledTimes(1);
     });
 
+    // @gate enableCustomElementPropertySupport
     it('custom element onChange/onInput/onClick with event target custom element child', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
