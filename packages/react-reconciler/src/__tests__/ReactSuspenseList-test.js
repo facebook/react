@@ -2968,4 +2968,102 @@ describe('ReactSuspenseList', () => {
     // treeBaseDuration
     expect(onRender.mock.calls[3][3]).toBe(1 + 4 + 5 + 3);
   });
+
+  // @gate enableSuspenseList
+  it('propagates despite a memo bailout', async () => {
+    const A = createAsyncText('A');
+    const B = createAsyncText('B');
+    const C = createAsyncText('C');
+
+    const Bailout = React.memo(({children}) => {
+      return children;
+    });
+
+    function Foo() {
+      // To test the part that relies on context propagation,
+      // we need to bailout *above* the Suspense's parent.
+      // Several layers of Bailout wrappers help verify we're
+      // marking updates all the way to the propagation root.
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Bailout>
+            <Bailout>
+              <Bailout>
+                <Bailout>
+                  <Suspense fallback={<Text text="Loading A" />}>
+                    <A />
+                  </Suspense>
+                </Bailout>
+              </Bailout>
+            </Bailout>
+          </Bailout>
+          <Bailout>
+            <Bailout>
+              <Bailout>
+                <Bailout>
+                  <Suspense fallback={<Text text="Loading B" />}>
+                    <B />
+                  </Suspense>
+                </Bailout>
+              </Bailout>
+            </Bailout>
+          </Bailout>
+          <Bailout>
+            <Bailout>
+              <Bailout>
+                <Bailout>
+                  <Suspense fallback={<Text text="Loading C" />}>
+                    <C />
+                  </Suspense>
+                </Bailout>
+              </Bailout>
+            </Bailout>
+          </Bailout>
+        </SuspenseList>
+      );
+    }
+
+    await C.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'Suspend! [A]',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await A.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
 });

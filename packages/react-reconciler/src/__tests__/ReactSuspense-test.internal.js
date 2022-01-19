@@ -1532,5 +1532,68 @@ describe('ReactSuspense', () => {
       expect(Scheduler).toFlushUntilNextPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
+
+    it('updates context consumer within child of suspended suspense component when context updates', () => {
+      const {createContext, useState} = React;
+
+      const ValueContext = createContext(null);
+
+      const promiseThatNeverResolves = new Promise(() => {});
+      function Child() {
+        return (
+          <ValueContext.Consumer>
+            {value => {
+              Scheduler.unstable_yieldValue(
+                `Received context value [${value}]`,
+              );
+              if (value === 'default') return <Text text="default" />;
+              throw promiseThatNeverResolves;
+            }}
+          </ValueContext.Consumer>
+        );
+      }
+
+      let setValue;
+      function Wrapper({children}) {
+        const [value, _setValue] = useState('default');
+        setValue = _setValue;
+        return (
+          <ValueContext.Provider value={value}>
+            {children}
+          </ValueContext.Provider>
+        );
+      }
+
+      function App() {
+        return (
+          <Wrapper>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Child />
+            </Suspense>
+          </Wrapper>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+      expect(Scheduler).toHaveYielded([
+        'Received context value [default]',
+        'default',
+      ]);
+      expect(root).toMatchRenderedOutput('default');
+
+      act(() => setValue('new value'));
+      expect(Scheduler).toHaveYielded([
+        'Received context value [new value]',
+        'Loading...',
+      ]);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      act(() => setValue('default'));
+      expect(Scheduler).toHaveYielded([
+        'Received context value [default]',
+        'default',
+      ]);
+      expect(root).toMatchRenderedOutput('default');
+    });
   });
 });
