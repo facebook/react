@@ -73,11 +73,6 @@ describe('Timeline profiler', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
-    const store = global.store;
-
-    // Start profiling so that data will actually be recorded.
-    utils.act(() => store.profilerStore.startProfiling());
-
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
