@@ -230,17 +230,21 @@ function injectProfilingHooks(profilingHooks: DevToolsProfilingHooks): void {
   injectedProfilingHooks = profilingHooks;
 }
 
-function getLaneLabelMap(): Map<Lane, string> {
-  const map: Map<Lane, string> = new Map();
+function getLaneLabelMap(): Map<Lane, string> | null {
+  if (enableSchedulingProfiler) {
+    const map: Map<Lane, string> = new Map();
 
-  let lane = 1;
-  for (let index = 0; index < TotalLanes; index++) {
-    const label = ((getLabelForLane(lane): any): string);
-    map.set(lane, label);
-    lane *= 2;
+    let lane = 1;
+    for (let index = 0; index < TotalLanes; index++) {
+      const label = ((getLabelForLane(lane): any): string);
+      map.set(lane, label);
+      lane *= 2;
+    }
+
+    return map;
+  } else {
+    return null;
   }
-
-  return map;
 }
 
 export function markCommitStarted(lanes: Lanes): void {

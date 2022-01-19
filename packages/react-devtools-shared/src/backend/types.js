@@ -152,7 +152,7 @@ export type ReactRenderer = {
   scheduleRefresh?: Function,
   // 18.0+
   injectProfilingHooks?: (profilingHooks: DevToolsProfilingHooks) => void,
-  getLaneLabelMap?: () => Map<Lane, string>,
+  getLaneLabelMap?: () => Map<Lane, string> | null,
   ...
 };
 

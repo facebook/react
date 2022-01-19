@@ -75,7 +75,7 @@ export function createProfilingHooks({
   reactVersion,
 }: {|
   getDisplayNameForFiber: (fiber: Fiber) => string | null,
-  getLaneLabelMap?: () => Map<Lane, string>,
+  getLaneLabelMap?: () => Map<Lane, string> | null,
   reactVersion: string,
 |}): DevToolsProfilingHooks {
   function markMetadata() {
@@ -108,8 +108,10 @@ export function createProfilingHooks({
 
     if (typeof getLaneLabelMap === 'function') {
       const map = getLaneLabelMap();
-      const labels = Array.from(map.values()).join(',');
-      markAndClear(`--react-lane-labels-${labels}`);
+      if (map != null) {
+        const labels = Array.from(map.values()).join(',');
+        markAndClear(`--react-lane-labels-${labels}`);
+      }
     }
   }
 
