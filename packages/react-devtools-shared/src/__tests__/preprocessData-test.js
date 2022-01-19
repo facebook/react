@@ -439,7 +439,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 0,
-              "duration": 0.004999999999999999,
+              "duration": 0.005,
               "lanes": Array [
                 9,
               ],
@@ -459,7 +459,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 0,
-              "duration": 0.002999999999999999,
+              "duration": 0.003,
               "lanes": Array [
                 9,
               ],
@@ -469,7 +469,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 1,
-              "duration": 0.0010000000000000009,
+              "duration": 0.001,
               "lanes": Array [
                 9,
               ],
@@ -529,7 +529,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 0,
-              "duration": 0.004999999999999999,
+              "duration": 0.005,
               "lanes": Array [
                 9,
               ],
@@ -549,7 +549,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 0,
-              "duration": 0.002999999999999999,
+              "duration": 0.003,
               "lanes": Array [
                 9,
               ],
@@ -559,7 +559,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 1,
-              "duration": 0.0010000000000000009,
+              "duration": 0.001,
               "lanes": Array [
                 9,
               ],
@@ -656,7 +656,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 1,
-              "duration": 0.0009999999999999992,
+              "duration": 0.001,
               "lanes": Array [
                 0,
               ],
@@ -748,7 +748,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 1,
-              "duration": 0.0009999999999999992,
+              "duration": 0.001,
               "lanes": Array [
                 0,
               ],
@@ -865,7 +865,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 1,
-              "duration": 0.0009999999999999992,
+              "duration": 0.001,
               "lanes": Array [
                 4,
               ],
@@ -887,7 +887,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.012000000000000004,
+              "duration": 0.012,
               "lanes": Array [
                 4,
               ],
@@ -897,7 +897,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.0030000000000000027,
+              "duration": 0.003,
               "lanes": Array [
                 4,
               ],
@@ -907,7 +907,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.008000000000000004,
+              "duration": 0.008,
               "lanes": Array [
                 4,
               ],
@@ -917,7 +917,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 1,
-              "duration": 0.0010000000000000009,
+              "duration": 0.001,
               "lanes": Array [
                 4,
               ],
@@ -927,7 +927,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.0029999999999999957,
+              "duration": 0.003,
               "lanes": Array [
                 4,
               ],
@@ -946,21 +946,21 @@ describe('Timeline profiler', () => {
           },
           Object {
             "componentName": "App",
-            "duration": 0.0020000000000000018,
+            "duration": 0.002,
             "timestamp": 0.018,
             "type": "passive-effect-mount",
             "warning": null,
           },
           Object {
             "componentName": "App",
-            "duration": 0.0010000000000000009,
+            "duration": 0.001,
             "timestamp": 0.023,
             "type": "render",
             "warning": null,
           },
           Object {
             "componentName": "App",
-            "duration": 0.0010000000000000009,
+            "duration": 0.001,
             "timestamp": 0.036,
             "type": "passive-effect-mount",
             "warning": null,
@@ -1052,7 +1052,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 0,
               "depth": 1,
-              "duration": 0.0009999999999999992,
+              "duration": 0.001,
               "lanes": Array [
                 4,
               ],
@@ -1072,7 +1072,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.012000000000000004,
+              "duration": 0.012,
               "lanes": Array [
                 4,
               ],
@@ -1082,7 +1082,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.0030000000000000027,
+              "duration": 0.003,
               "lanes": Array [
                 4,
               ],
@@ -1092,7 +1092,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.008000000000000004,
+              "duration": 0.008,
               "lanes": Array [
                 4,
               ],
@@ -1102,7 +1102,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 1,
-              "duration": 0.0010000000000000009,
+              "duration": 0.001,
               "lanes": Array [
                 4,
               ],
@@ -1112,7 +1112,7 @@ describe('Timeline profiler', () => {
             Object {
               "batchUID": 1,
               "depth": 0,
-              "duration": 0.0029999999999999957,
+              "duration": 0.003,
               "lanes": Array [
                 4,
               ],
