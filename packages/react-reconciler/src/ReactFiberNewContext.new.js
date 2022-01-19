@@ -178,6 +178,14 @@ export function scheduleContextWorkOnParentPath(
     }
     node = node.return;
   }
+  if (__DEV__) {
+    if (node !== propagationRoot) {
+      console.error(
+        'Expected to find the propagation root when scheduling context work. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
+  }
 }
 
 export function propagateContextChange<T>(
