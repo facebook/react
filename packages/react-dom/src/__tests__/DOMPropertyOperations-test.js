@@ -756,6 +756,76 @@ describe('DOMPropertyOperations', () => {
       expect(onClickHandler).toBeCalledTimes(1);
     });
 
+    it('custom element onChange/onInput/onClick with event target div child', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const onChangeHandler = jest.fn();
+      const onInputHandler = jest.fn();
+      const onClickHandler = jest.fn();
+      ReactDOM.render(
+        <my-custom-element
+          onChange={onChangeHandler}
+          onInput={onInputHandler}
+          onClick={onClickHandler}>
+          <div />
+        </my-custom-element>,
+        container,
+      );
+
+      const div = container.querySelector('div');
+      div.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+
+      div.dispatchEvent(new Event('change', {bubbles: true}));
+      // React always ignores change event invoked on non-custom and non-input targets.
+      // So change event emitted on a div does not propagate upwards.
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+
+      div.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(1);
+    });
+
+    it('div onChange/onInput/onClick with event target div child', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      const onChangeHandler = jest.fn();
+      const onInputHandler = jest.fn();
+      const onClickHandler = jest.fn();
+      ReactDOM.render(
+        <div
+          onChange={onChangeHandler}
+          onInput={onInputHandler}
+          onClick={onClickHandler}>
+          <div />
+        </div>,
+        container,
+      );
+
+      const div = container.querySelector('div > div');
+      div.dispatchEvent(new Event('input', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+
+      div.dispatchEvent(new Event('change', {bubbles: true}));
+      // React always ignores change event invoked on non-custom and non-input targets.
+      // So change event emitted on a div does not propagate upwards.
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(0);
+
+      div.dispatchEvent(new Event('click', {bubbles: true}));
+      expect(onChangeHandler).toBeCalledTimes(0);
+      expect(onInputHandler).toBeCalledTimes(1);
+      expect(onClickHandler).toBeCalledTimes(1);
+    });
+
     it('custom element onChange/onInput/onClick with event target custom element child', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
