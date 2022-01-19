@@ -397,7 +397,7 @@ describe('Timeline profiler', () => {
         "suspenseEvents": Array [],
         "thrownErrors": Array [],
       }
-  `);
+    `);
     });
 
     it('should process legacy data format (before lane labels were added)', async () => {
