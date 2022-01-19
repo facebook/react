@@ -28,7 +28,7 @@ describe('StoreStressConcurrent', () => {
     // this helper with the real thing.
     actAsync = require('./utils').actAsync;
 
-    print = require('./storeSerializer').print;
+    print = require('./__serializers__/storeSerializer').print;
   });
 
   // TODO: Remove this in favor of @gate pragma
