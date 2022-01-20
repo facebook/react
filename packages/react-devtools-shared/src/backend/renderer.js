@@ -2573,7 +2573,9 @@ export function attach(
 
   function getUpdatersList(root): Array<SerializedElement> | null {
     return root.memoizedUpdaters != null
-      ? Array.from(root.memoizedUpdaters).map(fiberToSerializedElement)
+      ? Array.from(root.memoizedUpdaters)
+          .filter(fiber => getFiberIDUnsafe(fiber) !== null)
+          .map(fiberToSerializedElement)
       : null;
   }
 
