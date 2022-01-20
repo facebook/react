@@ -48,13 +48,13 @@ function TimelineContextController({children}: Props) {
 
   const isTimelineSupported = useSyncExternalStore<boolean>(
     function subscribe(callback) {
-      store.addListener('rootSupportsTimeline', callback);
+      store.addListener('rootSupportsTimelineProfiling', callback);
       return function unsubscribe() {
-        store.removeListener('rootSupportsTimeline', callback);
+        store.removeListener('rootSupportsTimelineProfiling', callback);
       };
     },
     function getState() {
-      return store.rootSupportsTimeline;
+      return store.rootSupportsTimelineProfiling;
     },
   );
 

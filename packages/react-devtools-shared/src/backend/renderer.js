@@ -47,7 +47,7 @@ import {
 } from './utils';
 import {
   __DEBUG__,
-  PROFILING_FLAG_LEGACY_SUPPORT,
+  PROFILING_FLAG_BASIC_SUPPORT,
   PROFILING_FLAG_TIMELINE_SUPPORT,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
@@ -1915,7 +1915,7 @@ export function attach(
     // Instead let's re-purpose a pre-existing field to carry more information.
     let profilingFlags = 0;
     if (isProfilingSupported) {
-      profilingFlags = PROFILING_FLAG_LEGACY_SUPPORT;
+      profilingFlags = PROFILING_FLAG_BASIC_SUPPORT;
       if (typeof injectProfilingHooks === 'function') {
         profilingFlags |= PROFILING_FLAG_TIMELINE_SUPPORT;
       }

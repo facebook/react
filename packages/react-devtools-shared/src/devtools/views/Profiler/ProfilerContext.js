@@ -96,18 +96,18 @@ function ProfilerContextController({children}: Props) {
         isProcessingData: profilerStore.isProcessingData,
         isProfiling: profilerStore.isProfiling,
         profilingData: profilerStore.profilingData,
-        supportsProfiling: store.rootSupportsProfiling,
+        supportsProfiling: store.rootSupportsBasicProfiling,
       }),
       subscribe: (callback: Function) => {
         profilerStore.addListener('profilingData', callback);
         profilerStore.addListener('isProcessingData', callback);
         profilerStore.addListener('isProfiling', callback);
-        store.addListener('rootSupportsProfiling', callback);
+        store.addListener('rootSupportsBasicProfiling', callback);
         return () => {
           profilerStore.removeListener('profilingData', callback);
           profilerStore.removeListener('isProcessingData', callback);
           profilerStore.removeListener('isProfiling', callback);
-          store.removeListener('rootSupportsProfiling', callback);
+          store.removeListener('rootSupportsBasicProfiling', callback);
         };
       },
     }),

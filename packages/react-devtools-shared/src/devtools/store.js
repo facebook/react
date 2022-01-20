@@ -10,7 +10,7 @@
 import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
-  PROFILING_FLAG_LEGACY_SUPPORT,
+  PROFILING_FLAG_BASIC_SUPPORT,
   PROFILING_FLAG_TIMELINE_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -74,8 +74,8 @@ type Config = {|
 |};
 
 export type Capabilities = {|
+  supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
-  supportsProfiling: boolean,
   supportsStrictMode: boolean,
   supportsTimeline: boolean,
 |};
@@ -91,8 +91,8 @@ export default class Store extends EventEmitter<{|
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
-  rootSupportsProfiling: [],
-  rootSupportsTimeline: [],
+  rootSupportsBasicProfiling: [],
+  rootSupportsTimelineProfiling: [],
   supportsNativeStyleEditor: [],
   supportsReloadAndProfile: [],
   unsupportedBridgeProtocolDetected: [],
@@ -172,8 +172,8 @@ export default class Store extends EventEmitter<{|
   _supportsTraceUpdates: boolean = false;
 
   // These options default to false but may be updated as roots are added and removed.
-  _rootSupportsProfiling: boolean = false;
-  _rootSupportsTimeline: boolean = false;
+  _rootSupportsBasicProfiling: boolean = false;
+  _rootSupportsTimelineProfiling: boolean = false;
 
   _unsupportedBridgeProtocol: BridgeProtocol | null = null;
   _unsupportedRendererVersionDetected: boolean = false;
@@ -410,13 +410,13 @@ export default class Store extends EventEmitter<{|
   }
 
   // At least one of the currently mounted roots support the Legacy profiler.
-  get rootSupportsProfiling(): boolean {
-    return this._rootSupportsProfiling;
+  get rootSupportsBasicProfiling(): boolean {
+    return this._rootSupportsBasicProfiling;
   }
 
   // At least one of the currently mounted roots support the Timeline profiler.
-  get rootSupportsTimeline(): boolean {
-    return this._rootSupportsTimeline;
+  get rootSupportsTimelineProfiling(): boolean {
+    return this._rootSupportsTimelineProfiling;
   }
 
   get supportsNativeInspection(): boolean {
@@ -924,8 +924,8 @@ export default class Store extends EventEmitter<{|
             const isStrictModeCompliant = operations[i] > 0;
             i++;
 
-            const supportsProfiling =
-              (operations[i] & PROFILING_FLAG_LEGACY_SUPPORT) !== 0;
+            const supportsBasicProfiling =
+              (operations[i] & PROFILING_FLAG_BASIC_SUPPORT) !== 0;
             const supportsTimeline =
               (operations[i] & PROFILING_FLAG_TIMELINE_SUPPORT) !== 0;
             i++;
@@ -939,8 +939,8 @@ export default class Store extends EventEmitter<{|
             this._roots = this._roots.concat(id);
             this._rootIDToRendererID.set(id, rendererID);
             this._rootIDToCapabilities.set(id, {
+              supportsBasicProfiling,
               hasOwnerMetadata,
-              supportsProfiling,
               supportsStrictMode,
               supportsTimeline,
             });
@@ -1249,34 +1249,38 @@ export default class Store extends EventEmitter<{|
     }
 
     if (haveRootsChanged) {
-      const prevRootSupportsProfiling = this._rootSupportsProfiling;
-      const prevRootSupportsTimeline = this._rootSupportsTimeline;
+      const prevRootSupportsProfiling = this._rootSupportsBasicProfiling;
+      const prevRootSupportsTimelineProfiling = this
+        ._rootSupportsTimelineProfiling;
 
       this._hasOwnerMetadata = false;
-      this._rootSupportsProfiling = false;
-      this._rootSupportsTimeline = false;
+      this._rootSupportsBasicProfiling = false;
+      this._rootSupportsTimelineProfiling = false;
       this._rootIDToCapabilities.forEach(
-        ({hasOwnerMetadata, supportsProfiling, supportsTimeline}) => {
+        ({supportsBasicProfiling, hasOwnerMetadata, supportsTimeline}) => {
+          if (supportsBasicProfiling) {
+            this._rootSupportsBasicProfiling = true;
+          }
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
-          if (supportsProfiling) {
-            this._rootSupportsProfiling = true;
-          }
           if (supportsTimeline) {
-            this._rootSupportsTimeline = true;
+            this._rootSupportsTimelineProfiling = true;
           }
         },
       );
 
       this.emit('roots');
 
-      if (this._rootSupportsProfiling !== prevRootSupportsProfiling) {
-        this.emit('rootSupportsProfiling');
+      if (this._rootSupportsBasicProfiling !== prevRootSupportsProfiling) {
+        this.emit('rootSupportsBasicProfiling');
       }
 
-      if (this._rootSupportsTimeline !== prevRootSupportsTimeline) {
-        this.emit('rootSupportsTimeline');
+      if (
+        this._rootSupportsTimelineProfiling !==
+        prevRootSupportsTimelineProfiling
+      ) {
+        this.emit('rootSupportsTimelineProfiling');
       }
     }
 
