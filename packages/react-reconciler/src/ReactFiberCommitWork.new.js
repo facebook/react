@@ -39,7 +39,6 @@ import {
   deletedTreeCleanUpLevel,
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
-  warnAboutCallbackRefReturningFunction,
   enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -286,10 +285,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
       }
       if (__DEV__) {
-        if (
-          warnAboutCallbackRefReturningFunction &&
-          typeof retVal === 'function'
-        ) {
+        if (typeof retVal === 'function') {
           console.error(
             'Unexpected return value from a callback ref in %s. ' +
               'A callback ref should not return a function.',
@@ -1151,10 +1147,7 @@ function commitAttachRef(finishedWork: Fiber) {
         retVal = ref(instanceToUse);
       }
       if (__DEV__) {
-        if (
-          warnAboutCallbackRefReturningFunction &&
-          typeof retVal === 'function'
-        ) {
+        if (typeof retVal === 'function') {
           console.error(
             'Unexpected return value from a callback ref in %s. ' +
               'A callback ref should not return a function.',
