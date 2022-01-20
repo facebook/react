@@ -749,8 +749,8 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     const store = createExternalStore('Initial');
 
     function App() {
-      const text = useSyncExternalStore(store.subscribe, store.getState, store.getState);
-      const [derivedText, setDerivedText] = useState(text)
+      const text = useSyncExternalStore(store.subscribe, store.getState);
+      const [derivedText, setDerivedText] = useState(text);
       useEffect(() => {}, []);
       if (derivedText !== text.toUpperCase()) {
         setDerivedText(text.toUpperCase());
