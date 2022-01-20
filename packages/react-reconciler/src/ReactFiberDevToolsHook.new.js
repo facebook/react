@@ -74,11 +74,19 @@ export function injectInternals(internals: Object): boolean {
     return true;
   }
   try {
-    rendererID = hook.inject({
-      ...internals,
-      getLaneLabelMap,
-      injectProfilingHooks,
-    });
+    if (enableSchedulingProfiler) {
+      // Conditionally inject these hooks only if Timeline profiler is supported by this build.
+      // This gives DevTools a way to feature detect that isn't tied to version number
+      // (since profiling and timeline are controlled by different feature flags).
+      internals = {
+        ...internals,
+        getLaneLabelMap,
+        injectProfilingHooks,
+      };
+    }
+
+    rendererID = hook.inject(internals);
+
     // We have successfully injected, so now it is safe to set up hooks.
     injectedHook = hook;
   } catch (err) {
