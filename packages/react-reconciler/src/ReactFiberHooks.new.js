@@ -2471,7 +2471,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
-  useSyncExternalStore: mountSyncExternalStore,
+  useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,
