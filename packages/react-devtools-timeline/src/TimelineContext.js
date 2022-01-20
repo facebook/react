@@ -8,7 +8,15 @@
  */
 
 import * as React from 'react';
-import {createContext, useMemo, useRef, useState} from 'react';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import {StoreContext} from 'react-devtools-shared/src/devtools/views/context';
 
 import type {
   HorizontalScrollStateChangeCallback,
@@ -19,6 +27,7 @@ import type {RefObject} from 'shared/ReactTypes';
 
 export type Context = {|
   file: File | null,
+  isTimelineSupported: boolean,
   searchInputContainerRef: RefObject,
   setFile: (file: File | null) => void,
   viewState: ViewState,
@@ -34,6 +43,20 @@ type Props = {|
 function TimelineContextController({children}: Props) {
   const searchInputContainerRef = useRef(null);
   const [file, setFile] = useState<string | null>(null);
+
+  const store = useContext(StoreContext);
+
+  const isTimelineSupported = useSyncExternalStore<boolean>(
+    function subscribe(callback) {
+      store.addListener('rootSupportsTimelineProfiling', callback);
+      return function unsubscribe() {
+        store.removeListener('rootSupportsTimelineProfiling', callback);
+      };
+    },
+    function getState() {
+      return store.rootSupportsTimelineProfiling;
+    },
+  );
 
   // Recreate view state any time new profiling data is imported.
   const viewState = useMemo<ViewState>(() => {
@@ -85,11 +108,12 @@ function TimelineContextController({children}: Props) {
   const value = useMemo(
     () => ({
       file,
+      isTimelineSupported,
       searchInputContainerRef,
       setFile,
       viewState,
     }),
-    [file, setFile, viewState],
+    [file, isTimelineSupported, setFile, viewState],
   );
 
   return (

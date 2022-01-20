@@ -17,30 +17,25 @@ import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
 
 export default function ClearProfilingDataButton() {
   const store = useContext(StoreContext);
-  const {didRecordCommits, isProfiling, selectedTabID} = useContext(
-    ProfilerContext,
-  );
+  const {didRecordCommits, isProfiling} = useContext(ProfilerContext);
   const {file, setFile} = useContext(TimelineContext);
   const {profilerStore} = store;
 
-  let doesHaveData = false;
-  if (selectedTabID === 'timeline') {
-    doesHaveData = file !== null;
-  } else {
-    doesHaveData = didRecordCommits;
-  }
+  const doesHaveLegacyData = didRecordCommits;
+  const doesHaveTimelineData = file !== null;
 
   const clear = () => {
-    if (selectedTabID === 'timeline') {
-      setFile(null);
-    } else {
+    if (doesHaveLegacyData) {
       profilerStore.clear();
+    }
+    if (doesHaveTimelineData) {
+      setFile(null);
     }
   };
 
   return (
     <Button
-      disabled={isProfiling || !doesHaveData}
+      disabled={isProfiling || !(doesHaveLegacyData || doesHaveTimelineData)}
       onClick={clear}
       title="Clear profiling data">
       <ButtonIcon type="clear" />

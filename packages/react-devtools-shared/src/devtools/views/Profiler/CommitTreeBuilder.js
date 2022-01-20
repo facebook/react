@@ -194,7 +194,7 @@ function updateTree(
 
         if (type === ElementTypeRoot) {
           i++; // isStrictModeCompliant
-          i++; // supportsProfiling flag
+          i++; // Profiling flag
           i++; // supportsStrictMode flag
           i++; // hasOwnerMetadata flag
 
