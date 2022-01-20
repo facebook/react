@@ -62,19 +62,22 @@ module.exports = Object.assign({}, baseConfig, {
   testRegex: 'packages/react-devtools-shared/.+/__tests__/[^]+.test.js$',
   snapshotSerializers: [
     require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/dehydratedValueSerializer.js'
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/dehydratedValueSerializer.js'
     ),
     require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/hookSerializer.js'
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/hookSerializer.js'
     ),
     require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/inspectedElementSerializer.js'
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/inspectedElementSerializer.js'
     ),
     require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/storeSerializer.js'
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/storeSerializer.js'
     ),
     require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/treeContextStateSerializer.js'
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/treeContextStateSerializer.js'
+    ),
+    require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/numberToFixedSerializer.js'
     ),
   ],
   setupFiles: [
