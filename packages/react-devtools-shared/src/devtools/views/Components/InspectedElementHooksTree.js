@@ -27,6 +27,7 @@ import {
   enableProfilerChangedHookIndices,
 } from 'react-devtools-feature-flags';
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
+import isArray from 'react-devtools-shared/src/isArray';
 
 import type {InspectedElement} from './types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
@@ -269,7 +270,7 @@ function HookView({
     displayValue = 'null';
   } else if (value === undefined) {
     displayValue = null;
-  } else if (Array.isArray(value)) {
+  } else if (isArray(value)) {
     isComplexDisplayValue = true;
     displayValue = 'Array';
   } else if (type === 'object') {
@@ -278,7 +279,7 @@ function HookView({
   }
 
   if (isCustomHook) {
-    const subHooksView = Array.isArray(subHooks) ? (
+    const subHooksView = isArray(subHooks) ? (
       <InnerHooksTreeView
         element={element}
         hooks={subHooks}

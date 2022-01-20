@@ -24,6 +24,7 @@ import {parseHookPathForEdit} from './utils';
 import styles from './KeyValue.css';
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+import isArray from 'react-devtools-shared/src/isArray';
 import {InspectedElementContext} from './InspectedElementContext';
 import {PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE} from './constants';
 
@@ -327,7 +328,7 @@ export default function KeyValue({
       );
     }
   } else {
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
       const hasChildren = value.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 

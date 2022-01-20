@@ -10,6 +10,7 @@
 import escapeStringRegExp from 'escape-string-regexp';
 import {meta} from '../../hydration';
 import {formatDataForPreview} from '../../utils';
+import isArray from 'react-devtools-shared/src/isArray';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
@@ -107,7 +108,7 @@ function sanitize(data: Object): void {
     if (value && value[meta.type]) {
       data[key] = getMetaValueLabel(value);
     } else if (value != null) {
-      if (Array.isArray(value)) {
+      if (isArray(value)) {
         sanitize(value);
       } else if (typeof value === 'object') {
         sanitize(value);
