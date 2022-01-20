@@ -243,6 +243,9 @@ export type InspectedElement = {|
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
 
+  // Can StrictMode be toggled on for this component (subtree)?
+  canToggleStrictMode: boolean,
+
   // Can view component source location.
   canViewSource: boolean,
 
@@ -394,6 +397,7 @@ export type RendererInterface = {
     path: Array<string | number>,
     count: number,
   ) => void,
+  toggleStrictMode: (id: number) => void,
   unpatchConsoleForStrictMode: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
 

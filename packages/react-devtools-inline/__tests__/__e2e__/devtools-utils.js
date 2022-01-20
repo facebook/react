@@ -76,8 +76,20 @@ async function selectElement(page, displayName, waitForOwnersText) {
   }
 }
 
+async function verifyTagNameExists(page, targetTestName) {
+  await page.waitForFunction(testName => {
+    const {createTestNameSelector, findAllNodes} = window.REACT_DOM_DEVTOOLS;
+    const container = document.getElementById('devtools');
+
+    const results = findAllNodes(container, [createTestNameSelector(testName)]);
+
+    return results.length === 1;
+  }, targetTestName);
+}
+
 module.exports = {
   clickButton,
   getElementCount,
   selectElement,
+  verifyTagNameExists,
 };

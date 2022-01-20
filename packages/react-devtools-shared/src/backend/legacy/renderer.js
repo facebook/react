@@ -811,6 +811,9 @@ export function attach(
       // Suspense did not exist in legacy versions
       canToggleSuspense: false,
 
+      // StrictMode did not exist in legacy versions
+      canToggleStrictMode: false,
+
       // Can view component source location.
       canViewSource: type === ElementTypeClass || type === ElementTypeFunction,
 
@@ -1034,6 +1037,9 @@ export function attach(
   const overrideSuspense = () => {
     throw new Error('overrideSuspense not supported by this renderer');
   };
+  const toggleStrictMode = () => {
+    throw new Error('toggleStrictMode not supported by this renderer');
+  };
   const startProfiling = () => {
     // Do not throw, since this would break a multi-root scenario where v15 and v16 were both present.
   };
@@ -1121,6 +1127,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    toggleStrictMode,
     unpatchConsoleForStrictMode,
     updateComponentFilters,
   };

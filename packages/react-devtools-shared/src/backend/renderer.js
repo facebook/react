@@ -604,6 +604,8 @@ export function attach(
     setSuspenseHandler,
     scheduleUpdate,
   } = renderer;
+
+  const supportsTogglingStrictMode = typeof scheduleUpdate === 'function';
   const supportsTogglingError =
     typeof setErrorHandler === 'function' &&
     typeof scheduleUpdate === 'function';
@@ -3309,10 +3311,12 @@ export function attach(
         typeof overridePropsRenamePath === 'function',
 
       canToggleError: supportsTogglingError && targetErrorBoundaryID != null,
+
       // Is this error boundary in error state.
       isErrored,
       targetErrorBoundaryID,
 
+      canToggleStrictMode: supportsTogglingStrictMode,
       canToggleSuspense:
         supportsTogglingSuspense &&
         // If it's showing the real content, we can always flip fallback.
@@ -4114,6 +4118,69 @@ export function attach(
     }
   }
 
+  function toggleStrictMode(id) {
+    if (typeof scheduleUpdate !== 'function') {
+      throw new Error(
+        'Expected toggleStrictMode() to not get called for earlier React versions.',
+      );
+    }
+
+    const recursivelyToggleStrictMode = (currentFiber: Fiber) => {
+      if (pendingOperations.length !== 0) {
+        console.log(
+          'recursivelyToggleStrictMode() pendingOperations:',
+          pendingOperations,
+        );
+        // We can't edit a Fiber's mode safely during commit.
+        return;
+      }
+
+      const {alternate, child, sibling} = currentFiber;
+
+      currentFiber.mode |= StrictModeBits;
+      if (alternate !== null) {
+        alternate.mode |= StrictModeBits;
+      }
+
+      if (child !== null) {
+        recursivelyToggleStrictMode(child);
+      }
+
+      if (sibling !== null) {
+        recursivelyToggleStrictMode(sibling);
+      }
+
+      scheduleUpdate(currentFiber);
+    };
+
+    const fiber = idToArbitraryFiberMap.get(id);
+    if (fiber != null) {
+      recursivelyToggleStrictMode(fiber);
+
+      let rootID = 0;
+      let current = fiber.return;
+      while (current !== null) {
+        if (current.return === null) {
+          rootID = getFiberIDThrows(current);
+          current = null;
+        } else {
+          current = current.return;
+        }
+      }
+
+      const operations = [
+        rendererID,
+        rootID,
+        0, // String table size
+        TREE_OPERATION_SET_SUBTREE_MODE,
+        id,
+        StrictMode,
+      ];
+
+      flushOrQueueOperations(operations);
+    }
+  }
+
   // Remember if we're trying to restore the selection after reload.
   // In that case, we'll do some extra checks for matching mounts.
   let trackedPath: Array<PathFrame> | null = null;
@@ -4380,6 +4447,7 @@ export function attach(
     startProfiling,
     stopProfiling,
     storeAsGlobal,
+    toggleStrictMode,
     unpatchConsoleForStrictMode,
     updateComponentFilters,
   };

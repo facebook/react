@@ -2817,4 +2817,51 @@ describe('InspectedElement', () => {
       );
     });
   });
+
+  describe('strict mode', () => {
+    it('can toggle strict mode on for a subtree', async () => {
+      const App = () => <Child />;
+      const Child = () => (
+        <>
+          <Grandchild />
+          <Grandchild />
+          <Grandchild />
+        </>
+      );
+      const Grandchild = () => null;
+
+      await utils.actAsync(() =>
+        legacyRender(<App />, document.createElement('div')),
+      );
+
+      // Inspect <Child /> and see that we cannot toggle strict mode
+      const inspectedElement = await inspectElementAtIndex(1);
+      expect(inspectedElement.canToggleStrictMode).toBe(true);
+
+      const toggleStrictMode = async forceError => {
+        await TestUtilsAct(() => {
+          bridge.send('toggleStrictMode', {
+            id: inspectedElement.id,
+            rendererID: store.getRendererIDForElement(inspectedElement.id),
+          });
+        });
+
+        TestUtilsAct(() => {
+          jest.runOnlyPendingTimers();
+        });
+      };
+
+      // Toggle strict mode
+      await toggleStrictMode(true);
+
+      // Look at Child and Grandchild(ren) in store and verify strict mode enabled
+      expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(false);
+      expect(store.getElementAtIndex(2).isStrictModeNonCompliant).toBe(false);
+      expect(store.getElementAtIndex(3).isStrictModeNonCompliant).toBe(false);
+      expect(store.getElementAtIndex(4).isStrictModeNonCompliant).toBe(false);
+
+      // Strict mode should still be disabled for App though
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(true);
+    });
+  });
 });

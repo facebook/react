@@ -22,7 +22,7 @@ test.describe('Components', () => {
     await devToolsUtils.clickButton(page, 'TabBarButton-components');
   });
 
-  test('Should display initial React components', async () => {
+  test('should display initial React components', async () => {
     const appRowCount = await page.evaluate(() => {
       const {createTestNameSelector, findAllNodes} = window.REACT_DOM_APP;
       const container = document.getElementById('iframe').contentDocument;
@@ -40,14 +40,14 @@ test.describe('Components', () => {
     expect(devToolsRowCount).toBe(3);
   });
 
-  test('Should display newly added React components', async () => {
+  test('should display newly added React components', async () => {
     await listAppUtils.addItem(page, 'four');
 
     const count = await devToolsUtils.getElementCount(page, 'ListItem');
     expect(count).toBe(4);
   });
 
-  test('Should allow elements to be inspected', async () => {
+  test('should allow elements to be inspected', async () => {
     // Select the first list item in DevTools.
     await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
 
@@ -202,5 +202,38 @@ test.describe('Components', () => {
     page.keyboard.press('Shift+Enter');
     count = await getComponentSearchResultsCount();
     expect(count).toBe('1 | 3');
+  });
+
+  test('should support temporarily enabling strict mode for a component', async () => {
+    // Confirm a random child ListItem is not in strict mode to begin with
+    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.verifyTagNameExists(
+      page,
+      'StrictModeNonCompliantToggleButton'
+    );
+
+    // Select the List component in DevTools
+    await devToolsUtils.selectElement(page, 'List', 'App');
+    await devToolsUtils.verifyTagNameExists(
+      page,
+      'StrictModeNonCompliantToggleButton'
+    );
+
+    // Click to toggle strict mode on
+    await devToolsUtils.clickButton(page, 'StrictModeNonCompliantToggleButton');
+
+    // Confirm the component is now strict mode enabled
+    await devToolsUtils.verifyTagNameExists(page, 'StrictModeCompliantBadge');
+
+    // Confirm the children are also in strict mode
+    await devToolsUtils.selectElement(page, 'ListItem', 'List\nApp');
+    await devToolsUtils.verifyTagNameExists(page, 'StrictModeCompliantBadge');
+
+    // Confirm the parent is not in strict mode
+    await devToolsUtils.selectElement(page, 'App', 'createRoot()');
+    await devToolsUtils.verifyTagNameExists(
+      page,
+      'StrictModeNonCompliantToggleButton'
+    );
   });
 });
