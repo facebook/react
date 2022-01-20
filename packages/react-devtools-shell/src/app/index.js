@@ -14,7 +14,6 @@ import Iframe from './Iframe';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import Hydration from './Hydration';
-import InlineWarnings from './InlineWarnings';
 import InspectableElements from './InspectableElements';
 import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
@@ -87,7 +86,6 @@ function mountTestApp() {
   mountApp(Hydration);
   mountApp(ElementTypes);
   mountApp(EditableProps);
-  mountApp(InlineWarnings);
   mountApp(ReactNativeWeb);
   mountApp(Toggle);
   mountApp(ErrorBoundaries);

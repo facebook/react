@@ -10,6 +10,8 @@
 import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
+  PROFILING_FLAG_LEGACY_SUPPORT,
+  PROFILING_FLAG_TIMELINE_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
@@ -75,6 +77,7 @@ export type Capabilities = {|
   hasOwnerMetadata: boolean,
   supportsProfiling: boolean,
   supportsStrictMode: boolean,
+  supportsTimeline: boolean,
 |};
 
 /**
@@ -88,8 +91,9 @@ export default class Store extends EventEmitter<{|
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
+  rootSupportsProfiling: [],
+  rootSupportsTimeline: [],
   supportsNativeStyleEditor: [],
-  supportsProfiling: [],
   supportsReloadAndProfile: [],
   unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
@@ -161,12 +165,15 @@ export default class Store extends EventEmitter<{|
   _rootIDToRendererID: Map<number, number> = new Map();
 
   // These options may be initially set by a confiugraiton option when constructing the Store.
-  // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
   _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
+
+  // These options default to false but may be updated as roots are added and removed.
+  _rootSupportsProfiling: boolean = false;
+  _rootSupportsTimeline: boolean = false;
 
   _unsupportedBridgeProtocol: BridgeProtocol | null = null;
   _unsupportedRendererVersionDetected: boolean = false;
@@ -402,6 +409,16 @@ export default class Store extends EventEmitter<{|
     return this._roots;
   }
 
+  // At least one of the currently mounted roots support the Legacy profiler.
+  get rootSupportsProfiling(): boolean {
+    return this._rootSupportsProfiling;
+  }
+
+  // At least one of the currently mounted roots support the Timeline profiler.
+  get rootSupportsTimeline(): boolean {
+    return this._rootSupportsTimeline;
+  }
+
   get supportsNativeInspection(): boolean {
     return this._supportsNativeInspection;
   }
@@ -410,6 +427,8 @@ export default class Store extends EventEmitter<{|
     return this._isNativeStyleEditorSupported;
   }
 
+  // This build of DevTools supports the legacy profiler.
+  // This is a static flag, controled by the Store config.
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
@@ -425,6 +444,8 @@ export default class Store extends EventEmitter<{|
     );
   }
 
+  // This build of DevTools supports the Timeline profiler.
+  // This is a static flag, controled by the Store config.
   get supportsTimeline(): boolean {
     return this._supportsTimeline;
   }
@@ -903,7 +924,10 @@ export default class Store extends EventEmitter<{|
             const isStrictModeCompliant = operations[i] > 0;
             i++;
 
-            const supportsProfiling = operations[i] > 0;
+            const supportsProfiling =
+              (operations[i] & PROFILING_FLAG_LEGACY_SUPPORT) !== 0;
+            const supportsTimeline =
+              (operations[i] & PROFILING_FLAG_TIMELINE_SUPPORT) !== 0;
             i++;
 
             const supportsStrictMode = operations[i] > 0;
@@ -918,6 +942,7 @@ export default class Store extends EventEmitter<{|
               hasOwnerMetadata,
               supportsProfiling,
               supportsStrictMode,
+              supportsTimeline,
             });
 
             // Not all roots support StrictMode;
@@ -1224,25 +1249,34 @@ export default class Store extends EventEmitter<{|
     }
 
     if (haveRootsChanged) {
-      const prevSupportsProfiling = this._supportsProfiling;
+      const prevRootSupportsProfiling = this._rootSupportsProfiling;
+      const prevRootSupportsTimeline = this._rootSupportsTimeline;
 
       this._hasOwnerMetadata = false;
-      this._supportsProfiling = false;
+      this._rootSupportsProfiling = false;
+      this._rootSupportsTimeline = false;
       this._rootIDToCapabilities.forEach(
-        ({hasOwnerMetadata, supportsProfiling}) => {
+        ({hasOwnerMetadata, supportsProfiling, supportsTimeline}) => {
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
           if (supportsProfiling) {
-            this._supportsProfiling = true;
+            this._rootSupportsProfiling = true;
+          }
+          if (supportsTimeline) {
+            this._rootSupportsTimeline = true;
           }
         },
       );
 
       this.emit('roots');
 
-      if (this._supportsProfiling !== prevSupportsProfiling) {
-        this.emit('supportsProfiling');
+      if (this._rootSupportsProfiling !== prevRootSupportsProfiling) {
+        this.emit('rootSupportsProfiling');
+      }
+
+      if (this._rootSupportsTimeline !== prevRootSupportsTimeline) {
+        this.emit('rootSupportsTimeline');
       }
     }
 

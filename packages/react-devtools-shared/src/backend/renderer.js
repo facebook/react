@@ -47,6 +47,8 @@ import {
 } from './utils';
 import {
   __DEBUG__,
+  PROFILING_FLAG_LEGACY_SUPPORT,
+  PROFILING_FLAG_TIMELINE_SUPPORT,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
@@ -1909,12 +1911,22 @@ export function attach(
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
 
+    // Adding a new field here would require a bridge protocol version bump (a backwads breaking change).
+    // Instead let's re-purpose a pre-existing field to carry more information.
+    let profilingFlags = 0;
+    if (isProfilingSupported) {
+      profilingFlags = PROFILING_FLAG_LEGACY_SUPPORT;
+      if (typeof injectProfilingHooks === 'function') {
+        profilingFlags |= PROFILING_FLAG_TIMELINE_SUPPORT;
+      }
+    }
+
     if (isRoot) {
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(ElementTypeRoot);
       pushOperation((fiber.mode & StrictModeBits) !== 0 ? 1 : 0);
-      pushOperation(isProfilingSupported ? 1 : 0);
+      pushOperation(profilingFlags);
       pushOperation(StrictModeBits !== 0 ? 1 : 0);
       pushOperation(hasOwnerMetadata ? 1 : 0);
 

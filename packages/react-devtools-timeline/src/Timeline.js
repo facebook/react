@@ -9,7 +9,6 @@
 
 import type {ViewState} from './types';
 
-import {isInternalFacebookBuild} from 'react-devtools-feature-flags';
 import * as React from 'react';
 import {
   Suspense,
@@ -20,18 +19,22 @@ import {
   useState,
 } from 'react';
 import {SettingsContext} from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
+import NoProfilingData from 'react-devtools-shared/src/devtools/views/Profiler/NoProfilingData';
 import {updateColorsToMatchTheme} from './content-views/constants';
 import {TimelineContext} from './TimelineContext';
 import ImportButton from './ImportButton';
 import CanvasPage from './CanvasPage';
 import {importFile} from './timelineCache';
 import TimelineSearchInput from './TimelineSearchInput';
+import TimelineNotSupported from './TimelineNotSupported';
 import {TimelineSearchContextController} from './TimelineSearchContext';
 
 import styles from './Timeline.css';
 
 export function Timeline(_: {||}) {
-  const {file, setFile, viewState} = useContext(TimelineContext);
+  const {file, isTimelineSupported, setFile, viewState} = useContext(
+    TimelineContext,
+  );
 
   const ref = useRef(null);
 
@@ -71,54 +74,14 @@ export function Timeline(_: {||}) {
             viewState={viewState}
           />
         </Suspense>
+      ) : isTimelineSupported ? (
+        <NoProfilingData />
       ) : (
-        <Welcome onFileSelect={setFile} />
+        <TimelineNotSupported />
       )}
     </div>
   );
 }
-
-const Welcome = ({onFileSelect}: {|onFileSelect: (file: File) => void|}) => (
-  <ol className={styles.WelcomeInstructionsList}>
-    {isInternalFacebookBuild && (
-      <li className={styles.WelcomeInstructionsListItem}>
-        Enable the
-        <a
-          className={styles.WelcomeInstructionsListItemLink}
-          href="https://fburl.com/react-devtools-scheduling-profiler-gk"
-          rel="noopener noreferrer"
-          target="_blank">
-          <code>react_enable_scheduling_profiler</code> GK
-        </a>
-        .
-      </li>
-    )}
-    <li className={styles.WelcomeInstructionsListItem}>
-      Open a website that's built with the
-      <a
-        className={styles.WelcomeInstructionsListItemLink}
-        href="https://reactjs.org/link/profiling"
-        rel="noopener noreferrer"
-        target="_blank">
-        profiling build of ReactDOM
-      </a>
-      (version 18 or newer).
-    </li>
-    <li className={styles.WelcomeInstructionsListItem}>
-      Open the "Performance" tab in Chrome and record some performance data.
-    </li>
-    <li className={styles.WelcomeInstructionsListItem}>
-      Click the "Save profile..." button in Chrome to export the data.
-    </li>
-    <li className={styles.WelcomeInstructionsListItem}>
-      Import the data into the profiler:
-      <br />
-      <ImportButton onFileSelect={onFileSelect}>
-        <span className={styles.ImportButtonLabel}>Import</span>
-      </ImportButton>
-    </li>
-  </ol>
-);
 
 const ProcessingData = () => (
   <div className={styles.EmptyStateContainer}>

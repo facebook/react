@@ -22,6 +22,8 @@ import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
+import NoProfilingData from './NoProfilingData';
+import ProfilingNotSupported from './ProfilingNotSupported';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
@@ -104,9 +106,7 @@ function Profiler(_: {||}) {
       <div className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
-            <RecordToggle
-              disabled={!supportsProfiling || selectedTabID === 'timeline'}
-            />
+            <RecordToggle disabled={!supportsProfiling} />
             <ReloadAndProfileButton
               disabled={selectedTabID === 'timeline' || !supportsProfiling}
             />
@@ -175,37 +175,6 @@ const tabsWithTimeline = [
     title: 'Timeline',
   },
 ];
-
-const NoProfilingData = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>No profiling data has been recorded.</div>
-    <div className={styles.Row}>
-      Click the record button <RecordToggle /> to start recording.
-    </div>
-  </div>
-);
-
-const ProfilingNotSupported = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>Profiling not supported.</div>
-    <p className={styles.Paragraph}>
-      Profiling support requires either a development or production-profiling
-      build of React v16.5+.
-    </p>
-    <p className={styles.Paragraph}>
-      Learn more at{' '}
-      <a
-        className={styles.Link}
-        href="https://reactjs.org/link/profiling"
-        rel="noopener noreferrer"
-        target="_blank">
-        reactjs.org/link/profiling
-      </a>
-      .
-    </p>
-  </div>
-);
-
 const ProcessingData = () => (
   <div className={styles.Column}>
     <div className={styles.Header}>Processing data...</div>
