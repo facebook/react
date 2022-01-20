@@ -134,17 +134,6 @@ export function createProfilingHooks({
   function markCommitStarted(lanes: Lanes): void {
     if (supportsUserTimingV3) {
       markAndClear(`--commit-start-${lanes}`);
-
-      // Certain types of metadata should be logged infrequently.
-      // Normally we would log this during module init,
-      // but there's no guarantee a user is profiling at that time.
-      // Commits happen infrequently (less than renders or state updates)
-      // so we log this extra information along with a commit.
-      // It will likely be logged more than once but that's okay.
-      //
-      // TODO (timeline) Only log this once, when profiling starts.
-      // For the first phase– refactoring– we'll match the previous behavior.
-      markMetadata();
     }
   }
 
@@ -354,10 +343,23 @@ export function createProfilingHooks({
   }
 
   function toggleProfilingStatus(value: boolean) {
-    isProfiling = value;
+    if (isProfiling !== value) {
+      isProfiling = value;
 
-    if (value) {
-      // TODO (timeline) Log metadata (e.g. profiler and React versions, lane labels).
+      if (supportsUserTimingV3) {
+        if (isProfiling) {
+          // Some metadata only needs to be logged once per session.
+          // Log it at the start of the session.
+          //
+          // TODO (timeline)
+          // This is the right time to general and store one-off metadata like this,
+          // but using the User Timing API for it will leave things temporarily broken,
+          // because Chrome locks you to the Performance tab once you start recording.
+          // We'll clean this up with a subsequent commit though,
+          // when we store this data in memory like we do with the legacy profiler.
+          markMetadata();
+        }
+      }
     }
   }
 
