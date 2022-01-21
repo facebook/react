@@ -195,6 +195,7 @@ export type ProfilingDataForRootBackend = {|
 export type ProfilingDataBackend = {|
   dataForRoots: Array<ProfilingDataForRootBackend>,
   rendererID: number,
+  // TODO (timeline) Add (optional) Timeline data.
 |};
 
 export type PathFrame = {|

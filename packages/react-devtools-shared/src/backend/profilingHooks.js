@@ -134,6 +134,12 @@ export function createProfilingHooks({
   function markCommitStarted(lanes: Lanes): void {
     if (supportsUserTimingV3) {
       markAndClear(`--commit-start-${lanes}`);
+
+      // Some metadata only needs to be logged once per session,
+      // but if profiling information is being recorded via the Performance tab,
+      // DevTools has no way of knowing when the recording starts.
+      // Because of that, we log thie type of data periodically (once per commit).
+      markMetadata();
     }
   }
 
@@ -348,16 +354,9 @@ export function createProfilingHooks({
 
       if (supportsUserTimingV3) {
         if (isProfiling) {
-          // Some metadata only needs to be logged once per session.
-          // Log it at the start of the session.
-          //
           // TODO (timeline)
-          // This is the right time to general and store one-off metadata like this,
-          // but using the User Timing API for it will leave things temporarily broken,
-          // because Chrome locks you to the Performance tab once you start recording.
-          // We'll clean this up with a subsequent commit though,
-          // when we store this data in memory like we do with the legacy profiler.
-          markMetadata();
+          // Some metadata only needs to be logged once per session.
+          // Store it at the start of the session.
         }
       }
     }

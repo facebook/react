@@ -106,6 +106,7 @@ export type ProfilingDataFrontend = {|
   // Profiling data per root.
   dataForRoots: Map<number, ProfilingDataForRootFrontend>,
   imported: boolean,
+  // TODO (timeline) Add (optional) Timeline data.
 |};
 
 export type CommitDataExport = {|
@@ -136,4 +137,5 @@ export type ProfilingDataForRootExport = {|
 export type ProfilingDataExport = {|
   version: 5,
   dataForRoots: Array<ProfilingDataForRootExport>,
+  // TODO (timeline) Add (optional) Timeline data.
 |};
