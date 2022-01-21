@@ -1347,11 +1347,19 @@ export function attach(
   // Fibers only store the current context value,
   // so we need to track them separately in order to determine changed keys.
   function crawlToInitializeContextsMap(fiber: Fiber) {
-    updateContextsForFiber(fiber);
-    let current = fiber.child;
-    while (current !== null) {
-      crawlToInitializeContextsMap(current);
-      current = current.sibling;
+    const id = getFiberIDUnsafe(fiber);
+
+    // Not all Fibers in the subtree have mounted yet.
+    // For example, Offscreen (hidden) or Suspense (suspended) subtrees won't yet be tracked.
+    // We can safely skip these subtrees.
+    if (id !== null) {
+      updateContextsForFiber(fiber);
+
+      let current = fiber.child;
+      while (current !== null) {
+        crawlToInitializeContextsMap(current);
+        current = current.sibling;
+      }
     }
   }
 
