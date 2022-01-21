@@ -1141,4 +1141,36 @@ describe('Timeline profiler', () => {
       });
     });
   });
+
+  describe('DevTools hook (in memory)', () => {
+    beforeEach(() => {
+      utils = require('./utils');
+      utils.beforeEachProfiling();
+
+      unmountFns = [];
+      renderHelper = element => {
+        const unmountFn = utils.legacyRender(element);
+        unmountFns.push(unmountFn);
+        return unmountFn;
+      };
+      renderRootHelper = element => {
+        const container = document.createElement('div');
+        const root = ReactDOM.createRoot(container);
+        root.render(element);
+        const unmountFn = () => root.unmount();
+        unmountFns.push(unmountFn);
+        return unmountFn;
+      };
+
+      React = require('react');
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+    });
+
+    afterEach(() => {
+      unmountFns.forEach(unmountFn => unmountFn());
+    });
+
+    // TODO (timeline) Write tests
+  });
 });

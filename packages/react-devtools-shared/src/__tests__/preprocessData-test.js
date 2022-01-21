@@ -1937,4 +1937,24 @@ describe('Timeline profiler', () => {
       // TODO: Add test for flamechart parsing
     });
   });
+
+  describe('DevTools hook (in memory)', () => {
+    beforeEach(() => {
+      utils = require('./utils');
+      utils.beforeEachProfiling();
+
+      React = require('react');
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+
+      const store = global.store;
+
+      // Start profiling so that data will actually be recorded.
+      utils.act(() => store.profilerStore.startProfiling());
+
+      global.IS_REACT_ACT_ENVIRONMENT = true;
+    });
+
+    // TODO (timeline) Write tests
+  });
 });

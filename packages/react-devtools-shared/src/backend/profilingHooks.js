@@ -132,6 +132,8 @@ export function createProfilingHooks({
   }
 
   function markCommitStarted(lanes: Lanes): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear(`--commit-start-${lanes}`);
 
@@ -147,73 +149,95 @@ export function createProfilingHooks({
     if (supportsUserTimingV3) {
       markAndClear('--commit-stop');
     }
+
+    // TODO (timeline) Record data in-memory.
   }
 
   function markComponentRenderStarted(fiber: Fiber): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--component-render-start-${componentName}`);
     }
   }
 
   function markComponentRenderStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--component-render-stop');
     }
   }
 
   function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--component-passive-effect-mount-start-${componentName}`);
     }
   }
 
   function markComponentPassiveEffectMountStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--component-passive-effect-mount-stop');
     }
   }
 
   function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--component-passive-effect-unmount-start-${componentName}`);
     }
   }
 
   function markComponentPassiveEffectUnmountStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--component-passive-effect-unmount-stop');
     }
   }
 
   function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--component-layout-effect-mount-start-${componentName}`);
     }
   }
 
   function markComponentLayoutEffectMountStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--component-layout-effect-mount-stop');
     }
   }
 
   function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--component-layout-effect-unmount-start-${componentName}`);
     }
   }
 
   function markComponentLayoutEffectUnmountStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--component-layout-effect-unmount-stop');
     }
@@ -224,22 +248,24 @@ export function createProfilingHooks({
     thrownValue: mixed,
     lanes: Lanes,
   ): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    const phase = fiber.alternate === null ? 'mount' : 'update';
+
+    let message = '';
+    if (
+      thrownValue !== null &&
+      typeof thrownValue === 'object' &&
+      typeof thrownValue.message === 'string'
+    ) {
+      message = thrownValue.message;
+    } else if (typeof thrownValue === 'string') {
+      message = thrownValue;
+    }
+
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      const phase = fiber.alternate === null ? 'mount' : 'update';
-
-      let message = '';
-      if (
-        thrownValue !== null &&
-        typeof thrownValue === 'object' &&
-        typeof thrownValue.message === 'string'
-      ) {
-        message = thrownValue.message;
-      } else if (typeof thrownValue === 'string') {
-        message = thrownValue;
-      }
-
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--error-${componentName}-${phase}-${message}`);
     }
   }
@@ -261,19 +287,21 @@ export function createProfilingHooks({
     wakeable: Wakeable,
     lanes: Lanes,
   ): void {
+    const eventType = wakeableIDs.has(wakeable) ? 'resuspend' : 'suspend';
+    const id = getWakeableID(wakeable);
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    const phase = fiber.alternate === null ? 'mount' : 'update';
+
+    // Following the non-standard fn.displayName convention,
+    // frameworks like Relay may also annotate Promises with a displayName,
+    // describing what operation/data the thrown Promise is related to.
+    // When this is available we should pass it along to the Timeline.
+    const displayName = (wakeable: any).displayName || '';
+
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const eventType = wakeableIDs.has(wakeable) ? 'resuspend' : 'suspend';
-      const id = getWakeableID(wakeable);
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      const phase = fiber.alternate === null ? 'mount' : 'update';
-
-      // Following the non-standard fn.displayName convention,
-      // frameworks like Relay may also annotate Promises with a displayName,
-      // describing what operation/data the thrown Promise is related to.
-      // When this is available we should pass it along to the Timeline.
-      const displayName = (wakeable: any).displayName || '';
-
-      // TODO (timeline) Record and cache component stack
       markAndClear(
         `--suspense-${eventType}-${id}-${componentName}-${phase}-${lanes}-${displayName}`,
       );
@@ -285,65 +313,85 @@ export function createProfilingHooks({
   }
 
   function markLayoutEffectsStarted(lanes: Lanes): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear(`--layout-effects-start-${lanes}`);
     }
   }
 
   function markLayoutEffectsStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--layout-effects-stop');
     }
   }
 
   function markPassiveEffectsStarted(lanes: Lanes): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear(`--passive-effects-start-${lanes}`);
     }
   }
 
   function markPassiveEffectsStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--passive-effects-stop');
     }
   }
 
   function markRenderStarted(lanes: Lanes): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear(`--render-start-${lanes}`);
     }
   }
 
   function markRenderYielded(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--render-yield');
     }
   }
 
   function markRenderStopped(): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear('--render-stop');
     }
   }
 
   function markRenderScheduled(lane: Lane): void {
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
       markAndClear(`--schedule-render-${lane}`);
     }
   }
 
   function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--schedule-forced-update-${lane}-${componentName}`);
     }
   }
 
   function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    // TODO (timeline) Record data in-memory.
+
     if (supportsUserTimingV3) {
-      const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-      // TODO (timeline) Record and cache component stack
       markAndClear(`--schedule-state-update-${lane}-${componentName}`);
     }
   }
