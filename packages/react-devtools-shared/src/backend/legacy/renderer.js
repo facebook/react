@@ -387,7 +387,7 @@ export function attach(
       pushOperation(id);
       pushOperation(ElementTypeRoot);
       pushOperation(0); // StrictMode compliant?
-      pushOperation(0); // Profiling supported?
+      pushOperation(0); // Profiling flag
       pushOperation(0); // StrictMode supported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {

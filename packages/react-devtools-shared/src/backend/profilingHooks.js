@@ -63,21 +63,26 @@ export function setPerformanceMock_ONLY_FOR_TESTING(
   supportsUserTimingV3 = performanceMock !== null;
 }
 
-function markAndClear(markName) {
-  // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
-  ((performanceTarget: any): Performance).mark(markName);
-  ((performanceTarget: any): Performance).clearMarks(markName);
-}
+export type ToggleProfilingStatus = (value: boolean) => void;
+
+type Response = {|
+  profilingHooks: DevToolsProfilingHooks,
+  toggleProfilingStatus: ToggleProfilingStatus,
+|};
 
 export function createProfilingHooks({
   getDisplayNameForFiber,
+  getIsProfiling,
   getLaneLabelMap,
   reactVersion,
 }: {|
   getDisplayNameForFiber: (fiber: Fiber) => string | null,
+  getIsProfiling: () => boolean,
   getLaneLabelMap?: () => Map<Lane, string> | null,
   reactVersion: string,
-|}): DevToolsProfilingHooks {
+|}): Response {
+  let isProfiling: boolean = false;
+
   function markMetadata() {
     markAndClear(`--react-version-${reactVersion}`);
     markAndClear(`--profiler-version-${SCHEDULING_PROFILER_VERSION}`);
@@ -115,19 +120,25 @@ export function createProfilingHooks({
     }
   }
 
+  function markAndClear(markName) {
+    // Only record User Timing marks if DevTools is profiling.
+    if (!isProfiling) {
+      return;
+    }
+
+    // This method won't be called unless these functions are defined, so we can skip the extra typeof check.
+    ((performanceTarget: any): Performance).mark(markName);
+    ((performanceTarget: any): Performance).clearMarks(markName);
+  }
+
   function markCommitStarted(lanes: Lanes): void {
     if (supportsUserTimingV3) {
       markAndClear(`--commit-start-${lanes}`);
 
-      // Certain types of metadata should be logged infrequently.
-      // Normally we would log this during module init,
-      // but there's no guarantee a user is profiling at that time.
-      // Commits happen infrequently (less than renders or state updates)
-      // so we log this extra information along with a commit.
-      // It will likely be logged more than once but that's okay.
-      //
-      // TODO (timeline) Only log this once, when profiling starts.
-      // For the first phase– refactoring– we'll match the previous behavior.
+      // Some metadata only needs to be logged once per session,
+      // but if profiling information is being recorded via the Performance tab,
+      // DevTools has no way of knowing when the recording starts.
+      // Because of that, we log thie type of data periodically (once per commit).
       markMetadata();
     }
   }
@@ -337,30 +348,47 @@ export function createProfilingHooks({
     }
   }
 
+  function toggleProfilingStatus(value: boolean) {
+    if (isProfiling !== value) {
+      isProfiling = value;
+
+      if (supportsUserTimingV3) {
+        if (isProfiling) {
+          // TODO (timeline)
+          // Some metadata only needs to be logged once per session.
+          // Store it at the start of the session.
+        }
+      }
+    }
+  }
+
   return {
-    markCommitStarted,
-    markCommitStopped,
-    markComponentRenderStarted,
-    markComponentRenderStopped,
-    markComponentPassiveEffectMountStarted,
-    markComponentPassiveEffectMountStopped,
-    markComponentPassiveEffectUnmountStarted,
-    markComponentPassiveEffectUnmountStopped,
-    markComponentLayoutEffectMountStarted,
-    markComponentLayoutEffectMountStopped,
-    markComponentLayoutEffectUnmountStarted,
-    markComponentLayoutEffectUnmountStopped,
-    markComponentErrored,
-    markComponentSuspended,
-    markLayoutEffectsStarted,
-    markLayoutEffectsStopped,
-    markPassiveEffectsStarted,
-    markPassiveEffectsStopped,
-    markRenderStarted,
-    markRenderYielded,
-    markRenderStopped,
-    markRenderScheduled,
-    markForceUpdateScheduled,
-    markStateUpdateScheduled,
+    profilingHooks: {
+      markCommitStarted,
+      markCommitStopped,
+      markComponentRenderStarted,
+      markComponentRenderStopped,
+      markComponentPassiveEffectMountStarted,
+      markComponentPassiveEffectMountStopped,
+      markComponentPassiveEffectUnmountStarted,
+      markComponentPassiveEffectUnmountStopped,
+      markComponentLayoutEffectMountStarted,
+      markComponentLayoutEffectMountStopped,
+      markComponentLayoutEffectUnmountStarted,
+      markComponentLayoutEffectUnmountStopped,
+      markComponentErrored,
+      markComponentSuspended,
+      markLayoutEffectsStarted,
+      markLayoutEffectsStopped,
+      markPassiveEffectsStarted,
+      markPassiveEffectsStopped,
+      markRenderStarted,
+      markRenderYielded,
+      markRenderStopped,
+      markRenderScheduled,
+      markForceUpdateScheduled,
+      markStateUpdateScheduled,
+    },
+    toggleProfilingStatus,
   };
 }
