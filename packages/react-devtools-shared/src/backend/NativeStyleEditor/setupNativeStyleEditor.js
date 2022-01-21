@@ -213,10 +213,7 @@ function renameStyle(
     instance.setNativeProps({style: newStyle});
   } else if (isArray(style)) {
     const lastIndex = style.length - 1;
-    if (
-      typeof style[lastIndex] === 'object' &&
-      !isArray(style[lastIndex])
-    ) {
+    if (typeof style[lastIndex] === 'object' && !isArray(style[lastIndex])) {
       customStyle = shallowClone(style[lastIndex]);
       delete customStyle[oldName];
       if (newName) {
@@ -299,10 +296,7 @@ function setStyle(
     instance.setNativeProps({style: newStyle});
   } else if (isArray(style)) {
     const lastLength = style.length - 1;
-    if (
-      typeof style[lastLength] === 'object' &&
-      !isArray(style[lastLength])
-    ) {
+    if (typeof style[lastLength] === 'object' && !isArray(style[lastLength])) {
       agent.overrideValueAtPath({
         type: 'props',
         id,
