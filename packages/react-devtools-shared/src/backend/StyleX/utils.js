@@ -8,6 +8,7 @@
  */
 
 import type {StyleXPlugin} from 'react-devtools-shared/src/types';
+import isArray from 'react-devtools-shared/src/isArray';
 
 const cachedStyleNameToValueMap: Map<string, string> = new Map();
 
@@ -28,9 +29,9 @@ export function crawlData(
   sources: Set<string>,
   resolvedStyles: Object,
 ): void {
-  if (Array.isArray(data)) {
+  if (isArray(data)) {
     data.forEach(entry => {
-      if (Array.isArray(entry)) {
+      if (isArray(entry)) {
         crawlData(entry, sources, resolvedStyles);
       } else {
         crawlObjectProperties(entry, sources, resolvedStyles);

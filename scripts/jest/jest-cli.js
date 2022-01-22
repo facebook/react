@@ -297,7 +297,7 @@ function getEnvars() {
       ? 'experimental'
       : 'stable',
 
-    // Pass this flag through to the confit environment
+    // Pass this flag through to the config environment
     // so the base config can conditionally load the console setup file.
     compactConsole: argv.compactConsole,
   };

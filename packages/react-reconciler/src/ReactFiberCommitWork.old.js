@@ -39,7 +39,6 @@ import {
   deletedTreeCleanUpLevel,
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
-  warnAboutCallbackRefReturningFunction,
   enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -86,8 +85,6 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
-import {onCommitUnmount} from './ReactFiberDevToolsHook.old';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
   isCurrentUpdateNested,
@@ -147,6 +144,7 @@ import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
 import {doesFiberContain} from './ReactFiberTreeReflection';
 import {invokeGuardedCallback, clearCaughtError} from 'shared/ReactErrorUtils';
 import {
+  isDevToolsPresent,
   markComponentPassiveEffectMountStarted,
   markComponentPassiveEffectMountStopped,
   markComponentPassiveEffectUnmountStarted,
@@ -155,7 +153,8 @@ import {
   markComponentLayoutEffectMountStopped,
   markComponentLayoutEffectUnmountStarted,
   markComponentLayoutEffectUnmountStopped,
-} from './SchedulingProfiler';
+  onCommitUnmount,
+} from './ReactFiberDevToolsHook.old';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.old';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
@@ -286,10 +285,7 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
         captureCommitPhaseError(current, nearestMountedAncestor, error);
       }
       if (__DEV__) {
-        if (
-          warnAboutCallbackRefReturningFunction &&
-          typeof retVal === 'function'
-        ) {
+        if (typeof retVal === 'function') {
           console.error(
             'Unexpected return value from a callback ref in %s. ' +
               'A callback ref should not return a function.',
@@ -1151,10 +1147,7 @@ function commitAttachRef(finishedWork: Fiber) {
         retVal = ref(instanceToUse);
       }
       if (__DEV__) {
-        if (
-          warnAboutCallbackRefReturningFunction &&
-          typeof retVal === 'function'
-        ) {
+        if (typeof retVal === 'function') {
           console.error(
             'Unexpected return value from a callback ref in %s. ' +
               'A callback ref should not return a function.',

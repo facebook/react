@@ -67,7 +67,6 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
-export const warnAboutCallbackRefReturningFunction = true;
 
 export const enableLazyElements = true;
 export const enableCache = true;
@@ -105,6 +104,8 @@ export const consoleManagedByDevToolsDuringStrictMode = true;
 export const enableUseMutableSource = true;
 
 export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
+
+export const enableTransitionTracing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

@@ -37,7 +37,6 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
-import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {
@@ -74,11 +73,11 @@ import {
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.old';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
-
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
-} from './SchedulingProfiler';
+  setIsStrictModeForDevtools,
+} from './ReactFiberDevToolsHook.old';
 
 const fakeInternalInstance = {};
 

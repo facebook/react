@@ -11,7 +11,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "cjs/",
     "umd/",
@@ -29,7 +28,7 @@
       "react-server": "./unstable-shared-subset.js",
       "default": "./index.js"
     },
-    "./build-info.json": "./build-info.json",
+    "./package.json": "./package.json",
     "./jsx-runtime": "./jsx-runtime.js",
     "./jsx-dev-runtime": "./jsx-dev-runtime.js",
     "./": "./"

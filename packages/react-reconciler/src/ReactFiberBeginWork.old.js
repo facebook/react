@@ -35,7 +35,8 @@ import checkPropTypes from 'shared/checkPropTypes';
 import {
   markComponentRenderStarted,
   markComponentRenderStopped,
-} from './SchedulingProfiler';
+  setIsStrictModeForDevtools,
+} from './ReactFiberDevToolsHook.old';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -173,7 +174,7 @@ import {
   checkIfContextChanged,
   readContext,
   prepareToReadContext,
-  scheduleWorkOnParentPath,
+  scheduleContextWorkOnParentPath,
 } from './ReactFiberNewContext.old';
 import {
   renderWithHooks,
@@ -240,7 +241,6 @@ import {createCapturedValue} from './ReactCapturedValue';
 import {createClassErrorUpdate} from './ReactFiberThrow.old';
 import {completeSuspendedOffscreenHostContainer} from './ReactFiberCompleteWork.old';
 import is from 'shared/objectIs';
-import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.old';
 import {
   getForksAtLevel,
   isForkedChild,
@@ -2754,13 +2754,17 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
-function scheduleWorkOnFiber(fiber: Fiber, renderLanes: Lanes) {
+function scheduleSuspenseWorkOnFiber(
+  fiber: Fiber,
+  renderLanes: Lanes,
+  propagationRoot: Fiber,
+) {
   fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
   const alternate = fiber.alternate;
   if (alternate !== null) {
     alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
   }
-  scheduleWorkOnParentPath(fiber.return, renderLanes);
+  scheduleContextWorkOnParentPath(fiber.return, renderLanes, propagationRoot);
 }
 
 function propagateSuspenseContextChange(
@@ -2776,7 +2780,7 @@ function propagateSuspenseContextChange(
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        scheduleWorkOnFiber(node, renderLanes);
+        scheduleSuspenseWorkOnFiber(node, renderLanes, workInProgress);
       }
     } else if (node.tag === SuspenseListComponent) {
       // If the tail is hidden there might not be an Suspense boundaries
@@ -2784,7 +2788,7 @@ function propagateSuspenseContextChange(
       // list itself.
       // We don't have to traverse to the children of the list since
       // the list will propagate the change when it rerenders.
-      scheduleWorkOnFiber(node, renderLanes);
+      scheduleSuspenseWorkOnFiber(node, renderLanes, workInProgress);
     } else if (node.child !== null) {
       node.child.return = node;
       node = node.child;

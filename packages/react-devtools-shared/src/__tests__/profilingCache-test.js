@@ -752,4 +752,97 @@ describe('ProfilingCache', () => {
     utils.act(() => store.profilerStore.stopProfiling());
     expect(container.textContent).toBe('About');
   });
+
+  it('components that were deleted and added to updaters during the layout phase should not crash', () => {
+    let setChildUnmounted;
+    function Child() {
+      const [, setState] = React.useState(false);
+
+      React.useLayoutEffect(() => {
+        return () => setState(true);
+      });
+
+      return null;
+    }
+
+    function App() {
+      const [childUnmounted, _setChildUnmounted] = React.useState(false);
+      setChildUnmounted = _setChildUnmounted;
+      return <>{!childUnmounted && <Child />}</>;
+    }
+
+    const root = ReactDOM.createRoot(document.createElement('div'));
+    utils.act(() => root.render(<App />));
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => setChildUnmounted(true));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const updaters = store.profilerStore.getCommitData(store.roots[0], 0)
+      .updaters;
+    expect(updaters.length).toEqual(1);
+    expect(updaters[0].displayName).toEqual('App');
+  });
+
+  it('components in a deleted subtree and added to updaters during the layout phase should not crash', () => {
+    let setChildUnmounted;
+    function Child() {
+      return <GrandChild />;
+    }
+
+    function GrandChild() {
+      const [, setState] = React.useState(false);
+
+      React.useLayoutEffect(() => {
+        return () => setState(true);
+      });
+
+      return null;
+    }
+
+    function App() {
+      const [childUnmounted, _setChildUnmounted] = React.useState(false);
+      setChildUnmounted = _setChildUnmounted;
+      return <>{!childUnmounted && <Child />}</>;
+    }
+
+    const root = ReactDOM.createRoot(document.createElement('div'));
+    utils.act(() => root.render(<App />));
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => setChildUnmounted(true));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const updaters = store.profilerStore.getCommitData(store.roots[0], 0)
+      .updaters;
+    expect(updaters.length).toEqual(1);
+    expect(updaters[0].displayName).toEqual('App');
+  });
+
+  it('components that were deleted should not be added to updaters during the passive phase', () => {
+    let setChildUnmounted;
+    function Child() {
+      const [, setState] = React.useState(false);
+      React.useEffect(() => {
+        return () => setState(true);
+      });
+
+      return null;
+    }
+
+    function App() {
+      const [childUnmounted, _setChildUnmounted] = React.useState(false);
+      setChildUnmounted = _setChildUnmounted;
+      return <>{!childUnmounted && <Child />}</>;
+    }
+
+    const root = ReactDOM.createRoot(document.createElement('div'));
+    utils.act(() => root.render(<App />));
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => setChildUnmounted(true));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const updaters = store.profilerStore.getCommitData(store.roots[0], 0)
+      .updaters;
+    expect(updaters.length).toEqual(1);
+    expect(updaters[0].displayName).toEqual('App');
+  });
 });

@@ -745,6 +745,33 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     });
   });
 
+  test('regression test for #23150', async () => {
+    const store = createExternalStore('Initial');
+
+    function App() {
+      const text = useSyncExternalStore(store.subscribe, store.getState);
+      const [derivedText, setDerivedText] = useState(text);
+      useEffect(() => {}, []);
+      if (derivedText !== text.toUpperCase()) {
+        setDerivedText(text.toUpperCase());
+      }
+      return <Text text={derivedText} />;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(() => root.render(<App />));
+
+    expect(Scheduler).toHaveYielded(['INITIAL']);
+    expect(container.textContent).toEqual('INITIAL');
+
+    await act(() => {
+      store.set('Updated');
+    });
+    expect(Scheduler).toHaveYielded(['UPDATED']);
+    expect(container.textContent).toEqual('UPDATED');
+  });
+
   // The selector implementation uses the lazy ref initialization pattern
   // @gate !(enableUseRefAccessWarning && __DEV__)
   test('compares selection to rendered selection even if selector changes', async () => {

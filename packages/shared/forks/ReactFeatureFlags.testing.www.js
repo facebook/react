@@ -57,7 +57,6 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
-export const warnAboutCallbackRefReturningFunction = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
@@ -70,6 +69,8 @@ export const consoleManagedByDevToolsDuringStrictMode = false;
 
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;
+
+export const enableTransitionTracing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

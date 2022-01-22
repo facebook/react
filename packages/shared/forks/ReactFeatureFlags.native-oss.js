@@ -57,7 +57,6 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableStrictEffects = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
-export const warnAboutCallbackRefReturningFunction = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
@@ -68,6 +67,8 @@ export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableUseMutableSource = false;
+
+export const enableTransitionTracing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

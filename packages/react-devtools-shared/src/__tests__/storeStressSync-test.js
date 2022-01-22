@@ -28,7 +28,7 @@ describe('StoreStress (Legacy Mode)', () => {
     act = utils.act;
     legacyRender = utils.legacyRender;
 
-    print = require('./storeSerializer').print;
+    print = require('./__serializers__/storeSerializer').print;
   });
 
   // This is a stress test for the tree mount/update/unmount traversal.
