@@ -78,9 +78,10 @@ function popToNearestCommonAncestor(
       }
 
       popToNearestCommonAncestor(parentPrev, parentNext);
-      // On the way back, we push the new ones that weren't common.
-      pushNode(next);
     }
+
+    // On the way back, we push the new ones that weren't common.
+    pushNode(next);
   }
 }
 
