@@ -2,6 +2,18 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.23.0 (January 24, 2022)
+
+### Feature
+* DevTools: Only show StrictMode badge on root elements ([bvaughn](https://github.com/bvaughn) in [#23012](https://github.com/facebook/react/pull/23012))
+
+#### Bugfix
+* Don't crawl unmounted subtrees when profiling starts ([bvaughn](https://github.com/bvaughn) in [#23162](https://github.com/facebook/react/pull/23162))
+* Filter deleted components from the updaters list to avoid runtime errors later ([lunaruan](https://github.com/lunaruan) in [#23156](https://github.com/facebook/react/pull/23156))
+
+#### Misc
+* DevTools (not React) logs Timeline performance data to the User Timing API ([bvaughn](https://github.com/bvaughn) in [#23102](https://github.com/facebook/react/pull/23102))
+
 ## 4.22.1 (December 14, 2021)
 
 * Fix invalid `require()` statements in `react-devtools-inline` ([bvaughn](https://github.com/bvaughn) in [#22961](https://github.com/facebook/react/pull/22961))
