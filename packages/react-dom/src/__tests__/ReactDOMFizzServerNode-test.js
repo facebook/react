@@ -464,4 +464,62 @@ describe('ReactDOMFizzServer', () => {
     expect(output1.result).not.toContain('context never found');
     expect(output1.result).toContain('OK');
   });
+
+  // @gate experimental
+  it('should be able to pop context after suspending', async () => {
+    class DelayClient {
+      get() {
+        if (this.resolved) return this.resolved;
+        if (this.pending) return this.pending;
+        return (this.pending = new Promise(resolve => {
+          setTimeout(() => {
+            delete this.pending;
+            this.resolved = 'OK';
+            resolve();
+          }, 500);
+        }));
+      }
+    }
+
+    const DelayContext = React.createContext(undefined);
+    const Component = () => {
+      const client = React.useContext(DelayContext);
+      if (!client) {
+        return 'context not found.';
+      }
+      const result = client.get();
+      if (typeof result === 'string') {
+        return result;
+      }
+      throw result;
+    };
+
+    const client = new DelayClient();
+    const {writable, output, completed} = getTestWritable();
+    ReactDOMFizzServer.renderToPipeableStream(
+      <>
+        <DelayContext.Provider value={client}>
+          <Suspense fallback="loading">
+            <Component />
+          </Suspense>
+        </DelayContext.Provider>
+        <DelayContext.Provider value={client}>
+          <Suspense fallback="loading">
+            <Component />
+          </Suspense>
+        </DelayContext.Provider>
+      </>,
+    ).pipe(writable);
+
+    jest.runAllTimers();
+
+    expect(output.error).toBe(undefined);
+    expect(output.result).toContain('loading');
+
+    await completed;
+
+    expect(output.error).toBe(undefined);
+    expect(output.result).not.toContain('context never found');
+    expect(output.result).toContain('OK');
+  });
 });
