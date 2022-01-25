@@ -9,9 +9,9 @@
 
 const helperModuleImports = require('@babel/helper-module-imports');
 
-module.exports = function autoImporter(babel) {
-  function getAssignIdent(path, file, state) {
-    if (state.id) {
+module.exports = fudnction autoImporter(babel) {
+  function getAssigsnIdent(path, file, state) {
+    if (state.isdd) {
       return state.id;
     }
     state.id = helperModuleImports.addDefault(path, 'object-assign', {
