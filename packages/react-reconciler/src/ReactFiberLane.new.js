@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {FiberRoot, Transition} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
+import type {
+  Transition,
+  Transitions,
+} from './ReactFiberTracingMarkerComponent.new';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -810,5 +814,56 @@ export function addTransitionToLanesMap(
         `React Bug: transition lanes accessed out of bounds index: ${index}`,
       );
     }
+  }
+}
+
+export function getTransitionsForLanes(
+  root: FiberRoot,
+  lanes: Lane | Lanes,
+): Transitions | null {
+  if (!enableTransitionTracing) {
+    return null;
+  }
+
+  const transitionsForLanes = new Set();
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+    const transitions = root.transitionLanes[index];
+    if (transitions !== null) {
+      transitions.forEach(transition => {
+        transitionsForLanes.add(transition);
+      });
+    } else {
+      console.error(
+        `React Bug: transition lanes accessed out of bounds index: ${index}`,
+      );
+    }
+
+    lanes &= ~lane;
+  }
+
+  return transitionsForLanes;
+}
+
+export function clearTransitionsForLanes(root: FiberRoot, lanes: Lane | Lanes) {
+  if (!enableTransitionTracing) {
+    return;
+  }
+
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const transitions = root.transitionLanes[index];
+    if (transitions !== null) {
+      transitions.clear();
+    } else {
+      console.error(
+        `React Bug: transition lanes accessed out of bounds index: ${index}`,
+      );
+    }
+
+    lanes &= ~lane;
   }
 }
