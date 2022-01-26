@@ -33,6 +33,29 @@ describe('Stylex plugin utils', () => {
     });
   });
 
+  it('should gracefully handle empty values', () => {
+    expect(getStyleXData(null)).toMatchInlineSnapshot(`
+      Object {
+        "resolvedStyles": Object {},
+        "sources": Array [],
+      }
+    `);
+
+    expect(getStyleXData(undefined)).toMatchInlineSnapshot(`
+      Object {
+        "resolvedStyles": Object {},
+        "sources": Array [],
+      }
+    `);
+
+    expect(getStyleXData('')).toMatchInlineSnapshot(`
+      Object {
+        "resolvedStyles": Object {},
+        "sources": Array [],
+      }
+    `);
+  });
+
   it('should support simple style objects', () => {
     defineStyles(`
       .foo {

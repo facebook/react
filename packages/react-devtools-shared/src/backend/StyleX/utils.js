@@ -29,6 +29,10 @@ export function crawlData(
   sources: Set<string>,
   resolvedStyles: Object,
 ): void {
+  if (data == null) {
+    return;
+  }
+
   if (isArray(data)) {
     data.forEach(entry => {
       if (isArray(entry)) {
