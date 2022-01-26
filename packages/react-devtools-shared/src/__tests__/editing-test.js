@@ -19,7 +19,7 @@ describe('editing interface', () => {
   let utils;
 
   const flushPendingUpdates = () => {
-    jest.runOnlyPendingTimers();
+    utils.act(() => jest.runOnlyPendingTimers());
   };
 
   beforeEach(() => {

@@ -66,9 +66,13 @@ env.beforeEach(() => {
     if (typeof firstArg !== 'string') {
       return false;
     }
-    return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
-      return firstArg.indexOf(errorOrWarningMessage) !== -1;
-    });
+    const shouldFilter = global._ignoredErrorOrWarningMessages.some(
+      errorOrWarningMessage => {
+        return firstArg.indexOf(errorOrWarningMessage) !== -1;
+      },
+    );
+
+    return shouldFilter;
   }
 
   const originalConsoleError = console.error;
@@ -82,7 +86,15 @@ env.beforeEach(() => {
       throw args[1];
     } else if (
       typeof firstArg === 'string' &&
-      firstArg.startsWith("Warning: It looks like you're using the wrong act()")
+      (firstArg.startsWith(
+        "Warning: It looks like you're using the wrong act()",
+      ) ||
+        firstArg.startsWith(
+          'Warning: The current testing environment is not configured to support act',
+        ) ||
+        firstArg.startsWith(
+          'Warning: You seem to have overlapping act() calls',
+        ))
     ) {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.

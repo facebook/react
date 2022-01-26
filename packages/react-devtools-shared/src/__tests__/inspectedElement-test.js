@@ -71,8 +71,10 @@ describe('InspectedElement', () => {
       .TreeContextController;
 
     // Used by inspectElementAtIndex() helper function
-    testRendererInstance = TestRenderer.create(null, {
-      unstable_isConcurrent: true,
+    utils.act(() => {
+      testRendererInstance = TestRenderer.create(null, {
+        unstable_isConcurrent: true,
+      });
     });
 
     errorBoundaryInstance = null;
@@ -299,9 +301,14 @@ describe('InspectedElement', () => {
       // from props like defaultSelectedElementID and it's easier to reset here than
       // to read the TreeDispatcherContext and update the selected ID that way.
       // We're testing the inspected values here, not the context wiring, so that's ok.
-      testRendererInstance = TestRenderer.create(null, {
-        unstable_isConcurrent: true,
-      });
+      utils.withErrorsOrWarningsIgnored(
+        ['An update to %s inside a test was not wrapped in act'],
+        () => {
+          testRendererInstance = TestRenderer.create(null, {
+            unstable_isConcurrent: true,
+          });
+        },
+      );
 
       const inspectedElement = await inspectElementAtIndex(index);
 
@@ -460,9 +467,14 @@ describe('InspectedElement', () => {
     // The backend still thinks the most recently-inspected element is still cached,
     // so the frontend needs to tell it to resend a full value.
     // We can verify this by asserting that the component is re-rendered again.
-    testRendererInstance = TestRenderer.create(null, {
-      unstable_isConcurrent: true,
-    });
+    utils.withErrorsOrWarningsIgnored(
+      ['An update to %s inside a test was not wrapped in act'],
+      () => {
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
+        });
+      },
+    );
 
     const {
       clearCacheForTests,
@@ -2024,9 +2036,14 @@ describe('InspectedElement', () => {
     // from props like defaultSelectedElementID and it's easier to reset here than
     // to read the TreeDispatcherContext and update the selected ID that way.
     // We're testing the inspected values here, not the context wiring, so that's ok.
-    testRendererInstance = TestRenderer.create(null, {
-      unstable_isConcurrent: true,
-    });
+    utils.withErrorsOrWarningsIgnored(
+      ['An update to %s inside a test was not wrapped in act'],
+      () => {
+        testRendererInstance = TestRenderer.create(null, {
+          unstable_isConcurrent: true,
+        });
+      },
+    );
 
     // Select/inspect the same element again
     inspectedElement = await inspectElementAtIndex(0);
@@ -2743,11 +2760,15 @@ describe('InspectedElement', () => {
         0,
       ): any): number);
       const inspect = index => {
-        // HACK: Recreate TestRenderer instance so we can inspect different
-        // elements
-        testRendererInstance = TestRenderer.create(null, {
-          unstable_isConcurrent: true,
-        });
+        // HACK: Recreate TestRenderer instance so we can inspect different elements
+        utils.withErrorsOrWarningsIgnored(
+          ['An update to %s inside a test was not wrapped in act'],
+          () => {
+            testRendererInstance = TestRenderer.create(null, {
+              unstable_isConcurrent: true,
+            });
+          },
+        );
         return inspectElementAtIndex(index);
       };
       const toggleError = async forceError => {
