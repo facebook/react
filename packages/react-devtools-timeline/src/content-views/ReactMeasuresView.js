@@ -33,7 +33,6 @@ import {
 } from '../view-base';
 
 import {COLORS, BORDER_SIZE, REACT_MEASURE_HEIGHT} from './constants';
-import {REACT_TOTAL_NUM_LANES} from '../constants';
 
 const REACT_LANE_HEIGHT = REACT_MEASURE_HEIGHT + BORDER_SIZE;
 const MAX_ROWS_TO_SHOW_INITIALLY = 5;
@@ -55,12 +54,11 @@ export class ReactMeasuresView extends View {
   _performPreflightComputations() {
     this._lanesToRender = [];
 
-    for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
-      const measuresForLane = this._profilerData.laneToReactMeasureMap.get(
-        lane,
-      );
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const [lane, measuresForLane] of this._profilerData
+      .laneToReactMeasureMap) {
       // Only show lanes with measures
-      if (measuresForLane != null && measuresForLane.length > 0) {
+      if (measuresForLane.length > 0) {
         this._lanesToRender.push(lane);
       }
     }

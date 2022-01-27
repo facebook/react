@@ -1202,6 +1202,85 @@ describe('Timeline profiler', () => {
         `);
       });
 
+      it('should mark concurrent render without suspends or state updates', () => {
+        let updaterFn;
+
+        function Example() {
+          const setHigh = React.useState(0)[1];
+          const setLow = React.useState(0)[1];
+          const startTransition = React.useTransition()[1];
+
+          updaterFn = () => {
+            startTransition(() => {
+              setLow(prevLow => prevLow + 1);
+            });
+            setHigh(prevHigh => prevHigh + 1);
+          };
+
+          Scheduler.unstable_advanceTime(10);
+
+          return null;
+        }
+
+        utils.act(() => renderRootHelper(<Example />));
+        utils.act(() => store.profilerStore.stopProfiling());
+        utils.act(() => store.profilerStore.startProfiling());
+        utils.act(updaterFn);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000000100",
+              "timestamp": 10,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000001000000",
+              "timestamp": 10,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000001000000",
+              "timestamp": 10,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+      });
+
       it('should mark render yields', async () => {
         function Bar() {
           Scheduler.unstable_yieldValue('Bar');
