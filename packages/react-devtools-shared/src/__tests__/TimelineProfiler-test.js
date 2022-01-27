@@ -15,8 +15,35 @@ describe('Timeline profiler', () => {
   let Scheduler;
   let renderHelper;
   let renderRootHelper;
+  let store;
   let unmountFns;
   let utils;
+
+  beforeEach(() => {
+    utils = require('./utils');
+    utils.beforeEachProfiling();
+
+    unmountFns = [];
+    renderHelper = element => {
+      const unmountFn = utils.legacyRender(element);
+      unmountFns.push(unmountFn);
+      return unmountFn;
+    };
+    renderRootHelper = element => {
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      root.render(element);
+      const unmountFn = () => root.unmount();
+      unmountFns.push(unmountFn);
+      return unmountFn;
+    };
+
+    React = require('react');
+    ReactDOM = require('react-dom');
+    Scheduler = require('scheduler');
+
+    store = global.store;
+  });
 
   describe('User Timing API', () => {
     let clearedMarks;
@@ -33,11 +60,11 @@ describe('Timeline profiler', () => {
       // Remove file-system specific bits or version-specific bits of information from the module range marks.
       function filterMarkData(markName) {
         if (markName.startsWith('--react-internal-module-start')) {
-          return `${markName.substr(0, 29)}-<filtered-file-system-path>`;
+          return '--react-internal-module-start-  at filtered (<anonymous>:0:0)';
         } else if (markName.startsWith('--react-internal-module-stop')) {
-          return `${markName.substr(0, 28)}-<filtered-file-system-path>`;
+          return '--react-internal-module-stop-  at filtered (<anonymous>:1:1)';
         } else if (markName.startsWith('--react-version')) {
-          return `${markName.substr(0, 15)}-<filtered-version>`;
+          return '--react-version-<filtered-version>';
         } else {
           return markName;
         }
@@ -83,28 +110,6 @@ describe('Timeline profiler', () => {
     }
 
     beforeEach(() => {
-      utils = require('./utils');
-      utils.beforeEachProfiling();
-
-      unmountFns = [];
-      renderHelper = element => {
-        const unmountFn = utils.legacyRender(element);
-        unmountFns.push(unmountFn);
-        return unmountFn;
-      };
-      renderRootHelper = element => {
-        const container = document.createElement('div');
-        const root = ReactDOM.createRoot(container);
-        root.render(element);
-        const unmountFn = () => root.unmount();
-        unmountFns.push(unmountFn);
-        return unmountFn;
-      };
-
-      React = require('react');
-      ReactDOM = require('react-dom');
-      Scheduler = require('scheduler');
-
       setPerformanceMock = require('react-devtools-shared/src/backend/profilingHooks')
         .setPerformanceMock_ONLY_FOR_TESTING;
       setPerformanceMock(createUserTimingPolyfill());
@@ -121,7 +126,6 @@ describe('Timeline profiler', () => {
 
     describe('when profiling', () => {
       beforeEach(() => {
-        const store = global.store;
         utils.act(() => store.profilerStore.startProfiling());
 
         // Clear inital metadata marks to make tests below less noisy.
@@ -132,21 +136,21 @@ describe('Timeline profiler', () => {
         renderHelper(<div />);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-1",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--schedule-render-1",
+            "--render-start-1",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-1",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark concurrent render without suspends or state updates', () => {
@@ -163,20 +167,20 @@ describe('Timeline profiler', () => {
         expect(Scheduler).toFlushUntilNextPaint([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark render yields', async () => {
@@ -221,33 +225,33 @@ describe('Timeline profiler', () => {
         );
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-1-",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-1",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--schedule-render-1",
+            "--render-start-1",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--suspense-suspend-0-Example-mount-1-",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-1",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
 
         clearPendingMarks();
 
         await fakeSuspensePromise;
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--suspense-resolved-0-Example",
-        ]
-    `);
+                  Array [
+                    "--suspense-resolved-0-Example",
+                  ]
+            `);
       });
 
       it('should mark sync render with suspense that rejects', async () => {
@@ -263,24 +267,24 @@ describe('Timeline profiler', () => {
         );
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-1-",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-1",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--schedule-render-1",
+            "--render-start-1",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--suspense-suspend-0-Example-mount-1-",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-1",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
 
         clearPendingMarks();
 
@@ -311,23 +315,23 @@ describe('Timeline profiler', () => {
         expect(Scheduler).toFlushUntilNextPaint([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-16-",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--suspense-suspend-0-Example-mount-16-",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
 
         clearPendingMarks();
 
@@ -362,32 +366,32 @@ describe('Timeline profiler', () => {
         expect(Scheduler).toFlushUntilNextPaint([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--suspense-suspend-0-Example-mount-16-",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--suspense-suspend-0-Example-mount-16-",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
 
         clearPendingMarks();
 
         await expect(fakeSuspensePromise).rejects.toThrow();
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--suspense-rejected-0-Example",
-        ]
-    `);
+                  Array [
+                    "--suspense-rejected-0-Example",
+                  ]
+            `);
       });
 
       it('should mark cascading class component state updates', () => {
@@ -414,34 +418,34 @@ describe('Timeline profiler', () => {
         expect(Scheduler).toFlushUntilNextPaint([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--schedule-state-update-1-Example",
-          "--layout-effects-stop",
-          "--render-start-1",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--schedule-state-update-1-Example",
+            "--layout-effects-stop",
+            "--render-start-1",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--commit-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark cascading class component force updates', () => {
@@ -457,44 +461,44 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-        ]
-    `);
+                  Array [
+                    "--schedule-render-16",
+                  ]
+            `);
 
         clearPendingMarks();
 
         expect(Scheduler).toFlushUntilNextPaint([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--schedule-forced-update-1-Example",
-          "--layout-effects-stop",
-          "--render-start-1",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--schedule-forced-update-1-Example",
+            "--layout-effects-stop",
+            "--render-start-1",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--commit-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark render phase state updates for class component', () => {
@@ -511,10 +515,10 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-        ]
-    `);
+                  Array [
+                    "--schedule-render-16",
+                  ]
+            `);
 
         clearPendingMarks();
 
@@ -531,31 +535,32 @@ describe('Timeline profiler', () => {
         );
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--schedule-state-update-16-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--schedule-state-update-16-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark render phase force updates for class component', () => {
+        let forced = false;
         class Example extends React.Component {
-          state = {didRender: false};
           render() {
-            if (this.state.didRender === false) {
-              this.forceUpdate(() => this.setState({didRender: true}));
+            if (!forced) {
+              forced = true;
+              this.forceUpdate();
             }
             return null;
           }
@@ -564,10 +569,10 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-        ]
-    `);
+                  Array [
+                    "--schedule-render-16",
+                  ]
+            `);
 
         clearPendingMarks();
 
@@ -584,23 +589,23 @@ describe('Timeline profiler', () => {
         );
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--schedule-forced-update-16-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--schedule-forced-update-16-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark cascading layout updates', () => {
@@ -615,50 +620,48 @@ describe('Timeline profiler', () => {
         renderRootHelper(<Example />);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-        ]
-    `);
+                  Array [
+                    "--schedule-render-16",
+                  ]
+            `);
 
         clearPendingMarks();
 
         expect(Scheduler).toFlushUntilNextPaint([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--component-layout-effect-mount-start-Example",
-          "--schedule-state-update-1-Example",
-          "--component-layout-effect-mount-stop",
-          "--layout-effects-stop",
-          "--render-start-1",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--component-layout-effect-mount-start-Example",
+            "--schedule-state-update-1-Example",
+            "--component-layout-effect-mount-stop",
+            "--layout-effects-stop",
+            "--render-start-1",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--commit-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
-      // This test is coupled to lane implementation details, so I'm disabling it in
-      // the new fork until it stabilizes so we don't have to repeatedly update it.
       it('should mark cascading passive updates', () => {
         function Example() {
           const [didMount, setDidMount] = React.useState(false);
@@ -673,39 +676,39 @@ describe('Timeline profiler', () => {
         expect(Scheduler).toFlushAndYield([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-          "--passive-effects-start-16",
-          "--component-passive-effect-mount-start-Example",
-          "--schedule-state-update-16-Example",
-          "--component-passive-effect-mount-stop",
-          "--passive-effects-stop",
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--schedule-render-16",
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--layout-effects-stop",
+            "--commit-stop",
+            "--passive-effects-start-16",
+            "--component-passive-effect-mount-start-Example",
+            "--schedule-state-update-16-Example",
+            "--component-passive-effect-mount-stop",
+            "--passive-effects-stop",
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark render phase updates', () => {
@@ -722,24 +725,24 @@ describe('Timeline profiler', () => {
         expect(Scheduler).toFlushAndYield([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-          "--render-start-16",
-          "--component-render-start-Example",
-          "--schedule-state-update-16-Example",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--schedule-render-16",
+            "--render-start-16",
+            "--component-render-start-Example",
+            "--schedule-state-update-16-Example",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark sync render that throws', async () => {
@@ -769,39 +772,39 @@ describe('Timeline profiler', () => {
         );
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
-          "--component-render-start-ErrorBoundary",
-          "--component-render-stop",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-stop",
-          "--error-ExampleThatThrows-mount-Expected error",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-1",
-          "--schedule-state-update-1-ErrorBoundary",
-          "--layout-effects-stop",
-          "--commit-stop",
-          "--render-start-1",
-          "--component-render-start-ErrorBoundary",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--schedule-render-1",
+            "--render-start-1",
+            "--component-render-start-ErrorBoundary",
+            "--component-render-stop",
+            "--component-render-start-ExampleThatThrows",
+            "--component-render-start-ExampleThatThrows",
+            "--component-render-stop",
+            "--error-ExampleThatThrows-mount-Expected error",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-1",
+            "--schedule-state-update-1-ErrorBoundary",
+            "--layout-effects-stop",
+            "--commit-stop",
+            "--render-start-1",
+            "--component-render-start-ErrorBoundary",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark concurrent render that throws', async () => {
@@ -832,56 +835,56 @@ describe('Timeline profiler', () => {
         );
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-        ]
-    `);
+                  Array [
+                    "--schedule-render-16",
+                  ]
+            `);
 
         clearPendingMarks();
 
         expect(Scheduler).toFlushUntilNextPaint([]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--render-start-16",
-          "--component-render-start-ErrorBoundary",
-          "--component-render-stop",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-stop",
-          "--error-ExampleThatThrows-mount-Expected error",
-          "--render-stop",
-          "--render-start-16",
-          "--component-render-start-ErrorBoundary",
-          "--component-render-stop",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-start-ExampleThatThrows",
-          "--component-render-stop",
-          "--error-ExampleThatThrows-mount-Expected error",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--schedule-state-update-1-ErrorBoundary",
-          "--layout-effects-stop",
-          "--render-start-1",
-          "--component-render-start-ErrorBoundary",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--commit-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--render-start-16",
+            "--component-render-start-ErrorBoundary",
+            "--component-render-stop",
+            "--component-render-start-ExampleThatThrows",
+            "--component-render-start-ExampleThatThrows",
+            "--component-render-stop",
+            "--error-ExampleThatThrows-mount-Expected error",
+            "--render-stop",
+            "--render-start-16",
+            "--component-render-start-ErrorBoundary",
+            "--component-render-stop",
+            "--component-render-start-ExampleThatThrows",
+            "--component-render-start-ExampleThatThrows",
+            "--component-render-stop",
+            "--error-ExampleThatThrows-mount-Expected error",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--schedule-state-update-1-ErrorBoundary",
+            "--layout-effects-stop",
+            "--render-start-1",
+            "--component-render-start-ErrorBoundary",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-1",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--commit-stop",
+            "--commit-stop",
+          ]
+        `);
       });
 
       it('should mark passive and layout effects', async () => {
@@ -932,27 +935,27 @@ describe('Timeline profiler', () => {
         ]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-16",
-          "--render-start-16",
-          "--component-render-start-ComponentWithEffects",
-          "--component-render-stop",
-          "--render-stop",
-          "--commit-start-16",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--layout-effects-start-16",
-          "--component-layout-effect-mount-start-ComponentWithEffects",
-          "--component-layout-effect-mount-stop",
-          "--component-layout-effect-mount-start-ComponentWithEffects",
-          "--component-layout-effect-mount-stop",
-          "--layout-effects-stop",
-          "--commit-stop",
-        ]
-      `);
+          Array [
+            "--schedule-render-16",
+            "--render-start-16",
+            "--component-render-start-ComponentWithEffects",
+            "--component-render-stop",
+            "--render-stop",
+            "--commit-start-16",
+            "--react-version-<filtered-version>",
+            "--profiler-version-1",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--layout-effects-start-16",
+            "--component-layout-effect-mount-start-ComponentWithEffects",
+            "--component-layout-effect-mount-stop",
+            "--component-layout-effect-mount-start-ComponentWithEffects",
+            "--component-layout-effect-mount-stop",
+            "--layout-effects-stop",
+            "--commit-stop",
+          ]
+        `);
 
         clearPendingMarks();
 
@@ -990,40 +993,6 @@ describe('Timeline profiler', () => {
         ]);
 
         expect(clearedMarks).toMatchInlineSnapshot(`
-        Array [
-          "--schedule-render-1",
-          "--render-start-1",
-          "--render-stop",
-          "--commit-start-1",
-          "--react-version-<filtered-version>",
-          "--profiler-version-1",
-          "--react-internal-module-start-<filtered-file-system-path>",
-          "--react-internal-module-stop-<filtered-file-system-path>",
-          "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-          "--component-layout-effect-unmount-start-ComponentWithEffects",
-          "--component-layout-effect-unmount-stop",
-          "--component-layout-effect-unmount-start-ComponentWithEffects",
-          "--component-layout-effect-unmount-stop",
-          "--layout-effects-start-1",
-          "--layout-effects-stop",
-          "--passive-effects-start-1",
-          "--component-passive-effect-unmount-start-ComponentWithEffects",
-          "--component-passive-effect-unmount-stop",
-          "--component-passive-effect-unmount-start-ComponentWithEffects",
-          "--component-passive-effect-unmount-stop",
-          "--component-passive-effect-unmount-start-ComponentWithEffects",
-          "--component-passive-effect-unmount-stop",
-          "--passive-effects-stop",
-          "--commit-stop",
-        ]
-      `);
-      });
-
-      describe('lane labels', () => {
-        it('regression test SyncLane', () => {
-          renderHelper(<div />);
-
-          expect(clearedMarks).toMatchInlineSnapshot(`
           Array [
             "--schedule-render-1",
             "--render-start-1",
@@ -1031,23 +1000,57 @@ describe('Timeline profiler', () => {
             "--commit-start-1",
             "--react-version-<filtered-version>",
             "--profiler-version-1",
-            "--react-internal-module-start-<filtered-file-system-path>",
-            "--react-internal-module-stop-<filtered-file-system-path>",
+            "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+            "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
             "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+            "--component-layout-effect-unmount-start-ComponentWithEffects",
+            "--component-layout-effect-unmount-stop",
+            "--component-layout-effect-unmount-start-ComponentWithEffects",
+            "--component-layout-effect-unmount-stop",
             "--layout-effects-start-1",
             "--layout-effects-stop",
+            "--passive-effects-start-1",
+            "--component-passive-effect-unmount-start-ComponentWithEffects",
+            "--component-passive-effect-unmount-stop",
+            "--component-passive-effect-unmount-start-ComponentWithEffects",
+            "--component-passive-effect-unmount-stop",
+            "--component-passive-effect-unmount-start-ComponentWithEffects",
+            "--component-passive-effect-unmount-stop",
+            "--passive-effects-stop",
             "--commit-stop",
           ]
         `);
+      });
+
+      describe('lane labels', () => {
+        it('regression test SyncLane', () => {
+          renderHelper(<div />);
+
+          expect(clearedMarks).toMatchInlineSnapshot(`
+            Array [
+              "--schedule-render-1",
+              "--render-start-1",
+              "--render-stop",
+              "--commit-start-1",
+              "--react-version-<filtered-version>",
+              "--profiler-version-1",
+              "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+              "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+              "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+              "--layout-effects-start-1",
+              "--layout-effects-stop",
+              "--commit-stop",
+            ]
+          `);
         });
 
         it('regression test DefaultLane', () => {
           renderRootHelper(<div />);
           expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
-            "--schedule-render-16",
-          ]
-      `);
+                      Array [
+                        "--schedule-render-16",
+                      ]
+                `);
         });
 
         it('regression test InputDiscreteLane', async () => {
@@ -1072,23 +1075,23 @@ describe('Timeline profiler', () => {
           await Promise.resolve();
 
           expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
-            "--schedule-state-update-1-App",
-            "--render-start-1",
-            "--component-render-start-App",
-            "--component-render-stop",
-            "--render-stop",
-            "--commit-start-1",
-            "--react-version-<filtered-version>",
-            "--profiler-version-1",
-            "--react-internal-module-start-<filtered-file-system-path>",
-            "--react-internal-module-stop-<filtered-file-system-path>",
-            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-            "--layout-effects-start-1",
-            "--layout-effects-stop",
-            "--commit-stop",
-          ]
-        `);
+            Array [
+              "--schedule-state-update-1-App",
+              "--render-start-1",
+              "--component-render-start-App",
+              "--component-render-stop",
+              "--render-stop",
+              "--commit-start-1",
+              "--react-version-<filtered-version>",
+              "--profiler-version-1",
+              "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+              "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+              "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+              "--layout-effects-start-1",
+              "--layout-effects-stop",
+              "--commit-stop",
+            ]
+          `);
         });
 
         it('regression test InputContinuousLane', async () => {
@@ -1112,23 +1115,23 @@ describe('Timeline profiler', () => {
           expect(Scheduler).toFlushAndYield([]);
 
           expect(clearedMarks).toMatchInlineSnapshot(`
-          Array [
-            "--schedule-state-update-4-App",
-            "--render-start-4",
-            "--component-render-start-App",
-            "--component-render-stop",
-            "--render-stop",
-            "--commit-start-4",
-            "--react-version-<filtered-version>",
-            "--profiler-version-1",
-            "--react-internal-module-start-<filtered-file-system-path>",
-            "--react-internal-module-stop-<filtered-file-system-path>",
-            "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
-            "--layout-effects-start-4",
-            "--layout-effects-stop",
-            "--commit-stop",
-          ]
-        `);
+            Array [
+              "--schedule-state-update-4-App",
+              "--render-start-4",
+              "--component-render-start-App",
+              "--component-render-stop",
+              "--render-stop",
+              "--commit-start-4",
+              "--react-version-<filtered-version>",
+              "--profiler-version-1",
+              "--react-internal-module-start-  at filtered (<anonymous>:0:0)",
+              "--react-internal-module-stop-  at filtered (<anonymous>:1:1)",
+              "--react-lane-labels-Sync,InputContinuousHydration,InputContinuous,DefaultHydration,Default,TransitionHydration,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Transition,Retry,Retry,Retry,Retry,Retry,SelectiveHydration,IdleHydration,Idle,Offscreen",
+              "--layout-effects-start-4",
+              "--layout-effects-stop",
+              "--commit-stop",
+            ]
+          `);
         });
       });
     });
@@ -1143,28 +1146,36 @@ describe('Timeline profiler', () => {
   });
 
   describe('DevTools hook (in memory)', () => {
+    let getBatchOfWork;
+    let stopProfilingAndGetTimelineData;
+
     beforeEach(() => {
-      utils = require('./utils');
-      utils.beforeEachProfiling();
+      getBatchOfWork = index => {
+        const timelineData = stopProfilingAndGetTimelineData();
+        if (timelineData) {
+          if (timelineData.batchUIDToMeasuresMap.size > index) {
+            return Array.from(timelineData.batchUIDToMeasuresMap.values())[
+              index
+            ];
+          }
+        }
 
-      unmountFns = [];
-      renderHelper = element => {
-        const unmountFn = utils.legacyRender(element);
-        unmountFns.push(unmountFn);
-        return unmountFn;
-      };
-      renderRootHelper = element => {
-        const container = document.createElement('div');
-        const root = ReactDOM.createRoot(container);
-        root.render(element);
-        const unmountFn = () => root.unmount();
-        unmountFns.push(unmountFn);
-        return unmountFn;
+        return null;
       };
 
-      React = require('react');
-      ReactDOM = require('react-dom');
-      Scheduler = require('scheduler');
+      stopProfilingAndGetTimelineData = () => {
+        utils.act(() => store.profilerStore.stopProfiling());
+
+        const timelineData = store.profilerStore.profilingData?.timelineData;
+
+        if (timelineData) {
+          expect(timelineData).toHaveLength(1);
+
+          return timelineData[0];
+        } else {
+          return null;
+        }
+      };
     });
 
     afterEach(() => {

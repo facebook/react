@@ -30,11 +30,11 @@ describe('Timeline profiler', () => {
       // Remove file-system specific bits or version-specific bits of information from the module range marks.
       function filterMarkData(markName) {
         if (markName.startsWith('--react-internal-module-start')) {
-          return `${markName.substr(0, 29)}-<filtered-file-system-path>`;
+          return '--react-internal-module-start-  at filtered (<anonymous>:0:0)';
         } else if (markName.startsWith('--react-internal-module-stop')) {
-          return `${markName.substr(0, 28)}-<filtered-file-system-path>`;
+          return '--react-internal-module-stop-  at filtered (<anonymous>:1:1)';
         } else if (markName.startsWith('--react-version')) {
-          return `${markName.substr(0, 15)}-0.0.0`;
+          return '--react-version-<filtered-version>';
         } else {
           return markName;
         }
@@ -181,7 +181,7 @@ describe('Timeline profiler', () => {
       function createReactVersionEntry() {
         return createUserTimingEntry({
           cat: 'blink.user_timing',
-          name: '--react-version-0.0.0',
+          name: '--react-version-<filtered-version>',
         });
       }
 
@@ -390,7 +390,7 @@ describe('Timeline profiler', () => {
                   "nativeEvents": Array [],
                   "networkMeasures": Array [],
                   "otherUserTimingMarks": Array [],
-                  "reactVersion": "0.0.0",
+                  "reactVersion": "<filtered-version>",
                   "schedulingEvents": Array [],
                   "snapshotHeight": 0,
                   "snapshots": Array [],
@@ -439,183 +439,165 @@ describe('Timeline profiler', () => {
           }),
         ]);
         expect(data).toMatchInlineSnapshot(`
+          Object {
+            "batchUIDToMeasuresMap": Map {
+              0 => Array [
                 Object {
-                  "batchUIDToMeasuresMap": Map {
-                    0 => Array [
-                      Object {
-                        "batchUID": 0,
-                        "depth": 0,
-                        "duration": 0.005,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.006,
-                        "type": "render-idle",
-                      },
-                      Object {
-                        "batchUID": 0,
-                        "depth": 0,
-                        "duration": 0.001,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.006,
-                        "type": "render",
-                      },
-                      Object {
-                        "batchUID": 0,
-                        "depth": 0,
-                        "duration": 0.003,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.008,
-                        "type": "commit",
-                      },
-                      Object {
-                        "batchUID": 0,
-                        "depth": 1,
-                        "duration": 0.001,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.009,
-                        "type": "layout-effects",
-                      },
-                    ],
-                  },
-                  "componentMeasures": Array [],
-                  "duration": 0.011,
-                  "flamechart": Array [],
-                  "internalModuleSourceToRanges": Map {},
-                  "laneToLabelMap": Map {
-                    0 => "Sync",
-                    1 => "InputContinuousHydration",
-                    2 => "InputContinuous",
-                    3 => "DefaultHydration",
-                    4 => "Default",
-                    5 => "TransitionHydration",
-                    6 => "Transition",
-                    7 => "Transition",
-                    8 => "Transition",
-                    9 => "Transition",
-                    10 => "Transition",
-                    11 => "Transition",
-                    12 => "Transition",
-                    13 => "Transition",
-                    14 => "Transition",
-                    15 => "Transition",
-                    16 => "Transition",
-                    17 => "Transition",
-                    18 => "Transition",
-                    19 => "Transition",
-                    20 => "Transition",
-                    21 => "Transition",
-                    22 => "Retry",
-                    23 => "Retry",
-                    24 => "Retry",
-                    25 => "Retry",
-                    26 => "Retry",
-                    27 => "SelectiveHydration",
-                    28 => "IdleHydration",
-                    29 => "Idle",
-                    30 => "Offscreen",
-                  },
-                  "laneToReactMeasureMap": Map {
-                    0 => Array [],
-                    1 => Array [],
-                    2 => Array [],
-                    3 => Array [],
-                    4 => Array [],
-                    5 => Array [],
-                    6 => Array [],
-                    7 => Array [],
-                    8 => Array [],
-                    9 => Array [
-                      Object {
-                        "batchUID": 0,
-                        "depth": 0,
-                        "duration": 0.005,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.006,
-                        "type": "render-idle",
-                      },
-                      Object {
-                        "batchUID": 0,
-                        "depth": 0,
-                        "duration": 0.001,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.006,
-                        "type": "render",
-                      },
-                      Object {
-                        "batchUID": 0,
-                        "depth": 0,
-                        "duration": 0.003,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.008,
-                        "type": "commit",
-                      },
-                      Object {
-                        "batchUID": 0,
-                        "depth": 1,
-                        "duration": 0.001,
-                        "lanes": Array [
-                          9,
-                        ],
-                        "timestamp": 0.009,
-                        "type": "layout-effects",
-                      },
-                    ],
-                    10 => Array [],
-                    11 => Array [],
-                    12 => Array [],
-                    13 => Array [],
-                    14 => Array [],
-                    15 => Array [],
-                    16 => Array [],
-                    17 => Array [],
-                    18 => Array [],
-                    19 => Array [],
-                    20 => Array [],
-                    21 => Array [],
-                    22 => Array [],
-                    23 => Array [],
-                    24 => Array [],
-                    25 => Array [],
-                    26 => Array [],
-                    27 => Array [],
-                    28 => Array [],
-                    29 => Array [],
-                    30 => Array [],
-                  },
-                  "nativeEvents": Array [],
-                  "networkMeasures": Array [],
-                  "otherUserTimingMarks": Array [],
-                  "reactVersion": "0.0.0",
-                  "schedulingEvents": Array [
-                    Object {
-                      "lanes": Array [
-                        9,
-                      ],
-                      "timestamp": 0.005,
-                      "type": "schedule-render",
-                      "warning": null,
-                    },
-                  ],
-                  "snapshotHeight": 0,
-                  "snapshots": Array [],
-                  "startTime": 1,
-                  "suspenseEvents": Array [],
-                  "thrownErrors": Array [],
-                }
-          `);
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.005,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.006,
+                  "type": "render-idle",
+                },
+                Object {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.001,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.006,
+                  "type": "render",
+                },
+                Object {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.008,
+                  "type": "commit",
+                },
+                Object {
+                  "batchUID": 0,
+                  "depth": 1,
+                  "duration": 0.001,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.009,
+                  "type": "layout-effects",
+                },
+              ],
+            },
+            "componentMeasures": Array [],
+            "duration": 0.011,
+            "flamechart": Array [],
+            "internalModuleSourceToRanges": Map {},
+            "laneToLabelMap": Map {
+              0 => "Sync",
+              1 => "InputContinuousHydration",
+              2 => "InputContinuous",
+              3 => "DefaultHydration",
+              4 => "Default",
+              5 => "TransitionHydration",
+              6 => "Transition",
+              7 => "Transition",
+              8 => "Transition",
+              9 => "Transition",
+              10 => "Transition",
+              11 => "Transition",
+              12 => "Transition",
+              13 => "Transition",
+              14 => "Transition",
+              15 => "Transition",
+              16 => "Transition",
+              17 => "Transition",
+              18 => "Transition",
+              19 => "Transition",
+              20 => "Transition",
+              21 => "Transition",
+              22 => "Retry",
+              23 => "Retry",
+              24 => "Retry",
+              25 => "Retry",
+              26 => "Retry",
+              27 => "SelectiveHydration",
+              28 => "IdleHydration",
+              29 => "Idle",
+              30 => "Offscreen",
+            },
+            "laneToReactMeasureMap": Map {
+              0 => Array [],
+              1 => Array [],
+              2 => Array [],
+              3 => Array [],
+              4 => Array [],
+              5 => Array [],
+              6 => Array [],
+              7 => Array [],
+              8 => Array [],
+              9 => Array [
+                Object {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.005,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.006,
+                  "type": "render-idle",
+                },
+                Object {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.001,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.006,
+                  "type": "render",
+                },
+                Object {
+                  "batchUID": 0,
+                  "depth": 0,
+                  "duration": 0.003,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.008,
+                  "type": "commit",
+                },
+                Object {
+                  "batchUID": 0,
+                  "depth": 1,
+                  "duration": 0.001,
+                  "lanes": "0b0000000000000000000000000001001",
+                  "timestamp": 0.009,
+                  "type": "layout-effects",
+                },
+              ],
+              10 => Array [],
+              11 => Array [],
+              12 => Array [],
+              13 => Array [],
+              14 => Array [],
+              15 => Array [],
+              16 => Array [],
+              17 => Array [],
+              18 => Array [],
+              19 => Array [],
+              20 => Array [],
+              21 => Array [],
+              22 => Array [],
+              23 => Array [],
+              24 => Array [],
+              25 => Array [],
+              26 => Array [],
+              27 => Array [],
+              28 => Array [],
+              29 => Array [],
+              30 => Array [],
+            },
+            "nativeEvents": Array [],
+            "networkMeasures": Array [],
+            "otherUserTimingMarks": Array [],
+            "reactVersion": "<filtered-version>",
+            "schedulingEvents": Array [
+              Object {
+                "lanes": "0b0000000000000000000000000001001",
+                "timestamp": 0.005,
+                "type": "schedule-render",
+                "warning": null,
+              },
+            ],
+            "snapshotHeight": 0,
+            "snapshots": Array [],
+            "startTime": 1,
+            "suspenseEvents": Array [],
+            "thrownErrors": Array [],
+          }
+        `);
       });
 
       it('should process a sample legacy render sequence', async () => {
@@ -633,55 +615,53 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.006,
                   "type": "render-idle",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.006,
                   "type": "render",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.006,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.008,
                   "type": "commit",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.012,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.014,
                   "type": "layout-effects",
                 },
               ],
             },
             "componentMeasures": Array [],
-            "duration": 0.014,
+            "duration": 0.016,
             "flamechart": Array [],
             "internalModuleSourceToRanges": Map {
               undefined => Array [
                 Array [
                   Object {
-                    "functionName": "<filtered-file-system-path>",
+                    "columnNumber": 0,
+                    "functionName": "filtered",
+                    "lineNumber": 0,
+                    "source": "  at filtered (<anonymous>:0:0)",
                   },
                   Object {
-                    "functionName": "dule-stop-<filtered-file-system-path>",
+                    "columnNumber": 1,
+                    "functionName": "filtered",
+                    "lineNumber": 1,
+                    "source": "  at filtered (<anonymous>:1:1)",
                   },
                 ],
               ],
@@ -725,40 +705,32 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.01,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.006,
                   "type": "render-idle",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.001,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.006,
                   "type": "render",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.006,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.008,
                   "type": "commit",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": Array [
-                    0,
-                  ],
-                  "timestamp": 0.012,
+                  "lanes": "0b0000000000000000000000000000000",
+                  "timestamp": 0.014,
                   "type": "layout-effects",
                 },
               ],
@@ -796,13 +768,11 @@ describe('Timeline profiler', () => {
             "nativeEvents": Array [],
             "networkMeasures": Array [],
             "otherUserTimingMarks": Array [],
-            "reactVersion": "0.0.0",
+            "reactVersion": "<filtered-version>",
             "schedulingEvents": Array [
               Object {
-                "lanes": Array [
-                  0,
-                ],
-                "timestamp": 0.003,
+                "lanes": "0b0000000000000000000000000000000",
+                "timestamp": 0.005,
                 "type": "schedule-render",
                 "warning": null,
               },
@@ -842,50 +812,40 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.006,
                   "type": "render-idle",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.006,
                   "type": "render",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.008,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.01,
                   "type": "commit",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.014,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.016,
                   "type": "layout-effects",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.004,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.017,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.019,
                   "type": "passive-effects",
                 },
               ],
@@ -894,50 +854,40 @@ describe('Timeline profiler', () => {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.022,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.024,
                   "type": "render-idle",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.022,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.024,
                   "type": "render",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.026,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.028,
                   "type": "commit",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.032,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.034,
                   "type": "layout-effects",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.035,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.037,
                   "type": "passive-effects",
                 },
               ],
@@ -946,42 +896,48 @@ describe('Timeline profiler', () => {
               Object {
                 "componentName": "App",
                 "duration": 0.001,
-                "timestamp": 0.005,
+                "timestamp": 0.007,
                 "type": "render",
                 "warning": null,
               },
               Object {
                 "componentName": "App",
                 "duration": 0.002,
-                "timestamp": 0.018,
+                "timestamp": 0.02,
                 "type": "passive-effect-mount",
                 "warning": null,
               },
               Object {
                 "componentName": "App",
                 "duration": 0.001,
-                "timestamp": 0.023,
+                "timestamp": 0.025,
                 "type": "render",
                 "warning": null,
               },
               Object {
                 "componentName": "App",
                 "duration": 0.001,
-                "timestamp": 0.036,
+                "timestamp": 0.038,
                 "type": "passive-effect-mount",
                 "warning": null,
               },
             ],
-            "duration": 0.038,
+            "duration": 0.04,
             "flamechart": Array [],
             "internalModuleSourceToRanges": Map {
               undefined => Array [
                 Array [
                   Object {
-                    "functionName": "<filtered-file-system-path>",
+                    "columnNumber": 0,
+                    "functionName": "filtered",
+                    "lineNumber": 0,
+                    "source": "  at filtered (<anonymous>:0:0)",
                   },
                   Object {
-                    "functionName": "dule-stop-<filtered-file-system-path>",
+                    "columnNumber": 1,
+                    "functionName": "filtered",
+                    "lineNumber": 1,
+                    "source": "  at filtered (<anonymous>:1:1)",
                   },
                 ],
               ],
@@ -1029,100 +985,80 @@ describe('Timeline profiler', () => {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.006,
                   "type": "render-idle",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.004,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.006,
                   "type": "render",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.008,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.01,
                   "type": "commit",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.014,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.016,
                   "type": "layout-effects",
                 },
                 Object {
                   "batchUID": 0,
                   "depth": 0,
                   "duration": 0.004,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.017,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.019,
                   "type": "passive-effects",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.012,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.022,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.024,
                   "type": "render-idle",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.022,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.024,
                   "type": "render",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.008,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.026,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.028,
                   "type": "commit",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 1,
                   "duration": 0.001,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.032,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.034,
                   "type": "layout-effects",
                 },
                 Object {
                   "batchUID": 1,
                   "depth": 0,
                   "duration": 0.003,
-                  "lanes": Array [
-                    4,
-                  ],
-                  "timestamp": 0.035,
+                  "lanes": "0b0000000000000000000000000000100",
+                  "timestamp": 0.037,
                   "type": "passive-effects",
                 },
               ],
@@ -1156,22 +1092,18 @@ describe('Timeline profiler', () => {
             "nativeEvents": Array [],
             "networkMeasures": Array [],
             "otherUserTimingMarks": Array [],
-            "reactVersion": "0.0.0",
+            "reactVersion": "<filtered-version>",
             "schedulingEvents": Array [
               Object {
-                "lanes": Array [
-                  4,
-                ],
-                "timestamp": 0.003,
+                "lanes": "0b0000000000000000000000000000100",
+                "timestamp": 0.005,
                 "type": "schedule-render",
                 "warning": null,
               },
               Object {
                 "componentName": "App",
-                "lanes": Array [
-                  4,
-                ],
-                "timestamp": 0.019,
+                "lanes": "0b0000000000000000000000000000100",
+                "timestamp": 0.021,
                 "type": "schedule-state-update",
                 "warning": null,
               },
@@ -1938,7 +1870,11 @@ describe('Timeline profiler', () => {
     });
   });
 
+  // Note the in-memory tests vary slightly (e.g. timestamp values, lane numbers) from the above tests.
+  // That's okay; the important thing is the the lane-to-label matches the subsequent events/measures.
   describe('DevTools hook (in memory)', () => {
+    let store;
+
     beforeEach(() => {
       utils = require('./utils');
       utils.beforeEachProfiling();
@@ -1947,7 +1883,7 @@ describe('Timeline profiler', () => {
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
 
-      const store = global.store;
+      store = global.store;
 
       // Start profiling so that data will actually be recorded.
       utils.act(() => store.profilerStore.startProfiling());

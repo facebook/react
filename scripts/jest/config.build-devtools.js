@@ -77,6 +77,9 @@ module.exports = Object.assign({}, baseConfig, {
       '../../packages/react-devtools-shared/src/__tests__/__serializers__/storeSerializer.js'
     ),
     require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/timelineDataSerializer.js'
+    ),
+    require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/__serializers__/treeContextStateSerializer.js'
     ),
     require.resolve(
