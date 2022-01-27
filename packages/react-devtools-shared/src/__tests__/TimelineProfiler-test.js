@@ -1182,6 +1182,1174 @@ describe('Timeline profiler', () => {
       unmountFns.forEach(unmountFn => unmountFn());
     });
 
-    // TODO (timeline) Write tests
+    describe('when profiling', () => {
+      beforeEach(() => {
+        utils.act(() => store.profilerStore.startProfiling());
+      });
+
+      it('should mark sync render without suspends or state updates', () => {
+        renderHelper(<div />);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark concurrent render without suspends or state updates', () => {
+        utils.act(() => renderRootHelper(<div />));
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark render yields', async () => {
+        function Bar() {
+          Scheduler.unstable_yieldValue('Bar');
+          return null;
+        }
+
+        function Foo() {
+          Scheduler.unstable_yieldValue('Foo');
+          return <Bar />;
+        }
+
+        React.startTransition(() => {
+          renderRootHelper(<Foo />);
+        });
+
+        // Do one step of work.
+        expect(Scheduler).toFlushAndYieldThrough(['Foo']);
+
+        // Finish flushing so React commits;
+        // Unless we do this, the ProfilerStore won't collect Profiling data.
+        expect(Scheduler).toFlushAndYield(['Bar']);
+
+        // Since we yielded, the batch should report two separate "render" chunks.
+        const batch = getBatchOfWork(0);
+        expect(batch.filter(({type}) => type === 'render')).toHaveLength(2);
+      });
+
+      it('should mark sync render with suspense that resolves', async () => {
+        let resolveFn;
+        let resolved = false;
+        const suspensePromise = new Promise(resolve => {
+          resolveFn = () => {
+            resolved = true;
+            resolve();
+          };
+        });
+
+        function Example() {
+          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
+          if (!resolved) {
+            throw suspensePromise;
+          }
+          return null;
+        }
+
+        renderHelper(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
+
+        expect(Scheduler).toHaveYielded(['suspended']);
+
+        Scheduler.unstable_advanceTime(10);
+        resolveFn();
+        await suspensePromise;
+
+        expect(Scheduler).toFlushAndYield(['resolved']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+
+        // Verify the Suspense event and duration was recorded.
+        expect(timelineData.suspenseEvents).toHaveLength(1);
+        const suspenseEvent = timelineData.suspenseEvents[0];
+        expect(suspenseEvent).toMatchInlineSnapshot(`
+          Object {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "resolved",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+        // There should be two batches of renders: Suspeneded and resolved.
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toHaveLength(2);
+      });
+
+      it('should mark sync render with suspense that rejects', async () => {
+        let rejectFn;
+        let rejected = false;
+        const suspensePromise = new Promise((resolve, reject) => {
+          rejectFn = () => {
+            rejected = true;
+            reject(new Error('error'));
+          };
+        });
+
+        function Example() {
+          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
+          if (!rejected) {
+            throw suspensePromise;
+          }
+          return null;
+        }
+
+        renderHelper(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
+
+        expect(Scheduler).toHaveYielded(['suspended']);
+
+        Scheduler.unstable_advanceTime(10);
+        rejectFn();
+        await expect(suspensePromise).rejects.toThrow();
+
+        expect(Scheduler).toHaveYielded(['rejected']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+
+        // Verify the Suspense event and duration was recorded.
+        expect(timelineData.suspenseEvents).toHaveLength(1);
+        const suspenseEvent = timelineData.suspenseEvents[0];
+        expect(suspenseEvent).toMatchInlineSnapshot(`
+          Object {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "rejected",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+        // There should be two batches of renders: Suspeneded and resolved.
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toHaveLength(2);
+      });
+
+      it('should mark concurrent render with suspense that resolves', async () => {
+        let resolveFn;
+        let resolved = false;
+        const suspensePromise = new Promise(resolve => {
+          resolveFn = () => {
+            resolved = true;
+            resolve();
+          };
+        });
+
+        function Example() {
+          Scheduler.unstable_yieldValue(resolved ? 'resolved' : 'suspended');
+          if (!resolved) {
+            throw suspensePromise;
+          }
+          return null;
+        }
+
+        renderRootHelper(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
+
+        expect(Scheduler).toFlushAndYield(['suspended']);
+
+        Scheduler.unstable_advanceTime(10);
+        resolveFn();
+        await suspensePromise;
+
+        expect(Scheduler).toFlushAndYield(['resolved']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+
+        // Verify the Suspense event and duration was recorded.
+        expect(timelineData.suspenseEvents).toHaveLength(1);
+        const suspenseEvent = timelineData.suspenseEvents[0];
+        expect(suspenseEvent).toMatchInlineSnapshot(`
+          Object {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "resolved",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+        // There should be two batches of renders: Suspeneded and resolved.
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toHaveLength(2);
+      });
+
+      it('should mark concurrent render with suspense that rejects', async () => {
+        let rejectFn;
+        let rejected = false;
+        const suspensePromise = new Promise((resolve, reject) => {
+          rejectFn = () => {
+            rejected = true;
+            reject(new Error('error'));
+          };
+        });
+
+        function Example() {
+          Scheduler.unstable_yieldValue(rejected ? 'rejected' : 'suspended');
+          if (!rejected) {
+            throw suspensePromise;
+          }
+          return null;
+        }
+
+        renderRootHelper(
+          <React.Suspense fallback={null}>
+            <Example />
+          </React.Suspense>,
+        );
+
+        expect(Scheduler).toFlushAndYield(['suspended']);
+
+        Scheduler.unstable_advanceTime(10);
+        rejectFn();
+        await expect(suspensePromise).rejects.toThrow();
+
+        expect(Scheduler).toFlushAndYield(['rejected']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+
+        // Verify the Suspense event and duration was recorded.
+        expect(timelineData.suspenseEvents).toHaveLength(1);
+        const suspenseEvent = timelineData.suspenseEvents[0];
+        expect(suspenseEvent).toMatchInlineSnapshot(`
+          Object {
+            "componentName": "Example",
+            "depth": 0,
+            "duration": 10,
+            "id": "0",
+            "phase": "mount",
+            "promiseName": "",
+            "resolution": "rejected",
+            "timestamp": 10,
+            "type": "suspense",
+            "warning": null,
+          }
+        `);
+
+        // There should be two batches of renders: Suspeneded and resolved.
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toHaveLength(2);
+      });
+
+      it('should mark cascading class component state updates', () => {
+        class Example extends React.Component {
+          state = {didMount: false};
+          componentDidMount() {
+            this.setState({didMount: true});
+          }
+          render() {
+            Scheduler.unstable_advanceTime(10);
+            Scheduler.unstable_yieldValue(
+              this.state.didMount ? 'update' : 'mount',
+            );
+            return null;
+          }
+        }
+
+        renderRootHelper(<Example />);
+
+        expect(Scheduler).toFlushUntilNextPaint(['mount', 'update']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 20,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark cascading class component force updates', () => {
+        let forced = false;
+        class Example extends React.Component {
+          componentDidMount() {
+            forced = true;
+            this.forceUpdate();
+          }
+          render() {
+            Scheduler.unstable_advanceTime(10);
+            Scheduler.unstable_yieldValue(forced ? 'force update' : 'mount');
+            return null;
+          }
+        }
+
+        renderRootHelper(<Example />);
+
+        expect(Scheduler).toFlushUntilNextPaint(['mount', 'force update']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 20,
+              "type": "schedule-force-update",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark render phase state updates for class component', () => {
+        class Example extends React.Component {
+          state = {didRender: false};
+          render() {
+            if (this.state.didRender === false) {
+              this.setState({didRender: true});
+            }
+            Scheduler.unstable_advanceTime(10);
+            Scheduler.unstable_yieldValue(
+              this.state.didRender ? 'second render' : 'first render',
+            );
+            return null;
+          }
+        }
+
+        renderRootHelper(<Example />);
+
+        let errorMessage;
+        spyOn(console, 'error').and.callFake(message => {
+          errorMessage = message;
+        });
+
+        expect(Scheduler).toFlushAndYield(['first render', 'second render']);
+
+        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(errorMessage).toContain(
+          'Cannot update during an existing state transition',
+        );
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark render phase force updates for class component', () => {
+        let forced = false;
+        class Example extends React.Component {
+          render() {
+            Scheduler.unstable_advanceTime(10);
+            Scheduler.unstable_yieldValue(forced ? 'force update' : 'render');
+            if (!forced) {
+              forced = true;
+              this.forceUpdate();
+            }
+            return null;
+          }
+        }
+
+        renderRootHelper(<Example />);
+
+        let errorMessage;
+        spyOn(console, 'error').and.callFake(message => {
+          errorMessage = message;
+        });
+
+        expect(Scheduler).toFlushAndYield(['render', 'force update']);
+
+        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(errorMessage).toContain(
+          'Cannot update during an existing state transition',
+        );
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 20,
+              "type": "schedule-force-update",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark cascading layout updates', () => {
+        function Example() {
+          const [didMount, setDidMount] = React.useState(false);
+          React.useLayoutEffect(() => {
+            Scheduler.unstable_advanceTime(1);
+            setDidMount(true);
+          }, []);
+          Scheduler.unstable_advanceTime(10);
+          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
+          return didMount;
+        }
+
+        renderRootHelper(<Example />);
+
+        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 1,
+              "timestamp": 20,
+              "type": "layout-effect-mount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 21,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark cascading passive updates', () => {
+        function Example() {
+          const [didMount, setDidMount] = React.useState(false);
+          React.useEffect(() => {
+            Scheduler.unstable_advanceTime(1);
+            setDidMount(true);
+          }, []);
+          Scheduler.unstable_advanceTime(10);
+          Scheduler.unstable_yieldValue(didMount ? 'update' : 'mount');
+          return didMount;
+        }
+
+        renderRootHelper(<Example />);
+        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(2);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 1,
+              "timestamp": 20,
+              "type": "passive-effect-mount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "duration": 10,
+              "timestamp": 21,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 21,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark render phase updates', () => {
+        function Example() {
+          const [didRender, setDidRender] = React.useState(false);
+          Scheduler.unstable_advanceTime(10);
+          if (!didRender) {
+            setDidRender(true);
+          }
+          Scheduler.unstable_yieldValue(didRender ? 'update' : 'mount');
+          return didRender;
+        }
+
+        renderRootHelper(<Example />);
+        expect(Scheduler).toFlushAndYield(['mount', 'update']);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        // Render phase updates should be retried as part of the same batch.
+        expect(timelineData.batchUIDToMeasuresMap.size).toBe(1);
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "Example",
+              "duration": 20,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "Example",
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 20,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+      });
+
+      it('should mark sync render that throws', async () => {
+        spyOn(console, 'error');
+
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            Scheduler.unstable_advanceTime(10);
+            if (this.state.error) {
+              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
+              return null;
+            }
+            Scheduler.unstable_yieldValue('ErrorBoundary render');
+            return this.props.children;
+          }
+        }
+
+        function ExampleThatThrows() {
+          Scheduler.unstable_yieldValue('ExampleThatThrows');
+          throw Error('Expected error');
+        }
+
+        renderHelper(
+          <ErrorBoundary>
+            <ExampleThatThrows />
+          </ErrorBoundary>,
+        );
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render',
+          'ExampleThatThrows',
+          'ExampleThatThrows',
+          'ErrorBoundary fallback',
+        ]);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ExampleThatThrows",
+              "duration": 0,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ErrorBoundary",
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 20,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "ExampleThatThrows",
+              "message": "Expected error",
+              "phase": "mount",
+              "timestamp": 20,
+              "type": "thrown-error",
+            },
+          ]
+        `);
+      });
+
+      it('should mark concurrent render that throws', async () => {
+        spyOn(console, 'error');
+
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            Scheduler.unstable_advanceTime(10);
+            if (this.state.error) {
+              Scheduler.unstable_yieldValue('ErrorBoundary fallback');
+              return null;
+            }
+            Scheduler.unstable_yieldValue('ErrorBoundary render');
+            return this.props.children;
+          }
+        }
+
+        function ExampleThatThrows() {
+          Scheduler.unstable_yieldValue('ExampleThatThrows');
+          // eslint-disable-next-line no-throw-literal
+          throw 'Expected error';
+        }
+
+        renderRootHelper(
+          <ErrorBoundary>
+            <ExampleThatThrows />
+          </ErrorBoundary>,
+        );
+
+        expect(Scheduler).toFlushAndYield([
+          'ErrorBoundary render',
+          'ExampleThatThrows',
+          'ExampleThatThrows',
+          'ErrorBoundary render',
+          'ExampleThatThrows',
+          'ExampleThatThrows',
+          'ErrorBoundary fallback',
+        ]);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ExampleThatThrows",
+              "duration": 0,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 20,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ExampleThatThrows",
+              "duration": 0,
+              "timestamp": 30,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ErrorBoundary",
+              "duration": 10,
+              "timestamp": 30,
+              "type": "render",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.schedulingEvents).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "lanes": "0b0000000000000000000000000010000",
+              "timestamp": 10,
+              "type": "schedule-render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ErrorBoundary",
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 30,
+              "type": "schedule-state-update",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.thrownErrors).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "ExampleThatThrows",
+              "message": "Expected error",
+              "phase": "mount",
+              "timestamp": 20,
+              "type": "thrown-error",
+            },
+            Object {
+              "componentName": "ExampleThatThrows",
+              "message": "Expected error",
+              "phase": "mount",
+              "timestamp": 30,
+              "type": "thrown-error",
+            },
+          ]
+        `);
+      });
+
+      it('should mark passive and layout effects', async () => {
+        function ComponentWithEffects() {
+          React.useLayoutEffect(() => {
+            Scheduler.unstable_yieldValue('layout 1 mount');
+            return () => {
+              Scheduler.unstable_yieldValue('layout 1 unmount');
+            };
+          }, []);
+
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('passive 1 mount');
+            return () => {
+              Scheduler.unstable_yieldValue('passive 1 unmount');
+            };
+          }, []);
+
+          React.useLayoutEffect(() => {
+            Scheduler.unstable_yieldValue('layout 2 mount');
+            return () => {
+              Scheduler.unstable_yieldValue('layout 2 unmount');
+            };
+          }, []);
+
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('passive 2 mount');
+            return () => {
+              Scheduler.unstable_yieldValue('passive 2 unmount');
+            };
+          }, []);
+
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('passive 3 mount');
+            return () => {
+              Scheduler.unstable_yieldValue('passive 3 unmount');
+            };
+          }, []);
+
+          return null;
+        }
+
+        const unmount = renderRootHelper(<ComponentWithEffects />);
+
+        expect(Scheduler).toFlushUntilNextPaint([
+          'layout 1 mount',
+          'layout 2 mount',
+        ]);
+
+        expect(Scheduler).toFlushAndYield([
+          'passive 1 mount',
+          'passive 2 mount',
+          'passive 3 mount',
+        ]);
+
+        expect(Scheduler).toFlushAndYield([]);
+
+        unmount();
+
+        expect(Scheduler).toHaveYielded([
+          'layout 1 unmount',
+          'layout 2 unmount',
+          'passive 1 unmount',
+          'passive 2 unmount',
+          'passive 3 unmount',
+        ]);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData.componentMeasures).toMatchInlineSnapshot(`
+          Array [
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "render",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "layout-effect-mount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "layout-effect-mount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "passive-effect-mount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "passive-effect-mount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "passive-effect-mount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "layout-effect-unmount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "layout-effect-unmount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "passive-effect-unmount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "passive-effect-unmount",
+              "warning": null,
+            },
+            Object {
+              "componentName": "ComponentWithEffects",
+              "duration": 0,
+              "timestamp": 10,
+              "type": "passive-effect-unmount",
+              "warning": null,
+            },
+          ]
+        `);
+        expect(timelineData.batchUIDToMeasuresMap).toMatchInlineSnapshot(`
+          Map {
+            1 => Array [
+              Object {
+                "batchUID": 1,
+                "depth": 0,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000010000",
+                "timestamp": 10,
+                "type": "render-idle",
+              },
+              Object {
+                "batchUID": 1,
+                "depth": 0,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000010000",
+                "timestamp": 10,
+                "type": "render",
+              },
+              Object {
+                "batchUID": 1,
+                "depth": 0,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000010000",
+                "timestamp": 10,
+                "type": "commit",
+              },
+              Object {
+                "batchUID": 1,
+                "depth": 1,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000010000",
+                "timestamp": 10,
+                "type": "layout-effects",
+              },
+              Object {
+                "batchUID": 1,
+                "depth": 0,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000010000",
+                "timestamp": 10,
+                "type": "passive-effects",
+              },
+            ],
+            2 => Array [
+              Object {
+                "batchUID": 2,
+                "depth": 0,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000000001",
+                "timestamp": 10,
+                "type": "render-idle",
+              },
+              Object {
+                "batchUID": 2,
+                "depth": 0,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000000001",
+                "timestamp": 10,
+                "type": "render",
+              },
+              Object {
+                "batchUID": 2,
+                "depth": 0,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000000001",
+                "timestamp": 10,
+                "type": "commit",
+              },
+              Object {
+                "batchUID": 2,
+                "depth": 1,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000000001",
+                "timestamp": 10,
+                "type": "layout-effects",
+              },
+              Object {
+                "batchUID": 2,
+                "depth": 1,
+                "duration": 0,
+                "lanes": "0b0000000000000000000000000000001",
+                "timestamp": 10,
+                "type": "passive-effects",
+              },
+            ],
+          }
+        `);
+      });
+    });
+
+    describe('when not profiling', () => {
+      it('should not log any marks', () => {
+        renderHelper(<div />);
+
+        const timelineData = stopProfilingAndGetTimelineData();
+        expect(timelineData).toBeNull();
+      });
+    });
   });
 });
