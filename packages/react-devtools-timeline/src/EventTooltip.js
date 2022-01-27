@@ -15,7 +15,7 @@ import type {
   ReactComponentMeasure,
   ReactHoverContextInfo,
   ReactMeasure,
-  ReactProfilerData,
+  TimelineData,
   SchedulingEvent,
   Snapshot,
   SuspenseEvent,
@@ -33,7 +33,7 @@ const MAX_TOOLTIP_TEXT_LENGTH = 60;
 
 type Props = {|
   canvasRef: {|current: HTMLCanvasElement | null|},
-  data: ReactProfilerData,
+  data: TimelineData,
   height: number,
   hoveredEvent: ReactHoverContextInfo | null,
   origin: Point,
@@ -278,7 +278,7 @@ const TooltipSchedulingEvent = ({
   data,
   schedulingEvent,
 }: {|
-  data: ReactProfilerData,
+  data: TimelineData,
   schedulingEvent: SchedulingEvent,
 |}) => {
   const label = getSchedulingEventLabel(schedulingEvent);
@@ -433,7 +433,7 @@ const TooltipReactMeasure = ({
   data,
   measure,
 }: {|
-  data: ReactProfilerData,
+  data: TimelineData,
   measure: ReactMeasure,
 |}) => {
   const label = getReactMeasureLabel(measure.type);

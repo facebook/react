@@ -96,7 +96,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
 import {createProfilingHooks} from './profilingHooks';
 
-import type {ToggleProfilingStatus} from './profilingHooks';
+import type {GetTimelineData, ToggleProfilingStatus} from './profilingHooks';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
@@ -630,6 +630,7 @@ export function attach(
     };
   }
 
+  let getTimelineData: null | GetTimelineData = null;
   let toggleProfilingStatus: null | ToggleProfilingStatus = null;
   if (typeof injectProfilingHooks === 'function') {
     const response = createProfilingHooks({
@@ -643,6 +644,7 @@ export function attach(
     injectProfilingHooks(response.profilingHooks);
 
     // Hang onto this toggle so we can notify the external methods of profiling status changes.
+    getTimelineData = response.getTimelineData;
     toggleProfilingStatus = response.toggleProfilingStatus;
   }
 
@@ -3978,9 +3980,39 @@ export function attach(
       },
     );
 
+    let timelineData = null;
+    if (typeof getTimelineData === 'function') {
+      const currentTimelineData = getTimelineData();
+      if (currentTimelineData) {
+        const {
+          batchUIDToMeasuresMap,
+          internalModuleSourceToRanges,
+          laneToLabelMap,
+          laneToReactMeasureMap,
+          ...rest
+        } = currentTimelineData;
+
+        timelineData = {
+          ...rest,
+
+          // Most of the data is safe to parse as-is,
+          // but we need to convert the nested Arrays back to Maps.
+          // Most of the data is safe to serialize as-is,
+          // but we need to convert the Maps to nested Arrays.
+          batchUIDToMeasuresMap: Array.from(batchUIDToMeasuresMap.entries()),
+          internalModuleSourceToRanges: Array.from(
+            internalModuleSourceToRanges.entries(),
+          ),
+          laneToLabelMap: Array.from(laneToLabelMap.entries()),
+          laneToReactMeasureMap: Array.from(laneToReactMeasureMap.entries()),
+        };
+      }
+    }
+
     return {
       dataForRoots,
       rendererID,
+      timelineData,
     };
   }
 

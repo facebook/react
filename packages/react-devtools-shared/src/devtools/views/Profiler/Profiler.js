@@ -23,6 +23,8 @@ import ProfilingImportExportButtons from './ProfilingImportExportButtons';
 import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import NoProfilingData from './NoProfilingData';
+import RecordingInProgress from './RecordingInProgress';
+import ProcessingData from './ProcessingData';
 import ProfilingNotSupported from './ProfilingNotSupported';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
@@ -46,7 +48,9 @@ function Profiler(_: {||}) {
     supportsProfiling,
   } = useContext(ProfilerContext);
 
-  const {searchInputContainerRef} = useContext(TimelineContext);
+  const {file: timelineTraceEventData, searchInputContainerRef} = useContext(
+    TimelineContext,
+  );
 
   const {supportsTimeline} = useContext(StoreContext);
 
@@ -71,6 +75,8 @@ function Profiler(_: {||}) {
     view = <RecordingInProgress />;
   } else if (isProcessingData) {
     view = <ProcessingData />;
+  } else if (timelineTraceEventData) {
+    view = <OnlyTimelineData />;
   } else if (supportsProfiling) {
     view = <NoProfilingData />;
   } else {
@@ -150,6 +156,15 @@ function Profiler(_: {||}) {
   );
 }
 
+const OnlyTimelineData = () => (
+  <div className={styles.Column}>
+    <div className={styles.Header}>Timeline only</div>
+    <div className={styles.Row}>
+      The current profile contains only Timeline data.
+    </div>
+  </div>
+);
+
 const tabs = [
   {
     id: 'flame-chart',
@@ -175,20 +190,5 @@ const tabsWithTimeline = [
     title: 'Timeline',
   },
 ];
-const ProcessingData = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>Processing data...</div>
-    <div className={styles.Row}>This should only take a minute.</div>
-  </div>
-);
-
-const RecordingInProgress = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>Profiling is in progress...</div>
-    <div className={styles.Row}>
-      Click the record button <RecordToggle /> to stop recording.
-    </div>
-  </div>
-);
 
 export default portaledContent(Profiler);

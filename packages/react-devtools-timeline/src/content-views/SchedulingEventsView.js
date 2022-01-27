@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {SchedulingEvent, ReactProfilerData} from '../types';
+import type {SchedulingEvent, TimelineData} from '../types';
 import type {
   Interaction,
   MouseMoveInteraction,
@@ -40,13 +40,13 @@ const EVENT_ROW_HEIGHT_FIXED =
   TOP_ROW_PADDING + REACT_EVENT_DIAMETER + TOP_ROW_PADDING;
 
 export class SchedulingEventsView extends View {
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
   _intrinsicSize: Size;
 
   _hoveredEvent: SchedulingEvent | null = null;
   onHover: ((event: SchedulingEvent | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
     this._profilerData = profilerData;
 

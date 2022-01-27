@@ -14,9 +14,25 @@ import type {
 } from 'react-devtools-shared/src/backend/types';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
+import type {
+  BatchUID,
+  LaneToLabelMap,
+  ReactComponentMeasure,
+  ReactMeasure,
+  ReactMeasureType,
+  TimelineData,
+  SuspenseEvent,
+} from 'react-devtools-timeline/src/types';
 
 import isArray from 'shared/isArray';
-import {SCHEDULING_PROFILER_VERSION} from 'react-devtools-timeline/src/constants';
+import {
+  REACT_TOTAL_NUM_LANES,
+  SCHEDULING_PROFILER_VERSION,
+} from 'react-devtools-timeline/src/constants';
+
+// Add padding to the start/stop time of the profile.
+// This makes the UI nicer to use.
+const TIME_OFFSET = 10;
 
 let performanceTarget: Performance | null = null;
 
@@ -53,6 +69,12 @@ if (supportsUserTimingV3) {
   performanceTarget = performance;
 }
 
+// Some environments (e.g. React Native / Hermes) don't support the performance API yet.
+const getCurrentTime =
+  typeof performance === 'object' && typeof performance.now === 'function'
+    ? () => performance.now()
+    : () => Date.now();
+
 // Mocking the Performance Object (and User Timing APIs) for testing is fragile.
 // This API allows tests to directly override the User Timing APIs.
 export function setPerformanceMock_ONLY_FOR_TESTING(
@@ -63,9 +85,11 @@ export function setPerformanceMock_ONLY_FOR_TESTING(
   supportsUserTimingV3 = performanceMock !== null;
 }
 
+export type GetTimelineData = () => TimelineData | null;
 export type ToggleProfilingStatus = (value: boolean) => void;
 
 type Response = {|
+  getTimelineData: GetTimelineData,
   profilingHooks: DevToolsProfilingHooks,
   toggleProfilingStatus: ToggleProfilingStatus,
 |};
@@ -81,12 +105,28 @@ export function createProfilingHooks({
   getLaneLabelMap?: () => Map<Lane, string> | null,
   reactVersion: string,
 |}): Response {
+  let currentBatchUID: BatchUID = 0;
+  let currentReactComponentMeasure: ReactComponentMeasure | null = null;
+  let currentReactMeasuresStack: Array<ReactMeasure> = [];
+  let currentTimelineData: TimelineData | null = null;
   let isProfiling: boolean = false;
+  let nextRenderShouldStartNewBatch: boolean = false;
 
-  function markMetadata() {
-    markAndClear(`--react-version-${reactVersion}`);
-    markAndClear(`--profiler-version-${SCHEDULING_PROFILER_VERSION}`);
+  function getRelativeTime() {
+    const currentTime = getCurrentTime();
 
+    if (currentTimelineData) {
+      if (currentTimelineData.startTime === 0) {
+        currentTimelineData.startTime = currentTime - TIME_OFFSET;
+      }
+
+      return currentTime - currentTimelineData.startTime;
+    }
+
+    return 0;
+  }
+
+  function getInternalModuleRanges() {
     /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
     if (
       typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
@@ -94,34 +134,69 @@ export function createProfilingHooks({
         'function'
     ) {
       // Ask the DevTools hook for module ranges that may have been reported by the current renderer(s).
+      // Don't do this eagerly like the laneToLabelMap,
+      // because some modules might not yet have registered their boundaries when the renderer is injected.
       const ranges = __REACT_DEVTOOLS_GLOBAL_HOOK__.getInternalModuleRanges();
 
       // This check would not be required,
       // except that it's possible for things to override __REACT_DEVTOOLS_GLOBAL_HOOK__.
       if (isArray(ranges)) {
-        for (let i = 0; i < ranges.length; i++) {
-          const range = ranges[i];
-          if (isArray(range) && range.length === 2) {
-            const [startStackFrame, stopStackFrame] = ranges[i];
+        return ranges;
+      }
+    }
 
-            markAndClear(`--react-internal-module-start-${startStackFrame}`);
-            markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
-          }
+    return null;
+  }
+
+  function getTimelineData(): TimelineData | null {
+    return currentTimelineData;
+  }
+
+  function laneToLanesArray(lanes: Lane) {
+    const lanesArray = [];
+
+    let lane = 1;
+    for (let index = 0; index < REACT_TOTAL_NUM_LANES; index++) {
+      if (lane & lanes) {
+        lanesArray.push(lane);
+      }
+      lane *= 2;
+    }
+
+    return lanesArray;
+  }
+
+  const laneToLabelMap: LaneToLabelMap | null =
+    typeof getLaneLabelMap === 'function' ? getLaneLabelMap() : null;
+
+  function markMetadata() {
+    if (!isProfiling) {
+      return;
+    }
+
+    markAndClear(`--react-version-${reactVersion}`);
+    markAndClear(`--profiler-version-${SCHEDULING_PROFILER_VERSION}`);
+
+    const ranges = getInternalModuleRanges();
+    if (ranges) {
+      for (let i = 0; i < ranges.length; i++) {
+        const range = ranges[i];
+        if (isArray(range) && range.length === 2) {
+          const [startStackFrame, stopStackFrame] = ranges[i];
+
+          markAndClear(`--react-internal-module-start-${startStackFrame}`);
+          markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
         }
       }
     }
 
-    if (typeof getLaneLabelMap === 'function') {
-      const map = getLaneLabelMap();
-      if (map != null) {
-        const labels = Array.from(map.values()).join(',');
-        markAndClear(`--react-lane-labels-${labels}`);
-      }
+    if (laneToLabelMap != null) {
+      const labels = Array.from(laneToLabelMap.values()).join(',');
+      markAndClear(`--react-lane-labels-${labels}`);
     }
   }
 
   function markAndClear(markName) {
-    // Only record User Timing marks if DevTools is profiling.
     if (!isProfiling) {
       return;
     }
@@ -131,8 +206,95 @@ export function createProfilingHooks({
     ((performanceTarget: any): Performance).clearMarks(markName);
   }
 
+  function recordReactMeasureStarted(
+    type: ReactMeasureType,
+    lanes: Lanes,
+  ): void {
+    // Decide what depth thi work should be rendered at, based on what's on the top of the stack.
+    // It's okay to render over top of "idle" work but everything else should be on its own row.
+    let depth = 0;
+    if (currentReactMeasuresStack.length > 0) {
+      const top =
+        currentReactMeasuresStack[currentReactMeasuresStack.length - 1];
+      depth = top.type === 'render-idle' ? top.depth : top.depth + 1;
+    }
+
+    const lanesArray = laneToLanesArray(lanes);
+
+    const reactMeasure: ReactMeasure = {
+      type,
+      batchUID: currentBatchUID,
+      depth,
+      lanes: lanesArray,
+      timestamp: getRelativeTime(),
+      duration: 0,
+    };
+
+    currentReactMeasuresStack.push(reactMeasure);
+
+    if (currentTimelineData) {
+      const {
+        batchUIDToMeasuresMap,
+        laneToReactMeasureMap,
+      } = currentTimelineData;
+
+      let reactMeasures = batchUIDToMeasuresMap.get(currentBatchUID);
+      if (reactMeasures != null) {
+        reactMeasures.push(reactMeasure);
+      } else {
+        batchUIDToMeasuresMap.set(currentBatchUID, [reactMeasure]);
+      }
+
+      lanesArray.forEach(lane => {
+        reactMeasures = laneToReactMeasureMap.get(lane);
+        if (reactMeasures) {
+          reactMeasures.push(reactMeasure);
+        }
+      });
+    }
+  }
+
+  function recordReactMeasureCompleted(type: ReactMeasureType): void {
+    const currentTime = getRelativeTime();
+
+    if (currentReactMeasuresStack.length === 0) {
+      console.error(
+        'Unexpected type "%s" completed at %sms while currentReactMeasuresStack is empty.',
+        type,
+        currentTime,
+      );
+      // Ignore work "completion" user timing mark that doesn't complete anything
+      return;
+    }
+
+    const top = currentReactMeasuresStack.pop();
+    if (top.type !== type) {
+      console.error(
+        'Unexpected type "%s" completed at %sms before "%s" completed.',
+        type,
+        currentTime,
+        top.type,
+      );
+    }
+
+    // $FlowFixMe This property should not be writable outside of this function.
+    top.duration = currentTime - top.timestamp;
+
+    if (currentTimelineData) {
+      currentTimelineData.duration = getRelativeTime() + TIME_OFFSET;
+    }
+  }
+
   function markCommitStarted(lanes: Lanes): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureStarted('commit', lanes);
+
+    // TODO (timeline) Re-think this approach to "batching"; I don't think it works for Suspense or pre-rendering.
+    // This issue applies to the User Timing data also.
+    nextRenderShouldStartNewBatch = true;
 
     if (supportsUserTimingV3) {
       markAndClear(`--commit-start-${lanes}`);
@@ -146,17 +308,34 @@ export function createProfilingHooks({
   }
 
   function markCommitStopped(): void {
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureCompleted('commit');
+    recordReactMeasureCompleted('render-idle');
+
     if (supportsUserTimingV3) {
       markAndClear('--commit-stop');
     }
-
-    // TODO (timeline) Record data in-memory.
   }
 
   function markComponentRenderStarted(fiber: Fiber): void {
+    if (!isProfiling) {
+      return;
+    }
+
     const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
     // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
+    if (isProfiling) {
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'render',
+        warning: null,
+      };
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(`--component-render-start-${componentName}`);
@@ -164,53 +343,43 @@ export function createProfilingHooks({
   }
 
   function markComponentRenderStopped(): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    if (currentReactComponentMeasure) {
+      if (currentTimelineData) {
+        currentTimelineData.componentMeasures.push(
+          currentReactComponentMeasure,
+        );
+      }
+
+      currentReactComponentMeasure.duration =
+        getRelativeTime() - currentReactComponentMeasure.timestamp;
+      currentReactComponentMeasure = null;
+    }
 
     if (supportsUserTimingV3) {
       markAndClear('--component-render-stop');
     }
   }
 
-  function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
-    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-    // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
-
-    if (supportsUserTimingV3) {
-      markAndClear(`--component-passive-effect-mount-start-${componentName}`);
-    }
-  }
-
-  function markComponentPassiveEffectMountStopped(): void {
-    // TODO (timeline) Record data in-memory.
-
-    if (supportsUserTimingV3) {
-      markAndClear('--component-passive-effect-mount-stop');
-    }
-  }
-
-  function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
-    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
-    // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
-
-    if (supportsUserTimingV3) {
-      markAndClear(`--component-passive-effect-unmount-start-${componentName}`);
-    }
-  }
-
-  function markComponentPassiveEffectUnmountStopped(): void {
-    // TODO (timeline) Record data in-memory.
-
-    if (supportsUserTimingV3) {
-      markAndClear('--component-passive-effect-unmount-stop');
-    }
-  }
-
   function markComponentLayoutEffectMountStarted(fiber: Fiber): void {
+    if (!isProfiling) {
+      return;
+    }
+
     const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
     // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
+    if (isProfiling) {
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'layout-effect-mount',
+        warning: null,
+      };
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(`--component-layout-effect-mount-start-${componentName}`);
@@ -218,7 +387,21 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectMountStopped(): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    if (currentReactComponentMeasure) {
+      if (currentTimelineData) {
+        currentTimelineData.componentMeasures.push(
+          currentReactComponentMeasure,
+        );
+      }
+
+      currentReactComponentMeasure.duration =
+        getRelativeTime() - currentReactComponentMeasure.timestamp;
+      currentReactComponentMeasure = null;
+    }
 
     if (supportsUserTimingV3) {
       markAndClear('--component-layout-effect-mount-stop');
@@ -226,9 +409,21 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectUnmountStarted(fiber: Fiber): void {
+    if (!isProfiling) {
+      return;
+    }
+
     const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
     // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
+    if (isProfiling) {
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'layout-effect-unmount',
+        warning: null,
+      };
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(`--component-layout-effect-unmount-start-${componentName}`);
@@ -236,10 +431,112 @@ export function createProfilingHooks({
   }
 
   function markComponentLayoutEffectUnmountStopped(): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    if (currentReactComponentMeasure) {
+      if (currentTimelineData) {
+        currentTimelineData.componentMeasures.push(
+          currentReactComponentMeasure,
+        );
+      }
+
+      currentReactComponentMeasure.duration =
+        getRelativeTime() - currentReactComponentMeasure.timestamp;
+      currentReactComponentMeasure = null;
+    }
 
     if (supportsUserTimingV3) {
       markAndClear('--component-layout-effect-unmount-stop');
+    }
+  }
+
+  function markComponentPassiveEffectMountStarted(fiber: Fiber): void {
+    if (!isProfiling) {
+      return;
+    }
+
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    if (isProfiling) {
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'passive-effect-mount',
+        warning: null,
+      };
+    }
+
+    if (supportsUserTimingV3) {
+      markAndClear(`--component-passive-effect-mount-start-${componentName}`);
+    }
+  }
+
+  function markComponentPassiveEffectMountStopped(): void {
+    if (!isProfiling) {
+      return;
+    }
+
+    if (currentReactComponentMeasure) {
+      if (currentTimelineData) {
+        currentTimelineData.componentMeasures.push(
+          currentReactComponentMeasure,
+        );
+      }
+
+      currentReactComponentMeasure.duration =
+        getRelativeTime() - currentReactComponentMeasure.timestamp;
+      currentReactComponentMeasure = null;
+    }
+
+    if (supportsUserTimingV3) {
+      markAndClear('--component-passive-effect-mount-stop');
+    }
+  }
+
+  function markComponentPassiveEffectUnmountStarted(fiber: Fiber): void {
+    if (!isProfiling) {
+      return;
+    }
+
+    const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
+    // TODO (timeline) Record and cache component stack
+    if (isProfiling) {
+      currentReactComponentMeasure = {
+        componentName,
+        duration: 0,
+        timestamp: getRelativeTime(),
+        type: 'passive-effect-unmount',
+        warning: null,
+      };
+    }
+
+    if (supportsUserTimingV3) {
+      markAndClear(`--component-passive-effect-unmount-start-${componentName}`);
+    }
+  }
+
+  function markComponentPassiveEffectUnmountStopped(): void {
+    if (!isProfiling) {
+      return;
+    }
+
+    if (currentReactComponentMeasure) {
+      if (currentTimelineData) {
+        currentTimelineData.componentMeasures.push(
+          currentReactComponentMeasure,
+        );
+      }
+
+      currentReactComponentMeasure.duration =
+        getRelativeTime() - currentReactComponentMeasure.timestamp;
+      currentReactComponentMeasure = null;
+    }
+
+    if (supportsUserTimingV3) {
+      markAndClear('--component-passive-effect-unmount-stop');
     }
   }
 
@@ -248,6 +545,10 @@ export function createProfilingHooks({
     thrownValue: mixed,
     lanes: Lanes,
   ): void {
+    if (!isProfiling) {
+      return;
+    }
+
     const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
     const phase = fiber.alternate === null ? 'mount' : 'update';
 
@@ -263,7 +564,15 @@ export function createProfilingHooks({
     }
 
     // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
+    if (currentTimelineData) {
+      currentTimelineData.thrownErrors.push({
+        componentName,
+        message,
+        phase,
+        timestamp: getRelativeTime(),
+        type: 'thrown-error',
+      });
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(`--error-${componentName}-${phase}-${message}`);
@@ -287,6 +596,10 @@ export function createProfilingHooks({
     wakeable: Wakeable,
     lanes: Lanes,
   ): void {
+    if (!isProfiling) {
+      return;
+    }
+
     const eventType = wakeableIDs.has(wakeable) ? 'resuspend' : 'suspend';
     const id = getWakeableID(wakeable);
     const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
@@ -299,21 +612,55 @@ export function createProfilingHooks({
     const displayName = (wakeable: any).displayName || '';
 
     // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
+    const suspenseEvent: SuspenseEvent = {
+      componentName,
+      depth: 0,
+      duration: 0,
+      id: `${id}`,
+      phase,
+      promiseName: displayName,
+      resolution: 'unresolved',
+      timestamp: getRelativeTime(),
+      type: 'suspense',
+      warning: null,
+    };
+
+    if (currentTimelineData) {
+      currentTimelineData.suspenseEvents.push(suspenseEvent);
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(
         `--suspense-${eventType}-${id}-${componentName}-${phase}-${lanes}-${displayName}`,
       );
-      wakeable.then(
-        () => markAndClear(`--suspense-resolved-${id}-${componentName}`),
-        () => markAndClear(`--suspense-rejected-${id}-${componentName}`),
-      );
     }
+
+    wakeable.then(
+      () => {
+        suspenseEvent.duration = getRelativeTime() - suspenseEvent.timestamp;
+        suspenseEvent.resolution = 'resolved';
+
+        if (supportsUserTimingV3) {
+          markAndClear(`--suspense-resolved-${id}-${componentName}`);
+        }
+      },
+      () => {
+        suspenseEvent.duration = getRelativeTime() - suspenseEvent.timestamp;
+        suspenseEvent.resolution = 'rejected';
+
+        if (supportsUserTimingV3) {
+          markAndClear(`--suspense-rejected-${id}-${componentName}`);
+        }
+      },
+    );
   }
 
   function markLayoutEffectsStarted(lanes: Lanes): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureStarted('layout-effects', lanes);
 
     if (supportsUserTimingV3) {
       markAndClear(`--layout-effects-start-${lanes}`);
@@ -321,7 +668,11 @@ export function createProfilingHooks({
   }
 
   function markLayoutEffectsStopped(): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureCompleted('layout-effects');
 
     if (supportsUserTimingV3) {
       markAndClear('--layout-effects-stop');
@@ -329,7 +680,11 @@ export function createProfilingHooks({
   }
 
   function markPassiveEffectsStarted(lanes: Lanes): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureStarted('passive-effects', lanes);
 
     if (supportsUserTimingV3) {
       markAndClear(`--passive-effects-start-${lanes}`);
@@ -337,7 +692,11 @@ export function createProfilingHooks({
   }
 
   function markPassiveEffectsStopped(): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureCompleted('passive-effects');
 
     if (supportsUserTimingV3) {
       markAndClear('--passive-effects-stop');
@@ -345,7 +704,26 @@ export function createProfilingHooks({
   }
 
   function markRenderStarted(lanes: Lanes): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    if (nextRenderShouldStartNewBatch) {
+      nextRenderShouldStartNewBatch = false;
+      currentBatchUID++;
+    }
+
+    // If this is a new batch of work, wrap an "idle" measure around it.
+    // Log it before the "render" measure to preserve the stack ordering.
+    if (
+      currentReactMeasuresStack.length === 0 ||
+      currentReactMeasuresStack[currentReactMeasuresStack.length - 1].type !==
+        'render-idle'
+    ) {
+      recordReactMeasureStarted('render-idle', lanes);
+    }
+
+    recordReactMeasureStarted('render', lanes);
 
     if (supportsUserTimingV3) {
       markAndClear(`--render-start-${lanes}`);
@@ -353,7 +731,11 @@ export function createProfilingHooks({
   }
 
   function markRenderYielded(): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureCompleted('render');
 
     if (supportsUserTimingV3) {
       markAndClear('--render-yield');
@@ -361,7 +743,11 @@ export function createProfilingHooks({
   }
 
   function markRenderStopped(): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    recordReactMeasureCompleted('render');
 
     if (supportsUserTimingV3) {
       markAndClear('--render-stop');
@@ -369,7 +755,18 @@ export function createProfilingHooks({
   }
 
   function markRenderScheduled(lane: Lane): void {
-    // TODO (timeline) Record data in-memory.
+    if (!isProfiling) {
+      return;
+    }
+
+    if (currentTimelineData) {
+      currentTimelineData.schedulingEvents.push({
+        lanes: laneToLanesArray(lane),
+        timestamp: getRelativeTime(),
+        type: 'schedule-render',
+        warning: null,
+      });
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(`--schedule-render-${lane}`);
@@ -377,9 +774,21 @@ export function createProfilingHooks({
   }
 
   function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
+    if (!isProfiling) {
+      return;
+    }
+
     const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
     // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
+    if (currentTimelineData) {
+      currentTimelineData.schedulingEvents.push({
+        componentName,
+        lanes: laneToLanesArray(lane),
+        timestamp: getRelativeTime(),
+        type: 'schedule-force-update',
+        warning: null,
+      });
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(`--schedule-forced-update-${lane}-${componentName}`);
@@ -387,9 +796,21 @@ export function createProfilingHooks({
   }
 
   function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
+    if (!isProfiling) {
+      return;
+    }
+
     const componentName = getDisplayNameForFiber(fiber) || 'Unknown';
     // TODO (timeline) Record and cache component stack
-    // TODO (timeline) Record data in-memory.
+    if (currentTimelineData) {
+      currentTimelineData.schedulingEvents.push({
+        componentName,
+        lanes: laneToLanesArray(lane),
+        timestamp: getRelativeTime(),
+        type: 'schedule-state-update',
+        warning: null,
+      });
+    }
 
     if (supportsUserTimingV3) {
       markAndClear(`--schedule-state-update-${lane}-${componentName}`);
@@ -400,17 +821,69 @@ export function createProfilingHooks({
     if (isProfiling !== value) {
       isProfiling = value;
 
-      if (supportsUserTimingV3) {
-        if (isProfiling) {
-          // TODO (timeline)
-          // Some metadata only needs to be logged once per session.
-          // Store it at the start of the session.
+      if (isProfiling) {
+        const internalModuleSourceToRanges = new Map();
+
+        if (supportsUserTimingV3) {
+          const ranges = getInternalModuleRanges();
+          if (ranges) {
+            for (let i = 0; i < ranges.length; i++) {
+              const range = ranges[i];
+              if (isArray(range) && range.length === 2) {
+                const [startStackFrame, stopStackFrame] = ranges[i];
+
+                markAndClear(
+                  `--react-internal-module-start-${startStackFrame}`,
+                );
+                markAndClear(`--react-internal-module-stop-${stopStackFrame}`);
+              }
+            }
+          }
         }
+
+        const laneToReactMeasureMap = new Map();
+        let lane = 1;
+        for (let index = 0; index < REACT_TOTAL_NUM_LANES; index++) {
+          laneToReactMeasureMap.set(lane, []);
+          lane *= 2;
+        }
+
+        currentBatchUID = 0;
+        currentReactComponentMeasure = null;
+        currentReactMeasuresStack = [];
+        currentTimelineData = {
+          // Session wide metadata; only collected once.
+          internalModuleSourceToRanges,
+          laneToLabelMap: laneToLabelMap || new Map(),
+          reactVersion,
+
+          // Data logged by React during profiling session.
+          componentMeasures: [],
+          schedulingEvents: [],
+          suspenseEvents: [],
+          thrownErrors: [],
+
+          // Data inferred based on what React logs.
+          batchUIDToMeasuresMap: new Map(),
+          duration: 0,
+          laneToReactMeasureMap,
+          startTime: 0,
+
+          // Data only available in Chrome profiles.
+          flamechart: [],
+          nativeEvents: [],
+          networkMeasures: [],
+          otherUserTimingMarks: [],
+          snapshots: [],
+          snapshotHeight: 0,
+        };
+        nextRenderShouldStartNewBatch = true;
       }
     }
   }
 
   return {
+    getTimelineData,
     profilingHooks: {
       markCommitStarted,
       markCommitStopped,

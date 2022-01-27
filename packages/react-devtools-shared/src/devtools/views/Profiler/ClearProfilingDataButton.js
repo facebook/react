@@ -21,21 +21,23 @@ export default function ClearProfilingDataButton() {
   const {file, setFile} = useContext(TimelineContext);
   const {profilerStore} = store;
 
-  const doesHaveLegacyData = didRecordCommits;
-  const doesHaveTimelineData = file !== null;
+  const doesHaveInMemoryData = didRecordCommits;
+  const doesHaveUserTimingData = file !== null;
 
   const clear = () => {
-    if (doesHaveLegacyData) {
+    if (doesHaveInMemoryData) {
       profilerStore.clear();
     }
-    if (doesHaveTimelineData) {
+    if (doesHaveUserTimingData) {
       setFile(null);
     }
   };
 
   return (
     <Button
-      disabled={isProfiling || !(doesHaveLegacyData || doesHaveTimelineData)}
+      disabled={
+        isProfiling || !(doesHaveInMemoryData || doesHaveUserTimingData)
+      }
       onClick={clear}
       title="Clear profiling data">
       <ButtonIcon type="clear" />

@@ -19,7 +19,6 @@ import {StoreContext} from '../context';
 
 import type {ProfilingDataFrontend} from './types';
 
-// TODO (timeline) Should this be its own context?
 export type TabID = 'flame-chart' | 'ranked-chart' | 'timeline';
 
 export type Context = {|

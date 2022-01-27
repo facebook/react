@@ -19,10 +19,11 @@ import {
   useState,
 } from 'react';
 import {SettingsContext} from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
+import {ProfilerContext} from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
 import NoProfilingData from 'react-devtools-shared/src/devtools/views/Profiler/NoProfilingData';
+import RecordingInProgress from 'react-devtools-shared/src/devtools/views/Profiler/RecordingInProgress';
 import {updateColorsToMatchTheme} from './content-views/constants';
 import {TimelineContext} from './TimelineContext';
-import ImportButton from './ImportButton';
 import CanvasPage from './CanvasPage';
 import {importFile} from './timelineCache';
 import TimelineSearchInput from './TimelineSearchInput';
@@ -32,9 +33,14 @@ import {TimelineSearchContextController} from './TimelineSearchContext';
 import styles from './Timeline.css';
 
 export function Timeline(_: {||}) {
-  const {file, isTimelineSupported, setFile, viewState} = useContext(
-    TimelineContext,
-  );
+  const {
+    file,
+    inMemoryTimelineData,
+    isTimelineSupported,
+    setFile,
+    viewState,
+  } = useContext(TimelineContext);
+  const {didRecordCommits, isProfiling} = useContext(ProfilerContext);
 
   const ref = useRef(null);
 
@@ -63,22 +69,43 @@ export function Timeline(_: {||}) {
     };
   }, [deferredTheme]);
 
+  let content = null;
+  if (isProfiling) {
+    content = <RecordingInProgress />;
+  } else if (inMemoryTimelineData && inMemoryTimelineData.length > 0) {
+    // TODO (timeline) Support multiple renderers.
+    const timelineData = inMemoryTimelineData[0];
+
+    content = (
+      <TimelineSearchContextController
+        profilerData={timelineData}
+        viewState={viewState}>
+        <TimelineSearchInput />
+        <CanvasPage profilerData={timelineData} viewState={viewState} />
+      </TimelineSearchContextController>
+    );
+  } else if (file) {
+    content = (
+      <Suspense fallback={<ProcessingData />}>
+        <FileLoader
+          file={file}
+          key={key}
+          onFileSelect={setFile}
+          viewState={viewState}
+        />
+      </Suspense>
+    );
+  } else if (didRecordCommits) {
+    content = <NoTimelineData />;
+  } else if (isTimelineSupported) {
+    content = <NoProfilingData />;
+  } else {
+    content = <TimelineNotSupported />;
+  }
+
   return (
     <div className={styles.Content} ref={ref}>
-      {file ? (
-        <Suspense fallback={<ProcessingData />}>
-          <FileLoader
-            file={file}
-            key={key}
-            onFileSelect={setFile}
-            viewState={viewState}
-          />
-        </Suspense>
-      ) : isTimelineSupported ? (
-        <NoProfilingData />
-      ) : (
-        <TimelineNotSupported />
-      )}
+      {content}
     </div>
   );
 }
@@ -99,9 +126,15 @@ const CouldNotLoadProfile = ({error, onFileSelect}) => (
       </div>
     )}
     <div className={styles.Row}>
-      Try importing
-      <ImportButton onFileSelect={onFileSelect} />
-      another Chrome performance profile.
+      Try importing another Chrome performance profile.
+    </div>
+  </div>
+);
+
+const NoTimelineData = () => (
+  <div className={styles.EmptyStateContainer}>
+    <div className={styles.Row}>
+      This current profile does not contain timeline data.
     </div>
   </div>
 );

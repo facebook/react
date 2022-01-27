@@ -71,6 +71,9 @@ module.exports = Object.assign({}, baseConfig, {
       '../../packages/react-devtools-shared/src/__tests__/__serializers__/inspectedElementSerializer.js'
     ),
     require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/__serializers__/profilingSerializer.js'
+    ),
+    require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/__serializers__/storeSerializer.js'
     ),
     require.resolve(

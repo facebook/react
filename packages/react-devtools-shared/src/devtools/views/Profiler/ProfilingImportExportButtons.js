@@ -20,15 +20,15 @@ import {
 } from './utils';
 import {downloadFile} from '../utils';
 import {TimelineContext} from 'react-devtools-timeline/src/TimelineContext';
+import isArray from 'shared/isArray';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 import styles from './ProfilingImportExportButtons.css';
 
 import type {ProfilingDataExport} from './types';
 
 export default function ProfilingImportExportButtons() {
-  const {isProfiling, profilingData, rootID, selectedTabID} = useContext(
-    ProfilerContext,
-  );
+  const {isProfiling, profilingData, rootID} = useContext(ProfilerContext);
   const {setFile} = useContext(TimelineContext);
   const store = useContext(StoreContext);
   const {profilerStore} = store;
@@ -37,6 +37,8 @@ export default function ProfilingImportExportButtons() {
   const downloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
+
+  const doesHaveInMemoryData = profilerStore.didRecordCommits;
 
   const downloadData = useCallback(() => {
     if (rootID === null) {
@@ -74,45 +76,54 @@ export default function ProfilingImportExportButtons() {
     }
   }, []);
 
-  const importProfilerData = useCallback(() => {
-    const input = inputRef.current;
-    if (input !== null && input.files.length > 0) {
-      const fileReader = new FileReader();
-      fileReader.addEventListener('load', () => {
-        try {
-          const raw = ((fileReader.result: any): string);
-          const profilingDataExport = ((JSON.parse(
-            raw,
-          ): any): ProfilingDataExport);
-          profilerStore.profilingData = prepareProfilingDataFrontendFromExport(
-            profilingDataExport,
-          );
-        } catch (error) {
-          modalDialogDispatch({
-            id: 'ProfilingImportExportButtons',
-            type: 'SHOW',
-            title: 'Import failed',
-            content: (
-              <Fragment>
-                <div>The profiling data you selected cannot be imported.</div>
-                {error !== null && (
-                  <div className={styles.ErrorMessage}>{error.message}</div>
-                )}
-              </Fragment>
-            ),
-          });
-        }
-      });
-      // TODO (profiling) Handle fileReader errors.
-      fileReader.readAsText(input.files[0]);
-    }
-  }, [modalDialogDispatch, profilerStore]);
-
-  const importTimelineDataWrapper = event => {
+  // TODO (profiling) We should probably use a transition for this and suspend while loading the file.
+  // Local files load so fast it's probably not very noticeable though.
+  const handleChange = () => {
     const input = inputRef.current;
     if (input !== null && input.files.length > 0) {
       const file = input.files[0];
-      setFile(file);
+
+      // TODO (profiling) Handle fileReader errors.
+      const fileReader = new FileReader();
+      fileReader.addEventListener('load', () => {
+        const raw = ((fileReader.result: any): string);
+        const json = JSON.parse(raw);
+
+        if (!isArray(json) && hasOwnProperty.call(json, 'version')) {
+          // This looks like React profiling data.
+          // But first, clear any User Timing marks; we should only have one type open at a time.
+          setFile(null);
+
+          try {
+            const profilingDataExport = ((json: any): ProfilingDataExport);
+            profilerStore.profilingData = prepareProfilingDataFrontendFromExport(
+              profilingDataExport,
+            );
+          } catch (error) {
+            modalDialogDispatch({
+              id: 'ProfilingImportExportButtons',
+              type: 'SHOW',
+              title: 'Import failed',
+              content: (
+                <Fragment>
+                  <div>The profiling data you selected cannot be imported.</div>
+                  {error !== null && (
+                    <div className={styles.ErrorMessage}>{error.message}</div>
+                  )}
+                </Fragment>
+              ),
+            });
+          }
+        } else {
+          // Otherwise let's assume this is Trace Event data and pass it to the Timeline preprocessor.
+          // But first, clear React profiling data; we should only have one type open at a time.
+          profilerStore.clear();
+
+          // TODO (timeline) We shouldn't need to re-open the File but we'll need to refactor to avoid this.
+          setFile(file);
+        }
+      });
+      fileReader.readAsText(file);
     }
   };
 
@@ -124,11 +135,7 @@ export default function ProfilingImportExportButtons() {
         className={styles.Input}
         type="file"
         accept=".json"
-        onChange={
-          selectedTabID === 'timeline'
-            ? importTimelineDataWrapper
-            : importProfilerData
-        }
+        onChange={handleChange}
         tabIndex={-1}
       />
       <a ref={downloadRef} className={styles.Input} />
@@ -139,11 +146,7 @@ export default function ProfilingImportExportButtons() {
         <ButtonIcon type="import" />
       </Button>
       <Button
-        disabled={
-          isProfiling ||
-          !profilerStore.didRecordCommits ||
-          selectedTabID === 'timeline'
-        }
+        disabled={isProfiling || !doesHaveInMemoryData}
         onClick={downloadData}
         title="Save profile...">
         <ButtonIcon type="export" />

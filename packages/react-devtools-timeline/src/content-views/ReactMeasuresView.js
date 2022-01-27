@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactLane, ReactMeasure, ReactProfilerData} from '../types';
+import type {ReactLane, ReactMeasure, TimelineData} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -41,12 +41,12 @@ const MAX_ROWS_TO_SHOW_INITIALLY = 5;
 export class ReactMeasuresView extends View {
   _intrinsicSize: IntrinsicSize;
   _lanesToRender: ReactLane[];
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
   _hoveredMeasure: ReactMeasure | null = null;
 
   onHover: ((measure: ReactMeasure | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
     this._profilerData = profilerData;
     this._performPreflightComputations();

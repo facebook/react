@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ThrownError, ReactProfilerData} from '../types';
+import type {ThrownError, TimelineData} from '../types';
 import type {
   Interaction,
   MouseMoveInteraction,
@@ -40,12 +40,12 @@ const EVENT_ROW_HEIGHT_FIXED =
   TOP_ROW_PADDING + REACT_EVENT_DIAMETER + TOP_ROW_PADDING;
 
 export class ThrownErrorsView extends View {
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
   _intrinsicSize: Size;
   _hoveredEvent: ThrownError | null = null;
   onHover: ((event: ThrownError | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
     this._profilerData = profilerData;
 
