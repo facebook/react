@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Snapshot, ReactProfilerData} from '../types';
+import type {Snapshot, TimelineData} from '../types';
 import type {
   Interaction,
   Point,
@@ -31,11 +31,11 @@ type OnHover = (node: Snapshot | null) => void;
 export class SnapshotsView extends View {
   _hoverLocation: Point | null = null;
   _intrinsicSize: Size;
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
 
   onHover: OnHover | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
 
     this._intrinsicSize = {

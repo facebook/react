@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  ReactComponentMeasure,
-  ReactProfilerData,
-  ViewState,
-} from '../types';
+import type {ReactComponentMeasure, TimelineData, ViewState} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -44,7 +40,7 @@ export class ComponentMeasuresView extends View {
   _cachedSearchRegExp: RegExp | null = null;
   _hoveredComponentMeasure: ReactComponentMeasure | null = null;
   _intrinsicSize: IntrinsicSize;
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
   _viewState: ViewState;
 
   onHover: ((event: ReactComponentMeasure | null) => void) | null = null;
@@ -52,7 +48,7 @@ export class ComponentMeasuresView extends View {
   constructor(
     surface: Surface,
     frame: Rect,
-    profilerData: ReactProfilerData,
+    profilerData: TimelineData,
     viewState: ViewState,
   ) {
     super(surface, frame);

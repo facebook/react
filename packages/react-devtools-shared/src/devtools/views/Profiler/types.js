@@ -9,6 +9,10 @@
 
 import type {ElementType} from 'react-devtools-shared/src/types';
 import type {SerializedElement} from '../Components/types';
+import type {
+  TimelineData,
+  TimelineDataExport,
+} from 'react-devtools-timeline/src/types';
 
 export type CommitTreeNode = {|
   id: number,
@@ -103,8 +107,15 @@ export type ProfilingDataForRootFrontend = {|
 
 // Combination of profiling data collected by the renderer interface (backend) and Store (frontend).
 export type ProfilingDataFrontend = {|
-  // Profiling data per root.
+  // Legacy profiling data is per renderer + root.
   dataForRoots: Map<number, ProfilingDataForRootFrontend>,
+
+  // Timeline data is per rederer.
+  timelineData: Array<TimelineData>,
+
+  // Some functionality should be disabled for imported data.
+  // e.g. DevTools should not try to sync selection between Components and Profiler tabs,
+  // even if there are Fibers with the same IDs.
   imported: boolean,
 |};
 
@@ -135,5 +146,11 @@ export type ProfilingDataForRootExport = {|
 // Serializable version of ProfilingDataFrontend data.
 export type ProfilingDataExport = {|
   version: 5,
+
+  // Legacy profiling data is per renderer + root.
   dataForRoots: Array<ProfilingDataForRootExport>,
+
+  // Timeline data is per rederer.
+  // Note that old exported profiles won't contain this key.
+  timelineData?: Array<TimelineDataExport>,
 |};

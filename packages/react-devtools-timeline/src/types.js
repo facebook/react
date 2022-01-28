@@ -68,7 +68,6 @@ export type SuspenseEvent = {|
   +phase: Phase | null,
   promiseName: string | null,
   resolution: 'rejected' | 'resolved' | 'unresolved',
-  resuspendTimestamps: Array<number> | null,
   +type: 'suspense',
 |};
 
@@ -196,14 +195,38 @@ export type InternalModuleSourceToRanges = Map<
   Array<[ErrorStackFrame, ErrorStackFrame]>,
 >;
 
-export type ReactProfilerData = {|
+export type LaneToLabelMap = Map<ReactLane, string>;
+
+export type TimelineData = {|
   batchUIDToMeasuresMap: Map<BatchUID, ReactMeasure[]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
   internalModuleSourceToRanges: InternalModuleSourceToRanges,
-  laneToLabelMap: Map<ReactLane, string>,
+  laneToLabelMap: LaneToLabelMap,
   laneToReactMeasureMap: Map<ReactLane, ReactMeasure[]>,
+  nativeEvents: NativeEvent[],
+  networkMeasures: NetworkMeasure[],
+  otherUserTimingMarks: UserTimingMark[],
+  reactVersion: string | null,
+  schedulingEvents: SchedulingEvent[],
+  snapshots: Snapshot[],
+  snapshotHeight: number,
+  startTime: number,
+  suspenseEvents: SuspenseEvent[],
+  thrownErrors: ThrownError[],
+|};
+
+export type TimelineDataExport = {|
+  batchUIDToMeasuresKeyValueArray: Array<[BatchUID, ReactMeasure[]]>,
+  componentMeasures: ReactComponentMeasure[],
+  duration: number,
+  flamechart: Flamechart,
+  internalModuleSourceToRanges: Array<
+    [string, Array<[ErrorStackFrame, ErrorStackFrame]>],
+  >,
+  laneToLabelKeyValueArray: Array<[ReactLane, string]>,
+  laneToReactMeasureKeyValueArray: Array<[ReactLane, ReactMeasure[]]>,
   nativeEvents: NativeEvent[],
   networkMeasures: NetworkMeasure[],
   otherUserTimingMarks: UserTimingMark[],

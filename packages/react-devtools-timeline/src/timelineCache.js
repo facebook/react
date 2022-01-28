@@ -8,7 +8,7 @@
  */
 
 import type {Wakeable} from 'shared/ReactTypes';
-import type {ReactProfilerData} from './types';
+import type {TimelineData} from './types';
 
 import {importFile as importFileWorker} from './import-worker';
 
@@ -36,10 +36,7 @@ type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 // This is intentionally a module-level Map, rather than a React-managed one.
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // Profiler file contents are static anyway.
-const fileNameToProfilerDataMap: Map<
-  string,
-  Record<ReactProfilerData>,
-> = new Map();
+const fileNameToProfilerDataMap: Map<string, Record<TimelineData>> = new Map();
 
 function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   if (record.status === Resolved) {
@@ -53,7 +50,7 @@ function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   }
 }
 
-export function importFile(file: File): ReactProfilerData | Error {
+export function importFile(file: File): TimelineData | Error {
   const fileName = file.name;
   let record = fileNameToProfilerDataMap.get(fileName);
 
@@ -74,7 +71,7 @@ export function importFile(file: File): ReactProfilerData | Error {
       callbacks.clear();
     };
 
-    const newRecord: Record<ReactProfilerData> = (record = {
+    const newRecord: Record<TimelineData> = (record = {
       status: Pending,
       value: wakeable,
     });
@@ -82,7 +79,7 @@ export function importFile(file: File): ReactProfilerData | Error {
     importFileWorker(file).then(data => {
       switch (data.status) {
         case 'SUCCESS':
-          const resolvedRecord = ((newRecord: any): ResolvedRecord<ReactProfilerData>);
+          const resolvedRecord = ((newRecord: any): ResolvedRecord<TimelineData>);
           resolvedRecord.status = Resolved;
           resolvedRecord.value = data.processedData;
           break;

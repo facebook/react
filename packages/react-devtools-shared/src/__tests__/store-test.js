@@ -915,17 +915,17 @@ describe('Store', () => {
     const containerA = document.createElement('div');
     const containerB = document.createElement('div');
 
-    expect(store.supportsProfiling).toBe(false);
+    expect(store.rootSupportsBasicProfiling).toBe(false);
 
     act(() => legacyRender(<Component />, containerA));
-    expect(store.supportsProfiling).toBe(true);
+    expect(store.rootSupportsBasicProfiling).toBe(true);
 
     act(() => legacyRender(<Component />, containerB));
     act(() => ReactDOM.unmountComponentAtNode(containerA));
-    expect(store.supportsProfiling).toBe(true);
+    expect(store.rootSupportsBasicProfiling).toBe(true);
 
     act(() => ReactDOM.unmountComponentAtNode(containerB));
-    expect(store.supportsProfiling).toBe(false);
+    expect(store.rootSupportsBasicProfiling).toBe(false);
   });
 
   it('should properly serialize non-string key values', () => {

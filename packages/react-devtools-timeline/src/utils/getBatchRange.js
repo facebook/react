@@ -13,12 +13,12 @@ import type {
   BatchUID,
   Milliseconds,
   ReactMeasure,
-  ReactProfilerData,
+  TimelineData,
 } from '../types';
 
 function unmemoizedGetBatchRange(
   batchUID: BatchUID,
-  data: ReactProfilerData,
+  data: TimelineData,
   minStartTime?: number = 0,
 ): [Milliseconds, Milliseconds] {
   const measures = data.batchUIDToMeasuresMap.get(batchUID);

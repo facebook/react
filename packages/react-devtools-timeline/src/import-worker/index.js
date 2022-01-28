@@ -13,7 +13,7 @@
 import * as importFileModule from './importFile';
 import WorkerizedImportFile from './importFile.worker';
 
-import type {ReactProfilerData} from '../types';
+import type {TimelineData} from '../types';
 
 type ImportFileModule = typeof importFileModule;
 
@@ -22,7 +22,7 @@ const workerizedImportFile: ImportFileModule = window.Worker
   : importFileModule;
 
 export type ImportWorkerOutputData =
-  | {|status: 'SUCCESS', processedData: ReactProfilerData|}
+  | {|status: 'SUCCESS', processedData: TimelineData|}
   | {|status: 'INVALID_PROFILE_ERROR', error: Error|}
   | {|status: 'UNEXPECTED_ERROR', error: Error|};
 

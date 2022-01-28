@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {NativeEvent, ReactProfilerData} from '../types';
+import type {NativeEvent, TimelineData} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -40,11 +40,11 @@ export class NativeEventsView extends View {
   _hoveredEvent: NativeEvent | null = null;
   _intrinsicSize: IntrinsicSize;
   _maxDepth: number = 0;
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
 
   onHover: ((event: NativeEvent | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
 
     this._profilerData = profilerData;

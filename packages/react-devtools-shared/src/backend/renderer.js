@@ -47,6 +47,8 @@ import {
 } from './utils';
 import {
   __DEBUG__,
+  PROFILING_FLAG_BASIC_SUPPORT,
+  PROFILING_FLAG_TIMELINE_SUPPORT,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
@@ -94,6 +96,7 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import {getStyleXData} from './StyleX/utils';
 import {createProfilingHooks} from './profilingHooks';
 
+import type {GetTimelineData, ToggleProfilingStatus} from './profilingHooks';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
@@ -627,14 +630,22 @@ export function attach(
     };
   }
 
+  let getTimelineData: null | GetTimelineData = null;
+  let toggleProfilingStatus: null | ToggleProfilingStatus = null;
   if (typeof injectProfilingHooks === 'function') {
-    injectProfilingHooks(
-      createProfilingHooks({
-        getDisplayNameForFiber,
-        getLaneLabelMap,
-        reactVersion: version,
-      }),
-    );
+    const response = createProfilingHooks({
+      getDisplayNameForFiber,
+      getIsProfiling: () => isProfiling,
+      getLaneLabelMap,
+      reactVersion: version,
+    });
+
+    // Pass the Profiling hooks to the reconciler for it to call during render.
+    injectProfilingHooks(response.profilingHooks);
+
+    // Hang onto this toggle so we can notify the external methods of profiling status changes.
+    getTimelineData = response.getTimelineData;
+    toggleProfilingStatus = response.toggleProfilingStatus;
   }
 
   // Tracks Fibers with recently changed number of error/warning messages.
@@ -1910,12 +1921,22 @@ export function attach(
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
     const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
 
+    // Adding a new field here would require a bridge protocol version bump (a backwads breaking change).
+    // Instead let's re-purpose a pre-existing field to carry more information.
+    let profilingFlags = 0;
+    if (isProfilingSupported) {
+      profilingFlags = PROFILING_FLAG_BASIC_SUPPORT;
+      if (typeof injectProfilingHooks === 'function') {
+        profilingFlags |= PROFILING_FLAG_TIMELINE_SUPPORT;
+      }
+    }
+
     if (isRoot) {
       pushOperation(TREE_OPERATION_ADD);
       pushOperation(id);
       pushOperation(ElementTypeRoot);
       pushOperation((fiber.mode & StrictModeBits) !== 0 ? 1 : 0);
-      pushOperation(isProfilingSupported ? 1 : 0);
+      pushOperation(profilingFlags);
       pushOperation(StrictModeBits !== 0 ? 1 : 0);
       pushOperation(hasOwnerMetadata ? 1 : 0);
 
@@ -3959,9 +3980,43 @@ export function attach(
       },
     );
 
+    let timelineData = null;
+    if (typeof getTimelineData === 'function') {
+      const currentTimelineData = getTimelineData();
+      if (currentTimelineData) {
+        const {
+          batchUIDToMeasuresMap,
+          internalModuleSourceToRanges,
+          laneToLabelMap,
+          laneToReactMeasureMap,
+          ...rest
+        } = currentTimelineData;
+
+        timelineData = {
+          ...rest,
+
+          // Most of the data is safe to parse as-is,
+          // but we need to convert the nested Arrays back to Maps.
+          // Most of the data is safe to serialize as-is,
+          // but we need to convert the Maps to nested Arrays.
+          batchUIDToMeasuresKeyValueArray: Array.from(
+            batchUIDToMeasuresMap.entries(),
+          ),
+          internalModuleSourceToRanges: Array.from(
+            internalModuleSourceToRanges.entries(),
+          ),
+          laneToLabelKeyValueArray: Array.from(laneToLabelMap.entries()),
+          laneToReactMeasureKeyValueArray: Array.from(
+            laneToReactMeasureMap.entries(),
+          ),
+        };
+      }
+    }
+
     return {
       dataForRoots,
       rendererID,
+      timelineData,
     };
   }
 
@@ -3999,11 +4054,19 @@ export function attach(
     isProfiling = true;
     profilingStartTime = getCurrentTime();
     rootToCommitProfilingMetadataMap = new Map();
+
+    if (toggleProfilingStatus !== null) {
+      toggleProfilingStatus(true);
+    }
   }
 
   function stopProfiling() {
     isProfiling = false;
     recordChangeDescriptions = false;
+
+    if (toggleProfilingStatus !== null) {
+      toggleProfilingStatus(false);
+    }
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".

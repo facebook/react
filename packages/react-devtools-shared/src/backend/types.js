@@ -16,6 +16,7 @@ import type {
   Plugins,
 } from 'react-devtools-shared/src/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
 
 type BundleType =
   | 0 // PROD
@@ -195,6 +196,7 @@ export type ProfilingDataForRootBackend = {|
 export type ProfilingDataBackend = {|
   dataForRoots: Array<ProfilingDataForRootBackend>,
   rendererID: number,
+  timelineData: TimelineDataExport | null,
 |};
 
 export type PathFrame = {|
