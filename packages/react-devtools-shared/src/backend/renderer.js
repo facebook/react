@@ -3999,12 +3999,16 @@ export function attach(
           // but we need to convert the nested Arrays back to Maps.
           // Most of the data is safe to serialize as-is,
           // but we need to convert the Maps to nested Arrays.
-          batchUIDToMeasuresMap: Array.from(batchUIDToMeasuresMap.entries()),
+          batchUIDToMeasuresKeyValueArray: Array.from(
+            batchUIDToMeasuresMap.entries(),
+          ),
           internalModuleSourceToRanges: Array.from(
             internalModuleSourceToRanges.entries(),
           ),
-          laneToLabelMap: Array.from(laneToLabelMap.entries()),
-          laneToReactMeasureMap: Array.from(laneToReactMeasureMap.entries()),
+          laneToLabelKeyValueArray: Array.from(laneToLabelMap.entries()),
+          laneToReactMeasureKeyValueArray: Array.from(
+            laneToReactMeasureMap.entries(),
+          ),
         };
       }
     }

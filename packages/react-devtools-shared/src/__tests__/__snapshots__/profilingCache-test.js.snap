@@ -838,7 +838,7 @@ Object {
   ],
   "timelineData": Array [
     Object {
-      "batchUIDToMeasuresMap": Array [
+      "batchUIDToMeasuresKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -1086,7 +1086,7 @@ Object {
       "duration": 65,
       "flamechart": Array [],
       "internalModuleSourceToRanges": Array [],
-      "laneToLabelMap": Array [
+      "laneToLabelKeyValueArray": Array [
         Array [
           1,
           "Sync",
@@ -1212,7 +1212,7 @@ Object {
           "Offscreen",
         ],
       ],
-      "laneToReactMeasureMap": Array [
+      "laneToReactMeasureKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -1985,7 +1985,7 @@ Object {
   ],
   "timelineData": Array [
     Object {
-      "batchUIDToMeasuresMap": Array [
+      "batchUIDToMeasuresKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -2173,7 +2173,7 @@ Object {
       "duration": 55,
       "flamechart": Array [],
       "internalModuleSourceToRanges": Array [],
-      "laneToLabelMap": Array [
+      "laneToLabelKeyValueArray": Array [
         Array [
           1,
           "Sync",
@@ -2299,7 +2299,7 @@ Object {
           "Offscreen",
         ],
       ],
-      "laneToReactMeasureMap": Array [
+      "laneToReactMeasureKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -3507,7 +3507,7 @@ Object {
   ],
   "timelineData": Array [
     Object {
-      "batchUIDToMeasuresMap": Array [
+      "batchUIDToMeasuresKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -3793,7 +3793,7 @@ Object {
       "duration": 64,
       "flamechart": Array [],
       "internalModuleSourceToRanges": Array [],
-      "laneToLabelMap": Array [
+      "laneToLabelKeyValueArray": Array [
         Array [
           1,
           "Sync",
@@ -3919,7 +3919,7 @@ Object {
           "Offscreen",
         ],
       ],
-      "laneToReactMeasureMap": Array [
+      "laneToReactMeasureKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -5042,7 +5042,7 @@ Object {
   ],
   "timelineData": Array [
     Object {
-      "batchUIDToMeasuresMap": Array [
+      "batchUIDToMeasuresKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -5295,7 +5295,7 @@ Object {
       "duration": 20,
       "flamechart": Array [],
       "internalModuleSourceToRanges": Array [],
-      "laneToLabelMap": Array [
+      "laneToLabelKeyValueArray": Array [
         Array [
           1,
           "Sync",
@@ -5421,7 +5421,7 @@ Object {
           "Offscreen",
         ],
       ],
-      "laneToReactMeasureMap": Array [
+      "laneToReactMeasureKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -7059,7 +7059,7 @@ Object {
   ],
   "timelineData": Array [
     Object {
-      "batchUIDToMeasuresMap": Array [
+      "batchUIDToMeasuresKeyValueArray": Array [
         Array [
           1,
           Array [
@@ -7394,7 +7394,7 @@ Object {
       "duration": 20,
       "flamechart": Array [],
       "internalModuleSourceToRanges": Array [],
-      "laneToLabelMap": Array [
+      "laneToLabelKeyValueArray": Array [
         Array [
           1,
           "Sync",
@@ -7520,7 +7520,7 @@ Object {
           "Offscreen",
         ],
       ],
-      "laneToReactMeasureMap": Array [
+      "laneToReactMeasureKeyValueArray": Array [
         Array [
           1,
           Array [

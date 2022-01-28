@@ -51,10 +51,10 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
     const {timelineData} = dataBackend;
     if (timelineData != null) {
       const {
-        batchUIDToMeasuresMap,
+        batchUIDToMeasuresKeyValueArray,
         internalModuleSourceToRanges,
-        laneToLabelMap,
-        laneToReactMeasureMap,
+        laneToLabelKeyValueArray,
+        laneToReactMeasureKeyValueArray,
         ...rest
       } = timelineData;
 
@@ -63,10 +63,10 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
 
         // Most of the data is safe to parse as-is,
         // but we need to convert the nested Arrays back to Maps.
-        batchUIDToMeasuresMap: new Map(batchUIDToMeasuresMap),
+        batchUIDToMeasuresMap: new Map(batchUIDToMeasuresKeyValueArray),
         internalModuleSourceToRanges: new Map(internalModuleSourceToRanges),
-        laneToLabelMap: new Map(laneToLabelMap),
-        laneToReactMeasureMap: new Map(laneToReactMeasureMap),
+        laneToLabelMap: new Map(laneToLabelKeyValueArray),
+        laneToReactMeasureMap: new Map(laneToReactMeasureKeyValueArray),
       });
     }
 
@@ -154,13 +154,13 @@ export function prepareProfilingDataFrontendFromExport(
   const timelineData: Array<TimelineData> = profilingDataExport.timelineData
     ? profilingDataExport.timelineData.map(
         ({
-          batchUIDToMeasuresMap,
+          batchUIDToMeasuresKeyValueArray,
           componentMeasures,
           duration,
           flamechart,
           internalModuleSourceToRanges,
-          laneToLabelMap,
-          laneToReactMeasureMap,
+          laneToLabelKeyValueArray,
+          laneToReactMeasureKeyValueArray,
           nativeEvents,
           networkMeasures,
           otherUserTimingMarks,
@@ -174,13 +174,13 @@ export function prepareProfilingDataFrontendFromExport(
         }) => ({
           // Most of the data is safe to parse as-is,
           // but we need to convert the nested Arrays back to Maps.
-          batchUIDToMeasuresMap: new Map(batchUIDToMeasuresMap),
+          batchUIDToMeasuresMap: new Map(batchUIDToMeasuresKeyValueArray),
           componentMeasures,
           duration,
           flamechart,
           internalModuleSourceToRanges: new Map(internalModuleSourceToRanges),
-          laneToLabelMap: new Map(laneToLabelMap),
-          laneToReactMeasureMap: new Map(laneToReactMeasureMap),
+          laneToLabelMap: new Map(laneToLabelKeyValueArray),
+          laneToReactMeasureMap: new Map(laneToReactMeasureKeyValueArray),
           nativeEvents,
           networkMeasures,
           otherUserTimingMarks,
@@ -272,15 +272,19 @@ export function prepareProfilingDataExport(
     }) => ({
       // Most of the data is safe to serialize as-is,
       // but we need to convert the Maps to nested Arrays.
-      batchUIDToMeasuresMap: Array.from(batchUIDToMeasuresMap.entries()),
+      batchUIDToMeasuresKeyValueArray: Array.from(
+        batchUIDToMeasuresMap.entries(),
+      ),
       componentMeasures: componentMeasures,
       duration,
       flamechart,
       internalModuleSourceToRanges: Array.from(
         internalModuleSourceToRanges.entries(),
       ),
-      laneToLabelMap: Array.from(laneToLabelMap.entries()),
-      laneToReactMeasureMap: Array.from(laneToReactMeasureMap.entries()),
+      laneToLabelKeyValueArray: Array.from(laneToLabelMap.entries()),
+      laneToReactMeasureKeyValueArray: Array.from(
+        laneToReactMeasureMap.entries(),
+      ),
       nativeEvents,
       networkMeasures,
       otherUserTimingMarks,

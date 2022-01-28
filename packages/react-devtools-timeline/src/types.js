@@ -218,15 +218,15 @@ export type TimelineData = {|
 |};
 
 export type TimelineDataExport = {|
-  batchUIDToMeasuresMap: Array<[BatchUID, ReactMeasure[]]>,
+  batchUIDToMeasuresKeyValueArray: Array<[BatchUID, ReactMeasure[]]>,
   componentMeasures: ReactComponentMeasure[],
   duration: number,
   flamechart: Flamechart,
   internalModuleSourceToRanges: Array<
     [string, Array<[ErrorStackFrame, ErrorStackFrame]>],
   >,
-  laneToLabelMap: Array<[ReactLane, string]>,
-  laneToReactMeasureMap: Array<[ReactLane, ReactMeasure[]]>,
+  laneToLabelKeyValueArray: Array<[ReactLane, string]>,
+  laneToReactMeasureKeyValueArray: Array<[ReactLane, ReactMeasure[]]>,
   nativeEvents: NativeEvent[],
   networkMeasures: NetworkMeasure[],
   otherUserTimingMarks: UserTimingMark[],
