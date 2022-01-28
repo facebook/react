@@ -37,6 +37,7 @@ import {
 import {
   supportsPersistence,
   getOffscreenContainerProps,
+  logHydrationError,
 } from './ReactFiberHostConfig';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
@@ -507,6 +508,14 @@ function throwException(
           root,
           rootRenderLanes,
         );
+
+        // Even though the user may not be affected by this error, we should
+        // still log it so it can be fixed.
+        // TODO: For now, we only log errors that occur during hydration, but we
+        // probably want to log any error that is recovered from without
+        // triggering an error boundary — or maybe even those, too. Need to
+        // figure out the right API.
+        logHydrationError(root.errorLoggingConfig, value);
         return;
       }
     } else {

@@ -16,7 +16,10 @@ import type {
   MutableSourceVersion,
   MutableSource,
 } from 'shared/ReactTypes';
-import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {
+  SuspenseInstance,
+  ErrorLoggingConfig,
+} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
@@ -246,6 +249,8 @@ type BaseFiberRootProperties = {|
   // the public createRoot object, which the fiber tree does not currently have
   // a reference to.
   identifierPrefix: string,
+
+  errorLoggingConfig: ErrorLoggingConfig,
 |};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

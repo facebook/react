@@ -42,6 +42,8 @@ export type EventResponder = any;
 
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
+export type ErrorLoggingConfig = null;
+
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
@@ -312,5 +314,12 @@ export function getInstanceFromScope(scopeInstance: Object): null | Object {
 }
 
 export function detachDeletedInstance(node: Instance): void {
+  // noop
+}
+
+export function logHydrationError(
+  config: ErrorLoggingConfig,
+  error: mixed,
+): void {
   // noop
 }

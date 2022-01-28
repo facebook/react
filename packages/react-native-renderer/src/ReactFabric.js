@@ -214,6 +214,7 @@ function render(
       false,
       null,
       '',
+      null,
     );
     roots.set(containerTag, root);
   }

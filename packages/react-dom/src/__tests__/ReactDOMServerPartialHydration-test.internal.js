@@ -208,9 +208,17 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onHydrationError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      Scheduler.unstable_flushAll();
+      // Hydration error is logged
+      expect(Scheduler).toFlushAndYield([
+        'An error occurred during hydration. The server HTML was replaced ' +
+          'with client content',
+      ]);
     } else {
       expect(() => {
         Scheduler.unstable_flushAll();
@@ -290,13 +298,24 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     client = true;
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onHydrationError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
     expect(Scheduler).toFlushAndYield([
       'Suspend',
       'Component',
       'Component',
       'Component',
       'Component',
+
+      // Hydration mismatch errors are logged.
+      // TODO: This could get noisy. Is there some way to dedupe?
+      'An error occurred during hydration. The server HTML was replaced with client content',
+      'An error occurred during hydration. The server HTML was replaced with client content',
+      'An error occurred during hydration. The server HTML was replaced with client content',
+      'An error occurred during hydration. The server HTML was replaced with client content',
     ]);
     jest.runAllTimers();
 
@@ -316,12 +335,16 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       'Component',
       'Component',
+
       // second pass as client render
       'Hello',
       'Component',
       'Component',
       'Component',
       'Component',
+
+      // Hydration mismatch is logged
+      'An error occurred during hydration. The server HTML was replaced with client content',
     ]);
 
     // Client rendered - suspense comment nodes removed
@@ -573,9 +596,19 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <App hasB={false} />);
+        ReactDOM.hydrateRoot(container, <App hasB={false} />, {
+          onHydrationError(error) {
+            Scheduler.unstable_yieldValue(error.message);
+          },
+        });
       });
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
+    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      expect(Scheduler).toHaveYielded([
+        'An error occurred during hydration. The server HTML was replaced ' +
+          'with client content',
+      ]);
+    }
 
     expect(container.innerHTML).toContain('<span>A</span>');
     expect(container.innerHTML).not.toContain('<span>B</span>');

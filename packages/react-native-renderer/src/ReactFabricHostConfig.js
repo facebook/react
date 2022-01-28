@@ -95,6 +95,8 @@ export type RendererInspectionConfig = $ReadOnly<{|
   ) => void,
 |}>;
 
+export type ErrorLoggingConfig = null;
+
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
   /**
@@ -523,5 +525,12 @@ export function preparePortalMount(portalInstance: Instance): void {
 }
 
 export function detachDeletedInstance(node: Instance): void {
+  // noop
+}
+
+export function logHydrationError(
+  config: ErrorLoggingConfig,
+  error: mixed,
+): void {
   // noop
 }

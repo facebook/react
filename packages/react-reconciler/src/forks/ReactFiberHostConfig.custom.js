@@ -38,6 +38,7 @@ export opaque type ChildSet = mixed; // eslint-disable-line no-undef
 export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
 export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
 export opaque type RendererInspectionConfig = mixed; // eslint-disable-line no-undef
+export opaque type ErrorLoggingConfig = mixed; // eslint-disable-line no-undef
 export type EventResponder = any;
 
 export const getPublicInstance = $$$hostConfig.getPublicInstance;
@@ -68,6 +69,7 @@ export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
+export const logHydrationError = $$$hostConfig.logHydrationError;
 
 // -------------------
 //      Microtasks

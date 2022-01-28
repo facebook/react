@@ -466,6 +466,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     detachDeletedInstance() {},
+
+    logHydrationError() {
+      // no-op
+    },
   };
 
   const hostConfig = useMutation

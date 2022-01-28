@@ -55,6 +55,8 @@ export type RendererInspectionConfig = $ReadOnly<{|
   ) => void,
 |}>;
 
+export type ErrorLoggingConfig = null;
+
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(UPDATE_SIGNAL);
@@ -511,5 +513,12 @@ export function preparePortalMount(portalInstance: Instance): void {
 }
 
 export function detachDeletedInstance(node: Instance): void {
+  // noop
+}
+
+export function logHydrationError(
+  config: ErrorLoggingConfig,
+  error: mixed,
+): void {
   // noop
 }

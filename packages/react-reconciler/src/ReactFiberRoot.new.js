@@ -9,6 +9,7 @@
 
 import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
+import type {ErrorLoggingConfig} from './ReactFiberHostConfig';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
@@ -30,7 +31,13 @@ import {initializeUpdateQueue} from './ReactUpdateQueue.new';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 import {createCache, retainCache} from './ReactFiberCacheComponent.new';
 
-function FiberRootNode(containerInfo, tag, hydrate, identifierPrefix) {
+function FiberRootNode(
+  containerInfo,
+  tag,
+  hydrate,
+  identifierPrefix,
+  errorLoggingConfig,
+) {
   this.tag = tag;
   this.containerInfo = containerInfo;
   this.pendingChildren = null;
@@ -57,6 +64,7 @@ function FiberRootNode(containerInfo, tag, hydrate, identifierPrefix) {
   this.entanglements = createLaneMap(NoLanes);
 
   this.identifierPrefix = identifierPrefix;
+  this.errorLoggingConfig = errorLoggingConfig;
 
   if (enableCache) {
     this.pooledCache = null;
@@ -103,13 +111,19 @@ export function createFiberRoot(
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
+  // TODO: We have several of these arguments that are conceptually part of the
+  // host config, but because they are passed in at runtime, we have to thread
+  // them through the root constructor. Perhaps we should put them all into a
+  // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
+  errorLoggingConfig: ErrorLoggingConfig,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(
     containerInfo,
     tag,
     hydrate,
     identifierPrefix,
+    errorLoggingConfig,
   ): any);
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;

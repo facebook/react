@@ -1897,9 +1897,15 @@ describe('ReactDOMFizzServer', () => {
       // Hydrate the tree. Child will throw during hydration, but not when it
       // falls back to client rendering.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOM.hydrateRoot(container, <App />, {
+        onHydrationError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
 
-      expect(Scheduler).toFlushAndYield(['Yay!']);
+      // An error logged but instead of surfacing it to the UI, we switched
+      // to client rendering.
+      expect(Scheduler).toFlushAndYield(['Yay!', 'Hydration error']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
@@ -1975,9 +1981,16 @@ describe('ReactDOMFizzServer', () => {
 
       // Hydrate the tree. Child will throw during render.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOM.hydrateRoot(container, <App />, {
+        onHydrationError(error) {
+          // TODO: We logged a hydration error, but the same error ends up
+          // being thrown during the fallback to client rendering, too. Maybe
+          // we should only log if the client render succeeds.
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
 
-      expect(Scheduler).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield(['Oops!']);
       expect(getVisibleChildren(container)).toEqual('Oops!');
     },
   );
@@ -2049,9 +2062,15 @@ describe('ReactDOMFizzServer', () => {
       // Hydrate the tree. Child will throw during hydration, but not when it
       // falls back to client rendering.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOM.hydrateRoot(container, <App />, {
+        onHydrationError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
 
-      expect(Scheduler).toFlushAndYield([]);
+      // An error logged but instead of surfacing it to the UI, we switched
+      // to client rendering.
+      expect(Scheduler).toFlushAndYield(['Hydration error']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
