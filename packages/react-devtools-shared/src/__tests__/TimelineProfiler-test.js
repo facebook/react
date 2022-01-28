@@ -1202,7 +1202,7 @@ describe('Timeline profiler', () => {
         `);
       });
 
-      it('should mark concurrent render without suspends or state updates', () => {
+      it('should mark concurrent transitions without suspends or state updates', () => {
         let updaterFn;
 
         function Example() {
@@ -1264,7 +1264,7 @@ describe('Timeline profiler', () => {
           Array [
             Object {
               "componentName": "Example",
-              "duration": 0,
+              "duration": 10,
               "timestamp": 10,
               "type": "render",
               "warning": null,
@@ -1272,7 +1272,7 @@ describe('Timeline profiler', () => {
             Object {
               "componentName": "Example",
               "duration": 10,
-              "timestamp": 10,
+              "timestamp": 20,
               "type": "render",
               "warning": null,
             },
