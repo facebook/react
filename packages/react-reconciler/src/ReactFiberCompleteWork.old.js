@@ -126,7 +126,7 @@ import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
-  warnUnhydratedNextInstance,
+  warnIfUnhydratedTailNodes,
   popHydrationState,
   resetHydrationState,
   getIsHydrating,
@@ -1035,7 +1035,7 @@ function completeWork(
           (workInProgress.mode & ConcurrentMode) !== NoMode &&
           (workInProgress.flags & DidCapture) === NoFlags
         ) {
-          warnUnhydratedNextInstance(workInProgress);
+          warnIfUnhydratedTailNodes(workInProgress);
           resetHydrationState();
           workInProgress.flags |=
             ForceClientRender | Incomplete | ShouldCapture;
