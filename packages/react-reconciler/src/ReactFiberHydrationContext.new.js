@@ -553,7 +553,7 @@ function popHydrationState(fiber: Fiber): boolean {
   ) {
     let nextInstance = nextHydratableInstance;
     if (nextInstance) {
-      warnDeleteNextHydratableInstance(fiber);
+      warnUnhydratedNextInstance(fiber);
       throwOnHydrationMismatchIfConcurrentMode(fiber);
       while (nextInstance) {
         deleteHydratableInstance(fiber, nextInstance);
@@ -576,7 +576,7 @@ function hasUnhydratedTailNodes() {
   return isHydrating && nextHydratableInstance !== null;
 }
 
-function warnDeleteNextHydratableInstance(fiber: Fiber) {
+function warnUnhydratedNextInstance(fiber: Fiber) {
   if (nextHydratableInstance) {
     warnUnhydratedInstance(fiber, nextHydratableInstance);
   }
@@ -607,6 +607,6 @@ export {
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
-  hasMore,
-  warnDeleteNextHydratableInstance,
+  hasUnhydratedTailNodes,
+  warnUnhydratedNextInstance,
 };
