@@ -26,7 +26,13 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {ChildDeletion, Placement, Hydrating} from './ReactFiberFlags';
+import {
+  ChildDeletion,
+  Placement,
+  Hydrating,
+  NoFlags,
+  DidCapture,
+} from './ReactFiberFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -121,7 +127,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   return true;
 }
 
-function deleteHydratableInstance(
+function warnUnhydratedInstance(
   returnFiber: Fiber,
   instance: HydratableInstance,
 ) {
@@ -151,7 +157,13 @@ function deleteHydratableInstance(
         break;
     }
   }
+}
 
+function deleteHydratableInstance(
+  returnFiber: Fiber,
+  instance: HydratableInstance,
+) {
+  warnUnhydratedInstance(returnFiber, instance);
   const childToDelete = createFiberFromHostInstanceForDeletion();
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
@@ -330,7 +342,8 @@ function tryHydrate(fiber, nextInstance) {
 function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
   if (
     enableClientRenderFallbackOnHydrationMismatch &&
-    (fiber.mode & ConcurrentMode) !== NoMode
+    (fiber.mode & ConcurrentMode) !== NoMode &&
+    (fiber.flags & DidCapture) === NoFlags
   ) {
     throw new Error(
       'An error occurred during hydration. The server HTML was replaced with client content',
@@ -539,12 +552,15 @@ function popHydrationState(fiber: Fiber): boolean {
         !shouldSetTextContent(fiber.type, fiber.memoizedProps)))
   ) {
     let nextInstance = nextHydratableInstance;
-    while (nextInstance) {
-      deleteHydratableInstance(fiber, nextInstance);
-      nextInstance = getNextHydratableSibling(nextInstance);
+    if (nextInstance) {
+      warnDeleteNextHydratableInstance(fiber);
+      throwOnHydrationMismatchIfConcurrentMode(fiber);
+      while (nextInstance) {
+        deleteHydratableInstance(fiber, nextInstance);
+        nextInstance = getNextHydratableSibling(nextInstance);
+      }
     }
   }
-
   popToNextHostParent(fiber);
   if (fiber.tag === SuspenseComponent) {
     nextHydratableInstance = skipPastDehydratedSuspenseInstance(fiber);
@@ -554,6 +570,16 @@ function popHydrationState(fiber: Fiber): boolean {
       : null;
   }
   return true;
+}
+
+function hasUnhydratedTailNodes() {
+  return isHydrating && nextHydratableInstance !== null;
+}
+
+function warnDeleteNextHydratableInstance(fiber: Fiber) {
+  if (nextHydratableInstance) {
+    warnUnhydratedInstance(fiber, nextHydratableInstance);
+  }
 }
 
 function resetHydrationState(): void {
@@ -581,4 +607,6 @@ export {
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
+  hasMore,
+  warnDeleteNextHydratableInstance,
 };
