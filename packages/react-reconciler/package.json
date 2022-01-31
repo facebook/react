@@ -18,6 +18,14 @@
     "cjs/"
   ],
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./index": "./index.js",
+    "./constants": "./constants.js",
+    "./reflection": "./reflection.js",
+    "./package.json": "./package.json",
+    "./*": "./*"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
