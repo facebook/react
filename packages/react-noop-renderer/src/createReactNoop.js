@@ -467,7 +467,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     detachDeletedInstance() {},
 
-    logHydrationError() {
+    logRecoverableError() {
       // no-op
     },
   };

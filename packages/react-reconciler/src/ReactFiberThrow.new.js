@@ -37,7 +37,7 @@ import {
 import {
   supportsPersistence,
   getOffscreenContainerProps,
-  logHydrationError,
+  logRecoverableError,
 } from './ReactFiberHostConfig';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
@@ -515,7 +515,7 @@ function throwException(
         // probably want to log any error that is recovered from without
         // triggering an error boundary — or maybe even those, too. Need to
         // figure out the right API.
-        logHydrationError(root.errorLoggingConfig, value);
+        logRecoverableError(root.errorLoggingConfig, value);
         return;
       }
     } else {
@@ -526,7 +526,7 @@ function throwException(
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
-  renderDidError();
+  renderDidError(value);
 
   value = createCapturedValue(value, sourceFiber);
   let workInProgress = returnFiber;

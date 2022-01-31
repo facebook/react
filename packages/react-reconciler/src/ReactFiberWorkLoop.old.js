@@ -76,6 +76,7 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  logRecoverableError,
 } from './ReactFiberHostConfig';
 
 import {
@@ -296,6 +297,7 @@ let workInProgressRootInterleavedUpdatedLanes: Lanes = NoLanes;
 let workInProgressRootRenderPhaseUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
+let workInProgressRootConcurrentErrors: Array<mixed> | null = null;
 
 // The most recent time we committed a fallback. This lets us ensure a train
 // model where we don't commit new loading states in too quick succession.
@@ -895,6 +897,20 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
   }
 
   const exitStatus = renderRootSync(root, errorRetryLanes);
+  const recoverableErrors = workInProgressRootConcurrentErrors;
+  if (exitStatus !== RootErrored) {
+    // Successfully finished rendering
+    if (recoverableErrors !== null) {
+      // Although we recovered the UI without surfacing an error, we should
+      // still log the errors so they can be fixed.
+      for (let j = 0; j < recoverableErrors.length; j++) {
+        const recoverableError = recoverableErrors[j];
+        logRecoverableError(root.errorLoggingConfig, recoverableError);
+      }
+    }
+  } else {
+    // The UI failed to recover.
+  }
 
   executionContext = prevExecutionContext;
 
@@ -1320,6 +1336,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
   workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
+  workInProgressRootConcurrentErrors = null;
 
   enqueueInterleavedUpdates();
 
@@ -1474,9 +1491,14 @@ export function renderDidSuspendDelayIfPossible(): void {
   }
 }
 
-export function renderDidError() {
+export function renderDidError(error: mixed) {
   if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
+  }
+  if (workInProgressRootConcurrentErrors === null) {
+    workInProgressRootConcurrentErrors = [error];
+  } else {
+    workInProgressRootConcurrentErrors.push(error);
   }
 }
 

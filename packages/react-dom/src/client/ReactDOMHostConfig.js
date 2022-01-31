@@ -379,15 +379,15 @@ export function getCurrentEventPriority(): * {
   return getEventPriority(currentEvent.type);
 }
 
-export function logHydrationError(
+export function logRecoverableError(
   config: ErrorLoggingConfig,
   error: mixed,
 ): void {
-  const onHydrationError = config;
-  if (onHydrationError !== null) {
+  const onRecoverableError = config;
+  if (onRecoverableError !== null) {
     // Schedule a callback to invoke the user-provided logging function.
     scheduleCallback(IdlePriority, () => {
-      onHydrationError(error);
+      onRecoverableError(error);
     });
   } else {
     // Default behavior is to rethrow the error in a separate task. This will
@@ -1094,6 +1094,8 @@ export function didNotFindHydratableSuspenseInstance(
 
 export function errorHydratingContainer(parentContainer: Container): void {
   if (__DEV__) {
+    // TODO: This gets logged by onRecoverableError, too, so we should be
+    // able to remove it.
     console.error(
       'An error occurred during hydration. The server HTML was replaced with client content in <%s>.',
       parentContainer.nodeName.toLowerCase(),

@@ -24,6 +24,7 @@ export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   identifierPrefix?: string,
+  onRecoverableError?: (error: mixed) => void,
   ...
 };
 
@@ -36,7 +37,7 @@ export type HydrateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   identifierPrefix?: string,
-  onHydrationError?: (error: mixed) => void,
+  onRecoverableError?: (error: mixed) => void,
   ...
 };
 
@@ -144,6 +145,7 @@ export function createRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
+  let onRecoverableError = null;
   if (options !== null && options !== undefined) {
     if (__DEV__) {
       if ((options: any).hydrate) {
@@ -164,6 +166,9 @@ export function createRoot(
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
     }
+    if (options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
+    }
   }
 
   const root = createContainer(
@@ -174,7 +179,7 @@ export function createRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
-    null,
+    onRecoverableError,
   );
   markContainerAsRoot(root.current, container);
 
@@ -215,7 +220,7 @@ export function hydrateRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
-  let onHydrationError = null;
+  let onRecoverableError = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -229,8 +234,8 @@ export function hydrateRoot(
     if (options.identifierPrefix !== undefined) {
       identifierPrefix = options.identifierPrefix;
     }
-    if (options.onHydrationError !== undefined) {
-      onHydrationError = options.onHydrationError;
+    if (options.onRecoverableError !== undefined) {
+      onRecoverableError = options.onRecoverableError;
     }
   }
 
@@ -242,7 +247,7 @@ export function hydrateRoot(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
-    onHydrationError,
+    onRecoverableError,
   );
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.

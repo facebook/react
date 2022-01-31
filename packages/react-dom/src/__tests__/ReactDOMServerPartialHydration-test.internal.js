@@ -209,7 +209,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     ReactDOM.hydrateRoot(container, <App />, {
-      onHydrationError(error) {
+      onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
@@ -299,7 +299,7 @@ describe('ReactDOMServerPartialHydration', () => {
     client = true;
 
     ReactDOM.hydrateRoot(container, <App />, {
-      onHydrationError(error) {
+      onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
     });
@@ -597,7 +597,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(() => {
       act(() => {
         ReactDOM.hydrateRoot(container, <App hasB={false} />, {
-          onHydrationError(error) {
+          onRecoverableError(error) {
             Scheduler.unstable_yieldValue(error.message);
           },
         });
@@ -3175,13 +3175,27 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <App />);
+        ReactDOM.hydrateRoot(container, <App />, {
+          onRecoverableError(error) {
+            Scheduler.unstable_yieldValue(
+              'Log recoverable error: ' + error.message,
+            );
+          },
+        });
       });
     }).toErrorDev(
       'Warning: An error occurred during hydration. ' +
         'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
+    expect(Scheduler).toHaveYielded([
+      'Log recoverable error: An error occurred during hydration. The server ' +
+        'HTML was replaced with client content',
+      // TODO: There were multiple mismatches in a single container. Should
+      // we attempt to de-dupe them?
+      'Log recoverable error: An error occurred during hydration. The server ' +
+        'HTML was replaced with client content',
+    ]);
 
     // We show fallback state when mismatch happens at root
     expect(container.innerHTML).toEqual(

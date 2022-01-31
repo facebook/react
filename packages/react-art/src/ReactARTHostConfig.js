@@ -452,6 +452,6 @@ export function detachDeletedInstance(node: Instance): void {
   // noop
 }
 
-export function logHydrationError(config, error) {
+export function logRecoverableError(config, error) {
   // noop
 }
