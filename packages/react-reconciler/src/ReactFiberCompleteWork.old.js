@@ -1032,6 +1032,7 @@ function completeWork(
         if (
           enableClientRenderFallbackOnHydrationMismatch &&
           hasUnhydratedTailNodes() &&
+          (workInProgress.mode & ConcurrentMode) !== NoMode &&
           (workInProgress.flags & DidCapture) === NoFlags
         ) {
           warnUnhydratedNextInstance(workInProgress);
