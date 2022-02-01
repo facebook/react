@@ -51,6 +51,7 @@ export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseAvoidThisFallback = false;
+export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableStrictEffects = false;
