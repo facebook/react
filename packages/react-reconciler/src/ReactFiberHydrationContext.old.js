@@ -339,12 +339,16 @@ function tryHydrate(fiber, nextInstance) {
   }
 }
 
-function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
-  if (
+function shouldClientRenderOnMismatch(fiber: Fiber) {
+  return (
     enableClientRenderFallbackOnHydrationMismatch &&
     (fiber.mode & ConcurrentMode) !== NoMode &&
     (fiber.flags & DidCapture) === NoFlags
-  ) {
+  );
+}
+
+function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
+  if (shouldClientRenderOnMismatch(fiber)) {
     throw new Error(
       'An error occurred during hydration. The server HTML was replaced with client content',
     );
@@ -553,11 +557,14 @@ function popHydrationState(fiber: Fiber): boolean {
   ) {
     let nextInstance = nextHydratableInstance;
     if (nextInstance) {
-      warnIfUnhydratedTailNodes(fiber);
-      throwOnHydrationMismatchIfConcurrentMode(fiber);
-      while (nextInstance) {
-        deleteHydratableInstance(fiber, nextInstance);
-        nextInstance = getNextHydratableSibling(nextInstance);
+      if (shouldClientRenderOnMismatch(fiber)) {
+        warnIfUnhydratedTailNodes(fiber);
+        throwOnHydrationMismatchIfConcurrentMode(fiber);
+      } else {
+        while (nextInstance) {
+          deleteHydratableInstance(fiber, nextInstance);
+          nextInstance = getNextHydratableSibling(nextInstance);
+        }
       }
     }
   }
@@ -577,8 +584,10 @@ function hasUnhydratedTailNodes() {
 }
 
 function warnIfUnhydratedTailNodes(fiber: Fiber) {
-  if (nextHydratableInstance) {
-    warnUnhydratedInstance(fiber, nextHydratableInstance);
+  let nextInstance = nextHydratableInstance;
+  while (nextInstance) {
+    warnUnhydratedInstance(fiber, nextInstance);
+    nextInstance = getNextHydratableSibling(nextInstance);
   }
 }
 
