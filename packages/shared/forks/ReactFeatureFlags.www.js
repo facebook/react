@@ -51,6 +51,7 @@ export const enableUpdaterTracking = __PROFILE__;
 
 export const enableSuspenseLayoutEffectSemantics = true;
 export const enableSuspenseAvoidThisFallback = true;
+export const enableSuspenseAvoidThisFallbackFizz = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler =

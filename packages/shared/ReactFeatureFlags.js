@@ -102,6 +102,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 
 export const enableSuspenseAvoidThisFallback = false;
+export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 
