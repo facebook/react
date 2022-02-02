@@ -32,45 +32,45 @@ function isReactComponent(component: any, name: string) {
   );
 }
 
+// A ClientProxy behaves as a module reference for the Flight
+// runtime (RSC) and as a real component for the Fizz runtime (SSR).
+// Note that this is not used in browser environments.
 export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
   if (!isReactComponent(component, name)) {
-    // This is not a React component, return it as is.
+    // This is not a React component, do not wrap it.
     return component;
   }
 
-  // Use object syntax here to make sure the function name
-  // comes from the meta params for better error stacks.
-  const render = {
-    [name]: (props: any) => createElement(component, props),
-  }[name];
+  const render = (props: any) => createElement(component, props);
+  Object.defineProperty(render, 'name', {value: name});
 
   if (__DEV__) {
     render.displayName = name;
   }
 
-  // React accesses the `render` function directly when encountring this type
+  // Fizz runtime accesses the `render` method directly when encountering a forward_ref
   const componentRef = Object.create(null);
   componentRef.$$typeof = Symbol.for('react.forward_ref');
   componentRef.render = render;
 
-  // This custom type is checked in RSC renderer
-  const rscDescriptor = Object.create(null);
-  rscDescriptor.$$typeof_rsc = Symbol.for('react.module.reference');
-  rscDescriptor.filepath = id;
-  rscDescriptor.name = named ? name : 'default';
+  // Flight runtime will check this custom typeof to decide wether this is a module ref
+  const moduleRef = Object.create(null);
+  moduleRef.$$typeof_rsc = Symbol.for('react.module.reference');
+  moduleRef.filepath = id;
+  moduleRef.name = named ? name : 'default';
 
   if (!globalThis.__COMPONENT_INDEX[id]) {
     // Store a loader function to find components during SSR when consuming RSC
     globalThis.__COMPONENT_INDEX[id] = () =>
-      Promise.resolve({[rscDescriptor.name]: component});
+      Promise.resolve({[moduleRef.name]: component});
   }
 
   return new Proxy(componentRef, {
     get: (target, prop) =>
       // 1. Let React access the element/ref and type in SSR
       (target: any)[prop] ||
-      // 2. Check descriptor properties for RSC requests
-      (rscDescriptor: any)[prop] ||
+      // 2. Check module properties for RSC requests
+      (moduleRef: any)[prop] ||
       // 3. Fallback to custom component properties such as `ImageComponent.Fragment`
       (component: any)[prop],
   });
