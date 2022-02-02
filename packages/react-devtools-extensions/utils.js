@@ -20,7 +20,7 @@ const GITHUB_URL = 'https://github.com/facebook/react';
 
 function getGitCommit() {
   try {
-    return execSync('git show -s --format=%h')
+    return execSync('git show -s --no-show-signature --format=%h')
       .toString()
       .trim();
   } catch (error) {

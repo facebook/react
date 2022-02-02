@@ -54,7 +54,9 @@ Adding a root to the tree requires sending 5 numbers:
 1. add operation constant (`1`)
 1. fiber id
 1. element type constant (`11 === ElementTypeRoot`)
-1. profiling supported flag
+1. root has `StrictMode` enabled
+1. supports profiling flag
+1. supports `StrictMode` flag
 1. owner metadata flag
 
 For example, adding a root fiber with an id of 1:
@@ -63,7 +65,9 @@ For example, adding a root fiber with an id of 1:
   1, // add operation
   1, // fiber id
   11, // ElementTypeRoot
+  1, // this root is StrictMode enabled
   1, // this root's renderer supports profiling
+  1, // this root's renderer supports StrictMode
   1, // this root has owner metadata
 ]
 ```
@@ -175,6 +179,20 @@ Special case of unmounting an entire root (include its descendants). This specia
 ```
 
 This operation has no additional payload because renderer and root ids are already sent at the beginning of every operations payload.
+
+#### Setting the mode for a subtree
+
+This message specifies that a subtree operates under a specific mode (e.g. `StrictMode`).
+
+```js
+[
+  7,   // set subtree mode
+  1,   // subtree root fiber id
+  0b01 // mode bitmask
+]
+```
+
+Modes are constant meaning that the modes a subtree mounts with will never change.
 
 ## Reconstructing the tree
 

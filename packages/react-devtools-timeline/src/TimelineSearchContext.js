@@ -10,14 +10,10 @@
 import * as React from 'react';
 import {createContext, useMemo, useReducer} from 'react';
 
-import type {
-  ReactComponentMeasure,
-  ReactProfilerData,
-  ViewState,
-} from './types';
+import type {ReactComponentMeasure, TimelineData, ViewState} from './types';
 
 type State = {|
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   searchIndex: number,
   searchRegExp: RegExp | null,
   searchResults: Array<ReactComponentMeasure>,
@@ -116,7 +112,7 @@ function reducer(state: State, action: Action): State {
 }
 
 export type Context = {|
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
 
   // Search state
   dispatch: Dispatch,
@@ -131,7 +127,7 @@ TimelineSearchContext.displayName = 'TimelineSearchContext';
 
 type Props = {|
   children: React$Node,
-  profilerData: ReactProfilerData,
+  profilerData: TimelineData,
   viewState: ViewState,
 |};
 

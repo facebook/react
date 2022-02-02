@@ -60,7 +60,7 @@ function hookNamesModuleLoaderFunction() {
   return import('react-devtools-inline/hookNames');
 }
 
-inject('dist/app.js', () => {
+inject('dist/app-index.js', () => {
   initDevTools({
     connect(cb) {
       const root = createRoot(container);

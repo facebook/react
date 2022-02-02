@@ -52,7 +52,7 @@ async function runFlow(renderer, args) {
         fs.unlinkSync(destPath);
         fs.copyFileSync(srcPath, destPath);
         // Set the mtime of the copied file to be same as the original file,
-        // so that the ahove check works.
+        // so that the above check works.
         fs.utimesSync(destPath, srcStat.atime, srcStat.mtime);
       }
     } else {

@@ -114,6 +114,54 @@ describe('Store', () => {
     `);
   });
 
+  describe('StrictMode compliance', () => {
+    it('should mark strict root elements as strict', () => {
+      const App = () => <Component />;
+      const Component = () => null;
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container, {unstable_strictMode: true});
+      act(() => {
+        root.render(<App />);
+      });
+
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(false);
+      expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(false);
+    });
+
+    it('should mark non strict root elements as not strict', () => {
+      const App = () => <Component />;
+      const Component = () => null;
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      act(() => {
+        root.render(<App />);
+      });
+
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(true);
+      expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(true);
+    });
+
+    it('should mark StrictMode subtree elements as strict', () => {
+      const App = () => (
+        <React.StrictMode>
+          <Component />
+        </React.StrictMode>
+      );
+      const Component = () => null;
+
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      act(() => {
+        root.render(<App />);
+      });
+
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(true);
+      expect(store.getElementAtIndex(1).isStrictModeNonCompliant).toBe(false);
+    });
+  });
+
   describe('collapseNodesByDefault:false', () => {
     beforeEach(() => {
       store.collapseNodesByDefault = false;
@@ -867,17 +915,17 @@ describe('Store', () => {
     const containerA = document.createElement('div');
     const containerB = document.createElement('div');
 
-    expect(store.supportsProfiling).toBe(false);
+    expect(store.rootSupportsBasicProfiling).toBe(false);
 
     act(() => legacyRender(<Component />, containerA));
-    expect(store.supportsProfiling).toBe(true);
+    expect(store.rootSupportsBasicProfiling).toBe(true);
 
     act(() => legacyRender(<Component />, containerB));
     act(() => ReactDOM.unmountComponentAtNode(containerA));
-    expect(store.supportsProfiling).toBe(true);
+    expect(store.rootSupportsBasicProfiling).toBe(true);
 
     act(() => ReactDOM.unmountComponentAtNode(containerB));
-    expect(store.supportsProfiling).toBe(false);
+    expect(store.rootSupportsBasicProfiling).toBe(false);
   });
 
   it('should properly serialize non-string key values', () => {

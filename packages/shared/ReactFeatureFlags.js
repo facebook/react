@@ -102,6 +102,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 
 export const enableSuspenseAvoidThisFallback = false;
+export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 
@@ -178,8 +179,6 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 
 export const enableUseRefAccessWarning = false;
 
-export const warnAboutCallbackRefReturningFunction = false;
-
 export const disableSchedulerTimeoutInWorkLoop = false;
 
 export const enableLazyContextPropagation = false;
@@ -194,3 +193,5 @@ export const consoleManagedByDevToolsDuringStrictMode = true;
 
 // Only enabled in www builds
 export const enableUseMutableSource = false;
+
+export const enableTransitionTracing = false;

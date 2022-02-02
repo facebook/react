@@ -101,7 +101,7 @@ import {
   warnAboutMultipleRenderersDEV,
 } from './ReactMutableSource.old';
 import {logStateUpdateScheduled} from './DebugTracing';
-import {markStateUpdateScheduled} from './SchedulingProfiler';
+import {markStateUpdateScheduled} from './ReactFiberDevToolsHook.old';
 import {createCache, CacheContext} from './ReactFiberCacheComponent.old';
 import {
   createUpdate as createLegacyQueueUpdate,
@@ -2471,7 +2471,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
-  useSyncExternalStore: mountSyncExternalStore,
+  useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
 
   unstable_isNewReconciler: enableNewReconciler,

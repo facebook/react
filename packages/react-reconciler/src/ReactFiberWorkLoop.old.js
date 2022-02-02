@@ -65,20 +65,6 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
-import {
-  markCommitStarted,
-  markCommitStopped,
-  markComponentRenderStopped,
-  markComponentSuspended,
-  markComponentErrored,
-  markLayoutEffectsStarted,
-  markLayoutEffectsStopped,
-  markPassiveEffectsStarted,
-  markPassiveEffectsStopped,
-  markRenderStarted,
-  markRenderYielded,
-  markRenderStopped,
-} from './SchedulingProfiler';
 
 import {
   resetAfterCommit,
@@ -86,7 +72,6 @@ import {
   cancelTimeout,
   noTimeout,
   afterActiveInstanceBlur,
-  clearContainer,
   getCurrentEventPriority,
   supportsMicrotasks,
   errorHydratingContainer,
@@ -225,9 +210,21 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {
+  isDevToolsPresent,
+  markCommitStarted,
+  markCommitStopped,
+  markComponentRenderStopped,
+  markComponentSuspended,
+  markComponentErrored,
+  markLayoutEffectsStarted,
+  markLayoutEffectsStopped,
+  markPassiveEffectsStarted,
+  markPassiveEffectsStopped,
+  markRenderStarted,
+  markRenderYielded,
+  markRenderStopped,
   onCommitRoot as onCommitRootDevTools,
   onPostCommitRoot as onPostCommitRootDevTools,
-  isDevToolsPresent,
 } from './ReactFiberDevToolsHook.old';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 import {releaseCache} from './ReactFiberCacheComponent.old';
@@ -711,7 +708,17 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
         // of `act`.
         ReactCurrentActQueue.current.push(flushSyncCallbacks);
       } else {
-        scheduleMicrotask(flushSyncCallbacks);
+        scheduleMicrotask(() => {
+          // In Safari, appending an iframe forces microtasks to run.
+          // https://github.com/facebook/react/issues/22459
+          // We don't support running callbacks in the middle of render
+          // or commit so we need to check against that.
+          if (executionContext === NoContext) {
+            // It's only safe to do this conditionally because we always
+            // check for pending work before we exit the task.
+            flushSyncCallbacks();
+          }
+        });
       }
     } else {
       // Flush the queue in an Immediate task.
@@ -885,7 +892,6 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
     if (__DEV__) {
       errorHydratingContainer(root.containerInfo);
     }
-    clearContainer(root.containerInfo);
   }
 
   let exitStatus;

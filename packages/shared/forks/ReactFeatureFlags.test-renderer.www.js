@@ -41,6 +41,7 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseAvoidThisFallback = true;
+export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
 export const enableClientRenderFallbackOnHydrationMismatch = true;
 export const enableComponentStackLocations = true;
@@ -57,7 +58,6 @@ export const deferRenderPhaseUpdateToNextBatch = false;
 export const enableStrictEffects = true;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
-export const warnAboutCallbackRefReturningFunction = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
@@ -70,6 +70,8 @@ export const consoleManagedByDevToolsDuringStrictMode = false;
 
 // Some www surfaces are still using this. Remove once they have been migrated.
 export const enableUseMutableSource = true;
+
+export const enableTransitionTracing = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

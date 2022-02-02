@@ -42,6 +42,10 @@ export type Element = {|
   // This property is used to quickly determine the total number of Elements,
   // and the Element at any given index (for windowing purposes).
   weight: number,
+
+  // This element is not in a StrictMode compliant subtree.
+  // Only true for React versions supporting StrictMode.
+  isStrictModeNonCompliant: boolean,
 |};
 
 export type SerializedElement = {|

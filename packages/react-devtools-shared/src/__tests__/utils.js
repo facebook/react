@@ -163,6 +163,10 @@ export function getRendererID(): number {
 }
 
 export function legacyRender(elements, container) {
+  if (container == null) {
+    container = document.createElement('div');
+  }
+
   const ReactDOM = require('react-dom');
   withErrorsOrWarningsIgnored(
     ['ReactDOM.render is no longer supported in React 18'],
@@ -170,6 +174,10 @@ export function legacyRender(elements, container) {
       ReactDOM.render(elements, container);
     },
   );
+
+  return () => {
+    ReactDOM.unmountComponentAtNode(container);
+  };
 }
 
 export function requireTestRenderer(): ReactTestRenderer {
@@ -218,6 +226,9 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   // Sanity check that profiling snapshots are serialized correctly.
   expect(profilingDataFrontendInitial.dataForRoots).toEqual(
     profilingDataFrontend.dataForRoots,
+  );
+  expect(profilingDataFrontendInitial.timelineData).toEqual(
+    profilingDataFrontend.timelineData,
   );
 
   // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.

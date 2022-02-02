@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {NetworkMeasure, ReactProfilerData} from '../types';
+import type {NetworkMeasure, TimelineData} from '../types';
 import type {
   Interaction,
   IntrinsicSize,
@@ -43,11 +43,11 @@ export class NetworkMeasuresView extends View {
   _hoveredNetworkMeasure: NetworkMeasure | null = null;
   _intrinsicSize: IntrinsicSize;
   _maxDepth: number = 0;
-  _profilerData: ReactProfilerData;
+  _profilerData: TimelineData;
 
   onHover: ((event: NetworkMeasure | null) => void) | null = null;
 
-  constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
+  constructor(surface: Surface, frame: Rect, profilerData: TimelineData) {
     super(surface, frame);
 
     this._profilerData = profilerData;

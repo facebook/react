@@ -221,4 +221,24 @@ describe('ProfilerStore', () => {
     expect(data.commitData).toHaveLength(1);
     expect(data.operations).toHaveLength(1);
   });
+
+  it('should not throw while initializing context values for Fibers within a not-yet-mounted subtree', () => {
+    const promise = new Promise(resolve => {});
+    const SuspendingView = () => {
+      throw promise;
+    };
+
+    const App = () => {
+      return (
+        <React.Suspense fallback="Fallback">
+          <SuspendingView />
+        </React.Suspense>
+      );
+    };
+
+    const container = document.createElement('div');
+
+    utils.act(() => legacyRender(<App />, container));
+    utils.act(() => store.profilerStore.startProfiling());
+  });
 });
