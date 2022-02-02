@@ -16,20 +16,18 @@ type ClientProxy = {
   component: mixed,
 };
 
-function isReactComponent(component: any) {
-  if (component) {
-    return (
-      typeof component === 'function' ||
-      typeof component.render === 'function' ||
-      component.$$typeof === Symbol.for('react.element')
-    );
-  }
+function isReactComponent(component: any, name: string) {
+  if (!component) return false;
 
-  return false;
+  return (
+    (typeof component === 'function' && /^[A-Z]/.test(name)) ||
+    typeof component.render === 'function' ||
+    component.$$typeof === Symbol.for('react.element')
+  );
 }
 
 export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
-  if (!isReactComponent(component)) {
+  if (!isReactComponent(component, name)) {
     // This is not a React component, return it as is.
     return component;
   }
