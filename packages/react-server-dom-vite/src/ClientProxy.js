@@ -9,6 +9,7 @@
 
 import {createElement} from 'react';
 
+/*global globalThis*/
 declare var globalThis: any;
 
 // This is a store of components discovered during RSC
@@ -59,11 +60,12 @@ export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
   moduleRef.filepath = id;
   moduleRef.name = named ? name : 'default';
 
-  if (!globalThis.__COMPONENT_INDEX[id]) {
-    // Store a loader function to find components during SSR when consuming RSC
-    globalThis.__COMPONENT_INDEX[id] = () =>
-      Promise.resolve({[moduleRef.name]: component});
-  }
+  // Store component in a global index during RSC to use them later in SSR
+  globalThis.__COMPONENT_INDEX[id] = Object.defineProperty(
+    globalThis.__COMPONENT_INDEX[id] || Object.create(null),
+    moduleRef.name,
+    {value: component},
+  );
 
   return new Proxy(componentRef, {
     get: (target, prop) =>

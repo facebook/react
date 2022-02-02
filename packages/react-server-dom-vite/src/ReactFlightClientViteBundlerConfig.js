@@ -41,7 +41,9 @@ function importClientComponent(moduleId: string): Promise<any> {
     );
   }
 
-  return modImport();
+  return typeof modImport === 'function'
+    ? modImport()
+    : Promise.resolve(modImport);
 }
 
 // The module cache contains all the modules we've preloaded so far.
