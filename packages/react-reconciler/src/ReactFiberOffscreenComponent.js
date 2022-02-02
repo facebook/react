@@ -30,4 +30,10 @@ export type OffscreenState = {|
   // order to unhide the component.
   baseLanes: Lanes,
   cachePool: SpawnedCachePool | null,
+  isHidden: boolean,
 |};
+
+export function offscreenFiberIsHidden(fiber: Fiber): boolean {
+  const state: OffscreenState | null = fiber.memoizedState;
+  return state !== null && state.isHidden;
+}

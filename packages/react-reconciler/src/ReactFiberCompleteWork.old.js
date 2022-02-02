@@ -27,7 +27,6 @@ import type {
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent.old';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
-import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
 import {
   enableClientRenderFallbackOnHydrationMismatch,
@@ -165,6 +164,7 @@ import {
   popCachePool,
 } from './ReactFiberCacheComponent.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
+import {offscreenFiberIsHidden} from './ReactFiberOffscreenComponent';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -338,7 +338,7 @@ if (supportsMutation) {
         // the portal directly.
       } else if (
         node.tag === OffscreenComponent &&
-        node.memoizedState !== null
+        offscreenFiberIsHidden(node)
       ) {
         // The children in this boundary are hidden. Toggle their visibility
         // before appending.
@@ -407,7 +407,7 @@ if (supportsMutation) {
         // the portal directly.
       } else if (
         node.tag === OffscreenComponent &&
-        node.memoizedState !== null
+        offscreenFiberIsHidden(node)
       ) {
         // The children in this boundary are hidden. Toggle their visibility
         // before appending.
@@ -1485,12 +1485,10 @@ function completeWork(
     case OffscreenComponent:
     case LegacyHiddenComponent: {
       popRenderLanes(workInProgress);
-      const nextState: OffscreenState | null = workInProgress.memoizedState;
-      const nextIsHidden = nextState !== null;
+      const nextIsHidden = offscreenFiberIsHidden(workInProgress);
 
       if (current !== null) {
-        const prevState: OffscreenState | null = current.memoizedState;
-        const prevIsHidden = prevState !== null;
+        const prevIsHidden = offscreenFiberIsHidden(current);
         if (
           prevIsHidden !== nextIsHidden &&
           newProps.mode !== 'unstable-defer-without-hiding' &&

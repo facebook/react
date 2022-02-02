@@ -247,6 +247,7 @@ import {
   pushTreeId,
   pushMaterializedTreeId,
 } from './ReactFiberTreeContext.new';
+import {offscreenFiberIsHidden} from './ReactFiberOffscreenComponent';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -650,6 +651,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        isHidden: true,
       };
       workInProgress.memoizedState = nextState;
       pushRenderLanes(workInProgress, renderLanes);
@@ -657,7 +659,11 @@ function updateOffscreenComponent(
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
       let nextBaseLanes;
-      if (prevState !== null) {
+      if (
+        current !== null &&
+        prevState !== null &&
+        offscreenFiberIsHidden(current)
+      ) {
         const prevBaseLanes = prevState.baseLanes;
         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
         if (enableCache) {
@@ -678,6 +684,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
         cachePool: spawnedCachePool,
+        isHidden: true,
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
@@ -718,17 +725,20 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        isHidden: true,
       };
       workInProgress.memoizedState = nextState;
       // Push the lanes that were skipped when we bailed out.
       const subtreeRenderLanes =
-        prevState !== null ? prevState.baseLanes : renderLanes;
+        prevState !== null && offscreenFiberIsHidden(current)
+          ? prevState.baseLanes
+          : renderLanes;
       pushRenderLanes(workInProgress, subtreeRenderLanes);
     }
   } else {
     // Rendering a visible tree.
     let subtreeRenderLanes;
-    if (prevState !== null) {
+    if (prevState !== null && offscreenFiberIsHidden(current)) {
       // We're going from hidden -> visible.
 
       subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes);
@@ -1890,6 +1900,7 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
   return {
     baseLanes: renderLanes,
     cachePool: getSuspendedCachePool(),
+    isHidden: true,
   };
 }
 
@@ -1924,6 +1935,7 @@ function updateSuspenseOffscreenState(
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
     cachePool,
+    isHidden: true,
   };
 }
 

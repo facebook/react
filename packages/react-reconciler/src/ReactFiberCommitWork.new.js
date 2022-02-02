@@ -22,7 +22,6 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
 
@@ -156,6 +155,7 @@ import {
   onCommitUnmount,
 } from './ReactFiberDevToolsHook.new';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
+import {offscreenFiberIsHidden} from './ReactFiberOffscreenComponent';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -1078,7 +1078,7 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
       } else if (
         (node.tag === OffscreenComponent ||
           node.tag === LegacyHiddenComponent) &&
-        (node.memoizedState: OffscreenState) !== null &&
+        offscreenFiberIsHidden(node) &&
         node !== finishedWork
       ) {
         // Found a nested Offscreen component that is hidden.
@@ -2222,11 +2222,10 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
   if (flags & Visibility) {
     switch (finishedWork.tag) {
       case SuspenseComponent: {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
-        const isHidden = newState !== null;
+        const isHidden = offscreenFiberIsHidden(finishedWork);
         if (isHidden) {
           const current = finishedWork.alternate;
-          const wasHidden = current !== null && current.memoizedState !== null;
+          const wasHidden = current !== null && offscreenFiberIsHidden(current);
           if (!wasHidden) {
             // TODO: Move to passive phase
             markCommitTimeOfFallback();
@@ -2235,10 +2234,9 @@ function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
         break;
       }
       case OffscreenComponent: {
-        const newState: OffscreenState | null = finishedWork.memoizedState;
-        const isHidden = newState !== null;
+        const isHidden = offscreenFiberIsHidden(finishedWork);
         const current = finishedWork.alternate;
-        const wasHidden = current !== null && current.memoizedState !== null;
+        const wasHidden = current !== null && offscreenFiberIsHidden(current);
         const offscreenBoundary: Fiber = finishedWork;
 
         if (supportsMutation) {
@@ -2351,7 +2349,7 @@ function commitLayoutEffects_begin(
       isModernRoot
     ) {
       // Keep track of the current Offscreen stack's state.
-      const isHidden = fiber.memoizedState !== null;
+      const isHidden = offscreenFiberIsHidden(fiber);
       const newOffscreenSubtreeIsHidden = isHidden || offscreenSubtreeIsHidden;
       if (newOffscreenSubtreeIsHidden) {
         // The Offscreen tree is hidden. Skip over its layout effects.
@@ -2360,7 +2358,7 @@ function commitLayoutEffects_begin(
       } else {
         // TODO (Offscreen) Also check: subtreeFlags & LayoutMask
         const current = fiber.alternate;
-        const wasHidden = current !== null && current.memoizedState !== null;
+        const wasHidden = current !== null && offscreenFiberIsHidden(current);
         const newOffscreenSubtreeWasHidden =
           wasHidden || offscreenSubtreeWasHidden;
         const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
@@ -2485,7 +2483,7 @@ function disappearLayoutEffects_begin(subtreeRoot: Fiber) {
       }
       case OffscreenComponent: {
         // Check if this is a
-        const isHidden = fiber.memoizedState !== null;
+        const isHidden = offscreenFiberIsHidden(fiber);
         if (isHidden) {
           // Nested Offscreen tree is already hidden. Don't disappear
           // its effects.
@@ -2532,7 +2530,7 @@ function reappearLayoutEffects_begin(subtreeRoot: Fiber) {
     const firstChild = fiber.child;
 
     if (fiber.tag === OffscreenComponent) {
-      const isHidden = fiber.memoizedState !== null;
+      const isHidden = offscreenFiberIsHidden(fiber);
       if (isHidden) {
         // Nested Offscreen tree is still hidden. Don't re-appear its effects.
         reappearLayoutEffects_complete(subtreeRoot);
