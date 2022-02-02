@@ -146,28 +146,31 @@ export default function ReactFlightVitePlugin({
   };
 }
 
-const btoa = hash => Buffer.from(String(hash), 'binary').toString('base64');
+const btoa = (hash: number) =>
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  Buffer.from(String(hash), 'binary').toString('base64');
+
 // Quick, lossy hash function: https://stackoverflow.com/a/8831937/4468962
 // Prevents leaking path information in the browser, and minifies RSC responses.
-function hashCode(value) {
+function hashCode(value: string) {
   let hash = 0;
-  for (var i = 0; i < value.length; i++) {
-    var char = value.charCodeAt(i);
+  for (let i = 0; i < value.length; i++) {
+    const char = value.charCodeAt(i);
     hash = (hash << 5) - hash + char;
-    hash = hash & hash;
+    hash &= hash;
   }
 
   return btoa(hash).replace(/=+/, '');
 }
 
-const getComponentFilename = filepath =>
+const getComponentFilename = (filepath: string) =>
   filepath
     .split('/')
     .pop()
     .split('.')
     .shift();
 
-const getComponentId = filepath =>
+export const getComponentId = (filepath: string) =>
   `${getComponentFilename(filepath)}-${hashCode(filepath)}`;
 
 export async function proxyClientComponent(filepath: string, src?: string) {
@@ -210,7 +213,7 @@ export async function proxyClientComponent(filepath: string, src?: string) {
 const hashImportsPlugin = {
   name: 'vite-plugin-react-server-components-hash-imports',
   enforce: 'post',
-  transform(code, id) {
+  transform(code: string, id: string) {
     // Turn relative import paths to lossy hashes
     if (rscViteFileRE.test(id)) {
       const nestedRE = /\.\.\//gm;

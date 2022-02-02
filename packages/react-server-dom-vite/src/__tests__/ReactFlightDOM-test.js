@@ -63,7 +63,7 @@ describe('ReactFlightDOM', () => {
   }
 
   function moduleReference(moduleExport) {
-    const idx = viteModuleIdx++;
+    const idx = String(viteModuleIdx++);
     viteModules[idx] = () =>
       Promise.resolve({
         default: moduleExport,
@@ -72,7 +72,7 @@ describe('ReactFlightDOM', () => {
     return ClientProxy.wrapInClientProxy({
       component: moduleExport,
       id: idx,
-      name: 'default',
+      name: moduleExport.name || 'MyComponent',
       named: false,
     });
   }

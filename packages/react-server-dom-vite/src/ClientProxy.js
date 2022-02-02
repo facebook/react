@@ -9,8 +9,9 @@
 
 import {createElement} from 'react';
 
-/*global globalThis*/
 declare var globalThis: any;
+// eslint-disable-next-line no-unused-vars
+/*global globalThis*/
 
 // This is a store of components discovered during RSC
 // to load them later when consuming the response in SSR.
