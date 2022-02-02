@@ -28,7 +28,7 @@ import type {
 } from './ReactFiberSuspenseComponent.old';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
+import type {Cache} from './ReactFiberCacheComponent.old';
 import {
   enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
@@ -1550,8 +1550,14 @@ function completeWork(
           // Run passive effects to retain/release the cache.
           workInProgress.flags |= Passive;
         }
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        let prevState: OffscreenState | null = null;
+        if (
+          workInProgress.alternate !== null &&
+          workInProgress.alternate.memoizedState !== null
+        ) {
+          prevState = workInProgress.alternate.memoizedState;
+        }
+        if (prevState !== null && prevState.cachePool !== null) {
           popCachePool(workInProgress);
         }
       }
