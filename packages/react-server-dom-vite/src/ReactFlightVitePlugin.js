@@ -23,6 +23,8 @@ type PluginOptions = {
   ) => boolean,
 };
 
+const rscViteFileRE = /\/react-server-dom-vite.js/;
+
 export default function ReactFlightVitePlugin({
   clientComponentPaths = [],
   isServerComponentImporterAllowed = importer => false,
@@ -36,6 +38,10 @@ export default function ReactFlightVitePlugin({
 
     configResolved(_config: any) {
       config = _config;
+
+      // By pushing this plugin at the end of the existing array,
+      // we enforce running it *after* Vite resolves import.meta.glob.
+      config.plugins.push(hashImportsPlugin);
     },
 
     async resolveId(source: string, importer: string) {
@@ -81,7 +87,7 @@ export default function ReactFlightVitePlugin({
        * If the paths are relative to the root instead, Vite won't add the querystring
        * and we will have duplicated files in the browser (with duplicated contexts, etc).
        */
-      if (/\/react-server-dom-vite.js/.test(id)) {
+      if (rscViteFileRE.test(id)) {
         const INJECTING_RE = /\{\s*__INJECTED_CLIENT_IMPORTERS__[:\s]*null[,\s]*\}\s*;/;
 
         if (options && options.ssr) {
@@ -126,44 +132,57 @@ export default function ReactFlightVitePlugin({
         const injectedGlobs = `Object.assign(Object.create(null), ${importers
           .map(
             ([glob, prefix]) =>
-              `__vncp(import.meta.glob('${normalizePath(
-                glob,
-              )}'), '${normalizePath(prefix)}')`,
+              // Mark the globs to modify the result after Vite resolves them.
+              // The prefix is used later to turn relative imports
+              // into absolute imports, and then into hashes.
+              `/* HASH_BEGIN ${normalizePath(prefix)} */ ` +
+              `import.meta.glob('${normalizePath(glob)}') /* HASH_END */`,
           )
           .join(', ')});`;
 
-        return code.replace(
-          INJECTING_RE,
-          injectedGlobs + serializedNormalizePaths(),
-        );
+        return code.replace(INJECTING_RE, injectedGlobs);
       }
     },
   };
 }
 
-const serializedNormalizePaths = () => `
-function __vncp(obj, prefix) {
-  const nestedRE = /\\.\\.\\//gm;
-  return Object.keys(obj).reduce(function (acc, key) {
-    acc[prefix + key.replace(nestedRE, '')] = obj[key];
-    return acc;
-  }, {});
-}
-`;
+const btoa = hash => Buffer.from(String(hash), 'binary').toString('base64');
+// Quick, lossy hash function: https://stackoverflow.com/a/8831937/4468962
+// Prevents leaking path information in the browser, and minifies RSC responses.
+function hashCode(value) {
+  let hash = 0;
+  for (var i = 0; i < value.length; i++) {
+    var char = value.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
 
-export async function proxyClientComponent(id: string, src?: string) {
+  return btoa(hash).replace(/=+/, '');
+}
+
+const getComponentFilename = filepath =>
+  filepath
+    .split('/')
+    .pop()
+    .split('.')
+    .shift();
+
+const getComponentId = filepath =>
+  `${getComponentFilename(filepath)}-${hashCode(filepath)}`;
+
+export async function proxyClientComponent(filepath: string, src?: string) {
   const DEFAULT_EXPORT = 'default';
 
   // Modify the import ID to avoid infinite wraps
-  const importFrom = `${id}?no-proxy`;
+  const importFrom = `${filepath}?no-proxy`;
 
   await init;
 
   if (!src) {
-    src = await fs.readFile(id, 'utf-8');
+    src = await fs.readFile(filepath, 'utf-8');
   }
 
-  const {code} = await transformWithEsbuild(src, id);
+  const {code} = await transformWithEsbuild(src, filepath);
   const [, exportStatements] = parse(code);
 
   let proxyCode =
@@ -173,17 +192,13 @@ export async function proxyClientComponent(id: string, src?: string) {
   // Wrap components in Client Proxy
   exportStatements.forEach(key => {
     const isDefault = key === DEFAULT_EXPORT;
-    const componentName = isDefault
-      ? id
-          .split('/')
-          .pop()
-          .split('.')
-          .shift()
-      : key;
+    const componentName = isDefault ? getComponentFilename(filepath) : key;
 
     proxyCode += `export ${
       isDefault ? DEFAULT_EXPORT : `const ${componentName} =`
-    } wrapInClientProxy({ name: '${componentName}', id: '${id}', component: allImports['${key}'], named: ${
+    } wrapInClientProxy({ name: '${componentName}', id: '${getComponentId(
+      filepath,
+    )}', component: allImports['${key}'], named: ${
       // eslint-disable-next-line react-internal/safe-string-coercion
       String(!isDefault)
     } });\n`;
@@ -191,3 +206,26 @@ export async function proxyClientComponent(id: string, src?: string) {
 
   return proxyCode;
 }
+
+const hashImportsPlugin = {
+  name: 'vite-plugin-react-server-components-hash-imports',
+  enforce: 'post',
+  transform(code, id) {
+    // Turn relative import paths to lossy hashes
+    if (rscViteFileRE.test(id)) {
+      const nestedRE = /\.\.\//gm;
+
+      return code.replace(
+        /\/\*\s*HASH_BEGIN\s*(.+?)\s*\*\/\s*(.+?)\/\*\s*HASH_END\s*\*\//gms,
+        function(_, prefix, imports) {
+          return imports
+            .trim()
+            .replace(/"([^"]+?)":/gms, function(__, relativePath) {
+              const absolutePath = prefix + relativePath.replace(nestedRE, '');
+              return `"${getComponentId(absolutePath)}":`;
+            });
+        },
+      );
+    }
+  },
+};
