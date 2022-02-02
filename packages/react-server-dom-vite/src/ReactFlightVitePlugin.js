@@ -216,11 +216,11 @@ const hashImportsPlugin = {
       const nestedRE = /\.\.\//gm;
 
       return code.replace(
-        /\/\*\s*HASH_BEGIN\s*(.+?)\s*\*\/\s*(.+?)\/\*\s*HASH_END\s*\*\//gms,
+        /\/\*\s*HASH_BEGIN\s*(.+?)\s*\*\/\s*([^]+?)\/\*\s*HASH_END\s*\*\//gm,
         function(_, prefix, imports) {
           return imports
             .trim()
-            .replace(/"([^"]+?)":/gms, function(__, relativePath) {
+            .replace(/"([^"]+?)":/gm, function(__, relativePath) {
               const absolutePath = prefix + relativePath.replace(nestedRE, '');
               return `"${getComponentId(absolutePath)}":`;
             });
