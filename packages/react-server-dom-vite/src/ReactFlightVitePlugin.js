@@ -47,7 +47,7 @@ export default function ReactFlightVitePlugin({
       if (
         /\.server(\.[jt]sx?)?$/.test(source) &&
         !(
-          /(\.server\.[jt]sx?|entry-server\.[jt]sx?|\/index\.html)$/.test(
+          /(\.server\.[jt]sx?|entry-server\.[jt]sx?|index\.html)$/.test(
             importer,
           ) || isServerComponentImporterAllowed(importer, source)
         )
@@ -118,7 +118,9 @@ export default function ReactFlightVitePlugin({
         const injectedGlobs = `Object.assign(Object.create(null), ${importers
           .map(
             ([glob, prefix]) =>
-              `__vncp(import.meta.glob('${glob}'), '${prefix}')`,
+              `__vncp(import.meta.glob('${normalizePath(
+                glob,
+              )}'), '${normalizePath(prefix)}')`,
           )
           .join(', ')});`;
 
