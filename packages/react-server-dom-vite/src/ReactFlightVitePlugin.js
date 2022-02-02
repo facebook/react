@@ -71,7 +71,7 @@ export default function ReactFlightVitePlugin({
       return null;
     },
 
-    transform(code: string, id: string) {
+    transform(code: string, id: string, options: {ssr?: boolean} = {}) {
       /**
        * In order to allow dynamic component imports from RSC, we use Vite's import.meta.glob.
        * This hook replaces the glob placeholders with resolved paths to all client components.
@@ -82,6 +82,14 @@ export default function ReactFlightVitePlugin({
        * and we will have duplicated files in the browser (with duplicated contexts, etc).
        */
       if (/\/react-server-dom-vite.js/.test(id)) {
+        const INJECTING_RE = /\{\s*__INJECTED_CLIENT_IMPORTERS__[:\s]*null[,\s]*\}\s*;/;
+
+        if (options && options.ssr) {
+          // In SSR, directly use components already discovered by RSC
+          // instead of globs to avoid bundling unused components.
+          return code.replace(INJECTING_RE, 'globalThis.__COMPONENT_INDEX');
+        }
+
         const CLIENT_COMPONENT_GLOB = '**/*.client.[jt]s?(x)';
 
         const importerPath = path.dirname(id);
@@ -125,7 +133,7 @@ export default function ReactFlightVitePlugin({
           .join(', ')});`;
 
         return code.replace(
-          /\{\s*__INJECTED_CLIENT_IMPORTERS__[:\s]*null[,\s]*\}\s*;/,
+          INJECTING_RE,
           injectedGlobs + serializedNormalizePaths(),
         );
       }

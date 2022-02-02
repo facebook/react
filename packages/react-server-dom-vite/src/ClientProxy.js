@@ -9,6 +9,12 @@
 
 import {createElement} from 'react';
 
+declare var globalThis: any;
+
+// This is a store of components discovered during RSC
+// to load them later when consuming the response in SSR.
+globalThis.__COMPONENT_INDEX = {};
+
 type ClientProxy = {
   id: string,
   name: string,
@@ -52,6 +58,12 @@ export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
   rscDescriptor.$$typeof_rsc = Symbol.for('react.module.reference');
   rscDescriptor.filepath = id;
   rscDescriptor.name = named ? name : 'default';
+
+  if (!globalThis.__COMPONENT_INDEX[id]) {
+    // Store a loader function to find components during SSR when consuming RSC
+    globalThis.__COMPONENT_INDEX[id] = () =>
+      Promise.resolve({[rscDescriptor.name]: component});
+  }
 
   return new Proxy(componentRef, {
     get: (target, prop) =>
