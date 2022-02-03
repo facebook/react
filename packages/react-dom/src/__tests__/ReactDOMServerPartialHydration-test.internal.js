@@ -3019,7 +3019,13 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.innerHTML).toBe('Hidden child');
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Log recoverable error: ' + error.message,
+        );
+      },
+    });
 
     Scheduler.unstable_flushAll();
     expect(ref.current).toBe(span);

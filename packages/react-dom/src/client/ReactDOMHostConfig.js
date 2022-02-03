@@ -385,14 +385,11 @@ export function logRecoverableError(
 ): void {
   const onRecoverableError = config;
   if (onRecoverableError !== null) {
-    // Schedule a callback to invoke the user-provided logging function.
-    scheduleCallback(IdlePriority, () => {
       onRecoverableError(error);
-    });
   } else {
     // Default behavior is to rethrow the error in a separate task. This will
     // trigger a browser error event.
-    scheduleCallback(IdlePriority, () => {
+    queueMicrotask(() => {
       throw error;
     });
   }

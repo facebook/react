@@ -1723,12 +1723,22 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Log recoverable error: ' + error.message,
+        );
+      },
+    });
 
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
       expect(() => {
         // The first paint switches to client rendering due to mismatch
-        expect(Scheduler).toFlushUntilNextPaint(['client']);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'client',
+          'Log recoverable error: An error occurred during hydration. ' +
+            'The server HTML was replaced with client content',
+        ]);
       }).toErrorDev(
         'Warning: An error occurred during hydration. The server HTML was replaced with client content',
         {withoutStack: true},
@@ -1805,13 +1815,23 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Log recoverable error: ' + error.message,
+        );
+      },
+    });
 
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
       // The first paint uses the client due to mismatch forcing client render
       expect(() => {
         // The first paint switches to client rendering due to mismatch
-        expect(Scheduler).toFlushUntilNextPaint(['client']);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'client',
+          'Log recoverable error: An error occurred during hydration. ' +
+            'The server HTML was replaced with client content',
+        ]);
       }).toErrorDev(
         'Warning: An error occurred during hydration. The server HTML was replaced with client content',
         {withoutStack: true},
