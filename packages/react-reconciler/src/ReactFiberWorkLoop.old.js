@@ -909,14 +909,7 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
       // The errors from the failed first attempt have been recovered. Add
       // them to the collection of recoverable errors. We'll log them in the
       // commit phase.
-      if (workInProgressRootConcurrentErrors === null) {
-        workInProgressRootRecoverableErrors = errorsFromFirstAttempt;
-      } else {
-        workInProgressRootConcurrentErrors = workInProgressRootConcurrentErrors.push.apply(
-          null,
-          errorsFromFirstAttempt,
-        );
-      }
+      queueRecoverableErrors(errorsFromFirstAttempt);
     }
   } else {
     // The UI failed to recover.
@@ -925,6 +918,17 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
   executionContext = prevExecutionContext;
 
   return exitStatus;
+}
+
+export function queueRecoverableErrors(errors: Array<mixed>) {
+  if (workInProgressRootConcurrentErrors === null) {
+    workInProgressRootRecoverableErrors = errors;
+  } else {
+    workInProgressRootConcurrentErrors = workInProgressRootConcurrentErrors.push.apply(
+      null,
+      errors,
+    );
+  }
 }
 
 function finishConcurrentRender(root, exitStatus, lanes) {

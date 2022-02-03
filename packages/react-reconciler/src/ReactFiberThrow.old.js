@@ -37,7 +37,6 @@ import {
 import {
   supportsPersistence,
   getOffscreenContainerProps,
-  logRecoverableError,
 } from './ReactFiberHostConfig';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
@@ -80,7 +79,10 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane.old';
-import {getIsHydrating} from './ReactFiberHydrationContext.old';
+import {
+  getIsHydrating,
+  queueHydrationError,
+} from './ReactFiberHydrationContext.old';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -511,11 +513,7 @@ function throwException(
 
         // Even though the user may not be affected by this error, we should
         // still log it so it can be fixed.
-        // TODO: For now, we only log errors that occur during hydration, but we
-        // probably want to log any error that is recovered from without
-        // triggering an error boundary — or maybe even those, too. Need to
-        // figure out the right API.
-        logRecoverableError(root.errorLoggingConfig, value);
+        queueHydrationError(value);
         return;
       }
     } else {

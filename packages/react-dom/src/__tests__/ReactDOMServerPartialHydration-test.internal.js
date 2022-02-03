@@ -214,11 +214,7 @@ describe('ReactDOMServerPartialHydration', () => {
       },
     });
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      // Hydration error is logged
-      expect(Scheduler).toFlushAndYield([
-        'An error occurred during hydration. The server HTML was replaced ' +
-          'with client content',
-      ]);
+      Scheduler.unstable_flushAll();
     } else {
       expect(() => {
         Scheduler.unstable_flushAll();
@@ -309,13 +305,6 @@ describe('ReactDOMServerPartialHydration', () => {
       'Component',
       'Component',
       'Component',
-
-      // Hydration mismatch errors are logged.
-      // TODO: This could get noisy. Is there some way to dedupe?
-      'An error occurred during hydration. The server HTML was replaced with client content',
-      'An error occurred during hydration. The server HTML was replaced with client content',
-      'An error occurred during hydration. The server HTML was replaced with client content',
-      'An error occurred during hydration. The server HTML was replaced with client content',
     ]);
     jest.runAllTimers();
 

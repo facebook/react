@@ -1983,14 +1983,15 @@ describe('ReactDOMFizzServer', () => {
       isClient = true;
       ReactDOM.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
-          // TODO: We logged a hydration error, but the same error ends up
-          // being thrown during the fallback to client rendering, too. Maybe
-          // we should only log if the client render succeeds.
-          Scheduler.unstable_yieldValue(error.message);
+          Scheduler.unstable_yieldValue(
+            'Log recoverable error: ' + error.message,
+          );
         },
       });
 
-      expect(Scheduler).toFlushAndYield(['Oops!']);
+      // Because we failed to recover from the error, onRecoverableError
+      // shouldn't be called.
+      expect(Scheduler).toFlushAndYield([]);
       expect(getVisibleChildren(container)).toEqual('Oops!');
     },
   );
