@@ -401,7 +401,7 @@ function popComponentStackInDEV(task: Task): void {
   }
 }
 
-function reportError(request: Request, error: mixed): void {
+function logRecoverableError(request: Request, error: mixed): void {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
   const onError = request.onError;
@@ -484,7 +484,7 @@ function renderSuspenseBoundary(
     }
   } catch (error) {
     contentRootSegment.status = ERRORED;
-    reportError(request, error);
+    logRecoverableError(request, error);
     newBoundary.forceClientRender = true;
     // We don't need to decrement any task numbers because we didn't spawn any new task.
     // We don't need to schedule any task because we know the parent has written yet.
@@ -1337,7 +1337,7 @@ function erroredTask(
   error: mixed,
 ) {
   // Report the error to a global handler.
-  reportError(request, error);
+  logRecoverableError(request, error);
   if (boundary === null) {
     fatalError(request, error);
   } else {
@@ -1557,7 +1557,7 @@ export function performWork(request: Request): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    reportError(request, error);
+    logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
     setCurrentResponseState(prevResponseState);
@@ -1945,7 +1945,7 @@ export function startFlowing(request: Request, destination: Destination): void {
   try {
     flushCompletedQueues(request, destination);
   } catch (error) {
-    reportError(request, error);
+    logRecoverableError(request, error);
     fatalError(request, error);
   }
 }
@@ -1960,7 +1960,7 @@ export function abort(request: Request): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    reportError(request, error);
+    logRecoverableError(request, error);
     fatalError(request, error);
   }
 }

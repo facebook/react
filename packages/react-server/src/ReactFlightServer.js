@@ -421,7 +421,7 @@ export function resolveModelToJSON(
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
       } else {
-        reportError(request, x);
+        logRecoverableError(request, x);
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
         // once it gets rendered.
@@ -604,7 +604,7 @@ export function resolveModelToJSON(
   );
 }
 
-function reportError(request: Request, error: mixed): void {
+function logRecoverableError(request: Request, error: mixed): void {
   const onError = request.onError;
   onError(error);
 }
@@ -687,7 +687,7 @@ function retrySegment(request: Request, segment: Segment): void {
       x.then(ping, ping);
       return;
     } else {
-      reportError(request, x);
+      logRecoverableError(request, x);
       // This errored, we need to serialize this error to the
       emitErrorChunk(request, segment.id, x);
     }
@@ -711,7 +711,7 @@ function performWork(request: Request): void {
       flushCompletedChunks(request, request.destination);
     }
   } catch (error) {
-    reportError(request, error);
+    logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
@@ -794,7 +794,7 @@ export function startFlowing(request: Request, destination: Destination): void {
   try {
     flushCompletedChunks(request, destination);
   } catch (error) {
-    reportError(request, error);
+    logRecoverableError(request, error);
     fatalError(request, error);
   }
 }

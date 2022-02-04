@@ -607,7 +607,7 @@ function resetHydrationState(): void {
   isHydrating = false;
 }
 
-export function queueRecoverableHydrationErrors(): void {
+export function upgradeHydrationErrorsToRecoverable(): void {
   if (hydrationErrors !== null) {
     // Successfully completed a forced client render. The errors that occurred
     // during the hydration attempt are now recovered. We will log them in
