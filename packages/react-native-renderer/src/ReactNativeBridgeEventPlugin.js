@@ -14,7 +14,7 @@ import SyntheticEvent from './legacy-events/SyntheticEvent';
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
-import getListener from './ReactNativeGetListener';
+import getListener from './ReactNativeGetListeneReactNativeGetListenerr';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
@@ -66,7 +66,12 @@ function getParent(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
+export function traverseTwoPhase(
+  inst: Object,
+  fn: Function,
+  arg: Function,
+  skipBubble: ?boolean,
+) {
   const path = [];
   while (inst) {
     path.push(inst);
@@ -76,14 +81,22 @@ export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
-  for (i = 0; i < path.length; i++) {
-    fn(path[i], 'bubbled', arg);
+
+  if (!skipBubble) {
+    for (i = 0; i < path.length; i++) {
+      fn(path[i], 'bubbled', arg);
+    }
   }
 }
 
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      false,
+    );
   }
 }
 
@@ -114,6 +127,20 @@ function accumulateDispatches(
   }
 }
 
+function accumulateCapturedDispatch(inst, phase, event) {
+  if (inst && event && event.dispatchConfig.captured) {
+    const captured = event.dispatchConfig.captured;
+    const listener = getListener(inst, captured);
+    if (listener) {
+      event._dispatchListeners = accumulateInto(
+        event._dispatchListeners,
+        listener,
+      );
+      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    }
+  }
+}
+
 /**
  * Accumulates dispatches on an `SyntheticEvent`, but only for the
  * `dispatchMarker`.
@@ -121,6 +148,14 @@ function accumulateDispatches(
  */
 function accumulateDirectDispatchesSingle(event: Object) {
   if (event && event.dispatchConfig.registrationName) {
+    if (TODO_EXPERMENT_CHECK) {
+      traverseTwoPhase(
+        event._targetInst,
+        accumulateCapturedDispatch,
+        event,
+        true,
+      );
+    }
     accumulateDispatches(event._targetInst, null, event);
   }
 }
