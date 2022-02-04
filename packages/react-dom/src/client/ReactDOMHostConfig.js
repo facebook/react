@@ -374,13 +374,17 @@ export function getCurrentEventPriority(): * {
   return getEventPriority(currentEvent.type);
 }
 
-export function logRecoverableError(error: mixed): void {
-  // Default behavior is to rethrow the error in a separate task. This will
-  // trigger a browser error event.
-  queueMicrotask(() => {
-    throw error;
-  });
-}
+/* global reportError */
+export const logRecoverableError =
+  typeof reportError === 'function'
+    ? // In modern browsers, reportError will dispatch an error event,
+      // emulating an uncaught JavaScript error.
+      reportError
+    : (error: mixed) => {
+        // In older browsers and test environments, fallback to console.error.
+        // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+        console.error(error);
+      };
 
 export const isPrimaryRenderer = true;
 export const warnsIfNotActing = true;
