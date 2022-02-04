@@ -42,8 +42,6 @@ export type EventResponder = any;
 
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
-export type ErrorLoggingConfig = null;
-
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
@@ -317,9 +315,6 @@ export function detachDeletedInstance(node: Instance): void {
   // noop
 }
 
-export function logRecoverableError(
-  config: ErrorLoggingConfig,
-  error: mixed,
-): void {
+export function logRecoverableError(error: mixed): void {
   // noop
 }

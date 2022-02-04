@@ -9,7 +9,6 @@
 
 import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
-import type {ErrorLoggingConfig} from './ReactFiberHostConfig';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
@@ -36,7 +35,7 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  errorLoggingConfig,
+  onRecoverableError,
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -64,7 +63,7 @@ function FiberRootNode(
   this.entanglements = createLaneMap(NoLanes);
 
   this.identifierPrefix = identifierPrefix;
-  this.errorLoggingConfig = errorLoggingConfig;
+  this.onRecoverableError = onRecoverableError;
 
   if (enableCache) {
     this.pooledCache = null;
@@ -116,14 +115,14 @@ export function createFiberRoot(
   // them through the root constructor. Perhaps we should put them all into a
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
-  errorLoggingConfig: ErrorLoggingConfig,
+  onRecoverableError: null | ((error: mixed) => void),
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(
     containerInfo,
     tag,
     hydrate,
     identifierPrefix,
-    errorLoggingConfig,
+    onRecoverableError,
   ): any);
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;

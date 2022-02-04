@@ -55,8 +55,6 @@ export type RendererInspectionConfig = $ReadOnly<{|
   ) => void,
 |}>;
 
-export type ErrorLoggingConfig = null;
-
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(UPDATE_SIGNAL);
@@ -516,9 +514,6 @@ export function detachDeletedInstance(node: Instance): void {
   // noop
 }
 
-export function logRecoverableError(
-  config: ErrorLoggingConfig,
-  error: mixed,
-): void {
+export function logRecoverableError(error: mixed): void {
   // noop
 }

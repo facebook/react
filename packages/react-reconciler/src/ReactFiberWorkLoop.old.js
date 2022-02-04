@@ -2115,7 +2115,14 @@ function commitRootImpl(
     // needing to surface it to the UI. We log them here.
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
-      logRecoverableError(root.errorLoggingConfig, recoverableError);
+      const onRecoverableError = root.onRecoverableError;
+      if (onRecoverableError !== null) {
+        onRecoverableError(recoverableError);
+      } else {
+        // No user-provided onRecoverableError. Use the default behavior
+        // provided by the renderer's host config.
+        logRecoverableError(recoverableError);
+      }
     }
   }
 

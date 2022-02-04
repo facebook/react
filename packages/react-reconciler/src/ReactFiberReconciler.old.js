@@ -15,7 +15,6 @@ import type {
   TextInstance,
   Container,
   PublicInstance,
-  ErrorLoggingConfig,
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -246,7 +245,7 @@ export function createContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  errorLoggingConfig: ErrorLoggingConfig,
+  onRecoverableError: null | ((error: mixed) => void),
 ): OpaqueRoot {
   return createFiberRoot(
     containerInfo,
@@ -256,7 +255,7 @@ export function createContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
-    errorLoggingConfig,
+    onRecoverableError,
   );
 }
 

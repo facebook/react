@@ -70,7 +70,6 @@ import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
-import {scheduleCallback, IdlePriority} from 'react-reconciler/src/Scheduler';
 
 export type Type = string;
 export type Props = {
@@ -123,10 +122,6 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type RendererInspectionConfig = $ReadOnly<{||}>;
-
-// Right now this is a single callback, but could be multiple in the in the
-// future.
-export type ErrorLoggingConfig = null | ((error: mixed) => void);
 
 type SelectionInformation = {|
   focusedElem: null | HTMLElement,
@@ -379,20 +374,12 @@ export function getCurrentEventPriority(): * {
   return getEventPriority(currentEvent.type);
 }
 
-export function logRecoverableError(
-  config: ErrorLoggingConfig,
-  error: mixed,
-): void {
-  const onRecoverableError = config;
-  if (onRecoverableError !== null) {
-      onRecoverableError(error);
-  } else {
-    // Default behavior is to rethrow the error in a separate task. This will
-    // trigger a browser error event.
-    queueMicrotask(() => {
-      throw error;
-    });
-  }
+export function logRecoverableError(error: mixed): void {
+  // Default behavior is to rethrow the error in a separate task. This will
+  // trigger a browser error event.
+  queueMicrotask(() => {
+    throw error;
+  });
 }
 
 export const isPrimaryRenderer = true;

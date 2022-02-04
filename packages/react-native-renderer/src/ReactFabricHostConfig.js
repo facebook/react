@@ -95,8 +95,6 @@ export type RendererInspectionConfig = $ReadOnly<{|
   ) => void,
 |}>;
 
-export type ErrorLoggingConfig = null;
-
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
   /**
@@ -528,9 +526,6 @@ export function detachDeletedInstance(node: Instance): void {
   // noop
 }
 
-export function logRecoverableError(
-  config: ErrorLoggingConfig,
-  error: mixed,
-): void {
+export function logRecoverableError(error: mixed): void {
   // noop
 }
