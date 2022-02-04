@@ -68,6 +68,7 @@ export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 export const detachDeletedInstance = $$$hostConfig.detachDeletedInstance;
+export const logRecoverableError = $$$hostConfig.logRecoverableError;
 
 // -------------------
 //      Microtasks

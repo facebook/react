@@ -131,6 +131,7 @@ import {
   resetHydrationState,
   getIsHydrating,
   hasUnhydratedTailNodes,
+  upgradeHydrationErrorsToRecoverable,
 } from './ReactFiberHydrationContext.new';
 import {
   enableSuspenseCallback,
@@ -1099,6 +1100,12 @@ function completeWork(
             return null;
           }
         }
+
+        // Successfully completed this tree. If this was a forced client render,
+        // there may have been recoverable errors during first hydration
+        // attempt. If so, add them to a queue so we can log them in the
+        // commit phase.
+        upgradeHydrationErrorsToRecoverable();
       }
 
       if ((workInProgress.flags & DidCapture) !== NoFlags) {

@@ -14,6 +14,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Flags} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
+import type {EventPriority} from './ReactEventPriorities.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -76,6 +77,7 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
+  logRecoverableError,
 } from './ReactFiberHostConfig';
 
 import {
@@ -296,6 +298,11 @@ let workInProgressRootInterleavedUpdatedLanes: Lanes = NoLanes;
 let workInProgressRootRenderPhaseUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
+// Errors that are thrown during the render phase.
+let workInProgressRootConcurrentErrors: Array<mixed> | null = null;
+// These are errors that we recovered from without surfacing them to the UI.
+// We will log them once the tree commits.
+let workInProgressRootRecoverableErrors: Array<mixed> | null = null;
 
 // The most recent time we committed a fallback. This lets us ensure a train
 // model where we don't commit new loading states in too quick succession.
@@ -894,11 +901,34 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
     }
   }
 
+  const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
   const exitStatus = renderRootSync(root, errorRetryLanes);
+  if (exitStatus !== RootErrored) {
+    // Successfully finished rendering on retry
+    if (errorsFromFirstAttempt !== null) {
+      // The errors from the failed first attempt have been recovered. Add
+      // them to the collection of recoverable errors. We'll log them in the
+      // commit phase.
+      queueRecoverableErrors(errorsFromFirstAttempt);
+    }
+  } else {
+    // The UI failed to recover.
+  }
 
   executionContext = prevExecutionContext;
 
   return exitStatus;
+}
+
+export function queueRecoverableErrors(errors: Array<mixed>) {
+  if (workInProgressRootConcurrentErrors === null) {
+    workInProgressRootRecoverableErrors = errors;
+  } else {
+    workInProgressRootConcurrentErrors = workInProgressRootConcurrentErrors.push.apply(
+      null,
+      errors,
+    );
+  }
 }
 
 function finishConcurrentRender(root, exitStatus, lanes) {
@@ -913,7 +943,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
     case RootErrored: {
       // We should have already attempted to retry this tree. If we reached
       // this point, it errored again. Commit it.
-      commitRoot(root);
+      commitRoot(root, workInProgressRootRecoverableErrors);
       break;
     }
     case RootSuspended: {
@@ -953,14 +983,14 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           // lower priority work to do. Instead of committing the fallback
           // immediately, wait for more data to arrive.
           root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root),
+            commitRoot.bind(null, root, workInProgressRootRecoverableErrors),
             msUntilTimeout,
           );
           break;
         }
       }
       // The work expired. Commit immediately.
-      commitRoot(root);
+      commitRoot(root, workInProgressRootRecoverableErrors);
       break;
     }
     case RootSuspendedWithDelay: {
@@ -991,7 +1021,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           // Instead of committing the fallback immediately, wait for more data
           // to arrive.
           root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root),
+            commitRoot.bind(null, root, workInProgressRootRecoverableErrors),
             msUntilTimeout,
           );
           break;
@@ -999,12 +1029,12 @@ function finishConcurrentRender(root, exitStatus, lanes) {
       }
 
       // Commit the placeholder.
-      commitRoot(root);
+      commitRoot(root, workInProgressRootRecoverableErrors);
       break;
     }
     case RootCompleted: {
       // The work completed. Ready to commit.
-      commitRoot(root);
+      commitRoot(root, workInProgressRootRecoverableErrors);
       break;
     }
     default: {
@@ -1124,7 +1154,7 @@ function performSyncWorkOnRoot(root) {
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
   root.finishedLanes = lanes;
-  commitRoot(root);
+  commitRoot(root, workInProgressRootRecoverableErrors);
 
   // Before exiting, make sure there's a callback scheduled for the next
   // pending level.
@@ -1320,6 +1350,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
   workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
+  workInProgressRootConcurrentErrors = null;
+  workInProgressRootRecoverableErrors = null;
 
   enqueueInterleavedUpdates();
 
@@ -1474,9 +1506,14 @@ export function renderDidSuspendDelayIfPossible(): void {
   }
 }
 
-export function renderDidError() {
+export function renderDidError(error: mixed) {
   if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
+  }
+  if (workInProgressRootConcurrentErrors === null) {
+    workInProgressRootConcurrentErrors = [error];
+  } else {
+    workInProgressRootConcurrentErrors.push(error);
   }
 }
 
@@ -1781,7 +1818,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   }
 }
 
-function commitRoot(root) {
+function commitRoot(root: FiberRoot, recoverableErrors: null | Array<mixed>) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
   const previousUpdateLanePriority = getCurrentUpdatePriority();
@@ -1789,7 +1826,7 @@ function commitRoot(root) {
   try {
     ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
-    commitRootImpl(root, previousUpdateLanePriority);
+    commitRootImpl(root, recoverableErrors, previousUpdateLanePriority);
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
     setCurrentUpdatePriority(previousUpdateLanePriority);
@@ -1798,7 +1835,11 @@ function commitRoot(root) {
   return null;
 }
 
-function commitRootImpl(root, renderPriorityLevel) {
+function commitRootImpl(
+  root: FiberRoot,
+  recoverableErrors: null | Array<mixed>,
+  renderPriorityLevel: EventPriority,
+) {
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -2068,6 +2109,22 @@ function commitRootImpl(root, renderPriorityLevel) {
   // Always call this before exiting `commitRoot`, to ensure that any
   // additional work on this root is scheduled.
   ensureRootIsScheduled(root, now());
+
+  if (recoverableErrors !== null) {
+    // There were errors during this render, but recovered from them without
+    // needing to surface it to the UI. We log them here.
+    for (let i = 0; i < recoverableErrors.length; i++) {
+      const recoverableError = recoverableErrors[i];
+      const onRecoverableError = root.onRecoverableError;
+      if (onRecoverableError !== null) {
+        onRecoverableError(recoverableError);
+      } else {
+        // No user-provided onRecoverableError. Use the default behavior
+        // provided by the renderer's host config.
+        logRecoverableError(recoverableError);
+      }
+    }
+  }
 
   if (hasUncaughtError) {
     hasUncaughtError = false;

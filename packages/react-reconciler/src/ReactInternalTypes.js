@@ -246,6 +246,8 @@ type BaseFiberRootProperties = {|
   // the public createRoot object, which the fiber tree does not currently have
   // a reference to.
   identifierPrefix: string,
+
+  onRecoverableError: null | ((error: mixed) => void),
 |};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

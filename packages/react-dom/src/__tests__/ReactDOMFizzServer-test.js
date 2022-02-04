@@ -1723,12 +1723,22 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Log recoverable error: ' + error.message,
+        );
+      },
+    });
 
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
       expect(() => {
         // The first paint switches to client rendering due to mismatch
-        expect(Scheduler).toFlushUntilNextPaint(['client']);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'client',
+          'Log recoverable error: An error occurred during hydration. ' +
+            'The server HTML was replaced with client content',
+        ]);
       }).toErrorDev(
         'Warning: An error occurred during hydration. The server HTML was replaced with client content',
         {withoutStack: true},
@@ -1805,13 +1815,23 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Log recoverable error: ' + error.message,
+        );
+      },
+    });
 
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
       // The first paint uses the client due to mismatch forcing client render
       expect(() => {
         // The first paint switches to client rendering due to mismatch
-        expect(Scheduler).toFlushUntilNextPaint(['client']);
+        expect(Scheduler).toFlushUntilNextPaint([
+          'client',
+          'Log recoverable error: An error occurred during hydration. ' +
+            'The server HTML was replaced with client content',
+        ]);
       }).toErrorDev(
         'Warning: An error occurred during hydration. The server HTML was replaced with client content',
         {withoutStack: true},
@@ -1897,9 +1917,15 @@ describe('ReactDOMFizzServer', () => {
       // Hydrate the tree. Child will throw during hydration, but not when it
       // falls back to client rendering.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOM.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
 
-      expect(Scheduler).toFlushAndYield(['Yay!']);
+      // An error logged but instead of surfacing it to the UI, we switched
+      // to client rendering.
+      expect(Scheduler).toFlushAndYield(['Yay!', 'Hydration error']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
@@ -1975,8 +2001,16 @@ describe('ReactDOMFizzServer', () => {
 
       // Hydrate the tree. Child will throw during render.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOM.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(
+            'Log recoverable error: ' + error.message,
+          );
+        },
+      });
 
+      // Because we failed to recover from the error, onRecoverableError
+      // shouldn't be called.
       expect(Scheduler).toFlushAndYield([]);
       expect(getVisibleChildren(container)).toEqual('Oops!');
     },
@@ -2049,9 +2083,15 @@ describe('ReactDOMFizzServer', () => {
       // Hydrate the tree. Child will throw during hydration, but not when it
       // falls back to client rendering.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOM.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
 
-      expect(Scheduler).toFlushAndYield([]);
+      // An error logged but instead of surfacing it to the UI, we switched
+      // to client rendering.
+      expect(Scheduler).toFlushAndYield(['Hydration error']);
       expect(getVisibleChildren(container)).toEqual(
         <div>
           <span />
@@ -2081,4 +2121,64 @@ describe('ReactDOMFizzServer', () => {
       expect(span3Ref.current).toBe(span3);
     },
   );
+
+  it('logs regular (non-hydration) errors when the UI recovers', async () => {
+    let shouldThrow = true;
+
+    function A() {
+      if (shouldThrow) {
+        Scheduler.unstable_yieldValue('Oops!');
+        throw new Error('Oops!');
+      }
+      Scheduler.unstable_yieldValue('A');
+      return 'A';
+    }
+
+    function B() {
+      Scheduler.unstable_yieldValue('B');
+      return 'B';
+    }
+
+    function App() {
+      return (
+        <>
+          <A />
+          <B />
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(container, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Logged a recoverable error: ' + error.message,
+        );
+      },
+    });
+    React.startTransition(() => {
+      root.render(<App />);
+    });
+
+    // Partially render A, but yield before the render has finished
+    expect(Scheduler).toFlushAndYieldThrough(['Oops!', 'Oops!']);
+
+    // React will try rendering again synchronously. During the retry, A will
+    // not throw. This simulates a concurrent data race that is fixed by
+    // blocking the main thread.
+    shouldThrow = false;
+    expect(Scheduler).toFlushAndYield([
+      // Finish initial render attempt
+      'B',
+
+      // Render again, synchronously
+      'A',
+      'B',
+
+      // Log the error
+      'Logged a recoverable error: Oops!',
+    ]);
+
+    // UI looks normal
+    expect(container.textContent).toEqual('AB');
+  });
 });

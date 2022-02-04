@@ -77,12 +77,16 @@ import {
   getSuspendedTreeContext,
   restoreSuspendedTreeContext,
 } from './ReactFiberTreeContext.old';
+import {queueRecoverableErrors} from './ReactFiberWorkLoop.old';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
 let hydrationParentFiber: null | Fiber = null;
 let nextHydratableInstance: null | HydratableInstance = null;
 let isHydrating: boolean = false;
+
+// Hydration errors that were thrown inside this boundary
+let hydrationErrors: Array<mixed> | null = null;
 
 function warnIfHydrating() {
   if (__DEV__) {
@@ -105,6 +109,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  hydrationErrors = null;
   return true;
 }
 
@@ -121,6 +126,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   );
   hydrationParentFiber = fiber;
   isHydrating = true;
+  hydrationErrors = null;
   if (treeContext !== null) {
     restoreSuspendedTreeContext(fiber, treeContext);
   }
@@ -601,8 +607,26 @@ function resetHydrationState(): void {
   isHydrating = false;
 }
 
+export function upgradeHydrationErrorsToRecoverable(): void {
+  if (hydrationErrors !== null) {
+    // Successfully completed a forced client render. The errors that occurred
+    // during the hydration attempt are now recovered. We will log them in
+    // commit phase, once the entire tree has finished.
+    queueRecoverableErrors(hydrationErrors);
+    hydrationErrors = null;
+  }
+}
+
 function getIsHydrating(): boolean {
   return isHydrating;
+}
+
+export function queueHydrationError(error: mixed): void {
+  if (hydrationErrors === null) {
+    hydrationErrors = [error];
+  } else {
+    hydrationErrors.push(error);
+  }
 }
 
 export {

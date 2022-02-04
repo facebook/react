@@ -472,6 +472,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     isStrictMode,
     concurrentUpdatesByDefault,
     '',
+    null,
   );
 
   if (root == null) {

@@ -205,6 +205,9 @@ describe('useMutableSourceHydration', () => {
       act(() => {
         ReactDOM.hydrateRoot(container, <TestComponent />, {
           mutableSources: [mutableSource],
+          onRecoverableError(error) {
+            Scheduler.unstable_yieldValue('Log error: ' + error.message);
+          },
         });
 
         source.value = 'two';
@@ -254,11 +257,17 @@ describe('useMutableSourceHydration', () => {
           React.startTransition(() => {
             ReactDOM.hydrateRoot(container, <TestComponent />, {
               mutableSources: [mutableSource],
+              onRecoverableError(error) {
+                Scheduler.unstable_yieldValue('Log error: ' + error.message);
+              },
             });
           });
         } else {
           ReactDOM.hydrateRoot(container, <TestComponent />, {
             mutableSources: [mutableSource],
+            onRecoverableError(error) {
+              Scheduler.unstable_yieldValue('Log error: ' + error.message);
+            },
           });
         }
         expect(Scheduler).toFlushAndYieldThrough(['a:one']);
@@ -269,7 +278,17 @@ describe('useMutableSourceHydration', () => {
         'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
-    expect(Scheduler).toHaveYielded(['a:two', 'b:two']);
+    expect(Scheduler).toHaveYielded([
+      'a:two',
+      'b:two',
+      // TODO: Before onRecoverableError, this error was never surfaced to the
+      // user. The request to file an bug report no longer makes sense.
+      // However, the experimental useMutableSource API is slated for
+      // removal, anyway.
+      'Log error: Cannot read from mutable source during the current ' +
+        'render without tearing. This may be a bug in React. Please file ' +
+        'an issue.',
+    ]);
     expect(source.listenerCount).toBe(2);
   });
 
@@ -328,11 +347,17 @@ describe('useMutableSourceHydration', () => {
           React.startTransition(() => {
             ReactDOM.hydrateRoot(container, fragment, {
               mutableSources: [mutableSource],
+              onRecoverableError(error) {
+                Scheduler.unstable_yieldValue('Log error: ' + error.message);
+              },
             });
           });
         } else {
           ReactDOM.hydrateRoot(container, fragment, {
             mutableSources: [mutableSource],
+            onRecoverableError(error) {
+              Scheduler.unstable_yieldValue('Log error: ' + error.message);
+            },
           });
         }
         expect(Scheduler).toFlushAndYieldThrough(['0:a:one']);
@@ -343,7 +368,17 @@ describe('useMutableSourceHydration', () => {
         'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
-    expect(Scheduler).toHaveYielded(['0:a:one', '1:b:two']);
+    expect(Scheduler).toHaveYielded([
+      '0:a:one',
+      '1:b:two',
+      // TODO: Before onRecoverableError, this error was never surfaced to the
+      // user. The request to file an bug report no longer makes sense.
+      // However, the experimental useMutableSource API is slated for
+      // removal, anyway.
+      'Log error: Cannot read from mutable source during the current ' +
+        'render without tearing. This may be a bug in React. Please file ' +
+        'an issue.',
+    ]);
   });
 
   // @gate !enableSyncDefaultUpdates

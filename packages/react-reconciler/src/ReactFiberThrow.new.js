@@ -79,7 +79,10 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane.new';
-import {getIsHydrating} from './ReactFiberHydrationContext.new';
+import {
+  getIsHydrating,
+  queueHydrationError,
+} from './ReactFiberHydrationContext.new';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -507,6 +510,10 @@ function throwException(
           root,
           rootRenderLanes,
         );
+
+        // Even though the user may not be affected by this error, we should
+        // still log it so it can be fixed.
+        queueHydrationError(value);
         return;
       }
     } else {
@@ -517,7 +524,7 @@ function throwException(
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
-  renderDidError();
+  renderDidError(value);
 
   value = createCapturedValue(value, sourceFiber);
   let workInProgress = returnFiber;
