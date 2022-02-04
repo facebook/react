@@ -8,7 +8,7 @@
  */
 
 const ReactNativeEventPluginOrder = [
-  'ReactNativeEventTelemetryPlugin', // We want telemetry to get a chance to run before any real work is done.
+  'ReactNativeEventTelemetryPlugin', // We want telemetry to run before any other work is done.
   'ResponderEventPlugin',
   'ReactNativeBridgeEventPlugin',
 ];
