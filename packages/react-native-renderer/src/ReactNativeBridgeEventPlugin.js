@@ -17,6 +17,7 @@ import accumulateInto from './legacy-events/accumulateInto';
 import getListener from './ReactNativeGetListener';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import {enableCaptureForDirectEvents} from 'shared/ReactFeatureFlags';
 
 const {
   customBubblingEventTypes,
@@ -148,7 +149,7 @@ function accumulateCapturedDispatch(inst, phase, event) {
  */
 function accumulateDirectDispatchesSingle(event: Object) {
   if (event && event.dispatchConfig.registrationName) {
-    if (TODO_EXPERMENT_CHECK) {
+    if (enableCaptureForDirectEvents) {
       traverseTwoPhase(
         event._targetInst,
         accumulateCapturedDispatch,
