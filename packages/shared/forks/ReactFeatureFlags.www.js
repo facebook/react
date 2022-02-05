@@ -99,6 +99,8 @@ export const deletedTreeCleanUpLevel = 3;
 
 export const enablePersistentOffscreenHostContainer = false;
 
+export const enableCaptureForDirectEvents = false;
+
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 // Some www surfaces are still using this. Remove once they have been migrated.

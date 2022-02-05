@@ -9,4 +9,5 @@
 
 declare module 'ReactNativeInternalFeatureFlags' {
   declare export var enablePersistentOffscreenHostContainer: boolean;
+  declare export var enableCaptureForDirectEvents: boolean;
 }

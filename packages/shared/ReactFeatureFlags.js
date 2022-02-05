@@ -189,6 +189,8 @@ export const allowConcurrentByDefault = false;
 
 export const enablePersistentOffscreenHostContainer = false;
 
+export const enableCaptureForDirectEvents = false;
+
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
 // Only enabled in www builds

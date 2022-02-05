@@ -21,6 +21,7 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 // update the test configuration.
 
 export const enablePersistentOffscreenHostContainer = __VARIANT__;
+export const enableCaptureForDirectEvents = __VARIANT__;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

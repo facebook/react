@@ -80,6 +80,7 @@ export type ViewConfig = $ReadOnly<{
   directEventTypes?: $ReadOnly<{
     [eventName: string]: $ReadOnly<{
       registrationName: string,
+      captured?: ?string,
     }>,
     ...,
   }>,

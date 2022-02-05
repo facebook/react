@@ -61,5 +61,6 @@ export const createRootStrictEffectsByDefault = false;
 export const enableStrictEffects = false;
 export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
+export const enableCaptureForDirectEvents = false;
 // You probably *don't* want to add more hardcoded ones.
 // Instead, try to add them above with the __VARIANT__ value.

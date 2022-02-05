@@ -63,6 +63,7 @@ export const enableLazyContextPropagation = false;
 export const enableSyncDefaultUpdates = true;
 export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
+export const enableCaptureForDirectEvents = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableUseMutableSource = false;
