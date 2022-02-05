@@ -129,9 +129,9 @@ function accumulateDispatches(
 }
 
 function accumulateCapturedDispatch(inst, phase, event) {
-  if (inst && event && event.dispatchConfig.captured) {
-    const captured = event.dispatchConfig.captured;
-    const listener = getListener(inst, captured);
+  if (inst && event && event.dispatchConfig.registrationName) {
+    const capturedRegisteredName = `${event.dispatchConfig.registrationName}Capture`;
+    const listener = getListener(inst, capturedRegisteredName);
     if (listener) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,

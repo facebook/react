@@ -26,7 +26,6 @@ const customBubblingEventTypes: {
 const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{|
     registrationName: string,
-    captured?: ?string,
   |}>,
   ...,
 } = {};
