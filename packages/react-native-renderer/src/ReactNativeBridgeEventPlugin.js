@@ -14,7 +14,7 @@ import SyntheticEvent from './legacy-events/SyntheticEvent';
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
-import getListener from './ReactNativeGetListeneReactNativeGetListenerr';
+import getListener from './ReactNativeGetListener';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
