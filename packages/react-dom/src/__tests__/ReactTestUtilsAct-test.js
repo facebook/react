@@ -503,9 +503,13 @@ function runActTests(label, render, unmount, rerender) {
         spyOnDevAndProd(console, 'error');
         // let's try to cheat and spin off a 'thread' with an act call
         (async () => {
-          await act(async () => {
-            await sleep(50);
-          });
+          try {
+            await act(async () => {
+              await sleep(50);
+            });
+          } catch (e) {
+            // suppress ERR_UNHANDLED_REJECTION
+          }
         })();
 
         await act(async () => {
