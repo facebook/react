@@ -1,7 +1,7 @@
 import {RawEventTelemetryEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 const ReactNativeEventTelemetryPlugin = {
-  extractEvents: function(
+  extractEvents(
     topLevelType,
     targetInst,
     nativeEvent,
