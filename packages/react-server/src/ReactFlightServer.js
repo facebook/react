@@ -249,10 +249,6 @@ function serializeByRefID(id: number): string {
   return '@' + id.toString(16);
 }
 
-function serializeByContextID(id: number): string {
-  return '!';
-}
-
 function escapeStringValue(value: string): string {
   if (value[0] === '$' || value[0] === '@') {
     // We need to escape $ or @ prefixed strings since we use those to encode
