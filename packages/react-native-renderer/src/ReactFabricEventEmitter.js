@@ -100,6 +100,11 @@ export function dispatchEvent(
     // telemetry on event latency in your application, and could also be useful for debugging
     // low-level events issues.
     //
+    // If you do not have any event telemetry and are extremely concerned about event perf,
+    // it is safe to disable these "emit" statements; it will prevent checking the size of
+    // an empty array twice and prevent two no-ops. Practically the overhead is so low that
+    // we don't think it's worth thinking about in prod; your perf issues probably lie elsewhere.
+    //
     // We emit two events here: one for listeners to this specific event,
     // and one for the catchall listener '*', for any listeners that want
     // to be notified for all events.
