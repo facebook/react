@@ -8,7 +8,7 @@
 'use strict';
 
 const RawEventTelemetryEventEmitter = {
-  emitEvent: jest.fn(),
+  emit: jest.fn(),
 };
 
 module.exports = RawEventTelemetryEventEmitter;

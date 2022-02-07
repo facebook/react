@@ -90,7 +90,9 @@ export function dispatchEvent(
   }
 
   batchedUpdates(function() {
-    RawEventTelemetryEventEmitter.emitEvent(topLevelType, nativeEvent);
+    const event = {eventName: topLevelType, nativeEvent};
+    RawEventTelemetryEventEmitter.emit(topLevelType, event);
+    RawEventTelemetryEventEmitter.emit('*', event);
 
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(
