@@ -21,7 +21,6 @@ import {plugins} from './legacy-events/EventPluginRegistry';
 import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
-import {unsafeCastDOMTopLevelTypeToString} from './legacy-events/TopLevelEventTypes';
 import {RawEventTelemetryEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export {getListener, registrationNameModules as registrationNames};
@@ -91,7 +90,7 @@ export function dispatchEvent(
   }
 
   batchedUpdates(function() {
-    const topLevelTypeStr = unsafeCastDOMTopLevelTypeToString(topLevelType);
+    const topLevelTypeStr = (topLevelType: string);
     const event = {eventName: topLevelTypeStr, nativeEvent};
     RawEventTelemetryEventEmitter.emit(topLevelTypeStr, event);
     RawEventTelemetryEventEmitter.emit('*', event);
