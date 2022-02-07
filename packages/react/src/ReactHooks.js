@@ -14,6 +14,8 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
+  ReactServerContext,
+  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
@@ -184,6 +186,14 @@ export function useMutableSource<Source, Snapshot>(
 ): Snapshot {
   const dispatcher = resolveDispatcher();
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
+}
+
+export function useServerContext<T: ServerContextJSONValue>(
+  Context: ReactServerContext<T>,
+): T {
+  // TODO: Warn if regular context is passed in
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useServerContext(Context);
 }
 
 export function useSyncExternalStore<T>(

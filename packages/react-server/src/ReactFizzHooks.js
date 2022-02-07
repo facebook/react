@@ -15,6 +15,8 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
+  ReactServerContext,
+  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 
 import type {ResponseState} from './ReactServerFormatConfig';
@@ -243,7 +245,9 @@ function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-function readContext<T>(context: ReactContext<T>): T {
+function readContext<T: any>(
+  context: ReactContext<T> | ReactServerContext<T>,
+): T {
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
       console.error(
@@ -260,6 +264,16 @@ function readContext<T>(context: ReactContext<T>): T {
 function useContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
+  }
+  resolveCurrentlyRenderingComponent();
+  return readContextImpl(context);
+}
+
+function useServerContext<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
+): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useServerContext';
   }
   resolveCurrentlyRenderingComponent();
   return readContextImpl(context);
@@ -542,6 +556,7 @@ function noop(): void {}
 export const Dispatcher: DispatcherType = {
   readContext,
   useContext,
+  useServerContext,
   useMemo,
   useReducer,
   useRef,

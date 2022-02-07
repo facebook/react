@@ -32,6 +32,7 @@ import {
   isValidElement,
 } from './ReactElement';
 import {createContext} from './ReactContext';
+import {createServerContext} from './ReactServerContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
@@ -50,6 +51,7 @@ import {
   useSyncExternalStore,
   useReducer,
   useRef,
+  useServerContext,
   useState,
   useTransition,
   useDeferredValue,
@@ -86,6 +88,7 @@ export {
   Component,
   PureComponent,
   createContext,
+  createServerContext,
   forwardRef,
   lazy,
   memo,
@@ -98,6 +101,7 @@ export {
   useLayoutEffect,
   useMemo,
   useMutableSource,
+  useServerContext,
   useSyncExternalStore,
   useReducer,
   useRef,

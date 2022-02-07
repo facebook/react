@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactProviderType,
+  ReactContext,
+  ReactServerContext,
+} from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -3217,7 +3221,8 @@ function updateContextProvider(
   renderLanes: Lanes,
 ) {
   const providerType: ReactProviderType<any> = workInProgress.type;
-  const context: ReactContext<any> = providerType._context;
+  const context: ReactContext<any> | ReactServerContext<any> =
+    providerType._context;
 
   const newProps = workInProgress.pendingProps;
   const oldProps = workInProgress.memoizedProps;

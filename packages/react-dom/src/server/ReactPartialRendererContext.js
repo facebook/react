@@ -8,7 +8,7 @@
  */
 
 import type {ThreadID} from './ReactThreadIDAllocator';
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext, ReactServerContext} from 'shared/ReactTypes';
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
@@ -44,7 +44,7 @@ function checkContextTypes(typeSpecs, values, location: string) {
 }
 
 export function validateContextBounds(
-  context: ReactContext<any>,
+  context: ReactContext<any> | ReactServerContext<any>,
   threadID: ThreadID,
 ) {
   // If we don't have enough slots in this context to store this threadID,

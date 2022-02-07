@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {
+  ReactModel,
+  RequestOptions,
+} from 'react-server/src/ReactFlightServer';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 
 import {
@@ -16,20 +19,12 @@ import {
   startFlowing,
 } from 'react-server/src/ReactFlightServer';
 
-type Options = {
-  onError?: (error: mixed) => void,
-};
-
 function renderToReadableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
-  options?: Options,
+  options?: RequestOptions,
 ): ReadableStream {
-  const request = createRequest(
-    model,
-    webpackMap,
-    options ? options.onError : undefined,
-  );
+  const request = createRequest(model, webpackMap, options);
   const stream = new ReadableStream({
     type: 'bytes',
     start(controller) {

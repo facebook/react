@@ -75,45 +75,12 @@ export function processErrorChunk(
   ];
 }
 
-function convertModelToJSON(
-  request: Request,
-  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
-  key: string,
-  model: ReactModel,
-): JSONValue {
-  const json = resolveModelToJSON(request, parent, key, model);
-  if (typeof json === 'object' && json !== null) {
-    if (isArray(json)) {
-      const jsonArray: Array<JSONValue> = [];
-      for (let i = 0; i < json.length; i++) {
-        jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
-      }
-      return jsonArray;
-    } else {
-      const jsonObj: {[key: string]: JSONValue} = {};
-      for (const nextKey in json) {
-        if (hasOwnProperty.call(json, nextKey)) {
-          jsonObj[nextKey] = convertModelToJSON(
-            request,
-            json,
-            nextKey,
-            json[nextKey],
-          );
-        }
-      }
-      return jsonObj;
-    }
-  }
-  return json;
-}
-
 export function processModelChunk(
   request: Request,
   id: number,
-  model: ReactModel,
+  jsonValue: JSONValue,
 ): Chunk {
-  const json = convertModelToJSON(request, {}, '', model);
-  return ['J', id, json];
+  return ['J', id, jsonValue];
 }
 
 export function processModuleChunk(

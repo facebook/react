@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   Destination,
   Chunk,
@@ -16,6 +15,11 @@ import type {
   ModuleReference,
   ModuleKey,
 } from './ReactFlightServerConfig';
+import type {ContextSnapshot} from './ReactFlightNewContext';
+import type {
+  ReactServerContext,
+  ServerContextJSONValue,
+} from 'shared/ReactTypes';
 
 import {
   scheduleWork,
@@ -34,12 +38,28 @@ import {
   isModuleReference,
 } from './ReactFlightServerConfig';
 
+import {createServerContext} from 'react/src/ReactServerContext';
+import {
+  Dispatcher,
+  getCurrentCache,
+  setCurrentCache,
+  setCurrentServerContexts,
+} from './ReactFlightHooks';
+import {
+  pushProvider,
+  popProvider,
+  switchContext,
+  getActiveContext,
+  rootContextSnapshot,
+} from './ReactFlightNewContext';
+
 import {
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
+  REACT_PROVIDER_TYPE,
 } from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -68,6 +88,7 @@ type Segment = {
   id: number,
   model: ReactModel,
   ping: () => void,
+  context: ContextSnapshot,
 };
 
 export type Request = {
@@ -88,6 +109,11 @@ export type Request = {
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
+export type RequestOptions = {
+  onError?: (error: mixed) => void,
+  context?: Array<{name: string, value: ServerContextJSONValue}>,
+};
+
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 function defaultErrorHandler(error: mixed) {
@@ -102,9 +128,10 @@ const CLOSED = 2;
 export function createRequest(
   model: ReactModel,
   bundlerConfig: BundlerConfig,
-  onError: void | ((error: mixed) => void),
+  options?: RequestOptions,
 ): Request {
   const pingedSegments = [];
+  const onError = options?.onError;
   const request = {
     status: OPEN,
     fatalError: null,
@@ -125,9 +152,16 @@ export function createRequest(
     },
   };
   request.pendingChunks++;
-  const rootSegment = createSegment(request, model);
+  const context = createRootContext(options?.context);
+  const rootSegment = createSegment(request, model, context);
   pingedSegments.push(rootSegment);
   return request;
+}
+
+function createRootContext(
+  reqContext?: Array<{name: string, value: ServerContextJSONValue}>,
+) {
+  return importServerContexts(reqContext);
 }
 
 function attemptResolveElement(
@@ -174,6 +208,9 @@ function attemptResolveElement(
       case REACT_MEMO_TYPE: {
         return attemptResolveElement(type.type, key, ref, props);
       }
+      case REACT_PROVIDER_TYPE: {
+        return [REACT_PROVIDER_TYPE, type._context.displayName, key, props];
+      }
     }
   }
   throw new Error(
@@ -189,11 +226,16 @@ function pingSegment(request: Request, segment: Segment): void {
   }
 }
 
-function createSegment(request: Request, model: ReactModel): Segment {
+function createSegment(
+  request: Request,
+  model: ReactModel,
+  context: ContextSnapshot,
+): Segment {
   const id = request.nextChunkId++;
   const segment = {
     id,
     model,
+    context,
     ping: () => pingSegment(request, segment),
   };
   return segment;
@@ -205,6 +247,10 @@ function serializeByValueID(id: number): string {
 
 function serializeByRefID(id: number): string {
   return '@' + id.toString(16);
+}
+
+function serializeByContextID(id: number): string {
+  return '!';
 }
 
 function escapeStringValue(value: string): string {
@@ -221,7 +267,6 @@ function isObjectPrototype(object): boolean {
   if (!object) {
     return false;
   }
-  // $FlowFixMe
   const ObjectPrototype = Object.prototype;
   if (object === ObjectPrototype) {
     return true;
@@ -311,7 +356,6 @@ function describeObjectForErrorMessage(
 ): string {
   if (isArray(objectOrArray)) {
     let str = '[';
-    // $FlowFixMe: Should be refined by now.
     const array: $ReadOnlyArray<ReactModel> = objectOrArray;
     for (let i = 0; i < array.length; i++) {
       if (i > 0) {
@@ -336,7 +380,6 @@ function describeObjectForErrorMessage(
     return str;
   } else {
     let str = '{';
-    // $FlowFixMe: Should be refined by now.
     const object: {+[key: string | number]: ReactModel} = objectOrArray;
     const names = Object.keys(object);
     for (let i = 0; i < names.length; i++) {
@@ -390,6 +433,8 @@ export function resolveModelToJSON(
   switch (value) {
     case REACT_ELEMENT_TYPE:
       return '$';
+    case REACT_PROVIDER_TYPE:
+      return '!';
     case REACT_LAZY_TYPE:
       throw new Error(
         'React Lazy Components are not yet supported on the server.',
@@ -412,11 +457,12 @@ export function resolveModelToJSON(
         element.ref,
         element.props,
       );
+      2;
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
         request.pendingChunks++;
-        const newSegment = createSegment(request, value);
+        const newSegment = createSegment(request, value, getActiveContext());
         const ping = newSegment.ping;
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
@@ -658,6 +704,7 @@ function emitSymbolChunk(request: Request, id: number, name: string): void {
 }
 
 function retrySegment(request: Request, segment: Segment): void {
+  switchContext(segment.context);
   try {
     let value = segment.model;
     while (
@@ -677,8 +724,13 @@ function retrySegment(request: Request, segment: Segment): void {
         element.ref,
         element.props,
       );
+      1;
     }
-    const processedChunk = processModelChunk(request, segment.id, value);
+    const processedChunk = processModelChunk(
+      request,
+      segment.id,
+      convertModelToJSON(request, {'': value}, '', value),
+    );
     request.completedJSONChunks.push(processedChunk);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
@@ -696,9 +748,9 @@ function retrySegment(request: Request, segment: Segment): void {
 
 function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
-  const prevCache = currentCache;
+  const prevCache = getCurrentCache();
   ReactCurrentDispatcher.current = Dispatcher;
-  currentCache = request.cache;
+  setCurrentCache(request.cache);
 
   try {
     const pingedSegments = request.pingedSegments;
@@ -715,7 +767,7 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
-    currentCache = prevCache;
+    setCurrentCache(prevCache);
   }
 }
 
@@ -806,56 +858,76 @@ export function startFlowing(request: Request, destination: Destination): void {
   }
 }
 
-function unsupportedHook(): void {
-  throw new Error('This Hook is not supported in Server Components.');
-}
-
-function unsupportedRefresh(): void {
-  if (!currentCache) {
-    throw new Error(
-      'Refreshing the cache is not supported in Server Components.',
-    );
+function importServerContexts(
+  contexts:
+    | Array<{name: string, value: ServerContextJSONValue}>
+    | typeof undefined,
+) {
+  const registry: {[name: string]: ReactServerContext<any>} = {};
+  if (contexts) {
+    for (let i = 0; i < contexts.length; i++) {
+      const {name, value} = contexts[i];
+      const context = createServerContext(name, null);
+      pushProvider(context, value);
+      registry[name] = context;
+    }
   }
+  setCurrentServerContexts(registry);
+  return getActiveContext();
 }
 
-let currentCache: Map<Function, mixed> | null = null;
+function convertModelToJSON(
+  request: Request,
+  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
+  key: string,
+  model: ReactModel,
+): JSONValue {
+  const isReactElement =
+    typeof model === 'object' &&
+    model !== null &&
+    (model: any).$$typeof === REACT_ELEMENT_TYPE;
 
-const Dispatcher: DispatcherType = {
-  useMemo<T>(nextCreate: () => T): T {
-    return nextCreate();
-  },
-  useCallback<T>(callback: T): T {
-    return callback;
-  },
-  useDebugValue(): void {},
-  useDeferredValue: (unsupportedHook: any),
-  useTransition: (unsupportedHook: any),
-  getCacheForType<T>(resourceType: () => T): T {
-    if (!currentCache) {
-      throw new Error('Reading the cache is only supported while rendering.');
+  let context;
+  if (isReactElement) {
+    const element: React$Element<any> = (model: any);
+    if (element.type.$$typeof === REACT_PROVIDER_TYPE) {
+      context = element.type._context;
+      pushProvider(context, element.props.value);
     }
+  }
 
-    let entry: T | void = (currentCache.get(resourceType): any);
-    if (entry === undefined) {
-      entry = resourceType();
-      // TODO: Warn if undefined?
-      currentCache.set(resourceType, entry);
+  const json = resolveModelToJSON(request, parent, key, model);
+
+  if (typeof json === 'object' && json !== null) {
+    if (isArray(json)) {
+      const jsonArray: Array<JSONValue> = [];
+      for (let i = 0; i < json.length; i++) {
+        jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
+      }
+      if (context) {
+        popProvider(context);
+      }
+      return jsonArray;
+    } else {
+      const jsonObj: {[key: string]: JSONValue} = {};
+      for (const nextKey in json) {
+        if (hasOwnProperty.call(json, nextKey)) {
+          jsonObj[nextKey] = convertModelToJSON(
+            request,
+            json,
+            nextKey,
+            json[nextKey],
+          );
+        }
+      }
+      if (context) {
+        popProvider(context);
+      }
+      return jsonObj;
     }
-    return entry;
-  },
-  readContext: (unsupportedHook: any),
-  useContext: (unsupportedHook: any),
-  useReducer: (unsupportedHook: any),
-  useRef: (unsupportedHook: any),
-  useState: (unsupportedHook: any),
-  useInsertionEffect: (unsupportedHook: any),
-  useLayoutEffect: (unsupportedHook: any),
-  useImperativeHandle: (unsupportedHook: any),
-  useEffect: (unsupportedHook: any),
-  useId: (unsupportedHook: any),
-  useMutableSource: (unsupportedHook: any),
-  useSyncExternalStore: (unsupportedHook: any),
-  useCacheRefresh(): <T>(?() => T, ?T) => void {
-    return unsupportedRefresh;
-  },
-};
+  }
+  if (context) {
+    popProvider(context);
+  }
+  return json;
+}

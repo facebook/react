@@ -40,7 +40,8 @@ function read<T>(source: Source): T {
     processStringChunk(response, source[i], 0);
   }
   close(response);
-  return response.readRoot();
+  const root = response.readRoot();
+  return root;
 }
 
 export {read};

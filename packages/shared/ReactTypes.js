@@ -38,13 +38,19 @@ export type ReactProvider<T> = {
 
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
-  _context: ReactContext<T>,
+  _context: ReactContext<T> | ReactServerContext<T>,
+  ...
+};
+
+export type ReactServerProviderType<T: ServerContextJSONValue> = {
+  $$typeof: Symbol | number,
+  _context: ReactServerContext<T>,
   ...
 };
 
 export type ReactConsumer<T> = {
   $$typeof: Symbol | number,
-  type: ReactContext<T>,
+  type: ReactContext<T> | ReactServerContext<T>,
   key: null | string,
   ref: null,
   props: {
@@ -67,6 +73,26 @@ export type ReactContext<T> = {
   // This value may be added by application code
   // to improve DEV tooling display names
   displayName?: string,
+  ...
+};
+
+export type ServerContextJSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | $ReadOnlyArray<ServerContextJSONValue>
+  | {+[key: string]: ServerContextJSONValue};
+
+export type ReactServerContext<T: ServerContextJSONValue> = {
+  $$typeof: Symbol | number,
+  Provider: ReactServerProviderType<T>,
+  _currentValue: T,
+  _currentValue2: T,
+  _currentRenderer?: Object | null,
+  _currentRenderer2?: Object | null,
+  _threadCount: number,
+  +displayName: string,
   ...
 };
 

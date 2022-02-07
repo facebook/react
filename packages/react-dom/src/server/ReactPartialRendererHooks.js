@@ -14,6 +14,8 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  ReactServerContext,
+  ServerContextValue,
 } from 'shared/ReactTypes';
 import type PartialRenderer from './ReactPartialRenderer';
 
@@ -222,7 +224,9 @@ function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-function readContext<T>(context: ReactContext<T>): T {
+function readContext<T: any>(
+  context: ReactContext<T> | ReactServerContext<T>,
+): T {
   const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
@@ -239,6 +243,18 @@ function readContext<T>(context: ReactContext<T>): T {
 }
 
 function useContext<T>(context: ReactContext<T>): T {
+  if (__DEV__) {
+    currentHookNameInDev = 'useContext';
+  }
+  resolveCurrentlyRenderingComponent();
+  const threadID = currentPartialRenderer.threadID;
+  validateContextBounds(context, threadID);
+  return context[threadID];
+}
+
+function useServerContext<T: ServerContextValue>(
+  context: ReactServerContext<T>,
+): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
   }
@@ -531,6 +547,7 @@ export const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
+  useServerContext,
   useInsertionEffect,
   useLayoutEffect,
   useCallback,

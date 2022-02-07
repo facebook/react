@@ -7,9 +7,10 @@
  * @flow
  */
 
-import type {ReactContext, ReactServerContext} from 'shared/ReactTypes';
-
-import {isPrimaryRenderer} from './ReactServerFormatConfig';
+import type {
+  ReactServerContext,
+  ServerContextJSONValue,
+} from 'shared/ReactTypes';
 
 let rendererSigil;
 if (__DEV__) {
@@ -19,10 +20,10 @@ if (__DEV__) {
 
 // Used to store the parent path of all context overrides in a shared linked list.
 // Forming a reverse tree.
-type ContextNode<T: any> = {
+type ContextNode<T: ServerContextJSONValue> = {
   parent: null | ContextNode<any>,
   depth: number, // Short hand to compute the depth of the tree at this node.
-  context: ReactContext<T> | ReactServerContext<T>,
+  context: ReactServerContext<T>,
   parentValue: T,
   value: T,
 };
@@ -39,19 +40,11 @@ export const rootContextSnapshot: ContextSnapshot = null;
 let currentActiveSnapshot: ContextSnapshot = null;
 
 function popNode(prev: ContextNode<any>): void {
-  if (isPrimaryRenderer) {
-    prev.context._currentValue = prev.parentValue;
-  } else {
-    prev.context._currentValue2 = prev.parentValue;
-  }
+  prev.context._currentValue = prev.parentValue;
 }
 
 function pushNode(next: ContextNode<any>): void {
-  if (isPrimaryRenderer) {
-    next.context._currentValue = next.value;
-  } else {
-    next.context._currentValue2 = next.value;
-  }
+  next.context._currentValue = next.value;
 }
 
 function popToNearestCommonAncestor(
@@ -78,10 +71,9 @@ function popToNearestCommonAncestor(
       }
 
       popToNearestCommonAncestor(parentPrev, parentNext);
+      // On the way back, we push the new ones that weren't common.
+      pushNode(next);
     }
-
-    // On the way back, we push the new ones that weren't common.
-    pushNode(next);
   }
 }
 
@@ -177,43 +169,24 @@ export function switchContext(newSnapshot: ContextSnapshot): void {
   }
 }
 
-export function pushProvider<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
+export function pushProvider<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
   nextValue: T,
 ): ContextSnapshot {
-  let prevValue;
-  if (isPrimaryRenderer) {
-    prevValue = context._currentValue;
-    context._currentValue = nextValue;
-    if (__DEV__) {
-      if (
-        context._currentRenderer !== undefined &&
-        context._currentRenderer !== null &&
-        context._currentRenderer !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer = rendererSigil;
+  const prevValue = context._currentValue;
+  context._currentValue = nextValue;
+  if (__DEV__) {
+    if (
+      context._currentRenderer !== undefined &&
+      context._currentRenderer !== null &&
+      context._currentRenderer !== rendererSigil
+    ) {
+      console.error(
+        'Detected multiple renderers concurrently rendering the ' +
+          'same context provider. This is currently unsupported.',
+      );
     }
-  } else {
-    prevValue = context._currentValue2;
-    context._currentValue2 = nextValue;
-    if (__DEV__) {
-      if (
-        context._currentRenderer2 !== undefined &&
-        context._currentRenderer2 !== null &&
-        context._currentRenderer2 !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer2 = rendererSigil;
-    }
+    context._currentRenderer = rendererSigil;
   }
   const prevNode = currentActiveSnapshot;
   const newNode: ContextNode<T> = {
@@ -227,8 +200,8 @@ export function pushProvider<T: any>(
   return newNode;
 }
 
-export function popProvider<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
+export function popProvider<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
 ): ContextSnapshot {
   const prevSnapshot = currentActiveSnapshot;
 
@@ -245,36 +218,19 @@ export function popProvider<T: any>(
       );
     }
   }
-  if (isPrimaryRenderer) {
-    prevSnapshot.context._currentValue = prevSnapshot.parentValue;
-    if (__DEV__) {
-      if (
-        context._currentRenderer !== undefined &&
-        context._currentRenderer !== null &&
-        context._currentRenderer !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer = rendererSigil;
+  prevSnapshot.context._currentValue = prevSnapshot.parentValue;
+  if (__DEV__) {
+    if (
+      context._currentRenderer !== undefined &&
+      context._currentRenderer !== null &&
+      context._currentRenderer !== rendererSigil
+    ) {
+      console.error(
+        'Detected multiple renderers concurrently rendering the ' +
+          'same context provider. This is currently unsupported.',
+      );
     }
-  } else {
-    prevSnapshot.context._currentValue2 = prevSnapshot.parentValue;
-    if (__DEV__) {
-      if (
-        context._currentRenderer2 !== undefined &&
-        context._currentRenderer2 !== null &&
-        context._currentRenderer2 !== rendererSigil
-      ) {
-        console.error(
-          'Detected multiple renderers concurrently rendering the ' +
-            'same context provider. This is currently unsupported.',
-        );
-      }
-      context._currentRenderer2 = rendererSigil;
-    }
+    context._currentRenderer = rendererSigil;
   }
   return (currentActiveSnapshot = prevSnapshot.parent);
 }
@@ -283,11 +239,8 @@ export function getActiveContext(): ContextSnapshot {
   return currentActiveSnapshot;
 }
 
-export function readContext<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
+export function readContext<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
 ): T {
-  const value = isPrimaryRenderer
-    ? context._currentValue
-    : context._currentValue2;
-  return value;
+  return context._currentValue;
 }

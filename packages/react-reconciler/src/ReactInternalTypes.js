@@ -11,11 +11,14 @@ import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
+  ReactServerContext,
+  ServerContextJSONValue,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
   MutableSourceVersion,
   MutableSource,
   StartTransitionOptions,
+  Wakeable,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
@@ -24,7 +27,6 @@ import type {Flags} from './ReactFiberFlags';
 import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Wakeable} from 'shared/ReactTypes';
 import type {Cache} from './ReactFiberCacheComponent.old';
 import type {Transitions} from './ReactFiberTracingMarkerComponent.new';
 
@@ -46,10 +48,11 @@ export type HookType =
   | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useId'
-  | 'useCacheRefresh';
+  | 'useCacheRefresh'
+  | 'useServerContext';
 
-export type ContextDependency<T> = {
-  context: ReactContext<T>,
+export type ContextDependency<T: any> = {
+  context: ReactContext<T> | ReactServerContext<T>,
   next: ContextDependency<mixed> | null,
   memoizedValue: T,
   ...
@@ -342,7 +345,7 @@ type Dispatch<A> = A => void;
 export type Dispatcher = {|
   getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
-  readContext<T>(context: ReactContext<T>): T,
+  readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
     reducer: (S, A) => S,
@@ -381,6 +384,9 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
+  useServerContext<T: ServerContextJSONValue>(
+    context: ReactServerContext<T>,
+  ): T,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,

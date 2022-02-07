@@ -12,6 +12,7 @@ import type {
   ReactScopeInstance,
   ReactContext,
   ReactScopeQuery,
+  ReactServerContext,
 } from 'shared/ReactTypes';
 
 import {
@@ -108,9 +109,9 @@ function collectFirstScopedNodeFromChildren(
   return null;
 }
 
-function collectNearestContextValues<T>(
+function collectNearestContextValues<T: any>(
   node: Fiber,
-  context: ReactContext<T>,
+  context: ReactContext<T> | ReactServerContext<T>,
   childContextValues: Array<T>,
 ): void {
   if (node.tag === ContextProvider && node.type._context === context) {
@@ -128,9 +129,9 @@ function collectNearestContextValues<T>(
   }
 }
 
-function collectNearestChildContextValues<T>(
+function collectNearestChildContextValues<T: any>(
   startingChild: Fiber | null,
-  context: ReactContext<T>,
+  context: ReactContext<T> | ReactServerContext<T>,
   childContextValues: Array<T>,
 ): void {
   let child = startingChild;
@@ -176,7 +177,9 @@ function containsNode(node: Object): boolean {
   return false;
 }
 
-function getChildContextValues<T>(context: ReactContext<T>): Array<T> {
+function getChildContextValues<T: any>(
+  context: ReactContext<T> | ReactServerContext<T>,
+): Array<T> {
   const currentFiber = getInstanceFromScope(this);
   if (currentFiber === null) {
     return [];
