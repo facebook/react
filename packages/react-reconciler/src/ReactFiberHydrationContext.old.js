@@ -183,8 +183,7 @@ function deleteHydratableInstance(
   }
 }
 
-function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
-  fiber.flags = (fiber.flags & ~Hydrating) | Placement;
+function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   if (__DEV__) {
     switch (returnFiber.tag) {
       case HostRoot: {
@@ -283,6 +282,10 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
     }
   }
 }
+function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
+  fiber.flags = (fiber.flags & ~Hydrating) | Placement;
+  warnNonhydratedInstance(returnFiber, fiber);
+}
 
 function tryHydrate(fiber, nextInstance) {
   switch (fiber.tag) {
@@ -353,12 +356,10 @@ function shouldClientRenderOnMismatch(fiber: Fiber) {
   );
 }
 
-function throwOnHydrationMismatchIfConcurrentMode(fiber: Fiber) {
-  if (shouldClientRenderOnMismatch(fiber)) {
-    throw new Error(
-      'An error occurred during hydration. The server HTML was replaced with client content',
-    );
-  }
+function throwOnHydrationMismatch(fiber: Fiber) {
+  throw new Error(
+    'An error occurred during hydration. The server HTML was replaced with client content',
+  );
 }
 
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
@@ -367,7 +368,10 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
-    throwOnHydrationMismatchIfConcurrentMode(fiber);
+    if (shouldClientRenderOnMismatch(fiber)) {
+      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      throwOnHydrationMismatch(fiber);
+    }
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
     isHydrating = false;
@@ -376,7 +380,10 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   }
   const firstAttemptedInstance = nextInstance;
   if (!tryHydrate(fiber, nextInstance)) {
-    throwOnHydrationMismatchIfConcurrentMode(fiber);
+    if (shouldClientRenderOnMismatch(fiber)) {
+      warnNonhydratedInstance((hydrationParentFiber: any), fiber);
+      throwOnHydrationMismatch(fiber);
+    }
     // If we can't hydrate this instance let's try the next one.
     // We use this as a heuristic. It's based on intuition and not data so it
     // might be flawed or unnecessary.
@@ -565,7 +572,7 @@ function popHydrationState(fiber: Fiber): boolean {
     if (nextInstance) {
       if (shouldClientRenderOnMismatch(fiber)) {
         warnIfUnhydratedTailNodes(fiber);
-        throwOnHydrationMismatchIfConcurrentMode(fiber);
+        throwOnHydrationMismatch(fiber);
       } else {
         while (nextInstance) {
           deleteHydratableInstance(fiber, nextInstance);
