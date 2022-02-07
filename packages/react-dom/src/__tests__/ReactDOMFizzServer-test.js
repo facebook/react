@@ -1740,8 +1740,13 @@ describe('ReactDOMFizzServer', () => {
             'The server HTML was replaced with client content',
         ]);
       }).toErrorDev(
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-        {withoutStack: true},
+        [
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+          'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)',
+        ],
+        {withoutStack: 1},
       );
       expect(getVisibleChildren(container)).toEqual(<div>client</div>);
     } else {
@@ -1833,8 +1838,13 @@ describe('ReactDOMFizzServer', () => {
             'The server HTML was replaced with client content',
         ]);
       }).toErrorDev(
-        'Warning: An error occurred during hydration. The server HTML was replaced with client content',
-        {withoutStack: true},
+        [
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content',
+          'Warning: Expected server HTML to contain a matching <div> in <div>.\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)',
+        ],
+        {withoutStack: 1},
       );
       expect(getVisibleChildren(container)).toEqual(<div>client</div>);
     } else {
