@@ -12,6 +12,8 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  ReactServerContext,
+  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
@@ -2375,6 +2377,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
+  useServerContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
   useInsertionEffect: throwInvalidHookError,
@@ -2403,6 +2406,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 
   useCallback: mountCallback,
   useContext: readContext,
+  useServerContext: readContext,
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
@@ -2431,6 +2435,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 
   useCallback: updateCallback,
   useContext: readContext,
+  useServerContext: readContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
@@ -2459,6 +2464,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
 
   useCallback: updateCallback,
   useContext: readContext,
+  useServerContext: readContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
@@ -2510,7 +2516,7 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
-    readContext<T>(context: ReactContext<T>): T {
+    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2521,6 +2527,13 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
+      mountHookTypesDev();
+      return readContext(context);
+    },
+    useServerContext<T: ServerContextJSONValue>(
+      context: ReactServerContext<T>,
+    ): T {
+      currentHookNameInDev = 'useServerContext';
       mountHookTypesDev();
       return readContext(context);
     },
@@ -2658,7 +2671,7 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    readContext<T>(context: ReactContext<T>): T {
+    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2668,6 +2681,13 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
+      updateHookTypesDev();
+      return readContext(context);
+    },
+    useServerContext<T: ServerContextJSONValue>(
+      context: ReactServerContext<T>,
+    ): T {
+      currentHookNameInDev = 'useServerContext';
       updateHookTypesDev();
       return readContext(context);
     },
@@ -2800,7 +2820,7 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnUpdateInDEV = {
-    readContext<T>(context: ReactContext<T>): T {
+    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2810,6 +2830,13 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
+      updateHookTypesDev();
+      return readContext(context);
+    },
+    useServerContext<T: ServerContextJSONValue>(
+      context: ReactServerContext<T>,
+    ): T {
+      currentHookNameInDev = 'useServerContext';
       updateHookTypesDev();
       return readContext(context);
     },
@@ -2942,7 +2969,7 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnRerenderInDEV = {
-    readContext<T>(context: ReactContext<T>): T {
+    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       return readContext(context);
     },
 
@@ -2953,6 +2980,13 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
+      updateHookTypesDev();
+      return readContext(context);
+    },
+    useServerContext<T: ServerContextJSONValue>(
+      context: ReactServerContext<T>,
+    ): T {
+      currentHookNameInDev = 'useServerContext';
       updateHookTypesDev();
       return readContext(context);
     },
@@ -3085,7 +3119,7 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    readContext<T>(context: ReactContext<T>): T {
+    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       warnInvalidContextAccess();
       return readContext(context);
     },
@@ -3097,6 +3131,14 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return readContext(context);
+    },
+    useServerContext<T: ServerContextJSONValue>(
+      context: ReactServerContext<T>,
+    ): T {
+      currentHookNameInDev = 'useServerContext';
       warnInvalidHookAccess();
       mountHookTypesDev();
       return readContext(context);
@@ -3244,7 +3286,7 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    readContext<T>(context: ReactContext<T>): T {
+    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       warnInvalidContextAccess();
       return readContext(context);
     },
@@ -3256,6 +3298,14 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return readContext(context);
+    },
+    useServerContext<T: ServerContextJSONValue>(
+      context: ReactServerContext<T>,
+    ): T {
+      currentHookNameInDev = 'useServerContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);
@@ -3416,6 +3466,14 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return readContext(context);
+    },
+    useServerContext<T: ServerContextJSONValue>(
+      context: ReactServerContext<T>,
+    ): T {
+      currentHookNameInDev = 'useServerContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);

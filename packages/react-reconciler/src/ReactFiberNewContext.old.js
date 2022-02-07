@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactServerContext,
+  ReactProviderType,
+} from 'shared/ReactTypes';
 import type {
   Fiber,
   ContextDependency,
@@ -83,9 +87,9 @@ export function exitDisallowedContextReadInDEV(): void {
   }
 }
 
-export function pushProvider<T>(
+export function pushProvider<T: any>(
   providerFiber: Fiber,
-  context: ReactContext<T>,
+  context: ReactContext<T> | ReactServerContext<T>,
   nextValue: T,
 ): void {
   if (isPrimaryRenderer) {
@@ -125,16 +129,16 @@ export function pushProvider<T>(
   }
 }
 
-export function popProvider(
-  context: ReactContext<any>,
+export function popProvider<T: any>(
+  context: ReactContext<T> | ReactServerContext<T>,
   providerFiber: Fiber,
 ): void {
   const currentValue = valueCursor.current;
   pop(valueCursor, providerFiber);
   if (isPrimaryRenderer) {
-    context._currentValue = currentValue;
+    context._currentValue = (currentValue: any);
   } else {
-    context._currentValue2 = currentValue;
+    context._currentValue2 = (currentValue: any);
   }
 }
 
@@ -180,9 +184,9 @@ export function scheduleContextWorkOnParentPath(
   }
 }
 
-export function propagateContextChange<T>(
+export function propagateContextChange<T: any>(
   workInProgress: Fiber,
-  context: ReactContext<T>,
+  context: ReactContext<T> | ReactServerContext<T>,
   renderLanes: Lanes,
 ): void {
   if (enableLazyContextPropagation) {
@@ -201,9 +205,9 @@ export function propagateContextChange<T>(
   }
 }
 
-function propagateContextChange_eager<T>(
+function propagateContextChange_eager<T: any>(
   workInProgress: Fiber,
-  context: ReactContext<T>,
+  context: ReactContext<T> | ReactServerContext<T>,
   renderLanes: Lanes,
 ): void {
   // Only used by eager implementation
@@ -341,7 +345,7 @@ function propagateContextChange_eager<T>(
   }
 }
 
-function propagateContextChanges<T>(
+function propagateContextChanges<T: any>(
   workInProgress: Fiber,
   contexts: Array<any>,
   renderLanes: Lanes,
@@ -370,7 +374,7 @@ function propagateContextChanges<T>(
         const dependency = dep;
         const consumer = fiber;
         findContext: for (let i = 0; i < contexts.length; i++) {
-          const context: ReactContext<T> = contexts[i];
+          const context: ReactContext<T> | ReactServerContext<T> = contexts[i];
           // Check if the context matches.
           // TODO: Compare selected values to bail out early.
           if (dependency.context === context) {
@@ -537,7 +541,8 @@ function propagateParentContextChanges(
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
         const providerType: ReactProviderType<any> = parent.type;
-        const context: ReactContext<any> = providerType._context;
+        const context: ReactContext<any> | ReactServerContext<any> =
+          providerType._context;
 
         const newProps = parent.pendingProps;
         const newValue = newProps.value;
@@ -640,7 +645,9 @@ export function prepareToReadContext(
   }
 }
 
-export function readContext<T>(context: ReactContext<T>): T {
+export function readContext<T: any>(
+  context: ReactContext<T> | ReactServerContext<T>,
+): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.

@@ -27,8 +27,9 @@ const ReactNoopFlightServer = ReactFlightServer({
     callback();
   },
   beginWriting(destination: Destination): void {},
-  writeChunk(destination: Destination, chunk: string): void {
+  writeChunk(destination: Destination, chunk: string): boolean {
     destination.push(chunk);
+    return true;
   },
   completeWriting(destination: Destination): void {},
   close(destination: Destination): void {},
@@ -54,8 +55,16 @@ const ReactNoopFlightServer = ReactFlightServer({
   },
 });
 
+type ServerContextJSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | $ReadOnlyArray<ServerContextJSONValue>;
+
 type Options = {
   onError?: (error: mixed) => void,
+  context?: Array<{name: string, value: ServerContextJSONValue}>,
 };
 
 function render(model: ReactModel, options?: Options): Destination {
@@ -64,7 +73,7 @@ function render(model: ReactModel, options?: Options): Destination {
   const request = ReactNoopFlightServer.createRequest(
     model,
     bundlerConfig,
-    options ? options.onError : undefined,
+    options,
   );
   ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);

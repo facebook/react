@@ -12,7 +12,9 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  ReactServerContext,
   ReactProviderType,
+  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -103,7 +105,9 @@ function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-function readContext<T>(context: ReactContext<T>): T {
+function readContext<T: any>(
+  context: ReactContext<T> | ReactServerContext<T>,
+): T {
   // For now we don't expose readContext usage in the hooks debugging info.
   return context._currentValue;
 }
@@ -111,6 +115,17 @@ function readContext<T>(context: ReactContext<T>): T {
 function useContext<T>(context: ReactContext<T>): T {
   hookLog.push({
     primitive: 'Context',
+    stackError: new Error(),
+    value: context._currentValue,
+  });
+  return context._currentValue;
+}
+
+function useServerContext<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
+): T {
+  hookLog.push({
+    primitive: 'ServerContext',
     stackError: new Error(),
     value: context._currentValue,
   });
@@ -343,6 +358,7 @@ const Dispatcher: DispatcherType = {
   useMemo,
   useReducer,
   useRef,
+  useServerContext,
   useState,
   useTransition,
   useMutableSource,

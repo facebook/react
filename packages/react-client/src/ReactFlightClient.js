@@ -24,7 +24,13 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
-import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {getOrCreateContextByName} from 'react/src/ReactServerContext';
+
+import {
+  REACT_LAZY_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_PROVIDER_TYPE,
+} from 'shared/ReactSymbols';
 
 export type JSONValue =
   | number
@@ -318,6 +324,11 @@ export function parseModelString(
       // When passed into React, we'll know how to suspend on this.
       return createLazyChunkWrapper(chunk);
     }
+    case '!': {
+      if (value === '!') {
+        return REACT_PROVIDER_TYPE;
+      }
+    }
   }
   return value;
 }
@@ -327,10 +338,18 @@ export function parseModelTuple(
   value: {+[key: string]: JSONValue} | $ReadOnlyArray<JSONValue>,
 ): any {
   const tuple: [mixed, mixed, mixed, mixed] = (value: any);
-  if (tuple[0] === REACT_ELEMENT_TYPE) {
-    // TODO: Consider having React just directly accept these arrays as elements.
-    // Or even change the ReactElement type to be an array.
-    return createElement(tuple[1], tuple[2], tuple[3]);
+
+  switch (tuple[0]) {
+    case REACT_ELEMENT_TYPE:
+      // TODO: Consider having React just directly accept these arrays as elements.
+      // Or even change the ReactElement type to be an array.
+      return createElement(tuple[1], tuple[2], tuple[3]);
+    case REACT_PROVIDER_TYPE:
+      return createElement(
+        getOrCreateContextByName((tuple[1]: any)).Provider,
+        tuple[2],
+        tuple[3],
+      );
   }
   return value;
 }

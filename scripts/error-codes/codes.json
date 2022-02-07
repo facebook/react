@@ -403,5 +403,6 @@
   "415": "Error parsing the data. It's probably an error code or network corruption.",
   "416": "This environment don't support binary chunks.",
   "417": "React currently only supports piping to one writable stream.",
-  "418": "An error occurred during hydration. The server HTML was replaced with client content"
+  "418": "An error occurred during hydration. The server HTML was replaced with client content",
+  "419": "useServerContext is only supported while rendering."
 }

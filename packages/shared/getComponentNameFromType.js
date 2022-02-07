@@ -40,7 +40,7 @@ function getWrappedName(
 }
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
-function getContextName(type: ReactContext<any>) {
+function getContextName(type: ReactContext<any> | ReactServerContext<any>) {
   return type.displayName || 'Context';
 }
 

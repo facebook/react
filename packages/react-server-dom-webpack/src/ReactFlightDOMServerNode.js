@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ReactModel} from 'react-server/src/ReactFlightServer';
+import type {
+  ReactModel,
+  RequestOptions,
+} from 'react-server/src/ReactFlightServer';
 import type {BundlerConfig} from './ReactFlightServerWebpackBundlerConfig';
 import type {Writable} from 'stream';
 
@@ -21,10 +24,6 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request, destination);
 }
 
-type Options = {
-  onError?: (error: mixed) => void,
-};
-
 type Controls = {|
   pipe<T: Writable>(destination: T): T,
 |};
@@ -32,13 +31,9 @@ type Controls = {|
 function renderToPipeableStream(
   model: ReactModel,
   webpackMap: BundlerConfig,
-  options?: Options,
+  options?: RequestOptions,
 ): Controls {
-  const request = createRequest(
-    model,
-    webpackMap,
-    options ? options.onError : undefined,
-  );
+  const request = createRequest(model, webpackMap, options);
   let hasStartedFlowing = false;
   startWork(request);
   return {
