@@ -356,16 +356,18 @@ describe('ReactDOMServerPartialHydration', () => {
         'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
       );
 
-      expect(mockError.mock.calls[0]).toEqual([
-        'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
-        'div',
-        'div',
-        '\n' +
-          '    in div (at **)\n' +
-          '    in Component (at **)\n' +
-          '    in Suspense (at **)\n' +
-          '    in App (at **)',
-      ]);
+      if (__DEV__) {
+        expect(mockError.mock.calls[0]).toEqual([
+          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+          'div',
+          'div',
+          '\n' +
+            '    in div (at **)\n' +
+            '    in Component (at **)\n' +
+            '    in Suspense (at **)\n' +
+            '    in App (at **)',
+        ]);
+      }
     } finally {
       console.error = originalConsoleError;
     }
@@ -587,15 +589,17 @@ describe('ReactDOMServerPartialHydration', () => {
       } else {
         expect(ref.current).toBe(span);
       }
-      expect(mockError).toHaveBeenCalledWith(
-        'Warning: Did not expect server HTML to contain a <%s> in <%s>.%s',
-        'span',
-        'div',
-        '\n' +
-          '    in Suspense (at **)\n' +
-          '    in div (at **)\n' +
-          '    in App (at **)',
-      );
+      if (__DEV__) {
+        expect(mockError).toHaveBeenCalledWith(
+          'Warning: Did not expect server HTML to contain a <%s> in <%s>.%s',
+          'span',
+          'div',
+          '\n' +
+            '    in Suspense (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)',
+        );
+      }
     } finally {
       console.error = originalConsoleError;
     }
