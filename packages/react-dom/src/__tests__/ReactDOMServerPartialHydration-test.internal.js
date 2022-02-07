@@ -255,43 +255,43 @@ describe('ReactDOMServerPartialHydration', () => {
     console.error = (...args) => {
       mockError(...args.map(normalizeCodeLocInfo));
     };
+    let client = false;
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => {
+      resolve = () => {
+        suspend = false;
+        resolvePromise();
+      };
+    });
+    function Child() {
+      if (suspend) {
+        Scheduler.unstable_yieldValue('Suspend');
+        throw promise;
+      } else {
+        Scheduler.unstable_yieldValue('Hello');
+        return 'Hello';
+      }
+    }
+    function Component({shouldMismatch}) {
+      Scheduler.unstable_yieldValue('Component');
+      if (shouldMismatch && client) {
+        return <article>Mismatch</article>;
+      }
+      return <div>Component</div>;
+    }
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+          <Component />
+          <Component />
+          <Component />
+          <Component shouldMismatch={true} />
+        </Suspense>
+      );
+    }
     try {
-      let client = false;
-      let suspend = false;
-      let resolve;
-      const promise = new Promise(resolvePromise => {
-        resolve = () => {
-          suspend = false;
-          resolvePromise();
-        };
-      });
-      function Child() {
-        if (suspend) {
-          Scheduler.unstable_yieldValue('Suspend');
-          throw promise;
-        } else {
-          Scheduler.unstable_yieldValue('Hello');
-          return 'Hello';
-        }
-      }
-      function Component({shouldMismatch}) {
-        Scheduler.unstable_yieldValue('Component');
-        if (shouldMismatch && client) {
-          return <article>Mismatch</article>;
-        }
-        return <div>Component</div>;
-      }
-      function App() {
-        return (
-          <Suspense fallback="Loading...">
-            <Child />
-            <Component />
-            <Component />
-            <Component />
-            <Component shouldMismatch={true} />
-          </Suspense>
-        );
-      }
       const finalHTML = ReactDOMServer.renderToString(<App />);
       const container = document.createElement('div');
       container.innerHTML = finalHTML;
@@ -530,36 +530,35 @@ describe('ReactDOMServerPartialHydration', () => {
     console.error = (...args) => {
       mockError(...args.map(normalizeCodeLocInfo));
     };
+
+    const ref = React.createRef();
+    let shouldSuspend = false;
+    let resolve;
+    const promise = new Promise(res => {
+      resolve = () => {
+        shouldSuspend = false;
+        res();
+      };
+    });
+    function Suspender() {
+      if (shouldSuspend) {
+        throw promise;
+      }
+      return <></>;
+    }
+    function App({hasB}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Suspender />
+            <span ref={ref}>A</span>
+            {hasB ? <span>B</span> : null}
+          </Suspense>
+          <div>Sibling</div>
+        </div>
+      );
+    }
     try {
-      const ref = React.createRef();
-      function App({hasB}) {
-        return (
-          <div>
-            <Suspense fallback="Loading...">
-              <Suspender />
-              <span ref={ref}>A</span>
-              {hasB ? <span>B</span> : null}
-            </Suspense>
-            <div>Sibling</div>
-          </div>
-        );
-      }
-
-      let shouldSuspend = false;
-      let resolve;
-      const promise = new Promise(res => {
-        resolve = () => {
-          shouldSuspend = false;
-          res();
-        };
-      });
-      function Suspender() {
-        if (shouldSuspend) {
-          throw promise;
-        }
-        return <></>;
-      }
-
       const finalHTML = ReactDOMServer.renderToString(<App hasB={true} />);
 
       const container = document.createElement('div');
