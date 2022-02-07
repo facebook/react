@@ -22,7 +22,6 @@ import {
   injectEventPluginsByName,
 } from './legacy-events/EventPluginRegistry';
 
-import ReactNativeEventTelemetryPlugin from './ReactNativeEventTelemetryPlugin';
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';
 
@@ -36,7 +35,6 @@ injectEventPluginOrder(ReactNativeEventPluginOrder);
  * them).
  */
 injectEventPluginsByName({
-  ReactNativeEventTelemetryPlugin: ReactNativeEventTelemetryPlugin,
   ResponderEventPlugin: ResponderEventPlugin,
   ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
 });

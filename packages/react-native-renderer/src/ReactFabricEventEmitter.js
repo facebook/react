@@ -21,6 +21,8 @@ import {plugins} from './legacy-events/EventPluginRegistry';
 import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
+import {RawEventTelemetryEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+
 export {getListener, registrationNameModules as registrationNames};
 
 /**
@@ -88,6 +90,8 @@ export function dispatchEvent(
   }
 
   batchedUpdates(function() {
+    RawEventTelemetryEventEmitter.emitEvent(topLevelType, nativeEvent);
+
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(
       topLevelType,
