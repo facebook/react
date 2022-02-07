@@ -92,7 +92,6 @@ export function pushProvider<T: any>(
   context: ReactContext<T> | ReactServerContext<T>,
   nextValue: T,
 ): void {
-  debugger;
   if (isPrimaryRenderer) {
     push(valueCursor, context._currentValue, providerFiber);
 
