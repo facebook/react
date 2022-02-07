@@ -502,15 +502,14 @@ function runActTests(label, render, unmount, rerender) {
       it('warns if you try to interleave multiple act calls', async () => {
         spyOnDevAndProd(console, 'error');
         // let's try to cheat and spin off a 'thread' with an act call
-        (async () => {
-          try {
+        // uncaught rejection causes error since node.js v15 so it is gated here
+        if (__DEV__) {
+          (async () => {
             await act(async () => {
               await sleep(50);
             });
-          } catch (e) {
-            // suppress ERR_UNHANDLED_REJECTION
-          }
-        })();
+          })();
+        }
 
         await act(async () => {
           await sleep(100);
