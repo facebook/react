@@ -13,4 +13,4 @@ const RawEventTelemetryEventEmitterOffByDefault = {
   emit: jest.fn(),
 };
 
-module.exports = { default: RawEventTelemetryEventEmitterOffByDefault };
+module.exports = {default: RawEventTelemetryEventEmitterOffByDefault};
