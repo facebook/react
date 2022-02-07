@@ -90,7 +90,13 @@ export function dispatchEvent(
   }
 
   batchedUpdates(function() {
-    const topLevelTypeStr = (topLevelType: string);
+    // Emit event to the event telemetry system.
+    // We emit two events here: one for listeners to this specific event,
+    // and one for the catchall listener '*', for any listeners that want
+    // to be notified for all events.
+    // Note that extracted events are *not* emitted into the telemetry system,
+    // only events that have a 1:1 mapping with a native event, at least for now.
+    const topLevelTypeStr: string = ((topLevelType: any): string);
     const event = {eventName: topLevelTypeStr, nativeEvent};
     RawEventTelemetryEventEmitter.emit(topLevelTypeStr, event);
     RawEventTelemetryEventEmitter.emit('*', event);
