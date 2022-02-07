@@ -500,4 +500,24 @@ describe('ReactFlight', () => {
     expect(Scheduler).toHaveYielded(['ClientBar']);
     expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
   });
+
+  it('takes ServerContext from client for refetching usecases', async () => {
+    const ServerContext = React.createServerContext(
+      'ServerContext',
+      'default hello from server',
+    );
+    function Bar() {
+      return <span>{React.useServerContext(ServerContext)}</span>;
+    }
+    const transport = ReactNoopFlightServer.render(<Bar />, {
+      context: [{name: 'ServerContext', value: 'Override'}],
+    });
+
+    act(() => {
+      const flightModel = ReactNoopFlightClient.read(transport);
+      ReactNoop.render(flightModel);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
+  });
 });

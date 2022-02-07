@@ -38,7 +38,7 @@ import {
   isModuleReference,
 } from './ReactFlightServerConfig';
 
-import {createServerContext} from 'react/src/ReactServerContext';
+import {getOrCreateContextByName} from 'react/src/ReactServerContext';
 import {
   Dispatcher,
   getCurrentCache,
@@ -860,7 +860,7 @@ function importServerContexts(
   if (contexts) {
     for (let i = 0; i < contexts.length; i++) {
       const {name, value} = contexts[i];
-      const context = createServerContext(name, null);
+      const context = getOrCreateContextByName(name);
       pushProvider(context, value);
       registry[name] = context;
     }
