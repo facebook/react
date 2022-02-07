@@ -21,7 +21,7 @@ import {plugins} from './legacy-events/EventPluginRegistry';
 import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
-import {RawEventTelemetryEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {RawEventTelemetryEventEmitterOffByDefault} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -112,8 +112,8 @@ export function dispatchEvent(
     // only events that have a 1:1 mapping with a native event, at least for now.
     const topLevelTypeStr: string = ((topLevelType: any): string);
     const event = {eventName: topLevelTypeStr, nativeEvent};
-    RawEventTelemetryEventEmitter.emit(topLevelTypeStr, event);
-    RawEventTelemetryEventEmitter.emit('*', event);
+    RawEventTelemetryEventEmitterOffByDefault.emit(topLevelTypeStr, event);
+    RawEventTelemetryEventEmitterOffByDefault.emit('*', event);
 
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(

@@ -9,8 +9,8 @@
 
 // See the react-native repository for a full implementation.
 // However, this is just an EventEmitter.
-const RawEventTelemetryEventEmitter = {
+const RawEventTelemetryEventEmitterOffByDefault = {
   emit: jest.fn(),
 };
 
-module.exports = RawEventTelemetryEventEmitter;
+module.exports = { default: RawEventTelemetryEventEmitterOffByDefault };

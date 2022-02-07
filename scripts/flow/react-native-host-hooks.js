@@ -134,7 +134,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     get: (name: string) => ReactNativeBaseComponentViewConfig,
     ...
   };
-  declare export var RawEventTelemetryEventEmitter: {
+  declare export var RawEventTelemetryEventEmitterOffByDefault: {
     emit: (channel: string, event: RawEventTelemetryEvent) => string,
     ...
   };
