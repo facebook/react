@@ -91,6 +91,15 @@ export function dispatchEvent(
 
   batchedUpdates(function() {
     // Emit event to the event telemetry system.
+    //
+    // NOTE: this event telemetry system does *nothing* without explicit,
+    // per-application opt-in, and merely emits events into the local
+    // EventEmitter below. If *you* do not add listeners to the `RawEventTelemetryEventEmitter`,
+    // then all of these emitted events will just blackhole and are no-ops.
+    // It is available (although not officially supported... yet) if you want to collect
+    // telemetry on event latency in your application, and could also be useful for debugging
+    // low-level events issues.
+    //
     // We emit two events here: one for listeners to this specific event,
     // and one for the catchall listener '*', for any listeners that want
     // to be notified for all events.

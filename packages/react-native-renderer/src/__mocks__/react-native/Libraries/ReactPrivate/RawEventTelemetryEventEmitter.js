@@ -7,6 +7,8 @@
 
 'use strict';
 
+// See the react-native repository for a full implementation.
+// However, this is just an EventEmitter.
 const RawEventTelemetryEventEmitter = {
   emit: jest.fn(),
 };
