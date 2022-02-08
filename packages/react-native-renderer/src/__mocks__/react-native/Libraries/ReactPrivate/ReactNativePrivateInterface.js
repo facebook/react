@@ -41,4 +41,7 @@ module.exports = {
   get legacySendAccessibilityEvent() {
     return require('./legacySendAccessibilityEvent');
   },
+  get RawEventEmitter() {
+    return require('./RawEventEmitter').default;
+  },
 };
