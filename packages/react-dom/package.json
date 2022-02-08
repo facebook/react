@@ -38,6 +38,19 @@
     "cjs/",
     "umd/"
   ],
+  "exports": {
+    ".": "./index.js",
+    "./server": {
+      "deno": "./server.browser.js",
+      "worker": "./server.browser.js",
+      "browser": "./server.browser.js",
+      "default": "./server.node.js"
+    },
+    "./profiling": "./profiling.js",
+    "./test-utils": "./test-utils.js",
+    "./package.json": "./package.json",
+    "./": "./"
+  },
   "browser": {
     "./server.js": "./server.browser.js"
   },
