@@ -90,17 +90,18 @@ export function dispatchEvent(
   }
 
   batchedUpdates(function() {
-    // Emit event to the event telemetry system.
+    // Emit event to the RawEventEmitter. This is an unused-by-default EventEmitter
+    // that can be used to instrument event performance monitoring (primarily - could be useful
+    // for other things too).
     //
-    // NOTE: this event telemetry system does *nothing* without explicit,
-    // per-application opt-in, and merely emits events into the local
-    // EventEmitter below. If *you* do not add listeners to the `RawEventEmitter`,
+    // NOTE: this merely emits events into the EventEmitter below.
+    // If *you* do not add listeners to the `RawEventEmitter`,
     // then all of these emitted events will just blackhole and are no-ops.
     // It is available (although not officially supported... yet) if you want to collect
-    // telemetry on event latency in your application, and could also be useful for debugging
+    // perf data on event latency in your application, and could also be useful for debugging
     // low-level events issues.
     //
-    // If you do not have any event telemetry and are extremely concerned about event perf,
+    // If you do not have any event perf monitoring and are extremely concerned about event perf,
     // it is safe to disable these "emit" statements; it will prevent checking the size of
     // an empty array twice and prevent two no-ops. Practically the overhead is so low that
     // we don't think it's worth thinking about in prod; your perf issues probably lie elsewhere.
@@ -108,7 +109,7 @@ export function dispatchEvent(
     // We emit two events here: one for listeners to this specific event,
     // and one for the catchall listener '*', for any listeners that want
     // to be notified for all events.
-    // Note that extracted events are *not* emitted into the telemetry system,
+    // Note that extracted events are *not* emitted,
     // only events that have a 1:1 mapping with a native event, at least for now.
     const topLevelTypeStr: string = ((topLevelType: any): string);
     const event = {eventName: topLevelTypeStr, nativeEvent};
