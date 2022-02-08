@@ -26,19 +26,30 @@ function resolveRelatively(importee, importer) {
   }
 }
 
+function naivelyResolveInternalModulePath(p) {
+  // Naive version of require.resolve, because require.resolve is not available
+  // in the ESM world. We don't need this to be generally correct; we only use
+  // it to resolve internal forks at build time.
+  let resolved = path.resolve(process.cwd(), 'packages', p);
+  if (!resolved.endsWith('.js')) {
+    resolved += '.js';
+  }
+  return resolved;
+}
+
 let resolveCache = new Map();
 function useForks(forks) {
   let resolvedForks = new Map();
   Object.keys(forks).forEach(srcModule => {
     const targetModule = forks[srcModule];
     resolvedForks.set(
-      require.resolve(srcModule),
+      naivelyResolveInternalModulePath(srcModule),
       // targetModule could be a string (a file path),
       // or an error (which we'd throw if it gets used).
       // Don't try to "resolve" errors, but cache
       // resolved file paths.
       typeof targetModule === 'string'
-        ? require.resolve(targetModule)
+        ? naivelyResolveInternalModulePath(targetModule)
         : targetModule
     );
   });
