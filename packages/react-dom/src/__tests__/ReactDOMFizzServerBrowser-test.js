@@ -51,7 +51,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should call renderToReadableStream', async () => {
-    const stream = ReactDOMFizzServer.renderToReadableStream(
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,
     );
     const result = await readResult(stream);
@@ -60,7 +60,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
-    const stream = ReactDOMFizzServer.renderToReadableStream(
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
       <html>
         <body>hello world</body>
       </html>,
@@ -73,7 +73,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
-    const stream = ReactDOMFizzServer.renderToReadableStream(
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,
       {
         bootstrapScriptContent: 'INIT();',
@@ -99,7 +99,7 @@ describe('ReactDOMFizzServer', () => {
       return 'Done';
     }
     let isComplete = false;
-    const stream = ReactDOMFizzServer.renderToReadableStream(
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback="Loading">
           <Wait />
@@ -128,63 +128,55 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
-  it('should error the stream when an error is thrown at the root', async () => {
+  it('should reject the promise when an error is thrown at the root', async () => {
     const reportedErrors = [];
-    const stream = ReactDOMFizzServer.renderToReadableStream(
-      <div>
-        <Throw />
-      </div>,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-        },
-      },
-    );
-
     let caughtError = null;
-    let result = '';
     try {
-      result = await readResult(stream);
-    } catch (x) {
-      caughtError = x;
+      await ReactDOMFizzServer.renderToReadableStream(
+        <div>
+          <Throw />
+        </div>,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
+        },
+      );
+    } catch (error) {
+      caughtError = error;
     }
     expect(caughtError).toBe(theError);
-    expect(result).toBe('');
     expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental
-  it('should error the stream when an error is thrown inside a fallback', async () => {
+  it('should reject the promise when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
-    const stream = ReactDOMFizzServer.renderToReadableStream(
-      <div>
-        <Suspense fallback={<Throw />}>
-          <InfiniteSuspend />
-        </Suspense>
-      </div>,
-      {
-        onError(x) {
-          reportedErrors.push(x);
-        },
-      },
-    );
-
     let caughtError = null;
-    let result = '';
     try {
-      result = await readResult(stream);
-    } catch (x) {
-      caughtError = x;
+      await ReactDOMFizzServer.renderToReadableStream(
+        <div>
+          <Suspense fallback={<Throw />}>
+            <InfiniteSuspend />
+          </Suspense>
+        </div>,
+        {
+          onError(x) {
+            reportedErrors.push(x);
+          },
+        },
+      );
+    } catch (error) {
+      caughtError = error;
     }
     expect(caughtError).toBe(theError);
-    expect(result).toBe('');
     expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
-    const stream = ReactDOMFizzServer.renderToReadableStream(
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
@@ -205,7 +197,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const controller = new AbortController();
-    const stream = ReactDOMFizzServer.renderToReadableStream(
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
