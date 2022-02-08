@@ -21,7 +21,7 @@ import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 type DeepDifferOptions = {|+unsafelyIgnoreFunctions?: boolean|};
-type RawEventTelemetryEvent = $ReadOnly<{|
+type RawEventEmitterEvent = $ReadOnly<{|
   eventName: string,
   // We expect, but do not/cannot require, that nativeEvent is an object
   // with the properties: key, elementType (string), type (string), tag (numeric),
@@ -134,8 +134,8 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     get: (name: string) => ReactNativeBaseComponentViewConfig,
     ...
   };
-  declare export var RawEventTelemetryEventEmitterOffByDefault: {
-    emit: (channel: string, event: RawEventTelemetryEvent) => string,
+  declare export var RawEventEmitter: {
+    emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
 }

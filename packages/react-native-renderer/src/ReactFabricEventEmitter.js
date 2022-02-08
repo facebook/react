@@ -21,7 +21,7 @@ import {plugins} from './legacy-events/EventPluginRegistry';
 import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
-import {RawEventTelemetryEventEmitterOffByDefault} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {RawEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -94,7 +94,7 @@ export function dispatchEvent(
     //
     // NOTE: this event telemetry system does *nothing* without explicit,
     // per-application opt-in, and merely emits events into the local
-    // EventEmitter below. If *you* do not add listeners to the `RawEventTelemetryEventEmitter`,
+    // EventEmitter below. If *you* do not add listeners to the `RawEventEmitter`,
     // then all of these emitted events will just blackhole and are no-ops.
     // It is available (although not officially supported... yet) if you want to collect
     // telemetry on event latency in your application, and could also be useful for debugging
@@ -112,8 +112,8 @@ export function dispatchEvent(
     // only events that have a 1:1 mapping with a native event, at least for now.
     const topLevelTypeStr: string = ((topLevelType: any): string);
     const event = {eventName: topLevelTypeStr, nativeEvent};
-    RawEventTelemetryEventEmitterOffByDefault.emit(topLevelTypeStr, event);
-    RawEventTelemetryEventEmitterOffByDefault.emit('*', event);
+    RawEventEmitter.emit(topLevelTypeStr, event);
+    RawEventEmitter.emit('*', event);
 
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(
