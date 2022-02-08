@@ -75,7 +75,7 @@ function runExtractedPluginEventsInBatch(
 
 export function dispatchEvent(
   target: null | Object,
-  topLevelType: TopLevelType,
+  topLevelType: RNTopLevelEventType,
   nativeEvent: AnyNativeEvent,
 ) {
   const targetFiber = (target: null | Fiber);
@@ -111,9 +111,8 @@ export function dispatchEvent(
     // to be notified for all events.
     // Note that extracted events are *not* emitted,
     // only events that have a 1:1 mapping with a native event, at least for now.
-    const topLevelTypeStr: string = ((topLevelType: any): string);
-    const event = {eventName: topLevelTypeStr, nativeEvent};
-    RawEventEmitter.emit(topLevelTypeStr, event);
+    const event = {eventName: topLevelType, nativeEvent};
+    RawEventEmitter.emit(topLevelType, event);
     RawEventEmitter.emit('*', event);
 
     // Heritage plugin event system
