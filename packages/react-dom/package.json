@@ -50,7 +50,6 @@
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",
-    "./umd/*": "./umd/*",
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
