@@ -199,6 +199,9 @@ export opaque type Request = {
   // Typically you don't need this callback because it's best practice to always have a
   // root fallback ready so there's no need to wait.
   onCompleteShell: () => void,
+  // onErrorShell is called when the shell didn't complete. That means you probably want to
+  // emit a different response to the stream instead.
+  onErrorShell: (error: mixed) => void,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -232,6 +235,7 @@ export function createRequest(
   onError: void | ((error: mixed) => void),
   onCompleteAll: void | (() => void),
   onCompleteShell: void | (() => void),
+  onErrorShell: void | ((error: mixed) => void),
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
@@ -256,6 +260,7 @@ export function createRequest(
     onError: onError === undefined ? defaultErrorHandler : onError,
     onCompleteAll: onCompleteAll === undefined ? noop : onCompleteAll,
     onCompleteShell: onCompleteShell === undefined ? noop : onCompleteShell,
+    onErrorShell: onErrorShell === undefined ? noop : onErrorShell,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);
@@ -412,6 +417,8 @@ function fatalError(request: Request, error: mixed): void {
   // This is called outside error handling code such as if the root errors outside
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
+  const onErrorShell = request.onErrorShell;
+  onErrorShell(error);
   if (request.destination !== null) {
     request.status = CLOSED;
     closeWithError(request.destination, error);
@@ -1433,6 +1440,8 @@ function finishedTask(
     }
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
+      // We have completed the shell so the shell can't error anymore.
+      request.onErrorShell = noop;
       const onCompleteShell = request.onCompleteShell;
       onCompleteShell();
     }
