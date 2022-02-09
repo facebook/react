@@ -88,7 +88,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react/unstable-shared-subset',
+    entry: 'react/src/ReactSharedSubset.js',
+    name: 'react.shared-subset',
     global: 'React',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
