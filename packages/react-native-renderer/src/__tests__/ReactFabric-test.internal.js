@@ -15,6 +15,7 @@ let ReactFabric;
 let createReactNativeComponentClass;
 let StrictMode;
 let act;
+let ReactFeatureFlags;
 
 const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
@@ -41,6 +42,7 @@ describe('ReactFabric', () => {
       .ReactNativeViewConfigRegistry.register;
 
     act = require('jest-react').act;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
   });
 
   it('should be able to create and render a native component', () => {
@@ -571,6 +573,73 @@ describe('ReactFabric', () => {
         </Text>,
         11,
       );
+    });
+  });
+
+  describe('enableCaptureForDirectEvents', () => {
+    let cachedEnableCaptureForDirectEvents;
+
+    beforeEach(() => {
+      cachedEnableCaptureForDirectEvents =
+        ReactFeatureFlags.enableCaptureForDirectEvents;
+      ReactFeatureFlags.enableCaptureForDirectEvents = true;
+    });
+    afterEach(() => {
+      ReactFeatureFlags.enableCaptureForDirectEvents = cachedEnableCaptureForDirectEvents;
+    });
+
+    it('should trigger capture handler for parent', () => {
+      const View = createReactNativeComponentClass('RCTView', () => ({
+        validAttributes: {},
+        uiViewClassName: 'RCTView',
+        directEventTypes: {
+          topMyDirectEvent: {
+            registrationName: 'onMyDirectEvent',
+          },
+        },
+      }));
+      const ancestorBubble = jest.fn();
+      const ancestorCapture = jest.fn();
+      const targetBubble = jest.fn();
+      const targetCapture = jest.fn();
+
+      const event = {};
+
+      act(() => {
+        ReactFabric.render(
+          <View
+            onMyDirectEvent={ancestorBubble}
+            onMyDirectEventCapture={ancestorCapture}>
+            <View
+              onMyDirectEventCapture={targetCapture}
+              onMyDirectEvent={targetBubble}
+            />
+          </View>,
+          11,
+        );
+      });
+
+      expect(nativeFabricUIManager.createNode.mock.calls.length).toBe(2);
+      expect(nativeFabricUIManager.registerEventHandler.mock.calls.length).toBe(
+        1,
+      );
+      const [
+        ,
+        ,
+        ,
+        ,
+        childInstance,
+      ] = nativeFabricUIManager.createNode.mock.calls[0];
+      const [
+        dispatchEvent,
+      ] = nativeFabricUIManager.registerEventHandler.mock.calls[0];
+
+      dispatchEvent(childInstance, 'topMyDirectEvent', event);
+
+      expect(targetBubble).toBeCalled();
+      expect(targetCapture).toBeCalled();
+      expect(ancestorCapture).toBeCalled();
+      expect(ancestorBubble).not.toBeCalled();
     });
   });
 
