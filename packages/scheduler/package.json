@@ -23,7 +23,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "unstable_mock.js",
     "unstable_post_task.js",

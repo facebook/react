@@ -22,7 +22,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "persistent.js",
     "server.js",
