@@ -11,7 +11,7 @@ module.exports = [
     shortName: 'dom',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
+      'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerNode',
       'react-server-dom-webpack/writer.node.server',
       'react-server-dom-webpack',
@@ -33,14 +33,14 @@ module.exports = [
     shortName: 'dom-browser',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
+      'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack',
     ],
     paths: [
       'react-dom',
-      'react-dom/testing',
+      'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer.browser.server',

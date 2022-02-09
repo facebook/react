@@ -129,7 +129,7 @@ const forks = Object.freeze({
             return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
         }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
-      case 'react-dom/testing':
+      case 'react-dom/unstable_testing':
         switch (bundleType) {
           case FB_WWW_DEV:
           case FB_WWW_PROD:

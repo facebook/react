@@ -32,7 +32,7 @@ describe('ReactDOMTestSelectors', () => {
 
     React = require('react');
 
-    const ReactDOM = require('react-dom/testing');
+    const ReactDOM = require('react-dom/unstable_testing');
     act = React.unstable_act;
     createComponentSelector = ReactDOM.createComponentSelector;
     createHasPseudoClassSelector = ReactDOM.createHasPseudoClassSelector;
