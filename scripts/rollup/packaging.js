@@ -180,6 +180,15 @@ function filterOutEntrypoints(name) {
       i--;
       unlinkSync(`build/node_modules/${name}/${filename}`);
       changed = true;
+      // Remove it from the exports field too if it exists.
+      const exportsJSON = packageJSON.exports;
+      if (exportsJSON) {
+        if (filename === 'index.js') {
+          delete exportsJSON['.'];
+        } else {
+          delete exportsJSON['./' + filename.replace(/\.js$/, '')];
+        }
+      }
     }
   }
   if (changed) {
