@@ -139,7 +139,11 @@ let entryPointsToHasBundle = new Map();
 for (const bundle of Bundles.bundles) {
   let hasBundle = entryPointsToHasBundle.get(bundle.entry);
   if (!hasBundle) {
-    entryPointsToHasBundle.set(bundle.entry, bundle.bundleTypes.length > 0);
+    const hasNonFBBundleTypes = bundle.bundleTypes.some(
+      type =>
+        type !== FB_WWW_DEV && type !== FB_WWW_PROD && type !== FB_WWW_PROFILING
+    );
+    entryPointsToHasBundle.set(bundle.entry, hasNonFBBundleTypes);
   }
 }
 
