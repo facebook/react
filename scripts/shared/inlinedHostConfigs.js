@@ -12,7 +12,7 @@ module.exports = [
     entryPoints: [
       'react-dom',
       'react-dom/unstable_testing',
-      'react-dom/src/server/ReactDOMFizzServerNode',
+      'react-dom/src/server/ReactDOMFizzServerNode.js',
       'react-server-dom-webpack/writer.node.server',
       'react-server-dom-webpack',
     ],
@@ -34,7 +34,7 @@ module.exports = [
     entryPoints: [
       'react-dom',
       'react-dom/unstable_testing',
-      'react-dom/src/server/ReactDOMFizzServerBrowser',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.js',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack',
     ],
@@ -53,8 +53,8 @@ module.exports = [
   {
     shortName: 'dom-legacy',
     entryPoints: [
-      'react-dom/src/server/ReactDOMLegacyServerBrowser', // react-dom/server.browser
-      'react-dom/src/server/ReactDOMLegacyServerNode', // react-dom/server.node
+      'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
     ],
     paths: [
       'react-dom',
@@ -99,7 +99,7 @@ module.exports = [
     entryPoints: [
       'react-server-dom-relay',
       'react-server-dom-relay/server',
-      'react-server-dom-relay/src/ReactDOMServerFB',
+      'react-server-dom-relay/src/ReactDOMServerFB.js',
     ],
     paths: ['react-dom', 'react-server-dom-relay'],
     isFlowTyped: true,
