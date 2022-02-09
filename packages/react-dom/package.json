@@ -27,7 +27,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "profiling.js",
     "server.js",
@@ -46,8 +45,11 @@
       "browser": "./server.browser.js",
       "default": "./server.node.js"
     },
+    "./server.browser": "./server.browser.js",
+    "./server.node": "./server.node.js",
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
+    "./unstable_testing": "./unstable_testing.js",
     "./package.json": "./package.json",
     "./": "./"
   },
