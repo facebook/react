@@ -102,6 +102,11 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
+function noopOnRecoverableError() {
+  // This isn't reachable because onRecoverableError isn't called in the
+  // legacy API.
+}
+
 function legacyCreateRootFromDOMContainer(
   container: Container,
   forceHydrate: boolean,
@@ -122,7 +127,7 @@ function legacyCreateRootFromDOMContainer(
     false, // isStrictMode
     false, // concurrentUpdatesByDefaultOverride,
     '', // identifierPrefix
-    null,
+    noopOnRecoverableError,
   );
   markContainerAsRoot(root.current, container);
 

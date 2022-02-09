@@ -65,6 +65,18 @@ import {
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
+/* global reportError */
+const defaultOnRecoverableError =
+  typeof reportError === 'function'
+    ? // In modern browsers, reportError will dispatch an error event,
+      // emulating an uncaught JavaScript error.
+      reportError
+    : (error: mixed) => {
+        // In older browsers and test environments, fallback to console.error.
+        // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+        console.error(error);
+      };
+
 function ReactDOMRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
 }
@@ -145,7 +157,7 @@ export function createRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
-  let onRecoverableError = null;
+  let onRecoverableError = defaultOnRecoverableError;
   if (options !== null && options !== undefined) {
     if (__DEV__) {
       if ((options: any).hydrate) {
@@ -220,7 +232,7 @@ export function hydrateRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
-  let onRecoverableError = null;
+  let onRecoverableError = defaultOnRecoverableError;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
