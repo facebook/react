@@ -50,8 +50,8 @@
     "./profiling": "./profiling.js",
     "./test-utils": "./test-utils.js",
     "./unstable_testing": "./unstable_testing.js",
-    "./package.json": "./package.json",
-    "./": "./"
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
   },
   "browser": {
     "./server.js": "./server.browser.js"

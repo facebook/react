@@ -27,7 +27,8 @@
     "./package.json": "./package.json",
     "./jsx-runtime": "./jsx-runtime.js",
     "./jsx-dev-runtime": "./jsx-dev-runtime.js",
-    "./": "./"
+    "./unstable-shared-subset": "./unstable-shared-subset.js"
+
   },
   "repository": {
     "type": "git",
