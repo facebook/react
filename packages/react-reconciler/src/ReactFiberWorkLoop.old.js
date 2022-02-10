@@ -920,11 +920,11 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
 }
 
 export function queueRecoverableErrors(errors: Array<mixed>) {
-  if (workInProgressRootConcurrentErrors === null) {
+  if (workInProgressRootRecoverableErrors === null) {
     workInProgressRootRecoverableErrors = errors;
   } else {
-    workInProgressRootConcurrentErrors = workInProgressRootConcurrentErrors.push.apply(
-      workInProgressRootConcurrentErrors,
+    workInProgressRootRecoverableErrors.push.apply(
+      workInProgressRootRecoverableErrors,
       errors,
     );
   }

@@ -2191,4 +2191,68 @@ describe('ReactDOMFizzServer', () => {
     // UI looks normal
     expect(container.textContent).toEqual('AB');
   });
+
+  // @gate experimental
+  it('logs multiple hydration errors in the same render', async () => {
+    let isClient = false;
+
+    function subscribe() {
+      return () => {};
+    }
+    function getClientSnapshot() {
+      return 'Yay!';
+    }
+    function getServerSnapshot() {
+      if (isClient) {
+        throw new Error('Hydration error');
+      }
+      return 'Yay!';
+    }
+
+    function Child({label}) {
+      // This will throw during client hydration. Only reason to use
+      // useSyncExternalStore in this test is because getServerSnapshot has the
+      // ability to observe whether we're hydrating.
+      useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
+      Scheduler.unstable_yieldValue(label);
+      return label;
+    }
+
+    function App() {
+      return (
+        <>
+          <Suspense fallback="Loading...">
+            <Child label="A" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child label="B" />
+          </Suspense>
+        </>
+      );
+    }
+
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(Scheduler).toHaveYielded(['A', 'B']);
+
+    // Hydrate the tree. Child will throw during hydration, but not when it
+    // falls back to client rendering.
+    isClient = true;
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(
+          'Logged recoverable error: ' + error.message,
+        );
+      },
+    });
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Logged recoverable error: Hydration error',
+      'Logged recoverable error: Hydration error',
+    ]);
+  });
 });
