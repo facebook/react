@@ -13,6 +13,7 @@ import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 import type {Transitions} from './ReactFiberTracingMarkerComponent.new';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -166,9 +167,15 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
+      let prevState: OffscreenState | null = null;
       if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        if (
+          workInProgress.alternate !== null &&
+          workInProgress.alternate.memoizedState !== null
+        ) {
+          prevState = workInProgress.alternate.memoizedState;
+        }
+        if (prevState !== null && prevState.cachePool !== null) {
           popCachePool(workInProgress);
         }
       }
@@ -256,8 +263,14 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
       if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (interruptedWork.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        let prevState: OffscreenState | null = null;
+        if (
+          interruptedWork.alternate !== null &&
+          interruptedWork.alternate.memoizedState !== null
+        ) {
+          prevState = interruptedWork.alternate.memoizedState;
+        }
+        if (prevState !== null && prevState.cachePool !== null) {
           popCachePool(interruptedWork);
         }
       }

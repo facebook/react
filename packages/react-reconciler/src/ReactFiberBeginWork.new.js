@@ -675,6 +675,12 @@ function updateOffscreenComponent(
         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
         if (enableCache) {
           // Save the cache pool so we can resume later.
+          const prevCachePool = prevState.cachePool;
+          if (prevCachePool !== null) {
+            // push the cache pool even though we're going to bail out
+            // because otherwise there'd be a context mismatch
+            restoreSpawnedCachePool(workInProgress, prevCachePool);
+          }
           spawnedCachePool = getOffscreenDeferredCachePool();
           // We don't need to push to the cache pool because we're about to
           // bail out. There won't be a context mismatch because we only pop
@@ -779,12 +785,6 @@ function updateOffscreenComponent(
       subtreeRenderLanes = renderLanes;
     }
     pushRenderLanes(workInProgress, subtreeRenderLanes);
-  }
-
-  if (enableCache) {
-    // If we have a cache pool from a previous render attempt, then this will be
-    // non-null. We use this to infer whether to push/pop the cache context.
-    workInProgress.updateQueue = spawnedCachePool;
   }
 
   if (enablePersistentOffscreenHostContainer && supportsPersistence) {
