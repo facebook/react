@@ -319,6 +319,12 @@ let workInProgressRootRenderTargetTime: number = Infinity;
 // suspense heuristics and opt out of rendering more content.
 const RENDER_TIMEOUT_MS = 500;
 
+let suspenseOffscreenID: number = 0;
+
+export function generateNewSuspenseOffscreenID(): number {
+  return suspenseOffscreenID++;
+}
+
 function resetRenderTimer() {
   workInProgressRootRenderTargetTime = now() + RENDER_TIMEOUT_MS;
 }

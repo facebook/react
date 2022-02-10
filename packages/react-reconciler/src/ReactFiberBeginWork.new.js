@@ -228,6 +228,7 @@ import {
   getExecutionContext,
   RetryAfterError,
   NoContext,
+  generateNewSuspenseOffscreenID,
 } from './ReactFiberWorkLoop.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {
@@ -2266,9 +2267,17 @@ function mountSuspensePrimaryChildren(
   renderLanes,
 ) {
   const mode = workInProgress.mode;
+  const props = workInProgress.memoizedProps;
+  let name = null;
+  if (props !== null) {
+    name = props.name;
+  }
+
   const primaryChildProps: OffscreenProps = {
     mode: 'visible',
     children: primaryChildren,
+    name,
+    id: generateNewSuspenseOffscreenID(),
   };
   const primaryChildFragment = mountWorkInProgressOffscreenFiber(
     primaryChildProps,
@@ -2288,10 +2297,16 @@ function mountSuspenseFallbackChildren(
 ) {
   const mode = workInProgress.mode;
   const progressedPrimaryFragment: Fiber | null = workInProgress.child;
-
+  const props = workInProgress.memoizedProps;
+  let name = null;
+  if (props !== null) {
+    name = props.name;
+  }
   const primaryChildProps: OffscreenProps = {
     mode: 'hidden',
     children: primaryChildren,
+    name,
+    id: generateNewSuspenseOffscreenID(),
   };
 
   let primaryChildFragment;
@@ -2369,15 +2384,22 @@ function updateSuspensePrimaryChildren(
   primaryChildren,
   renderLanes,
 ) {
+  const name = workInProgress.pendingProps.name;
   const currentPrimaryChildFragment: Fiber = (current.child: any);
   const currentFallbackChildFragment: Fiber | null =
     currentPrimaryChildFragment.sibling;
+  const props =
+    currentPrimaryChildFragment.memoizedProps !== null
+      ? currentPrimaryChildFragment.memoizedProps
+      : currentPrimaryChildFragment.pendingProps;
 
   const primaryChildFragment = updateWorkInProgressOffscreenFiber(
     currentPrimaryChildFragment,
     {
       mode: 'visible',
       children: primaryChildren,
+      name,
+      id: props.id,
     },
   );
   if ((workInProgress.mode & ConcurrentMode) === NoMode) {
@@ -2407,14 +2429,21 @@ function updateSuspenseFallbackChildren(
   fallbackChildren,
   renderLanes,
 ) {
+  const name = workInProgress.pendingProps.name;
   const mode = workInProgress.mode;
   const currentPrimaryChildFragment: Fiber = (current.child: any);
   const currentFallbackChildFragment: Fiber | null =
     currentPrimaryChildFragment.sibling;
+  const props =
+    currentPrimaryChildFragment.memoizedProps !== null
+      ? currentPrimaryChildFragment.memoizedProps
+      : currentPrimaryChildFragment.pendingProps;
 
   const primaryChildProps: OffscreenProps = {
     mode: 'hidden',
     children: primaryChildren,
+    name,
+    id: props.id,
   };
 
   let primaryChildFragment;
@@ -2561,10 +2590,13 @@ function mountSuspenseFallbackAfterRetryWithoutHydrating(
   fallbackChildren,
   renderLanes,
 ) {
+  const name = workInProgress.pendingProps.name;
   const fiberMode = workInProgress.mode;
   const primaryChildProps: OffscreenProps = {
     mode: 'visible',
     children: primaryChildren,
+    name,
+    id: generateNewSuspenseOffscreenID(),
   };
   const primaryChildFragment = mountWorkInProgressOffscreenFiber(
     primaryChildProps,
