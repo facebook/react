@@ -255,6 +255,7 @@ import {
   getSuspendedTransitionPool,
   getSuspendedTracingMarkersPool,
   pushTracingMarkersPool,
+  pushTransitionPool,
 } from './ReactFiberTracingMarkerComponent.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -659,6 +660,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       pushRenderLanes(workInProgress, renderLanes);
@@ -687,6 +689,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
         cachePool: spawnedCachePool,
+        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
@@ -727,6 +730,7 @@ function updateOffscreenComponent(
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
         cachePool: null,
+        transitions: null,
       };
       workInProgress.memoizedState = nextState;
       // Push the lanes that were skipped when we bailed out.
@@ -752,6 +756,15 @@ function updateOffscreenComponent(
             workInProgress,
             prevCachePool,
           );
+        }
+      }
+
+      if (enableTransitionTracing) {
+        const transitions = prevState.transitions;
+
+        if (transitions !== null) {
+          // This suspense boundary has rendered, so push the transitions onto the stack
+          pushTransitionPool(workInProgress, transitions);
         }
       }
 
@@ -1957,6 +1970,7 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
   return {
     baseLanes: renderLanes,
     cachePool: getSuspendedCachePool(),
+    transitions: getSuspendedTransitionPool(),
   };
 }
 
@@ -1988,9 +2002,27 @@ function updateSuspenseOffscreenState(
       cachePool = getSuspendedCachePool();
     }
   }
+
+  let transitions = new Set();
+  if (enableTransitionTracing) {
+    const prevTransitions = prevOffscreenState.transitions;
+    const newTransitions = getSuspendedTransitionPool();
+    if (prevTransitions !== null) {
+      prevTransitions.forEach(transition => {
+        transitions.add(transition);
+      });
+    }
+    if (newTransitions !== null) {
+      newTransitions.forEach(transition => {
+        transitions.add(transition);
+      });
+    }
+  }
+
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
     cachePool,
+    transitions,
   };
 }
 
@@ -2135,6 +2167,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
         renderLanes,
       );
+      if (enableTransitionTracing) {
+        primaryChildFragment.updateQueue = getSuspendedTracingMarkersPool();
+      }
       workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackFragment;
     } else if (typeof nextProps.unstable_expectedLoadTime === 'number') {
@@ -2151,6 +2186,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
         renderLanes,
       );
+      if (enableTransitionTracing) {
+        primaryChildFragment.updateQueue = getSuspendedTracingMarkersPool();
+      }
       workInProgress.memoizedState = SUSPENDED_MARKER;
 
       // Since nothing actually suspended, there will nothing to ping this to
@@ -2225,6 +2263,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             primaryChildFragment.memoizedState = mountSuspenseOffscreenState(
               renderLanes,
             );
+            if (enableTransitionTracing) {
+              primaryChildFragment.updateQueue = getSuspendedTracingMarkersPool();
+            }
             workInProgress.memoizedState = SUSPENDED_MARKER;
             return fallbackChildFragment;
           }
@@ -2248,6 +2289,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           prevOffscreenState === null
             ? mountSuspenseOffscreenState(renderLanes)
             : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
+        if (enableTransitionTracing) {
+          primaryChildFragment.updateQueue = getSuspendedTracingMarkersPool();
+        }
         primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
           current,
           renderLanes,
@@ -2263,6 +2307,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           renderLanes,
         );
         workInProgress.memoizedState = null;
+        if (enableTransitionTracing) {
+          primaryChildFragment.updateQueue = getSuspendedTracingMarkersPool();
+        }
         return primaryChildFragment;
       }
     } else {
@@ -2285,6 +2332,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           prevOffscreenState === null
             ? mountSuspenseOffscreenState(renderLanes)
             : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
+        if (enableTransitionTracing) {
+          primaryChildFragment.updateQueue = getSuspendedTracingMarkersPool();
+        }
         primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
           current,
           renderLanes,
@@ -2304,6 +2354,9 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           renderLanes,
         );
         workInProgress.memoizedState = null;
+        if (enableTransitionTracing) {
+          primaryChildFragment.updateQueue = getSuspendedTracingMarkersPool();
+        }
         return primaryChildFragment;
       }
     }
