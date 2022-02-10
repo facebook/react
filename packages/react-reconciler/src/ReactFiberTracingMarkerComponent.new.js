@@ -8,7 +8,11 @@
  */
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane, Lanes} from './ReactFiberLane.new';
-import type {Fiber, FiberRoot, Transition} from './ReactInternalTypes';
+import type {
+  Fiber,
+  FiberRoot,
+  TransitionTracingCallbacks,
+} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
@@ -207,4 +211,96 @@ export function getSuspendedTracingMarkersPool(): TracingMarkerInfo | null {
   } else {
     return currentTracingMarkers;
   }
+}
+
+export function processTransitionCallbacks(
+  pendingTransitions: Array<TransitionCallbackObject>,
+  endTime: number,
+  callbacks: TransitionTracingCallbacks,
+): void {
+  pendingTransitions.forEach(transition => {
+    switch (transition.type) {
+      case TransitionStart: {
+        if (callbacks.onTransitionStart != null) {
+          callbacks.onTransitionStart(
+            transition.transitionName,
+            transition.startTime,
+          );
+        }
+        break;
+      }
+      case TransitionComplete: {
+        if (callbacks.onTransitionComplete != null) {
+          callbacks.onTransitionComplete(
+            transition.transitionName,
+            transition.startTime,
+            endTime,
+          );
+        }
+        break;
+      }
+      case MarkerComplete: {
+        if (callbacks.onMarkerComplete != null) {
+          if (transition.markerName != null) {
+            callbacks.onMarkerComplete(
+              transition.transitionName,
+              transition.markerName,
+              transition.startTime,
+              endTime,
+            );
+          } else {
+            console.error(
+              'React bug: Calling onMarkerComplete transition tracing callback' +
+                'but markerName is null',
+            );
+          }
+        }
+        break;
+      }
+      case TransitionProgress: {
+        if (callbacks.onTransitionProgress != null) {
+          if (transition.pendingBoundaries != null) {
+            callbacks.onTransitionProgress(
+              transition.transitionName,
+              transition.startTime,
+              endTime,
+              transition.pendingBoundaries,
+            );
+          } else {
+            console.error(
+              'React bug: Calling onTransitionProgress transition tracing callback' +
+                'but pendingBoundaries is null',
+            );
+          }
+        }
+
+        break;
+      }
+      case MarkerProgress: {
+        if (callbacks.onMarkerProgress != null) {
+          if (
+            transition.markerName != null &&
+            transition.pendingBoundaries != null
+          ) {
+            callbacks.onMarkerProgress(
+              transition.transitionName,
+              transition.markerName,
+              transition.startTime,
+              endTime,
+              transition.pendingBoundaries,
+            );
+          } else {
+            console.error(
+              'React bug: Calling onTransitionProgress transition tracing callback' +
+                'but either markerName or pendingBoundaries is null: pendingBoundaries - ',
+              transition.pendingBoundaries,
+              ' markerName: ',
+              transition.markerName,
+            );
+          }
+        }
+        break;
+      }
+    }
+  });
 }

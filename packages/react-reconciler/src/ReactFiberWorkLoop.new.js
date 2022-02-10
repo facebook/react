@@ -80,6 +80,7 @@ import {
   errorHydratingContainer,
   scheduleMicrotask,
   getCurrentEventStartTime,
+  scheduleTransitionCallbacks,
 } from './ReactFiberHostConfig';
 
 import {
@@ -237,6 +238,7 @@ import {
   isLegacyActEnvironment,
   isConcurrentActEnvironment,
 } from './ReactFiberAct.new';
+import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.new';
 
 const ceil = Math.ceil;
 
@@ -2287,6 +2289,20 @@ function commitRootImpl(
 
   // If layout work was scheduled, flush it now.
   flushSyncCallbacks();
+
+  if (enableTransitionTracing) {
+    if (
+      currentPendingTransitionCallbacks !== null &&
+      root.transitionCallbacks !== null
+    ) {
+      scheduleTransitionCallbacks(
+        processTransitionCallbacks,
+        currentPendingTransitionCallbacks,
+        root.transitionCallbacks,
+      );
+      currentPendingTransitionCallbacks = null;
+    }
+  }
 
   if (__DEV__) {
     if (enableDebugTracing) {
