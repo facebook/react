@@ -137,6 +137,7 @@ import {
   mergeLanes,
   getBumpedLaneForHydration,
   pickArbitraryLane,
+  getTransitionsForLanes,
 } from './ReactFiberLane.new';
 import {
   ConcurrentMode,
@@ -1334,6 +1335,13 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       // The root cache refreshed.
       propagateContextChange(workInProgress, CacheContext, renderLanes);
     }
+  }
+
+  if (enableTransitionTracing) {
+    workInProgress.memoizedState.transitions = getTransitionsForLanes(
+      root,
+      renderLanes,
+    );
   }
 
   // Caution: React DevTools currently depends on this property
@@ -3495,11 +3503,17 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   switch (workInProgress.tag) {
     case HostRoot:
       pushHostRootContext(workInProgress);
+      const root: FiberRoot = workInProgress.stateNode;
       if (enableCache) {
-        const root: FiberRoot = workInProgress.stateNode;
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
         pushRootCachePool(root);
+      }
+      if (enableTransitionTracing) {
+        workInProgress.memoizedState.transitions = getTransitionsForLanes(
+          root,
+          renderLanes,
+        );
       }
       resetHydrationState();
       break;
