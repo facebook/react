@@ -254,6 +254,8 @@ import {
 import {
   getSuspendedTransitionPool,
   getSuspendedTracingMarkersPool,
+  pushRootTransitionPool,
+  pushRootTracingMarkersPool,
   pushTracingMarkersPool,
   pushTransitionPool,
 } from './ReactFiberTracingMarkerComponent.new';
@@ -1398,6 +1400,33 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       // The root cache refreshed.
       propagateContextChange(workInProgress, CacheContext, renderLanes);
     }
+  }
+
+  if (enableTransitionTracing) {
+    pushRootTransitionPool(root, renderLanes);
+
+    const nextTransitions = new Set();
+    const transitions = getSuspendedTransitionPool();
+    if (transitions !== null) {
+      transitions.forEach(transition => {
+        nextTransitions.add(transition);
+      });
+    }
+    const rootTransitions = prevState.transitions;
+    if (rootTransitions != null) {
+      rootTransitions.forEach(transition => {
+        nextTransitions.add(transition);
+      });
+    }
+
+    let pendingSuspenseBoundaries = prevState.pendingSuspenseBoundaries;
+    if (pendingSuspenseBoundaries == null) {
+      pendingSuspenseBoundaries = new Map();
+    }
+    // probably have to actually copy this
+    workInProgress.memoizedState.transitions = nextTransitions;
+    workInProgress.memoizedState.pendingSuspenseBoundaries = pendingSuspenseBoundaries;
+    pushRootTracingMarkersPool(workInProgress);
   }
 
   // Caution: React DevTools currently depends on this property
@@ -3603,11 +3632,39 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   switch (workInProgress.tag) {
     case HostRoot:
       pushHostRootContext(workInProgress);
+      const root: FiberRoot = workInProgress.stateNode;
       if (enableCache) {
-        const root: FiberRoot = workInProgress.stateNode;
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
         pushRootCachePool(root);
+      }
+      if (enableTransitionTracing) {
+        const prevState = current.memoizedState;
+        pushRootTransitionPool(root, renderLanes);
+
+        const nextTransitions = new Set();
+        const transitions = getSuspendedTransitionPool();
+        if (transitions !== null) {
+          transitions.forEach(transition => {
+            nextTransitions.add(transition);
+          });
+        }
+        const rootTransitions = prevState.transitions;
+        if (rootTransitions != null) {
+          rootTransitions.forEach(transition => {
+            nextTransitions.add(transition);
+          });
+        }
+
+        let pendingSuspenseBoundaries = prevState.pendingSuspenseBoundaries;
+        if (pendingSuspenseBoundaries == null) {
+          pendingSuspenseBoundaries = new Map();
+        }
+        // probably have to actually copy this
+        workInProgress.memoizedState.transitions = nextTransitions;
+        workInProgress.memoizedState.pendingSuspenseBoundaries = pendingSuspenseBoundaries;
+
+        pushRootTracingMarkersPool(workInProgress);
       }
       resetHydrationState();
       break;
