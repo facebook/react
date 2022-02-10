@@ -40,6 +40,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
   enableCache,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -60,6 +61,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
@@ -132,6 +134,7 @@ import {
   markCommitTimeOfFallback,
   enqueuePendingPassiveProfilerEffect,
   restorePendingUpdaters,
+  addCallbackToPendingTransitionCallbacks,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -156,6 +159,14 @@ import {
   onCommitUnmount,
 } from './ReactFiberDevToolsHook.new';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
+import {
+  TransitionStart,
+  TransitionComplete,
+} from './ReactFiberTracingMarkerComponent.new';
+import {
+  getTransitionsForLanes,
+  clearTransitionsForLanes,
+} from './ReactFiberLane.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -984,7 +995,10 @@ function commitLayoutEffectOnFiber(
       case ScopeComponent:
       case OffscreenComponent:
       case LegacyHiddenComponent:
+      case TracingMarkerComponent: {
         break;
+      }
+
       default:
         throw new Error(
           'This unit of work tag should not have side-effects. This error is ' +
@@ -2137,13 +2151,13 @@ export function commitMutationEffects(
   inProgressRoot = root;
   nextEffect = firstChild;
 
-  commitMutationEffects_begin(root);
+  commitMutationEffects_begin(root, committedLanes);
 
   inProgressLanes = null;
   inProgressRoot = null;
 }
 
-function commitMutationEffects_begin(root: FiberRoot) {
+function commitMutationEffects_begin(root: FiberRoot, lanes: Lanes) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
 
@@ -2166,17 +2180,17 @@ function commitMutationEffects_begin(root: FiberRoot) {
       ensureCorrectReturnPointer(child, fiber);
       nextEffect = child;
     } else {
-      commitMutationEffects_complete(root);
+      commitMutationEffects_complete(root, lanes);
     }
   }
 }
 
-function commitMutationEffects_complete(root: FiberRoot) {
+function commitMutationEffects_complete(root: FiberRoot, lanes: Lanes) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
     setCurrentDebugFiberInDEV(fiber);
     try {
-      commitMutationEffectsOnFiber(fiber, root);
+      commitMutationEffectsOnFiber(fiber, root, lanes);
     } catch (error) {
       reportUncaughtErrorInDEV(error);
       captureCommitPhaseError(fiber, fiber.return, error);
@@ -2194,12 +2208,44 @@ function commitMutationEffects_complete(root: FiberRoot) {
   }
 }
 
-function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
+function commitMutationEffectsOnFiber(
+  finishedWork: Fiber,
+  root: FiberRoot,
+  lanes: Lanes,
+) {
   // TODO: The factoring of this phase could probably be improved. Consider
   // switching on the type of work before checking the flags. That's what
   // we do in all the other phases. I think this one is only different
   // because of the shared reconciliation logic below.
   const flags = finishedWork.flags;
+
+  if (enableTransitionTracing) {
+    switch (finishedWork.tag) {
+      case HostRoot: {
+        const state = finishedWork.memoizedState;
+        const transitions = state.transitions;
+        if (transitions != null) {
+          transitions.forEach(transition => {
+            // TODO(luna) Do we want to log TransitionStart in the startTransition callback instead?
+            addCallbackToPendingTransitionCallbacks({
+              type: TransitionStart,
+              transitionName: transition.name,
+              startTime: transition.startTime,
+            });
+
+            addCallbackToPendingTransitionCallbacks({
+              type: TransitionComplete,
+              transitionName: transition.name,
+              startTime: transition.startTime,
+            });
+          });
+
+          clearTransitionsForLanes(root, lanes);
+          state.transitions.clear();
+        }
+      }
+    }
+  }
 
   if (flags & ContentReset) {
     commitResetTextContent(finishedWork);
