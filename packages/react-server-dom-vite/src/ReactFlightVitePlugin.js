@@ -111,11 +111,7 @@ export default function ReactFlightVitePlugin({
             importerToRootNested.replace(/\/?$/, path.sep),
           ),
         );
-        const userGlob = path.join(
-          importerToRootPath,
-          'src',
-          CLIENT_COMPONENT_GLOB,
-        );
+        const userGlob = path.join(importerToRootPath, CLIENT_COMPONENT_GLOB);
 
         const importers = [[userGlob, userPrefix]];
 
