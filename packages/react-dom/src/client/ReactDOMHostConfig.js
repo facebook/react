@@ -374,18 +374,6 @@ export function getCurrentEventPriority(): * {
   return getEventPriority(currentEvent.type);
 }
 
-/* global reportError */
-export const logRecoverableError =
-  typeof reportError === 'function'
-    ? // In modern browsers, reportError will dispatch an error event,
-      // emulating an uncaught JavaScript error.
-      reportError
-    : (error: mixed) => {
-        // In older browsers and test environments, fallback to console.error.
-        // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
-        console.error(error);
-      };
-
 export const isPrimaryRenderer = true;
 export const warnsIfNotActing = true;
 // This initialization code may run even on server environments

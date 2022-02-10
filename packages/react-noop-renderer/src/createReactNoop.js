@@ -938,6 +938,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return NoopRenderer.flushSync(fn);
   }
 
+  function onRecoverableError(error) {
+    // TODO: Turn this on once tests are fixed
+    // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+    // console.error(error);
+  }
+
   let idCounter = 0;
 
   const ReactNoop = {
@@ -966,7 +972,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           null,
           false,
           '',
-          null,
+          onRecoverableError,
         );
         roots.set(rootID, root);
       }
@@ -988,7 +994,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
-        null,
+        onRecoverableError,
       );
       return {
         _Scheduler: Scheduler,
@@ -1018,7 +1024,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
-        null,
+        onRecoverableError,
       );
       return {
         _Scheduler: Scheduler,

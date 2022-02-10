@@ -245,7 +245,7 @@ export function createContainer(
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
-  onRecoverableError: null | ((error: mixed) => void),
+  onRecoverableError: (error: mixed) => void,
 ): OpaqueRoot {
   return createFiberRoot(
     containerInfo,

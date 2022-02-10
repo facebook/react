@@ -77,7 +77,6 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
-  logRecoverableError,
 } from './ReactFiberHostConfig';
 
 import {
@@ -2113,16 +2112,10 @@ function commitRootImpl(
   if (recoverableErrors !== null) {
     // There were errors during this render, but recovered from them without
     // needing to surface it to the UI. We log them here.
+    const onRecoverableError = root.onRecoverableError;
     for (let i = 0; i < recoverableErrors.length; i++) {
       const recoverableError = recoverableErrors[i];
-      const onRecoverableError = root.onRecoverableError;
-      if (onRecoverableError !== null) {
-        onRecoverableError(recoverableError);
-      } else {
-        // No user-provided onRecoverableError. Use the default behavior
-        // provided by the renderer's host config.
-        logRecoverableError(recoverableError);
-      }
+      onRecoverableError(recoverableError);
     }
   }
 
