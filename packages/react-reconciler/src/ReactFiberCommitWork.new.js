@@ -61,7 +61,6 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
-  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
@@ -994,8 +993,7 @@ function commitLayoutEffectOnFiber(
       case IncompleteClassComponent:
       case ScopeComponent:
       case OffscreenComponent:
-      case LegacyHiddenComponent:
-      case TracingMarkerComponent: {
+      case LegacyHiddenComponent: {
         break;
       }
 

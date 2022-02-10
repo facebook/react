@@ -77,7 +77,6 @@ import {
   supportsMicrotasks,
   errorHydratingContainer,
   scheduleMicrotask,
-  getCurrentEventStartTime,
 } from './ReactFiberHostConfig';
 
 import {
@@ -235,6 +234,7 @@ import {
   isLegacyActEnvironment,
   isConcurrentActEnvironment,
 } from './ReactFiberAct.new';
+import {processTransitionCallbacks} from './ReactFiberTracingMarkerComponent.new';
 
 const ceil = Math.ceil;
 
@@ -536,7 +536,7 @@ export function scheduleUpdateOnFiber(
       const transition = ReactCurrentBatchConfig.transition;
       if (transition !== null) {
         if (transition.startTime === -1) {
-          transition.startTime = getCurrentEventStartTime();
+          transition.startTime = now();
         }
 
         addTransitionToLanesMap(root, transition, lane);
@@ -2268,6 +2268,27 @@ function commitRootImpl(
 
   // If layout work was scheduled, flush it now.
   flushSyncCallbacks();
+
+  if (enableTransitionTracing) {
+    const prevPendingTransitionCallbacks = currentPendingTransitionCallbacks;
+    const prevRootTransitionCallbacks = root.transitionCallbacks;
+    if (
+      prevPendingTransitionCallbacks !== null &&
+      prevRootTransitionCallbacks !== null
+    ) {
+      // TODO(luna) Refactor this code into the Host Config
+      const endTime = now();
+      currentPendingTransitionCallbacks = null;
+
+      scheduleCallback(IdleSchedulerPriority, () =>
+        processTransitionCallbacks(
+          prevPendingTransitionCallbacks,
+          endTime,
+          prevRootTransitionCallbacks,
+        ),
+      );
+    }
+  }
 
   if (__DEV__) {
     if (enableDebugTracing) {

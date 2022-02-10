@@ -37,3 +37,33 @@ export type TransitionCallback = 0 | 1;
 
 export const TransitionStart = 0;
 export const TransitionComplete = 1;
+
+export function processTransitionCallbacks(
+  pendingTransitions: Array<TransitionCallbackObject>,
+  endTime: number,
+  callbacks: TransitionTracingCallbacks,
+): void {
+  pendingTransitions.forEach(transition => {
+    switch (transition.type) {
+      case TransitionStart: {
+        if (callbacks.onTransitionStart != null) {
+          callbacks.onTransitionStart(
+            transition.transitionName,
+            transition.startTime,
+          );
+        }
+        break;
+      }
+      case TransitionComplete: {
+        if (callbacks.onTransitionComplete != null) {
+          callbacks.onTransitionComplete(
+            transition.transitionName,
+            transition.startTime,
+            endTime,
+          );
+        }
+        break;
+      }
+    }
+  });
+}
