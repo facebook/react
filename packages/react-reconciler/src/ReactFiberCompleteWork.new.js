@@ -82,6 +82,7 @@ import {
   Incomplete,
   ShouldCapture,
   ForceClientRender,
+  SuspenseToggle,
 } from './ReactFiberFlags';
 
 import {
@@ -1175,6 +1176,16 @@ function completeWork(
         }
       }
 
+      if (enableTransitionTracing) {
+        if (
+          (current === null && nextDidTimeout) ||
+          nextDidTimeout !== prevDidTimeout
+        ) {
+          const offscreenFiber: Fiber = (workInProgress.child: any);
+          offscreenFiber.flags |= SuspenseToggle;
+        }
+      }
+
       // If the suspended state of the boundary changes, we need to schedule
       // an effect to toggle the subtree's visibility. When we switch from
       // fallback -> primary, the inner Offscreen fiber schedules this effect
@@ -1614,7 +1625,12 @@ function completeWork(
       if (enableTransitionTracing) {
         popTracingMarkersPool(workInProgress);
 
+        // Bubble subtree flags before so we can set the flag property
         bubbleProperties(workInProgress);
+
+        if ((workInProgress.subtreeFlags & SuspenseToggle) !== NoFlags) {
+          workInProgress.flags |= SuspenseToggle;
+        }
 
         return null;
       }
