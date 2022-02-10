@@ -28,6 +28,7 @@ import type {
   CacheComponentState,
   SpawnedCachePool,
 } from './ReactFiberCacheComponent.new';
+import type {TracingMarkerState} from './ReactFiberTracingMarkerComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 
@@ -250,6 +251,11 @@ import {
   pushTreeId,
   pushMaterializedTreeId,
 } from './ReactFiberTreeContext.new';
+import {
+  getSuspendedTransitionPool,
+  getSuspendedTracingMarkersPool,
+  pushTracingMarkersPool,
+} from './ReactFiberTracingMarkerComponent.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -910,6 +916,49 @@ function updateTracingMarkerComponent(
   if (!enableTransitionTracing) {
     return null;
   }
+
+  const nextProps = workInProgress.pendingProps;
+  if (__DEV__) {
+    if (nextProps.name === null) {
+      console.error('Tracing marker name must be defined');
+    }
+  }
+
+  const transitions = new Set();
+  let pendingSuspenseBoundaries = null;
+
+  // Add all current transitions on the stack to the tracing marker
+  const currentTransitions = getSuspendedTransitionPool();
+  if (currentTransitions !== null && currentTransitions.size > 0) {
+    currentTransitions.forEach(transition => {
+      transitions.add(transition);
+    });
+  }
+
+  if (current !== null) {
+    const prevProps = current.pendingProps;
+    const prevState: TracingMarkerState = current.memoizedState;
+
+    // Tracing marker name hasn't changed so this means
+    // the previous transitions are still valid so move them over
+    // Not actually sure when this would update without the name changing
+    // but this check is just in case
+    if (prevProps.name === nextProps.name && prevState.transitions !== null) {
+      prevState.transitions.forEach(transition => {
+        transitions.add(transition);
+      });
+    }
+
+    pendingSuspenseBoundaries = prevState.pendingSuspenseBoundaries;
+  } else {
+    pendingSuspenseBoundaries = new Map();
+  }
+
+  workInProgress.memoizedState = {
+    transitions,
+    pendingSuspenseBoundaries,
+  };
+  pushTracingMarkersPool(workInProgress);
 
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -3692,6 +3741,12 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       if (enableCache) {
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        pushTracingMarkersPool(workInProgress);
       }
       break;
     }
