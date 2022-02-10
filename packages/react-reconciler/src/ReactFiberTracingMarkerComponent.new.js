@@ -40,6 +40,22 @@ export type TracingMarkerInfo = Array<{
   pendingSuspenseBoundaries: PendingSuspenseBoundaries,
 }>;
 
+export type TransitionCallbackObject = {|
+  type: TransitionCallback,
+  transitionName: string,
+  startTime: number,
+  markerName?: string,
+  pendingBoundaries?: Array<SuspenseInfo>,
+|};
+
+export type TransitionCallback = 0 | 1 | 2 | 3 | 4;
+
+export const TransitionStart = 0;
+export const TransitionProgress = 1;
+export const MarkerProgress = 2;
+export const TransitionComplete = 3;
+export const MarkerComplete = 4;
+
 let currentTransitions: Transitions | null = null;
 const transitionStack: StackCursor<Transitions | null> = createCursor(null);
 

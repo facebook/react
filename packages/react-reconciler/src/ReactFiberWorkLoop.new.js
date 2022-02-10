@@ -15,6 +15,7 @@ import type {StackCursor} from './ReactFiberStack.new';
 import type {Flags} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
+import type {TransitionCallbackObject} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -323,6 +324,19 @@ let suspenseOffscreenID: number = 0;
 
 export function generateNewSuspenseOffscreenID(): number {
   return suspenseOffscreenID++;
+}
+
+let currentPendingTransitionCallbacks: Array<TransitionCallbackObject> | null = null;
+export function addCallbackToPendingTransitionCallbacks(
+  callbackObj: TransitionCallbackObject,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = [];
+    }
+
+    currentPendingTransitionCallbacks.push(callbackObj);
+  }
 }
 
 function resetRenderTimer() {

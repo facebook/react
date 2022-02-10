@@ -25,6 +25,10 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent.new';
+import type {
+  Transitions,
+  TracingMarkerInfo,
+} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   enableCreateEventHandleAPI,
@@ -40,6 +44,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableUpdaterTracking,
   enableCache,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -60,6 +65,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
@@ -79,6 +85,7 @@ import {
   LayoutMask,
   PassiveMask,
   Visibility,
+  SuspenseToggle,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -132,6 +139,7 @@ import {
   markCommitTimeOfFallback,
   enqueuePendingPassiveProfilerEffect,
   restorePendingUpdaters,
+  addCallbackToPendingTransitionCallbacks,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -156,6 +164,17 @@ import {
   onCommitUnmount,
 } from './ReactFiberDevToolsHook.new';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.new';
+import {
+  MarkerProgress,
+  MarkerComplete,
+  TransitionStart,
+  TransitionProgress,
+  TransitionComplete,
+} from './ReactFiberTracingMarkerComponent.new';
+import {
+  getTransitionsForLanes,
+  clearTransitionsForLanes,
+} from './ReactFiberLane.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -984,7 +1003,10 @@ function commitLayoutEffectOnFiber(
       case ScopeComponent:
       case OffscreenComponent:
       case LegacyHiddenComponent:
+      case TracingMarkerComponent: {
         break;
+      }
+
       default:
         throw new Error(
           'This unit of work tag should not have side-effects. This error is ' +
@@ -1043,6 +1065,55 @@ function reappearLayoutEffectsOnFiber(node: Fiber) {
       safelyAttachRef(node, node.return);
       break;
     }
+  }
+}
+
+function addOrRemoveBoundariesOnPendingBoundariesMap(
+  finishedWork: Fiber,
+  name: string | null,
+  id: number,
+) {
+  let prevState: SuspenseState | null = null;
+  if (
+    finishedWork.alternate !== null &&
+    finishedWork.alternate.memoizedState !== null
+  ) {
+    prevState = finishedWork.alternate.memoizedState;
+  }
+  const nextState: SuspenseState | null = finishedWork.memoizedState;
+
+  const wasHidden = prevState !== null;
+  const isHidden = nextState !== null;
+  const markers: TracingMarkerInfo | null = (finishedWork.updateQueue: any);
+
+  if (markers !== null) {
+    markers.forEach(markerInfo => {
+      const pendingSuspenseBoundaries = markerInfo.pendingSuspenseBoundaries;
+      const transitions = markerInfo.transitions;
+      if (finishedWork.alternate === null) {
+        // Initial mount
+        if (isHidden) {
+          pendingSuspenseBoundaries.set(id, {
+            name,
+          });
+        }
+      } else {
+        if (wasHidden && !isHidden) {
+          // The suspense boundary went from hidden to visible. Remove
+          // the boundary from the pending suspense boundaries set
+          // if it's there
+          if (pendingSuspenseBoundaries.has(id)) {
+            pendingSuspenseBoundaries.delete(id);
+          }
+        } else if (!wasHidden && isHidden) {
+          // The suspense boundaries was just hidden. Add the boundary
+          // to the pending boundary set if it's there
+          pendingSuspenseBoundaries.set(id, {
+            name,
+          });
+        }
+      }
+    });
   }
 }
 
@@ -2137,13 +2208,13 @@ export function commitMutationEffects(
   inProgressRoot = root;
   nextEffect = firstChild;
 
-  commitMutationEffects_begin(root);
+  commitMutationEffects_begin(root, committedLanes);
 
   inProgressLanes = null;
   inProgressRoot = null;
 }
 
-function commitMutationEffects_begin(root: FiberRoot) {
+function commitMutationEffects_begin(root: FiberRoot, lanes: Lanes) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
 
@@ -2166,17 +2237,17 @@ function commitMutationEffects_begin(root: FiberRoot) {
       ensureCorrectReturnPointer(child, fiber);
       nextEffect = child;
     } else {
-      commitMutationEffects_complete(root);
+      commitMutationEffects_complete(root, lanes);
     }
   }
 }
 
-function commitMutationEffects_complete(root: FiberRoot) {
+function commitMutationEffects_complete(root: FiberRoot, lanes: Lanes) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
     setCurrentDebugFiberInDEV(fiber);
     try {
-      commitMutationEffectsOnFiber(fiber, root);
+      commitMutationEffectsOnFiber(fiber, root, lanes);
     } catch (error) {
       reportUncaughtErrorInDEV(error);
       captureCommitPhaseError(fiber, fiber.return, error);
@@ -2194,12 +2265,124 @@ function commitMutationEffects_complete(root: FiberRoot) {
   }
 }
 
-function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
+function commitMutationEffectsOnFiber(
+  finishedWork: Fiber,
+  root: FiberRoot,
+  lanes: Lanes,
+) {
   // TODO: The factoring of this phase could probably be improved. Consider
   // switching on the type of work before checking the flags. That's what
   // we do in all the other phases. I think this one is only different
   // because of the shared reconciliation logic below.
   const flags = finishedWork.flags;
+
+  if (enableTransitionTracing) {
+    if (flags & SuspenseToggle) {
+      switch (finishedWork.tag) {
+        case HostRoot: {
+          const currentTransitions = getTransitionsForLanes(root, lanes);
+          if (currentTransitions != null) {
+            currentTransitions.forEach(transition => {
+              addCallbackToPendingTransitionCallbacks({
+                type: TransitionStart,
+                transitionName: transition.name,
+                startTime: transition.startTime,
+              });
+            });
+          }
+          clearTransitionsForLanes(root, lanes);
+
+          const state = finishedWork.memoizedState;
+          const pendingSuspenseBoundaries = state.pendingSuspenseBoundaries;
+          const transitions = state.transitions;
+          if (transitions != null) {
+            transitions.forEach(transition => {
+              if (pendingSuspenseBoundaries.size === 0) {
+                addCallbackToPendingTransitionCallbacks({
+                  type: TransitionComplete,
+                  transitionName: transition.name,
+                  startTime: transition.startTime,
+                });
+              }
+
+              addCallbackToPendingTransitionCallbacks({
+                type: TransitionProgress,
+                transitionName: transition.name,
+                startTime: transition.startTime,
+                pendingBoundaries: Array.from(
+                  pendingSuspenseBoundaries.values(),
+                ),
+              });
+            });
+
+            if (pendingSuspenseBoundaries.size === 0) {
+              state.transitions.clear();
+            }
+          }
+        }
+        case OffscreenComponent: {
+          if (enableTransitionTracing) {
+            const isFallback = finishedWork.memoizedState;
+            let props;
+            if (isFallback) {
+              props = finishedWork.pendingProps;
+            } else {
+              props = finishedWork.memoizedProps;
+            }
+
+            if (props !== null) {
+              if (typeof props.id !== 'number') {
+                console.error('wtf props id is wrong');
+              }
+
+              addOrRemoveBoundariesOnPendingBoundariesMap(
+                finishedWork,
+                props.name || null,
+                props.id,
+              );
+            }
+          }
+          break;
+        }
+        case TracingMarkerComponent: {
+          if (enableTransitionTracing) {
+            const props = finishedWork.memoizedProps;
+            const state = finishedWork.memoizedState;
+            const pendingSuspenseBoundaries = state.pendingSuspenseBoundaries;
+            const transitions = state.transitions;
+            transitions.forEach(transition => {
+              if (pendingSuspenseBoundaries.size === 0) {
+                // This interaction is complete because there's no suspense boundaries
+                // so resolve this transition
+                // TODO: only do this if tehre is a marker complete callback
+                addCallbackToPendingTransitionCallbacks({
+                  type: MarkerComplete,
+                  transitionName: transition.name,
+                  startTime: transition.startTime,
+                  markerName: props.name,
+                });
+              }
+              // always call onMarkerProgress
+              addCallbackToPendingTransitionCallbacks({
+                type: MarkerProgress,
+                transitionName: transition.name,
+                startTime: transition.startTime,
+                markerName: props.name,
+                pendingBoundaries: Array.from(
+                  pendingSuspenseBoundaries.values(),
+                ),
+              });
+            });
+
+            if (pendingSuspenseBoundaries.size === 0) {
+              state.transitions.clear();
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
 
   if (flags & ContentReset) {
     commitResetTextContent(finishedWork);
