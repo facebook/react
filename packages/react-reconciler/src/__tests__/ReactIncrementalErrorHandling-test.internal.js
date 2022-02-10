@@ -416,14 +416,29 @@ describe('ReactIncrementalErrorHandling', () => {
     // Finish the rest of the async work
     expect(Scheduler).toFlushAndYieldThrough(['Sibling']);
 
-    // Old scheduler renders, commits, and throws synchronously
-    expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
-    expect(Scheduler).toHaveYielded([
-      'Parent',
-      'BadRender',
-      'Sibling',
-      'commit',
-    ]);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      // When the update is wrapped in startTransition, we suspend instead of
+      // rethrowing the error. That part isn't really relevant to this test;
+      // the only reason we use startTransition above is to ensure the update
+      // is concurrent. If/when enableSyncDefaultUpdates lands, remove
+      // this branch.
+      Scheduler.unstable_flushNumberOfYields(1);
+      expect(Scheduler).toHaveYielded([
+        'Parent',
+        'BadRender',
+        'Sibling',
+        // Render suspends without committing
+        // 'commit',
+      ]);
+    } else {
+      expect(() => Scheduler.unstable_flushNumberOfYields(1)).toThrow('oops');
+      expect(Scheduler).toHaveYielded([
+        'Parent',
+        'BadRender',
+        'Sibling',
+        'commit',
+      ]);
+    }
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
@@ -464,10 +479,19 @@ describe('ReactIncrementalErrorHandling', () => {
     // Expire the render midway through
     Scheduler.unstable_advanceTime(10000);
 
-    expect(() => {
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      // When the update is wrapped in startTransition, we suspend instead of
+      // rethrowing the error. That part isn't really relevant to this test;
+      // the only reason we use startTransition above is to ensure the update
+      // is concurrent. If/when enableSyncDefaultUpdates lands, remove
+      // this branch.
       Scheduler.unstable_flushExpired();
-      ReactNoop.flushSync();
-    }).toThrow('Oops');
+    } else {
+      expect(() => {
+        Scheduler.unstable_flushExpired();
+        ReactNoop.flushSync();
+      }).toThrow('Oops');
+    }
 
     expect(Scheduler).toHaveYielded([
       // The render expired, but we shouldn't throw out the partial work.

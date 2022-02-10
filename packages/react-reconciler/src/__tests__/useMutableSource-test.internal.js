@@ -1918,9 +1918,11 @@ describe('useMutableSource', () => {
           // TODO (useMutableSource) Act will automatically flush remaining work from render 1,
           // but at this point something in the hooks dispatcher has been broken by jest.resetModules()
           // Figure out what this is and remove this catch.
-          expect(() =>
-            PrevScheduler.unstable_flushAllWithoutAsserting(),
-          ).toThrow('Invalid hook call');
+          if (gate(flags => !flags.enableSyncDefaultUpdates)) {
+            expect(() =>
+              PrevScheduler.unstable_flushAllWithoutAsserting(),
+            ).toThrow('Invalid hook call');
+          }
         });
       });
 
@@ -2002,9 +2004,11 @@ describe('useMutableSource', () => {
           // TODO (useMutableSource) Act will automatically flush remaining work from render 1,
           // but at this point something in the hooks dispatcher has been broken by jest.resetModules()
           // Figure out what this is and remove this catch.
-          expect(() =>
-            PrevScheduler.unstable_flushAllWithoutAsserting(),
-          ).toThrow('Invalid hook call');
+          if (gate(flags => !flags.enableSyncDefaultUpdates)) {
+            expect(() =>
+              PrevScheduler.unstable_flushAllWithoutAsserting(),
+            ).toThrow('Invalid hook call');
+          }
         });
       });
     });

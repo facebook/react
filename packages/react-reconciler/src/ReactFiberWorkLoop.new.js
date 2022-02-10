@@ -251,13 +251,14 @@ const RenderContext = /*                */ 0b0010;
 const CommitContext = /*                */ 0b0100;
 export const RetryAfterError = /*       */ 0b1000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const RootIncomplete = 0;
-const RootFatalErrored = 1;
-const RootErrored = 2;
-const RootSuspended = 3;
-const RootSuspendedWithDelay = 4;
-const RootCompleted = 5;
+const RootErroredInternal = 1;
+const RootErroredUncaught = 2;
+const RootErrored = 3;
+const RootSuspended = 4;
+const RootSuspendedWithDelay = 5;
+const RootCompleted = 6;
 
 // Describes where we are in the React execution stack
 let executionContext: ExecutionContext = NoContext;
@@ -281,8 +282,9 @@ const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
-// A fatal error, if one is thrown
-let workInProgressRootFatalError: mixed = null;
+// An internal error that can't be handled using the normal error handling path.
+// This happens when there's a bug within React itself.
+let workInProgressInternalError: mixed = null;
 // "Included" lanes refer to lanes that were worked on during this render. It's
 // slightly different than `renderLanes` because `renderLanes` can change as you
 // enter and exit an Offscreen tree. This value is the combination of all render
@@ -818,7 +820,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
   if (exitStatus !== RootIncomplete) {
-    if (exitStatus === RootErrored) {
+    if (exitStatus === RootErrored || exitStatus === RootErroredUncaught) {
       // If something threw an error, try rendering one more time. We'll
       // render synchronously to block concurrent data mutations, and we'll
       // includes all pending updates are included. If it still fails after
@@ -829,12 +831,12 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         exitStatus = recoverFromConcurrentError(root, errorRetryLanes);
       }
     }
-    if (exitStatus === RootFatalErrored) {
-      const fatalError = workInProgressRootFatalError;
+    if (exitStatus === RootErroredInternal) {
+      const internalError = workInProgressInternalError;
       prepareFreshStack(root, NoLanes);
       markRootSuspended(root, lanes);
       ensureRootIsScheduled(root, now());
-      throw fatalError;
+      throw internalError;
     }
 
     // Check if this render may have yielded to a concurrent event, and if so,
@@ -853,7 +855,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       exitStatus = renderRootSync(root, lanes);
 
       // We need to check again if something threw
-      if (exitStatus === RootErrored) {
+      if (exitStatus === RootErrored || exitStatus === RootErroredUncaught) {
         const errorRetryLanes = getLanesToRetrySynchronouslyOnError(root);
         if (errorRetryLanes !== NoLanes) {
           lanes = errorRetryLanes;
@@ -862,12 +864,12 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           // concurrent events.
         }
       }
-      if (exitStatus === RootFatalErrored) {
-        const fatalError = workInProgressRootFatalError;
+      if (exitStatus === RootErroredInternal) {
+        const internalError = workInProgressInternalError;
         prepareFreshStack(root, NoLanes);
         markRootSuspended(root, lanes);
         ensureRootIsScheduled(root, now());
-        throw fatalError;
+        throw internalError;
       }
     }
 
@@ -902,7 +904,7 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
 
   const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;
   const exitStatus = renderRootSync(root, errorRetryLanes);
-  if (exitStatus !== RootErrored) {
+  if (exitStatus !== RootErrored && exitStatus !== RootErroredUncaught) {
     // Successfully finished rendering on retry
     if (errorsFromFirstAttempt !== null) {
       // The errors from the failed first attempt have been recovered. Add
@@ -920,11 +922,11 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
 }
 
 export function queueRecoverableErrors(errors: Array<mixed>) {
-  if (workInProgressRootConcurrentErrors === null) {
+  if (workInProgressRootRecoverableErrors === null) {
     workInProgressRootRecoverableErrors = errors;
   } else {
-    workInProgressRootConcurrentErrors = workInProgressRootConcurrentErrors.push.apply(
-      workInProgressRootConcurrentErrors,
+    workInProgressRootRecoverableErrors.push.apply(
+      workInProgressRootRecoverableErrors,
       errors,
     );
   }
@@ -933,12 +935,35 @@ export function queueRecoverableErrors(errors: Array<mixed>) {
 function finishConcurrentRender(root, exitStatus, lanes) {
   switch (exitStatus) {
     case RootIncomplete:
-    case RootFatalErrored: {
+    case RootErroredInternal: {
       throw new Error('Root did not complete. This is a bug in React.');
     }
-    // Flow knows about invariant, so it complains if I add a break
-    // statement, but eslint doesn't know about invariant, so it complains
-    // if I do. eslint-disable-next-line no-fallthrough
+    case RootErroredUncaught: {
+      // An error was thrown but was not caught by an error boundary. This will
+      // cause the whole root to unmount. However, if this render was the
+      // result of a transition (e.g. startTransition) we can suspend instead.
+      if (includesOnlyTransitions(lanes)) {
+        // This is a transition, so we'll suspend instead of surfacing
+        // the error.
+        markRootSuspended(root, lanes);
+
+        // Log the errors that were thrown during this render. Normally we log
+        // recoverable errors in the commit phase, but we do it here in this
+        // case because we intentionally skipped the commit phase.
+        if (workInProgressRootConcurrentErrors !== null) {
+          logRecoverableErrors(root, workInProgressRootConcurrentErrors);
+        }
+        return;
+      }
+
+      commitRoot(root, workInProgressRootRecoverableErrors);
+
+      // TODO: Currently, when there's an uncaught error, we add it to the root
+      // fiber's effect queue and re-throw it at the end of the commit phase.
+      // It might make more sense to rethrow the error here instead. The timing
+      // is the same, but we wouldn't have to queue the error.
+      break;
+    }
     case RootErrored: {
       // We should have already attempted to retry this tree. If we reached
       // this point, it errored again. Commit it.
@@ -1128,7 +1153,10 @@ function performSyncWorkOnRoot(root) {
   }
 
   let exitStatus = renderRootSync(root, lanes);
-  if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
+  if (
+    root.tag !== LegacyRoot &&
+    (exitStatus === RootErrored || exitStatus === RootErroredUncaught)
+  ) {
     // If something threw an error, try rendering one more time. We'll render
     // synchronously to block concurrent data mutations, and we'll includes
     // all pending updates are included. If it still fails after the second
@@ -1140,8 +1168,8 @@ function performSyncWorkOnRoot(root) {
     }
   }
 
-  if (exitStatus === RootFatalErrored) {
-    const fatalError = workInProgressRootFatalError;
+  if (exitStatus === RootErroredInternal) {
+    const fatalError = workInProgressInternalError;
     prepareFreshStack(root, NoLanes);
     markRootSuspended(root, lanes);
     ensureRootIsScheduled(root, now());
@@ -1344,7 +1372,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgress = createWorkInProgress(root.current, null);
   workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
   workInProgressRootExitStatus = RootIncomplete;
-  workInProgressRootFatalError = null;
+  workInProgressInternalError = null;
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
   workInProgressRootRenderPhaseUpdatedLanes = NoLanes;
@@ -1376,8 +1404,8 @@ function handleError(root, thrownValue): void {
         // because there's no ancestor that can handle it; the root is
         // supposed to capture all errors that weren't caught by an error
         // boundary.
-        workInProgressRootExitStatus = RootFatalErrored;
-        workInProgressRootFatalError = thrownValue;
+        workInProgressRootExitStatus = RootErroredInternal;
+        workInProgressInternalError = thrownValue;
         // Set `workInProgress` to null. This represents advancing to the next
         // sibling, or the parent if there are no siblings. But since the root
         // has no siblings nor a parent, we set it to null. Usually this is
@@ -1482,7 +1510,8 @@ export function renderDidSuspendDelayIfPossible(): void {
   if (
     workInProgressRootExitStatus === RootIncomplete ||
     workInProgressRootExitStatus === RootSuspended ||
-    workInProgressRootExitStatus === RootErrored
+    workInProgressRootExitStatus === RootErrored ||
+    workInProgressRootExitStatus === RootErroredUncaught
   ) {
     workInProgressRootExitStatus = RootSuspendedWithDelay;
   }
@@ -1505,10 +1534,19 @@ export function renderDidSuspendDelayIfPossible(): void {
   }
 }
 
-export function renderDidError(error: mixed) {
+export function renderDidError() {
   if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
     workInProgressRootExitStatus = RootErrored;
   }
+}
+
+export function renderDidErrorUncaught() {
+  if (workInProgressRootExitStatus !== RootSuspendedWithDelay) {
+    workInProgressRootExitStatus = RootErroredUncaught;
+  }
+}
+
+export function queueConcurrentError(error: mixed) {
   if (workInProgressRootConcurrentErrors === null) {
     workInProgressRootConcurrentErrors = [error];
   } else {
@@ -2112,11 +2150,7 @@ function commitRootImpl(
   if (recoverableErrors !== null) {
     // There were errors during this render, but recovered from them without
     // needing to surface it to the UI. We log them here.
-    const onRecoverableError = root.onRecoverableError;
-    for (let i = 0; i < recoverableErrors.length; i++) {
-      const recoverableError = recoverableErrors[i];
-      onRecoverableError(recoverableError);
-    }
+    logRecoverableErrors(root, recoverableErrors);
   }
 
   if (hasUncaughtError) {
@@ -2174,6 +2208,17 @@ function commitRootImpl(
   }
 
   return null;
+}
+
+function logRecoverableErrors(
+  root: FiberRoot,
+  recoverableErrors: Array<mixed>,
+) {
+  const onRecoverableError = root.onRecoverableError;
+  for (let i = 0; i < recoverableErrors.length; i++) {
+    const recoverableError = recoverableErrors[i];
+    onRecoverableError(recoverableError);
+  }
 }
 
 function releaseRootPooledCache(root: FiberRoot, remainingLanes: Lanes) {

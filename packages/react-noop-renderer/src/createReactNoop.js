@@ -938,7 +938,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return NoopRenderer.flushSync(fn);
   }
 
-  function onRecoverableError(error) {
+  function onRecoverableErrorDefault(error) {
     // TODO: Turn this on once tests are fixed
     // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
     // console.error(error);
@@ -972,7 +972,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           null,
           false,
           '',
-          onRecoverableError,
+          onRecoverableErrorDefault,
         );
         roots.set(rootID, root);
       }
@@ -980,7 +980,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     // TODO: Replace ReactNoop.render with createRoot + root.render
-    createRoot() {
+    createRoot(options) {
       const container = {
         rootID: '' + idCounter++,
         pendingChildren: [],
@@ -994,8 +994,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
-        onRecoverableError,
+        options && options.onRecoverableError
+          ? options.onRecoverableError
+          : onRecoverableErrorDefault,
       );
+
       return {
         _Scheduler: Scheduler,
         render(children: ReactNodeList) {
@@ -1024,7 +1027,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         null,
         false,
         '',
-        onRecoverableError,
+        onRecoverableErrorDefault,
       );
       return {
         _Scheduler: Scheduler,

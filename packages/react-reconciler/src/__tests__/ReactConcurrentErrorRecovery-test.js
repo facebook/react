@@ -398,4 +398,37 @@ describe('ReactConcurrentErrorRecovery', () => {
     // Now we can show the error boundary that's wrapped around B.
     expect(root).toMatchRenderedOutput('Oops!B2');
   });
+
+  test("uncaught errors at the root should suspend if they're part of a transition", async () => {
+    const root = ReactNoop.createRoot({
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue('Log recoverable error: ' + error);
+      },
+    });
+
+    function Throws() {
+      throw new Error('Oops!');
+    }
+
+    await act(async () => {
+      root.render('(empty)');
+    });
+
+    // Trigger an error during render. Because it's wrapped with
+    // startTransition, the render will suspend instead of unmounting the app.
+    await act(async () => {
+      startTransition(() => {
+        root.render(<Throws />);
+      });
+    });
+    // The error is logged with onRecoverableError
+    expect(Scheduler).toHaveYielded(['Log recoverable error: Error: Oops!']);
+    // Previous screen is still visible.
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    // Confirm that if there's no startTransition, the error surfaces
+    expect(() => act(() => root.render(<Throws />))).toThrow('Oops!');
+    // onRecoverableError is not called this time
+    expect(Scheduler).toHaveYielded([]);
+  });
 });

@@ -62,6 +62,8 @@ import {
 } from './ReactFiberSuspenseContext.new';
 import {
   renderDidError,
+  renderDidErrorUncaught,
+  queueConcurrentError,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
@@ -516,22 +518,32 @@ function throwException(
         queueHydrationError(value);
         return;
       }
-    } else {
-      // Otherwise, fall through to the error path.
     }
+
+    // Otherwise, fall through to the error path.
+
+    // Push the error to a queue. If we end up recovering without surfacing
+    // the error to the user, we'll updgrade this to a recoverable error and
+    // log it with onRecoverableError.
+    //
+    // This is intentionally a separate call from renderDidError because in
+    // some cases we use the error handling path as an implementation detail
+    // to unwind the stack, but we don't want to log it as a real error. An
+    // example is suspending outside of a Suspense boundary (see previous
+    // branch above).
+    queueConcurrentError(value);
   }
 
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
-  renderDidError(value);
-
-  value = createCapturedValue(value, sourceFiber);
+  const error = value;
+  const errorInfo = createCapturedValue(error, sourceFiber);
   let workInProgress = returnFiber;
   do {
     switch (workInProgress.tag) {
       case HostRoot: {
-        const errorInfo = value;
+        renderDidErrorUncaught();
         workInProgress.flags |= ShouldCapture;
         const lane = pickArbitraryLane(rootRenderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
@@ -541,7 +553,7 @@ function throwException(
       }
       case ClassComponent:
         // Capture and retry
-        const errorInfo = value;
+        renderDidError();
         const ctor = workInProgress.type;
         const instance = workInProgress.stateNode;
         if (
