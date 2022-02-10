@@ -65,7 +65,7 @@ export function wrapInClientProxy({id, name, named, component}: ClientProxy) {
   globalThis.__COMPONENT_INDEX[id] = Object.defineProperty(
     globalThis.__COMPONENT_INDEX[id] || Object.create(null),
     moduleRef.name,
-    {value: component},
+    {value: component, writable: true},
   );
 
   return new Proxy(componentRef, {
