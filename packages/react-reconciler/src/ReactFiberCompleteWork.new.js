@@ -33,6 +33,7 @@ import {
   enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
 } from 'shared/ReactFeatureFlags';
+import type {Transitions} from './ReactFiberTracingMarkerComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
@@ -62,6 +63,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -141,6 +143,7 @@ import {
   enableCache,
   enableSuspenseLayoutEffectSemantics,
   enablePersistentOffscreenHostContainer,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   renderDidSuspend,
@@ -166,6 +169,12 @@ import {
   popCachePool,
 } from './ReactFiberCacheComponent.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
+import {
+  popRootTransitionPool,
+  popRootTracingMarkersPool,
+  popTransitionPool,
+  popTracingMarkersPool,
+} from './ReactFiberTracingMarkerComponent.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -900,6 +909,18 @@ function completeWork(
       }
       updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
+
+      if (enableTransitionTracing) {
+        const transitions = popRootTransitionPool();
+        if (
+          transitions !== null ||
+          (workInProgress.subtreeFlags & SuspenseToggle) !== NoFlags
+        ) {
+          workInProgress.flags |= SuspenseToggle;
+        }
+        popRootTracingMarkersPool();
+      }
+
       return null;
     }
     case HostComponent: {
@@ -1556,6 +1577,21 @@ function completeWork(
         }
       }
 
+      if (enableTransitionTracing) {
+        let prevTransitions: Transitions | null = null;
+        if (
+          workInProgress.alternate !== null &&
+          workInProgress.alternate.memoizedState !== null &&
+          workInProgress.alternate.memoizedState.transitions !== null
+        ) {
+          prevTransitions = workInProgress.alternate.memoizedState.transitions;
+        }
+
+        if (prevTransitions !== null) {
+          popTransitionPool(workInProgress);
+        }
+      }
+
       return null;
     }
     case CacheComponent: {
@@ -1571,6 +1607,15 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);
+        return null;
+      }
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        popTracingMarkersPool(workInProgress);
+
+        bubbleProperties(workInProgress);
+
         return null;
       }
     }

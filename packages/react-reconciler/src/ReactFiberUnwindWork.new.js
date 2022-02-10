@@ -12,6 +12,7 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Transitions} from './ReactFiberTracingMarkerComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -25,6 +26,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
@@ -32,6 +34,7 @@ import {
   enableSuspenseServerRenderer,
   enableProfilerTimer,
   enableCache,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
@@ -51,6 +54,12 @@ import {
 } from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
+import {
+  popRootTransitionPool,
+  popRootTracingMarkersPool,
+  popTransitionPool,
+  popTracingMarkersPool,
+} from './ReactFiberTracingMarkerComponent.new';
 
 function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   // Note: This intentionally doesn't check if we're hydrating because comparing
@@ -84,6 +93,11 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
 
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
+      }
+
+      if (enableTransitionTracing) {
+        popRootTransitionPool();
+        popRootTracingMarkersPool();
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -158,11 +172,31 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
           popCachePool(workInProgress);
         }
       }
+      if (enableTransitionTracing) {
+        let prevTransitions: Transitions | null = null;
+        if (
+          workInProgress.alternate !== null &&
+          workInProgress.alternate.memoizedState !== null &&
+          workInProgress.alternate.memoizedState.transitions !== null
+        ) {
+          prevTransitions = workInProgress.alternate.memoizedState.transitions;
+        }
+
+        if (prevTransitions !== null) {
+          popTransitionPool(workInProgress);
+        }
+      }
+
       return null;
     case CacheComponent:
       if (enableCache) {
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
+      }
+      return null;
+    case TracingMarkerComponent:
+      if (enableTransitionTracing) {
+        popTracingMarkersPool(workInProgress);
       }
       return null;
     default:
@@ -191,6 +225,10 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
 
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
+      }
+      if (enableTransitionTracing) {
+        popRootTransitionPool();
+        popRootTracingMarkersPool();
       }
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
@@ -224,11 +262,30 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
         }
       }
 
+      if (enableTransitionTracing) {
+        let prevTransitions: Transitions | null = null;
+        if (
+          interruptedWork.alternate !== null &&
+          interruptedWork.alternate.memoizedState !== null &&
+          interruptedWork.alternate.memoizedState.transitions !== null
+        ) {
+          prevTransitions = interruptedWork.alternate.memoizedState.transitions;
+        }
+
+        if (prevTransitions !== null) {
+          popTransitionPool(interruptedWork);
+        }
+      }
       break;
     case CacheComponent:
       if (enableCache) {
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
+      }
+      break;
+    case TracingMarkerComponent:
+      if (enableTransitionTracing) {
+        popTracingMarkersPool(interruptedWork);
       }
       break;
     default:
