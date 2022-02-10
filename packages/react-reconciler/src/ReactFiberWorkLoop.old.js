@@ -925,7 +925,7 @@ export function queueRecoverableErrors(errors: Array<mixed>) {
     workInProgressRootRecoverableErrors = errors;
   } else {
     workInProgressRootConcurrentErrors = workInProgressRootConcurrentErrors.push.apply(
-      null,
+      workInProgressRootConcurrentErrors,
       errors,
     );
   }
