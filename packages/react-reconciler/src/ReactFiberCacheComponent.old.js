@@ -19,6 +19,7 @@ import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.old';
 import {pushProvider, popProvider} from './ReactFiberNewContext.old';
 import * as Scheduler from 'scheduler';
+import {getWorkInProgressRoot} from './ReactFiberWorkLoop.old';
 
 export type Cache = {|
   controller: AbortController,
@@ -61,13 +62,9 @@ if (__DEV__ && enableCache) {
   CacheContext._currentRenderer2 = null;
 }
 
-// The cache that newly mounted Cache boundaries should use. It's either
-// retrieved from the cache pool, or the result of a refresh.
-let pooledCache: Cache | null = null;
-
-// When retrying a Suspense/Offscreen boundary, we override pooledCache with the
-// cache from the render that suspended.
-const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
+// When retrying a Suspense/Offscreen boundary, we restore the cache that was
+// used during the previous render by placing it here, on the stack.
+const resumedCache: StackCursor<Cache | null> = createCursor(null);
 
 // Creates a new empty Cache instance with a ref-count of 0. The caller is responsible
 // for retaining the cache once it is in use (retainCache), and releasing the cache
@@ -135,56 +132,70 @@ export function popCacheProvider(workInProgress: Fiber, cache: Cache) {
   popProvider(CacheContext, workInProgress);
 }
 
-export function requestCacheFromPool(renderLanes: Lanes): Cache {
+function peekCacheFromPool(): Cache | null {
   if (!enableCache) {
     return (null: any);
   }
-  if (pooledCache !== null) {
-    return pooledCache;
+
+  // Check if the cache pool already has a cache we can use.
+
+  // If we're rendering inside a Suspense boundary that is currently hidden,
+  // we should use the same cache that we used during the previous render, if
+  // one exists.
+  const cacheResumedFromPreviousRender = resumedCache.current;
+  if (cacheResumedFromPreviousRender !== null) {
+    return cacheResumedFromPreviousRender;
   }
-  // Create a fresh cache. The pooled cache must be owned - it is freed
-  // in releaseRootPooledCache() - but the cache instance handed out
-  // is retained/released in the commit phase of the component that
-  // references is (ie the host root, cache boundary, suspense component)
-  // Ie, pooledCache is conceptually an Option<Arc<Cache>> (owned),
-  // whereas the return value of this function is a &Arc<Cache> (borrowed).
-  pooledCache = createCache();
-  retainCache(pooledCache);
-  return pooledCache;
+
+  // Otherwise, check the root's cache pool.
+  const root = (getWorkInProgressRoot(): any);
+  const cacheFromRootCachePool = root.pooledCache;
+
+  return cacheFromRootCachePool;
+}
+
+export function requestCacheFromPool(renderLanes: Lanes): Cache {
+  // Similar to previous function, except if there's not already a cache in the
+  // pool, we allocate a new one.
+  const cacheFromPool = peekCacheFromPool();
+  if (cacheFromPool !== null) {
+    return cacheFromPool;
+  }
+
+  // Create a fresh cache and add it to the root cache pool. A cache can have
+  // multiple owners:
+  // - A cache pool that lives on the FiberRoot. This is where all fresh caches
+  //   are originally created (TODO: except during refreshes, until we implement
+  //   this correctly). The root takes ownership immediately when the cache is
+  //   created. Conceptually, root.pooledCache is an Option<Arc<Cache>> (owned),
+  //   and the return value of this function is a &Arc<Cache> (borrowed).
+  // - One of several fiber types: host root, cache boundary, suspense
+  //   component. These retain and release in the commit phase.
+
+  const root = (getWorkInProgressRoot(): any);
+  const freshCache = createCache();
+  root.pooledCache = freshCache;
+  retainCache(freshCache);
+  if (freshCache !== null) {
+    root.pooledCacheLanes |= renderLanes;
+  }
+  return freshCache;
 }
 
 export function pushRootCachePool(root: FiberRoot) {
   if (!enableCache) {
     return;
   }
-  // When we start rendering a tree, read the pooled cache for this render
-  // from `root.pooledCache`. If it's currently `null`, we will lazily
-  // initialize it the first type it's requested. However, we only mutate
-  // the root itself during the complete/unwind phase of the HostRoot.
-  const rootCache = root.pooledCache;
-  if (rootCache != null) {
-    pooledCache = rootCache;
-    root.pooledCache = null;
-  } else {
-    pooledCache = null;
-  }
+  // Note: This function currently does nothing but I'll leave it here for
+  // code organization purposes in case that changes.
 }
 
 export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
   if (!enableCache) {
     return;
   }
-  // The `pooledCache` variable points to the cache that was used for new
-  // cache boundaries during this render, if any. Move ownership of the
-  // cache to the root so that parallel transitions may share the same
-  // cache. We will clear this field once all the transitions that depend
-  // on it (which we track with `pooledCacheLanes`) have committed.
-  root.pooledCache = pooledCache;
-  if (pooledCache !== null) {
-    root.pooledCacheLanes |= renderLanes;
-  }
-  // set to null, conceptually we are moving ownership to the root
-  pooledCache = null;
+  // Note: This function currently does nothing but I'll leave it here for
+  // code organization purposes in case that changes.
 }
 
 export function restoreSpawnedCachePool(
@@ -202,11 +213,10 @@ export function restoreSpawnedCachePool(
     // will override it.
     return null;
   } else {
-    // No refresh. Resume with the previous cache. This will override the cache
-    // pool so that any new Cache boundaries in the subtree use this one instead
-    // of requesting a fresh one.
-    push(prevFreshCacheOnStack, pooledCache, offscreenWorkInProgress);
-    pooledCache = prevCachePool.pool;
+    // No refresh. Resume with the previous cache. New Cache boundaries in the
+    // subtree use this one instead of requesting a fresh one (see
+    // peekCacheFromPool).
+    push(resumedCache, prevCachePool.pool, offscreenWorkInProgress);
 
     // Return the cache pool to signal that we did in fact push it. We will
     // assign this to the field on the fiber so we know to pop the context.
@@ -214,39 +224,24 @@ export function restoreSpawnedCachePool(
   }
 }
 
-// Note: Ideally, `popCachePool` would return this value, and then we would pass
-// it to `getSuspendedCachePool`. But factoring reasons, those two functions are
-// in different phases/files. They are always called in sequence, though, so we
-// can stash the value here temporarily.
-let _suspendedPooledCache: Cache | null = null;
-
 export function popCachePool(workInProgress: Fiber) {
   if (!enableCache) {
     return;
   }
-  _suspendedPooledCache = pooledCache;
-  pooledCache = prevFreshCacheOnStack.current;
-  pop(prevFreshCacheOnStack, workInProgress);
+  pop(resumedCache, workInProgress);
 }
 
 export function getSuspendedCachePool(): SpawnedCachePool | null {
   if (!enableCache) {
     return null;
   }
-  // We check the cache on the stack first, since that's the one any new Caches
-  // would have accessed.
-  let pool = pooledCache;
-  if (pool === null) {
-    // There's no pooled cache above us in the stack. However, a child in the
-    // suspended tree may have requested a fresh cache pool. If so, we would
-    // have unwound it with `popCachePool`.
-    if (_suspendedPooledCache !== null) {
-      pool = _suspendedPooledCache;
-      _suspendedPooledCache = null;
-    } else {
-      // There's no suspended cache pool.
-      return null;
-    }
+  // This function is called when a Suspense boundary suspends. It returns the
+  // cache that would have been used to render fresh data during this render,
+  // if there was any, so that we can resume rendering with the same cache when
+  // we receive more data.
+  const cacheFromPool = peekCacheFromPool();
+  if (cacheFromPool === null) {
+    return null;
   }
 
   return {
@@ -255,7 +250,7 @@ export function getSuspendedCachePool(): SpawnedCachePool | null {
     parent: isPrimaryRenderer
       ? CacheContext._currentValue
       : CacheContext._currentValue2,
-    pool,
+    pool: cacheFromPool,
   };
 }
 
@@ -264,8 +259,8 @@ export function getOffscreenDeferredCachePool(): SpawnedCachePool | null {
     return null;
   }
 
-  if (pooledCache === null) {
-    // There's no deferred cache pool.
+  const cacheFromPool = peekCacheFromPool();
+  if (cacheFromPool === null) {
     return null;
   }
 
@@ -275,6 +270,6 @@ export function getOffscreenDeferredCachePool(): SpawnedCachePool | null {
     parent: isPrimaryRenderer
       ? CacheContext._currentValue
       : CacheContext._currentValue2,
-    pool: pooledCache,
+    pool: cacheFromPool,
   };
 }
