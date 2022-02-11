@@ -294,7 +294,7 @@ export function appendInitialChild(
   child: Instance | TextInstance,
 ): void {
   if (parentInstance.tagName === 'TEMPLATE')
-    parentInstance.content.appendChild(child);
+    (parentInstance: HTMLTemplateElement).content.appendChild(child);
   else parentInstance.appendChild(child);
 }
 
@@ -468,7 +468,7 @@ export function appendChild(
   child: Instance | TextInstance,
 ): void {
   if (parentInstance.tagName === 'TEMPLATE')
-    parentInstance.content.appendChild(child);
+    (parentInstance: HTMLTemplateElement).content.appendChild(child);
   else parentInstance.appendChild(child);
 }
 
@@ -481,7 +481,7 @@ export function appendChildToContainer(
     parentNode = (container.parentNode: any);
     parentNode.insertBefore(child, container);
   } else if (container.tagName === "TEMPLATE") {
-    parentNode = container.content;
+    parentNode = (container: HTMLTemplateElement).content;
     parentNode.appendChild(child);
   } else {
     parentNode = container;
@@ -562,7 +562,7 @@ export function removeChild(
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
   if (parentInstance.tagName === 'TEMPLATE')
-    parentInstance.content.removeChild(child);
+    (parentInstance: HTMLTemplateElement).content.removeChild(child);
   else parentInstance.removeChild(child);
 }
 
@@ -573,7 +573,7 @@ export function removeChildFromContainer(
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
   } else if (container.tagName === "TEMPLATE") {
-    parentNode = container.content;
+    parentNode = (container: HTMLTemplateElement).content;
     parentNode.removeChild(child);
   } else {
     container.removeChild(child);

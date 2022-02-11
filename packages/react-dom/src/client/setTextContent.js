@@ -19,7 +19,7 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @internal
  */
 const setTextContent = function(node: Element, text: string): void {
-  const parentNode = node.tagName === 'TEMPLATE' ? node.content : node;
+  const parentNode = node.tagName === 'TEMPLATE' ? (node: HTMLTemplateElement).content : node;
   if (text) {
     const firstChild = parentNode.firstChild;
 
