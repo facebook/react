@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {
+  FiberRoot,
+  SuspenseHydrationCallbacks,
+  TransitionTracingCallbacks,
+} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
@@ -25,6 +29,7 @@ import {
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableUpdaterTracking,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
@@ -78,6 +83,10 @@ function FiberRootNode(
     this.hydrationCallbacks = null;
   }
 
+  if (enableTransitionTracing) {
+    this.transitionCallbacks = null;
+  }
+
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     this.effectDuration = 0;
     this.passiveEffectDuration = 0;
@@ -116,6 +125,7 @@ export function createFiberRoot(
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
   onRecoverableError: null | ((error: mixed) => void),
+  transitionCallbacks: null | TransitionTracingCallbacks,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(
     containerInfo,
@@ -126,6 +136,10 @@ export function createFiberRoot(
   ): any);
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;
+  }
+
+  if (enableTransitionTracing) {
+    root.transitionCallbacks = transitionCallbacks;
   }
 
   // Cyclic construction. This cheats the type system right now because

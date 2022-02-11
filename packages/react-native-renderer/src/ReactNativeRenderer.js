@@ -217,6 +217,7 @@ function render(
       null,
       '',
       onRecoverableError,
+      null,
     );
     roots.set(containerTag, root);
   }

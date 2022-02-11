@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {
+  Fiber,
+  SuspenseHydrationCallbacks,
+  TransitionTracingCallbacks,
+} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
@@ -246,6 +250,7 @@ export function createContainer(
   concurrentUpdatesByDefaultOverride: null | boolean,
   identifierPrefix: string,
   onRecoverableError: (error: mixed) => void,
+  transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   return createFiberRoot(
     containerInfo,
@@ -256,6 +261,7 @@ export function createContainer(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
+    transitionCallbacks,
   );
 }
 

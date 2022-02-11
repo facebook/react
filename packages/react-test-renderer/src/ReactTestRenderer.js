@@ -479,6 +479,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     concurrentUpdatesByDefault,
     '',
     onRecoverableError,
+    null,
   );
 
   if (root == null) {
