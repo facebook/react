@@ -251,13 +251,14 @@ const RenderContext = /*                */ 0b0010;
 const CommitContext = /*                */ 0b0100;
 export const RetryAfterError = /*       */ 0b1000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
-const RootIncomplete = 0;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+const RootInProgress = 0;
 const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
 const RootCompleted = 5;
+const RootDidNotComplete = 6;
 
 // Describes where we are in the React execution stack
 let executionContext: ExecutionContext = NoContext;
@@ -280,7 +281,7 @@ export let subtreeRenderLanes: Lanes = NoLanes;
 const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 
 // Whether to root completed, errored, suspended, etc.
-let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
+let workInProgressRootExitStatus: RootExitStatus = RootInProgress;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
 // "Included" lanes refer to lanes that were worked on during this render. It's
@@ -817,7 +818,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
-  if (exitStatus !== RootIncomplete) {
+  if (exitStatus !== RootInProgress) {
     if (exitStatus === RootErrored) {
       // If something threw an error, try rendering one more time. We'll
       // render synchronously to block concurrent data mutations, and we'll
@@ -837,45 +838,58 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       throw fatalError;
     }
 
-    // Check if this render may have yielded to a concurrent event, and if so,
-    // confirm that any newly rendered stores are consistent.
-    // TODO: It's possible that even a concurrent render may never have yielded
-    // to the main thread, if it was fast enough, or if it expired. We could
-    // skip the consistency check in that case, too.
-    const renderWasConcurrent = !includesBlockingLane(root, lanes);
-    const finishedWork: Fiber = (root.current.alternate: any);
-    if (
-      renderWasConcurrent &&
-      !isRenderConsistentWithExternalStores(finishedWork)
-    ) {
-      // A store was mutated in an interleaved event. Render again,
-      // synchronously, to block further mutations.
-      exitStatus = renderRootSync(root, lanes);
+    if (exitStatus === RootDidNotComplete) {
+      // The render unwound without completing the tree. This happens in special
+      // cases where need to exit the current render without producing a
+      // consistent tree or committing.
+      //
+      // This should only happen during a concurrent render, not a discrete or
+      // synchronous update. We should have already checked for this when we
+      // unwound the stack.
+      markRootSuspended(root, lanes);
+    } else {
+      // The render completed.
 
-      // We need to check again if something threw
-      if (exitStatus === RootErrored) {
-        const errorRetryLanes = getLanesToRetrySynchronouslyOnError(root);
-        if (errorRetryLanes !== NoLanes) {
-          lanes = errorRetryLanes;
-          exitStatus = recoverFromConcurrentError(root, errorRetryLanes);
-          // We assume the tree is now consistent because we didn't yield to any
-          // concurrent events.
+      // Check if this render may have yielded to a concurrent event, and if so,
+      // confirm that any newly rendered stores are consistent.
+      // TODO: It's possible that even a concurrent render may never have yielded
+      // to the main thread, if it was fast enough, or if it expired. We could
+      // skip the consistency check in that case, too.
+      const renderWasConcurrent = !includesBlockingLane(root, lanes);
+      const finishedWork: Fiber = (root.current.alternate: any);
+      if (
+        renderWasConcurrent &&
+        !isRenderConsistentWithExternalStores(finishedWork)
+      ) {
+        // A store was mutated in an interleaved event. Render again,
+        // synchronously, to block further mutations.
+        exitStatus = renderRootSync(root, lanes);
+
+        // We need to check again if something threw
+        if (exitStatus === RootErrored) {
+          const errorRetryLanes = getLanesToRetrySynchronouslyOnError(root);
+          if (errorRetryLanes !== NoLanes) {
+            lanes = errorRetryLanes;
+            exitStatus = recoverFromConcurrentError(root, errorRetryLanes);
+            // We assume the tree is now consistent because we didn't yield to any
+            // concurrent events.
+          }
+        }
+        if (exitStatus === RootFatalErrored) {
+          const fatalError = workInProgressRootFatalError;
+          prepareFreshStack(root, NoLanes);
+          markRootSuspended(root, lanes);
+          ensureRootIsScheduled(root, now());
+          throw fatalError;
         }
       }
-      if (exitStatus === RootFatalErrored) {
-        const fatalError = workInProgressRootFatalError;
-        prepareFreshStack(root, NoLanes);
-        markRootSuspended(root, lanes);
-        ensureRootIsScheduled(root, now());
-        throw fatalError;
-      }
-    }
 
-    // We now have a consistent tree. The next step is either to commit it,
-    // or, if something suspended, wait to commit it after a timeout.
-    root.finishedWork = finishedWork;
-    root.finishedLanes = lanes;
-    finishConcurrentRender(root, exitStatus, lanes);
+      // We now have a consistent tree. The next step is either to commit it,
+      // or, if something suspended, wait to commit it after a timeout.
+      root.finishedWork = finishedWork;
+      root.finishedLanes = lanes;
+      finishConcurrentRender(root, exitStatus, lanes);
+    }
   }
 
   ensureRootIsScheduled(root, now());
@@ -932,7 +946,7 @@ export function queueRecoverableErrors(errors: Array<mixed>) {
 
 function finishConcurrentRender(root, exitStatus, lanes) {
   switch (exitStatus) {
-    case RootIncomplete:
+    case RootInProgress:
     case RootFatalErrored: {
       throw new Error('Root did not complete. This is a bug in React.');
     }
@@ -1148,6 +1162,10 @@ function performSyncWorkOnRoot(root) {
     throw fatalError;
   }
 
+  if (exitStatus === RootDidNotComplete) {
+    throw new Error('Root did not complete. This is a bug in React.');
+  }
+
   // We now have a consistent tree. Because this is a sync render, we
   // will commit it even if something suspended.
   const finishedWork: Fiber = (root.current.alternate: any);
@@ -1343,7 +1361,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRoot = root;
   workInProgress = createWorkInProgress(root.current, null);
   workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
-  workInProgressRootExitStatus = RootIncomplete;
+  workInProgressRootExitStatus = RootInProgress;
   workInProgressRootFatalError = null;
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
@@ -1473,14 +1491,14 @@ export function markSkippedUpdateLanes(lane: Lane | Lanes): void {
 }
 
 export function renderDidSuspend(): void {
-  if (workInProgressRootExitStatus === RootIncomplete) {
+  if (workInProgressRootExitStatus === RootInProgress) {
     workInProgressRootExitStatus = RootSuspended;
   }
 }
 
 export function renderDidSuspendDelayIfPossible(): void {
   if (
-    workInProgressRootExitStatus === RootIncomplete ||
+    workInProgressRootExitStatus === RootInProgress ||
     workInProgressRootExitStatus === RootSuspended ||
     workInProgressRootExitStatus === RootErrored
   ) {
@@ -1521,7 +1539,7 @@ export function renderDidError(error: mixed) {
 export function renderHasNotSuspendedYet(): boolean {
   // If something errored or completed, we can't really be sure,
   // so those are false.
-  return workInProgressRootExitStatus === RootIncomplete;
+  return workInProgressRootExitStatus === RootInProgress;
 }
 
 function renderRootSync(root: FiberRoot, lanes: Lanes) {
@@ -1671,7 +1689,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     if (enableSchedulingProfiler) {
       markRenderYielded();
     }
-    return RootIncomplete;
+    return RootInProgress;
   } else {
     // Completed the tree.
     if (enableSchedulingProfiler) {
@@ -1796,6 +1814,11 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         returnFiber.flags |= Incomplete;
         returnFiber.subtreeFlags = NoFlags;
         returnFiber.deletions = null;
+      } else {
+        // We've unwound all the way to the root.
+        workInProgressRootExitStatus = RootDidNotComplete;
+        workInProgress = null;
+        return;
       }
     }
 
@@ -1812,7 +1835,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   } while (completedWork !== null);
 
   // We've reached the root.
-  if (workInProgressRootExitStatus === RootIncomplete) {
+  if (workInProgressRootExitStatus === RootInProgress) {
     workInProgressRootExitStatus = RootCompleted;
   }
 }

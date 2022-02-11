@@ -89,16 +89,17 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
       const flags = workInProgress.flags;
-
-      if ((flags & DidCapture) !== NoFlags) {
-        throw new Error(
-          'The root failed to unmount after an error. This is likely a bug in ' +
-            'React. Please file an issue.',
-        );
+      if (
+        (flags & ShouldCapture) !== NoFlags &&
+        (flags & DidCapture) === NoFlags
+      ) {
+        // There was an error during render that wasn't captured by a suspense
+        // boundary. Do a second pass on the root to unmount the children.
+        workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
+        return workInProgress;
       }
-
-      workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
-      return workInProgress;
+      // We unwound to the root without completing it. Exit.
+      return null;
     }
     case HostComponent: {
       // TODO: popHydrationState
