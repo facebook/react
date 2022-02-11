@@ -293,7 +293,9 @@ export function appendInitialChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  if (parentInstance.tagName === 'TEMPLATE')
+    parentInstance.content.appendChild(child);
+  else parentInstance.appendChild(child);
 }
 
 export function finalizeInitialChildren(
@@ -465,7 +467,9 @@ export function appendChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
-  parentInstance.appendChild(child);
+  if (parentInstance.tagName === 'TEMPLATE')
+    parentInstance.content.appendChild(child);
+  else parentInstance.appendChild(child);
 }
 
 export function appendChildToContainer(
@@ -476,6 +480,9 @@ export function appendChildToContainer(
   if (container.nodeType === COMMENT_NODE) {
     parentNode = (container.parentNode: any);
     parentNode.insertBefore(child, container);
+  } else if (container.tagName === "TEMPLATE") {
+    parentNode = container.content;
+    parentNode.appendChild(child);
   } else {
     parentNode = container;
     parentNode.appendChild(child);
@@ -554,7 +561,9 @@ export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance | SuspenseInstance,
 ): void {
-  parentInstance.removeChild(child);
+  if (parentInstance.tagName === 'TEMPLATE')
+    parentInstance.content.removeChild(child);
+  else parentInstance.removeChild(child);
 }
 
 export function removeChildFromContainer(
@@ -563,6 +572,9 @@ export function removeChildFromContainer(
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).removeChild(child);
+  } else if (container.tagName === "TEMPLATE") {
+    parentNode = container.content;
+    parentNode.removeChild(child);
   } else {
     container.removeChild(child);
   }
