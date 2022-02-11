@@ -19,8 +19,9 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @internal
  */
 const setTextContent = function(node: Element, text: string): void {
+  const parentNode = node.tagName === 'TEMPLATE' ? node.content : node;
   if (text) {
-    const firstChild = node.firstChild;
+    const firstChild = parentNode.firstChild;
 
     if (
       firstChild &&
@@ -31,7 +32,7 @@ const setTextContent = function(node: Element, text: string): void {
       return;
     }
   }
-  node.textContent = text;
+  parentNode.textContent = text;
 };
 
 export default setTextContent;
