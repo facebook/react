@@ -739,14 +739,21 @@ describe('ReactCache', () => {
     await act(async () => {
       refresh();
     });
-    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(Scheduler).toHaveYielded([
+      'Cache miss! [A]',
+      'Loading...',
+      // The v1 cache can be cleaned up since everything that references it has
+      // been replaced by a fallback. When the boundary switches back to visible
+      // it will use the v2 cache.
+      'Cache cleanup: A [v1]',
+    ]);
     expect(root).toMatchRenderedOutput('Loading...');
 
     await act(async () => {
       resolveMostRecentTextCache('A');
     });
     // Note that the version has updated, and the previous cache is cleared
-    expect(Scheduler).toHaveYielded(['A [v2]', 'Cache cleanup: A [v1]']);
+    expect(Scheduler).toHaveYielded(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v2]');
 
     await act(async () => {
