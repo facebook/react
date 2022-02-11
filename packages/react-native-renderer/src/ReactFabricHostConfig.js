@@ -238,22 +238,25 @@ class ReactFabricHostComponent {
     const passive = optionsObj.passive || false;
     const signal = null; // TODO: implement signal/AbortSignal
 
+    const eventListeners: InternalEventListeners = this._eventListeners || {};
     if (this._eventListeners === null) {
-      this._eventListeners = {};
+      this._eventListeners = eventListeners;
     }
-    const eventListeners: InternalEventListeners = this._eventListeners;
-    if (eventListeners != null) {
-      eventListeners[eventType] = eventListeners[eventType] || [];
-      eventListeners[eventType].push({
-        listener: listener,
-        options: {
-          capture: capture,
-          once: once,
-          passive: passive,
-          signal: signal
-        }
-      });
+
+    const namedEventListeners = eventListeners[eventType] || [];
+    if (eventListeners[eventType] == null) {
+      eventListeners[eventType] = namedEventListeners;
     }
+
+    namedEventListeners.push({
+      listener: listener,
+      options: {
+        capture: capture,
+        once: once,
+        passive: passive,
+        signal: signal
+      }
+    });
   }
 
   // See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener
@@ -265,11 +268,18 @@ class ReactFabricHostComponent {
     const optionsObj = (typeof options === 'object' && options !== null ? options : {});
     const capture = (typeof options === 'boolean' ? options : (optionsObj.capture)) || false;
 
-    if (!this._eventListeners[eventType]) {
+    // If there are no event listeners or named event listeners, we can bail early - our
+    // job is already done.
+    const eventListeners = this._eventListeners;
+    if (!eventListeners) {
+      return;
+    }
+    const namedEventListeners = eventListeners[eventType];
+    if (!namedEventListeners) {
       return;
     }
 
-    this._eventListeners[eventType] = this._eventListeners[eventType].filter(listenerObj => {
+    eventListeners[eventType] = namedEventListeners.filter(listenerObj => {
       return !(listenerObj.listener === listener && listenerObj.options.capture === capture);
     });
   };
