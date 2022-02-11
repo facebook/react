@@ -47,7 +47,7 @@ export default function getListener(
   }
 
   // Get imperative event listeners for this event
-  if (stateNode.canonical._eventListeners[registrationName] && stateNode.canonical._eventListeners[registrationName].length > 0) {
+  if (stateNode.canonical?._eventListeners?.[registrationName]?.length > 0) {
     var toRemove = [];
     for (var listenerObj of stateNode.canonical._eventListeners[registrationName]) {
       // Make sure phase of listener matches requested phase

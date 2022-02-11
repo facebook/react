@@ -117,6 +117,8 @@ if (registerEventHandler) {
   registerEventHandler(dispatchEvent);
 }
 
+type InternalEventListeners = { [string]: $ReadOnly<{| listener: EventListener, options: EventListenerOptions |}>[] };
+
 /**
  * This is used for refs on host components.
  */
@@ -125,7 +127,7 @@ class ReactFabricHostComponent {
   viewConfig: ViewConfig;
   currentProps: Props;
   _internalInstanceHandle: Object;
-  _eventListeners: { [string]: $ReadOnly<{| listener: EventListener, options: EventListenerOptions |}>[] };
+  _eventListeners: ?InternalEventListeners;
 
   constructor(
     tag: number,
@@ -137,7 +139,7 @@ class ReactFabricHostComponent {
     this.viewConfig = viewConfig;
     this.currentProps = props;
     this._internalInstanceHandle = internalInstanceHandle;
-    this._eventListeners = {};
+    this._eventListeners = null;
   }
 
   blur() {
@@ -236,16 +238,22 @@ class ReactFabricHostComponent {
     const passive = optionsObj.passive || false;
     const signal = null; // TODO: implement signal/AbortSignal
 
-    this._eventListeners[eventType] = this._eventListeners[eventType] || [];
-    this._eventListeners[eventType].push({
-      listener: listener,
-      options: {
-        capture: capture,
-        once: once,
-        passive: passive,
-        signal: signal
-      }
-    });
+    if (this._eventListeners === null) {
+      this._eventListeners = {};
+    }
+    const eventListeners: InternalEventListeners = this._eventListeners;
+    if (eventListeners != null) {
+      eventListeners[eventType] = eventListeners[eventType] || [];
+      eventListeners[eventType].push({
+        listener: listener,
+        options: {
+          capture: capture,
+          once: once,
+          passive: passive,
+          signal: signal
+        }
+      });
+    }
   }
 
   // See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener
