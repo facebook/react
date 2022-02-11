@@ -10,6 +10,7 @@
 import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
+import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
@@ -29,7 +30,7 @@ const {
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(inst, registrationName);
+  return getListener(inst, registrationName, propagationPhase);
 }
 
 function accumulateDirectionalDispatches(inst, phase, event) {
@@ -103,7 +104,9 @@ function accumulateDispatches(
 ): void {
   if (inst && event && event.dispatchConfig.registrationName) {
     const registrationName = event.dispatchConfig.registrationName;
-    const listener = getListener(inst, registrationName);
+    // Since we "do not look for phased registration names", that
+    // should be the same as "bubbled" here, for all intents and purposes...?
+    const listener = getListener(inst, registrationName, 'bubbled');
     if (listener) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
@@ -130,7 +133,6 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 }
 
 // End of inline
-type PropagationPhases = 'bubbled' | 'captured';
 
 const ReactNativeBridgeEventPlugin = {
   eventTypes: {},

@@ -23,6 +23,7 @@ import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
+import CustomEvent from './CustomEvent';
 
 import {
   DefaultEventPriority,
@@ -95,6 +96,19 @@ export type RendererInspectionConfig = $ReadOnly<{|
   ) => void,
 |}>;
 
+// TODO: find a better place for this type to live
+export type EventListenerOptions = $ReadOnly<{|
+  capture?: boolean,
+  once?: boolean,
+  passive?: boolean,
+  signal: mixed, // not yet implemented
+|}>;
+export type EventListenerRemoveOptions = $ReadOnly<{|
+  capture?: boolean,
+|}>;
+// TODO: this will be changed in the future to be w3c-compatible and allow "EventListener" objects as well as functions.
+export type EventListener = Function;
+
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
   /**
@@ -111,6 +125,7 @@ class ReactFabricHostComponent {
   viewConfig: ViewConfig;
   currentProps: Props;
   _internalInstanceHandle: Object;
+  _eventListeners: { [string]: $ReadOnly<{| listener: EventListener, options: EventListenerOptions |}>[] };
 
   constructor(
     tag: number,
@@ -122,6 +137,7 @@ class ReactFabricHostComponent {
     this.viewConfig = viewConfig;
     this.currentProps = props;
     this._internalInstanceHandle = internalInstanceHandle;
+    this._eventListeners = {};
   }
 
   blur() {
@@ -193,6 +209,62 @@ class ReactFabricHostComponent {
 
     return;
   }
+
+  dipatchEvent_unstable(event: CustomEvent) {
+    dispatchEvent(this._internalInstanceHandle, event.type, event);
+  }
+
+  // This API adheres to the w3c addEventListener spec.
+  // See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+  // See https://www.w3.org/TR/DOM-Level-2-Events/events.html
+  //
+  // Exceptions/TODOs:
+  // (1) listener must currently be a function, we do not support EventListener objects yet.
+  // (2) we do not support the `signal` option / AbortSignal yet
+  addEventListener_unstable(eventType: string, listener: EventListener, options: EventListenerOptions | boolean) {
+    if (typeof eventType !== 'string') {
+      throw new Error('addEventListener_unstable eventType must be a string');
+    }
+    if (typeof listener !== 'function') {
+      throw new Error('addEventListener_unstable listener must be a function');
+    }
+
+    // The third argument is either boolean indicating "captures" or an object.
+    const optionsObj = (typeof options === 'object' && options !== null ? options : {});
+    const capture = (typeof options === 'boolean' ? options : (optionsObj.capture)) || false;
+    const once = optionsObj.once || false;
+    const passive = optionsObj.passive || false;
+    const signal = null; // TODO: implement signal/AbortSignal
+
+    this._eventListeners[eventType] = this._eventListeners[eventType] || [];
+    this._eventListeners[eventType].push({
+      listener: listener,
+      options: {
+        capture: capture,
+        once: once,
+        passive: passive,
+        signal: signal
+      }
+    });
+  }
+
+  // See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener
+  removeEventListener_unstable(eventType: string, listener: EventListener, options: EventListenerRemoveOptions | boolean) {
+    // eventType and listener must be referentially equal to be removed from the listeners
+    // data structure, but in "options" we only check the `capture` flag, according to spec.
+    // That means if you add the same function as a listener with capture set to true and false,
+    // you must also call removeEventListener twice with capture set to true/false.
+    const optionsObj = (typeof options === 'object' && options !== null ? options : {});
+    const capture = (typeof options === 'boolean' ? options : (optionsObj.capture)) || false;
+
+    if (!this._eventListeners[eventType]) {
+      return;
+    }
+
+    this._eventListeners[eventType] = this._eventListeners[eventType].filter(listenerObj => {
+      return !(listenerObj.listener === listener && listenerObj.options.capture === capture);
+    });
+  };
 }
 
 // eslint-disable-next-line no-unused-expressions
