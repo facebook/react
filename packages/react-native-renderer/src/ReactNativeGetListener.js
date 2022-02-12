@@ -56,15 +56,28 @@ export default function getListener(
         continue;
       }
 
-      listeners.push(listenerObj.listener);
-
-      // Only call once? If so, remove from listeners after calling.
+      // Only call once?
+      // If so, we ensure that it's only called once by setting a flag
+      // and by removing it from eventListeners once it is called (but only
+      // when it's actually been executed).
       if (listenerObj.options.once) {
-        toRemove.push(listenerObj);
+        listeners.push(function () {
+          var args = Array.prototype.slice.call(arguments);
+
+          // Guard against function being called more than once in
+          // case there are somehow multiple in-flight references to
+          // it being processed
+          if (!listenerObj.invalidated) {
+            listenerObj.listener.apply(null, args);
+            listenerObj.invalidated = true;
+          }
+
+          // Remove from the event listener once it's been called
+          stateNode.canonical.removeEventListener_unstable(registrationName, listenerObj.listener, listenerObj.capture);
+        });
+      } else {
+        listeners.push(listenerObj.listener);
       }
-    }
-    for (var listenerObj of toRemove) {
-      stateNode.canonical.removeEventListener_unstable(registrationName, listenerObj.listener, listenerObj.capture);
     }
   }
 

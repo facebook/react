@@ -117,7 +117,7 @@ if (registerEventHandler) {
   registerEventHandler(dispatchEvent);
 }
 
-type InternalEventListeners = { [string]: $ReadOnly<{| listener: EventListener, options: EventListenerOptions |}>[] };
+type InternalEventListeners = { [string]: {| listener: EventListener, options: EventListenerOptions, invalidated: boolean |}[] };
 
 /**
  * This is used for refs on host components.
@@ -250,6 +250,7 @@ class ReactFabricHostComponent {
 
     namedEventListeners.push({
       listener: listener,
+      invalidated: false,
       options: {
         capture: capture,
         once: once,
