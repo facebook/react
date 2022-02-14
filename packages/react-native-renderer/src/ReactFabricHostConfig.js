@@ -212,15 +212,22 @@ class ReactFabricHostComponent {
     return;
   }
 
-  dipatchEvent_unstable(event: CustomEvent) {
+  // This API (dispatchEvent, addEventListener, removeEventListener) attempts to adhere to the
+  // w3 Level2 Events spec as much as possible, treating HostComponent as a DOM node.
+  //
+  // Unless otherwise noted, these methods should "just work" and adhere to the W3 specs.
+  // If they deviate in a way that is not explicitly noted here, you've found a bug!
+  //
+  // See:
+  // * https://www.w3.org/TR/DOM-Level-2-Events/events.html
+  // * https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent
+  // * https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
+  // * https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener
+  dispatchEvent_unstable(event: CustomEvent) {
     dispatchEvent(this._internalInstanceHandle, event.type, event);
   }
 
-  // This API adheres to the w3c addEventListener spec.
-  // See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
-  // See https://www.w3.org/TR/DOM-Level-2-Events/events.html
-  //
-  // Exceptions/TODOs:
+  // Deviations from spec/TODOs:
   // (1) listener must currently be a function, we do not support EventListener objects yet.
   // (2) we do not support the `signal` option / AbortSignal yet
   addEventListener_unstable(eventType: string, listener: EventListener, options: EventListenerOptions | boolean) {
