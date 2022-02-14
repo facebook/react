@@ -19,6 +19,7 @@ export const REACT_STRICT_MODE_TYPE = Symbol.for('react.strict_mode');
 export const REACT_PROFILER_TYPE = Symbol.for('react.profiler');
 export const REACT_PROVIDER_TYPE = Symbol.for('react.provider');
 export const REACT_CONTEXT_TYPE = Symbol.for('react.context');
+export const REACT_SERVER_CONTEXT_TYPE = Symbol.for('react.server_context');
 export const REACT_FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
 export const REACT_SUSPENSE_TYPE = Symbol.for('react.suspense');
 export const REACT_SUSPENSE_LIST_TYPE = Symbol.for('react.suspense_list');

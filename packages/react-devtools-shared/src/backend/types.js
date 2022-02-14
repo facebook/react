@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactContext, Wakeable} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactServerContext,
+  Wakeable,
+} from 'shared/ReactTypes';
 import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {

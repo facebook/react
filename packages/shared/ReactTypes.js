@@ -25,7 +25,7 @@ export type ReactText = string | number;
 
 export type ReactProvider<T> = {
   $$typeof: Symbol | number,
-  type: ReactProviderType<T>,
+  type: ReactProviderType<T> | ReactServerProviderType<T>,
   key: null | string,
   ref: null,
   props: {
@@ -92,6 +92,7 @@ export type ReactServerContext<T: ServerContextJSONValue> = {
   _currentRenderer?: Object | null,
   _currentRenderer2?: Object | null,
   _threadCount: number,
+  _definitionLoaded: boolean,
   +displayName: string,
   ...
 };

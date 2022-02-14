@@ -24,7 +24,7 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
-import {getOrCreateContextByName} from 'react/src/ReactServerContext';
+import {getOrCreateServerContext} from 'react/src/ReactServerContext';
 
 import {
   REACT_LAZY_TYPE,
@@ -346,7 +346,7 @@ export function parseModelTuple(
       return createElement(tuple[1], tuple[2], tuple[3]);
     case REACT_PROVIDER_TYPE:
       return createElement(
-        getOrCreateContextByName((tuple[1]: any)).Provider,
+        getOrCreateServerContext((tuple[1]: any)).Provider,
         tuple[2],
         tuple[3],
       );

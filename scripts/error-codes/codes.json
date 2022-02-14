@@ -412,5 +412,6 @@
   "424": "Text content does not match server-rendered HTML.",
   "425": "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition.",
   "426": "An error occurred during hydration. The server HTML was replaced with client content",
-  "427": "useServerContext is only supported while rendering."
+  "427": "useServerContext is only supported while rendering.",
+  "428": "ServerContext: %s already defined"
 }

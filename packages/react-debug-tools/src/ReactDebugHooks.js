@@ -351,7 +351,8 @@ function useId(): string {
 
 const Dispatcher: DispatcherType = {
   getCacheForType,
-  readContext,
+  // TODO: figure out why flow is complaining here
+  readContext: (readContext: any),
   useCacheRefresh,
   useCallback,
   useContext,
@@ -694,12 +695,16 @@ export function inspectHooks<Props>(
   return buildTree(rootStack, readHookLog, includeHooksSource);
 }
 
-function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
+function setupContexts(
+  contextMap: Map<ReactContext<any> | ReactServerContext<any>, any>,
+  fiber: Fiber,
+) {
   let current = fiber;
   while (current) {
     if (current.tag === ContextProvider) {
       const providerType: ReactProviderType<any> = current.type;
-      const context: ReactContext<any> = providerType._context;
+      const context: ReactContext<any> | ReactServerContext<any> =
+        providerType._context;
       if (!contextMap.has(context)) {
         // Store the current value that we're going to restore later.
         contextMap.set(context, context._currentValue);
@@ -711,7 +716,9 @@ function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
   }
 }
 
-function restoreContexts(contextMap: Map<ReactContext<any>, any>) {
+function restoreContexts(
+  contextMap: Map<ReactContext<any> | ReactServerContext<any>, any>,
+) {
   contextMap.forEach((value, context) => (context._currentValue = value));
 }
 

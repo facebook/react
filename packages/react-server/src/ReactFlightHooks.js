@@ -9,15 +9,20 @@
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {
+  ReactContext,
   ReactServerContext,
   ServerContextJSONValue,
 } from 'shared/ReactTypes';
+import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 
 function readContext<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
+  context: ReactContext<T> | ReactServerContext<T>,
 ): T {
   if (__DEV__) {
+    if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
+      console.error('Only ServerContext is supported in Flight');
+    }
     if (currentCache === null) {
       console.error(
         'Context can only be read while React is rendering. ' +
@@ -27,7 +32,7 @@ function readContext<T: ServerContextJSONValue>(
       );
     }
   }
-  return readContextImpl(context);
+  return readContextImpl(((context: any): ReactServerContext<any>));
 }
 
 export const Dispatcher: DispatcherType = {

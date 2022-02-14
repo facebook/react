@@ -129,16 +129,16 @@ export function pushProvider<T: any>(
   }
 }
 
-export function popProvider<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
+export function popProvider(
+  context: ReactContext<any> | ReactServerContext<any>,
   providerFiber: Fiber,
 ): void {
   const currentValue = valueCursor.current;
   pop(valueCursor, providerFiber);
   if (isPrimaryRenderer) {
-    context._currentValue = (currentValue: any);
+    context._currentValue = currentValue;
   } else {
-    context._currentValue2 = (currentValue: any);
+    context._currentValue2 = currentValue;
   }
 }
 

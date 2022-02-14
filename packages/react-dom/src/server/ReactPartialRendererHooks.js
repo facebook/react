@@ -15,7 +15,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactServerContext,
-  ServerContextValue,
+  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 import type PartialRenderer from './ReactPartialRenderer';
 
@@ -252,7 +252,7 @@ function useContext<T>(context: ReactContext<T>): T {
   return context[threadID];
 }
 
-function useServerContext<T: ServerContextValue>(
+function useServerContext<T: ServerContextJSONValue>(
   context: ReactServerContext<T>,
 ): T {
   if (__DEV__) {

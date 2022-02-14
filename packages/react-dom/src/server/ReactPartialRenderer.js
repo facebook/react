@@ -10,7 +10,11 @@
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactProvider,
+  ReactContext,
+  ReactServerContext,
+} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import isArray from 'shared/isArray';
@@ -777,7 +781,7 @@ class ReactDOMServerRenderer {
   suspenseDepth: number;
 
   contextIndex: number;
-  contextStack: Array<ReactContext<any>>;
+  contextStack: Array<ReactContext<any> | ReactServerContext<any>>;
   contextValueStack: Array<any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
@@ -833,9 +837,10 @@ class ReactDOMServerRenderer {
    * https://github.com/facebook/react/pull/12985#issuecomment-396301248
    */
 
-  pushProvider<T>(provider: ReactProvider<T>): void {
+  pushProvider<T: any>(provider: ReactProvider<T>): void {
     const index = ++this.contextIndex;
-    const context: ReactContext<any> = provider.type._context;
+    const context: ReactContext<any> | ReactServerContext<any> =
+      provider.type._context;
     const threadID = this.threadID;
     validateContextBounds(context, threadID);
     const previousValue = context[threadID];
@@ -860,7 +865,8 @@ class ReactDOMServerRenderer {
       }
     }
 
-    const context: ReactContext<any> = this.contextStack[index];
+    const context: ReactContext<any> | ReactServerContext<any> = this
+      .contextStack[index];
     const previousValue = this.contextValueStack[index];
 
     // "Hide" these null assignments from Flow by using `any`
@@ -882,7 +888,8 @@ class ReactDOMServerRenderer {
   clearProviders(): void {
     // Restore any remaining providers on the stack to previous values
     for (let index = this.contextIndex; index >= 0; index--) {
-      const context: ReactContext<any> = this.contextStack[index];
+      const context: ReactContext<any> | ReactServerContext<any> = this
+        .contextStack[index];
       const previousValue = this.contextValueStack[index];
       context[this.threadID] = previousValue;
     }

@@ -92,9 +92,10 @@ export function processErrorChunk(
 export function processModelChunk(
   request: Request,
   id: number,
-  jsonValue: JSONValue,
+  model: ReactModel,
 ): Chunk {
-  const row = serializeRowHeader('J', id) + JSON.stringify(jsonValue) + '\n';
+  const json = stringify(model, request.toJSON);
+  const row = serializeRowHeader('J', id) + json + '\n';
   return stringToChunk(row);
 }
 

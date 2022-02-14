@@ -1555,7 +1555,6 @@ function handleError(root, thrownValue): void {
           );
         }
       }
-
       throwException(
         root,
         erroredWork.return,

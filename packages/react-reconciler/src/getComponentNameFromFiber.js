@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactServerContext,
+  ReactProviderType,
+} from 'shared/ReactTypes';
 
 import {
   FunctionComponent,
@@ -53,7 +57,7 @@ function getWrappedName(
 }
 
 // Keep in sync with shared/getComponentNameFromType
-function getContextName(type: ReactContext<any>) {
+function getContextName(type: ReactContext<any> | ReactServerContext<any>) {
   return type.displayName || 'Context';
 }
 

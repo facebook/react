@@ -53,14 +53,14 @@ export type HookType =
 
 export type ContextDependency<T: any> = {
   context: ReactContext<T> | ReactServerContext<T>,
-  next: ContextDependency<mixed> | null,
+  next: ContextDependency<T> | null,
   memoizedValue: T,
   ...
 };
 
 export type Dependencies = {
   lanes: Lanes,
-  firstContext: ContextDependency<mixed> | null,
+  firstContext: ContextDependency<any> | null,
   ...
 };
 
@@ -384,9 +384,9 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
-  useServerContext<T: ServerContextJSONValue>(
+  useServerContext?: <T: ServerContextJSONValue>(
     context: ReactServerContext<T>,
-  ): T,
+  ) => T,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,
