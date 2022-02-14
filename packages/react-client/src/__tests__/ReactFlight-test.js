@@ -305,219 +305,232 @@ describe('ReactFlight', () => {
     );
   });
 
-  it('supports basic createServerContext usage', () => {
-    const ServerContext = React.createServerContext(
-      'ServerContext',
-      'hello from server',
-    );
-    function Foo() {
-      const context = React.useServerContext(ServerContext);
-      return <div>{context}</div>;
-    }
-
-    const transport = ReactNoopFlightServer.render(<Foo />);
-    act(() => {
-      ServerContext._currentRenderer = null;
-      ServerContext._currentRenderer2 = null;
-      ReactNoop.render(ReactNoopFlightClient.read(transport));
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(<div>hello from server</div>);
-  });
-
-  it('propagates ServerContext providers in flight', () => {
-    const ServerContext = React.createServerContext(
-      'ServerContext',
-      'default hello from server',
-    );
-
-    function Foo() {
-      return (
-        <div>
-          <ServerContext.Provider value="hi this is server">
-            <Bar />
-          </ServerContext.Provider>
-        </div>
+  describe('ServerContext', () => {
+    // @gate enableServerContext
+    it('supports basic createServerContext usage', () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'hello from server',
       );
-    }
-    function Bar() {
-      const context = React.useServerContext(ServerContext);
-      return context;
-    }
+      function Foo() {
+        const context = React.useServerContext(ServerContext);
+        return <div>{context}</div>;
+      }
 
-    const transport = ReactNoopFlightServer.render(<Foo />);
-    act(() => {
-      ServerContext._currentRenderer = null;
-      ServerContext._currentRenderer2 = null;
-      ReactNoop.render(ReactNoopFlightClient.read(transport));
+      const transport = ReactNoopFlightServer.render(<Foo />);
+      act(() => {
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(<div>hello from server</div>);
     });
 
-    expect(ReactNoop).toMatchRenderedOutput(<div>hi this is server</div>);
-  });
+    // @gate enableServerContext
+    it('propagates ServerContext providers in flight', () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default hello from server',
+      );
 
-  it('propagates ServerContext and cleansup providers in flight', () => {
-    const ServerContext = React.createServerContext(
-      'ServerContext',
-      'default hello from server',
-    );
-
-    function Foo() {
-      return (
-        <>
-          <ServerContext.Provider value="hi this is server outer">
+      function Foo() {
+        return (
+          <div>
             <ServerContext.Provider value="hi this is server">
               <Bar />
             </ServerContext.Provider>
-            <ServerContext.Provider value="hi this is server2">
+          </div>
+        );
+      }
+      function Bar() {
+        const context = React.useServerContext(ServerContext);
+        return context;
+      }
+
+      const transport = ReactNoopFlightServer.render(<Foo />);
+      act(() => {
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(<div>hi this is server</div>);
+    });
+
+    // @gate enableServerContext
+    it('propagates ServerContext and cleansup providers in flight', () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default hello from server',
+      );
+
+      function Foo() {
+        return (
+          <>
+            <ServerContext.Provider value="hi this is server outer">
+              <ServerContext.Provider value="hi this is server">
+                <Bar />
+              </ServerContext.Provider>
+              <ServerContext.Provider value="hi this is server2">
+                <Bar />
+              </ServerContext.Provider>
+              <Bar />
+            </ServerContext.Provider>
+            <ServerContext.Provider value="hi this is server outer2">
               <Bar />
             </ServerContext.Provider>
             <Bar />
-          </ServerContext.Provider>
-          <ServerContext.Provider value="hi this is server outer2">
+          </>
+        );
+      }
+      function Bar() {
+        const context = React.useServerContext(ServerContext);
+        return <span>{context}</span>;
+      }
+
+      const transport = ReactNoopFlightServer.render(<Foo />);
+      act(() => {
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span>hi this is server</span>
+          <span>hi this is server2</span>
+          <span>hi this is server outer</span>
+          <span>hi this is server outer2</span>
+          <span>default hello from server</span>
+        </>,
+      );
+    });
+
+    // @gate enableServerContext
+    it('propagates ServerContext providers in flight after suspending', async () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default hello from server',
+      );
+
+      function Foo() {
+        return (
+          <div>
+            <ServerContext.Provider value="hi this is server">
+              <React.Suspense fallback={'Loading'}>
+                <Bar />
+              </React.Suspense>
+            </ServerContext.Provider>
+          </div>
+        );
+      }
+
+      let resolve;
+      const promise = new Promise(res => {
+        resolve = () => {
+          promise.unsuspend = true;
+          res();
+        };
+      });
+
+      function Bar() {
+        if (!promise.unsuspend) {
+          Scheduler.unstable_yieldValue('suspended');
+          throw promise;
+        }
+        Scheduler.unstable_yieldValue('rendered');
+        const context = React.useServerContext(ServerContext);
+        return context;
+      }
+
+      const transport = ReactNoopFlightServer.render(<Foo />);
+
+      expect(Scheduler).toHaveYielded(['suspended']);
+
+      await act(async () => {
+        resolve();
+        await promise;
+        jest.runAllImmediates();
+      });
+
+      expect(Scheduler).toHaveYielded(['rendered']);
+
+      act(() => {
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(<div>hi this is server</div>);
+    });
+
+    // @gate enableServerContext
+    it('serializes ServerContext to client', async () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default hello from server',
+      );
+
+      function ClientBar() {
+        Scheduler.unstable_yieldValue('ClientBar');
+        const context = React.useServerContext(ServerContext);
+        return <span>{context}</span>;
+      }
+
+      const Bar = moduleReference(ClientBar);
+
+      function Foo() {
+        return (
+          <ServerContext.Provider value="hi this is server">
             <Bar />
           </ServerContext.Provider>
-          <Bar />
-        </>
-      );
-    }
-    function Bar() {
-      const context = React.useServerContext(ServerContext);
-      return <span>{context}</span>;
-    }
-
-    const transport = ReactNoopFlightServer.render(<Foo />);
-    act(() => {
-      ServerContext._currentRenderer = null;
-      ServerContext._currentRenderer2 = null;
-      ReactNoop.render(ReactNoopFlightClient.read(transport));
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(
-      <>
-        <span>hi this is server</span>
-        <span>hi this is server2</span>
-        <span>hi this is server outer</span>
-        <span>hi this is server outer2</span>
-        <span>default hello from server</span>
-      </>,
-    );
-  });
-
-  it('propagates ServerContext providers in flight after suspending', async () => {
-    const ServerContext = React.createServerContext(
-      'ServerContext',
-      'default hello from server',
-    );
-
-    function Foo() {
-      return (
-        <div>
-          <ServerContext.Provider value="hi this is server">
-            <React.Suspense fallback={'Loading'}>
-              <Bar />
-            </React.Suspense>
-          </ServerContext.Provider>
-        </div>
-      );
-    }
-
-    let resolve;
-    const promise = new Promise(res => {
-      resolve = () => {
-        promise.unsuspend = true;
-        res();
-      };
-    });
-
-    function Bar() {
-      if (!promise.unsuspend) {
-        Scheduler.unstable_yieldValue('suspended');
-        throw promise;
+        );
       }
-      Scheduler.unstable_yieldValue('rendered');
-      const context = React.useServerContext(ServerContext);
-      return context;
-    }
 
-    const transport = ReactNoopFlightServer.render(<Foo />);
+      const model = {
+        foo: <Foo />,
+      };
 
-    expect(Scheduler).toHaveYielded(['suspended']);
+      const transport = ReactNoopFlightServer.render(model);
 
-    await act(async () => {
-      resolve();
-      await promise;
-      jest.runAllImmediates();
+      expect(Scheduler).toHaveYielded([]);
+
+      act(() => {
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        const flightModel = ReactNoopFlightClient.read(transport);
+        ReactNoop.render(flightModel.foo);
+      });
+
+      expect(Scheduler).toHaveYielded(['ClientBar']);
+      expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
     });
 
-    expect(Scheduler).toHaveYielded(['rendered']);
-
-    act(() => {
-      ServerContext._currentRenderer = null;
-      ServerContext._currentRenderer2 = null;
-      ReactNoop.render(ReactNoopFlightClient.read(transport));
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(<div>hi this is server</div>);
-  });
-
-  it('serializes ServerContext to client', async () => {
-    const ServerContext = React.createServerContext(
-      'ServerContext',
-      'default hello from server',
-    );
-
-    function ClientBar() {
-      Scheduler.unstable_yieldValue('ClientBar');
-      const context = React.useServerContext(ServerContext);
-      return <span>{context}</span>;
-    }
-
-    const Bar = moduleReference(ClientBar);
-
-    function Foo() {
-      return (
-        <ServerContext.Provider value="hi this is server">
-          <Bar />
-        </ServerContext.Provider>
+    // @gate enableServerContext
+    it('takes ServerContext from client for refetching usecases', async () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default hello from server',
       );
-    }
+      function Bar() {
+        return <span>{React.useServerContext(ServerContext)}</span>;
+      }
+      const transport = ReactNoopFlightServer.render(<Bar />, {
+        context: [
+          {
+            name: 'ServerContext',
+            value: 'Override',
+          },
+        ],
+      });
 
-    const model = {
-      foo: <Foo />,
-    };
+      act(() => {
+        const flightModel = ReactNoopFlightClient.read(transport);
+        ReactNoop.render(flightModel);
+      });
 
-    const transport = ReactNoopFlightServer.render(model);
-
-    expect(Scheduler).toHaveYielded([]);
-
-    act(() => {
-      ServerContext._currentRenderer = null;
-      ServerContext._currentRenderer2 = null;
-      const flightModel = ReactNoopFlightClient.read(transport);
-      ReactNoop.render(flightModel.foo);
+      expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
     });
-
-    expect(Scheduler).toHaveYielded(['ClientBar']);
-    expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
-  });
-
-  it('takes ServerContext from client for refetching usecases', async () => {
-    const ServerContext = React.createServerContext(
-      'ServerContext',
-      'default hello from server',
-    );
-    function Bar() {
-      return <span>{React.useServerContext(ServerContext)}</span>;
-    }
-    const transport = ReactNoopFlightServer.render(<Bar />, {
-      context: [{name: 'ServerContext', value: 'Override'}],
-    });
-
-    act(() => {
-      const flightModel = ReactNoopFlightClient.read(transport);
-      ReactNoop.render(flightModel);
-    });
-
-    expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
   });
 });

@@ -33,6 +33,7 @@ import {
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
+  enableServerContext,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -2372,12 +2373,33 @@ function getCacheForType<T>(resourceType: () => T): T {
   return cacheForType;
 }
 
+function mountServerContext<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
+): T {
+  if (!enableServerContext) {
+    throw new Error('Not implemented.');
+  }
+  currentHookNameInDev = 'useServerContext';
+  mountHookTypesDev();
+  return readContext(context);
+}
+
+function updateServerContext<T: ServerContextJSONValue>(
+  context: ReactServerContext<T>,
+): T {
+  if (!enableServerContext) {
+    throw new Error('Not implemented.');
+  }
+  currentHookNameInDev = 'useServerContext';
+  updateHookTypesDev();
+  return readContext(context);
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
   useCallback: throwInvalidHookError,
   useContext: throwInvalidHookError,
-  useServerContext: throwInvalidHookError,
   useEffect: throwInvalidHookError,
   useImperativeHandle: throwInvalidHookError,
   useInsertionEffect: throwInvalidHookError,
@@ -2401,12 +2423,15 @@ if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
 }
 
+if (enableServerContext) {
+  (ContextOnlyDispatcher: Dispatcher).useServerContext = throwInvalidHookError;
+}
+
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
 
   useCallback: mountCallback,
   useContext: readContext,
-  useServerContext: readContext,
   useEffect: mountEffect,
   useImperativeHandle: mountImperativeHandle,
   useLayoutEffect: mountLayoutEffect,
@@ -2429,13 +2454,15 @@ if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
+if (enableServerContext) {
+  (HooksDispatcherOnMount: Dispatcher).useServerContext = readContext;
+}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
   useContext: readContext,
-  useServerContext: readContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
@@ -2458,13 +2485,15 @@ if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
 }
+if (enableServerContext) {
+  (HooksDispatcherOnUpdate: Dispatcher).useServerContext = readContext;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
 
   useCallback: updateCallback,
   useContext: readContext,
-  useServerContext: readContext,
   useEffect: updateEffect,
   useImperativeHandle: updateImperativeHandle,
   useInsertionEffect: updateInsertionEffect,
@@ -2486,6 +2515,9 @@ if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
+}
+if (enableServerContext) {
+  (HooksDispatcherOnRerender: Dispatcher).useServerContext = readContext;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2527,13 +2559,6 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
-      mountHookTypesDev();
-      return readContext(context);
-    },
-    useServerContext<T: ServerContextJSONValue>(
-      context: ReactServerContext<T>,
-    ): T {
-      currentHookNameInDev = 'useServerContext';
       mountHookTypesDev();
       return readContext(context);
     },
@@ -2669,6 +2694,9 @@ if (__DEV__) {
       return mountRefresh();
     };
   }
+  if (enableServerContext) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).useServerContext = mountServerContext;
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
@@ -2681,13 +2709,6 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
-      updateHookTypesDev();
-      return readContext(context);
-    },
-    useServerContext<T: ServerContextJSONValue>(
-      context: ReactServerContext<T>,
-    ): T {
-      currentHookNameInDev = 'useServerContext';
       updateHookTypesDev();
       return readContext(context);
     },
@@ -2818,6 +2839,9 @@ if (__DEV__) {
       return mountRefresh();
     };
   }
+  if (enableServerContext) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useServerContext = updateServerContext;
+  }
 
   HooksDispatcherOnUpdateInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
@@ -2830,13 +2854,6 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
-      updateHookTypesDev();
-      return readContext(context);
-    },
-    useServerContext<T: ServerContextJSONValue>(
-      context: ReactServerContext<T>,
-    ): T {
-      currentHookNameInDev = 'useServerContext';
       updateHookTypesDev();
       return readContext(context);
     },
@@ -2967,6 +2984,12 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
+  if (enableServerContext) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useServerContext = updateServerContext;
+  }
+
+  if (!enableServerContext) {
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
@@ -2980,13 +3003,6 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
-      updateHookTypesDev();
-      return readContext(context);
-    },
-    useServerContext<T: ServerContextJSONValue>(
-      context: ReactServerContext<T>,
-    ): T {
-      currentHookNameInDev = 'useServerContext';
       updateHookTypesDev();
       return readContext(context);
     },
@@ -3117,6 +3133,9 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
+  if (enableServerContext) {
+    HooksDispatcherOnRerenderInDEV.useServerContext = updateServerContext;
+  }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
@@ -3131,14 +3150,6 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return readContext(context);
-    },
-    useServerContext<T: ServerContextJSONValue>(
-      context: ReactServerContext<T>,
-    ): T {
-      currentHookNameInDev = 'useServerContext';
       warnInvalidHookAccess();
       mountHookTypesDev();
       return readContext(context);
@@ -3285,6 +3296,22 @@ if (__DEV__) {
     };
   }
 
+  if (enableServerContext) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useServerContext = <
+      T: ServerContextJSONValue,
+    >(
+      context: ReactServerContext<T>,
+    ): T => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContext';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return readContext(context);
+    };
+  }
+
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       warnInvalidContextAccess();
@@ -3298,14 +3325,6 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return readContext(context);
-    },
-    useServerContext<T: ServerContextJSONValue>(
-      context: ReactServerContext<T>,
-    ): T {
-      currentHookNameInDev = 'useServerContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);
@@ -3451,9 +3470,24 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
+  if (enableServerContext) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useServerContext = <
+      T: ServerContextJSONValue,
+    >(
+      context: ReactServerContext<T>,
+    ): T => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContext';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return readContext(context);
+    };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    readContext<T>(context: ReactContext<T>): T {
+    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
       warnInvalidContextAccess();
       return readContext(context);
     },
@@ -3466,14 +3500,6 @@ if (__DEV__) {
     },
     useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return readContext(context);
-    },
-    useServerContext<T: ServerContextJSONValue>(
-      context: ReactServerContext<T>,
-    ): T {
-      currentHookNameInDev = 'useServerContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);
@@ -3617,6 +3643,21 @@ if (__DEV__) {
       currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
+    };
+  }
+  if (enableServerContext) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useServerContext = <
+      T: ServerContextJSONValue,
+    >(
+      context: ReactServerContext<T>,
+    ): T => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContext';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return readContext(context);
     };
   }
 }

@@ -103,13 +103,13 @@ function convertModelToJSON(
   }
   return json;
 }
-
 export function processModelChunk(
   request: Request,
   id: number,
-  jsonValue: JSONValue,
+  model: ReactModel,
 ): Chunk {
-  return ['J', id, jsonValue];
+  const json = convertModelToJSON(request, {}, '', model);
+  return ['J', id, json];
 }
 
 export function processModuleChunk(

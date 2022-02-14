@@ -75,6 +75,8 @@ export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
+export const enableServerContext = false;
+
 export const enableUseMutableSource = true;
 
 export const enableTransitionTracing = false;

@@ -189,6 +189,7 @@ export function useServerContext<T: ServerContextJSONValue>(
 ): T {
   // TODO: Warn if regular context is passed in
   const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
   return dispatcher.useServerContext(Context);
 }
 

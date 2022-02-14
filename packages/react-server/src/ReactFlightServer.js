@@ -38,7 +38,7 @@ import {
   isModuleReference,
 } from './ReactFlightServerConfig';
 
-import {getOrCreateContextByName} from 'react/src/ReactServerContext';
+import {getOrCreateServerContext} from 'react/src/ReactServerContext';
 import {
   Dispatcher,
   getCurrentCache,
@@ -50,7 +50,6 @@ import {
   popProvider,
   switchContext,
   getActiveContext,
-  rootContextSnapshot,
 } from './ReactFlightNewContext';
 
 import {
@@ -60,6 +59,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
+  REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -209,7 +209,15 @@ function attemptResolveElement(
         return attemptResolveElement(type.type, key, ref, props);
       }
       case REACT_PROVIDER_TYPE: {
-        return [REACT_PROVIDER_TYPE, type._context.displayName, key, props];
+        parentsWithContextStack.push(type._context);
+        pushProvider(type._context, props.value);
+        return [
+          REACT_PROVIDER_TYPE,
+          type._context.displayName,
+          key,
+          props,
+          type._context,
+        ];
       }
     }
   }
@@ -404,6 +412,23 @@ function describeObjectForErrorMessage(
   }
 }
 
+function isReactElement(value: mixed) {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value: any).$$typeof === REACT_ELEMENT_TYPE
+  );
+}
+
+// Save all of the parents/contexts as we recursively stringify onto this stack
+// so that we can popContexts as we recurse into neighbors.
+const parentsWithContextStack: Array<
+  | {+[key: string | number]: ReactModel}
+  | $ReadOnlyArray<ReactModel>
+  | ReactServerContext<any>
+  | ReactModel,
+> = [];
+
 export function resolveModelToJSON(
   request: Request,
   parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
@@ -438,11 +463,7 @@ export function resolveModelToJSON(
   }
 
   // Resolve server components.
-  while (
-    typeof value === 'object' &&
-    value !== null &&
-    value.$$typeof === REACT_ELEMENT_TYPE
-  ) {
+  while (isReactElement(value)) {
     // TODO: Concatenate keys of parents onto children.
     const element: React$Element<any> = (value: any);
     try {
@@ -453,7 +474,6 @@ export function resolveModelToJSON(
         element.ref,
         element.props,
       );
-      2;
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
@@ -477,6 +497,11 @@ export function resolveModelToJSON(
 
   if (value === null) {
     return null;
+  }
+
+  if (value.$$typeof === REACT_SERVER_CONTEXT_TYPE && key === '4') {
+    popProvider((value: any));
+    return (undefined: any);
   }
 
   if (typeof value === 'object') {
@@ -557,6 +582,7 @@ export function resolveModelToJSON(
         }
       }
     }
+
     return value;
   }
 
@@ -703,11 +729,7 @@ function retrySegment(request: Request, segment: Segment): void {
   switchContext(segment.context);
   try {
     let value = segment.model;
-    while (
-      typeof value === 'object' &&
-      value !== null &&
-      value.$$typeof === REACT_ELEMENT_TYPE
-    ) {
+    while (isReactElement(value)) {
       // TODO: Concatenate keys of parents onto children.
       const element: React$Element<any> = (value: any);
       // Attempt to render the server component.
@@ -720,13 +742,8 @@ function retrySegment(request: Request, segment: Segment): void {
         element.ref,
         element.props,
       );
-      1;
     }
-    const processedChunk = processModelChunk(
-      request,
-      segment.id,
-      convertModelToJSON(request, {'': value}, '', value),
-    );
+    const processedChunk = processModelChunk(request, segment.id, value);
     request.completedJSONChunks.push(processedChunk);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
@@ -856,67 +873,11 @@ function importServerContexts(
   if (contexts) {
     for (let i = 0; i < contexts.length; i++) {
       const {name, value} = contexts[i];
-      const context = getOrCreateContextByName(name);
+      const context = getOrCreateServerContext(name);
       pushProvider(context, value);
       registry[name] = context;
     }
   }
   setCurrentServerContexts(registry);
   return getActiveContext();
-}
-
-function convertModelToJSON(
-  request: Request,
-  parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
-  key: string,
-  model: ReactModel,
-): JSONValue {
-  const isReactElement =
-    typeof model === 'object' &&
-    model !== null &&
-    (model: any).$$typeof === REACT_ELEMENT_TYPE;
-
-  let context;
-  if (isReactElement) {
-    const element: React$Element<any> = (model: any);
-    if (element.type.$$typeof === REACT_PROVIDER_TYPE) {
-      context = element.type._context;
-      pushProvider(context, element.props.value);
-    }
-  }
-
-  const json = resolveModelToJSON(request, parent, key, model);
-
-  if (typeof json === 'object' && json !== null) {
-    if (isArray(json)) {
-      const jsonArray: Array<JSONValue> = [];
-      for (let i = 0; i < json.length; i++) {
-        jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
-      }
-      if (context) {
-        popProvider(context);
-      }
-      return jsonArray;
-    } else {
-      const jsonObj: {[key: string]: JSONValue} = {};
-      for (const nextKey in json) {
-        if (hasOwnProperty.call(json, nextKey)) {
-          jsonObj[nextKey] = convertModelToJSON(
-            request,
-            json,
-            nextKey,
-            json[nextKey],
-          );
-        }
-      }
-      if (context) {
-        popProvider(context);
-      }
-      return jsonObj;
-    }
-  }
-  if (context) {
-    popProvider(context);
-  }
-  return json;
 }

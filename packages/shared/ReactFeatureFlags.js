@@ -191,6 +191,8 @@ export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
+export const enableServerContext = false;
+
 // Only enabled in www builds
 export const enableUseMutableSource = false;
 

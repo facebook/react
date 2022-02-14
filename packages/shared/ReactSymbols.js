@@ -20,6 +20,7 @@ export let REACT_STRICT_MODE_TYPE = 0xeacc;
 export let REACT_PROFILER_TYPE = 0xead2;
 export let REACT_PROVIDER_TYPE = 0xeacd;
 export let REACT_CONTEXT_TYPE = 0xeace;
+export let REACT_SERVER_CONTEXT_TYPE = 0xeacf;
 export let REACT_FORWARD_REF_TYPE = 0xead0;
 export let REACT_SUSPENSE_TYPE = 0xead1;
 export let REACT_SUSPENSE_LIST_TYPE = 0xead8;
@@ -40,6 +41,7 @@ if (typeof Symbol === 'function' && Symbol.for) {
   REACT_PROFILER_TYPE = symbolFor('react.profiler');
   REACT_PROVIDER_TYPE = symbolFor('react.provider');
   REACT_CONTEXT_TYPE = symbolFor('react.context');
+  REACT_SERVER_CONTEXT_TYPE = symbolFor('react.server_context');
   REACT_FORWARD_REF_TYPE = symbolFor('react.forward_ref');
   REACT_SUSPENSE_TYPE = symbolFor('react.suspense');
   REACT_SUSPENSE_LIST_TYPE = symbolFor('react.suspense_list');
