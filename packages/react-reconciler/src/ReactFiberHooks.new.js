@@ -3134,7 +3134,7 @@ if (__DEV__) {
     };
   }
   if (enableServerContext) {
-    HooksDispatcherOnRerenderInDEV.useServerContext = updateServerContext;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useServerContext = updateServerContext;
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
