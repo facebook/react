@@ -158,6 +158,11 @@ export type TouchedViewDataAtPoint = $ReadOnly<{|
   ...InspectorData,
 |}>;
 
+export interface CustomEvent extends Event {
+  constructor(type: string, eventInitDict?: CustomEvent$Init): void;
+  detail: any;
+}
+
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
  * Provide minimal Flow typing for the high-level RN API and call it a day.

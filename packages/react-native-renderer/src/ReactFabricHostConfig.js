@@ -10,6 +10,7 @@
 import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
 import type {ElementRef} from 'react';
 import type {
+  CustomEvent,
   HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
@@ -23,7 +24,6 @@ import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
-import CustomEvent from './CustomEvent';
 
 import {
   DefaultEventPriority,
