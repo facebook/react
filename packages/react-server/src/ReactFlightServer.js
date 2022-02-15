@@ -38,7 +38,7 @@ import {
   isModuleReference,
 } from './ReactFlightServerConfig';
 
-import {getOrCreateServerContext} from 'react/src/ReactServerContext';
+import {getOrCreateServerContext} from './ReactServerContext';
 import {
   Dispatcher,
   getCurrentCache,
