@@ -80,6 +80,7 @@ import {
   mergeLanes,
   pickArbitraryLane,
   includesOnlyTransitions,
+  includesSyncLane,
 } from './ReactFiberLane.old';
 import {
   getIsHydrating,
@@ -483,12 +484,20 @@ function throwException(
       // No boundary was found. If we're inside startTransition, this is OK.
       // We can suspend and wait for more data to arrive.
 
-      if (includesOnlyTransitions(rootRenderLanes)) {
+      if (
+        includesOnlyTransitions(rootRenderLanes) ||
+        (getIsHydrating() && !includesSyncLane(rootRenderLanes))
+      ) {
         // This is a transition. Suspend. Since we're not activating a Suspense
         // boundary, this will unwind all the way to the root without performing
         // a second pass to render a fallback. (This is arguably how refresh
         // transitions should work, too, since we're not going to commit the
         // fallbacks anyway.)
+        //
+        // This case also applies to initial hydration.
+        //
+        // TODO: Maybe we should expand this branch to cover all non-sync
+        // updates, including default.
         attachPingListener(root, wakeable, rootRenderLanes);
         renderDidSuspendDelayIfPossible();
         return;
