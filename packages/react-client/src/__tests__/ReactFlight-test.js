@@ -505,6 +505,13 @@ describe('ReactFlight', () => {
 
       expect(Scheduler).toHaveYielded(['ClientBar']);
       expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
+
+      expect(() => {
+        const ServerContext2 = React.createServerContext(
+          'ServerContext',
+          'default hello from server',
+        );
+      }).toThrow('ServerContext: ServerContext already defined');
     });
 
     // @gate enableServerContext

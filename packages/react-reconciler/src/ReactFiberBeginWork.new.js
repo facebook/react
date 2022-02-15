@@ -1531,6 +1531,7 @@ function mountLazyComponent(
       hint = ' Did you wrap a component in React.lazy() more than once?';
     }
   }
+  debugger;
 
   // This message intentionally doesn't mention ForwardRef or MemoComponent
   // because the fact that it's a separate type of work is an

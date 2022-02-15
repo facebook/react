@@ -24,7 +24,7 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
-import {getOrCreateServerContext} from 'react/src/ReactServerContext';
+import {getOrCreateServerContext} from './ReactServerContext';
 
 import {
   REACT_LAZY_TYPE,
