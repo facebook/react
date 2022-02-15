@@ -155,7 +155,7 @@ describe('ReactDOMFizzShellHydration', () => {
     textCache = new Map();
   }
 
-  test('suspending in the shell', async () => {
+  test('suspending in the shell during hydration', async () => {
     const div = React.createRef(null);
 
     function App() {
@@ -192,6 +192,25 @@ describe('ReactDOMFizzShellHydration', () => {
     });
     expect(Scheduler).toHaveYielded(['Shell']);
     expect(div.current).toBe(dehydratedDiv);
+    expect(container.textContent).toBe('Shell');
+  });
+
+  test('suspending in the shell during a normal client render', async () => {
+    // Same as previous test but during a normal client render, no hydration
+    function App() {
+      return <AsyncText text="Shell" />;
+    }
+
+    const root = ReactDOM.createRoot(container);
+    await clientAct(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Suspend! [Shell]']);
+
+    await clientAct(async () => {
+      await resolveText('Shell');
+    });
+    expect(Scheduler).toHaveYielded(['Shell']);
     expect(container.textContent).toBe('Shell');
   });
 });

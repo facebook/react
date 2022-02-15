@@ -389,17 +389,6 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  it('throws if tree suspends and none of the Suspense ancestors have a boundary', () => {
-    ReactTestRenderer.create(<AsyncText text="Hi" ms={1000} />, {
-      unstable_isConcurrent: true,
-    });
-
-    expect(Scheduler).toFlushAndThrow(
-      'AsyncText suspended while rendering, but no fallback UI was specified.',
-    );
-    expect(Scheduler).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
-  });
-
   it('updates memoized child of suspense component when context updates (simple memo)', () => {
     const {useContext, createContext, useState, memo} = React;
 

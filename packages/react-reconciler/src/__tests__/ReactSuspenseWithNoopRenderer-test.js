@@ -1003,9 +1003,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableCache
-  it('throws a helpful error when an update is suspends without a placeholder', () => {
-    ReactNoop.render(<AsyncText text="Async" />);
-    expect(Scheduler).toFlushAndThrow(
+  it('errors when an update suspends without a placeholder during a sync update', () => {
+    // This is an error because sync/discrete updates are expected to produce
+    // a complete tree immediately to maintain consistency with external state
+    // — we can't delay the commit.
+    expect(() => {
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(<AsyncText text="Async" />);
+      });
+    }).toThrow(
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
   });
