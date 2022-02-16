@@ -22,7 +22,7 @@ import enqueueTask from 'shared/enqueueTask';
 
 let actingUpdatesScopeDepth = 0;
 
-export function act(scope: () => Thenable<mixed> | void) {
+export function act<T>(scope: () => Thenable<T> | T): Thenable<T> {
   if (Scheduler.unstable_flushAllWithoutAsserting === undefined) {
     throw Error(
       'This version of `act` requires a special mock build of Scheduler.',
@@ -66,20 +66,21 @@ export function act(scope: () => Thenable<mixed> | void) {
   // returned and 2) we could use async/await. Since it's only our used in
   // our test suite, we should be able to.
   try {
-    const thenable = scope();
+    const result = scope();
     if (
-      typeof thenable === 'object' &&
-      thenable !== null &&
-      typeof thenable.then === 'function'
+      typeof result === 'object' &&
+      result !== null &&
+      typeof result.then === 'function'
     ) {
+      const thenableResult: Thenable<T> = (result: any);
       return {
-        then(resolve: () => void, reject: (error: mixed) => void) {
-          thenable.then(
-            () => {
+        then(resolve, reject) {
+          thenableResult.then(
+            returnValue => {
               flushActWork(
                 () => {
                   unwind();
-                  resolve();
+                  resolve(returnValue);
                 },
                 error => {
                   unwind();
@@ -95,6 +96,7 @@ export function act(scope: () => Thenable<mixed> | void) {
         },
       };
     } else {
+      const returnValue: T = (result: any);
       try {
         // TODO: Let's not support non-async scopes at all in our tests. Need to
         // migrate existing tests.
@@ -102,6 +104,11 @@ export function act(scope: () => Thenable<mixed> | void) {
         do {
           didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();
         } while (didFlushWork);
+        return {
+          then(resolve, reject) {
+            resolve(returnValue);
+          },
+        };
       } finally {
         unwind();
       }

@@ -140,10 +140,10 @@ describe('ReactDOMFizzShellHydration', () => {
     }
   }
 
-  // function Text({text}) {
-  //   Scheduler.unstable_yieldValue(text);
-  //   return text;
-  // }
+  function Text({text}) {
+    Scheduler.unstable_yieldValue(text);
+    return text;
+  }
 
   function AsyncText({text}) {
     readText(text);
@@ -212,5 +212,35 @@ describe('ReactDOMFizzShellHydration', () => {
     });
     expect(Scheduler).toHaveYielded(['Shell']);
     expect(container.textContent).toBe('Shell');
+  });
+
+  test('updating the root before the shell hydrates forces a client render', async () => {
+    function App() {
+      return <AsyncText text="Shell" />;
+    }
+
+    // Server render
+    await resolveText('Shell');
+    await serverAct(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(Scheduler).toHaveYielded(['Shell']);
+
+    // Clear the cache and start rendering on the client
+    resetTextCache();
+
+    // Hydration suspends because the data for the shell hasn't loaded yet
+    const root = await clientAct(async () => {
+      return ReactDOM.hydrateRoot(container, <App />);
+    });
+    expect(Scheduler).toHaveYielded(['Suspend! [Shell]']);
+    expect(container.textContent).toBe('Shell');
+
+    await clientAct(async () => {
+      root.render(<Text text="New screen" />);
+    });
+    expect(Scheduler).toHaveYielded(['New screen']);
+    expect(container.textContent).toBe('New screen');
   });
 });

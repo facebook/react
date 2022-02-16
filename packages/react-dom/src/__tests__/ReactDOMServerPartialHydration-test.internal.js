@@ -1966,6 +1966,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(b.textContent).toBe('B');
 
     const root = ReactDOM.hydrateRoot(container, <App />);
+
     // Increase hydration priority to higher than "offscreen".
     root.unstable_scheduleHydration(b);
 
@@ -1973,14 +1974,8 @@ describe('ReactDOMServerPartialHydration', () => {
 
     await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          root.render(<App />);
-        });
-
         expect(Scheduler).toFlushAndYieldThrough(['Before', 'After']);
       } else {
-        root.render(<App />);
-
         expect(Scheduler).toFlushAndYieldThrough(['Before']);
         // This took a long time to render.
         Scheduler.unstable_advanceTime(1000);
