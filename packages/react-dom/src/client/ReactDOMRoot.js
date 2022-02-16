@@ -60,6 +60,7 @@ import {
 
 import {
   createContainer,
+  createHydrationContainer,
   updateContainer,
   findHostInstanceWithNoPortals,
   registerMutableSourceForHydration,
@@ -261,10 +262,10 @@ export function hydrateRoot(
     }
   }
 
-  const root = createContainer(
+  const root = createHydrationContainer(
+    initialChildren,
     container,
     ConcurrentRoot,
-    true, // hydrate
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -283,9 +284,6 @@ export function hydrateRoot(
       registerMutableSourceForHydration(root, mutableSource);
     }
   }
-
-  // Render the initial children
-  updateContainer(initialChildren, root, null, null);
 
   return new ReactDOMHydrationRoot(root);
 }

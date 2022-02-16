@@ -57,6 +57,7 @@ import {
   requestEventTime,
   requestUpdateLane,
   scheduleUpdateOnFiber,
+  scheduleInitialHydrationOnRoot,
   flushRoot,
   batchedUpdates,
   flushSync,
@@ -244,6 +245,8 @@ function findHostInstanceWithWarning(
 export function createContainer(
   containerInfo: Container,
   tag: RootTag,
+  // TODO: We can remove hydration-specific stuff from createContainer once
+  // we delete legacy mode. The new root API uses createHydrationContainer.
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
@@ -263,6 +266,49 @@ export function createContainer(
     onRecoverableError,
     transitionCallbacks,
   );
+}
+
+export function createHydrationContainer(
+  initialChildren: ReactNodeList,
+  containerInfo: Container,
+  tag: RootTag,
+  hydrationCallbacks: null | SuspenseHydrationCallbacks,
+  isStrictMode: boolean,
+  concurrentUpdatesByDefaultOverride: null | boolean,
+  identifierPrefix: string,
+  onRecoverableError: (error: mixed) => void,
+  transitionCallbacks: null | TransitionTracingCallbacks,
+): OpaqueRoot {
+  const hydrate = true;
+  const root = createFiberRoot(
+    containerInfo,
+    tag,
+    hydrate,
+    hydrationCallbacks,
+    isStrictMode,
+    concurrentUpdatesByDefaultOverride,
+    identifierPrefix,
+    onRecoverableError,
+    transitionCallbacks,
+  );
+
+  // TODO: Move this to FiberRoot constructor
+  root.context = getContextForSubtree(null);
+
+  // Schedule the initial render. In a hydration root, this is different from
+  // a regular update because the initial render must match was was rendered
+  // on the server.
+  const current = root.current;
+  const eventTime = requestEventTime();
+  const lane = requestUpdateLane(current);
+  const update = createUpdate(eventTime, lane);
+  // Caution: React DevTools currently depends on this property
+  // being called "element".
+  update.payload = {element: initialChildren};
+  enqueueUpdate(current, update, lane);
+  scheduleInitialHydrationOnRoot(root, lane, eventTime);
+
+  return root;
 }
 
 export function updateContainer(

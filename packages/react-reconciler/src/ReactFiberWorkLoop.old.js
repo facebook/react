@@ -517,8 +517,31 @@ export function scheduleUpdateOnFiber(
       }
     }
 
-    // TODO: Consolidate with `isInterleavedUpdate` check
-    if (root === workInProgressRoot) {
+    if (root.isDehydrated && root.tag !== LegacyRoot) {
+      // This root's shell hasn't hydrated yet. Revert to client rendering.
+      // TODO: Log a recoverable error
+      if (workInProgressRoot === root) {
+        // If this happened during an interleaved event, interrupt the
+        // in-progress hydration. Theoretically, we could attempt to force a
+        // synchronous hydration before switching to client rendering, but the
+        // most common reason the shell hasn't hydrated yet is because it
+        // suspended. So it's very likely to suspend again anyway. For
+        // simplicity, we'll skip that atttempt and go straight to
+        // client rendering.
+        //
+        // Another way to model this would be to give the initial hydration its
+        // own special lane. However, it may not be worth adding a lane solely
+        // for this purpose, so we'll wait until we find another use case before
+        // adding it.
+        //
+        // TODO: Consider only interrupting hydration if the priority of the
+        // update is higher than default.
+        prepareFreshStack(root, NoLanes);
+      }
+      root.isDehydrated = false;
+    } else if (root === workInProgressRoot) {
+      // TODO: Consolidate with `isInterleavedUpdate` check
+
       // Received an update to a tree that's in the middle of rendering. Mark
       // that there was an interleaved update work on this root. Unless the
       // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
@@ -562,6 +585,26 @@ export function scheduleUpdateOnFiber(
     }
   }
   return root;
+}
+
+export function scheduleInitialHydrationOnRoot(
+  root: FiberRoot,
+  lane: Lane,
+  eventTime: number,
+) {
+  // This is a special fork of scheduleUpdateOnFiber that is only used to
+  // schedule the initial hydration of a root that has just been created. Most
+  // of the stuff in scheduleUpdateOnFiber can be skipped.
+  //
+  // The main reason for this separate path, though, is to distinguish the
+  // initial children from subsequent updates. In fully client-rendered roots
+  // (createRoot instead of hydrateRoot), all top-level renders are modeled as
+  // updates, but hydration roots are special because the initial render must
+  // match what was rendered on the server.
+  const current = root.current;
+  current.lanes = lane;
+  markRootUpdated(root, lane, eventTime);
+  ensureRootIsScheduled(root, eventTime);
 }
 
 // This is split into a separate function so we can mark a fiber with pending
