@@ -25,6 +25,7 @@ export const enableSelectiveHydration = true;
 export const enableLazyElements = false;
 export const enableCache = true;
 export const disableJavaScriptURLs = true;
+export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
 export const enableScopeAPI = true;

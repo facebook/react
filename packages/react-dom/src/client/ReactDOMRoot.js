@@ -68,7 +68,10 @@ import {
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
-import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
+import {
+  allowConcurrentByDefault,
+  disableCommentsAsDOMContainers,
+} from 'shared/ReactFeatureFlags';
 
 /* global reportError */
 const defaultOnRecoverableError =
@@ -153,7 +156,7 @@ export function createRoot(
   container: Container,
   options?: CreateRootOptions,
 ): RootType {
-  if (!isValidContainerLegacy(container)) {
+  if (!isValidContainer(container)) {
     throw new Error('createRoot(...): Target container is not a DOM element.');
   }
 
@@ -293,7 +296,10 @@ export function isValidContainer(node: any): boolean {
     node &&
     (node.nodeType === ELEMENT_NODE ||
       node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE)
+      node.nodeType === DOCUMENT_FRAGMENT_NODE ||
+      (!disableCommentsAsDOMContainers &&
+        node.nodeType === COMMENT_NODE &&
+        (node: any).nodeValue === ' react-mount-point-unstable '))
   );
 }
 

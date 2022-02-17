@@ -68,6 +68,10 @@ export const enableSchedulerDebugging = false;
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
+// Disable support for comment nodes as React DOM containers. Only supported
+// by www builds.
+export const disableCommentsAsDOMContainers = true;
+
 // Experimental Scope support.
 export const enableScopeAPI = false;
 

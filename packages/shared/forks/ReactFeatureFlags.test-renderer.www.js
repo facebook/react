@@ -26,6 +26,7 @@ export const enableLazyElements = false;
 export const enableCache = true;
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
+export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
