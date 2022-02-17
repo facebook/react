@@ -401,9 +401,14 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     if (
       __DEV__ &&
       warnOnSubscriptionInsideStartTransition &&
-      ReactCurrentBatchConfig._updatedFibers
+      ReactCurrentBatchConfig.transition !== null
     ) {
-      ReactCurrentBatchConfig._updatedFibers.add(fiber);
+      const transition = ReactCurrentBatchConfig.transition;
+      if (!transition._updatedFibers) {
+        transition._updatedFibers = new Set();
+      }
+
+      transition._updatedFibers.add(fiber);
     }
     // The algorithm for assigning an update to a lane should be stable for all
     // updates at the same priority within the same event. To do this, the
@@ -1235,7 +1240,7 @@ export function deferredUpdates<A>(fn: () => A): A {
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
   try {
-    ReactCurrentBatchConfig.transition = 0;
+    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DefaultEventPriority);
     return fn();
   } finally {
@@ -1274,7 +1279,7 @@ export function discreteUpdates<A, B, C, D, R>(
   const previousPriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
   try {
-    ReactCurrentBatchConfig.transition = 0;
+    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
     return fn(a, b, c, d);
   } finally {
@@ -1309,7 +1314,7 @@ export function flushSync(fn) {
   const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
   try {
-    ReactCurrentBatchConfig.transition = 0;
+    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
     if (fn) {
       return fn();
@@ -1344,7 +1349,7 @@ export function flushControlled(fn: () => mixed): void {
   const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
   try {
-    ReactCurrentBatchConfig.transition = 0;
+    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
     fn();
   } finally {
@@ -1882,7 +1887,7 @@ function commitRoot(root: FiberRoot, recoverableErrors: null | Array<mixed>) {
   const previousUpdateLanePriority = getCurrentUpdatePriority();
   const prevTransition = ReactCurrentBatchConfig.transition;
   try {
-    ReactCurrentBatchConfig.transition = 0;
+    ReactCurrentBatchConfig.transition = null;
     setCurrentUpdatePriority(DiscreteEventPriority);
     commitRootImpl(root, recoverableErrors, previousUpdateLanePriority);
   } finally {
@@ -2017,7 +2022,7 @@ function commitRootImpl(
 
   if (subtreeHasEffects || rootHasEffect) {
     const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 0;
+    ReactCurrentBatchConfig.transition = null;
     const previousPriority = getCurrentUpdatePriority();
     setCurrentUpdatePriority(DiscreteEventPriority);
 
@@ -2272,7 +2277,7 @@ export function flushPassiveEffects(): boolean {
     const prevTransition = ReactCurrentBatchConfig.transition;
     const previousPriority = getCurrentUpdatePriority();
     try {
-      ReactCurrentBatchConfig.transition = 0;
+      ReactCurrentBatchConfig.transition = null;
       setCurrentUpdatePriority(priority);
       return flushPassiveEffectsImpl();
     } finally {
