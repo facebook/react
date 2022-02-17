@@ -518,7 +518,6 @@ export function scheduleUpdateOnFiber(
 
     if (root.isDehydrated && root.tag !== LegacyRoot) {
       // This root's shell hasn't hydrated yet. Revert to client rendering.
-      // TODO: Log a recoverable error
       if (workInProgressRoot === root) {
         // If this happened during an interleaved event, interrupt the
         // in-progress hydration. Theoretically, we could attempt to force a
@@ -538,6 +537,12 @@ export function scheduleUpdateOnFiber(
         prepareFreshStack(root, NoLanes);
       }
       root.isDehydrated = false;
+      const error = new Error(
+        'This root received an early update, before anything was able ' +
+          'hydrate. Switched the entire root to client rendering.',
+      );
+      const onRecoverableError = root.onRecoverableError;
+      onRecoverableError(error);
     } else if (root === workInProgressRoot) {
       // TODO: Consolidate with `isInterleavedUpdate` check
 
@@ -951,6 +956,12 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
     if (__DEV__) {
       errorHydratingContainer(root.containerInfo);
     }
+    const error = new Error(
+      'There was an error while hydrating. Because the error happened outside ' +
+        'of a Suspense boundary, the entire root will switch to ' +
+        'client rendering.',
+    );
+    renderDidError(error);
   }
 
   const errorsFromFirstAttempt = workInProgressRootConcurrentErrors;

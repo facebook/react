@@ -200,6 +200,7 @@ import {
   resetHydrationState,
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
+  queueHydrationError,
 } from './ReactFiberHydrationContext.old';
 import {
   adoptClassInstance,
@@ -2145,6 +2146,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
               current,
               workInProgress,
               renderLanes,
+              new Error(
+                'There was an error while hydrating this Suspense boundary. ' +
+                  'Switched to client rendering.',
+              ),
             );
           } else if (
             (workInProgress.memoizedState: null | SuspenseState) !== null
@@ -2531,7 +2536,19 @@ function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
+  recoverableError: Error | null,
 ) {
+  // Falling back to client rendering. Because this has performance
+  // implications, it's considered a recoverable error, even though the user
+  // likely won't observe anything wrong with the UI.
+  //
+  // The error is passed in as an argument to enforce that every caller provide
+  // a custom message, or explicitly opt out (currently the only path that opts
+  // out is legacy mode; every concurrent path provides an error).
+  if (recoverableError !== null) {
+    queueHydrationError(recoverableError);
+  }
+
   // This will add the old fiber to the deletion list
   reconcileChildFibers(workInProgress, current.child, null, renderLanes);
 
@@ -2648,6 +2665,10 @@ function updateDehydratedSuspenseComponent(
       current,
       workInProgress,
       renderLanes,
+      // TODO: When we delete legacy mode, we should make this error argument
+      // required — every concurrent mode path that causes hydration to
+      // de-opt to client rendering should have an error message.
+      null,
     );
   }
 
@@ -2659,6 +2680,14 @@ function updateDehydratedSuspenseComponent(
       current,
       workInProgress,
       renderLanes,
+      // TODO: The server should serialize the error message so we can log it
+      // here on the client. Or, in production, a hash/id that corresponds to
+      // the error.
+      new Error(
+        'The server could not finish this Suspense boundary, likely ' +
+          'due to an error during server rendering. Switched to ' +
+          'client rendering.',
+      ),
     );
   }
 
@@ -2717,6 +2746,12 @@ function updateDehydratedSuspenseComponent(
       current,
       workInProgress,
       renderLanes,
+      new Error(
+        'This Suspense boundary received an update before it finished ' +
+          'hydrating. This caused the boundary to switch to client rendering. ' +
+          'The usual way to fix this is to wrap the original update ' +
+          'in startTransition.',
+      ),
     );
   } else if (isSuspenseInstancePending(suspenseInstance)) {
     // This component is still pending more data from the server, so we can't hydrate its

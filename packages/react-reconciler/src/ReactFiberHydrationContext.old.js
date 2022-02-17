@@ -358,7 +358,8 @@ function shouldClientRenderOnMismatch(fiber: Fiber) {
 
 function throwOnHydrationMismatch(fiber: Fiber) {
   throw new Error(
-    'An error occurred during hydration. The server HTML was replaced with client content',
+    'Hydration failed because the initial UI does not match what was ' +
+      'rendered on the server.',
   );
 }
 

@@ -279,6 +279,9 @@ describe('useMutableSourceHydration', () => {
       'Log error: Cannot read from mutable source during the current ' +
         'render without tearing. This may be a bug in React. Please file ' +
         'an issue.',
+      'Log error: There was an error while hydrating. Because the error ' +
+        'happened outside of a Suspense boundary, the entire root will ' +
+        'switch to client rendering.',
     ]);
     expect(source.listenerCount).toBe(2);
   });
@@ -369,6 +372,9 @@ describe('useMutableSourceHydration', () => {
       'Log error: Cannot read from mutable source during the current ' +
         'render without tearing. This may be a bug in React. Please file ' +
         'an issue.',
+      'Log error: There was an error while hydrating. Because the error ' +
+        'happened outside of a Suspense boundary, the entire root will ' +
+        'switch to client rendering.',
     ]);
   });
 });

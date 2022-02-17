@@ -232,7 +232,11 @@ describe('ReactDOMFizzShellHydration', () => {
 
     // Hydration suspends because the data for the shell hasn't loaded yet
     const root = await clientAct(async () => {
-      return ReactDOM.hydrateRoot(container, <App />);
+      return ReactDOM.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
     });
     expect(Scheduler).toHaveYielded(['Suspend! [Shell]']);
     expect(container.textContent).toBe('Shell');
@@ -240,7 +244,11 @@ describe('ReactDOMFizzShellHydration', () => {
     await clientAct(async () => {
       root.render(<Text text="New screen" />);
     });
-    expect(Scheduler).toHaveYielded(['New screen']);
+    expect(Scheduler).toHaveYielded([
+      'This root received an early update, before anything was able ' +
+        'hydrate. Switched the entire root to client rendering.',
+      'New screen',
+    ]);
     expect(container.textContent).toBe('New screen');
   });
 });
