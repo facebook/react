@@ -198,29 +198,18 @@ export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
   // code organization purposes in case that changes.
 }
 
-export function restoreSpawnedCachePool(
+export function pushSpawnedCachePool(
   offscreenWorkInProgress: Fiber,
-  prevCachePool: SpawnedCachePool,
-): SpawnedCachePool | null {
+  prevCachePool: SpawnedCachePool | null,
+): void {
   if (!enableCache) {
-    return (null: any);
+    return;
   }
-  const nextParentCache = isPrimaryRenderer
-    ? CacheContext._currentValue
-    : CacheContext._currentValue2;
-  if (nextParentCache !== prevCachePool.parent) {
-    // There was a refresh. Don't bother restoring anything since the refresh
-    // will override it.
-    return null;
-  } else {
-    // No refresh. Resume with the previous cache. New Cache boundaries in the
-    // subtree use this one instead of requesting a fresh one (see
-    // peekCacheFromPool).
-    push(resumedCache, prevCachePool.pool, offscreenWorkInProgress);
 
-    // Return the cache pool to signal that we did in fact push it. We will
-    // assign this to the field on the fiber so we know to pop the context.
-    return prevCachePool;
+  if (prevCachePool === null) {
+    push(resumedCache, resumedCache.current, offscreenWorkInProgress);
+  } else {
+    push(resumedCache, prevCachePool.pool, offscreenWorkInProgress);
   }
 }
 
@@ -228,6 +217,7 @@ export function popCachePool(workInProgress: Fiber) {
   if (!enableCache) {
     return;
   }
+
   pop(resumedCache, workInProgress);
 }
 

@@ -12,7 +12,6 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {Cache} from './ReactFiberCacheComponent.old';
-import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 import {
@@ -53,7 +52,11 @@ import {
 import {transferActualDuration} from './ReactProfilerTimer.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
 
-function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
+function unwindWork(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -153,15 +156,8 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
-      let prevState: OffscreenState | null = null;
       if (enableCache) {
-        if (
-          workInProgress.alternate !== null &&
-          workInProgress.alternate.memoizedState !== null
-        ) {
-          prevState = workInProgress.alternate.memoizedState;
-        }
-        if (prevState !== null && prevState.cachePool !== null) {
+        if (current !== null) {
           popCachePool(workInProgress);
         }
       }
@@ -177,7 +173,11 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   }
 }
 
-function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
+function unwindInterruptedWork(
+  current: Fiber | null,
+  interruptedWork: Fiber,
+  renderLanes: Lanes,
+) {
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -225,14 +225,7 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
       if (enableCache) {
-        let prevState: OffscreenState | null = null;
-        if (
-          interruptedWork.alternate !== null &&
-          interruptedWork.alternate.memoizedState !== null
-        ) {
-          prevState = interruptedWork.alternate.memoizedState;
-        }
-        if (prevState !== null && prevState.cachePool !== null) {
+        if (current !== null) {
           popCachePool(interruptedWork);
         }
       }
