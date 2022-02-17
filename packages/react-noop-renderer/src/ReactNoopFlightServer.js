@@ -64,7 +64,7 @@ type ServerContextJSONValue =
 
 type Options = {
   onError?: (error: mixed) => void,
-  context?: Array<{name: string, value: ServerContextJSONValue}>,
+  context?: Array<[string, ServerContextJSONValue]>,
 };
 
 function render(model: ReactModel, options?: Options): Destination {

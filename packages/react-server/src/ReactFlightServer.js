@@ -106,7 +106,7 @@ export type Request = {
 
 export type RequestOptions = {
   onError?: (error: mixed) => void,
-  context?: Array<{name: string, value: ServerContextJSONValue}>,
+  context?: Array<[string, ServerContextJSONValue]>,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -154,7 +154,7 @@ export function createRequest(
 }
 
 function createRootContext(
-  reqContext?: Array<{name: string, value: ServerContextJSONValue}>,
+  reqContext?: Array<[string, ServerContextJSONValue]>,
 ) {
   return importServerContexts(reqContext);
 }
@@ -854,14 +854,12 @@ export function startFlowing(request: Request, destination: Destination): void {
 }
 
 function importServerContexts(
-  contexts:
-    | Array<{name: string, value: ServerContextJSONValue}>
-    | typeof undefined,
+  contexts?: Array<[string, ServerContextJSONValue]>,
 ) {
   const registry: {[name: string]: ReactServerContext<any>} = {};
   if (contexts) {
     for (let i = 0; i < contexts.length; i++) {
-      const {name, value} = contexts[i];
+      const [name, value] = contexts[i];
       const context = getOrCreateServerContext(name, value);
       pushProvider(context, value);
       registry[name] = context;
