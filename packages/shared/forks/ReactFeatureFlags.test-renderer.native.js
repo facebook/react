@@ -65,6 +65,7 @@ export const allowConcurrentByDefault = true;
 export const enablePersistentOffscreenHostContainer = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
+export const enableServerContext = false;
 export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
