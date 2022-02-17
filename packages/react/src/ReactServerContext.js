@@ -70,7 +70,7 @@ function _createServerContext<T: ServerContextJSONValue>(
         // and we should use the default value in the definition.
         // Otherwise the definition hasn't loaded so `useServerContext` is not
         // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
-        if ('_defaultValue' in context) {
+        if (context._definitionLoaded) {
           return (context: any)._defaultValue;
         }
       }
