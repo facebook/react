@@ -66,12 +66,12 @@ function _createServerContext<T: ServerContextJSONValue>(
     get _currentValue() {
       const value = context.__currentValue;
       if (value === DEFAULT_PLACEHOLDER) {
-        // If there is an entry in defaults then the definition was loaded
-        // and we should use the default value in the definition.
-        // Otherwise the definition hasn't loaded so `useServerContext` is not
-        // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
         if (context._definitionLoaded) {
           return (context: any)._defaultValue;
+        } else {
+          // If the definition hasn't loaded then we know `useServerContext` is not
+          // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
+          // because it won't actually be returned to a component
         }
       }
       return value;
@@ -84,12 +84,12 @@ function _createServerContext<T: ServerContextJSONValue>(
     get _currentValue2() {
       const value = context.__currentValue2;
       if (value === DEFAULT_PLACEHOLDER) {
-        // If there is an entry in defaults then the definition was loaded
-        // and we should use the default value in the definition.
-        // Otherwise the definition hasn't loaded so `useServerContext` is not
-        // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
-        if ('_defaultValue' in context) {
+        if (context._definitionLoaded) {
           return (context: any)._defaultValue;
+        } else {
+          // If the definition hasn't loaded then we know `useServerContext` is not
+          // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
+          // because it won't actually be returned to a component
         }
         return (undefined: any);
       }
