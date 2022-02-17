@@ -245,11 +245,10 @@ const {
 
 type ExecutionContext = number;
 
-export const NoContext = /*             */ 0b0000;
-const BatchedContext = /*               */ 0b0001;
-const RenderContext = /*                */ 0b0010;
-const CommitContext = /*                */ 0b0100;
-export const RetryAfterError = /*       */ 0b1000;
+export const NoContext = /*             */ 0b000;
+const BatchedContext = /*               */ 0b001;
+const RenderContext = /*                */ 0b010;
+const CommitContext = /*                */ 0b100;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const RootInProgress = 0;
@@ -945,9 +944,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 }
 
 function recoverFromConcurrentError(root, errorRetryLanes) {
-  const prevExecutionContext = executionContext;
-  executionContext |= RetryAfterError;
-
   // If an error occurred during hydration, discard server response and fall
   // back to client side render.
   if (root.isDehydrated) {
@@ -970,9 +966,6 @@ function recoverFromConcurrentError(root, errorRetryLanes) {
   } else {
     // The UI failed to recover.
   }
-
-  executionContext = prevExecutionContext;
-
   return exitStatus;
 }
 

@@ -225,9 +225,6 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   pushRenderLanes,
-  getExecutionContext,
-  RetryAfterError,
-  NoContext,
 } from './ReactFiberWorkLoop.new';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {
@@ -2645,14 +2642,6 @@ function updateDehydratedSuspenseComponent(
   // We should never be hydrating at this point because it is the first pass,
   // but after we've already committed once.
   warnIfHydrating();
-
-  if ((getExecutionContext() & RetryAfterError) !== NoContext) {
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-    );
-  }
 
   if ((workInProgress.mode & ConcurrentMode) === NoMode) {
     return retrySuspenseComponentWithoutHydrating(

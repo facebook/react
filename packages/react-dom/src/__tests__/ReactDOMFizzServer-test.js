@@ -1866,6 +1866,83 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it(
+    'errors during hydration in the shell force a client render at the ' +
+      'root, and during the client render it recovers',
+    async () => {
+      let isClient = false;
+
+      function subscribe() {
+        return () => {};
+      }
+      function getClientSnapshot() {
+        return 'Yay!';
+      }
+
+      // At the time of writing, the only API that exposes whether it's currently
+      // hydrating is the `getServerSnapshot` API, so I'm using that here to
+      // simulate an error during hydration.
+      function getServerSnapshot() {
+        if (isClient) {
+          throw new Error('Hydration error');
+        }
+        return 'Yay!';
+      }
+
+      function Child() {
+        const value = useSyncExternalStore(
+          subscribe,
+          getClientSnapshot,
+          getServerSnapshot,
+        );
+        Scheduler.unstable_yieldValue(value);
+        return value;
+      }
+
+      const spanRef = React.createRef();
+
+      function App() {
+        return (
+          <span ref={spanRef}>
+            <Child />
+          </span>
+        );
+      }
+
+      await act(async () => {
+        const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+      expect(Scheduler).toHaveYielded(['Yay!']);
+
+      const span = container.getElementsByTagName('span')[0];
+
+      // Hydrate the tree. Child will throw during hydration, but not when it
+      // falls back to client rendering.
+      isClient = true;
+      ReactDOM.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
+
+      // An error logged but instead of surfacing it to the UI, we switched
+      // to client rendering.
+      expect(() => {
+        expect(Scheduler).toFlushAndYield(['Yay!', 'Hydration error']);
+      }).toErrorDev(
+        'An error occurred during hydration. The server HTML was replaced',
+        {withoutStack: true},
+      );
+      expect(getVisibleChildren(container)).toEqual(<span>Yay!</span>);
+
+      // The node that's inside the boundary that errored during hydration was
+      // not hydrated.
+      expect(spanRef.current).not.toBe(span);
+    },
+  );
+
+  // @gate experimental
+  it(
     'errors during hydration force a client render at the nearest Suspense ' +
       'boundary, and during the client render it recovers',
     async () => {
