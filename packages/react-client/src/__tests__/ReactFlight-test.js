@@ -526,12 +526,7 @@ describe('ReactFlight', () => {
         return <span>{React.useServerContext(ServerContext)}</span>;
       }
       const transport = ReactNoopFlightServer.render(<Bar />, {
-        context: [
-          {
-            name: 'ServerContext',
-            value: 'Override',
-          },
-        ],
+        context: [['ServerContext', 'Override']],
       });
 
       act(() => {
@@ -601,12 +596,7 @@ describe('ReactFlight', () => {
       }
 
       const transport = ReactNoopFlightServer.render(<ServerApp />, {
-        context: [
-          {
-            name: 'ServerContext',
-            value: 'Override',
-          },
-        ],
+        context: [['ServerContext', 'Override']],
       });
 
       expect(ClientContext).toBe(undefined);
