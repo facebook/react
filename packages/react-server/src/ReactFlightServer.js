@@ -131,7 +131,7 @@ export function createRequest(
   options?: RequestOptions,
 ): Request {
   const pingedSegments = [];
-  const onError = options?.onError;
+  const onError = options ? options.onError : undefined;
   const request = {
     status: OPEN,
     fatalError: null,
@@ -152,7 +152,7 @@ export function createRequest(
     },
   };
   request.pendingChunks++;
-  const context = createRootContext(options?.context);
+  const context = createRootContext(options ? options.context : undefined);
   const rootSegment = createSegment(request, model, context);
   pingedSegments.push(rootSegment);
   return request;
