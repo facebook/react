@@ -30,7 +30,8 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
-    const ReactSharedInternals = require('shared/ReactSharedInternals').default;
+    const ReactSharedInternals =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
     globalServerContextRegistry =
       ReactSharedInternals.globalServerContextRegistry;
 
