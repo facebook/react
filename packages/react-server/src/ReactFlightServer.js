@@ -209,7 +209,6 @@ function attemptResolveElement(
         return attemptResolveElement(type.type, key, ref, props);
       }
       case REACT_PROVIDER_TYPE: {
-        parentsWithContextStack.push(type._context);
         pushProvider(type._context, props.value);
         return [
           REACT_PROVIDER_TYPE,
@@ -420,15 +419,6 @@ function isReactElement(value: mixed) {
   );
 }
 
-// Save all of the parents/contexts as we recursively stringify onto this stack
-// so that we can popContexts as we recurse into neighbors.
-const parentsWithContextStack: Array<
-  | {+[key: string | number]: ReactModel}
-  | $ReadOnlyArray<ReactModel>
-  | ReactServerContext<any>
-  | ReactModel,
-> = [];
-
 export function resolveModelToJSON(
   request: Request,
   parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
@@ -499,7 +489,11 @@ export function resolveModelToJSON(
     return null;
   }
 
-  if (value.$$typeof === REACT_SERVER_CONTEXT_TYPE && key === '4') {
+  if (
+    value.$$typeof === REACT_SERVER_CONTEXT_TYPE &&
+    key === '4' &&
+    parent[0] === REACT_PROVIDER_TYPE
+  ) {
     popProvider((value: any));
     return (undefined: any);
   }
@@ -873,7 +867,7 @@ function importServerContexts(
   if (contexts) {
     for (let i = 0; i < contexts.length; i++) {
       const {name, value} = contexts[i];
-      const context = getOrCreateServerContext(name);
+      const context = getOrCreateServerContext(name, value);
       pushProvider(context, value);
       registry[name] = context;
     }

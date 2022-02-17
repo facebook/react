@@ -18,6 +18,7 @@ let ReactNoopFlightClient;
 let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
+let globalServerContextRegistry;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -29,6 +30,9 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
     act = require('jest-react').act;
     Scheduler = require('scheduler');
+    const ReactSharedInternals = require('shared/ReactSharedInternals').default;
+    globalServerContextRegistry =
+      ReactSharedInternals.globalServerContextRegistry;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -331,7 +335,7 @@ describe('ReactFlight', () => {
     it('propagates ServerContext providers in flight', () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
-        'default hello from server',
+        'default',
       );
 
       function Foo() {
@@ -362,7 +366,7 @@ describe('ReactFlight', () => {
     it('propagates ServerContext and cleansup providers in flight', () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
-        'default hello from server',
+        'default',
       );
 
       function Foo() {
@@ -402,7 +406,7 @@ describe('ReactFlight', () => {
           <span>hi this is server2</span>
           <span>hi this is server outer</span>
           <span>hi this is server outer2</span>
-          <span>default hello from server</span>
+          <span>default</span>
         </>,
       );
     });
@@ -411,7 +415,7 @@ describe('ReactFlight', () => {
     it('propagates ServerContext providers in flight after suspending', async () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
-        'default hello from server',
+        'default',
       );
 
       function Foo() {
@@ -469,7 +473,7 @@ describe('ReactFlight', () => {
     it('serializes ServerContext to client', async () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
-        'default hello from server',
+        'default',
       );
 
       function ClientBar() {
@@ -507,10 +511,7 @@ describe('ReactFlight', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
 
       expect(() => {
-        const ServerContext2 = React.createServerContext(
-          'ServerContext',
-          'default hello from server',
-        );
+        React.createServerContext('ServerContext', 'default');
       }).toThrow('ServerContext: ServerContext already defined');
     });
 
@@ -518,7 +519,7 @@ describe('ReactFlight', () => {
     it('takes ServerContext from client for refetching usecases', async () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
-        'default hello from server',
+        'default',
       );
       function Bar() {
         return <span>{React.useServerContext(ServerContext)}</span>;
@@ -538,6 +539,102 @@ describe('ReactFlight', () => {
       });
 
       expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
+    });
+
+    // @gate enableServerContext
+    it('sets default initial value when defined lazily on server or client', async () => {
+      let ServerContext;
+      function inlineLazyServerContextInitialization() {
+        if (!ServerContext) {
+          ServerContext = React.createServerContext('ServerContext', 'default');
+        }
+        return ServerContext;
+      }
+
+      let ClientContext;
+      function inlineContextInitialization() {
+        if (!ClientContext) {
+          ClientContext = React.createServerContext('ServerContext', 'default');
+        }
+        return ClientContext;
+      }
+
+      function ClientBaz() {
+        const context = inlineContextInitialization();
+        const value = React.useServerContext(context);
+        return <div>{value}</div>;
+      }
+
+      const Baz = moduleReference(ClientBaz);
+
+      function Bar() {
+        return (
+          <article>
+            <div>
+              {React.useServerContext(inlineLazyServerContextInitialization())}
+            </div>
+            <Baz />
+          </article>
+        );
+      }
+
+      function ServerApp() {
+        const Context = inlineLazyServerContextInitialization();
+        return (
+          <>
+            <Context.Provider value="test">
+              <Bar />
+            </Context.Provider>
+            <Bar />
+          </>
+        );
+      }
+
+      function ClientApp({serverModel}) {
+        return (
+          <>
+            {serverModel}
+            <ClientBaz />
+          </>
+        );
+      }
+
+      const transport = ReactNoopFlightServer.render(<ServerApp />, {
+        context: [
+          {
+            name: 'ServerContext',
+            value: 'Override',
+          },
+        ],
+      });
+
+      expect(ClientContext).toBe(undefined);
+      act(() => {
+        delete globalServerContextRegistry.ServerContext;
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        const serverModel = ReactNoopFlightClient.read(transport);
+        ReactNoop.render(<ClientApp serverModel={serverModel} />);
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <article>
+            <div>test</div>
+            <div>test</div>
+          </article>
+          <article>
+            <div>Override</div>
+
+            {/** In practice this would also be Override because the */}
+            {/** server context sent up to the server would be around this*/}
+            {/** tree. For this test we didn't do that though so it uses the */}
+            {/** real default */}
+            <div>default</div>
+          </article>
+          <div>default</div>
+        </>,
+      );
     });
   });
 });

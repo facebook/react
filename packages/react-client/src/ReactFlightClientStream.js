@@ -46,7 +46,6 @@ function processFullRow(response: Response, row: string): void {
       return;
     }
     case 'M': {
-      debugger;
       resolveModule(response, id, text);
       return;
     }
