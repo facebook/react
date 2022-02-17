@@ -413,5 +413,6 @@
   "425": "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition.",
   "426": "An error occurred during hydration. The server HTML was replaced with client content",
   "427": "useServerContext is only supported while rendering.",
-  "428": "ServerContext: %s already defined"
+  "428": "ServerContext: %s already defined",
+  "429": "useServerContext expects a context created with React.createServerContext"
 }

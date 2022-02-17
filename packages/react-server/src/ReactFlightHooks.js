@@ -105,14 +105,3 @@ export function setCurrentCache(cache: Map<Function, mixed> | null) {
 export function getCurrentCache() {
   return currentCache;
 }
-
-type ServerContextCache = {[name: string]: ReactServerContext<any>} | null;
-let currentServerContexts: ServerContextCache = null;
-
-export function setCurrentServerContexts(contexts: ServerContextCache) {
-  currentServerContexts = contexts;
-}
-
-export function getCurrentServerContexts(): ServerContextCache {
-  return currentServerContexts;
-}
