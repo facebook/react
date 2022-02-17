@@ -24,7 +24,10 @@ import {enableServerContext} from 'shared/ReactFeatureFlags';
 const globalServerContextRegistry =
   ReactSharedInternals.globalServerContextRegistry;
 
-const DEFAULT_PLACEHOLDER = globalServerContextRegistry.__defaultValue;
+let DEFAULT_PLACEHOLDER;
+if (enableServerContext) {
+  DEFAULT_PLACEHOLDER = globalServerContextRegistry.__defaultValue;
+}
 
 export function createServerContext<T: ServerContextJSONValue>(
   globalName: string,
