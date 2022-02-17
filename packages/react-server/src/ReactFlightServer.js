@@ -39,12 +39,7 @@ import {
 } from './ReactFlightServerConfig';
 
 import {getOrCreateServerContext} from './ReactServerContext';
-import {
-  Dispatcher,
-  getCurrentCache,
-  setCurrentCache,
-  setCurrentServerContexts,
-} from './ReactFlightHooks';
+import {Dispatcher, getCurrentCache, setCurrentCache} from './ReactFlightHooks';
 import {
   pushProvider,
   popProvider,
@@ -872,6 +867,5 @@ function importServerContexts(
       registry[name] = context;
     }
   }
-  setCurrentServerContexts(registry);
   return getActiveContext();
 }

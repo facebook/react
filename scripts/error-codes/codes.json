@@ -405,5 +405,6 @@
   "417": "React currently only supports piping to one writable stream.",
   "418": "An error occurred during hydration. The server HTML was replaced with client content",
   "419": "useServerContext is only supported while rendering.",
-  "420": "ServerContext: %s already defined"
+  "420": "ServerContext: %s already defined",
+  "421": "useServerContext expects a context created with React.createServerContext"
 }

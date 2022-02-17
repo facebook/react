@@ -346,8 +346,7 @@ function useId(): string {
 
 const Dispatcher: DispatcherType = {
   getCacheForType,
-  // TODO: figure out why flow is complaining here
-  readContext: (readContext: any),
+  readContext,
   useCacheRefresh,
   useCallback,
   useContext,
