@@ -162,10 +162,7 @@ import {
   TransitionStart,
   TransitionComplete,
 } from './ReactFiberTracingMarkerComponent.new';
-import {
-  getTransitionsForLanes,
-  clearTransitionsForLanes,
-} from './ReactFiberLane.new';
+import {clearTransitionsForLanes} from './ReactFiberLane.new';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {

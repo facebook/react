@@ -816,7 +816,8 @@ export function addTransitionToLanesMap(
     } else {
       if (__DEV__) {
         console.error(
-          'React Bug: transition lanes accessed out of bounds index: ' + index,
+          'React Bug: transition lanes accessed out of bounds index: %s',
+          index.toString(),
         );
       }
     }
@@ -843,7 +844,8 @@ export function getTransitionsForLanes(
     } else {
       if (__DEV__) {
         console.error(
-          'React Bug: transition lanes accessed out of bounds index: ' + index,
+          'React Bug: transition lanes accessed out of bounds index: %s',
+          index.toString(),
         );
       }
     }
@@ -869,7 +871,8 @@ export function clearTransitionsForLanes(root: FiberRoot, lanes: Lane | Lanes) {
     } else {
       if (__DEV__) {
         console.error(
-          'React Bug: transition lanes accessed out of bounds index: ' + index,
+          'React Bug: transition lanes accessed out of bounds index: %s',
+          index.toString(),
         );
       }
     }
