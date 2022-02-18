@@ -13,7 +13,7 @@ import SyntheticEvent from './legacy-events/SyntheticEvent';
 import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 // Module provided by RN:
-import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {CustomEvent, ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
 import getListener from './ReactNativeGetListener';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
@@ -27,10 +27,10 @@ const {
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
-function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
+function listenerAtPhase(inst, event, propagationPhase: PropagationPhases, isCustomEvent: boolean) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(inst, registrationName, propagationPhase);
+  return getListener(inst, registrationName, propagationPhase, isCustomEvent);
 }
 
 function accumulateDirectionalDispatches(inst, phase, event) {
@@ -39,7 +39,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       console.error('Dispatching inst must not be null');
     }
   }
-  const listener = listenerAtPhase(inst, event, phase);
+  const listener = listenerAtPhase(inst, event, phase, event instanceof CustomEvent);
   if (listener) {
     event._dispatchListeners = accumulateInto(
       event._dispatchListeners,
@@ -67,7 +67,7 @@ function getParent(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
+export function traverseTwoPhase(inst: Object, fn: Function, arg: Function, bubbles: boolean) {
   const path = [];
   while (inst) {
     path.push(inst);
@@ -79,12 +79,20 @@ export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
   }
   for (i = 0; i < path.length; i++) {
     fn(path[i], 'bubbled', arg);
+    // It's possible this is false for custom events.
+    if (!bubbles) {
+      break;
+    }
   }
 }
 
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
+    // bubbles is only set on the dispatchConfig for custom events.
+    // The `event` param here at this point is a SyntheticEvent, not an Event or CustomEvent.
+    const bubbles = event.dispatchConfig.isCustomEvent === true ? (!!event.dispatchConfig.bubbles) : true;
+
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event, bubbles);
   }
 }
 
@@ -106,7 +114,7 @@ function accumulateDispatches(
     const registrationName = event.dispatchConfig.registrationName;
     // Since we "do not look for phased registration names", that
     // should be the same as "bubbled" here, for all intents and purposes...?
-    const listener = getListener(inst, registrationName, 'bubbled');
+    const listener = getListener(inst, registrationName, 'bubbled', !!event.dispatchConfig.isCustomEvent);
     if (listener) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
@@ -149,8 +157,28 @@ const ReactNativeBridgeEventPlugin = {
     }
     const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     const directDispatchConfig = customDirectEventTypes[topLevelType];
+    let customEventConfig = null;
+    if (nativeEvent instanceof CustomEvent) {
+      // $FlowFixMe
+      if (topLevelType.indexOf('on') !== 0) {
+        throw new Error('Custom event name must start with "on"');
+      }
+      nativeEvent.isTrusted = false;
+      // For now, this custom event name should technically not be used -
+      // CustomEvents emitted in the system do not result in calling prop handlers.
+      customEventConfig = {
+        registrationName: topLevelType,
+        isCustomEvent: true,
+        bubbles: nativeEvent.bubbles,
+        phasedRegistrationNames: {
+          bubbled: topLevelType,
+          // $FlowFixMe
+          captured: topLevelType + 'Capture'
+        }
+      }
+    }
 
-    if (!bubbleDispatchConfig && !directDispatchConfig) {
+    if (!bubbleDispatchConfig && !directDispatchConfig && !customEventConfig) {
       throw new Error(
         // $FlowFixMe - Flow doesn't like this string coercion because DOMTopLevelEventType is opaque
         `Unsupported top level event type "${topLevelType}" dispatched`,
@@ -158,12 +186,15 @@ const ReactNativeBridgeEventPlugin = {
     }
 
     const event = SyntheticEvent.getPooled(
-      bubbleDispatchConfig || directDispatchConfig,
+      bubbleDispatchConfig || directDispatchConfig || customEventConfig,
       targetInst,
       nativeEvent,
       nativeEventTarget,
     );
-    if (bubbleDispatchConfig) {
+    if (bubbleDispatchConfig || customEventConfig) {
+      // All CustomEvents go through two-phase dispatching, even if they
+      // are non-bubbling events, which is why we put the `bubbles` param
+      // in
       accumulateTwoPhaseDispatches(event);
     } else if (directDispatchConfig) {
       accumulateDirectDispatches(event);

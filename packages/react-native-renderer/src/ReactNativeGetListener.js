@@ -11,10 +11,27 @@ import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 import {getFiberCurrentPropsFromNode} from './legacy-events/EventPluginUtils';
 
+/**
+ * Get a list of listeners for a specific event, in-order.
+ * For React Native we treat the props-based function handlers
+ * as the first-class citizens, and they are always executed first
+ * for both capture and bubbling phase.
+ *
+ * We need "phase" propagated to this point to support the HostComponent
+ * EventEmitter API, which does not mutate the name of the handler based
+ * on phase (whereas prop handlers are registered as `onMyEvent` and `onMyEvent_Capture`).
+ *
+ * Additionally, we do NOT want CustomEvent events dispatched through
+ * the EventEmitter directly in JS to be emitted to prop handlers. This
+ * may change in the future. OTOH, native events emitted into React Native
+ * will be emitted both to the prop handler function and to imperative event
+ * listeners.
+ */
 export default function getListener(
   inst: Fiber,
   registrationName: string,
   phase: PropagationPhases,
+  isCustomEvent: boolean,
 ): Function | null {
   // Previously, there was only one possible listener for an event:
   // the onEventName property in props.
@@ -27,7 +44,7 @@ export default function getListener(
 
   const stateNode = inst.stateNode;
   // If null: Work in progress (ex: onload events in incremental mode).
-  if (stateNode !== null) {
+  if (stateNode !== null && !isCustomEvent) {
     const props = getFiberCurrentPropsFromNode(stateNode);
     if (props === null) {
       // Work in progress.
