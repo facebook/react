@@ -24,7 +24,6 @@ export const {
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
-  skipUnmountedBoundaries,
   createRootStrictEffectsByDefault,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,

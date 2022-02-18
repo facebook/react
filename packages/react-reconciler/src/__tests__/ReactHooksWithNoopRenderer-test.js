@@ -2351,7 +2351,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         };
       });
 
-      // @gate skipUnmountedBoundaries
       it('should use the nearest still-mounted boundary if there are no unmounted boundaries', () => {
         act(() => {
           ReactNoop.render(
@@ -2377,7 +2376,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       });
 
-      // @gate skipUnmountedBoundaries
       it('should skip unmounted boundaries and use the nearest still-mounted boundary', () => {
         function Conditional({showChildren}) {
           if (showChildren) {
@@ -2420,7 +2418,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       });
 
-      // @gate skipUnmountedBoundaries
       it('should call getDerivedStateFromError in the nearest still-mounted boundary', () => {
         function Conditional({showChildren}) {
           if (showChildren) {
@@ -2464,7 +2461,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
       });
 
-      // @gate skipUnmountedBoundaries
       it('should rethrow error if there are no still-mounted boundaries', () => {
         function Conditional({showChildren}) {
           if (showChildren) {
@@ -3190,7 +3186,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
-    // @gate skipUnmountedBoundaries
     it('catches errors thrown in useLayoutEffect', () => {
       class ErrorBoundary extends React.Component {
         state = {error: null};
