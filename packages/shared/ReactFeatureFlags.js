@@ -121,12 +121,6 @@ export const disableNativeComponentFrames = false;
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
 
-// Errors that are thrown while unmounting (or after in the case of passive effects)
-// should bypass any error boundaries that are also unmounting (or have unmounted)
-// and be handled by the nearest still-mounted boundary.
-// If there are no still-mounted boundaries, the errors should be rethrown.
-export const skipUnmountedBoundaries = false;
-
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
 // As far as we know, React itself doesn't leak, but because the Fiber contains
