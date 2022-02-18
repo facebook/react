@@ -11,7 +11,7 @@
   5. Run `yarn test --prod` to test in the production environment. It supports the same options as `yarn test`.
   6. If you need a debugger, run `yarn debug-test --watch TestName`, open `chrome://inspect`, and press "Inspect".
   7. Format your code with [prettier](https://github.com/prettier/prettier) (`yarn prettier`).
-  8. Make sure your code lints (`yarn lint`). Tip: `yarn linc` to only check changed files.
+  8. Make sure your code lints (`yarn lint`). Tip: `yarn lint` to only check changed files.
   9. Run the [Flow](https://flowtype.org/) type checks (`yarn flow`).
   10. If you haven't already, complete the CLA.
 
