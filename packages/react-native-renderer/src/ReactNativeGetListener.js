@@ -32,7 +32,7 @@ export default function getListener(
   registrationName: string,
   phase: PropagationPhases,
   isCustomEvent: boolean,
-): Function | null {
+): Array<Function> {
   // Previously, there was only one possible listener for an event:
   // the onEventName property in props.
   // Now, it is also possible to have N listeners
@@ -48,7 +48,7 @@ export default function getListener(
     const props = getFiberCurrentPropsFromNode(stateNode);
     if (props === null) {
       // Work in progress.
-      return null;
+      return [];
     }
     const listener = props[registrationName];
 
@@ -98,21 +98,5 @@ export default function getListener(
     }
   }
 
-  if (listeners.length === 0) {
-    return null;
-  }
-
-  if (listeners.length === 1) {
-    return listeners[0];
-  }
-
-  // We need to call at least 2 event handlers
-  return function () {
-    // any arguments that are passed to the event handlers
-    var args = Array.prototype.slice.call(arguments);
-
-    for (var i = 0; i < listeners.length; i++) {
-      listeners[i] && listeners[i].apply(null, args);
-    }
-  };
+  return listeners;
 }
