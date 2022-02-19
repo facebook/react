@@ -234,7 +234,7 @@ import {
   pushRootCachePool,
   CacheContext,
   getSuspendedCachePool,
-  restoreSpawnedCachePool,
+  pushSpawnedCachePool,
   getOffscreenDeferredCachePool,
 } from './ReactFiberCacheComponent.old';
 import {createCapturedValue} from './ReactCapturedValue';
@@ -635,11 +635,6 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
-  // If this is not null, this is a cache pool that was carried over from the
-  // previous render. We will push this to the cache pool context so that we can
-  // resume in-flight requests.
-  let spawnedCachePool: SpawnedCachePool | null = null;
-
   if (
     nextProps.mode === 'hidden' ||
     nextProps.mode === 'unstable-defer-without-hiding'
@@ -652,8 +647,16 @@ function updateOffscreenComponent(
         cachePool: null,
       };
       workInProgress.memoizedState = nextState;
+      if (enableCache) {
+        // push the cache pool even though we're going to bail out
+        // because otherwise there'd be a context mismatch
+        if (current !== null) {
+          pushSpawnedCachePool(workInProgress, null);
+        }
+      }
       pushRenderLanes(workInProgress, renderLanes);
     } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+      let spawnedCachePool: SpawnedCachePool | null = null;
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
       let nextBaseLanes;
@@ -663,9 +666,6 @@ function updateOffscreenComponent(
         if (enableCache) {
           // Save the cache pool so we can resume later.
           spawnedCachePool = getOffscreenDeferredCachePool();
-          // We don't need to push to the cache pool because we're about to
-          // bail out. There won't be a context mismatch because we only pop
-          // the cache pool if `updateQueue` is non-null.
         }
       } else {
         nextBaseLanes = renderLanes;
@@ -681,6 +681,14 @@ function updateOffscreenComponent(
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
+      if (enableCache) {
+        // push the cache pool even though we're going to bail out
+        // because otherwise there'd be a context mismatch
+        if (current !== null) {
+          pushSpawnedCachePool(workInProgress, null);
+        }
+      }
+
       // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
       pushRenderLanes(workInProgress, nextBaseLanes);
@@ -701,19 +709,6 @@ function updateOffscreenComponent(
       // This is the second render. The surrounding visible content has already
       // committed. Now we resume rendering the hidden tree.
 
-      if (enableCache && prevState !== null) {
-        // If the render that spawned this one accessed the cache pool, resume
-        // using the same cache. Unless the parent changed, since that means
-        // there was a refresh.
-        const prevCachePool = prevState.cachePool;
-        if (prevCachePool !== null) {
-          spawnedCachePool = restoreSpawnedCachePool(
-            workInProgress,
-            prevCachePool,
-          );
-        }
-      }
-
       // Rendering at offscreen, so we can clear the base lanes.
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
@@ -723,6 +718,14 @@ function updateOffscreenComponent(
       // Push the lanes that were skipped when we bailed out.
       const subtreeRenderLanes =
         prevState !== null ? prevState.baseLanes : renderLanes;
+      if (enableCache && current !== null) {
+        // If the render that spawned this one accessed the cache pool, resume
+        // using the same cache. Unless the parent changed, since that means
+        // there was a refresh.
+        const prevCachePool = prevState !== null ? prevState.cachePool : null;
+        pushSpawnedCachePool(workInProgress, prevCachePool);
+      }
+
       pushRenderLanes(workInProgress, subtreeRenderLanes);
     }
   } else {
@@ -738,12 +741,7 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         const prevCachePool = prevState.cachePool;
-        if (prevCachePool !== null) {
-          spawnedCachePool = restoreSpawnedCachePool(
-            workInProgress,
-            prevCachePool,
-          );
-        }
+        pushSpawnedCachePool(workInProgress, prevCachePool);
       }
 
       // Since we're not hidden anymore, reset the state
@@ -753,14 +751,17 @@ function updateOffscreenComponent(
       // special to do. Need to push to the stack regardless, though, to avoid
       // a push/pop misalignment.
       subtreeRenderLanes = renderLanes;
+
+      if (enableCache) {
+        // If the render that spawned this one accessed the cache pool, resume
+        // using the same cache. Unless the parent changed, since that means
+        // there was a refresh.
+        if (current !== null) {
+          pushSpawnedCachePool(workInProgress, null);
+        }
+      }
     }
     pushRenderLanes(workInProgress, subtreeRenderLanes);
-  }
-
-  if (enableCache) {
-    // If we have a cache pool from a previous render attempt, then this will be
-    // non-null. We use this to infer whether to push/pop the cache context.
-    workInProgress.updateQueue = spawnedCachePool;
   }
 
   if (enablePersistentOffscreenHostContainer && supportsPersistence) {
@@ -2072,6 +2073,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
 
     const nextPrimaryChildren = nextProps.children;
     const nextFallbackChildren = nextProps.fallback;
+
     if (showFallback) {
       const fallbackFragment = mountSuspenseFallbackChildren(
         workInProgress,

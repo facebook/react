@@ -28,7 +28,7 @@ import type {
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Cache} from './ReactFiberCacheComponent.new';
 import {
   enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
@@ -865,8 +865,8 @@ function completeWork(
         popRootCachePool(fiberRoot, renderLanes);
 
         let previousCache: Cache | null = null;
-        if (workInProgress.alternate !== null) {
-          previousCache = workInProgress.alternate.memoizedState.cache;
+        if (current !== null) {
+          previousCache = current.memoizedState.cache;
         }
         const cache: Cache = workInProgress.memoizedState.cache;
         if (cache !== previousCache) {
@@ -1533,11 +1533,11 @@ function completeWork(
       if (enableCache) {
         let previousCache: Cache | null = null;
         if (
-          workInProgress.alternate !== null &&
-          workInProgress.alternate.memoizedState !== null &&
-          workInProgress.alternate.memoizedState.cachePool !== null
+          current !== null &&
+          current.memoizedState !== null &&
+          current.memoizedState.cachePool !== null
         ) {
-          previousCache = workInProgress.alternate.memoizedState.cachePool.pool;
+          previousCache = current.memoizedState.cachePool.pool;
         }
         let cache: Cache | null = null;
         if (
@@ -1550,8 +1550,7 @@ function completeWork(
           // Run passive effects to retain/release the cache.
           workInProgress.flags |= Passive;
         }
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        if (current !== null) {
           popCachePool(workInProgress);
         }
       }
@@ -1561,8 +1560,8 @@ function completeWork(
     case CacheComponent: {
       if (enableCache) {
         let previousCache: Cache | null = null;
-        if (workInProgress.alternate !== null) {
-          previousCache = workInProgress.alternate.memoizedState.cache;
+        if (current !== null) {
+          previousCache = current.memoizedState.cache;
         }
         const cache: Cache = workInProgress.memoizedState.cache;
         if (cache !== previousCache) {

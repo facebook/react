@@ -11,7 +11,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
+import type {Cache} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -52,7 +52,11 @@ import {
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
 
-function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
+function unwindWork(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -153,8 +157,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
       if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        if (current !== null) {
           popCachePool(workInProgress);
         }
       }
@@ -170,7 +173,11 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   }
 }
 
-function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
+function unwindInterruptedWork(
+  current: Fiber | null,
+  interruptedWork: Fiber,
+  renderLanes: Lanes,
+) {
   // Note: This intentionally doesn't check if we're hydrating because comparing
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
@@ -218,8 +225,7 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
       if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (interruptedWork.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        if (current !== null) {
           popCachePool(interruptedWork);
         }
       }
