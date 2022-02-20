@@ -302,6 +302,84 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should asynchronously load a lazy component with sibling after', async () => {
+    const makeApp = () => {
+      let resolve;
+      const imports = new Promise(r => {
+        resolve = () => r({default: () => <span id="async">async</span>});
+      });
+      const Lazy = React.lazy(() => imports);
+
+      // Test passes if you change:
+      // <span id="after">after</span>
+      // to:
+      // <Suspense fallback={null}><span id="after">after</span></Suspense>
+      const App = () => (
+        <div>
+          <Suspense fallback={<span>Loading...</span>}>
+            <Lazy />
+            <span id="after">after</span>
+          </Suspense>
+        </div>
+      );
+
+      return [App, resolve];
+    };
+
+    // Server-side
+    const [App, resolve] = makeApp();
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading...</span>
+      </div>,
+    );
+    await act(async () => {
+      resolve();
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span id="async">async</span>
+        <span id="after">after</span>
+      </div>,
+    );
+
+    // Client-side
+    const [HydrateApp, hydrateResolve] = makeApp();
+    await act(async () => {
+      ReactDOM.hydrateRoot(container, <HydrateApp />);
+      // Throws after flushAll:
+      // Warning: Prop `id` did not match. Server: "async" Client: "after"
+      //     at span
+      //     at Suspense
+      //     at div
+      //     at App
+      Scheduler.unstable_flushAll();
+    });
+
+    // nb: Honestly not really sure whether this should expect "loading..." or "async"
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span id="async">async</span>
+        <span id="after">after</span>
+      </div>,
+    );
+
+    await act(async () => {
+      hydrateResolve();
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span id="async">async</span>
+        <span id="after">after</span>
+      </div>,
+    );
+  });
+
+  // @gate experimental
   it('should support nonce scripts', async () => {
     CSPnonce = 'R4nd0m';
     try {
