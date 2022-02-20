@@ -588,6 +588,27 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   });
 
   describe('extra features implemented in user-space', () => {
+    test('Selector can return NaN without infinite loop warning', async () => {
+      const store = createExternalStore({nan: 'not a number'});
+
+      function App() {
+        const selectedNaN = useSyncExternalStoreWithSelector(
+          store.subscribe,
+          store.getState,
+          null,
+          s => parseInt(s.nan, 10),
+        );
+        return <Text text={selectedNaN.toString()} />;
+      }
+
+      const container = document.createElement('div');
+      const root = createRoot(container);
+
+      await act(() => root.render(<App />));
+
+      expect(container.textContent).toEqual('NaN');
+    });
+
     // The selector implementation uses the lazy ref initialization pattern
     // @gate !(enableUseRefAccessWarning && __DEV__)
     test('memoized selectors are only called once per update', async () => {
