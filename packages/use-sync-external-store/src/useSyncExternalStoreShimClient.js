@@ -57,11 +57,8 @@ export function useSyncExternalStore<T>(
   const value = getSnapshot();
   if (__DEV__) {
     if (!didWarnUncachedGetSnapshot) {
-      const valueShouldBeCached = getSnapshot();
-      if (
-        !(Number.isNaN(value) && Number.isNaN(valueShouldBeCached)) &&
-        value !== valueShouldBeCached
-      ) {
+      const cachedValue = getSnapshot();
+      if (!is(value, cachedValue)) {
         console.error(
           'The result of getSnapshot should be cached to avoid an infinite loop',
         );
