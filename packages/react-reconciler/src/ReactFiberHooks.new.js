@@ -1290,7 +1290,11 @@ function mountSyncExternalStore<T>(
     nextSnapshot = getSnapshot();
     if (__DEV__) {
       if (!didWarnUncachedGetSnapshot) {
-        if (nextSnapshot !== getSnapshot()) {
+        const cachedSnapshot = getSnapshot();
+        if (
+          !(Number.isNaN(nextSnapshot) && Number.isNaN(cachedSnapshot)) &&
+          nextSnapshot !== cachedSnapshot
+        ) {
           console.error(
             'The result of getSnapshot should be cached to avoid an infinite loop',
           );
@@ -1362,7 +1366,11 @@ function updateSyncExternalStore<T>(
   const nextSnapshot = getSnapshot();
   if (__DEV__) {
     if (!didWarnUncachedGetSnapshot) {
-      if (nextSnapshot !== getSnapshot()) {
+      const cachedSnapshot = getSnapshot();
+      if (
+        !(Number.isNaN(nextSnapshot) && Number.isNaN(cachedSnapshot)) &&
+        nextSnapshot !== cachedSnapshot
+      ) {
         console.error(
           'The result of getSnapshot should be cached to avoid an infinite loop',
         );
