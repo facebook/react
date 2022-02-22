@@ -27,7 +27,7 @@ describe('useSubscription', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
 
-    act = ReactTestRenderer.unstable_concurrentAct;
+    act = require('jest-react').act;
 
     BehaviorSubject = require('rxjs').BehaviorSubject;
     ReplaySubject = require('rxjs').ReplaySubject;
@@ -331,7 +331,14 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      renderer.update(<Parent observed={observableB} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          renderer.update(<Parent observed={observableB} />);
+        });
+      } else {
+        renderer.update(<Parent observed={observableB} />);
+      }
+
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual(['Parent.componentDidMount']);
 
@@ -432,7 +439,13 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      renderer.update(<Parent observed={observableB} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          renderer.update(<Parent observed={observableB} />);
+        });
+      } else {
+        renderer.update(<Parent observed={observableB} />);
+      }
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual([]);
 
@@ -608,9 +621,21 @@ describe('useSubscription', () => {
       // Interrupt with a second mutation "C" -> "D".
       // This update will not be eagerly evaluated,
       // but useSubscription() should eagerly close over the updated value to avoid tearing.
-      mutate('C');
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          mutate('C');
+        });
+      } else {
+        mutate('C');
+      }
       expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
-      mutate('D');
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          mutate('D');
+        });
+      } else {
+        mutate('D');
+      }
       expect(Scheduler).toFlushAndYield([
         'render:second:C',
         'render:first:D',

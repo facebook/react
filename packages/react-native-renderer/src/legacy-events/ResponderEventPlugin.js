@@ -29,7 +29,6 @@ import {
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
-import invariant from 'shared/invariant';
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -249,12 +248,13 @@ function getListener(inst, registrationName) {
     return null;
   }
   const listener = props[registrationName];
-  invariant(
-    !listener || typeof listener === 'function',
-    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
-    registrationName,
-    typeof listener,
-  );
+
+  if (listener && typeof listener !== 'function') {
+    throw new Error(
+      `Expected \`${registrationName}\` listener to be a function, instead got a value of \`${typeof listener}\` type.`,
+    );
+  }
+
   return listener;
 }
 

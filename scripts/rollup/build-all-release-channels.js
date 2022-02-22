@@ -8,14 +8,35 @@ const {spawnSync} = require('child_process');
 const path = require('path');
 const tmp = require('tmp');
 
+const {
+  ReactVersion,
+  stablePackages,
+  experimentalPackages,
+  nextChannelLabel,
+} = require('../../ReactVersions');
+
 // Runs the build script for both stable and experimental release channels,
 // by configuring an environment variable.
 
-const sha = (
-  spawnSync('git', ['show', '-s', '--format=%h']).stdout + ''
+const sha = String(
+  spawnSync('git', ['show', '-s', '--no-show-signature', '--format=%h']).stdout
 ).trim();
-const ReactVersion = JSON.parse(fs.readFileSync('packages/react/package.json'))
-  .version;
+
+let dateString = String(
+  spawnSync('git', [
+    'show',
+    '-s',
+    '--no-show-signature',
+    '--format=%cd',
+    '--date=format:%Y%m%d',
+    sha,
+  ]).stdout
+).trim();
+
+// On CI environment, this string is wrapped with quotes '...'s
+if (dateString.startsWith("'")) {
+  dateString = dateString.substr(1, 8);
+}
 
 if (process.env.CIRCLE_NODE_TOTAL) {
   // In CI, we use multiple concurrent processes. Allocate half the processes to
@@ -27,49 +48,46 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   if (index < halfTotal) {
     const nodeTotal = halfTotal;
     const nodeIndex = index;
-    const version = '0.0.0-' + sha;
-    updateTheReactVersionThatDevToolsReads(ReactVersion + '-' + sha);
+    updateTheReactVersionThatDevToolsReads(
+      ReactVersion + '-' + sha + '-' + dateString
+    );
     buildForChannel('stable', nodeTotal, nodeIndex);
-    processStable('./build', version);
+    processStable('./build');
   } else {
     const nodeTotal = total - halfTotal;
     const nodeIndex = index - halfTotal;
-    const version = '0.0.0-experimental-' + sha;
     updateTheReactVersionThatDevToolsReads(
-      ReactVersion + '-experimental-' + sha
+      ReactVersion + '-experimental-' + sha + '-' + dateString
     );
     buildForChannel('experimental', nodeTotal, nodeIndex);
-    processExperimental('./build', version);
+    processExperimental('./build');
   }
-
-  // TODO: Currently storing artifacts as `./build2` so that it doesn't conflict
-  // with old build job. Remove once we migrate rest of build/test pipeline.
-  fs.renameSync('./build', './build2');
 } else {
   // Running locally, no concurrency. Move each channel's build artifacts into
   // a temporary directory so that they don't conflict.
-  const stableVersion = '0.0.0-' + sha;
+  updateTheReactVersionThatDevToolsReads(
+    ReactVersion + '-' + sha + '-' + dateString
+  );
   buildForChannel('stable', '', '');
   const stableDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', stableDir);
-  processStable(stableDir, stableVersion);
-
-  const experimentalVersion = '0.0.0-experimental-' + sha;
+  processStable(stableDir);
+  updateTheReactVersionThatDevToolsReads(
+    ReactVersion + '-experimental-' + sha + '-' + dateString
+  );
   buildForChannel('experimental', '', '');
   const experimentalDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', experimentalDir);
-  processExperimental(experimentalDir, experimentalVersion);
+  processExperimental(experimentalDir);
 
   // Then merge the experimental folder into the stable one. processExperimental
   // will have already removed conflicting files.
   //
   // In CI, merging is handled automatically by CircleCI's workspace feature.
-  spawnSync('rsync', ['-ar', experimentalDir + '/', stableDir + '/']);
+  mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
   // Now restore the combined directory back to its original name
-  // TODO: Currently storing artifacts as `./build2` so that it doesn't conflict
-  // with old build job. Remove once we migrate rest of build/test pipeline.
-  crossDeviceRenameSync(stableDir, './build2');
+  crossDeviceRenameSync(stableDir, './build');
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {
@@ -84,10 +102,46 @@ function buildForChannel(channel, nodeTotal, nodeIndex) {
   });
 }
 
-function processStable(buildDir, version) {
+function processStable(buildDir) {
   if (fs.existsSync(buildDir + '/node_modules')) {
-    updatePackageVersions(buildDir + '/node_modules', version);
+    // Identical to `oss-stable` but with real, semver versions. This is what
+    // will get published to @latest.
+    spawnSync('cp', [
+      '-r',
+      buildDir + '/node_modules',
+      buildDir + '/oss-stable-semver',
+    ]);
+
+    const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
+    const versionsMap = new Map();
+    for (const moduleName in stablePackages) {
+      const version = stablePackages[moduleName];
+      versionsMap.set(
+        moduleName,
+        version + '-' + nextChannelLabel + '-' + sha + '-' + dateString,
+        defaultVersionIfNotFound
+      );
+    }
+    updatePackageVersions(
+      buildDir + '/node_modules',
+      versionsMap,
+      defaultVersionIfNotFound,
+      true
+    );
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
+
+    // Now do the semver ones
+    const semverVersionsMap = new Map();
+    for (const moduleName in stablePackages) {
+      const version = stablePackages[moduleName];
+      semverVersionsMap.set(moduleName, version);
+    }
+    updatePackageVersions(
+      buildDir + '/oss-stable-semver',
+      semverVersionsMap,
+      defaultVersionIfNotFound,
+      false
+    );
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
@@ -107,7 +161,21 @@ function processStable(buildDir, version) {
 
 function processExperimental(buildDir, version) {
   if (fs.existsSync(buildDir + '/node_modules')) {
-    updatePackageVersions(buildDir + '/node_modules', version);
+    const defaultVersionIfNotFound =
+      '0.0.0' + '-' + 'experimental' + '-' + sha + '-' + dateString;
+    const versionsMap = new Map();
+    for (const moduleName in stablePackages) {
+      versionsMap.set(moduleName, defaultVersionIfNotFound);
+    }
+    for (const moduleName of experimentalPackages) {
+      versionsMap.set(moduleName, defaultVersionIfNotFound);
+    }
+    updatePackageVersions(
+      buildDir + '/node_modules',
+      versionsMap,
+      defaultVersionIfNotFound,
+      true
+    );
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-experimental');
   }
 
@@ -144,9 +212,26 @@ function crossDeviceRenameSync(source, destination) {
   return fse.moveSync(source, destination, {overwrite: true});
 }
 
-function updatePackageVersions(modulesDir, version) {
-  const allReactModuleNames = fs.readdirSync('packages');
+/*
+ * Grabs the built packages in ${tmp_build_dir}/node_modules and updates the
+ * `version` key in their package.json to 0.0.0-${date}-${commitHash} for the commit
+ * you're building. Also updates the dependencies and peerDependencies
+ * to match this version for all of the 'React' packages
+ * (packages available in this repo).
+ */
+function updatePackageVersions(
+  modulesDir,
+  versionsMap,
+  defaultVersionIfNotFound,
+  pinToExactVersion
+) {
   for (const moduleName of fs.readdirSync(modulesDir)) {
+    let version = versionsMap.get(moduleName);
+    if (version === undefined) {
+      // TODO: If the module is not in the version map, we should exclude it
+      // from the build artifacts.
+      version = defaultVersionIfNotFound;
+    }
     const packageJSONPath = path.join(modulesDir, moduleName, 'package.json');
     const stats = fs.statSync(packageJSONPath);
     if (stats.isFile()) {
@@ -155,18 +240,30 @@ function updatePackageVersions(modulesDir, version) {
       // Update version
       packageInfo.version = version;
 
-      // Update dependency versions
       if (packageInfo.dependencies) {
         for (const dep of Object.keys(packageInfo.dependencies)) {
-          if (allReactModuleNames.includes(dep)) {
-            packageInfo.dependencies[dep] = version;
+          const depVersion = versionsMap.get(dep);
+          if (depVersion !== undefined) {
+            packageInfo.dependencies[dep] = pinToExactVersion
+              ? depVersion
+              : '^' + depVersion;
           }
         }
       }
       if (packageInfo.peerDependencies) {
-        for (const dep of Object.keys(packageInfo.peerDependencies)) {
-          if (allReactModuleNames.includes(dep)) {
-            packageInfo.peerDependencies[dep] = version;
+        if (!pinToExactVersion && moduleName === 'use-sync-external-store') {
+          // use-sync-external-store supports older versions of React, too, so
+          // we don't override to the latest version. We should figure out some
+          // better way to handle this.
+          // TODO: Remove this special case.
+        } else {
+          for (const dep of Object.keys(packageInfo.peerDependencies)) {
+            const depVersion = versionsMap.get(dep);
+            if (depVersion !== undefined) {
+              packageInfo.peerDependencies[dep] = pinToExactVersion
+                ? depVersion
+                : '^' + depVersion;
+            }
           }
         }
       }
@@ -185,4 +282,24 @@ function updateTheReactVersionThatDevToolsReads(version) {
     './packages/shared/ReactVersion.js',
     `export default '${version}';\n`
   );
+}
+
+/**
+ * cross-platform alternative to `rsync -ar`
+ * @param {string} source
+ * @param {string} destination
+ */
+function mergeDirsSync(source, destination) {
+  for (const sourceFileBaseName of fs.readdirSync(source)) {
+    const sourceFileName = path.join(source, sourceFileBaseName);
+    const targetFileName = path.join(destination, sourceFileBaseName);
+
+    const sourceFile = fs.statSync(sourceFileName);
+    if (sourceFile.isDirectory()) {
+      fse.ensureDirSync(targetFileName);
+      mergeDirsSync(sourceFileName, targetFileName);
+    } else {
+      fs.copyFileSync(sourceFileName, targetFileName);
+    }
+  }
 }

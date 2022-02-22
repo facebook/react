@@ -10,14 +10,14 @@ Object {
       "props": null,
       "state": null,
     },
-    3 => Object {
+    4 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
-    5 => Object {
+    6 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -26,21 +26,31 @@ Object {
     },
   },
   "duration": 16,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 16,
     2 => 16,
-    3 => 1,
-    5 => 1,
+    4 => 1,
+    6 => 1,
   },
   "fiberSelfDurations": Map {
     1 => 0,
     2 => 10,
-    3 => 1,
-    5 => 1,
+    4 => 1,
+    6 => 1,
   },
-  "interactionIDs": Array [],
-  "priorityLevel": "Normal",
+  "passiveEffectDuration": null,
+  "priorityLevel": "Immediate",
   "timestamp": 16,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -63,6 +73,7 @@ Object {
     },
   },
   "duration": 15,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     1 => 15,
     2 => 15,
@@ -75,16 +86,25 @@ Object {
     3 => 3,
     4 => 2,
   },
-  "interactionIDs": Array [],
-  "priorityLevel": "Normal",
+  "passiveEffectDuration": 0,
+  "priorityLevel": "Immediate",
   "timestamp": 15,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
 exports[`ProfilingCache should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 2`] = `
 Object {
   "changeDescriptions": Map {
-    5 => Object {
+    7 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -93,17 +113,27 @@ Object {
     },
   },
   "duration": 3,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
-    5 => 3,
+    7 => 3,
     3 => 3,
   },
   "fiberSelfDurations": Map {
-    5 => 3,
+    7 => 3,
     3 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 18,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -117,13 +147,6 @@ Object {
       "props": null,
       "state": null,
     },
-    3 => Object {
-      "context": null,
-      "didHooksChange": false,
-      "isFirstMount": true,
-      "props": null,
-      "state": null,
-    },
     4 => Object {
       "context": null,
       "didHooksChange": false,
@@ -138,46 +161,65 @@ Object {
       "props": null,
       "state": null,
     },
+    6 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "isFirstMount": true,
+      "props": null,
+      "state": null,
+    },
   },
   "duration": 12,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 12,
     2 => 12,
-    3 => 0,
-    4 => 1,
+    4 => 0,
     5 => 1,
+    6 => 1,
   },
   "fiberSelfDurations": Map {
     1 => 0,
     2 => 10,
-    3 => 0,
-    4 => 1,
+    4 => 0,
     5 => 1,
+    6 => 1,
   },
-  "interactionIDs": Array [],
-  "priorityLevel": "Normal",
+  "passiveEffectDuration": null,
+  "priorityLevel": "Immediate",
   "timestamp": 12,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 1 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
-      "didHooksChange": false,
-      "isFirstMount": false,
-      "props": Array [],
-      "state": null,
-    },
     4 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
-    6 => Object {
+    5 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "hooks": null,
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+    7 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -187,6 +229,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -195,32 +238,43 @@ Object {
     },
   },
   "duration": 13,
+  "effectDuration": null,
   "fiberActualDurations": Map {
-    3 => 0,
-    4 => 1,
-    6 => 2,
+    4 => 0,
+    5 => 1,
+    7 => 2,
     2 => 13,
     1 => 13,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
-    4 => 1,
-    6 => 2,
+    4 => 0,
+    5 => 1,
+    7 => 2,
     2 => 10,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 25,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 2 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
+    4 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -228,6 +282,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -236,19 +291,29 @@ Object {
     },
   },
   "duration": 10,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
-    3 => 0,
+    4 => 0,
     2 => 10,
     1 => 10,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
+    4 => 0,
     2 => 10,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 35,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -258,6 +323,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -266,6 +332,7 @@ Object {
     },
   },
   "duration": 10,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     2 => 10,
     1 => 10,
@@ -274,9 +341,18 @@ Object {
     2 => 10,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": 0,
   "priorityLevel": "Immediate",
   "timestamp": 45,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -298,16 +374,6 @@ Object {
               },
             ],
             Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
               4,
               Object {
                 "context": null,
@@ -319,6 +385,16 @@ Object {
             ],
             Array [
               5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+            Array [
+              6,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -329,6 +405,7 @@ Object {
             ],
           ],
           "duration": 12,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -339,15 +416,15 @@ Object {
               12,
             ],
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              5,
+              6,
               1,
             ],
           ],
@@ -361,46 +438,57 @@ Object {
               10,
             ],
             Array [
-              3,
-              0,
-            ],
-            Array [
               4,
-              1,
+              0,
             ],
             Array [
               5,
               1,
             ],
+            Array [
+              6,
+              1,
+            ],
           ],
-          "interactionIDs": Array [],
-          "priorityLevel": "Normal",
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
           "timestamp": 12,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
-            Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
             Array [
               4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
               },
             ],
             Array [
-              6,
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -414,6 +502,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -423,17 +512,18 @@ Object {
             ],
           ],
           "duration": 13,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -447,15 +537,15 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -467,17 +557,27 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 25,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -488,6 +588,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -497,9 +598,10 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -513,7 +615,7 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -525,9 +627,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 35,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -536,6 +647,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -545,6 +657,7 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -565,15 +678,22 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 45,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -599,6 +719,8 @@ Object {
           1,
           1,
           11,
+          0,
+          3,
           1,
           1,
           4,
@@ -615,34 +737,34 @@ Object {
           2,
           12000,
           1,
-          3,
+          4,
           5,
           2,
           2,
           2,
           3,
           4,
-          3,
+          4,
           0,
           1,
-          4,
+          5,
           5,
           2,
           2,
           2,
           4,
           4,
-          4,
+          5,
           1000,
           1,
-          5,
+          6,
           8,
           2,
           2,
           2,
           0,
           4,
-          5,
+          6,
           1000,
         ],
         Array [
@@ -658,14 +780,14 @@ Object {
           1,
           50,
           1,
-          6,
+          7,
           5,
           2,
           2,
           1,
           2,
           4,
-          6,
+          7,
           2000,
           4,
           2,
@@ -673,10 +795,10 @@ Object {
           3,
           2,
           4,
-          3,
           4,
-          6,
           5,
+          7,
+          6,
           4,
           1,
           14000,
@@ -687,16 +809,16 @@ Object {
           0,
           2,
           2,
-          6,
-          4,
+          7,
+          5,
           4,
           2,
           11000,
           3,
           2,
           2,
-          3,
-          5,
+          4,
+          6,
           4,
           1,
           11000,
@@ -707,14 +829,698 @@ Object {
           0,
           2,
           1,
-          3,
+          4,
         ],
       ],
       "rootID": 1,
       "snapshots": Array [],
     },
   ],
-  "version": 4,
+  "timelineData": Array [
+    Object {
+      "batchUIDToMeasuresKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 12,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 12,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          3,
+          Array [
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+        Array [
+          4,
+          Array [
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 55,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 55,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 55,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+      ],
+      "componentMeasures": Array [
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 20,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 20,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 21,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 22,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 32,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 32,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 2,
+          "timestamp": 33,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 35,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 45,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 45,
+          "type": "render",
+          "warning": null,
+        },
+      ],
+      "duration": 65,
+      "flamechart": Array [],
+      "internalModuleSourceToRanges": Array [],
+      "laneToLabelKeyValueArray": Array [
+        Array [
+          1,
+          "Sync",
+        ],
+        Array [
+          2,
+          "InputContinuousHydration",
+        ],
+        Array [
+          4,
+          "InputContinuous",
+        ],
+        Array [
+          8,
+          "DefaultHydration",
+        ],
+        Array [
+          16,
+          "Default",
+        ],
+        Array [
+          32,
+          "TransitionHydration",
+        ],
+        Array [
+          64,
+          "Transition",
+        ],
+        Array [
+          128,
+          "Transition",
+        ],
+        Array [
+          256,
+          "Transition",
+        ],
+        Array [
+          512,
+          "Transition",
+        ],
+        Array [
+          1024,
+          "Transition",
+        ],
+        Array [
+          2048,
+          "Transition",
+        ],
+        Array [
+          4096,
+          "Transition",
+        ],
+        Array [
+          8192,
+          "Transition",
+        ],
+        Array [
+          16384,
+          "Transition",
+        ],
+        Array [
+          32768,
+          "Transition",
+        ],
+        Array [
+          65536,
+          "Transition",
+        ],
+        Array [
+          131072,
+          "Transition",
+        ],
+        Array [
+          262144,
+          "Transition",
+        ],
+        Array [
+          524288,
+          "Transition",
+        ],
+        Array [
+          1048576,
+          "Transition",
+        ],
+        Array [
+          2097152,
+          "Transition",
+        ],
+        Array [
+          4194304,
+          "Retry",
+        ],
+        Array [
+          8388608,
+          "Retry",
+        ],
+        Array [
+          16777216,
+          "Retry",
+        ],
+        Array [
+          33554432,
+          "Retry",
+        ],
+        Array [
+          67108864,
+          "Retry",
+        ],
+        Array [
+          134217728,
+          "SelectiveHydration",
+        ],
+        Array [
+          268435456,
+          "IdleHydration",
+        ],
+        Array [
+          536870912,
+          "Idle",
+        ],
+        Array [
+          1073741824,
+          "Offscreen",
+        ],
+      ],
+      "laneToReactMeasureKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 12,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 12,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 22,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 35,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "passive-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 55,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 55,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 55,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [],
+        ],
+        Array [
+          4,
+          Array [],
+        ],
+        Array [
+          8,
+          Array [],
+        ],
+        Array [
+          16,
+          Array [],
+        ],
+        Array [
+          32,
+          Array [],
+        ],
+        Array [
+          64,
+          Array [],
+        ],
+        Array [
+          128,
+          Array [],
+        ],
+        Array [
+          256,
+          Array [],
+        ],
+        Array [
+          512,
+          Array [],
+        ],
+        Array [
+          1024,
+          Array [],
+        ],
+        Array [
+          2048,
+          Array [],
+        ],
+        Array [
+          4096,
+          Array [],
+        ],
+        Array [
+          8192,
+          Array [],
+        ],
+        Array [
+          16384,
+          Array [],
+        ],
+        Array [
+          32768,
+          Array [],
+        ],
+        Array [
+          65536,
+          Array [],
+        ],
+        Array [
+          131072,
+          Array [],
+        ],
+        Array [
+          262144,
+          Array [],
+        ],
+        Array [
+          524288,
+          Array [],
+        ],
+        Array [
+          1048576,
+          Array [],
+        ],
+        Array [
+          2097152,
+          Array [],
+        ],
+        Array [
+          4194304,
+          Array [],
+        ],
+        Array [
+          8388608,
+          Array [],
+        ],
+        Array [
+          16777216,
+          Array [],
+        ],
+        Array [
+          33554432,
+          Array [],
+        ],
+        Array [
+          67108864,
+          Array [],
+        ],
+        Array [
+          134217728,
+          Array [],
+        ],
+        Array [
+          268435456,
+          Array [],
+        ],
+        Array [
+          536870912,
+          Array [],
+        ],
+        Array [
+          1073741824,
+          Array [],
+        ],
+      ],
+      "nativeEvents": Array [],
+      "networkMeasures": Array [],
+      "otherUserTimingMarks": Array [],
+      "reactVersion": "<filtered-version>",
+      "schedulingEvents": Array [
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 22,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 35,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 45,
+          "type": "schedule-render",
+          "warning": null,
+        },
+      ],
+      "snapshotHeight": 0,
+      "snapshots": Array [],
+      "startTime": -10,
+      "suspenseEvents": Array [],
+      "thrownErrors": Array [],
+    },
+  ],
+  "version": 5,
 }
 `;
 
@@ -726,28 +1532,28 @@ Array [
 ]
 `;
 
-exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 3 1`] = `
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 4 1`] = `
 Array [
   0,
   1,
   2,
-]
-`;
-
-exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 4 1`] = `
-Array [
-  0,
 ]
 `;
 
 exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 5 1`] = `
 Array [
+  0,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 6 1`] = `
+Array [
   1,
   2,
 ]
 `;
 
-exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 6 1`] = `
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 7 1`] = `
 Array [
   2,
 ]
@@ -771,7 +1577,7 @@ Object {
               },
             ],
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -781,7 +1587,7 @@ Object {
               },
             ],
             Array [
-              4,
+              5,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -792,6 +1598,7 @@ Object {
             ],
           ],
           "duration": 11,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -802,11 +1609,11 @@ Object {
               11,
             ],
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
           ],
@@ -820,111 +1627,35 @@ Object {
               10,
             ],
             Array [
-              3,
-              0,
-            ],
-            Array [
               4,
-              1,
-            ],
-          ],
-          "interactionIDs": Array [],
-          "priorityLevel": "Normal",
-          "timestamp": 11,
-        },
-        Object {
-          "changeDescriptions": Array [
-            Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
-              5,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              2,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [
-                  "count",
-                ],
-                "state": null,
-              },
-            ],
-          ],
-          "duration": 11,
-          "fiberActualDurations": Array [
-            Array [
-              3,
               0,
             ],
             Array [
               5,
               1,
             ],
-            Array [
-              2,
-              11,
-            ],
-            Array [
-              1,
-              11,
-            ],
           ],
-          "fiberSelfDurations": Array [
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              5,
-              1,
-            ],
-            Array [
-              2,
-              10,
-            ],
-            Array [
-              1,
-              0,
-            ],
-          ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
-          "timestamp": 22,
+          "timestamp": 11,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
-              5,
-              Object {
-                "context": null,
-                "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -945,6 +1676,106 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 11,
+          "effectDuration": null,
+          "fiberActualDurations": Array [
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              6,
+              1,
+            ],
+            Array [
+              2,
+              11,
+            ],
+            Array [
+              1,
+              11,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              6,
+              1,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
+          "timestamp": 22,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              4,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              6,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -954,17 +1785,18 @@ Object {
             ],
           ],
           "duration": 13,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              5,
+              6,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -978,15 +1810,15 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              5,
+              6,
               1,
             ],
             Array [
-              6,
+              7,
               2,
             ],
             Array [
@@ -998,15 +1830,22 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 35,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -1030,6 +1869,8 @@ Object {
           1,
           1,
           11,
+          0,
+          3,
           1,
           1,
           4,
@@ -1046,24 +1887,24 @@ Object {
           2,
           11000,
           1,
-          3,
+          4,
           5,
           2,
           2,
           2,
           3,
           4,
-          3,
+          4,
           0,
           1,
-          4,
+          5,
           8,
           2,
           2,
           2,
           0,
           4,
-          4,
+          5,
           1000,
         ],
         Array [
@@ -1079,14 +1920,14 @@ Object {
           1,
           49,
           1,
-          5,
+          6,
           5,
           2,
           2,
           1,
           2,
           4,
-          5,
+          6,
           1000,
           4,
           2,
@@ -1094,9 +1935,9 @@ Object {
           3,
           2,
           3,
-          3,
-          5,
           4,
+          6,
+          5,
           4,
           1,
           12000,
@@ -1114,14 +1955,14 @@ Object {
           1,
           50,
           1,
-          6,
+          7,
           5,
           2,
           2,
           1,
           2,
           4,
-          6,
+          7,
           2000,
           4,
           2,
@@ -1129,10 +1970,10 @@ Object {
           3,
           2,
           4,
-          3,
-          5,
-          6,
           4,
+          6,
+          7,
+          5,
           4,
           1,
           14000,
@@ -1142,7 +1983,577 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 4,
+  "timelineData": Array [
+    Object {
+      "batchUIDToMeasuresKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          3,
+          Array [
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+      ],
+      "componentMeasures": Array [
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 20,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 20,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 21,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 31,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 31,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 32,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 42,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 42,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 2,
+          "timestamp": 43,
+          "type": "render",
+          "warning": null,
+        },
+      ],
+      "duration": 55,
+      "flamechart": Array [],
+      "internalModuleSourceToRanges": Array [],
+      "laneToLabelKeyValueArray": Array [
+        Array [
+          1,
+          "Sync",
+        ],
+        Array [
+          2,
+          "InputContinuousHydration",
+        ],
+        Array [
+          4,
+          "InputContinuous",
+        ],
+        Array [
+          8,
+          "DefaultHydration",
+        ],
+        Array [
+          16,
+          "Default",
+        ],
+        Array [
+          32,
+          "TransitionHydration",
+        ],
+        Array [
+          64,
+          "Transition",
+        ],
+        Array [
+          128,
+          "Transition",
+        ],
+        Array [
+          256,
+          "Transition",
+        ],
+        Array [
+          512,
+          "Transition",
+        ],
+        Array [
+          1024,
+          "Transition",
+        ],
+        Array [
+          2048,
+          "Transition",
+        ],
+        Array [
+          4096,
+          "Transition",
+        ],
+        Array [
+          8192,
+          "Transition",
+        ],
+        Array [
+          16384,
+          "Transition",
+        ],
+        Array [
+          32768,
+          "Transition",
+        ],
+        Array [
+          65536,
+          "Transition",
+        ],
+        Array [
+          131072,
+          "Transition",
+        ],
+        Array [
+          262144,
+          "Transition",
+        ],
+        Array [
+          524288,
+          "Transition",
+        ],
+        Array [
+          1048576,
+          "Transition",
+        ],
+        Array [
+          2097152,
+          "Transition",
+        ],
+        Array [
+          4194304,
+          "Retry",
+        ],
+        Array [
+          8388608,
+          "Retry",
+        ],
+        Array [
+          16777216,
+          "Retry",
+        ],
+        Array [
+          33554432,
+          "Retry",
+        ],
+        Array [
+          67108864,
+          "Retry",
+        ],
+        Array [
+          134217728,
+          "SelectiveHydration",
+        ],
+        Array [
+          268435456,
+          "IdleHydration",
+        ],
+        Array [
+          536870912,
+          "Idle",
+        ],
+        Array [
+          1073741824,
+          "Offscreen",
+        ],
+      ],
+      "laneToReactMeasureKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 21,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 32,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 45,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [],
+        ],
+        Array [
+          4,
+          Array [],
+        ],
+        Array [
+          8,
+          Array [],
+        ],
+        Array [
+          16,
+          Array [],
+        ],
+        Array [
+          32,
+          Array [],
+        ],
+        Array [
+          64,
+          Array [],
+        ],
+        Array [
+          128,
+          Array [],
+        ],
+        Array [
+          256,
+          Array [],
+        ],
+        Array [
+          512,
+          Array [],
+        ],
+        Array [
+          1024,
+          Array [],
+        ],
+        Array [
+          2048,
+          Array [],
+        ],
+        Array [
+          4096,
+          Array [],
+        ],
+        Array [
+          8192,
+          Array [],
+        ],
+        Array [
+          16384,
+          Array [],
+        ],
+        Array [
+          32768,
+          Array [],
+        ],
+        Array [
+          65536,
+          Array [],
+        ],
+        Array [
+          131072,
+          Array [],
+        ],
+        Array [
+          262144,
+          Array [],
+        ],
+        Array [
+          524288,
+          Array [],
+        ],
+        Array [
+          1048576,
+          Array [],
+        ],
+        Array [
+          2097152,
+          Array [],
+        ],
+        Array [
+          4194304,
+          Array [],
+        ],
+        Array [
+          8388608,
+          Array [],
+        ],
+        Array [
+          16777216,
+          Array [],
+        ],
+        Array [
+          33554432,
+          Array [],
+        ],
+        Array [
+          67108864,
+          Array [],
+        ],
+        Array [
+          134217728,
+          Array [],
+        ],
+        Array [
+          268435456,
+          Array [],
+        ],
+        Array [
+          536870912,
+          Array [],
+        ],
+        Array [
+          1073741824,
+          Array [],
+        ],
+      ],
+      "nativeEvents": Array [],
+      "networkMeasures": Array [],
+      "otherUserTimingMarks": Array [],
+      "reactVersion": "<filtered-version>",
+      "schedulingEvents": Array [
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 21,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 32,
+          "type": "schedule-render",
+          "warning": null,
+        },
+      ],
+      "snapshotHeight": 0,
+      "snapshots": Array [],
+      "startTime": -10,
+      "suspenseEvents": Array [],
+      "thrownErrors": Array [],
+    },
+  ],
+  "version": 5,
 }
 `;
 
@@ -1151,21 +2562,23 @@ Object {
   "commitData": Array [
     Object {
       "changeDescriptions": Map {
-        3 => Object {
-          "context": null,
-          "didHooksChange": false,
-          "isFirstMount": false,
-          "props": Array [],
-          "state": null,
-        },
         4 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [],
           "state": null,
         },
-        10 => Object {
+        5 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "hooks": null,
+          "isFirstMount": false,
+          "props": Array [],
+          "state": null,
+        },
+        12 => Object {
           "context": null,
           "didHooksChange": false,
           "isFirstMount": true,
@@ -1175,6 +2588,7 @@ Object {
         2 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1183,29 +2597,40 @@ Object {
         },
       },
       "duration": 13,
+      "effectDuration": null,
       "fiberActualDurations": Map {
-        3 => 0,
-        4 => 1,
-        10 => 2,
+        4 => 0,
+        5 => 1,
+        12 => 2,
         2 => 13,
         1 => 13,
       },
       "fiberSelfDurations": Map {
-        3 => 0,
-        4 => 1,
-        10 => 2,
+        4 => 0,
+        5 => 1,
+        12 => 2,
         2 => 10,
         1 => 0,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": null,
       "priorityLevel": "Immediate",
       "timestamp": 13,
+      "updaters": Array [
+        Object {
+          "displayName": "render()",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
     Object {
       "changeDescriptions": Map {
-        3 => Object {
+        4 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [],
           "state": null,
@@ -1213,6 +2638,7 @@ Object {
         2 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1221,25 +2647,36 @@ Object {
         },
       },
       "duration": 10,
+      "effectDuration": 0,
       "fiberActualDurations": Map {
-        3 => 0,
+        4 => 0,
         2 => 10,
         1 => 10,
       },
       "fiberSelfDurations": Map {
-        3 => 0,
+        4 => 0,
         2 => 10,
         1 => 0,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": 0,
       "priorityLevel": "Immediate",
       "timestamp": 34,
+      "updaters": Array [
+        Object {
+          "displayName": "render()",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
     Object {
       "changeDescriptions": Map {
         2 => Object {
           "context": null,
           "didHooksChange": false,
+          "hooks": null,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1248,6 +2685,7 @@ Object {
         },
       },
       "duration": 10,
+      "effectDuration": 0,
       "fiberActualDurations": Map {
         2 => 10,
         1 => 10,
@@ -1256,21 +2694,28 @@ Object {
         2 => 10,
         1 => 0,
       },
-      "interactionIDs": Array [],
+      "passiveEffectDuration": 0,
       "priorityLevel": "Immediate",
       "timestamp": 44,
+      "updaters": Array [
+        Object {
+          "displayName": "render()",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
   ],
   "displayName": "Parent",
   "initialTreeBaseDurations": Map {
     1 => 12,
     2 => 12,
-    3 => 0,
-    4 => 1,
+    4 => 0,
     5 => 1,
+    6 => 1,
   },
-  "interactionCommits": Map {},
-  "interactions": Map {},
   "operations": Array [
     Array [
       1,
@@ -1285,14 +2730,14 @@ Object {
       1,
       50,
       1,
-      10,
+      12,
       5,
       2,
       2,
       1,
       2,
       4,
-      10,
+      12,
       2000,
       4,
       2,
@@ -1300,10 +2745,10 @@ Object {
       3,
       2,
       4,
-      3,
       4,
-      10,
       5,
+      12,
+      6,
       4,
       1,
       14000,
@@ -1314,16 +2759,16 @@ Object {
       0,
       2,
       2,
-      10,
-      4,
+      12,
+      5,
       4,
       2,
       11000,
       3,
       2,
       2,
-      3,
-      5,
+      4,
+      6,
       4,
       1,
       11000,
@@ -1334,7 +2779,7 @@ Object {
       0,
       2,
       1,
-      3,
+      4,
     ],
   ],
   "rootID": 1,
@@ -1351,9 +2796,9 @@ Object {
     },
     2 => Object {
       "children": Array [
-        3,
         4,
         5,
+        6,
       ],
       "displayName": "Parent",
       "hocDisplayNames": null,
@@ -1361,29 +2806,29 @@ Object {
       "key": null,
       "type": 5,
     },
-    3 => Object {
-      "children": Array [],
-      "displayName": "Child",
-      "hocDisplayNames": null,
-      "id": 3,
-      "key": "0",
-      "type": 5,
-    },
     4 => Object {
       "children": Array [],
       "displayName": "Child",
       "hocDisplayNames": null,
       "id": 4,
-      "key": "1",
+      "key": "0",
       "type": 5,
     },
     5 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 5,
+      "key": "1",
+      "type": 5,
+    },
+    6 => Object {
+      "children": Array [],
+      "displayName": "Child",
       "hocDisplayNames": Array [
         "Memo",
       ],
-      "id": 5,
+      "id": 6,
       "key": null,
       "type": 8,
     },
@@ -1396,21 +2841,21 @@ Object {
   "commitData": Array [
     Object {
       "changeDescriptions": Map {
-        12 => Object {
-          "context": null,
-          "didHooksChange": false,
-          "isFirstMount": true,
-          "props": null,
-          "state": null,
-        },
-        13 => Object {
-          "context": null,
-          "didHooksChange": false,
-          "isFirstMount": true,
-          "props": null,
-          "state": null,
-        },
         14 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        16 => Object {
+          "context": null,
+          "didHooksChange": false,
+          "isFirstMount": true,
+          "props": null,
+          "state": null,
+        },
+        17 => Object {
           "context": null,
           "didHooksChange": false,
           "isFirstMount": true,
@@ -1419,31 +2864,39 @@ Object {
         },
       },
       "duration": 11,
+      "effectDuration": null,
       "fiberActualDurations": Map {
-        11 => 11,
-        12 => 11,
-        13 => 0,
-        14 => 1,
+        13 => 11,
+        14 => 11,
+        16 => 0,
+        17 => 1,
       },
       "fiberSelfDurations": Map {
-        11 => 0,
-        12 => 10,
         13 => 0,
-        14 => 1,
+        14 => 10,
+        16 => 0,
+        17 => 1,
       },
-      "interactionIDs": Array [],
-      "priorityLevel": "Normal",
+      "passiveEffectDuration": null,
+      "priorityLevel": "Immediate",
       "timestamp": 24,
+      "updaters": Array [
+        Object {
+          "displayName": "render()",
+          "hocDisplayNames": null,
+          "id": 13,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
   ],
   "displayName": "Parent",
   "initialTreeBaseDurations": Map {},
-  "interactionCommits": Map {},
-  "interactions": Map {},
   "operations": Array [
     Array [
       1,
-      11,
+      13,
       15,
       6,
       80,
@@ -1461,127 +2914,49 @@ Object {
       1,
       48,
       1,
-      11,
-      11,
-      1,
-      1,
-      4,
-      11,
-      11000,
-      1,
-      12,
-      5,
-      11,
-      0,
-      1,
-      0,
-      4,
-      12,
-      11000,
-      1,
       13,
+      11,
+      0,
+      3,
+      1,
+      1,
+      4,
+      13,
+      11000,
+      1,
+      14,
       5,
-      12,
-      12,
+      13,
+      0,
+      1,
+      0,
+      4,
+      14,
+      11000,
+      1,
+      16,
+      5,
+      14,
+      14,
       2,
       3,
       4,
-      13,
+      16,
       0,
       1,
-      14,
+      17,
       8,
-      12,
-      12,
+      14,
+      14,
       2,
       0,
       4,
-      14,
+      17,
       1000,
     ],
   ],
-  "rootID": 11,
+  "rootID": 13,
   "snapshots": Map {},
-}
-`;
-
-exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): Data for root Parent 3`] = `
-Object {
-  "commitData": Array [
-    Object {
-      "changeDescriptions": Map {},
-      "duration": 0,
-      "fiberActualDurations": Map {},
-      "fiberSelfDurations": Map {},
-      "interactionIDs": Array [],
-      "priorityLevel": "Normal",
-      "timestamp": 34,
-    },
-  ],
-  "displayName": "Parent",
-  "initialTreeBaseDurations": Map {
-    6 => 11,
-    7 => 11,
-    8 => 0,
-    9 => 1,
-  },
-  "interactionCommits": Map {},
-  "interactions": Map {},
-  "operations": Array [
-    Array [
-      1,
-      6,
-      0,
-      2,
-      4,
-      9,
-      8,
-      7,
-      6,
-    ],
-  ],
-  "rootID": 6,
-  "snapshots": Map {
-    6 => Object {
-      "children": Array [
-        7,
-      ],
-      "displayName": null,
-      "hocDisplayNames": null,
-      "id": 6,
-      "key": null,
-      "type": 11,
-    },
-    7 => Object {
-      "children": Array [
-        8,
-        9,
-      ],
-      "displayName": "Parent",
-      "hocDisplayNames": null,
-      "id": 7,
-      "key": null,
-      "type": 5,
-    },
-    8 => Object {
-      "children": Array [],
-      "displayName": "Child",
-      "hocDisplayNames": null,
-      "id": 8,
-      "key": "0",
-      "type": 5,
-    },
-    9 => Object {
-      "children": Array [],
-      "displayName": "Child",
-      "hocDisplayNames": Array [
-        "Memo",
-      ],
-      "id": 9,
-      "key": null,
-      "type": 8,
-    },
-  },
 }
 `;
 
@@ -1593,27 +2968,29 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
               4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
               },
             ],
             Array [
-              10,
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "hooks": null,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              12,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -1627,6 +3004,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1636,17 +3014,18 @@ Object {
             ],
           ],
           "duration": 13,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              10,
+              12,
               2,
             ],
             Array [
@@ -1660,15 +3039,15 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
-              4,
+              5,
               1,
             ],
             Array [
-              10,
+              12,
               2,
             ],
             Array [
@@ -1680,17 +3059,27 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 13,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -1701,6 +3090,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1710,9 +3100,10 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -1726,7 +3117,7 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
             Array [
@@ -1738,9 +3129,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 34,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -1749,6 +3149,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1758,6 +3159,7 @@ Object {
             ],
           ],
           "duration": 10,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               2,
@@ -1778,9 +3180,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": 0,
           "priorityLevel": "Immediate",
           "timestamp": 44,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
@@ -1794,20 +3205,18 @@ Object {
           12,
         ],
         Array [
-          3,
-          0,
-        ],
-        Array [
           4,
-          1,
+          0,
         ],
         Array [
           5,
           1,
         ],
+        Array [
+          6,
+          1,
+        ],
       ],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -1822,14 +3231,14 @@ Object {
           1,
           50,
           1,
-          10,
+          12,
           5,
           2,
           2,
           1,
           2,
           4,
-          10,
+          12,
           2000,
           4,
           2,
@@ -1837,10 +3246,10 @@ Object {
           3,
           2,
           4,
-          3,
           4,
-          10,
           5,
+          12,
+          6,
           4,
           1,
           14000,
@@ -1851,16 +3260,16 @@ Object {
           0,
           2,
           2,
-          10,
-          4,
+          12,
+          5,
           4,
           2,
           11000,
           3,
           2,
           2,
-          3,
-          5,
+          4,
+          6,
           4,
           1,
           11000,
@@ -1871,7 +3280,7 @@ Object {
           0,
           2,
           1,
-          3,
+          4,
         ],
       ],
       "rootID": 1,
@@ -1893,25 +3302,14 @@ Object {
           2,
           Object {
             "children": Array [
-              3,
               4,
               5,
+              6,
             ],
             "displayName": "Parent",
             "hocDisplayNames": null,
             "id": 2,
             "key": null,
-            "type": 5,
-          },
-        ],
-        Array [
-          3,
-          Object {
-            "children": Array [],
-            "displayName": "Child",
-            "hocDisplayNames": null,
-            "id": 3,
-            "key": "0",
             "type": 5,
           },
         ],
@@ -1922,7 +3320,7 @@ Object {
             "displayName": "Child",
             "hocDisplayNames": null,
             "id": 4,
-            "key": "1",
+            "key": "0",
             "type": 5,
           },
         ],
@@ -1931,10 +3329,21 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
+            "id": 5,
+            "key": "1",
+            "type": 5,
+          },
+        ],
+        Array [
+          6,
+          Object {
+            "children": Array [],
+            "displayName": "Child",
             "hocDisplayNames": Array [
               "Memo",
             ],
-            "id": 5,
+            "id": 6,
             "key": null,
             "type": 8,
           },
@@ -1946,27 +3355,27 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              12,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              13,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
               14,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+            Array [
+              16,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+            Array [
+              17,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -1977,55 +3386,63 @@ Object {
             ],
           ],
           "duration": 11,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              11,
-              11,
-            ],
-            Array [
-              12,
-              11,
-            ],
-            Array [
               13,
-              0,
+              11,
             ],
             Array [
               14,
+              11,
+            ],
+            Array [
+              16,
+              0,
+            ],
+            Array [
+              17,
               1,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              11,
-              0,
-            ],
-            Array [
-              12,
-              10,
-            ],
-            Array [
               13,
               0,
             ],
             Array [
               14,
+              10,
+            ],
+            Array [
+              16,
+              0,
+            ],
+            Array [
+              17,
               1,
             ],
           ],
-          "interactionIDs": Array [],
-          "priorityLevel": "Normal",
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
           "timestamp": 24,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 13,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
-          11,
+          13,
           15,
           6,
           80,
@@ -2043,151 +3460,820 @@ Object {
           1,
           48,
           1,
-          11,
-          11,
-          1,
-          1,
-          4,
-          11,
-          11000,
-          1,
-          12,
-          5,
-          11,
-          0,
-          1,
-          0,
-          4,
-          12,
-          11000,
-          1,
           13,
+          11,
+          0,
+          3,
+          1,
+          1,
+          4,
+          13,
+          11000,
+          1,
+          14,
           5,
-          12,
-          12,
+          13,
+          0,
+          1,
+          0,
+          4,
+          14,
+          11000,
+          1,
+          16,
+          5,
+          14,
+          14,
           2,
           3,
           4,
-          13,
+          16,
           0,
           1,
-          14,
+          17,
           8,
-          12,
-          12,
+          14,
+          14,
           2,
           0,
           4,
-          14,
+          17,
           1000,
         ],
       ],
-      "rootID": 11,
+      "rootID": 13,
       "snapshots": Array [],
     },
+  ],
+  "timelineData": Array [
     Object {
-      "commitData": Array [
+      "batchUIDToMeasuresKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          3,
+          Array [
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+        Array [
+          4,
+          Array [
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+        Array [
+          5,
+          Array [
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 54,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 54,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 54,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+      ],
+      "componentMeasures": Array [
         Object {
-          "changeDescriptions": Array [],
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
           "duration": 0,
-          "fiberActualDurations": Array [],
-          "fiberSelfDurations": Array [],
-          "interactionIDs": Array [],
-          "priorityLevel": "Normal",
+          "timestamp": 20,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 20,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 2,
+          "timestamp": 21,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 23,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 33,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 1,
+          "timestamp": 33,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
           "timestamp": 34,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Child",
+          "duration": 0,
+          "timestamp": 44,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Parent",
+          "duration": 10,
+          "timestamp": 44,
+          "type": "render",
+          "warning": null,
         },
       ],
-      "displayName": "Parent",
-      "initialTreeBaseDurations": Array [
-        Array [
-          6,
-          11,
-        ],
-        Array [
-          7,
-          11,
-        ],
-        Array [
-          8,
-          0,
-        ],
-        Array [
-          9,
-          1,
-        ],
-      ],
-      "interactionCommits": Array [],
-      "interactions": Array [],
-      "operations": Array [
+      "duration": 64,
+      "flamechart": Array [],
+      "internalModuleSourceToRanges": Array [],
+      "laneToLabelKeyValueArray": Array [
         Array [
           1,
-          6,
-          0,
+          "Sync",
+        ],
+        Array [
           2,
+          "InputContinuousHydration",
+        ],
+        Array [
           4,
-          9,
-          8,
-          7,
-          6,
-        ],
-      ],
-      "rootID": 6,
-      "snapshots": Array [
-        Array [
-          6,
-          Object {
-            "children": Array [
-              7,
-            ],
-            "displayName": null,
-            "hocDisplayNames": null,
-            "id": 6,
-            "key": null,
-            "type": 11,
-          },
-        ],
-        Array [
-          7,
-          Object {
-            "children": Array [
-              8,
-              9,
-            ],
-            "displayName": "Parent",
-            "hocDisplayNames": null,
-            "id": 7,
-            "key": null,
-            "type": 5,
-          },
+          "InputContinuous",
         ],
         Array [
           8,
-          Object {
-            "children": Array [],
-            "displayName": "Child",
-            "hocDisplayNames": null,
-            "id": 8,
-            "key": "0",
-            "type": 5,
-          },
+          "DefaultHydration",
         ],
         Array [
-          9,
-          Object {
-            "children": Array [],
-            "displayName": "Child",
-            "hocDisplayNames": Array [
-              "Memo",
-            ],
-            "id": 9,
-            "key": null,
-            "type": 8,
-          },
+          16,
+          "Default",
+        ],
+        Array [
+          32,
+          "TransitionHydration",
+        ],
+        Array [
+          64,
+          "Transition",
+        ],
+        Array [
+          128,
+          "Transition",
+        ],
+        Array [
+          256,
+          "Transition",
+        ],
+        Array [
+          512,
+          "Transition",
+        ],
+        Array [
+          1024,
+          "Transition",
+        ],
+        Array [
+          2048,
+          "Transition",
+        ],
+        Array [
+          4096,
+          "Transition",
+        ],
+        Array [
+          8192,
+          "Transition",
+        ],
+        Array [
+          16384,
+          "Transition",
+        ],
+        Array [
+          32768,
+          "Transition",
+        ],
+        Array [
+          65536,
+          "Transition",
+        ],
+        Array [
+          131072,
+          "Transition",
+        ],
+        Array [
+          262144,
+          "Transition",
+        ],
+        Array [
+          524288,
+          "Transition",
+        ],
+        Array [
+          1048576,
+          "Transition",
+        ],
+        Array [
+          2097152,
+          "Transition",
+        ],
+        Array [
+          4194304,
+          "Retry",
+        ],
+        Array [
+          8388608,
+          "Retry",
+        ],
+        Array [
+          16777216,
+          "Retry",
+        ],
+        Array [
+          33554432,
+          "Retry",
+        ],
+        Array [
+          67108864,
+          "Retry",
+        ],
+        Array [
+          134217728,
+          "SelectiveHydration",
+        ],
+        Array [
+          268435456,
+          "IdleHydration",
+        ],
+        Array [
+          536870912,
+          "Idle",
+        ],
+        Array [
+          1073741824,
+          "Offscreen",
         ],
       ],
+      "laneToReactMeasureKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 13,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 11,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 23,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 34,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "passive-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "passive-effects",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 10,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 44,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 54,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 54,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 54,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [],
+        ],
+        Array [
+          4,
+          Array [],
+        ],
+        Array [
+          8,
+          Array [],
+        ],
+        Array [
+          16,
+          Array [],
+        ],
+        Array [
+          32,
+          Array [],
+        ],
+        Array [
+          64,
+          Array [],
+        ],
+        Array [
+          128,
+          Array [],
+        ],
+        Array [
+          256,
+          Array [],
+        ],
+        Array [
+          512,
+          Array [],
+        ],
+        Array [
+          1024,
+          Array [],
+        ],
+        Array [
+          2048,
+          Array [],
+        ],
+        Array [
+          4096,
+          Array [],
+        ],
+        Array [
+          8192,
+          Array [],
+        ],
+        Array [
+          16384,
+          Array [],
+        ],
+        Array [
+          32768,
+          Array [],
+        ],
+        Array [
+          65536,
+          Array [],
+        ],
+        Array [
+          131072,
+          Array [],
+        ],
+        Array [
+          262144,
+          Array [],
+        ],
+        Array [
+          524288,
+          Array [],
+        ],
+        Array [
+          1048576,
+          Array [],
+        ],
+        Array [
+          2097152,
+          Array [],
+        ],
+        Array [
+          4194304,
+          Array [],
+        ],
+        Array [
+          8388608,
+          Array [],
+        ],
+        Array [
+          16777216,
+          Array [],
+        ],
+        Array [
+          33554432,
+          Array [],
+        ],
+        Array [
+          67108864,
+          Array [],
+        ],
+        Array [
+          134217728,
+          Array [],
+        ],
+        Array [
+          268435456,
+          Array [],
+        ],
+        Array [
+          536870912,
+          Array [],
+        ],
+        Array [
+          1073741824,
+          Array [],
+        ],
+      ],
+      "nativeEvents": Array [],
+      "networkMeasures": Array [],
+      "otherUserTimingMarks": Array [],
+      "reactVersion": "<filtered-version>",
+      "schedulingEvents": Array [
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 23,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 34,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 44,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 44,
+          "type": "schedule-render",
+          "warning": null,
+        },
+      ],
+      "snapshotHeight": 0,
+      "snapshots": Array [],
+      "startTime": 13,
+      "suspenseEvents": Array [],
+      "thrownErrors": Array [],
     },
   ],
-  "version": 4,
+  "version": 5,
 }
 `;
 
@@ -2197,6 +4283,7 @@ Object {
     Object {
       "changeDescriptions": Map {},
       "duration": 0,
+      "effectDuration": null,
       "fiberActualDurations": Map {
         1 => 0,
         2 => 0,
@@ -2205,15 +4292,22 @@ Object {
         1 => 0,
         2 => 0,
       },
-      "interactionIDs": Array [],
-      "priorityLevel": "Normal",
+      "passiveEffectDuration": null,
+      "priorityLevel": "Immediate",
       "timestamp": 0,
+      "updaters": Array [
+        Object {
+          "displayName": "render()",
+          "hocDisplayNames": null,
+          "id": 1,
+          "key": null,
+          "type": 11,
+        },
+      ],
     },
   ],
   "displayName": "Suspense",
   "initialTreeBaseDurations": Map {},
-  "interactionCommits": Map {},
-  "interactions": Map {},
   "operations": Array [
     Array [
       1,
@@ -2231,6 +4325,8 @@ Object {
       1,
       1,
       11,
+      0,
+      3,
       1,
       1,
       1,
@@ -2253,7 +4349,7 @@ Object {
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 0 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
+    4 => Object {
       "context": null,
       "didHooksChange": false,
       "isFirstMount": true,
@@ -2262,28 +4358,41 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": 0,
   "fiberActualDurations": Map {
     1 => 0,
     2 => 0,
     3 => 0,
+    4 => 0,
   },
   "fiberSelfDurations": Map {
     1 => 0,
     2 => 0,
     3 => 0,
+    4 => 0,
   },
-  "interactionIDs": Array [],
-  "priorityLevel": "Normal",
+  "passiveEffectDuration": 0,
+  "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 1 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": false,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -2292,95 +4401,187 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
   },
   "fiberSelfDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 2 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": false,
       "didHooksChange": true,
+      "hooks": Array [
+        1,
+      ],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
-    3 => 0,
+    4 => 0,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
+    4 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Component",
+      "hocDisplayNames": null,
+      "id": 4,
+      "key": null,
+      "type": 5,
+    },
+  ],
 }
 `;
 
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 3 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": false,
       "didHooksChange": true,
+      "hooks": Array [
+        0,
+      ],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
-    3 => 0,
+    4 => 0,
   },
   "fiberSelfDurations": Map {
-    3 => 0,
+    4 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "Component",
+      "hocDisplayNames": null,
+      "id": 4,
+      "key": null,
+      "type": 5,
+    },
+  ],
 }
 `;
 
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 4 1`] = `
 Object {
   "changeDescriptions": Map {
-    3 => Object {
-      "context": null,
+    4 => Object {
+      "context": true,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
   },
   "fiberSelfDurations": Map {
+    4 => 0,
     3 => 0,
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 5 1`] = `
+Object {
+  "changeDescriptions": Map {
+    4 => Object {
+      "context": true,
+      "didHooksChange": false,
+      "hooks": Array [],
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "effectDuration": null,
+  "fiberActualDurations": Map {
+    4 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    4 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "passiveEffectDuration": null,
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2392,7 +4593,7 @@ Object {
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
                 "context": null,
                 "didHooksChange": false,
@@ -2403,6 +4604,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": 0,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -2414,6 +4616,10 @@ Object {
             ],
             Array [
               3,
+              0,
+            ],
+            Array [
+              4,
               0,
             ],
           ],
@@ -2430,18 +4636,32 @@ Object {
               3,
               0,
             ],
+            Array [
+              4,
+              0,
+            ],
           ],
-          "interactionIDs": Array [],
-          "priorityLevel": "Normal",
+          "passiveEffectDuration": 0,
+          "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": false,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -2451,7 +4671,12 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
+            Array [
+              4,
+              0,
+            ],
             Array [
               3,
               0,
@@ -2467,6 +4692,10 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
+              4,
+              0,
+            ],
+            Array [
               3,
               0,
             ],
@@ -2479,17 +4708,29 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": false,
                 "didHooksChange": true,
+                "hooks": Array [
+                  1,
+                ],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2497,29 +4738,42 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Component",
+              "hocDisplayNames": null,
+              "id": 4,
+              "key": null,
+              "type": 5,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": false,
                 "didHooksChange": true,
+                "hooks": Array [
+                  0,
+                ],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2527,29 +4781,40 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
           "fiberSelfDurations": Array [
             Array [
-              3,
+              4,
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "Component",
+              "hocDisplayNames": null,
+              "id": 4,
+              "key": null,
+              "type": 5,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
             Array [
-              3,
+              4,
               Object {
-                "context": null,
+                "context": true,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2557,7 +4822,12 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
+            Array [
+              4,
+              0,
+            ],
             Array [
               3,
               0,
@@ -2573,6 +4843,10 @@ Object {
           ],
           "fiberSelfDurations": Array [
             Array [
+              4,
+              0,
+            ],
+            Array [
               3,
               0,
             ],
@@ -2585,15 +4859,87 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              4,
+              Object {
+                "context": true,
+                "didHooksChange": false,
+                "hooks": Array [],
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 0,
+          "effectDuration": null,
+          "fiberActualDurations": Array [
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "Component",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -2629,6 +4975,8 @@ Object {
           1,
           1,
           11,
+          0,
+          3,
           1,
           1,
           1,
@@ -2643,13 +4991,28 @@ Object {
           0,
           1,
           3,
+          2,
+          2,
+          0,
+          1,
+          0,
+          4,
+          3,
+          0,
+          1,
+          4,
           5,
-          2,
+          3,
           0,
           2,
           0,
           4,
-          3,
+          4,
+          0,
+        ],
+        Array [
+          1,
+          1,
           0,
         ],
         Array [
@@ -2677,7 +5040,726 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 4,
+  "timelineData": Array [
+    Object {
+      "batchUIDToMeasuresKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          3,
+          Array [
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          4,
+          Array [
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          5,
+          Array [
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          6,
+          Array [
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+      ],
+      "componentMeasures": Array [
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "layout-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "passive-effect-mount",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+      ],
+      "duration": 20,
+      "flamechart": Array [],
+      "internalModuleSourceToRanges": Array [],
+      "laneToLabelKeyValueArray": Array [
+        Array [
+          1,
+          "Sync",
+        ],
+        Array [
+          2,
+          "InputContinuousHydration",
+        ],
+        Array [
+          4,
+          "InputContinuous",
+        ],
+        Array [
+          8,
+          "DefaultHydration",
+        ],
+        Array [
+          16,
+          "Default",
+        ],
+        Array [
+          32,
+          "TransitionHydration",
+        ],
+        Array [
+          64,
+          "Transition",
+        ],
+        Array [
+          128,
+          "Transition",
+        ],
+        Array [
+          256,
+          "Transition",
+        ],
+        Array [
+          512,
+          "Transition",
+        ],
+        Array [
+          1024,
+          "Transition",
+        ],
+        Array [
+          2048,
+          "Transition",
+        ],
+        Array [
+          4096,
+          "Transition",
+        ],
+        Array [
+          8192,
+          "Transition",
+        ],
+        Array [
+          16384,
+          "Transition",
+        ],
+        Array [
+          32768,
+          "Transition",
+        ],
+        Array [
+          65536,
+          "Transition",
+        ],
+        Array [
+          131072,
+          "Transition",
+        ],
+        Array [
+          262144,
+          "Transition",
+        ],
+        Array [
+          524288,
+          "Transition",
+        ],
+        Array [
+          1048576,
+          "Transition",
+        ],
+        Array [
+          2097152,
+          "Transition",
+        ],
+        Array [
+          4194304,
+          "Retry",
+        ],
+        Array [
+          8388608,
+          "Retry",
+        ],
+        Array [
+          16777216,
+          "Retry",
+        ],
+        Array [
+          33554432,
+          "Retry",
+        ],
+        Array [
+          67108864,
+          "Retry",
+        ],
+        Array [
+          134217728,
+          "SelectiveHydration",
+        ],
+        Array [
+          268435456,
+          "IdleHydration",
+        ],
+        Array [
+          536870912,
+          "Idle",
+        ],
+        Array [
+          1073741824,
+          "Offscreen",
+        ],
+      ],
+      "laneToReactMeasureKeyValueArray": Array [
+        Array [
+          1,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "passive-effects",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 6,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [],
+        ],
+        Array [
+          4,
+          Array [],
+        ],
+        Array [
+          8,
+          Array [],
+        ],
+        Array [
+          16,
+          Array [],
+        ],
+        Array [
+          32,
+          Array [],
+        ],
+        Array [
+          64,
+          Array [],
+        ],
+        Array [
+          128,
+          Array [],
+        ],
+        Array [
+          256,
+          Array [],
+        ],
+        Array [
+          512,
+          Array [],
+        ],
+        Array [
+          1024,
+          Array [],
+        ],
+        Array [
+          2048,
+          Array [],
+        ],
+        Array [
+          4096,
+          Array [],
+        ],
+        Array [
+          8192,
+          Array [],
+        ],
+        Array [
+          16384,
+          Array [],
+        ],
+        Array [
+          32768,
+          Array [],
+        ],
+        Array [
+          65536,
+          Array [],
+        ],
+        Array [
+          131072,
+          Array [],
+        ],
+        Array [
+          262144,
+          Array [],
+        ],
+        Array [
+          524288,
+          Array [],
+        ],
+        Array [
+          1048576,
+          Array [],
+        ],
+        Array [
+          2097152,
+          Array [],
+        ],
+        Array [
+          4194304,
+          Array [],
+        ],
+        Array [
+          8388608,
+          Array [],
+        ],
+        Array [
+          16777216,
+          Array [],
+        ],
+        Array [
+          33554432,
+          Array [],
+        ],
+        Array [
+          67108864,
+          Array [],
+        ],
+        Array [
+          134217728,
+          Array [],
+        ],
+        Array [
+          268435456,
+          Array [],
+        ],
+        Array [
+          536870912,
+          Array [],
+        ],
+        Array [
+          1073741824,
+          Array [],
+        ],
+      ],
+      "nativeEvents": Array [],
+      "networkMeasures": Array [],
+      "otherUserTimingMarks": Array [],
+      "reactVersion": "<filtered-version>",
+      "schedulingEvents": Array [
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-state-update",
+          "warning": null,
+        },
+        Object {
+          "componentName": "Component",
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-state-update",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+      ],
+      "snapshotHeight": 0,
+      "snapshots": Array [],
+      "startTime": -10,
+      "suspenseEvents": Array [],
+      "thrownErrors": Array [],
+    },
+  ],
+  "version": 5,
 }
 `;
 
@@ -2721,6 +5803,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     1 => 0,
     2 => 0,
@@ -2739,9 +5822,18 @@ Object {
     6 => 0,
     7 => 0,
   },
-  "interactionIDs": Array [],
-  "priorityLevel": "Normal",
+  "passiveEffectDuration": null,
+  "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2751,6 +5843,9 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": true,
+      "hooks": Array [
+        0,
+      ],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -2760,6 +5855,7 @@ Object {
     4 => Object {
       "context": true,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2767,6 +5863,9 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": true,
+      "hooks": Array [
+        0,
+      ],
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -2778,6 +5877,7 @@ Object {
         "count",
       ],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2785,6 +5885,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": Array [
@@ -2793,6 +5894,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -2809,9 +5911,18 @@ Object {
     3 => 0,
     2 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "LegacyContextProvider",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "type": 1,
+    },
+  ],
 }
 `;
 
@@ -2821,6 +5932,7 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2828,6 +5940,7 @@ Object {
     4 => Object {
       "context": false,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2835,6 +5948,7 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2842,6 +5956,7 @@ Object {
     6 => Object {
       "context": Array [],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2849,6 +5964,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "foo",
@@ -2857,6 +5973,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -2875,9 +5992,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2887,6 +6013,7 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2894,6 +6021,7 @@ Object {
     4 => Object {
       "context": false,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2901,6 +6029,7 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2908,6 +6037,7 @@ Object {
     6 => Object {
       "context": Array [],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2915,6 +6045,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "foo",
@@ -2924,6 +6055,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -2942,9 +6074,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -2954,6 +6095,7 @@ Object {
     5 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2961,6 +6103,7 @@ Object {
     4 => Object {
       "context": false,
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2968,6 +6111,7 @@ Object {
     7 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2975,6 +6119,7 @@ Object {
     6 => Object {
       "context": Array [],
       "didHooksChange": false,
+      "hooks": null,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
@@ -2982,6 +6127,7 @@ Object {
     2 => Object {
       "context": null,
       "didHooksChange": false,
+      "hooks": Array [],
       "isFirstMount": false,
       "props": Array [
         "bar",
@@ -2990,6 +6136,7 @@ Object {
     },
   },
   "duration": 0,
+  "effectDuration": null,
   "fiberActualDurations": Map {
     5 => 0,
     4 => 0,
@@ -3008,9 +6155,18 @@ Object {
     2 => 0,
     1 => 0,
   },
-  "interactionIDs": Array [],
+  "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
+  "updaters": Array [
+    Object {
+      "displayName": "render()",
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+  ],
 }
 `;
 
@@ -3073,6 +6229,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               1,
@@ -3133,9 +6290,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
-          "priorityLevel": "Normal",
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3144,6 +6310,9 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": true,
+                "hooks": Array [
+                  0,
+                ],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -3156,6 +6325,7 @@ Object {
               Object {
                 "context": true,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3166,6 +6336,9 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": true,
+                "hooks": Array [
+                  0,
+                ],
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -3180,6 +6353,7 @@ Object {
                   "count",
                 ],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3190,6 +6364,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": Array [
@@ -3199,6 +6374,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3251,9 +6427,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "LegacyContextProvider",
+              "hocDisplayNames": null,
+              "id": 2,
+              "key": null,
+              "type": 1,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3262,6 +6447,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3272,6 +6458,7 @@ Object {
               Object {
                 "context": false,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3282,6 +6469,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3292,6 +6480,7 @@ Object {
               Object {
                 "context": Array [],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3302,6 +6491,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "foo",
@@ -3311,6 +6501,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3371,9 +6562,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3382,6 +6582,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3392,6 +6593,7 @@ Object {
               Object {
                 "context": false,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3402,6 +6604,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3412,6 +6615,7 @@ Object {
               Object {
                 "context": Array [],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3422,6 +6626,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "foo",
@@ -3432,6 +6637,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3492,9 +6698,18 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
         Object {
           "changeDescriptions": Array [
@@ -3503,6 +6718,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3513,6 +6729,7 @@ Object {
               Object {
                 "context": false,
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3523,6 +6740,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3533,6 +6751,7 @@ Object {
               Object {
                 "context": Array [],
                 "didHooksChange": false,
+                "hooks": null,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3543,6 +6762,7 @@ Object {
               Object {
                 "context": null,
                 "didHooksChange": false,
+                "hooks": Array [],
                 "isFirstMount": false,
                 "props": Array [
                   "bar",
@@ -3552,6 +6772,7 @@ Object {
             ],
           ],
           "duration": 0,
+          "effectDuration": null,
           "fiberActualDurations": Array [
             Array [
               5,
@@ -3612,15 +6833,22 @@ Object {
               0,
             ],
           ],
-          "interactionIDs": Array [],
+          "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
+          "updaters": Array [
+            Object {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
         },
       ],
       "displayName": "LegacyContextProvider",
       "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [],
-      "interactions": Array [],
       "operations": Array [
         Array [
           1,
@@ -3739,6 +6967,8 @@ Object {
           1,
           1,
           11,
+          0,
+          3,
           1,
           1,
           1,
@@ -3827,322 +7057,768 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 4,
-}
-`;
-
-exports[`ProfilingCache should report every traced interaction: Interactions 1`] = `
-Array [
-  Object {
-    "__count": 1,
-    "id": 0,
-    "name": "mount: one child",
-    "timestamp": 0,
-  },
-  Object {
-    "__count": 0,
-    "id": 1,
-    "name": "update: two children",
-    "timestamp": 11,
-  },
-]
-`;
-
-exports[`ProfilingCache should report every traced interaction: imported data 1`] = `
-Object {
-  "dataForRoots": Array [
+  "timelineData": Array [
     Object {
-      "commitData": Array [
-        Object {
-          "changeDescriptions": Array [
-            Array [
-              2,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              4,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-          ],
-          "duration": 11,
-          "fiberActualDurations": Array [
-            Array [
-              1,
-              11,
-            ],
-            Array [
-              2,
-              11,
-            ],
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              4,
-              1,
-            ],
-          ],
-          "fiberSelfDurations": Array [
-            Array [
-              1,
-              0,
-            ],
-            Array [
-              2,
-              10,
-            ],
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              4,
-              1,
-            ],
-          ],
-          "interactionIDs": Array [
-            0,
-          ],
-          "priorityLevel": "Normal",
-          "timestamp": 11,
-        },
-        Object {
-          "changeDescriptions": Array [
-            Array [
-              3,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [],
-                "state": null,
-              },
-            ],
-            Array [
-              5,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": true,
-                "props": null,
-                "state": null,
-              },
-            ],
-            Array [
-              2,
-              Object {
-                "context": null,
-                "didHooksChange": false,
-                "isFirstMount": false,
-                "props": Array [
-                  "count",
-                ],
-                "state": null,
-              },
-            ],
-          ],
-          "duration": 11,
-          "fiberActualDurations": Array [
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              5,
-              1,
-            ],
-            Array [
-              2,
-              11,
-            ],
-            Array [
-              1,
-              11,
-            ],
-          ],
-          "fiberSelfDurations": Array [
-            Array [
-              3,
-              0,
-            ],
-            Array [
-              5,
-              1,
-            ],
-            Array [
-              2,
-              10,
-            ],
-            Array [
-              1,
-              0,
-            ],
-          ],
-          "interactionIDs": Array [
-            1,
-          ],
-          "priorityLevel": "Immediate",
-          "timestamp": 22,
-        },
-      ],
-      "displayName": "Parent",
-      "initialTreeBaseDurations": Array [],
-      "interactionCommits": Array [
-        Array [
-          0,
-          Array [
-            0,
-          ],
-        ],
+      "batchUIDToMeasuresKeyValueArray": Array [
         Array [
           1,
           Array [
-            1,
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+          ],
+        ],
+        Array [
+          2,
+          Array [
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          3,
+          Array [
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          4,
+          Array [
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
+        ],
+        Array [
+          5,
+          Array [
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
           ],
         ],
       ],
-      "interactions": Array [
-        Array [
-          0,
-          Object {
-            "__count": 1,
-            "id": 0,
-            "name": "mount: one child",
-            "timestamp": 0,
-          },
-        ],
+      "componentMeasures": Array [
+        Object {
+          "componentName": "LegacyContextProvider",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "ModernContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextProvider",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "ModernContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextProvider",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "ModernContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextProvider",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "ModernContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextProvider",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "ModernContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextConsumer",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "FunctionComponentWithHooks",
+          "duration": 0,
+          "timestamp": 10,
+          "type": "render",
+          "warning": null,
+        },
+      ],
+      "duration": 20,
+      "flamechart": Array [],
+      "internalModuleSourceToRanges": Array [],
+      "laneToLabelKeyValueArray": Array [
         Array [
           1,
-          Object {
-            "__count": 0,
-            "id": 1,
-            "name": "update: two children",
-            "timestamp": 11,
-          },
+          "Sync",
+        ],
+        Array [
+          2,
+          "InputContinuousHydration",
+        ],
+        Array [
+          4,
+          "InputContinuous",
+        ],
+        Array [
+          8,
+          "DefaultHydration",
+        ],
+        Array [
+          16,
+          "Default",
+        ],
+        Array [
+          32,
+          "TransitionHydration",
+        ],
+        Array [
+          64,
+          "Transition",
+        ],
+        Array [
+          128,
+          "Transition",
+        ],
+        Array [
+          256,
+          "Transition",
+        ],
+        Array [
+          512,
+          "Transition",
+        ],
+        Array [
+          1024,
+          "Transition",
+        ],
+        Array [
+          2048,
+          "Transition",
+        ],
+        Array [
+          4096,
+          "Transition",
+        ],
+        Array [
+          8192,
+          "Transition",
+        ],
+        Array [
+          16384,
+          "Transition",
+        ],
+        Array [
+          32768,
+          "Transition",
+        ],
+        Array [
+          65536,
+          "Transition",
+        ],
+        Array [
+          131072,
+          "Transition",
+        ],
+        Array [
+          262144,
+          "Transition",
+        ],
+        Array [
+          524288,
+          "Transition",
+        ],
+        Array [
+          1048576,
+          "Transition",
+        ],
+        Array [
+          2097152,
+          "Transition",
+        ],
+        Array [
+          4194304,
+          "Retry",
+        ],
+        Array [
+          8388608,
+          "Retry",
+        ],
+        Array [
+          16777216,
+          "Retry",
+        ],
+        Array [
+          33554432,
+          "Retry",
+        ],
+        Array [
+          67108864,
+          "Retry",
+        ],
+        Array [
+          134217728,
+          "SelectiveHydration",
+        ],
+        Array [
+          268435456,
+          "IdleHydration",
+        ],
+        Array [
+          536870912,
+          "Idle",
+        ],
+        Array [
+          1073741824,
+          "Offscreen",
         ],
       ],
-      "operations": Array [
+      "laneToReactMeasureKeyValueArray": Array [
         Array [
           1,
-          1,
-          15,
-          6,
-          80,
-          97,
-          114,
-          101,
-          110,
-          116,
-          5,
-          67,
-          104,
-          105,
-          108,
-          100,
-          1,
-          48,
-          1,
-          1,
-          11,
-          1,
-          1,
-          4,
-          1,
-          11000,
-          1,
-          2,
-          5,
-          1,
-          0,
-          1,
-          0,
-          4,
-          2,
-          11000,
-          1,
-          3,
-          5,
-          2,
-          2,
-          2,
-          3,
-          4,
-          3,
-          0,
-          1,
-          4,
-          8,
-          2,
-          2,
-          2,
-          0,
-          4,
-          4,
-          1000,
+          Array [
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 1,
+              "depth": 1,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "layout-effects",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 2,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 3,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 4,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render-idle",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "render",
+            },
+            Object {
+              "batchUID": 5,
+              "depth": 0,
+              "duration": 0,
+              "lanes": "0b0000000000000000000000000000001",
+              "timestamp": 10,
+              "type": "commit",
+            },
+          ],
         ],
         Array [
-          1,
-          1,
+          2,
+          Array [],
+        ],
+        Array [
+          4,
+          Array [],
+        ],
+        Array [
           8,
-          5,
-          67,
-          104,
-          105,
-          108,
-          100,
-          1,
-          49,
-          1,
-          5,
-          5,
-          2,
-          2,
-          1,
-          2,
-          4,
-          5,
-          1000,
-          4,
-          2,
-          12000,
-          3,
-          2,
-          3,
-          3,
-          5,
-          4,
-          4,
-          1,
-          12000,
+          Array [],
+        ],
+        Array [
+          16,
+          Array [],
+        ],
+        Array [
+          32,
+          Array [],
+        ],
+        Array [
+          64,
+          Array [],
+        ],
+        Array [
+          128,
+          Array [],
+        ],
+        Array [
+          256,
+          Array [],
+        ],
+        Array [
+          512,
+          Array [],
+        ],
+        Array [
+          1024,
+          Array [],
+        ],
+        Array [
+          2048,
+          Array [],
+        ],
+        Array [
+          4096,
+          Array [],
+        ],
+        Array [
+          8192,
+          Array [],
+        ],
+        Array [
+          16384,
+          Array [],
+        ],
+        Array [
+          32768,
+          Array [],
+        ],
+        Array [
+          65536,
+          Array [],
+        ],
+        Array [
+          131072,
+          Array [],
+        ],
+        Array [
+          262144,
+          Array [],
+        ],
+        Array [
+          524288,
+          Array [],
+        ],
+        Array [
+          1048576,
+          Array [],
+        ],
+        Array [
+          2097152,
+          Array [],
+        ],
+        Array [
+          4194304,
+          Array [],
+        ],
+        Array [
+          8388608,
+          Array [],
+        ],
+        Array [
+          16777216,
+          Array [],
+        ],
+        Array [
+          33554432,
+          Array [],
+        ],
+        Array [
+          67108864,
+          Array [],
+        ],
+        Array [
+          134217728,
+          Array [],
+        ],
+        Array [
+          268435456,
+          Array [],
+        ],
+        Array [
+          536870912,
+          Array [],
+        ],
+        Array [
+          1073741824,
+          Array [],
         ],
       ],
-      "rootID": 1,
+      "nativeEvents": Array [],
+      "networkMeasures": Array [],
+      "otherUserTimingMarks": Array [],
+      "reactVersion": "<filtered-version>",
+      "schedulingEvents": Array [
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "componentName": "LegacyContextProvider",
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-state-update",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+        Object {
+          "lanes": "0b0000000000000000000000000000001",
+          "timestamp": 10,
+          "type": "schedule-render",
+          "warning": null,
+        },
+      ],
+      "snapshotHeight": 0,
       "snapshots": Array [],
+      "startTime": -10,
+      "suspenseEvents": Array [],
+      "thrownErrors": Array [],
     },
   ],
-  "version": 4,
+  "version": 5,
 }
 `;

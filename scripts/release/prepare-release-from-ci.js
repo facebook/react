@@ -9,11 +9,10 @@ const downloadBuildArtifacts = require('./shared-commands/download-build-artifac
 const parseParams = require('./shared-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
 const testPackagingFixture = require('./shared-commands/test-packaging-fixture');
-const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 
 const run = async () => {
   try {
-    addDefaultParamValue(null, '--commit', 'master');
+    addDefaultParamValue(null, '--commit', 'main');
 
     const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
@@ -22,10 +21,10 @@ const run = async () => {
 
     if (!params.skipTests) {
       await testPackagingFixture(params);
-      await testTracingFixture(params);
     }
 
-    await printPrereleaseSummary(params, false);
+    const isLatestRelease = params.releaseChannel === 'latest';
+    await printPrereleaseSummary(params, isLatestRelease);
   } catch (error) {
     handleError(error);
   }

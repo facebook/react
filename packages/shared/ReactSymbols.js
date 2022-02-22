@@ -26,11 +26,11 @@ export let REACT_SUSPENSE_LIST_TYPE = 0xead8;
 export let REACT_MEMO_TYPE = 0xead3;
 export let REACT_LAZY_TYPE = 0xead4;
 export let REACT_SCOPE_TYPE = 0xead7;
-export let REACT_OPAQUE_ID_TYPE = 0xeae0;
 export let REACT_DEBUG_TRACING_MODE_TYPE = 0xeae1;
 export let REACT_OFFSCREEN_TYPE = 0xeae2;
 export let REACT_LEGACY_HIDDEN_TYPE = 0xeae3;
 export let REACT_CACHE_TYPE = 0xeae4;
+export let REACT_TRACING_MARKER_TYPE = 0xeae5;
 
 if (typeof Symbol === 'function' && Symbol.for) {
   const symbolFor = Symbol.for;
@@ -47,11 +47,11 @@ if (typeof Symbol === 'function' && Symbol.for) {
   REACT_MEMO_TYPE = symbolFor('react.memo');
   REACT_LAZY_TYPE = symbolFor('react.lazy');
   REACT_SCOPE_TYPE = symbolFor('react.scope');
-  REACT_OPAQUE_ID_TYPE = symbolFor('react.opaque.id');
   REACT_DEBUG_TRACING_MODE_TYPE = symbolFor('react.debug_trace_mode');
   REACT_OFFSCREEN_TYPE = symbolFor('react.offscreen');
   REACT_LEGACY_HIDDEN_TYPE = symbolFor('react.legacy_hidden');
   REACT_CACHE_TYPE = symbolFor('react.cache');
+  REACT_TRACING_MARKER_TYPE = symbolFor('react.tracing_marker');
 }
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;

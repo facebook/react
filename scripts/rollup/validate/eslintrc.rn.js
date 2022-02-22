@@ -7,33 +7,37 @@ module.exports = {
   },
   globals: {
     // ES6
-    Map: true,
-    Set: true,
-    Symbol: true,
-    Proxy: true,
-    WeakMap: true,
-    WeakSet: true,
-    Reflect: true,
+    Map: 'readonly',
+    Set: 'readonly',
+    Symbol: 'readonly',
+    Proxy: 'readonly',
+    WeakMap: 'readonly',
+    WeakSet: 'readonly',
+    Reflect: 'readonly',
     // Vendor specific
-    MSApp: true,
-    __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
+    MSApp: 'readonly',
+    __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
     // FB
-    __DEV__: true,
+    __DEV__: 'readonly',
     // Fabric. See https://github.com/facebook/react/pull/15490
     // for more information
-    nativeFabricUIManager: true,
+    nativeFabricUIManager: 'readonly',
     // Trusted Types
-    trustedTypes: true,
-
+    trustedTypes: 'readonly',
+    // RN supports this
+    setImmediate: 'readonly',
     // Scheduler profiling
-    SharedArrayBuffer: true,
-    Int32Array: true,
-    ArrayBuffer: true,
+    Int32Array: 'readonly',
+    ArrayBuffer: 'readonly',
 
-    TaskController: true,
+    TaskController: 'readonly',
+    reportError: 'readonly',
 
     // jest
-    jest: true,
+    jest: 'readonly',
+
+    // act
+    IS_REACT_ACT_ENVIRONMENT: 'readonly',
   },
   parserOptions: {
     ecmaVersion: 5,

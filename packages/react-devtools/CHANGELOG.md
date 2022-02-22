@@ -1,13 +1,394 @@
 # React DevTools changelog
 
-<details>
-  <summary>
-    Changes that have landed in master but are not yet released.
-    Click to see more.
-  </summary>
+<!-- RELEASE_SCRIPT_TOKEN -->
 
-  <!-- Upcoming changes go here -->
-</details>
+## 4.23.0 (January 24, 2022)
+
+### Feature
+* DevTools: Only show StrictMode badge on root elements ([bvaughn](https://github.com/bvaughn) in [#23012](https://github.com/facebook/react/pull/23012))
+
+#### Bugfix
+* Don't crawl unmounted subtrees when profiling starts ([bvaughn](https://github.com/bvaughn) in [#23162](https://github.com/facebook/react/pull/23162))
+* Filter deleted components from the updaters list to avoid runtime errors later ([lunaruan](https://github.com/lunaruan) in [#23156](https://github.com/facebook/react/pull/23156))
+
+#### Misc
+* DevTools (not React) logs Timeline performance data to the User Timing API ([bvaughn](https://github.com/bvaughn) in [#23102](https://github.com/facebook/react/pull/23102))
+
+## 4.22.1 (December 14, 2021)
+
+* Fix invalid `require()` statements in `react-devtools-inline` ([bvaughn](https://github.com/bvaughn) in [#22961](https://github.com/facebook/react/pull/22961))
+* Fix invalid `files` array in `react-devtools` `package.json` ([bvaughn](https://github.com/bvaughn) in [#22960](https://github.com/facebook/react/pull/22960))
+
+## 4.22.0 (December 13, 2021)
+
+#### A note for React Native users
+React DevTools has [two main pieces](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md#overview):
+* The *frontend* users interact with (the Components tree, the Profiler, etc.).
+* The *backend* which runs in the same context as React itself. (In the web page with React DOM or shipped on the device with the React Native runtime.)
+
+This release updates the [**protocol** that DevTools uses](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md#serializing-the-tree) to communicate between the "frontend" and "backend" components.
+
+Because React Native embeds a copy of the React DevTools "backend" ([`react-devtools-core/backend`](https://www.npmjs.com/package/react-devtools-core)), the "frontend" (UI) needs to match. This means you may be prompted to upgrade (or downgrade) your React DevTools based on which version of React Native your app uses.
+
+#### Features
+* Support multiple DevTools instances per page ([@bvaughn](https://github.com/bvaughn) in [#22949](https://github.com/facebook/react/pull/22949))
+* Advocate for StrictMode usage within Components tree ([@bvaughn](https://github.com/bvaughn) in [#22886](https://github.com/facebook/react/pull/22886))
+* StyleX plug-in for resolving atomic styles to values for props.xstyle ([@bvaughn](https://github.com/bvaughn) in [#22808](https://github.com/facebook/react/pull/22808))
+* Timeline search ([@bvaughn](https://github.com/bvaughn) in [#22799](https://github.com/facebook/react/pull/22799))
+* Timeline: Improved snapshot view ([@bvaughn](https://github.com/bvaughn) in [#22706](https://github.com/facebook/react/pull/22706))
+* Display root type for root updates in "what caused this update?" ([@eps1lon](https://github.com/eps1lon) in [#22599](https://github.com/facebook/react/pull/22599))
+
+#### Bugfix
+* DevTools should inject itself for XHTML pages too (not just HTML) ([@bvaughn](https://github.com/bvaughn) in [#22932](https://github.com/facebook/react/pull/22932))
+* Don't restore profiling data if we're profling ([@eps1lon](https://github.com/eps1lon) in [#22753](https://github.com/facebook/react/pull/22753))
+* DevTools should properly report re-renders due to (use)context changes ([@bvaughn](https://github.com/bvaughn) in [#22746](https://github.com/facebook/react/pull/22746))
+* Filter empty commits (all Fibers bailed out) from Profiler ([@bvaughn](https://github.com/bvaughn) in [#22745](https://github.com/facebook/react/pull/22745))
+* Accept json file in import fileinput ([@jyash97](https://github.com/jyash97) in [#22717](https://github.com/facebook/react/pull/22717))
+* Expose css vars to reach-ui portal components ([@jyash97](https://github.com/jyash97) in [#22716](https://github.com/facebook/react/pull/22716))
+* Fix DevTools advanced tooltip display conditional check ([@bvaughn](https://github.com/bvaughn) in [#22669](https://github.com/facebook/react/pull/22669))
+
+#### Misc
+* Emit new event when DevTools connects in standalone app ([@jstejada](https://github.com/jstejada) in [#22848](https://github.com/facebook/react/pull/22848))
+
+## 4.21.0 (October 31, 2021)
+
+#### Features
+* Scheduling Profiler: Add marks for component effects (mount and unmount) ([@bvaughn](https://github.com/bvaughn) in [#22578](https://github.com/facebook/react/pull/22578))
+* Scheduling Profiler: De-emphasize React internal frames ([bvaughn](https://github.com/bvaughn) in [#22588](https://github.com/facebook/react/pull/22588))
+
+
+#### Bugfix
+* Revert logic for checking for duplicate installations of DevTools potentially causing issues loading Components tab ([@jstejada](https://github.com/jstejada) in [#22638](https://github.com/facebook/react/pull/22638))
+* Scheduling Profiler does not warn about long transitions ([@bvaughn](https://github.com/bvaughn) in [#22614](https://github.com/facebook/react/pull/22614))
+* Re-enable 'Reload and Start Profiling' for Microsoft Edge ([@eoandersson](https://github.com/eoandersson) in [#22631](https://github.com/facebook/react/pull/22631))
+
+
+#### Misc
+* DevTools supports ENV-injected version for better internal bug reports ([@bvaughn](https://github.com/bvaughn) in [#22635](https://github.com/facebook/react/pull/22635))
+* Fix typos ([@KonstHardy](https://github.com/KonstHardy) in [#22494](https://github.com/facebook/react/pull/22494))
+
+## 4.20.2 (October 20, 2021)
+
+#### Bugfix
+* Dev Tools: Relax constraint on passing extensionId for backend init ([@jstejada](https://github.com/jstejada) in [#22597](https://github.com/facebook/react/pull/22597))
+* DevTools: Fix passing extensionId in evaled postMessage calls ([@jstejada](https://github.com/jstejada) in [#22590](https://github.com/facebook/react/pull/22590))
+
+## 4.20.1 (October 19, 2021)
+
+#### Bugfix
+* Only show DevTools warning about unrecognized build in Chrome ([@jstejada](https://github.com/jstejada) in [#22571](https://github.com/facebook/react/pull/22571))
+* DevTools: Include Edge in browser name detection ([@jstejada](https://github.com/jstejada) in [#22584](https://github.com/facebook/react/pull/22584))
+
+## 4.20.0 (October 15, 2021)
+
+#### Features
+* Allow to use the Profiler when no client is connected in standalone DevTools ([@gabrieltrompiz](https://github.com/gabrieltrompiz) in [#22551](https://github.com/facebook/react/pull/22551))
+
+#### Bugfix
+* Surface backend errors during inspection in the frontend UI ([@bvaughn](https://github.com/bvaughn) in [#22546](https://github.com/facebook/react/pull/22546))
+* Prevent splash page in standalone app from becoming unresponsive after the disconnection of a client  (#22558) ([@gabrieltrompiz](https://github.com/gabrieltrompiz) in [#22560](https://github.com/facebook/react/pull/22560))
+* Prevent errors/crashing when multiple installs of DevTools are present ([@jstejada](https://github.com/jstejada) in [#22517](https://github.com/facebook/react/pull/22517))
+* Update Fiber logic in backend renderer to match implementation in React ([@jstejada](https://github.com/jstejada) in [#22527](https://github.com/facebook/react/pull/22527))
+
+#### Misc
+* Show warning in UI when duplicate installations of DevTools extension are detected ([@jstejada](https://github.com/jstejada) in [#22563](https://github.com/facebook/react/pull/22563))
+* Improved filenames of built worker files ([@akgupta0777](https://github.com/akgupta0777) in [#22559](https://github.com/facebook/react/pull/22559))
+
+## 4.19.2 (October 8, 2021)
+
+#### Bugfix
+* Show different error boundary UI for timeouts than normal errors ([bvaughn](https://github.com/bvaughn) in [#22483](https://github.com/facebook/react/pull/22483))
+* Fixed bug where deleting a component filter would also close the settings modal ([Biki-das](https://github.com/Biki-das) in [#22484](https://github.com/facebook/react/pull/22484))
+
+## 4.19.1 (October 1, 2021)
+
+#### Bugfix
+* Fixed potential cache miss when insepcting elements ([bvaughn](https://github.com/bvaughn) in [#22472](https://github.com/facebook/react/pull/22472))
+
+## 4.19.0 (September 29, 2021)
+
+#### Features
+* Scheduling Profiler: Show Suspense resource .displayName ([bvaughn](https://github.com/bvaughn) in [#22451](https://github.com/facebook/react/pull/22451))
+* Scheduling Profiler marks should include thrown Errors ([bvaughn](https://github.com/bvaughn) in [#22419](https://github.com/facebook/react/pull/22419))
+* Don't patch console during first render in strict mode ([lunaruan](https://github.com/lunaruan) in [#22308](https://github.com/facebook/react/pull/22308))
+* Show which hook indicies changed when profiling for all builds ([bvaughn](https://github.com/bvaughn) in [#22365](https://github.com/facebook/react/pull/22365))
+* Display actual ReactDOM API name in root type ([eps1lon](https://github.com/eps1lon) in [#22363](https://github.com/facebook/react/pull/22363))
+* Add named hooks support to standalone and inline DevTools ([jstejada](https://github.com/jstejada) in [#22320](https://github.com/facebook/react/pull/22320) and [bvaughn](https://github.com/bvaughn) in [#22263](https://github.com/facebook/react/pull/22263))
+#### Bugfix
+* DevTools encoding supports multibyte characters (e.g. "🟩") ([bvaughn](https://github.com/bvaughn) in [#22424](https://github.com/facebook/react/pull/22424))
+* Improve DEV errors if string coercion throws (Temporal.*, Symbol, etc.) ([justingrant](https://github.com/justingrant) in [#22064](https://github.com/facebook/react/pull/22064))
+* Fix memory leak caused by not storing alternate Fiber pointer ([bvaughn](https://github.com/bvaughn) in [#22346](https://github.com/facebook/react/pull/22346))
+* Fix call stack exceeded error in `utfDecodeString()` ([bvaughn](https://github.com/bvaughn) in [#22330](https://github.com/facebook/react/pull/22330))
+* Fix runtime error when inspecting an element times out ([jstejada](https://github.com/jstejada) in [#22329](https://github.com/facebook/react/pull/22329))
+
+#### Performance
+* DevTools: Lazily parse indexed map sections ([bvaughn](https://github.com/bvaughn) in [#22415](https://github.com/facebook/react/pull/22415))
+* DevTools: Hook names optimizations ([bvaughn](https://github.com/bvaughn) in [#22403](https://github.com/facebook/react/pull/22403))
+* Replaced `network.onRequestFinished()` caching with `network.getHAR()` ([bvaughn](https://github.com/bvaughn) in [#22285](https://github.com/facebook/react/pull/22285))
+
+## 4.18.0 (September 1, 2021)
+
+#### Features
+* DevTools: Improve named hooks network caching ([bvaughn](https://github.com/bvaughn) in [#22198](https://github.com/facebook/react/pull/22198))
+* Console Logging for StrictMode Double Rendering ([lunaruan](https://github.com/lunaruan) in [#22030](https://github.com/facebook/react/pull/22030))
+
+### Bugfix
+* Fix react-devtools-inline size issues ([lunaruan](https://github.com/lunaruan) in [#22232](https://github.com/facebook/react/pull/22232))
+* devtools: Don't display hook index of useContext ([eps1lon](https://github.com/eps1lon) in [#22200](https://github.com/facebook/react/pull/22200))
+* Throw error in console without interfering with logs ([lunaruan](https://github.com/lunaruan) in [#22175](https://github.com/facebook/react/pull/22175))
+
+
+## 4.17.0 (August 24, 2021)
+
+#### Features
+* Scheduling Profiler: Add network measures ([bvaughn](https://github.com/bvaughn) in [#22112](https://github.com/facebook/react/pull/22112))
+* Add options for disabling some features ([hbenl](https://github.com/hbenl) in [#22136](https://github.com/facebook/react/pull/22136))
+
+#### Bugfix
+* Fixed broken scroll-to error or warning feature ([bvaughn](https://github.com/bvaughn) and [eps1lon](https://github.com/eps1lon) in [#22147](https://github.com/facebook/react/pull/22147) and [#22144](https://github.com/facebook/react/pull/22144))
+* Replaced WeakMap with LRU for inspected element cache ([bvaughn](https://github.com/bvaughn) in [#22160](https://github.com/facebook/react/pull/22160))
+* Add more detailed error handling if profiling data does not have any React marks ([byronluk](https://github.com/byronluk) in [#22157](https://github.com/facebook/react/pull/22157))
+* Various named hooks bug fixes ([jstejada](https://github.com/jstejada) in [#22129](https://github.com/facebook/react/pull/22129), [#22128](https://github.com/facebook/react/pull/22128), [#22096](https://github.com/facebook/react/pull/22096), and [#22148](https://github.com/facebook/react/pull/22148))
+* Fix tooltip wheel event regression ([bvaughn](https://github.com/bvaughn) in [#22130](https://github.com/facebook/react/pull/22130))
+* Replace `source-map` library with `source-map-js` for named hooks source map parsing ([bvaughn](https://github.com/bvaughn) in [#22126](https://github.com/facebook/react/pull/22126))
+
+## 4.16.0 (August 16, 2021)
+#### Features
+* Scheduling Profiler: Inline snapshots ([bvaughn](https://github.com/bvaughn) in [#22091](https://github.com/facebook/react/pull/22091) and[bvaughn](https://github.com/bvaughn) in [#22088](https://github.com/facebook/react/pull/22088))
+#### Bugfix
+* split parsing code to unblock Firefox release ([lunaruan](https://github.com/lunaruan) in [#22102](https://github.com/facebook/react/pull/22102))
+* Scheduling profiler: Canvas views clip by default ([bvaughn](https://github.com/bvaughn) in [#22100](https://github.com/facebook/react/pull/22100))
+* Fixed Components tree indentation bug for Chrome extension ([bvaughn](https://github.com/bvaughn) in [#22083](https://github.com/facebook/react/pull/22083))
+
+## 4.15.0 (August 11, 2021)
+
+#### Features
+* Added new scheduling profiler tool ([bvaughn](https://github.com/bvaughn), [kartikcho](https://github.com/kartikcho), and [taneliang](https://github.com/taneliang) in [#22006](https://github.com/facebook/react/pull/22006), [#21990](https://github.com/facebook/react/pull/21990), [#22013](https://github.com/facebook/react/pull/22013), [#21897](https://github.com/facebook/react/pull/21897), [#22029](https://github.com/facebook/react/pull/22029), [#22038](https://github.com/facebook/react/pull/22038), [#22043](https://github.com/facebook/react/pull/22043), [#21947](https://github.com/facebook/react/pull/21947), [#21966](https://github.com/facebook/react/pull/21966), [#21970](https://github.com/facebook/react/pull/21970), [#21971](https://github.com/facebook/react/pull/21971), [#21975](https://github.com/facebook/react/pull/21975)).
+* Parsing source code for extracting names for hooks now happens in a worker ([tsirlucas](https://github.com/tsirlucas) in [#21902](https://github.com/facebook/react/pull/21902)).
+* Format hyperlink text as a clickable link ([kkragoth](https://github.com/kkragoth) in [#21964](https://github.com/facebook/react/pull/21964)).
+* Named hooks can now be extracted from extended source maps ([jstejada](https://github.com/jstejada) [#22010](https://github.com/facebook/react/pull/22010), [#22073](https://github.com/facebook/react/pull/22073)).
+* Hook indices now show up as a reason why a component rendered in the profiler ([mrkev](https://github.com/mrkev) in [#22073](https://github.com/facebook/react/pull/22073)).
+* Optimize images in DevTools ([ilhamsyahids](https://github.com/ilhamsyahids) in [#21968](https://github.com/facebook/react/pull/21968)).
+
+#### Bugfix
+* Named hooks cache is correctly cleared after Fast Refresh ([bvaughn](https://github.com/bvaughn) in [#21891](https://github.com/facebook/react/pull/21891)).
+* Hook names are correctly extracted when parsing nested hook calls ([jstejada](https://github.com/jstejada) in [#22037](https://github.com/facebook/react/pull/22037), [#21996](https://github.com/facebook/react/pull/21996)).
+* Highlight updates with memoized components ([Selnapenek](https://github.com/Selnapenek) in [#22008](https://github.com/facebook/react/pull/22008)).
+* Set app icon on MacOS ([christian-schulze](https://github.com/christian-schulze) in [#21908](https://github.com/facebook/react/pull/21908)).
+* Updated @reach packages to fix unmount bug ([bvaughn](https://github.com/bvaughn) in [#22075](https://github.com/facebook/react/pull/22075)).
+
+#### Misc
+* Refactor imperative theme code ([houssemchebeb](https://github.com/houssemchebeb) in [#21950](https://github.com/facebook/react/pull/21950)).
+* Change some remaining instances of master -> main ([shubham9411](https://github.com/shubham9411) in [#21982](https://github.com/facebook/react/pull/21982)).
+
+##### Scheduling profiler
+
+###### What is React working on?
+
+React’s previous Profiler primarily reports how fast (or slow) components are when rendering. It didn’t provide an overview of *what React is doing* (the actual cooperative scheduling bits). The new profiler does. It shows when components schedule state updates and when React works on them. It also shows how React categorizes and prioritizing what it works on.
+
+Here’s a profile for a simple app that uses only the legacy (synchronous) `ReactDOM.render` API. The profiler shows that all of the work scheduled and rendered by this app is done at *synchronous* priority:
+
+https://user-images.githubusercontent.com/29597/129042321-56985f5a-264e-4f3a-a8b7-9371d75c690f.mp4
+
+Here’s a more interesting profile for an app that’s rendered at _default_ priority using the new [`createRoot` API](https://github.com/reactwg/react-18/discussions/5), then updates _synchronously_ in response to an “input” event to manage a ["controlled component"](https://reactjs.org/docs/forms.html#controlled-components):
+
+https://user-images.githubusercontent.com/29597/129074959-50912a63-0215-4be5-b51b-1e0004fcd2a1.mp4
+
+Here’s part of a profile showing an idle app (no JavaScript running). In this case, React does some pre-rendering work for components that are “offscreen” (not currently displayed).
+
+https://user-images.githubusercontent.com/29597/128971757-612f232f-c64f-4447-a766-66a0516e8f49.mp4
+
+Note that “offscreen” refers to a new API and set of features that we haven’t talked about much yet except for [some passing references](https://github.com/reactwg/react-18/discussions/18#discussioncomment-795661). We’ll talk more about it in future posts.
+
+###### What are “transitions” and how do they work?
+We recently shared an update about the new [`startTransition` API](https://github.com/reactwg/react-18/discussions/41). This API helps apps feel responsive even when there are large updates by splitting the work into (1) a quick update to show that the app has received some input and (2) a slower update (the “transition”) that actually does any heavy lifting needed as a result of the input.
+
+Here is an example profile that uses the transition API. First React renders a small update that shows the user some visual feedback (like updating a controlled component or showing an inline loading indicator). Then it renders a larger update that, in this case, computes some expensive value.
+
+https://user-images.githubusercontent.com/29597/129079176-0995c8c0-e95a-4f44-8d55-891a7efa35c0.mp4
+
+###### How does Suspense impact rendering performance?
+
+You may have heard mention of “suspense” in past talks or seen it referenced [in our docs](https://reactjs.org/docs/react-api.html#suspense). Although full support for data fetching via Suspense is [expected to be released sometime after React 18.0](https://github.com/reactwg/react-18/discussions/47#discussioncomment-847004), you can use Suspense today for things like lazy-loading React components. The new profiler shows when components suspend during render and how that impacts overall rendering performance.
+
+Here’s an example profile that suspends during the initial render to lazy-load a component using [`React.lazy`](https://reactjs.org/docs/code-splitting.html#reactlazy). While this component is loading, React shows a “fallback“ (placeholder UI). Once the component finishes loading, React retries the render and commits the final UI.
+
+https://user-images.githubusercontent.com/29597/129054366-2700e7e8-0172-4f61-9453-475acd740456.mp4
+
+We plan to expand support for Suspense in the coming weeks to more explicitly show when suspense fallbacks are rendered and which subsequent renders are related to an initial update that suspended.
+
+###### What else might cause a render to get delayed?
+
+Suspense can cause a render to get delayed as React waits for data to load, but React can also get stuck waiting on a lot of JavaScript to run.
+
+React profiling tools have previously focused on only reporting what React (or React components) are doing, but any JavaScript the browser runs affects performance. The new profiler shows non-React JavaScript as well, making it easy to see when it delays React from rendering.
+
+https://user-images.githubusercontent.com/29597/128971952-7c4e7e11-f4fb-497e-b643-4d9b3994b590.mp4
+
+###### What can you do to improve performance?
+
+Until now, DevTools (and the Profiler) has provided information without commentary. The new profiler takes a more active approach– highlighting where we think performance can be improved and providing suggestions.
+
+For example, suspending during an update is generally a bad user experience because it causes previously shown components to be unmounted (hidden) so the fallback can be shown while data loads. This can be avoided using the new [Transition API](https://github.com/reactwg/react-18/discussions/41). If you forget to add a transition to an update that suspends, the new profiler will warn you about this:
+
+https://user-images.githubusercontent.com/29597/128972228-3b23f01a-8017-43ad-b371-975ffed26c06.mp4
+
+The new profiler also warns about scheduling a long, synchronous React update inside of event handler.
+
+https://user-images.githubusercontent.com/29597/128972000-d7477ba3-b779-46f2-b141-aaa712e9d6d2.mp4
+
+Another thing the new profiler will warn about is long-running renders scheduled from layout effects (`useLayoutEffect` or `componentDidMount`/`componentDidUpdate`). These updates (called “nested updates”) are sometimes necessary to adjust layout before the browser paints, but they should be *fast*. Slow nested updates make the browser feel unresponsive.
+
+https://user-images.githubusercontent.com/29597/128972017-3ed0e682-751c-46fb-a6c5-271f255c8087.mp4
+
+## 4.14.0 (July 17, 2021)
+#### Features
+* Display hook names for inspected components ([saphal1998](https://github.com/saphal1998), [VibhorCodecianGupta](https://github.com/VibhorCodecianGupta), [bvaughn](https://github.com/bvaughn), and [motiz88](https://github.com/motiz88) in [#21641](https://github.com/facebook/react/pull/21641), [#21790](https://github.com/facebook/react/pull/21790), [#21814](https://github.com/facebook/react/pull/21814), [#21815](https://github.com/facebook/react/pull/21815), [#21831](https://github.com/facebook/react/pull/21831), [#21833](https://github.com/facebook/react/pull/21833), [#21835](https://github.com/facebook/react/pull/21835), [#21865](https://github.com/facebook/react/pull/21865), [#21871](https://github.com/facebook/react/pull/21871), [#21874](https://github.com/facebook/react/pull/21874), [#21891](https://github.com/facebook/react/pull/21891))
+* Control for manually toggling error boundaries ([baopham](https://github.com/baopham) in [#21583](https://github.com/facebook/react/pull/21583))
+* Allow user to manually enter Profiler commit number to jump between commits ([srubin](https://github.com/srubin) in [#19957](https://github.com/facebook/react/pull/19957))
+
+##### Display hook names for inspected components
+![DevTools parsing hook names](https://user-images.githubusercontent.com/29597/124013541-68c2cb00-d9b0-11eb-83ab-81a5180da46b.gif)
+
+##### Control for manually toggling error boundaries
+![DevTools error boundary toggle](https://user-images.githubusercontent.com/29597/125891522-30f0d99d-407f-4c31-b5a7-e9d0bd3fa554.gif)
+
+## 4.13.5 (May 25, 2021)
+#### Bugfix
+* Handle edge case where a component mounts before its "owner" (in DEV mode) that previously caused a validation error ([bvaughn](https://github.com/bvaughn) in [#21562](https://github.com/facebook/react/pull/21562))
+
+## 4.13.4 (May 20, 2021)
+#### Bugfix
+* Fix edge-case Fast Refresh bug that caused Fibers with warnings/errors to be untracked prematurely (which broke componentinspection in DevTools) ([bvaughn](https://github.com/bvaughn) in [#21536](https://github.com/facebook/react/pull/21536))
+* Revert force deep re-mount when Fast Refresh detected (was no longer necessary) ([bvaughn](https://github.com/bvaughn) in [#21539](https://github.com/facebook/react/pull/21539))
+
+## 4.13.3 (May 19, 2021)
+#### Misc
+* Updated `react` and `react-dom` API imports in preparation for upcoming stable release ([bvaughn](https://github.com/bvaughn) in [#21488](https://github.com/facebook/react/pull/21488))
+
+#### Bugfix
+* Reload all roots after Fast Refresh force-remount (to avoid corrupted Store state) ([bvaughn](https://github.com/bvaughn) in [#21516](https://github.com/facebook/react/pull/21516) and [#21523](https://github.com/facebook/react/pull/21523))
+* Errors thrown by Store can be dismissed so DevTools remain usable in many cases ([bvaughn](https://github.com/bvaughn) in [#21520](https://github.com/facebook/react/pull/21520))
+* Bugfix for `useState()` object with `hasOwnProperty` key ([bvaughn](https://github.com/bvaughn) in [#21524](https://github.com/facebook/react/pull/21524))
+* Fixed string concatenation problem when a `Symbol` was logged to `console.error` or `console.warn` ([bvaughn](https://github.com/bvaughn) in [#21521](https://github.com/facebook/react/pull/21521))
+* DevTools: Fixed version range NPM syntax
+ ([bvaughn](https://github.com/bvaughn) in [9cf1069](https://github.com/facebook/react/commit/9cf1069ffc5f3835506e314ef8c2e80bbfa8bdca#diff))
+* Tweaked DevTools error template title to match issue form template ([bvaughn](https://github.com/bvaughn) in [1a2d792](https://github.com/facebook/react/commit/1a2d7925035531e5767ff31ff8d0d581b5f94d49))
+
+## 4.13.2 (May 7, 2021)
+#### Misc
+* Improved bug report template to use new [GitHub issue forms](https://gh-community.github.io/issue-template-feedback/structured/) ([bvaughn](https://github.com/bvaughn) in [#21450](https://github.com/facebook/react/pull/21450))
+
+## 4.13.1 (April 28, 2021)
+#### Bugfix
+* Improve display name logic for `React.memo` components ([bvaughn](https://github.com/bvaughn) in [#21392](https://github.com/facebook/react/pull/21392))
+* Fixed potential runtime error with Suspense in versions <= 17 ([bvaughn](https://github.com/bvaughn) in [#21432](https://github.com/facebook/react/pull/21432))
+* Errors thrown in the Store are no longer silent ([bvaughn](https://github.com/bvaughn) in [#21426](https://github.com/facebook/react/pull/21426))
+
+#### Misc
+* Improved bug report template ([bvaughn](https://github.com/bvaughn) in [#21413](https://github.com/facebook/react/pull/21413)), [#21421](https://github.com/facebook/react/pull/21421))
+
+## 4.13.0 (April 28, 2021)
+#### Features
+* Add Bridge protocol version backend/frontend ([bvaughn](https://github.com/bvaughn) in [#21331](https://github.com/facebook/react/pull/21331))
+
+#### Bugfix
+* DevTools iterates over siblings during mount (rather than recursing) to avoid stack overflow errors ([bvaughn](https://github.com/bvaughn) in [#21377](https://github.com/facebook/react/pull/21377))
+* Multiple error dialogs can be visible at once ([bvaughn](https://github.com/bvaughn) in [#21370](https://github.com/facebook/react/pull/21370))
+* Console patching should handle Symbols without erroring ([bvaughn](https://github.com/bvaughn) in [#21368](https://github.com/facebook/react/pull/21368))
+
+###### Bridge protocol version backend/frontend
+During initialization, DevTools now checks to ensure it's compatible with the ["backend"](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md#overview) that's embedded within a renderer like React Native. If the two aren't compatible, upgrade instructions will be shown:
+
+<img width="400" height="233" alt="Dialog displaying downgrade instructions for the React DevTools frontend to connect to an older backend version" src="https://user-images.githubusercontent.com/29597/115997927-f77f2a00-a5b2-11eb-9098-20042b664cea.png">
+    
+<img width="400" height="233" alt="Dialog displaying upgrade instructions for the React DevTools frontend to connect to a newer backend version" src="https://user-images.githubusercontent.com/29597/115997965-167dbc00-a5b3-11eb-9cbc-082c65077a6e.png">
+
+Learn more about this change at [fb.me/devtools-unsupported-bridge-protocol](https://fb.me/devtools-unsupported-bridge-protocol)
+
+## 4.12.4 (April 19, 2021)
+#### Bugfix
+* Remove `@octokit/rest` dependency because of a problem with transitive dependencies ([bvaughn](https://github.com/bvaughn) in [#21317](https://github.com/facebook/react/pull/21317))
+
+## 4.12.3 (April 19, 2021)
+#### Bugfix
+* Wrapped quotation marks around Fiber ids or indices for all DevTools errors to better support GitHub fuzzy error search ([bvaughn](https://github.com/bvaughn) in [#21314](https://github.com/facebook/react/pull/21314))
+
+## 4.12.2 (April 16, 2021)
+#### Bugfix
+* DevTools reliably suppresses console logs when generating component stacks ([bvaughn](https://github.com/bvaughn) in [#21301](https://github.com/facebook/react/pull/21301))
+
+## 4.12.1 (April 14, 2021)
+Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
+#### Bugfix
+* Fixed `react-devtools-inline` bug in frontend `initialize` method ([bvaughn](https://github.com/bvaughn) in [#21265](https://github.com/facebook/react/pull/21265))
+
+## 4.12.0 (April 12, 2021)
+Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
+#### Features
+* Added `createBridge` and `createStore` exports to the `react-devtools-inline/frontend` entrypoint to support advanced use cases ([bvaughn](https://github.com/bvaughn) in [#21032](https://github.com/facebook/react/pull/21032))
+
+## 4.11.1 (April 11, 2021)
+#### Bugfix
+* Fixed broken import in `react-devtools-inline` for feature flags file ([bvaughn](https://github.com/bvaughn) in [#21237](https://github.com/facebook/react/pull/21237))
+
+## 4.11.0 (April 9, 2021)
+#### Bugfix
+* `$r` should contain hooks property when it is `forwardRef` or `memo` component  ([meowtec](https://github.com/meowtec) in [#20626](https://github.com/facebook/react/pull/20626))
+* Ensure `sync-xhr` is allowed before reload and profile ([ChrisDobby](https://github.com/ChrisDobby) in [#20879](https://github.com/facebook/react/pull/20879))
+* Bump electron version from 9.1.0 to 11.1.0 for darwin-arm64 builds ([jaiwanth-v](https://github.com/jaiwanth-v) in [#20496](https://github.com/facebook/react/pull/20496))
+* Fixed primitive hook badge colors for light theme ([bvaughn](https://github.com/bvaughn) in [#21034](https://github.com/facebook/react/pull/21034))
+* Increased minimum Chrome/Firefox versions from 51/54 to 60/55 to reduce polyfill code. ([bvaughn](https://github.com/bvaughn) in [#21185](https://github.com/facebook/react/pull/21185))
+* Fix can't expand prop value in some scenario ([iChenLei](https://github.com/iChenLei) in [#20534](https://github.com/facebook/react/pull/20534))
+* Flush updated passive warning/error info after delay ([bvaughn](https://github.com/bvaughn) in [#20931](https://github.com/facebook/react/pull/20931))
+* Patch console methods even when only show-inline-warnings/errors enabled ([bvaughn](https://github.com/bvaughn) in [#20688](https://github.com/facebook/react/pull/20688))
+* React Native fixes for new inline errors feature ([bvaughn](https://github.com/bvaughn) in [#20502](https://github.com/facebook/react/pull/20502))
+* Fixed invalid work tag constants that affected a certain range of React versions ([bvaughn](https://github.com/bvaughn) in [#20362](https://github.com/facebook/react/pull/20362))
+
+#### Features
+* Improve Profiler commit-selector UX ([bvaughn](https://github.com/bvaughn) in [#20943](https://github.com/facebook/react/pull/20943))
+* Swap `log` with `cbrt` for commit bar height ([bvaughn](https://github.com/bvaughn) in [#20952](https://github.com/facebook/react/pull/20952))
+* Integrate with new experimental React Suspense features to improve props loading and inspection UX ([bvaughn](https://github.com/bvaughn) in [#20548](https://github.com/facebook/react/pull/20548), [#20789](https://github.com/facebook/react/pull/20789), [#20458](https://github.com/facebook/react/pull/20458))
+* Expose DEV-mode warnings in devtools UI ([eps1lon](https://github.com/eps1lon) in [#20463](https://github.com/facebook/react/pull/20463))
+* Display shortcuts for prev/next search result ([eps1lon](https://github.com/eps1lon) in [#20470](https://github.com/facebook/react/pull/20470))
+* Increase the clickable area of the prop value ([TryingToImprove](https://github.com/TryingToImprove) in [#20428](https://github.com/facebook/react/pull/20428))
+
+#### Experimental features
+The following features are only enabled when used with (experimental) builds of React:
+* Shows which fibers scheduled the current update ([bvaughn](https://github.com/bvaughn) in [#21171](https://github.com/facebook/react/pull/21171))
+* Add commit and post-commit durations to Profiler UI ([bvaughn](https://github.com/bvaughn) in [#20984](https://github.com/facebook/react/pull/20984), [#21183](https://github.com/facebook/react/pull/21183))
+* Show which hooks (indices) changed when profiling ([bvaughn](https://github.com/bvaughn) in [#20998](https://github.com/facebook/react/pull/20998))
+
+###### Improve Profiler commit-selector UX
+
+![Video demonstrating tooltip with commit duration and time](https://user-images.githubusercontent.com/29597/110225725-30a1f480-7eb6-11eb-9825-4c762ffde0bb.gif)
+
+![Graphic illustrating Profiler bar heights using different scales](https://user-images.githubusercontent.com/29597/110361997-bafd6c00-800e-11eb-92d8-d411e6c79d84.png)
+
+###### Expose DEV-mode warnings in devtools UI
+![Inline warnings and errors](https://user-images.githubusercontent.com/29597/114225729-adeed800-9940-11eb-8df2-34d8b0ead3b8.png)
+
+###### Shows which fibers scheduled the current update
+![Shows which fibers scheduled the current update](https://user-images.githubusercontent.com/29597/114225931-eee6ec80-9940-11eb-90cc-fe6630fbfc08.gif)
+
+###### Add commit and post-commit durations to Profiler UI
+![Add commit and post-commit durations to Profiler UI](https://user-images.githubusercontent.com/29597/114225991-00c88f80-9941-11eb-84df-e2af04ecef1c.gif)
+
+###### Show which hooks (indices) changed when profiling
+![Show which hooks (indices) changed when profiling](https://user-images.githubusercontent.com/29597/114225838-d37be180-9940-11eb-93f8-93e0115421c8.png)
+
+## 4.10.4 (May 20, 2021)
+#### Bugfix
+* Ported passive effects sync flushing/bubbling bugfix ([bvaughn](https://github.com/bvaughn) in [#21540](https://github.com/facebook/react/pull/21540))
+
+## 4.10.3 (April 27, 2021)
+#### Bugfix
+* Replaced Facebook-internal fburl.com link with public fb.me link for Bridge protocol mismatch info page ([bvaughn](https://github.com/bvaughn) in [#21344](https://github.com/facebook/react/pull/21344))
+
+## 4.10.2 (April 27, 2021)
+#### Features
+* Added Bridge protocol check and warning dialog if embedded DevTools backend is incompatible with DevTools UI ([bvaughn](https://github.com/bvaughn) in [#21344](https://github.com/facebook/react/pull/21344))
 
 ## 4.10.1 (November 12, 2020)
 #### Bugfix
@@ -244,7 +625,7 @@ New keys can be added to object props/state/hooks now. Existing keys can be rena
 #### Improved performance
 The legacy DevTools extension used to add significant performance overhead, making it unusable for some larger React applications. That overhead has been effectively eliminated in version 4.
 
-[Learn more](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) about the performance optimizations that made this possible.
+[Learn more](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md) about the performance optimizations that made this possible.
 
 #### Component stacks
 
@@ -270,7 +651,7 @@ Filter preferences are remembered between sessions.
 
 #### No more inline props
 
-Components in the tree no longer show inline props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
+Components in the tree no longer show inline props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/main/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
 
 You can view a component's props, state, and hooks by selecting it:
 

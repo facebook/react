@@ -397,6 +397,7 @@ export function resolveError(
   message: string,
   stack: string,
 ): void {
+  // eslint-disable-next-line react-internal/prod-error-codes
   const error = new Error(message);
   error.stack = stack;
   const chunks = response._chunks;

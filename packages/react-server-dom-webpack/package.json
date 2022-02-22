@@ -11,7 +11,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "plugin.js",
     "writer.js",
@@ -50,7 +49,7 @@
   "peerDependencies": {
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
-    "webpack": "^4.43.0"
+    "webpack": "^5.59.0"
   },
   "dependencies": {
     "acorn": "^6.2.1",

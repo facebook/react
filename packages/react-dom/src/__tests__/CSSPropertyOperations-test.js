@@ -224,7 +224,7 @@ describe('CSSPropertyOperations', () => {
     ReactDOM.render(<Comp />, root);
   });
 
-  it('should warn about style containing a Infinity value', () => {
+  it('should warn about style containing an Infinity value', () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 

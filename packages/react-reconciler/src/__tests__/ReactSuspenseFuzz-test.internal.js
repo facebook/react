@@ -2,6 +2,7 @@ let React;
 let Suspense;
 let ReactNoop;
 let Scheduler;
+let act;
 let ReactFeatureFlags;
 let Random;
 
@@ -27,6 +28,7 @@ describe('ReactSuspenseFuzz', () => {
     Suspense = React.Suspense;
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    act = require('jest-react').act;
     Random = require('random-seed');
   });
 
@@ -100,7 +102,7 @@ describe('ReactSuspenseFuzz', () => {
         }
       }, [updates]);
 
-      const fullText = `${text}:${step}`;
+      const fullText = `[${text}:${step}]`;
 
       const shouldSuspend = useContext(ShouldSuspendContext);
 
@@ -143,7 +145,11 @@ describe('ReactSuspenseFuzz', () => {
         if ((elapsedTime += 1000) > 1000000) {
           throw new Error('Something did not resolve properly.');
         }
-        ReactNoop.act(() => jest.advanceTimersByTime(1000));
+        act(() => {
+          ReactNoop.batchedUpdates(() => {
+            jest.advanceTimersByTime(1000);
+          });
+        });
         Scheduler.unstable_flushAllWithoutAsserting();
       }
     }
@@ -163,26 +169,26 @@ describe('ReactSuspenseFuzz', () => {
       resolveAllTasks();
       const expectedOutput = expectedRoot.getChildrenAsJSX();
 
-      resetCache();
-      ReactNoop.renderLegacySyncRoot(children);
-      resolveAllTasks();
-      const legacyOutput = ReactNoop.getChildrenAsJSX();
-      expect(legacyOutput).toEqual(expectedOutput);
-      ReactNoop.renderLegacySyncRoot(null);
+      gate(flags => {
+        resetCache();
+        ReactNoop.renderLegacySyncRoot(children);
+        resolveAllTasks();
+        const legacyOutput = ReactNoop.getChildrenAsJSX();
+        expect(legacyOutput).toEqual(expectedOutput);
+        ReactNoop.renderLegacySyncRoot(null);
 
-      resetCache();
-      const batchedBlockingRoot = ReactNoop.createBlockingRoot();
-      batchedBlockingRoot.render(children);
-      resolveAllTasks();
-      const batchedSyncOutput = batchedBlockingRoot.getChildrenAsJSX();
-      expect(batchedSyncOutput).toEqual(expectedOutput);
-
-      resetCache();
-      const concurrentRoot = ReactNoop.createRoot();
-      concurrentRoot.render(children);
-      resolveAllTasks();
-      const concurrentOutput = concurrentRoot.getChildrenAsJSX();
-      expect(concurrentOutput).toEqual(expectedOutput);
+        // Observable behavior differs here in a way that's expected:
+        // If enableSuspenseLayoutEffectSemantics is enabled, layout effects are destroyed on re-suspend
+        // before larger 'beginAfter' timers have a chance to fire.
+        if (!flags.enableSuspenseLayoutEffectSemantics) {
+          resetCache();
+          const concurrentRoot = ReactNoop.createRoot();
+          concurrentRoot.render(children);
+          resolveAllTasks();
+          const concurrentOutput = concurrentRoot.getChildrenAsJSX();
+          expect(concurrentOutput).toEqual(expectedOutput);
+        }
+      });
     }
 
     function pickRandomWeighted(rand, options) {
@@ -415,6 +421,33 @@ Random seed is ${SEED}
             <Text initialDelay={6732} text="D" />
           </Container>
         </>,
+      );
+    });
+
+    it('4', () => {
+      const {Text, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Suspense fallback="Loading...">
+          <React.Suspense>
+            <React.Suspense>
+              <Text initialDelay={9683} text="E" updates={[]} />
+            </React.Suspense>
+            <Text
+              initialDelay={4053}
+              text="C"
+              updates={[
+                {
+                  beginAfter: 1566,
+                  suspendFor: 4142,
+                },
+                {
+                  beginAfter: 9572,
+                  suspendFor: 4832,
+                },
+              ]}
+            />
+          </React.Suspense>
+        </React.Suspense>,
       );
     });
   });

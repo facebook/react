@@ -21,12 +21,12 @@ if (process.env.NODE_ENV === 'development') {
       delete require.cache[key];
     }
     const render = require('./render').default;
-    res.send(render(req.url));
+    render(req.url, res);
   });
 } else {
   const render = require('./render').default;
   app.get('/', function(req, res) {
-    res.send(render(req.url));
+    render(req.url, res);
   });
 }
 

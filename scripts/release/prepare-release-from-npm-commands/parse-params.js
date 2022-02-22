@@ -29,7 +29,8 @@ const paramDefinitions = [
   {
     name: 'version',
     type: String,
-    description: 'Version of published "next" release (e.g. 0.0.0-ddaf2b07c)',
+    description:
+      'Version of published "next" release (e.g. 0.0.0-0e526bcec-20210202)',
   },
 ];
 

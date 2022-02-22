@@ -31,14 +31,12 @@ describe('ReactDOMServer', () => {
   describe('renderToString', () => {
     it('should generate simple markup', () => {
       const response = ReactDOMServer.renderToString(<span>hello world</span>);
-      expect(response).toMatch(
-        new RegExp('<span data-reactroot=""' + '>hello world</span>'),
-      );
+      expect(response).toMatch(new RegExp('<span' + '>hello world</span>'));
     });
 
     it('should generate simple markup for self-closing tags', () => {
       const response = ReactDOMServer.renderToString(<img />);
-      expect(response).toMatch(new RegExp('<img data-reactroot=""' + '/>'));
+      expect(response).toMatch(new RegExp('<img' + '/>'));
     });
 
     it('should generate comment markup for component returns null', () => {
@@ -74,10 +72,7 @@ describe('ReactDOMServer', () => {
       const response = ReactDOMServer.renderToString(<Parent />);
       expect(response).toMatch(
         new RegExp(
-          '<div ' +
-            'data-reactroot' +
-            '=""' +
-            '>' +
+          '<div>' +
             '<span' +
             '>' +
             'My name is <!-- -->child' +
@@ -136,12 +131,7 @@ describe('ReactDOMServer', () => {
 
         expect(response).toMatch(
           new RegExp(
-            '<span ' +
-              'data-reactroot' +
-              '=""' +
-              '>' +
-              'Component name: <!-- -->TestComponent' +
-              '</span>',
+            '<span>' + 'Component name: <!-- -->TestComponent' + '</span>',
           ),
         );
         expect(lifecycle).toEqual([
@@ -580,9 +570,7 @@ describe('ReactDOMServer', () => {
     it('should generate simple markup', () => {
       const SuccessfulElement = React.createElement(() => <img />);
       const response = ReactDOMServer.renderToNodeStream(SuccessfulElement);
-      expect(response.read().toString()).toMatch(
-        new RegExp('<img data-reactroot=""' + '/>'),
-      );
+      expect(response.read().toString()).toMatch(new RegExp('<img' + '/>'));
     });
 
     it('should handle errors correctly', () => {
@@ -1108,5 +1096,44 @@ describe('ReactDOMServer', () => {
         'contextType should point to the Context object returned by React.createContext(). ' +
         'However, it is set to a string.',
     );
+  });
+
+  describe('custom element server rendering', () => {
+    it('String properties should be server rendered for custom elements', () => {
+      const output = ReactDOMServer.renderToString(
+        <my-custom-element foo="bar" />,
+      );
+      expect(output).toBe(`<my-custom-element foo="bar"></my-custom-element>`);
+    });
+
+    it('Number properties should be server rendered for custom elements', () => {
+      const output = ReactDOMServer.renderToString(
+        <my-custom-element foo={5} />,
+      );
+      expect(output).toBe(`<my-custom-element foo="5"></my-custom-element>`);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('Object properties should not be server rendered for custom elements', () => {
+      const output = ReactDOMServer.renderToString(
+        <my-custom-element foo={{foo: 'bar'}} />,
+      );
+      expect(output).toBe(`<my-custom-element></my-custom-element>`);
+    });
+
+    // @gate enableCustomElementPropertySupport
+    it('Array properties should not be server rendered for custom elements', () => {
+      const output = ReactDOMServer.renderToString(
+        <my-custom-element foo={['foo', 'bar']} />,
+      );
+      expect(output).toBe(`<my-custom-element></my-custom-element>`);
+    });
+
+    it('Function properties should not be server rendered for custom elements', () => {
+      const output = ReactDOMServer.renderToString(
+        <my-custom-element foo={() => console.log('bar')} />,
+      );
+      expect(output).toBe(`<my-custom-element></my-custom-element>`);
+    });
   });
 });

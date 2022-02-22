@@ -19,6 +19,7 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
 };*/
 
 declare var queueMicrotask: (fn: Function) => void;
+declare var reportError: (error: mixed) => void;
 
 declare module 'create-react-class' {
   declare var exports: React$CreateClass;

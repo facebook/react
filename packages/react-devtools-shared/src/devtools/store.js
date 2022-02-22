@@ -10,10 +10,13 @@
 import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
+  PROFILING_FLAG_BASIC_SUPPORT,
+  PROFILING_FLAG_TIMELINE_SUPPORT,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_SET_SUBTREE_MODE,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
@@ -29,10 +32,18 @@ import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
 import {printStore} from './utils';
 import ProfilerStore from './ProfilerStore';
+import {
+  BRIDGE_PROTOCOL,
+  currentBridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
+import {StrictMode} from 'react-devtools-shared/src/types';
 
 import type {Element} from './views/Components/types';
 import type {ComponentFilter, ElementType} from '../types';
-import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {
+  FrontendBridge,
+  BridgeProtocol,
+} from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -50,17 +61,23 @@ const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
 const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
   'React::DevTools::recordChangeDescriptions';
 
+type ErrorAndWarningTuples = Array<{|id: number, index: number|}>;
+
 type Config = {|
+  checkBridgeProtocolCompatibility?: boolean,
   isProfiling?: boolean,
   supportsNativeInspection?: boolean,
-  supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
+  supportsReloadAndProfile?: boolean,
+  supportsTimeline?: boolean,
   supportsTraceUpdates?: boolean,
 |};
 
 export type Capabilities = {|
+  supportsBasicProfiling: boolean,
   hasOwnerMetadata: boolean,
-  supportsProfiling: boolean,
+  supportsStrictMode: boolean,
+  supportsTimeline: boolean,
 |};
 
 /**
@@ -70,12 +87,15 @@ export type Capabilities = {|
 export default class Store extends EventEmitter<{|
   collapseNodesByDefault: [],
   componentFilters: [],
+  error: [Error],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
+  rootSupportsBasicProfiling: [],
+  rootSupportsTimelineProfiling: [],
   supportsNativeStyleEditor: [],
-  supportsProfiling: [],
   supportsReloadAndProfile: [],
+  unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
 |}> {
   _bridge: FrontendBridge;
@@ -83,7 +103,7 @@ export default class Store extends EventEmitter<{|
   // Computed whenever _errorsAndWarnings Map changes.
   _cachedErrorCount: number = 0;
   _cachedWarningCount: number = 0;
-  _cachedErrorAndWarningTuples: Array<{|id: number, index: number|}> = [];
+  _cachedErrorAndWarningTuples: ErrorAndWarningTuples | null = null;
 
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
@@ -111,7 +131,17 @@ export default class Store extends EventEmitter<{|
   // If not, features like reload-and-profile will not work correctly and must be disabled.
   _isBackendStorageAPISupported: boolean = false;
 
+  // Can DevTools use sync XHR requests?
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  // This current limitation applies only to web extension builds
+  // and will need to be reconsidered in the future if we add support for reload to React Native.
+  _isSynchronousXHRSupported: boolean = false;
+
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
+
+  // Older backends don't support an explicit bridge protocol,
+  // so we should timeout eventually and show a downgrade message.
+  _onBridgeProtocolTimeoutID: TimeoutID | null = null;
 
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
@@ -135,12 +165,17 @@ export default class Store extends EventEmitter<{|
   _rootIDToRendererID: Map<number, number> = new Map();
 
   // These options may be initially set by a confiugraiton option when constructing the Store.
-  // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
+  _supportsTimeline: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
+  // These options default to false but may be updated as roots are added and removed.
+  _rootSupportsBasicProfiling: boolean = false;
+  _rootSupportsTimelineProfiling: boolean = false;
+
+  _unsupportedBridgeProtocol: BridgeProtocol | null = null;
   _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
@@ -172,6 +207,7 @@ export default class Store extends EventEmitter<{|
         supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
+        supportsTimeline,
         supportsTraceUpdates,
       } = config;
       this._supportsNativeInspection = supportsNativeInspection !== false;
@@ -180,6 +216,9 @@ export default class Store extends EventEmitter<{|
       }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
+      }
+      if (supportsTimeline) {
+        this._supportsTimeline = true;
       }
       if (supportsTraceUpdates) {
         this._supportsTraceUpdates = true;
@@ -195,11 +234,15 @@ export default class Store extends EventEmitter<{|
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+      this.onBackendStorageAPISupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.addListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -207,6 +250,20 @@ export default class Store extends EventEmitter<{|
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
+
+    // Verify that the frontend version is compatible with the connected backend.
+    // See github.com/facebook/react/issues/21326
+    if (config != null && config.checkBridgeProtocolCompatibility) {
+      // Older backends don't support an explicit bridge protocol,
+      // so we should timeout eventually and show a downgrade message.
+      this._onBridgeProtocolTimeoutID = setTimeout(
+        this.onBridgeProtocolTimeout,
+        10000,
+      );
+
+      bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
+      bridge.send('getBridgeProtocol');
+    }
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -232,12 +289,14 @@ export default class Store extends EventEmitter<{|
   assertMapSizeMatchesRootCount(map: Map<any, any>, mapName: string) {
     const expectedSize = this.roots.length;
     if (map.size !== expectedSize) {
-      throw new Error(
-        `Expected ${mapName} to contain ${expectedSize} items, but it contains ${
-          map.size
-        } items\n\n${inspect(map, {
-          depth: 20,
-        })}`,
+      this._throwAndEmitError(
+        Error(
+          `Expected ${mapName} to contain ${expectedSize} items, but it contains ${
+            map.size
+          } items\n\n${inspect(map, {
+            depth: 20,
+          })}`,
+        ),
       );
     }
   }
@@ -263,7 +322,9 @@ export default class Store extends EventEmitter<{|
     if (this._profilerStore.isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
-      throw Error('Cannot modify filter preferences while profiling');
+      this._throwAndEmitError(
+        Error('Cannot modify filter preferences while profiling'),
+      );
     }
 
     // Filter updates are expensive to apply (since they impact the entire tree).
@@ -292,8 +353,8 @@ export default class Store extends EventEmitter<{|
     // Update persisted filter preferences stored in localStorage.
     saveComponentFilters(value);
 
-    // Notify the renderer that filter prefernces have changed.
-    // This is an expensive opreation; it unmounts and remounts the entire tree,
+    // Notify the renderer that filter preferences have changed.
+    // This is an expensive operation; it unmounts and remounts the entire tree,
     // so only do it if the set of enabled component filters has changed.
     if (haveEnabledFiltersChanged) {
       this._bridge.send('updateComponentFilters', value);
@@ -348,6 +409,16 @@ export default class Store extends EventEmitter<{|
     return this._roots;
   }
 
+  // At least one of the currently mounted roots support the Legacy profiler.
+  get rootSupportsBasicProfiling(): boolean {
+    return this._rootSupportsBasicProfiling;
+  }
+
+  // At least one of the currently mounted roots support the Timeline profiler.
+  get rootSupportsTimelineProfiling(): boolean {
+    return this._rootSupportsTimelineProfiling;
+  }
+
   get supportsNativeInspection(): boolean {
     return this._supportsNativeInspection;
   }
@@ -356,18 +427,35 @@ export default class Store extends EventEmitter<{|
     return this._isNativeStyleEditorSupported;
   }
 
+  // This build of DevTools supports the legacy profiler.
+  // This is a static flag, controled by the Store config.
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
+
   get supportsReloadAndProfile(): boolean {
     // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
-    // And if so, can the backend use the localStorage API?
-    // Both of these are required for the reload-and-profile feature to work.
-    return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+    // And if so, can the backend use the localStorage API and sync XHR?
+    // All of these are currently required for the reload-and-profile feature to work.
+    return (
+      this._supportsReloadAndProfile &&
+      this._isBackendStorageAPISupported &&
+      this._isSynchronousXHRSupported
+    );
+  }
+
+  // This build of DevTools supports the Timeline profiler.
+  // This is a static flag, controled by the Store config.
+  get supportsTimeline(): boolean {
+    return this._supportsTimeline;
   }
 
   get supportsTraceUpdates(): boolean {
     return this._supportsTraceUpdates;
+  }
+
+  get unsupportedBridgeProtocol(): BridgeProtocol | null {
+    return this._unsupportedBridgeProtocol;
   }
 
   get unsupportedRendererVersionDetected(): boolean {
@@ -448,7 +536,34 @@ export default class Store extends EventEmitter<{|
 
   // Returns a tuple of [id, index]
   getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
-    return this._cachedErrorAndWarningTuples;
+    if (this._cachedErrorAndWarningTuples !== null) {
+      return this._cachedErrorAndWarningTuples;
+    } else {
+      const errorAndWarningTuples: ErrorAndWarningTuples = [];
+
+      this._errorsAndWarnings.forEach((_, id) => {
+        const index = this.getIndexOfElementID(id);
+        if (index !== null) {
+          let low = 0;
+          let high = errorAndWarningTuples.length;
+          while (low < high) {
+            const mid = (low + high) >> 1;
+            if (errorAndWarningTuples[mid].index > index) {
+              high = mid;
+            } else {
+              low = mid + 1;
+            }
+          }
+
+          errorAndWarningTuples.splice(low, 0, {id, index});
+        }
+      });
+
+      // Cache for later (at least until the tree changes again).
+      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
+
+      return errorAndWarningTuples;
+    }
   }
 
   getErrorAndWarningCountForElementID(
@@ -560,7 +675,7 @@ export default class Store extends EventEmitter<{|
             }
 
             if (depth === 0) {
-              throw Error('Invalid owners list');
+              this._throwAndEmitError(Error('Invalid owners list'));
             }
 
             list.push({...innerElement, depth});
@@ -620,7 +735,7 @@ export default class Store extends EventEmitter<{|
     if (element !== null) {
       if (isCollapsed) {
         if (element.type === ElementTypeRoot) {
-          throw Error('Root nodes cannot be collapsed');
+          this._throwAndEmitError(Error('Root nodes cannot be collapsed'));
         }
 
         if (!element.isCollapsed) {
@@ -721,6 +836,20 @@ export default class Store extends EventEmitter<{|
     }
   };
 
+  _recursivelyUpdateSubtree(
+    id: number,
+    callback: (element: Element) => void,
+  ): void {
+    const element = this._idToElement.get(id);
+    if (element) {
+      callback(element);
+
+      element.children.forEach(child =>
+        this._recursivelyUpdateSubtree(child, callback),
+      );
+    }
+  }
+
   onBridgeNativeStyleEditorSupported = ({
     isSupported,
     validAttributes,
@@ -778,8 +907,10 @@ export default class Store extends EventEmitter<{|
           i += 3;
 
           if (this._idToElement.has(id)) {
-            throw Error(
-              `Cannot add node ${id} because a node with that id is already in the Store.`,
+            this._throwAndEmitError(
+              Error(
+                `Cannot add node "${id}" because a node with that id is already in the Store.`,
+              ),
             );
           }
 
@@ -790,7 +921,16 @@ export default class Store extends EventEmitter<{|
               debug('Add', `new root node ${id}`);
             }
 
-            const supportsProfiling = operations[i] > 0;
+            const isStrictModeCompliant = operations[i] > 0;
+            i++;
+
+            const supportsBasicProfiling =
+              (operations[i] & PROFILING_FLAG_BASIC_SUPPORT) !== 0;
+            const supportsTimeline =
+              (operations[i] & PROFILING_FLAG_TIMELINE_SUPPORT) !== 0;
+            i++;
+
+            const supportsStrictMode = operations[i] > 0;
             i++;
 
             const hasOwnerMetadata = operations[i] > 0;
@@ -799,9 +939,16 @@ export default class Store extends EventEmitter<{|
             this._roots = this._roots.concat(id);
             this._rootIDToRendererID.set(id, rendererID);
             this._rootIDToCapabilities.set(id, {
+              supportsBasicProfiling,
               hasOwnerMetadata,
-              supportsProfiling,
+              supportsStrictMode,
+              supportsTimeline,
             });
+
+            // Not all roots support StrictMode;
+            // don't flag a root as non-compliant unless it also supports StrictMode.
+            const isStrictModeNonCompliant =
+              !isStrictModeCompliant && supportsStrictMode;
 
             this._idToElement.set(id, {
               children: [],
@@ -810,6 +957,7 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
+              isStrictModeNonCompliant,
               key: null,
               ownerID: 0,
               parentID: 0,
@@ -841,8 +989,10 @@ export default class Store extends EventEmitter<{|
             }
 
             if (!this._idToElement.has(parentID)) {
-              throw Error(
-                `Cannot add child ${id} to parent ${parentID} because parent node was not found in the Store.`,
+              this._throwAndEmitError(
+                Error(
+                  `Cannot add child "${id}" to parent "${parentID}" because parent node was not found in the Store.`,
+                ),
               );
             }
 
@@ -863,9 +1013,10 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames,
               id,
               isCollapsed: this._collapseNodesByDefault,
+              isStrictModeNonCompliant: parentElement.isStrictModeNonCompliant,
               key,
               ownerID,
-              parentID: parentElement.id,
+              parentID,
               type,
               weight: 1,
             };
@@ -893,8 +1044,10 @@ export default class Store extends EventEmitter<{|
             const id = ((operations[i]: any): number);
 
             if (!this._idToElement.has(id)) {
-              throw Error(
-                `Cannot remove node ${id} because no matching node was found in the Store.`,
+              this._throwAndEmitError(
+                Error(
+                  `Cannot remove node "${id}" because no matching node was found in the Store.`,
+                ),
               );
             }
 
@@ -903,7 +1056,9 @@ export default class Store extends EventEmitter<{|
             const element = ((this._idToElement.get(id): any): Element);
             const {children, ownerID, parentID, weight} = element;
             if (children.length > 0) {
-              throw new Error(`Node ${id} was removed before its children.`);
+              this._throwAndEmitError(
+                Error(`Node "${id}" was removed before its children.`),
+              );
             }
 
             this._idToElement.delete(id);
@@ -925,8 +1080,10 @@ export default class Store extends EventEmitter<{|
               }
               parentElement = ((this._idToElement.get(parentID): any): Element);
               if (parentElement === undefined) {
-                throw Error(
-                  `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`,
+                this._throwAndEmitError(
+                  Error(
+                    `Cannot remove node "${id}" from parent "${parentID}" because no matching node was found in the Store.`,
+                  ),
                 );
               }
               const index = parentElement.children.indexOf(id);
@@ -949,6 +1106,7 @@ export default class Store extends EventEmitter<{|
               haveErrorsOrWarningsChanged = true;
             }
           }
+
           break;
         }
         case TREE_OPERATION_REMOVE_ROOT: {
@@ -986,16 +1144,20 @@ export default class Store extends EventEmitter<{|
           i += 3;
 
           if (!this._idToElement.has(id)) {
-            throw Error(
-              `Cannot reorder children for node ${id} because no matching node was found in the Store.`,
+            this._throwAndEmitError(
+              Error(
+                `Cannot reorder children for node "${id}" because no matching node was found in the Store.`,
+              ),
             );
           }
 
           const element = ((this._idToElement.get(id): any): Element);
           const children = element.children;
           if (children.length !== numChildren) {
-            throw Error(
-              `Children cannot be added or removed during a reorder operation.`,
+            this._throwAndEmitError(
+              Error(
+                `Children cannot be added or removed during a reorder operation.`,
+              ),
             );
           }
 
@@ -1016,6 +1178,28 @@ export default class Store extends EventEmitter<{|
 
           if (__DEBUG__) {
             debug('Re-order', `Node ${id} children ${children.join(',')}`);
+          }
+          break;
+        }
+        case TREE_OPERATION_SET_SUBTREE_MODE: {
+          const id = operations[i + 1];
+          const mode = operations[i + 2];
+
+          i += 3;
+
+          // If elements have already been mounted in this subtree, update them.
+          // (In practice, this likely only applies to the root element.)
+          if (mode === StrictMode) {
+            this._recursivelyUpdateSubtree(id, element => {
+              element.isStrictModeNonCompliant = false;
+            });
+          }
+
+          if (__DEBUG__) {
+            debug(
+              'Subtree mode',
+              `Subtree with root ${id} set to mode ${mode}`,
+            );
           }
           break;
         }
@@ -1040,11 +1224,16 @@ export default class Store extends EventEmitter<{|
           haveErrorsOrWarningsChanged = true;
           break;
         default:
-          throw Error(`Unsupported Bridge operation ${operation}`);
+          this._throwAndEmitError(
+            Error(`Unsupported Bridge operation "${operation}"`),
+          );
       }
     }
 
     this._revision++;
+
+    // Any time the tree changes (e.g. elements added, removed, or reordered) cached inidices may be invalid.
+    this._cachedErrorAndWarningTuples = null;
 
     if (haveErrorsOrWarningsChanged) {
       let errorCount = 0;
@@ -1057,50 +1246,41 @@ export default class Store extends EventEmitter<{|
 
       this._cachedErrorCount = errorCount;
       this._cachedWarningCount = warningCount;
-
-      const errorAndWarningTuples: Array<{|id: number, index: number|}> = [];
-
-      this._errorsAndWarnings.forEach((_, id) => {
-        const index = this.getIndexOfElementID(id);
-        if (index !== null) {
-          let low = 0;
-          let high = errorAndWarningTuples.length;
-          while (low < high) {
-            const mid = (low + high) >> 1;
-            if (errorAndWarningTuples[mid].index > index) {
-              high = mid;
-            } else {
-              low = mid + 1;
-            }
-          }
-
-          errorAndWarningTuples.splice(low, 0, {id, index});
-        }
-      });
-
-      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
     }
 
     if (haveRootsChanged) {
-      const prevSupportsProfiling = this._supportsProfiling;
+      const prevRootSupportsProfiling = this._rootSupportsBasicProfiling;
+      const prevRootSupportsTimelineProfiling = this
+        ._rootSupportsTimelineProfiling;
 
       this._hasOwnerMetadata = false;
-      this._supportsProfiling = false;
+      this._rootSupportsBasicProfiling = false;
+      this._rootSupportsTimelineProfiling = false;
       this._rootIDToCapabilities.forEach(
-        ({hasOwnerMetadata, supportsProfiling}) => {
+        ({supportsBasicProfiling, hasOwnerMetadata, supportsTimeline}) => {
+          if (supportsBasicProfiling) {
+            this._rootSupportsBasicProfiling = true;
+          }
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
-          if (supportsProfiling) {
-            this._supportsProfiling = true;
+          if (supportsTimeline) {
+            this._rootSupportsTimelineProfiling = true;
           }
         },
       );
 
       this.emit('roots');
 
-      if (this._supportsProfiling !== prevSupportsProfiling) {
-        this.emit('supportsProfiling');
+      if (this._rootSupportsBasicProfiling !== prevRootSupportsProfiling) {
+        this.emit('rootSupportsBasicProfiling');
+      }
+
+      if (
+        this._rootSupportsTimelineProfiling !==
+        prevRootSupportsTimelineProfiling
+      ) {
+        this.emit('rootSupportsTimelineProfiling');
       }
     }
 
@@ -1130,16 +1310,45 @@ export default class Store extends EventEmitter<{|
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
 
-    this._bridge.removeListener('operations', this.onBridgeOperations);
-    this._bridge.removeListener('shutdown', this.onBridgeShutdown);
-    this._bridge.removeListener(
-      'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+    const bridge = this._bridge;
+    bridge.removeListener('operations', this.onBridgeOperations);
+    bridge.removeListener(
+      'overrideComponentFilters',
+      this.onBridgeOverrideComponentFilters,
     );
+    bridge.removeListener('shutdown', this.onBridgeShutdown);
+    bridge.removeListener(
+      'isBackendStorageAPISupported',
+      this.onBackendStorageAPISupported,
+    );
+    bridge.removeListener(
+      'isNativeStyleEditorSupported',
+      this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.removeListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
+    );
+    bridge.removeListener(
+      'unsupportedRendererVersion',
+      this.onBridgeUnsupportedRendererVersion,
+    );
+    bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
+
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
   };
 
-  onBridgeStorageSupported = (isBackendStorageAPISupported: boolean) => {
+  onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+
+    this.emit('supportsReloadAndProfile');
+  };
+
+  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+    this._isSynchronousXHRSupported = isSynchronousXHRSupported;
 
     this.emit('supportsReloadAndProfile');
   };
@@ -1149,4 +1358,43 @@ export default class Store extends EventEmitter<{|
 
     this.emit('unsupportedRendererVersionDetected');
   };
+
+  onBridgeProtocol = (bridgeProtocol: BridgeProtocol) => {
+    if (this._onBridgeProtocolTimeoutID !== null) {
+      clearTimeout(this._onBridgeProtocolTimeoutID);
+      this._onBridgeProtocolTimeoutID = null;
+    }
+
+    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+      this._unsupportedBridgeProtocol = bridgeProtocol;
+    } else {
+      // If we should happen to get a response after timing out...
+      this._unsupportedBridgeProtocol = null;
+    }
+
+    this.emit('unsupportedBridgeProtocolDetected');
+  };
+
+  onBridgeProtocolTimeout = () => {
+    this._onBridgeProtocolTimeoutID = null;
+
+    // If we timed out, that indicates the backend predates the bridge protocol,
+    // so we can set a fake version (0) to trigger the downgrade message.
+    this._unsupportedBridgeProtocol = BRIDGE_PROTOCOL[0];
+
+    this.emit('unsupportedBridgeProtocolDetected');
+  };
+
+  // The Store should never throw an Error without also emitting an event.
+  // Otherwise Store errors will be invisible to users,
+  // but the downstream errors they cause will be reported as bugs.
+  // For example, https://github.com/facebook/react/issues/21402
+  // Emitting an error event allows the ErrorBoundary to show the original error.
+  _throwAndEmitError(error: Error) {
+    this.emit('error', error);
+
+    // Throwing is still valuable for local development
+    // and for unit testing the Store itself.
+    throw error;
+  }
 }

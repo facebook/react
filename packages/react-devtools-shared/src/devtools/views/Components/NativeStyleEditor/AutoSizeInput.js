@@ -14,6 +14,7 @@ type Props = {
   className?: string,
   onFocus?: (event: FocusEvent) => void,
   placeholder?: string,
+  testName?: ?string,
   value: any,
   ...
 };
@@ -22,6 +23,7 @@ export default function AutoSizeInput({
   className,
   onFocus,
   placeholder = '',
+  testName,
   value,
   ...rest
 }: Props) {
@@ -42,6 +44,7 @@ export default function AutoSizeInput({
   return (
     <input
       className={[styles.Input, className].join(' ')}
+      data-testname={testName}
       onFocus={onFocusWrapper}
       placeholder={placeholder}
       style={{

@@ -10,9 +10,15 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
+import type {Flags} from './ReactFiberFlags';
 
 import * as React from 'react';
-import {MountLayoutDev, Update, Snapshot} from './ReactFiberFlags';
+import {
+  LayoutStatic,
+  MountLayoutDev,
+  Update,
+  Snapshot,
+} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -20,13 +26,16 @@ import {
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
   enableStrictEffects,
+  enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
+import isArray from 'shared/isArray';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
@@ -57,22 +66,20 @@ import {
   hasContextChanged,
   emptyContextObject,
 } from './ReactFiberContext.new';
-import {readContext} from './ReactFiberNewContext.new';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {
   requestEventTime,
   requestUpdateLane,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.new';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
-
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
-} from './SchedulingProfiler';
+  setIsStrictModeForDevtools,
+} from './ReactFiberDevToolsHook.new';
 
 const fakeInternalInstance = {};
-const isArray = Array.isArray;
 
 // React.Component uses a shared frozen object by default.
 // We'll use it to determine whether we need to initialize legacy refs.
@@ -119,7 +126,7 @@ if (__DEV__) {
 
   warnOnUndefinedDerivedState = function(type, partialState) {
     if (partialState === undefined) {
-      const componentName = getComponentName(type) || 'Component';
+      const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
         didWarnAboutUndefinedDerivedState.add(componentName);
         console.error(
@@ -139,8 +146,7 @@ if (__DEV__) {
   Object.defineProperty(fakeInternalInstance, '_processChildContext', {
     enumerable: false,
     value: function() {
-      invariant(
-        false,
+      throw new Error(
         '_processChildContext is not available in React 16+. This likely ' +
           'means you have multiple copies of React and are attempting to nest ' +
           'a React 15 tree inside a React 16 tree using ' +
@@ -153,32 +159,27 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-export function applyDerivedStateFromProps(
+function applyDerivedStateFromProps(
   workInProgress: Fiber,
   ctor: any,
   getDerivedStateFromProps: (props: any, state: any) => any,
   nextProps: any,
 ) {
   const prevState = workInProgress.memoizedState;
-
+  let partialState = getDerivedStateFromProps(nextProps, prevState);
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
         // Invoke the function an extra time to help detect side-effects.
-        getDerivedStateFromProps(nextProps, prevState);
+        partialState = getDerivedStateFromProps(nextProps, prevState);
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
-  }
-
-  const partialState = getDerivedStateFromProps(nextProps, prevState);
-
-  if (__DEV__) {
     warnOnUndefinedDerivedState(ctor, partialState);
   }
   // Merge the partial state and the previous state.
@@ -222,7 +223,7 @@ const classComponentUpdater = {
     if (__DEV__) {
       if (enableDebugTracing) {
         if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
           logStateUpdateScheduled(name, lane, payload);
         }
       }
@@ -257,7 +258,7 @@ const classComponentUpdater = {
     if (__DEV__) {
       if (enableDebugTracing) {
         if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
           logStateUpdateScheduled(name, lane, payload);
         }
       }
@@ -291,7 +292,7 @@ const classComponentUpdater = {
     if (__DEV__) {
       if (enableDebugTracing) {
         if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
           logForceUpdateScheduled(name, lane);
         }
       }
@@ -314,32 +315,33 @@ function checkShouldComponentUpdate(
 ) {
   const instance = workInProgress.stateNode;
   if (typeof instance.shouldComponentUpdate === 'function') {
+    let shouldUpdate = instance.shouldComponentUpdate(
+      newProps,
+      newState,
+      nextContext,
+    );
     if (__DEV__) {
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictLegacyMode
       ) {
-        disableLogs();
+        setIsStrictModeForDevtools(true);
         try {
           // Invoke the function an extra time to help detect side-effects.
-          instance.shouldComponentUpdate(newProps, newState, nextContext);
+          shouldUpdate = instance.shouldComponentUpdate(
+            newProps,
+            newState,
+            nextContext,
+          );
         } finally {
-          reenableLogs();
+          setIsStrictModeForDevtools(false);
         }
       }
-    }
-    const shouldUpdate = instance.shouldComponentUpdate(
-      newProps,
-      newState,
-      nextContext,
-    );
-
-    if (__DEV__) {
       if (shouldUpdate === undefined) {
         console.error(
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
-          getComponentName(ctor) || 'Component',
+          getComponentNameFromType(ctor) || 'Component',
         );
       }
     }
@@ -359,7 +361,7 @@ function checkShouldComponentUpdate(
 function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
   const instance = workInProgress.stateNode;
   if (__DEV__) {
-    const name = getComponentName(ctor) || 'Component';
+    const name = getComponentNameFromType(ctor) || 'Component';
     const renderPresent = instance.render;
 
     if (!renderPresent) {
@@ -472,7 +474,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
           'Please extend React.Component if shouldComponentUpdate is used.',
-        getComponentName(ctor) || 'A pure component',
+        getComponentNameFromType(ctor) || 'A pure component',
       );
     }
     if (typeof instance.componentDidUnmount === 'function') {
@@ -534,7 +536,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       console.error(
         '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
           'This component defines getSnapshotBeforeUpdate() only.',
-        getComponentName(ctor),
+        getComponentNameFromType(ctor),
       );
     }
 
@@ -631,7 +633,7 @@ function constructClassInstance(
         console.error(
           '%s defines an invalid contextType. ' +
             'contextType should point to the Context object returned by React.createContext().%s',
-          getComponentName(ctor) || 'Component',
+          getComponentNameFromType(ctor) || 'Component',
           addendum,
         );
       }
@@ -650,22 +652,22 @@ function constructClassInstance(
       : emptyContextObject;
   }
 
+  let instance = new ctor(props, context);
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
       workInProgress.mode & StrictLegacyMode
     ) {
-      disableLogs();
+      setIsStrictModeForDevtools(true);
       try {
-        new ctor(props, context); // eslint-disable-line no-new
+        instance = new ctor(props, context); // eslint-disable-line no-new
       } finally {
-        reenableLogs();
+        setIsStrictModeForDevtools(false);
       }
     }
   }
 
-  const instance = new ctor(props, context);
   const state = (workInProgress.memoizedState =
     instance.state !== null && instance.state !== undefined
       ? instance.state
@@ -674,7 +676,7 @@ function constructClassInstance(
 
   if (__DEV__) {
     if (typeof ctor.getDerivedStateFromProps === 'function' && state === null) {
-      const componentName = getComponentName(ctor) || 'Component';
+      const componentName = getComponentNameFromType(ctor) || 'Component';
       if (!didWarnAboutUninitializedState.has(componentName)) {
         didWarnAboutUninitializedState.add(componentName);
         console.error(
@@ -730,7 +732,7 @@ function constructClassInstance(
         foundWillReceivePropsName !== null ||
         foundWillUpdateName !== null
       ) {
-        const componentName = getComponentName(ctor) || 'Component';
+        const componentName = getComponentNameFromType(ctor) || 'Component';
         const newApiName =
           typeof ctor.getDerivedStateFromProps === 'function'
             ? 'getDerivedStateFromProps()'
@@ -780,7 +782,7 @@ function callComponentWillMount(workInProgress, instance) {
         '%s.componentWillMount(): Assigning directly to this.state is ' +
           "deprecated (except inside a component's " +
           'constructor). Use setState instead.',
-        getComponentName(workInProgress.type) || 'Component',
+        getComponentNameFromFiber(workInProgress) || 'Component',
       );
     }
     classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
@@ -804,7 +806,7 @@ function callComponentWillReceiveProps(
   if (instance.state !== oldState) {
     if (__DEV__) {
       const componentName =
-        getComponentName(workInProgress.type) || 'Component';
+        getComponentNameFromFiber(workInProgress) || 'Component';
       if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
         didWarnAboutStateAssignmentForComponent.add(componentName);
         console.error(
@@ -849,7 +851,7 @@ function mountClassInstance(
 
   if (__DEV__) {
     if (instance.state === newProps) {
-      const componentName = getComponentName(ctor) || 'Component';
+      const componentName = getComponentNameFromType(ctor) || 'Component';
       if (!didWarnAboutDirectlyAssigningPropsToState.has(componentName)) {
         didWarnAboutDirectlyAssigningPropsToState.add(componentName);
         console.error(
@@ -876,7 +878,6 @@ function mountClassInstance(
     }
   }
 
-  processUpdateQueue(workInProgress, newProps, instance, renderLanes);
   instance.state = workInProgress.memoizedState;
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
@@ -906,16 +907,18 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
+    let fiberFlags: Flags = Update;
+    if (enableSuspenseLayoutEffectSemantics) {
+      fiberFlags |= LayoutStatic;
+    }
     if (
       __DEV__ &&
       enableStrictEffects &&
       (workInProgress.mode & StrictEffectsMode) !== NoMode
     ) {
-      // Never double-invoke effects for legacy roots.
-      workInProgress.flags |= MountLayoutDev | Update;
-    } else {
-      workInProgress.flags |= Update;
+      fiberFlags |= MountLayoutDev;
     }
+    workInProgress.flags |= fiberFlags;
   }
 }
 
@@ -985,16 +988,18 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
     return false;
   }
@@ -1037,31 +1042,35 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
+      let fiberFlags: Flags = Update;
+      if (enableSuspenseLayoutEffectSemantics) {
+        fiberFlags |= LayoutStatic;
+      }
       if (
         __DEV__ &&
         enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
-        // Never double-invoke effects for legacy roots.
-        workInProgress.flags |= MountLayoutDev | Update;
-      } else {
-        workInProgress.flags |= Update;
+        fiberFlags |= MountLayoutDev;
       }
+      workInProgress.flags |= fiberFlags;
     }
 
     // If shouldComponentUpdate returned false, we should still update the
@@ -1149,7 +1158,13 @@ function updateClassInstance(
     unresolvedOldProps === unresolvedNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
-    !checkHasForceUpdateAfterProcessing()
+    !checkHasForceUpdateAfterProcessing() &&
+    !(
+      enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies)
+    )
   ) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
@@ -1192,7 +1207,15 @@ function updateClassInstance(
       oldState,
       newState,
       nextContext,
-    );
+    ) ||
+    // TODO: In some cases, we'll end up checking if context has changed twice,
+    // both before and after `shouldComponentUpdate` has been called. Not ideal,
+    // but I'm loath to refactor this function. This only happens for memoized
+    // components so it's not that common.
+    (enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies));
 
   if (shouldUpdate) {
     // In order to support react-lifecycles-compat polyfilled components,

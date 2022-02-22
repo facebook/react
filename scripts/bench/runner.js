@@ -61,7 +61,7 @@ async function runBenchmarks(reactPath) {
 }
 
 // get the performance benchmark results
-// from remote master (default React repo)
+// from remote main (default React repo)
 async function benchmarkRemoteMaster() {
   console.log(chalk.gray(`- Building React bundles...`));
   let commit = argv.remote;

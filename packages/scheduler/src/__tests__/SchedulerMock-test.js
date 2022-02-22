@@ -117,14 +117,14 @@ describe('Scheduler', () => {
 
     // Advance by just a bit more to expire the user blocking callbacks
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toFlushExpired([
+    expect(Scheduler).toFlushAndYieldThrough([
       'B (did timeout: true)',
       'C (did timeout: true)',
     ]);
 
     // Expire A
     Scheduler.unstable_advanceTime(4600);
-    expect(Scheduler).toFlushExpired(['A (did timeout: true)']);
+    expect(Scheduler).toFlushAndYieldThrough(['A (did timeout: true)']);
 
     // Flush the rest without expiring
     expect(Scheduler).toFlushAndYield([

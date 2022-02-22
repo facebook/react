@@ -30,42 +30,18 @@ describe('ReactMockedComponent', () => {
     MockedComponent.prototype.render = jest.fn();
   });
 
-  it('should allow a mocked component to be rendered in dev', () => {
+  it('should allow a mocked component to be rendered', () => {
     const container = document.createElement('container');
-    if (__DEV__) {
-      ReactDOM.render(<MockedComponent />, container);
-    } else {
-      expect(() => ReactDOM.render(<MockedComponent />, container)).toThrow(
-        'Nothing was returned from render.',
-      );
-    }
+    ReactDOM.render(<MockedComponent />, container);
   });
 
   it('should allow a mocked component to be updated in dev', () => {
     const container = document.createElement('container');
-    if (__DEV__) {
-      ReactDOM.render(<MockedComponent />, container);
-    } else {
-      expect(() => ReactDOM.render(<MockedComponent />, container)).toThrow(
-        'Nothing was returned from render.',
-      );
-    }
-    if (__DEV__) {
-      ReactDOM.render(<MockedComponent />, container);
-    } else {
-      expect(() => ReactDOM.render(<MockedComponent />, container)).toThrow(
-        'Nothing was returned from render.',
-      );
-    }
+    ReactDOM.render(<MockedComponent />, container);
+    ReactDOM.render(<MockedComponent />, container);
   });
 
   it('should allow a mocked component to be rendered in dev (SSR)', () => {
-    if (__DEV__) {
-      ReactDOMServer.renderToString(<MockedComponent />);
-    } else {
-      expect(() => ReactDOMServer.renderToString(<MockedComponent />)).toThrow(
-        'Nothing was returned from render.',
-      );
-    }
+    ReactDOMServer.renderToString(<MockedComponent />);
   });
 });

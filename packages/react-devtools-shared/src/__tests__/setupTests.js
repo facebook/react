@@ -7,10 +7,30 @@
  * @flow
  */
 
+import {CustomConsole} from '@jest/console';
+
 import type {
   BackendBridge,
   FrontendBridge,
 } from 'react-devtools-shared/src/bridge';
+
+// Argument is serialized when passed from jest-cli script through to setupTests.
+const compactConsole = process.env.compactConsole === 'true';
+if (compactConsole) {
+  const formatter = (type, message) => {
+    switch (type) {
+      case 'error':
+        return '\x1b[31m' + message + '\x1b[0m';
+      case 'warn':
+        return '\x1b[33m' + message + '\x1b[0m';
+      case 'log':
+      default:
+        return message;
+    }
+  };
+
+  global.console = new CustomConsole(process.stdout, process.stderr, formatter);
+}
 
 const env = jasmine.getEnv();
 env.beforeEach(() => {
@@ -46,9 +66,13 @@ env.beforeEach(() => {
     if (typeof firstArg !== 'string') {
       return false;
     }
-    return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
-      return firstArg.indexOf(errorOrWarningMessage) !== -1;
-    });
+    const shouldFilter = global._ignoredErrorOrWarningMessages.some(
+      errorOrWarningMessage => {
+        return firstArg.indexOf(errorOrWarningMessage) !== -1;
+      },
+    );
+
+    return shouldFilter;
   }
 
   const originalConsoleError = console.error;
@@ -62,7 +86,15 @@ env.beforeEach(() => {
       throw args[1];
     } else if (
       typeof firstArg === 'string' &&
-      firstArg.startsWith("Warning: It looks like you're using the wrong act()")
+      (firstArg.startsWith(
+        "Warning: It looks like you're using the wrong act()",
+      ) ||
+        firstArg.startsWith(
+          'Warning: The current testing environment is not configured to support act',
+        ) ||
+        firstArg.startsWith(
+          'Warning: You seem to have overlapping act() calls',
+        ))
     ) {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.
@@ -122,6 +154,16 @@ env.beforeEach(() => {
   global.agent = agent;
   global.bridge = bridge;
   global.store = store;
+
+  const readFileSync = require('fs').readFileSync;
+  async function mockFetch(url) {
+    return {
+      ok: true,
+      status: 200,
+      text: async () => readFileSync(__dirname + url, 'utf-8'),
+    };
+  }
+  global.fetch = mockFetch;
 });
 env.afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -131,4 +173,8 @@ env.afterEach(() => {
   // It's also important to reset after tests, rather than before,
   // so that we don't disconnect the ReactCurrentDispatcher ref.
   jest.resetModules();
+});
+
+expect.extend({
+  ...require('../../../../scripts/jest/matchers/schedulerTestMatchers'),
 });

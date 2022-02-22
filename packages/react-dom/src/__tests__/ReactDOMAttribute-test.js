@@ -89,6 +89,27 @@ describe('ReactDOM unknown attribute', () => {
       testUnknownAttributeAssignment(lol, 'lol');
     });
 
+    it('throws with Temporal-like objects', () => {
+      class TemporalLike {
+        valueOf() {
+          // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
+          // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
+          throw new TypeError('prod message');
+        }
+        toString() {
+          return '2020-01-01';
+        }
+      }
+      const test = () =>
+        testUnknownAttributeAssignment(new TemporalLike(), null);
+      expect(() =>
+        expect(test).toThrowError(new TypeError('prod message')),
+      ).toErrorDev(
+        'Warning: The provided `unknown` attribute is an unsupported type TemporalLike.' +
+          ' This value must be coerced to a string before before using it here.',
+      );
+    });
+
     it('removes symbols and warns', () => {
       expect(() => testUnknownAttributeRemoval(Symbol('foo'))).toErrorDev(
         'Warning: Invalid value for prop `unknown` on <div> tag. Either remove it ' +

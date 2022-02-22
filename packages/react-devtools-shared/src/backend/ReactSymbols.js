@@ -40,9 +40,6 @@ export const LAZY_SYMBOL_STRING = 'Symbol(react.lazy)';
 export const MEMO_NUMBER = 0xead3;
 export const MEMO_SYMBOL_STRING = 'Symbol(react.memo)';
 
-export const OPAQUE_ID_NUMBER = 0xeae0;
-export const OPAQUE_ID_SYMBOL_STRING = 'Symbol(react.opaque.id)';
-
 export const PORTAL_NUMBER = 0xeaca;
 export const PORTAL_SYMBOL_STRING = 'Symbol(react.portal)';
 

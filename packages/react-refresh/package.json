@@ -4,7 +4,7 @@
   "keywords": [
     "react"
   ],
-  "version": "0.9.0",
+  "version": "0.11.0",
   "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
@@ -13,11 +13,16 @@
     "README.md",
     "babel.js",
     "runtime.js",
-    "build-info.json",
     "cjs/",
     "umd/"
   ],
   "main": "runtime.js",
+  "exports": {
+    ".": "./runtime.js",
+    "./runtime": "./runtime.js",
+    "./babel": "./babel.js",
+    "./package.json": "./package.json"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
@@ -28,6 +33,7 @@
   },
   "devDependencies": {
     "react-16-8": "npm:react@16.8.0",
-    "react-dom-16-8": "npm:react-dom@16.8.0"
+    "react-dom-16-8": "npm:react-dom@16.8.0",
+    "scheduler-0-13": "npm:scheduler@0.13.0"
   }
 }

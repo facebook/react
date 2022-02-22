@@ -32,8 +32,11 @@ type RejectedRecord = {|
 
 type Record = PendingRecord | ResolvedRecord | RejectedRecord;
 
+declare var globalThis: any;
+
 // TODO: this is a browser-only version. Add a separate Node entry point.
-const nativeFetch = window.fetch;
+const nativeFetch = (typeof globalThis !== 'undefined' ? globalThis : window)
+  .fetch;
 
 function getRecordMap(): Map<string, Record> {
   return unstable_getCacheForType(createRecordMap);
@@ -129,6 +132,7 @@ function preloadRecord(url: string, options: mixed): Record {
       if (options.method || options.body || options.signal) {
         // TODO: wire up our own cancellation mechanism.
         // TODO: figure out what to do with POST.
+        // eslint-disable-next-line react-internal/prod-error-codes
         throw Error('Unsupported option');
       }
     }

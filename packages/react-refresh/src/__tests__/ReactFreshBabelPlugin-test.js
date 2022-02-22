@@ -524,4 +524,41 @@ describe('ReactFreshBabelPlugin', () => {
         '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
     );
   });
+
+  it('does not get tripped by IIFEs', () => {
+    expect(
+      transform(`
+        while (item) {
+          (item => {
+            useFoo();
+          })(item);
+        }
+      `),
+    ).toMatchSnapshot();
+  });
+
+  it('supports typescript namespace syntax', () => {
+    expect(
+      transform(
+        `
+        namespace Foo {
+          export namespace Bar {
+            export const A = () => {};
+
+            function B() {};
+            export const B1 = B;
+          }
+
+          export const C = () => {};
+          export function D() {};
+
+          namespace NotExported {
+            export const E = () => {};
+          }
+        }
+      `,
+        {plugins: [['@babel/plugin-syntax-typescript', {isTSX: true}]]},
+      ),
+    ).toMatchSnapshot();
+  });
 });

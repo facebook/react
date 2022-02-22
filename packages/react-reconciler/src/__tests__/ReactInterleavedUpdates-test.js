@@ -4,6 +4,7 @@ let Scheduler;
 let startTransition;
 let useState;
 let useEffect;
+let act;
 
 describe('ReactInterleavedUpdates', () => {
   beforeEach(() => {
@@ -12,7 +13,8 @@ describe('ReactInterleavedUpdates', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    startTransition = React.unstable_startTransition;
+    act = require('jest-react').act;
+    startTransition = React.startTransition;
     useState = React.useState;
     useEffect = React.useEffect;
   });
@@ -42,7 +44,7 @@ describe('ReactInterleavedUpdates', () => {
 
     const root = ReactNoop.createRoot();
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <>
           <Child />
@@ -54,14 +56,26 @@ describe('ReactInterleavedUpdates', () => {
     expect(Scheduler).toHaveYielded([0, 0, 0]);
     expect(root).toMatchRenderedOutput('000');
 
-    await ReactNoop.act(async () => {
-      updateChildren(1);
+    await act(async () => {
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          updateChildren(1);
+        });
+      } else {
+        updateChildren(1);
+      }
       // Partially render the children. Only the first one.
       expect(Scheduler).toFlushAndYieldThrough([1]);
 
       // In an interleaved event, schedule an update on each of the children.
       // Including the two that haven't rendered yet.
-      updateChildren(2);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.startTransition(() => {
+          updateChildren(2);
+        });
+      } else {
+        updateChildren(2);
+      }
 
       // We should continue rendering without including the interleaved updates.
       expect(Scheduler).toFlushUntilNextPaint([1, 1]);
@@ -72,7 +86,7 @@ describe('ReactInterleavedUpdates', () => {
     expect(root).toMatchRenderedOutput('222');
   });
 
-  // @gate experimental
+  // @gate !enableSyncDefaultUpdates
   test('low priority update during an interleaved event is not processed during the current render', async () => {
     // Same as previous test, but the interleaved update is lower priority than
     // the in-progress render.
@@ -95,7 +109,7 @@ describe('ReactInterleavedUpdates', () => {
 
     const root = ReactNoop.createRoot();
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       root.render(
         <>
           <Child />
@@ -107,7 +121,7 @@ describe('ReactInterleavedUpdates', () => {
     expect(Scheduler).toHaveYielded([0, 0, 0]);
     expect(root).toMatchRenderedOutput('000');
 
-    await ReactNoop.act(async () => {
+    await act(async () => {
       updateChildren(1);
       // Partially render the children. Only the first one.
       expect(Scheduler).toFlushAndYieldThrough([1]);

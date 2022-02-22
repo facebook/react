@@ -23,6 +23,7 @@ import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWa
 import InspectedElementHooksTree from './InspectedElementHooksTree';
 import InspectedElementPropsTree from './InspectedElementPropsTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
+import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
 import Badge from './Badge';
@@ -31,24 +32,32 @@ import {
   copyInspectedElementPath as copyInspectedElementPathAPI,
   storeAsGlobal as storeAsGlobalAPI,
 } from 'react-devtools-shared/src/backendAPI';
+import {enableStyleXFeatures} from 'react-devtools-feature-flags';
 
 import styles from './InspectedElementView.css';
 
 import type {ContextMenuContextType} from '../context';
-import type {Element, InspectedElement, Owner} from './types';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {Element, InspectedElement, SerializedElement} from './types';
+import type {ElementType, HookNames} from 'react-devtools-shared/src/types';
+import type {ToggleParseHookNames} from './InspectedElementContext';
 
 export type CopyPath = (path: Array<string | number>) => void;
 export type InspectPath = (path: Array<string | number>) => void;
 
 type Props = {|
   element: Element,
+  hookNames: HookNames | null,
   inspectedElement: InspectedElement,
+  parseHookNames: boolean,
+  toggleParseHookNames: ToggleParseHookNames,
 |};
 
 export default function InspectedElementView({
   element,
+  hookNames,
   inspectedElement,
+  parseHookNames,
+  toggleParseHookNames,
 }: Props) {
   const {id} = element;
   const {
@@ -103,8 +112,11 @@ export default function InspectedElementView({
         <InspectedElementHooksTree
           bridge={bridge}
           element={element}
+          hookNames={hookNames}
           inspectedElement={inspectedElement}
+          parseHookNames={parseHookNames}
           store={store}
+          toggleParseHookNames={toggleParseHookNames}
         />
 
         <InspectedElementContextTree
@@ -113,6 +125,15 @@ export default function InspectedElementView({
           inspectedElement={inspectedElement}
           store={store}
         />
+
+        {enableStyleXFeatures && (
+          <InspectedElementStyleXPlugin
+            bridge={bridge}
+            element={element}
+            inspectedElement={inspectedElement}
+            store={store}
+          />
+        )}
 
         <InspectedElementErrorsAndWarningsTree
           bridge={bridge}
@@ -124,10 +145,12 @@ export default function InspectedElementView({
         <NativeStyleEditor />
 
         {showRenderedBy && (
-          <div className={styles.Owners}>
+          <div
+            className={styles.Owners}
+            data-testname="InspectedElementView-Owners">
             <div className={styles.OwnersHeader}>rendered by</div>
             {showOwnersList &&
-              ((owners: any): Array<Owner>).map(owner => (
+              ((owners: any): Array<SerializedElement>).map(owner => (
                 <OwnerView
                   key={owner.id}
                   displayName={owner.displayName || 'Anonymous'}
@@ -243,7 +266,7 @@ type SourceProps = {|
 function Source({fileName, lineNumber}: SourceProps) {
   const handleCopy = () => copy(`${fileName}:${lineNumber}`);
   return (
-    <div className={styles.Source}>
+    <div className={styles.Source} data-testname="InspectedElementView-Source">
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
         <Button onClick={handleCopy} title="Copy to clipboard">

@@ -71,7 +71,7 @@ Object {
     },
     3 => Object {
       "children": Array [
-        4,
+        6,
       ],
       "displayName": "Suspense",
       "hocDisplayNames": null,
@@ -81,11 +81,11 @@ Object {
       "treeBaseDuration": 0,
       "type": 12,
     },
-    4 => Object {
+    6 => Object {
       "children": Array [],
       "displayName": "LazyInnerComponent",
       "hocDisplayNames": null,
-      "id": 4,
+      "id": 6,
       "key": null,
       "parentID": 3,
       "treeBaseDuration": 0,
@@ -167,7 +167,7 @@ Object {
     },
     3 => Object {
       "children": Array [
-        4,
+        6,
       ],
       "displayName": "Suspense",
       "hocDisplayNames": null,
@@ -177,11 +177,11 @@ Object {
       "treeBaseDuration": 0,
       "type": 12,
     },
-    4 => Object {
+    6 => Object {
       "children": Array [],
       "displayName": "LazyInnerComponent",
       "hocDisplayNames": null,
-      "id": 4,
+      "id": 6,
       "key": null,
       "parentID": 3,
       "treeBaseDuration": 0,

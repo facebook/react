@@ -7,73 +7,25 @@
  * @flow
  */
 
-import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
-export type LanePriority =
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | 5
-  | 6
-  | 7
-  | 8
-  | 9
-  | 10
-  | 11
-  | 12
-  | 13
-  | 14
-  | 15
-  | 16
-  | 17;
 
 export type Lanes = number;
 export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
-import invariant from 'shared/invariant';
-import {enableCache, enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
-
 import {
-  ImmediatePriority as ImmediateSchedulerPriority,
-  UserBlockingPriority as UserBlockingSchedulerPriority,
-  NormalPriority as NormalSchedulerPriority,
-  LowPriority as LowSchedulerPriority,
-  IdlePriority as IdleSchedulerPriority,
-  NoPriority as NoSchedulerPriority,
-} from './SchedulerWithReactIntegration.old';
+  enableSchedulingProfiler,
+  enableUpdaterTracking,
+  allowConcurrentByDefault,
+} from 'shared/ReactFeatureFlags';
+import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
+import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
+import {clz32} from './clz32';
 
-export const SyncLanePriority: LanePriority = 15;
-export const SyncBatchedLanePriority: LanePriority = 14;
-
-const InputDiscreteHydrationLanePriority: LanePriority = 13;
-export const InputDiscreteLanePriority: LanePriority = 12;
-
-const InputContinuousHydrationLanePriority: LanePriority = 11;
-export const InputContinuousLanePriority: LanePriority = 10;
-
-const DefaultHydrationLanePriority: LanePriority = 9;
-export const DefaultLanePriority: LanePriority = 8;
-
-const TransitionHydrationPriority: LanePriority = 7;
-export const TransitionPriority: LanePriority = 6;
-
-const RetryLanePriority: LanePriority = 5;
-
-const SelectiveHydrationLanePriority: LanePriority = 4;
-
-const IdleHydrationLanePriority: LanePriority = 3;
-export const IdleLanePriority: LanePriority = 2;
-
-const OffscreenLanePriority: LanePriority = 1;
-
-export const NoLanePriority: LanePriority = 0;
-
-// Lane values below should be kept in sync with getLabelsForLanes(), used by react-devtools-scheduling-profiler.
+// Lane values below should be kept in sync with getLabelForLane(), used by react-devtools-timeline.
 // If those values are changed that package should be rebuilt and redeployed.
 
 export const TotalLanes = 31;
@@ -82,39 +34,38 @@ export const NoLanes: Lanes = /*                        */ 0b0000000000000000000
 export const NoLane: Lane = /*                          */ 0b0000000000000000000000000000000;
 
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000001;
-export const SyncBatchedLane: Lane = /*                 */ 0b0000000000000000000000000000010;
 
-export const InputDiscreteHydrationLane: Lane = /*      */ 0b0000000000000000000000000000100;
-export const InputDiscreteLane: Lanes = /*              */ 0b0000000000000000000000000001000;
+export const InputContinuousHydrationLane: Lane = /*    */ 0b0000000000000000000000000000010;
+export const InputContinuousLane: Lanes = /*            */ 0b0000000000000000000000000000100;
 
-const InputContinuousHydrationLane: Lane = /*           */ 0b0000000000000000000000000010000;
-export const InputContinuousLane: Lanes = /*            */ 0b0000000000000000000000000100000;
+export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000001000;
+export const DefaultLane: Lanes = /*                    */ 0b0000000000000000000000000010000;
 
-export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000001000000;
-export const DefaultLane: Lanes = /*                    */ 0b0000000000000000000000010000000;
+const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000000100000;
+const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111111000000;
+const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000001000000;
+const TransitionLane2: Lane = /*                        */ 0b0000000000000000000000010000000;
+const TransitionLane3: Lane = /*                        */ 0b0000000000000000000000100000000;
+const TransitionLane4: Lane = /*                        */ 0b0000000000000000000001000000000;
+const TransitionLane5: Lane = /*                        */ 0b0000000000000000000010000000000;
+const TransitionLane6: Lane = /*                        */ 0b0000000000000000000100000000000;
+const TransitionLane7: Lane = /*                        */ 0b0000000000000000001000000000000;
+const TransitionLane8: Lane = /*                        */ 0b0000000000000000010000000000000;
+const TransitionLane9: Lane = /*                        */ 0b0000000000000000100000000000000;
+const TransitionLane10: Lane = /*                       */ 0b0000000000000001000000000000000;
+const TransitionLane11: Lane = /*                       */ 0b0000000000000010000000000000000;
+const TransitionLane12: Lane = /*                       */ 0b0000000000000100000000000000000;
+const TransitionLane13: Lane = /*                       */ 0b0000000000001000000000000000000;
+const TransitionLane14: Lane = /*                       */ 0b0000000000010000000000000000000;
+const TransitionLane15: Lane = /*                       */ 0b0000000000100000000000000000000;
+const TransitionLane16: Lane = /*                       */ 0b0000000001000000000000000000000;
 
-const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000100000000;
-const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111000000000;
-const TransitionLane1: Lane = /*                        */ 0b0000000000000000000001000000000;
-const TransitionLane2: Lane = /*                        */ 0b0000000000000000000010000000000;
-const TransitionLane3: Lane = /*                        */ 0b0000000000000000000100000000000;
-const TransitionLane4: Lane = /*                        */ 0b0000000000000000001000000000000;
-const TransitionLane5: Lane = /*                        */ 0b0000000000000000010000000000000;
-const TransitionLane6: Lane = /*                        */ 0b0000000000000000100000000000000;
-const TransitionLane7: Lane = /*                        */ 0b0000000000000001000000000000000;
-const TransitionLane8: Lane = /*                        */ 0b0000000000000010000000000000000;
-const TransitionLane9: Lane = /*                        */ 0b0000000000000100000000000000000;
-const TransitionLane10: Lane = /*                       */ 0b0000000000001000000000000000000;
-const TransitionLane11: Lane = /*                       */ 0b0000000000010000000000000000000;
-const TransitionLane12: Lane = /*                       */ 0b0000000000100000000000000000000;
-const TransitionLane13: Lane = /*                       */ 0b0000000001000000000000000000000;
-const TransitionLane14: Lane = /*                       */ 0b0000000010000000000000000000000;
-
-const RetryLanes: Lanes = /*                            */ 0b0000111100000000000000000000000;
-const RetryLane1: Lane = /*                             */ 0b0000000100000000000000000000000;
-const RetryLane2: Lane = /*                             */ 0b0000001000000000000000000000000;
-const RetryLane3: Lane = /*                             */ 0b0000010000000000000000000000000;
-const RetryLane4: Lane = /*                             */ 0b0000100000000000000000000000000;
+const RetryLanes: Lanes = /*                            */ 0b0000111110000000000000000000000;
+const RetryLane1: Lane = /*                             */ 0b0000000010000000000000000000000;
+const RetryLane2: Lane = /*                             */ 0b0000000100000000000000000000000;
+const RetryLane3: Lane = /*                             */ 0b0000001000000000000000000000000;
+const RetryLane4: Lane = /*                             */ 0b0000010000000000000000000000000;
+const RetryLane5: Lane = /*                             */ 0b0000100000000000000000000000000;
 
 export const SomeRetryLane: Lane = RetryLane1;
 
@@ -123,111 +74,71 @@ export const SelectiveHydrationLane: Lane = /*          */ 0b0001000000000000000
 const NonIdleLanes = /*                                 */ 0b0001111111111111111111111111111;
 
 export const IdleHydrationLane: Lane = /*               */ 0b0010000000000000000000000000000;
-const IdleLane: Lanes = /*                              */ 0b0100000000000000000000000000000;
+export const IdleLane: Lanes = /*                       */ 0b0100000000000000000000000000000;
 
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 
-// This function is used for the experimental scheduling profiler (react-devtools-scheduling-profiler)
+// This function is used for the experimental timeline (react-devtools-timeline)
 // It should be kept in sync with the Lanes values above.
-export function getLabelsForLanes(lanes: Lanes): Array<string> | void {
+export function getLabelForLane(lane: Lane): string | void {
   if (enableSchedulingProfiler) {
-    const labels = [];
-    if (lanes & SyncLane) {
-      labels.push('Sync');
+    if (lane & SyncLane) {
+      return 'Sync';
     }
-    if (lanes & SyncBatchedLane) {
-      labels.push('SyncBatched');
+    if (lane & InputContinuousHydrationLane) {
+      return 'InputContinuousHydration';
     }
-    if (lanes & InputDiscreteHydrationLane) {
-      labels.push('InputDiscreteHydration');
+    if (lane & InputContinuousLane) {
+      return 'InputContinuous';
     }
-    if (lanes & InputDiscreteLane) {
-      labels.push('InputDiscrete');
+    if (lane & DefaultHydrationLane) {
+      return 'DefaultHydration';
     }
-    if (lanes & InputContinuousHydrationLane) {
-      labels.push('InputContinuousHydration');
+    if (lane & DefaultLane) {
+      return 'Default';
     }
-    if (lanes & InputContinuousLane) {
-      labels.push('InputContinuous');
+    if (lane & TransitionHydrationLane) {
+      return 'TransitionHydration';
     }
-    if (lanes & DefaultHydrationLane) {
-      labels.push('DefaultHydration');
+    if (lane & TransitionLanes) {
+      return 'Transition';
     }
-    if (lanes & DefaultLane) {
-      labels.push('Default');
+    if (lane & RetryLanes) {
+      return 'Retry';
     }
-    if (lanes & TransitionHydrationLane) {
-      labels.push('TransitionHydration');
+    if (lane & SelectiveHydrationLane) {
+      return 'SelectiveHydration';
     }
-    if (lanes & TransitionLanes) {
-      labels.push('Transition(s)');
+    if (lane & IdleHydrationLane) {
+      return 'IdleHydration';
     }
-    if (lanes & RetryLanes) {
-      labels.push('Retry(s)');
+    if (lane & IdleLane) {
+      return 'Idle';
     }
-    if (lanes & SelectiveHydrationLane) {
-      labels.push('SelectiveHydration');
+    if (lane & OffscreenLane) {
+      return 'Offscreen';
     }
-    if (lanes & IdleHydrationLane) {
-      labels.push('IdleHydration');
-    }
-    if (lanes & IdleLane) {
-      labels.push('Idle');
-    }
-    if (lanes & OffscreenLane) {
-      labels.push('Offscreen');
-    }
-    return labels;
   }
 }
 
 export const NoTimestamp = -1;
 
-let currentUpdateLanePriority: LanePriority = NoLanePriority;
-
 let nextTransitionLane: Lane = TransitionLane1;
 let nextRetryLane: Lane = RetryLane1;
-
-export function getCurrentUpdateLanePriority(): LanePriority {
-  return currentUpdateLanePriority;
-}
-
-export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
-  currentUpdateLanePriority = newLanePriority;
-}
-
-// "Registers" used to "return" multiple values
-// Used by getHighestPriorityLanes and getNextLanes:
-let return_highestLanePriority: LanePriority = DefaultLanePriority;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
   switch (getHighestPriorityLane(lanes)) {
     case SyncLane:
-      return_highestLanePriority = SyncLanePriority;
       return SyncLane;
-    case SyncBatchedLane:
-      return_highestLanePriority = SyncBatchedLanePriority;
-      return SyncBatchedLane;
-    case InputDiscreteHydrationLane:
-      return_highestLanePriority = InputDiscreteHydrationLanePriority;
-      return InputDiscreteHydrationLane;
-    case InputDiscreteLane:
-      return_highestLanePriority = InputDiscreteLanePriority;
-      return InputDiscreteLane;
     case InputContinuousHydrationLane:
-      return_highestLanePriority = InputContinuousHydrationLanePriority;
       return InputContinuousHydrationLane;
     case InputContinuousLane:
-      return_highestLanePriority = InputContinuousLanePriority;
       return InputContinuousLane;
     case DefaultHydrationLane:
-      return_highestLanePriority = DefaultHydrationLanePriority;
       return DefaultHydrationLane;
     case DefaultLane:
-      return_highestLanePriority = DefaultLanePriority;
       return DefaultLane;
     case TransitionHydrationLane:
-      return_highestLanePriority = TransitionHydrationPriority;
       return TransitionHydrationLane;
     case TransitionLane1:
     case TransitionLane2:
@@ -243,25 +154,22 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
-      return_highestLanePriority = TransitionPriority;
+    case TransitionLane15:
+    case TransitionLane16:
       return lanes & TransitionLanes;
     case RetryLane1:
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
-      return_highestLanePriority = RetryLanePriority;
+    case RetryLane5:
       return lanes & RetryLanes;
     case SelectiveHydrationLane:
-      return_highestLanePriority = SelectiveHydrationLanePriority;
       return SelectiveHydrationLane;
     case IdleHydrationLane:
-      return_highestLanePriority = IdleHydrationLanePriority;
       return IdleHydrationLane;
     case IdleLane:
-      return_highestLanePriority = IdleLanePriority;
       return IdleLane;
     case OffscreenLane:
-      return_highestLanePriority = OffscreenLanePriority;
       return OffscreenLane;
     default:
       if (__DEV__) {
@@ -270,61 +178,7 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
         );
       }
       // This shouldn't be reachable, but as a fallback, return the entire bitmask.
-      return_highestLanePriority = DefaultLanePriority;
       return lanes;
-  }
-}
-
-export function schedulerPriorityToLanePriority(
-  schedulerPriorityLevel: ReactPriorityLevel,
-): LanePriority {
-  switch (schedulerPriorityLevel) {
-    case ImmediateSchedulerPriority:
-      return SyncLanePriority;
-    case UserBlockingSchedulerPriority:
-      return InputContinuousLanePriority;
-    case NormalSchedulerPriority:
-    case LowSchedulerPriority:
-      // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
-      return DefaultLanePriority;
-    case IdleSchedulerPriority:
-      return IdleLanePriority;
-    default:
-      return NoLanePriority;
-  }
-}
-
-export function lanePriorityToSchedulerPriority(
-  lanePriority: LanePriority,
-): ReactPriorityLevel {
-  switch (lanePriority) {
-    case SyncLanePriority:
-    case SyncBatchedLanePriority:
-      return ImmediateSchedulerPriority;
-    case InputDiscreteHydrationLanePriority:
-    case InputDiscreteLanePriority:
-    case InputContinuousHydrationLanePriority:
-    case InputContinuousLanePriority:
-      return UserBlockingSchedulerPriority;
-    case DefaultHydrationLanePriority:
-    case DefaultLanePriority:
-    case TransitionHydrationPriority:
-    case TransitionPriority:
-    case SelectiveHydrationLanePriority:
-    case RetryLanePriority:
-      return NormalSchedulerPriority;
-    case IdleHydrationLanePriority:
-    case IdleLanePriority:
-    case OffscreenLanePriority:
-      return IdleSchedulerPriority;
-    case NoLanePriority:
-      return NoSchedulerPriority;
-    default:
-      invariant(
-        false,
-        'Invalid update priority: %s. This is a bug in React.',
-        lanePriority,
-      );
   }
 }
 
@@ -332,49 +186,35 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // Early bailout if there's no pending work left.
   const pendingLanes = root.pendingLanes;
   if (pendingLanes === NoLanes) {
-    return_highestLanePriority = NoLanePriority;
     return NoLanes;
   }
 
   let nextLanes = NoLanes;
-  let nextLanePriority = NoLanePriority;
 
-  const expiredLanes = root.expiredLanes;
   const suspendedLanes = root.suspendedLanes;
   const pingedLanes = root.pingedLanes;
 
-  // Check if any work has expired.
-  if (expiredLanes !== NoLanes) {
-    // TODO: Should entangle with SyncLane
-    nextLanes = expiredLanes;
-    nextLanePriority = return_highestLanePriority = SyncLanePriority;
-  } else {
-    // Do not work on any idle work until all the non-idle work has finished,
-    // even if the work is suspended.
-    const nonIdlePendingLanes = pendingLanes & NonIdleLanes;
-    if (nonIdlePendingLanes !== NoLanes) {
-      const nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
-      if (nonIdleUnblockedLanes !== NoLanes) {
-        nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
-        nextLanePriority = return_highestLanePriority;
-      } else {
-        const nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
-        if (nonIdlePingedLanes !== NoLanes) {
-          nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
-          nextLanePriority = return_highestLanePriority;
-        }
-      }
+  // Do not work on any idle work until all the non-idle work has finished,
+  // even if the work is suspended.
+  const nonIdlePendingLanes = pendingLanes & NonIdleLanes;
+  if (nonIdlePendingLanes !== NoLanes) {
+    const nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
+    if (nonIdleUnblockedLanes !== NoLanes) {
+      nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
     } else {
-      // The only remaining work is Idle.
-      const unblockedLanes = pendingLanes & ~suspendedLanes;
-      if (unblockedLanes !== NoLanes) {
-        nextLanes = getHighestPriorityLanes(unblockedLanes);
-        nextLanePriority = return_highestLanePriority;
-      } else {
-        if (pingedLanes !== NoLanes) {
-          nextLanes = getHighestPriorityLanes(pingedLanes);
-          nextLanePriority = return_highestLanePriority;
-        }
+      const nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
+      if (nonIdlePingedLanes !== NoLanes) {
+        nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
+      }
+    }
+  } else {
+    // The only remaining work is Idle.
+    const unblockedLanes = pendingLanes & ~suspendedLanes;
+    if (unblockedLanes !== NoLanes) {
+      nextLanes = getHighestPriorityLanes(unblockedLanes);
+    } else {
+      if (pingedLanes !== NoLanes) {
+        nextLanes = getHighestPriorityLanes(pingedLanes);
       }
     }
   }
@@ -395,21 +235,33 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     // bother waiting until the root is complete.
     (wipLanes & suspendedLanes) === NoLanes
   ) {
-    getHighestPriorityLanes(wipLanes);
-    const wipLanePriority = return_highestLanePriority;
+    const nextLane = getHighestPriorityLane(nextLanes);
+    const wipLane = getHighestPriorityLane(wipLanes);
     if (
-      nextLanePriority <= wipLanePriority ||
+      // Tests whether the next lane is equal or lower priority than the wip
+      // one. This works because the bits decrease in priority as you go left.
+      nextLane >= wipLane ||
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      (nextLanePriority === DefaultLanePriority &&
-        wipLanePriority === TransitionPriority)
+      (nextLane === DefaultLane && (wipLane & TransitionLanes) !== NoLanes)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
       return wipLanes;
-    } else {
-      return_highestLanePriority = nextLanePriority;
     }
+  }
+
+  if (
+    allowConcurrentByDefault &&
+    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
+  ) {
+    // Do nothing, use the lanes as they were assigned.
+  } else if ((nextLanes & InputContinuousLane) !== NoLanes) {
+    // When updates are sync by default, we entangle continuous priority updates
+    // and default updates, so they render in the same batch. The only reason
+    // they use separate lanes is because continuous updates should interrupt
+    // transitions, but default updates should not.
+    nextLanes |= pendingLanes & DefaultLane;
   }
 
   // Check for entangled lanes and add them to the batch.
@@ -471,31 +323,64 @@ export function getMostRecentEventTime(root: FiberRoot, lanes: Lanes): number {
 }
 
 function computeExpirationTime(lane: Lane, currentTime: number) {
-  // TODO: Expiration heuristic is constant per lane, so could use a map.
-  getHighestPriorityLanes(lane);
-  const priority = return_highestLanePriority;
-  if (priority >= InputContinuousLanePriority) {
-    // User interactions should expire slightly more quickly.
-    //
-    // NOTE: This is set to the corresponding constant as in Scheduler.js. When
-    // we made it larger, a product metric in www regressed, suggesting there's
-    // a user interaction that's being starved by a series of synchronous
-    // updates. If that theory is correct, the proper solution is to fix the
-    // starvation. However, this scenario supports the idea that expiration
-    // times are an important safeguard when starvation does happen.
-    //
-    // Also note that, in the case of user input specifically, this will soon no
-    // longer be an issue because we plan to make user input synchronous by
-    // default (until you enter `startTransition`, of course.)
-    //
-    // If weren't planning to make these updates synchronous soon anyway, I
-    // would probably make this number a configurable parameter.
-    return currentTime + 250;
-  } else if (priority >= TransitionPriority) {
-    return currentTime + 5000;
-  } else {
-    // Anything idle priority or lower should never expire.
-    return NoTimestamp;
+  switch (lane) {
+    case SyncLane:
+    case InputContinuousHydrationLane:
+    case InputContinuousLane:
+      // User interactions should expire slightly more quickly.
+      //
+      // NOTE: This is set to the corresponding constant as in Scheduler.js.
+      // When we made it larger, a product metric in www regressed, suggesting
+      // there's a user interaction that's being starved by a series of
+      // synchronous updates. If that theory is correct, the proper solution is
+      // to fix the starvation. However, this scenario supports the idea that
+      // expiration times are an important safeguard when starvation
+      // does happen.
+      return currentTime + 250;
+    case DefaultHydrationLane:
+    case DefaultLane:
+    case TransitionHydrationLane:
+    case TransitionLane1:
+    case TransitionLane2:
+    case TransitionLane3:
+    case TransitionLane4:
+    case TransitionLane5:
+    case TransitionLane6:
+    case TransitionLane7:
+    case TransitionLane8:
+    case TransitionLane9:
+    case TransitionLane10:
+    case TransitionLane11:
+    case TransitionLane12:
+    case TransitionLane13:
+    case TransitionLane14:
+    case TransitionLane15:
+    case TransitionLane16:
+      return currentTime + 5000;
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+    case RetryLane5:
+      // TODO: Retries should be allowed to expire if they are CPU bound for
+      // too long, but when I made this change it caused a spike in browser
+      // crashes. There must be some other underlying bug; not super urgent but
+      // ideally should figure out why and fix it. Unfortunately we don't have
+      // a repro for the crashes, only detected via production metrics.
+      return NoTimestamp;
+    case SelectiveHydrationLane:
+    case IdleHydrationLane:
+    case IdleLane:
+    case OffscreenLane:
+      // Anything idle priority or lower should never expire.
+      return NoTimestamp;
+    default:
+      if (__DEV__) {
+        console.error(
+          'Should have found matching lanes. This is a bug in React.',
+        );
+      }
+      return NoTimestamp;
   }
 }
 
@@ -558,9 +443,10 @@ export function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes {
   return NoLanes;
 }
 
-export function returnNextLanesPriority() {
-  return return_highestLanePriority;
+export function includesSyncLane(lanes: Lanes) {
+  return (lanes & SyncLane) !== NoLanes;
 }
+
 export function includesNonIdleWork(lanes: Lanes) {
   return (lanes & NonIdleLanes) !== NoLanes;
 }
@@ -571,41 +457,30 @@ export function includesOnlyTransitions(lanes: Lanes) {
   return (lanes & TransitionLanes) === lanes;
 }
 
-export function isTransitionLane(lane: Lane) {
-  return (lane & TransitionLanes) !== 0;
+export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
+  if (
+    allowConcurrentByDefault &&
+    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
+  ) {
+    // Concurrent updates by default always use time slicing.
+    return false;
+  }
+  const SyncDefaultLanes =
+    InputContinuousHydrationLane |
+    InputContinuousLane |
+    DefaultHydrationLane |
+    DefaultLane;
+  return (lanes & SyncDefaultLanes) !== NoLanes;
 }
 
-// To ensure consistency across multiple updates in the same event, this should
-// be a pure function, so that it always returns the same lane for given inputs.
-export function findUpdateLane(lanePriority: LanePriority): Lane {
-  switch (lanePriority) {
-    case NoLanePriority:
-      break;
-    case SyncLanePriority:
-      return SyncLane;
-    case SyncBatchedLanePriority:
-      return SyncBatchedLane;
-    case InputDiscreteLanePriority:
-      return InputDiscreteLane;
-    case InputContinuousLanePriority:
-      return InputContinuousLane;
-    case DefaultLanePriority:
-      return DefaultLane;
-    case TransitionPriority: // Should be handled by findTransitionLane instead
-    case RetryLanePriority: // Should be handled by findRetryLane instead
-      break;
-    case IdleLanePriority:
-      return IdleLane;
-    default:
-      // The remaining priorities are not valid for updates
-      break;
-  }
+export function includesExpiredLane(root: FiberRoot, lanes: Lanes) {
+  // This is a separate check from includesBlockingLane because a lane can
+  // expire after a render has already started.
+  return (lanes & root.expiredLanes) !== NoLanes;
+}
 
-  invariant(
-    false,
-    'Invalid update priority: %s. This is a bug in React.',
-    lanePriority,
-  );
+export function isTransitionLane(lane: Lane) {
+  return (lane & TransitionLanes) !== 0;
 }
 
 export function claimNextTransitionLane(): Lane {
@@ -629,7 +504,7 @@ export function claimNextRetryLane(): Lane {
   return lane;
 }
 
-function getHighestPriorityLane(lanes: Lanes) {
+export function getHighestPriorityLane(lanes: Lanes): Lane {
   return lanes & -lanes;
 }
 
@@ -678,13 +553,6 @@ export function laneToLanes(lane: Lane): Lanes {
 export function higherPriorityLane(a: Lane, b: Lane) {
   // This works because the bit ranges decrease in priority as you go left.
   return a !== NoLane && a < b ? a : b;
-}
-
-export function higherLanePriority(
-  a: LanePriority,
-  b: LanePriority,
-): LanePriority {
-  return a !== NoLanePriority && a > b ? a : b;
 }
 
 export function createLaneMap<T>(initial: T): LaneMap<T> {
@@ -753,20 +621,6 @@ export function markRootPinged(
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
-export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
-  root.expiredLanes |= expiredLanes & root.pendingLanes;
-}
-
-export function markDiscreteUpdatesExpired(root: FiberRoot) {
-  if (root.pendingLanes & InputDiscreteLane) {
-    root.expiredLanes |= InputDiscreteLane;
-  }
-}
-
-export function hasDiscreteLanes(lanes: Lanes) {
-  return (lanes & InputDiscreteLane) !== NoLanes;
-}
-
 export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
   root.mutableReadLanes |= updateLane & root.pendingLanes;
 }
@@ -784,15 +638,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
-
-  if (enableCache) {
-    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
-    if (pooledCacheLanes === NoLanes) {
-      // None of the remaining work relies on the cache pool. Clear it so
-      // subsequent requests get a new cache.
-      root.pooledCache = null;
-    }
-  }
 
   const entanglements = root.entanglements;
   const eventTimes = root.eventTimes;
@@ -847,49 +692,47 @@ export function getBumpedLaneForHydration(
   root: FiberRoot,
   renderLanes: Lanes,
 ): Lane {
-  getHighestPriorityLanes(renderLanes);
-  const highestLanePriority = return_highestLanePriority;
+  const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  switch (highestLanePriority) {
-    case SyncLanePriority:
-    case SyncBatchedLanePriority:
-      lane = NoLane;
-      break;
-    case InputDiscreteHydrationLanePriority:
-    case InputDiscreteLanePriority:
-      lane = InputDiscreteHydrationLane;
-      break;
-    case InputContinuousHydrationLanePriority:
-    case InputContinuousLanePriority:
+  switch (renderLane) {
+    case InputContinuousLane:
       lane = InputContinuousHydrationLane;
       break;
-    case DefaultHydrationLanePriority:
-    case DefaultLanePriority:
+    case DefaultLane:
       lane = DefaultHydrationLane;
       break;
-    case TransitionHydrationPriority:
-    case TransitionPriority:
+    case TransitionLane1:
+    case TransitionLane2:
+    case TransitionLane3:
+    case TransitionLane4:
+    case TransitionLane5:
+    case TransitionLane6:
+    case TransitionLane7:
+    case TransitionLane8:
+    case TransitionLane9:
+    case TransitionLane10:
+    case TransitionLane11:
+    case TransitionLane12:
+    case TransitionLane13:
+    case TransitionLane14:
+    case TransitionLane15:
+    case TransitionLane16:
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+    case RetryLane5:
       lane = TransitionHydrationLane;
       break;
-    case RetryLanePriority:
-      // Shouldn't be reachable under normal circumstances, so there's no
-      // dedicated lane for retry priority. Use the one for long transitions.
-      lane = TransitionHydrationLane;
-      break;
-    case SelectiveHydrationLanePriority:
-      lane = SelectiveHydrationLane;
-      break;
-    case IdleHydrationLanePriority:
-    case IdleLanePriority:
+    case IdleLane:
       lane = IdleHydrationLane;
       break;
-    case OffscreenLanePriority:
-    case NoLanePriority:
+    default:
+      // Everything else is already either a hydration lane, or shouldn't
+      // be retried at a hydration lane.
       lane = NoLane;
       break;
-    default:
-      invariant(false, 'Invalid lane: %s. This is a bug in React.', lane);
   }
 
   // Check if the lane we chose is suspended. If so, that indicates that we
@@ -903,16 +746,53 @@ export function getBumpedLaneForHydration(
   return lane;
 }
 
-const clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;
-
-// Count leading zeros. Only used on lanes, so assume input is an integer.
-// Based on:
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/clz32
-const log = Math.log;
-const LN2 = Math.LN2;
-function clz32Fallback(lanes: Lanes | Lane) {
-  if (lanes === 0) {
-    return 32;
+export function addFiberToLanesMap(
+  root: FiberRoot,
+  fiber: Fiber,
+  lanes: Lanes | Lane,
+) {
+  if (!enableUpdaterTracking) {
+    return;
   }
-  return (31 - ((log(lanes) / LN2) | 0)) | 0;
+  if (!isDevToolsPresent) {
+    return;
+  }
+  const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const updaters = pendingUpdatersLaneMap[index];
+    updaters.add(fiber);
+
+    lanes &= ~lane;
+  }
+}
+
+export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
+  if (!enableUpdaterTracking) {
+    return;
+  }
+  if (!isDevToolsPresent) {
+    return;
+  }
+  const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  const memoizedUpdaters = root.memoizedUpdaters;
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const updaters = pendingUpdatersLaneMap[index];
+    if (updaters.size > 0) {
+      updaters.forEach(fiber => {
+        const alternate = fiber.alternate;
+        if (alternate === null || !memoizedUpdaters.has(alternate)) {
+          memoizedUpdaters.add(fiber);
+        }
+      });
+      updaters.clear();
+    }
+
+    lanes &= ~lane;
+  }
 }

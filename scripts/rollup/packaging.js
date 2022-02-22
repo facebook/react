@@ -75,6 +75,7 @@ function getBundleOutputPath(bundleType, filename, packageName) {
       switch (packageName) {
         case 'scheduler':
         case 'react':
+        case 'react-is':
         case 'react-test-renderer':
           return `build/facebook-react-native/${packageName}/cjs/${filename}`;
         case 'react-native-renderer':
@@ -138,7 +139,11 @@ let entryPointsToHasBundle = new Map();
 for (const bundle of Bundles.bundles) {
   let hasBundle = entryPointsToHasBundle.get(bundle.entry);
   if (!hasBundle) {
-    entryPointsToHasBundle.set(bundle.entry, bundle.bundleTypes.length > 0);
+    const hasNonFBBundleTypes = bundle.bundleTypes.some(
+      type =>
+        type !== FB_WWW_DEV && type !== FB_WWW_PROD && type !== FB_WWW_PROFILING
+    );
+    entryPointsToHasBundle.set(bundle.entry, hasNonFBBundleTypes);
   }
 }
 
@@ -175,6 +180,15 @@ function filterOutEntrypoints(name) {
       i--;
       unlinkSync(`build/node_modules/${name}/${filename}`);
       changed = true;
+      // Remove it from the exports field too if it exists.
+      const exportsJSON = packageJSON.exports;
+      if (exportsJSON) {
+        if (filename === 'index.js') {
+          delete exportsJSON['.'];
+        } else {
+          delete exportsJSON['./' + filename.replace(/\.js$/, '')];
+        }
+      }
     }
   }
   if (changed) {

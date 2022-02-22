@@ -8,13 +8,37 @@
  */
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
+import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 
 export function startTransition(scope: () => void) {
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
+  ReactCurrentBatchConfig.transition = {};
+  const currentTransition = ReactCurrentBatchConfig.transition;
+
+  if (__DEV__) {
+    ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+  }
   try {
     scope();
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (__DEV__) {
+      if (
+        prevTransition === null &&
+        warnOnSubscriptionInsideStartTransition &&
+        currentTransition._updatedFibers
+      ) {
+        const updatedFibersCount = currentTransition._updatedFibers.size;
+        if (updatedFibersCount > 10) {
+          console.warn(
+            'Detected a large number of updates inside startTransition. ' +
+              'If this is due to a subscription please re-write it to use React provided hooks. ' +
+              'Otherwise concurrent mode guarantees are off the table.',
+          );
+        }
+        currentTransition._updatedFibers.clear();
+      }
+    }
   }
 }

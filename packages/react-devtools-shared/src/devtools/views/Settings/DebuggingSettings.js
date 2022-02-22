@@ -17,10 +17,12 @@ export default function DebuggingSettings(_: {||}) {
   const {
     appendComponentStack,
     breakOnConsoleErrors,
+    hideConsoleLogsInStrictMode,
     setAppendComponentStack,
     setBreakOnConsoleErrors,
     setShowInlineWarningsAndErrors,
     showInlineWarningsAndErrors,
+    sethideConsoleLogsInStrictMode,
   } = useContext(SettingsContext);
 
   return (
@@ -64,8 +66,17 @@ export default function DebuggingSettings(_: {||}) {
         </label>
       </div>
 
-      <div className={styles.ConsoleAPIWarning}>
-        These settings require DevTools to override native console APIs.
+      <div className={styles.Setting}>
+        <label>
+          <input
+            type="checkbox"
+            checked={hideConsoleLogsInStrictMode}
+            onChange={({currentTarget}) =>
+              sethideConsoleLogsInStrictMode(currentTarget.checked)
+            }
+          />{' '}
+          Hide logs during second render in Strict Mode
+        </label>
       </div>
     </div>
   );

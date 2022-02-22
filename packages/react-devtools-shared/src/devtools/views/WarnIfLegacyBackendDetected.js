@@ -31,6 +31,7 @@ export default function WarnIfLegacyBackendDetected(_: {||}) {
           // Any of these types indicate the v3 backend.
           dispatch({
             canBeDismissed: false,
+            id: 'WarnIfLegacyBackendDetected',
             type: 'SHOW',
             title: 'DevTools v4 is incompatible with this version of React',
             content: <InvalidBackendDetected />,

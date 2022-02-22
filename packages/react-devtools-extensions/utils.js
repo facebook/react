@@ -9,11 +9,18 @@ const {execSync} = require('child_process');
 const {readFileSync} = require('fs');
 const {resolve} = require('path');
 
+const DARK_MODE_DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, 0.5)';
+const DARK_MODE_DIMMED_ERROR_COLOR = 'rgba(250, 123, 130, 0.5)';
+const DARK_MODE_DIMMED_LOG_COLOR = 'rgba(125, 125, 125, 0.5)';
+const LIGHT_MODE_DIMMED_WARNING_COLOR = 'rgba(250, 180, 50, 0.75)';
+const LIGHT_MODE_DIMMED_ERROR_COLOR = 'rgba(250, 123, 130, 0.75)';
+const LIGHT_MODE_DIMMED_LOG_COLOR = 'rgba(125, 125, 125, 0.75)';
+
 const GITHUB_URL = 'https://github.com/facebook/react';
 
 function getGitCommit() {
   try {
-    return execSync('git show -s --format=%h')
+    return execSync('git show -s --no-show-signature --format=%h')
       .toString()
       .trim();
   } catch (error) {
@@ -23,12 +30,14 @@ function getGitCommit() {
   }
 }
 
-function getVersionString() {
-  const packageVersion = JSON.parse(
-    readFileSync(
-      resolve(__dirname, '..', 'react-devtools-core', './package.json'),
-    ),
-  ).version;
+function getVersionString(packageVersion = null) {
+  if (packageVersion == null) {
+    packageVersion = JSON.parse(
+      readFileSync(
+        resolve(__dirname, '..', 'react-devtools-core', './package.json'),
+      ),
+    ).version;
+  }
 
   const commit = getGitCommit();
 
@@ -36,6 +45,12 @@ function getVersionString() {
 }
 
 module.exports = {
+  DARK_MODE_DIMMED_WARNING_COLOR,
+  DARK_MODE_DIMMED_ERROR_COLOR,
+  DARK_MODE_DIMMED_LOG_COLOR,
+  LIGHT_MODE_DIMMED_WARNING_COLOR,
+  LIGHT_MODE_DIMMED_ERROR_COLOR,
+  LIGHT_MODE_DIMMED_LOG_COLOR,
   GITHUB_URL,
   getGitCommit,
   getVersionString,

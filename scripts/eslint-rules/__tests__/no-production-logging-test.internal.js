@@ -10,7 +10,7 @@
 'use strict';
 
 const rule = require('../no-production-logging');
-const RuleTester = require('eslint').RuleTester;
+const {RuleTester} = require('eslint');
 const ruleTester = new RuleTester();
 
 ruleTester.run('no-production-logging', rule, {

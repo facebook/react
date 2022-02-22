@@ -49,7 +49,6 @@ export type ReactConsumer<T> = {
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
-    unstable_observedBits?: number,
     ...
   },
   ...
@@ -59,7 +58,6 @@ export type ReactContext<T> = {
   $$typeof: Symbol | number,
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
-  _calculateChangedBits: ((a: T, b: T) => number) | null,
   _currentValue: T,
   _currentValue2: T,
   _threadCount: number,
@@ -157,8 +155,6 @@ export type MutableSource<Source: $NonMaybeType<mixed>> = {|
 // This doesn't require a value to be passed to either handler.
 export interface Wakeable {
   then(onFulfill: () => mixed, onReject: () => mixed): void | Wakeable;
-  // Special flag to opt out of tracing interactions across a Suspense boundary.
-  __reactDoNotTraceInteractions?: boolean;
 }
 
 // The subset of a Promise that React APIs rely on. This resolves a value.
@@ -170,3 +166,8 @@ export interface Thenable<+R> {
     onReject: (error: mixed) => void | Thenable<U> | U,
   ): void | Thenable<U>;
 }
+
+export type OffscreenMode =
+  | 'hidden'
+  | 'unstable-defer-without-hiding'
+  | 'visible';

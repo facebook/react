@@ -160,6 +160,11 @@ describe('transform-test-gate-pragma', () => {
   test('single quoted strings', () => {
     expect(shouldPass).toBe(true);
   });
+
+  // @gate flagThatIsOn // This is a comment
+  test('line comment', () => {
+    expect(shouldPass).toBe(true);
+  });
 });
 
 describe('transform test-gate-pragma: actual runtime', () => {

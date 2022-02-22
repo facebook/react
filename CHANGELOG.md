@@ -1,3 +1,9 @@
+## 17.0.2 (March 22, 2021)
+
+### React DOM
+
+* Remove an unused dependency to address the [`SharedArrayBuffer` cross-origin isolation warning](https://developer.chrome.com/blog/enabling-shared-array-buffer/). ([@koba04](https://github.com/koba04) and [@bvaughn](https://github.com/bvaughn) in [#20831](https://github.com/facebook/react/pull/20831), [#20832](https://github.com/facebook/react/pull/20832), and [#20840](https://github.com/facebook/react/pull/20840))
+
 ## 17.0.1 (October 22, 2020)
 
 ### React DOM
@@ -673,7 +679,7 @@ This release was published in a broken state and should be skipped.
 
 ### React Is (New)
 
-* First release of the [new package](https://github.com/facebook/react/tree/master/packages/react-is) that libraries can use to detect different React node types. ([@bvaughn](https://github.com/bvaughn) in [#12199](https://github.com/facebook/react/pull/12199))
+* First release of the [new package](https://github.com/facebook/react/tree/main/packages/react-is) that libraries can use to detect different React node types. ([@bvaughn](https://github.com/bvaughn) in [#12199](https://github.com/facebook/react/pull/12199))
 * Add `ReactIs.isValidElementType()` to help higher-order components validate their inputs. ([@jamesreggio](https://github.com/jamesreggio) in [#12483](https://github.com/facebook/react/pull/12483))
 
 ### React Lifecycles Compat (New)
@@ -682,7 +688,7 @@ This release was published in a broken state and should be skipped.
 
 ### Create Subscription (New)
 
-* First release of the [new package](https://github.com/facebook/react/tree/master/packages/create-subscription) to subscribe to external data sources safely for async rendering. ([@bvaughn](https://github.com/bvaughn) in [#12325](https://github.com/facebook/react/pull/12325))
+* First release of the [new package](https://github.com/facebook/react/tree/main/packages/create-subscription) to subscribe to external data sources safely for async rendering. ([@bvaughn](https://github.com/bvaughn) in [#12325](https://github.com/facebook/react/pull/12325))
 
 ### React Reconciler (Experimental)
 
@@ -813,12 +819,12 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 
 ### React Reconciler (Experimental)
 
-* First release of the [new experimental package](https://github.com/facebook/react/blob/master/packages/react-reconciler/README.md) for creating custom renderers. ([@iamdustan](https://github.com/iamdustan) in [#10758](https://github.com/facebook/react/pull/10758))
+* First release of the [new experimental package](https://github.com/facebook/react/blob/main/packages/react-reconciler/README.md) for creating custom renderers. ([@iamdustan](https://github.com/iamdustan) in [#10758](https://github.com/facebook/react/pull/10758))
 * Add support for React DevTools. ([@gaearon](https://github.com/gaearon) in [#11463](https://github.com/facebook/react/pull/11463))
 
 ### React Call Return (Experimental)
 
-* First release of the [new experimental package](https://github.com/facebook/react/tree/master/packages/react-call-return) for parent-child communication. ([@gaearon](https://github.com/gaearon) in [#11364](https://github.com/facebook/react/pull/11364))
+* First release of the [new experimental package](https://github.com/facebook/react/tree/main/packages/react-call-return) for parent-child communication. ([@gaearon](https://github.com/gaearon) in [#11364](https://github.com/facebook/react/pull/11364))
 
 ## 16.0.1 (August 1, 2018)
 

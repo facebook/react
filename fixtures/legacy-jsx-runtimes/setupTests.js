@@ -33,16 +33,6 @@ function shouldIgnoreConsoleError(format, args) {
       // They are noisy too so we'll try to ignore them.
       return true;
     }
-    if (
-      format.indexOf(
-        'act(...) is not supported in production builds of React'
-      ) === 0
-    ) {
-      // We don't yet support act() for prod builds, and warn for it.
-      // But we'd like to use act() ourselves for prod builds.
-      // Let's ignore the warning and #yolo.
-      return true;
-    }
   }
   // Looks legit
   return false;

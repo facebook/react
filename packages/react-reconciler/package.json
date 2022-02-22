@@ -11,7 +11,7 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
+    "constants.js",
     "index.js",
     "reflection.js",
     "cjs/"
@@ -26,7 +26,7 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^17.0.2"
+    "react": "^17.0.3"
   },
   "dependencies": {
     "loose-envify": "^1.1.0",

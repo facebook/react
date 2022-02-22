@@ -15,11 +15,11 @@ export default {
     docs: {
       description:
         'verifies the list of dependencies for Hooks like useEffect and similar',
-      category: 'Best Practices',
       recommended: true,
       url: 'https://github.com/facebook/react/issues/14920',
     },
     fixable: 'code',
+    hasSuggestions: true,
     schema: [
       {
         type: 'object',
@@ -145,6 +145,8 @@ export default {
         componentScope = currentScope;
       }
 
+      const isArray = Array.isArray;
+
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
 
@@ -157,7 +159,7 @@ export default {
       //       ^^^ true for this reference
       // False for everything else.
       function isStableKnownHookValue(resolved) {
-        if (!Array.isArray(resolved.defs)) {
+        if (!isArray(resolved.defs)) {
           return false;
         }
         const def = resolved.defs[0];
@@ -226,7 +228,7 @@ export default {
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
-            Array.isArray(resolved.identifiers)
+            isArray(resolved.identifiers)
           ) {
             // Is second tuple value the same reference we're checking?
             if (id.elements[1] === resolved.identifiers[0]) {
@@ -253,12 +255,14 @@ export default {
             }
           }
         } else if (name === 'useTransition') {
+          // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
+            id.elements.length === 2 &&
             Array.isArray(resolved.identifiers)
           ) {
-            // Is first tuple value the same reference we're checking?
-            if (id.elements[0] === resolved.identifiers[0]) {
+            // Is second tuple value the same reference we're checking?
+            if (id.elements[1] === resolved.identifiers[0]) {
               // Setter is stable.
               return true;
             }
@@ -270,7 +274,7 @@ export default {
 
       // Some are just functions that don't reference anything dynamic.
       function isFunctionWithoutCapturedValues(resolved) {
-        if (!Array.isArray(resolved.defs)) {
+        if (!isArray(resolved.defs)) {
           return false;
         }
         const def = resolved.defs[0];
@@ -749,7 +753,7 @@ export default {
             if (
               isUsedOutsideOfHook &&
               construction.type === 'Variable' &&
-              // Objects may be mutated ater construction, which would make this
+              // Objects may be mutated after construction, which would make this
               // fix unsafe. Functions _probably_ won't be mutated, so we'll
               // allow this fix for them.
               depType === 'function'
@@ -1656,6 +1660,11 @@ function analyzePropertyChain(node, optionalChains) {
     return result;
   } else if (node.type === 'ChainExpression' && !node.computed) {
     const expression = node.expression;
+
+    if (expression.type === 'CallExpression') {
+      throw new Error(`Unsupported node type: ${expression.type}`);
+    }
+
     const object = analyzePropertyChain(expression.object, optionalChains);
     const property = analyzePropertyChain(expression.property, null);
     const result = `${object}.${property}`;

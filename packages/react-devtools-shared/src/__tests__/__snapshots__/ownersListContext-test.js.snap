@@ -13,18 +13,21 @@ Array [
     "displayName": "Grandparent",
     "hocDisplayNames": null,
     "id": 2,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Parent",
     "hocDisplayNames": null,
     "id": 3,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Child",
     "hocDisplayNames": null,
     "id": 4,
+    "key": null,
     "type": 5,
   },
 ]
@@ -44,18 +47,21 @@ Array [
     "displayName": "Grandparent",
     "hocDisplayNames": null,
     "id": 2,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Parent",
     "hocDisplayNames": null,
     "id": 3,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Child",
     "hocDisplayNames": null,
     "id": 4,
+    "key": null,
     "type": 5,
   },
 ]
@@ -67,12 +73,14 @@ Array [
     "displayName": "Grandparent",
     "hocDisplayNames": null,
     "id": 2,
+    "key": null,
     "type": 5,
   },
   Object {
     "displayName": "Parent",
     "hocDisplayNames": null,
     "id": 3,
+    "key": null,
     "type": 5,
   },
 ]
@@ -84,6 +92,7 @@ Array [
     "displayName": "Grandparent",
     "hocDisplayNames": null,
     "id": 2,
+    "key": null,
     "type": 5,
   },
   Object {
@@ -92,6 +101,7 @@ Array [
       "Memo",
     ],
     "id": 3,
+    "key": null,
     "type": 8,
   },
   Object {
@@ -100,6 +110,7 @@ Array [
       "ForwardRef",
     ],
     "id": 4,
+    "key": null,
     "type": 6,
   },
 ]
@@ -116,6 +127,7 @@ Array [
     "displayName": "Grandparent",
     "hocDisplayNames": null,
     "id": 2,
+    "key": null,
     "type": 5,
   },
 ]

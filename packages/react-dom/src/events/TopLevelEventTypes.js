@@ -71,6 +71,7 @@ export type TopLevelType =
   | 'progress'
   | 'ratechange'
   | 'reset'
+  | 'resize'
   | 'scroll'
   | 'seeked'
   | 'seeking'

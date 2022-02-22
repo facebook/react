@@ -18,17 +18,42 @@ import {
 } from 'react-server/src/ReactFlightServer';
 
 function createDrainHandler(destination, request) {
-  return () => startFlowing(request);
+  return () => startFlowing(request, destination);
 }
 
-function pipeToNodeWritable(
+type Options = {
+  onError?: (error: mixed) => void,
+};
+
+type Controls = {|
+  pipe<T: Writable>(destination: T): T,
+|};
+
+function renderToPipeableStream(
   model: ReactModel,
-  destination: Writable,
   webpackMap: BundlerConfig,
-): void {
-  const request = createRequest(model, destination, webpackMap);
-  destination.on('drain', createDrainHandler(destination, request));
+  options?: Options,
+): Controls {
+  const request = createRequest(
+    model,
+    webpackMap,
+    options ? options.onError : undefined,
+  );
+  let hasStartedFlowing = false;
   startWork(request);
+  return {
+    pipe<T: Writable>(destination: T): T {
+      if (hasStartedFlowing) {
+        throw new Error(
+          'React currently only supports piping to one writable stream.',
+        );
+      }
+      hasStartedFlowing = true;
+      startFlowing(request, destination);
+      destination.on('drain', createDrainHandler(destination, request));
+      return destination;
+    },
+  };
 }
 
-export {pipeToNodeWritable};
+export {renderToPipeableStream};

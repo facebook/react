@@ -48,7 +48,7 @@ describe('unmocked scheduler', () => {
       TestAct(() => {
         TestRenderer.create(<Effecty />);
       });
-      expect(log).toEqual(['called']);
+      expect(log).toEqual([]);
     });
     expect(log).toEqual(['called']);
   });

@@ -74,7 +74,7 @@ export default function Element({data, index, style}: Props) {
     }
   };
 
-  const handleMouseDown = ({metaKey}) => {
+  const handleClick = ({metaKey}) => {
     if (id !== null) {
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
@@ -113,9 +113,14 @@ export default function Element({data, index, style}: Props) {
     depth,
     displayName,
     hocDisplayNames,
+    isStrictModeNonCompliant,
     key,
     type,
   } = ((element: any): ElementType);
+
+  // Only show strict mode non-compliance badges for top level elements.
+  // Showing an inline badge for every element in the tree would be noisy.
+  const showStrictModeBadge = isStrictModeNonCompliant && depth === 0;
 
   let className = styles.Element;
   if (isSelected) {
@@ -131,9 +136,10 @@ export default function Element({data, index, style}: Props) {
       className={className}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onMouseDown={handleMouseDown}
+      onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       style={style}
+      data-testname="ComponentTreeListItem"
       data-depth={depth}>
       {/* This wrapper is used by Tree for measurement purposes. */}
       <div
@@ -146,7 +152,9 @@ export default function Element({data, index, style}: Props) {
         {ownerID === null ? (
           <ExpandCollapseToggle element={element} store={store} />
         ) : null}
+
         <DisplayName displayName={displayName} id={((id: any): number)} />
+
         {key && (
           <Fragment>
             &nbsp;<span className={styles.KeyName}>key</span>="
@@ -188,6 +196,17 @@ export default function Element({data, index, style}: Props) {
                 ? styles.WarningIconContrast
                 : styles.WarningIcon
             }
+          />
+        )}
+        {showStrictModeBadge && (
+          <Icon
+            className={
+              isSelected && treeFocused
+                ? styles.StrictModeContrast
+                : styles.StrictMode
+            }
+            title="This component is not running in StrictMode."
+            type="strict-mode-non-compliant"
           />
         )}
       </div>

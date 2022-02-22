@@ -12,14 +12,14 @@ import type {CapturedValue} from '../ReactCapturedValue';
 
 import {ClassComponent} from '../ReactWorkTags';
 
-import invariant from 'shared/invariant';
-
 // Provided by www
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');
-invariant(
-  typeof ReactFiberErrorDialogWWW.showErrorDialog === 'function',
-  'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
-);
+
+if (typeof ReactFiberErrorDialogWWW.showErrorDialog !== 'function') {
+  throw new Error(
+    'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
+  );
+}
 
 export function showErrorDialog(
   boundary: Fiber,

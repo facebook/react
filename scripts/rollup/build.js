@@ -19,7 +19,6 @@ const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
-const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
@@ -94,10 +93,6 @@ const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
-const shouldExtractErrors = argv['extract-errors'];
-const errorCodeOpts = {
-  errorMapFilePath: 'scripts/error-codes/codes.json',
-};
 
 const closureOptions = {
   compilation_level: 'SIMPLE',
@@ -149,7 +144,8 @@ function getBabelConfig(
   bundleType,
   packageName,
   externals,
-  isDevelopment
+  isDevelopment,
+  bundle
 ) {
   const canAccessReactObject =
     packageName === 'react' || externals.indexOf('react') !== -1;
@@ -175,31 +171,13 @@ function getBabelConfig(
   if (updateBabelOptions) {
     options = updateBabelOptions(options);
   }
+  // Controls whether to replace error messages with error codes in production.
+  // By default, error messages are replaced in production.
+  if (!isDevelopment && bundle.minifyWithProdErrorCodes !== false) {
+    options.plugins.push(require('../error-codes/transform-error-messages'));
+  }
+
   switch (bundleType) {
-    case FB_WWW_DEV:
-    case FB_WWW_PROD:
-    case FB_WWW_PROFILING:
-      return Object.assign({}, options, {
-        plugins: options.plugins.concat([
-          // Minify invariant messages
-          require('../error-codes/transform-error-messages'),
-        ]),
-      });
-    case RN_OSS_DEV:
-    case RN_OSS_PROD:
-    case RN_OSS_PROFILING:
-    case RN_FB_DEV:
-    case RN_FB_PROD:
-    case RN_FB_PROFILING:
-      return Object.assign({}, options, {
-        plugins: options.plugins.concat([
-          [
-            require('../error-codes/transform-error-messages'),
-            // Preserve full error messages in React Native build
-            {noMinify: true},
-          ],
-        ]),
-      });
     case UMD_DEV:
     case UMD_PROD:
     case UMD_PROFILING:
@@ -210,8 +188,6 @@ function getBabelConfig(
         plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
           path.resolve('./scripts/babel/transform-object-assign-require'),
-          // Minify invariant messages
-          require('../error-codes/transform-error-messages'),
         ]),
       });
     default:
@@ -343,7 +319,6 @@ function getPlugins(
   pureExternalModules,
   bundle
 ) {
-  const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
   const isProduction = isProductionBundleType(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
@@ -364,13 +339,6 @@ function getPlugins(
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
-    // Extract error codes from invariant() messages into a file.
-    shouldExtractErrors && {
-      transform(source) {
-        findAndRecordErrorCodes(source);
-        return source;
-      },
-    },
     // Shim any modules that need forking in this environment.
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
@@ -390,7 +358,8 @@ function getPlugins(
         bundleType,
         packageName,
         externals,
-        !isProduction
+        !isProduction,
+        bundle
       )
     ),
     // Remove 'use strict' from individual source files.
@@ -443,7 +412,8 @@ function getPlugins(
           bundleType,
           globalName,
           filename,
-          moduleType
+          moduleType,
+          bundle.wrapWithModuleBoundaries
         );
       },
     },
@@ -582,6 +552,17 @@ async function createBundle(bundle, bundleType) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
       if (!shouldBundleDependencies && isProvidedByDependency) {
+        if (id.indexOf('/src/') !== -1) {
+          throw Error(
+            'You are trying to import ' +
+              id +
+              ' but ' +
+              externals.find(containsThisModule) +
+              ' is one of npm dependencies, ' +
+              'so it will not contain that source file. You probably want ' +
+              'to create a new bundle entry point for it instead.'
+          );
+        }
         return true;
       }
       return !!peerGlobals[id];
@@ -753,7 +734,7 @@ async function buildEverything() {
     );
   }
 
-  if (!shouldExtractErrors && process.env.CIRCLE_NODE_TOTAL) {
+  if (process.env.CIRCLE_NODE_TOTAL) {
     // In CI, parallelize bundles across multiple tasks.
     const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
     const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
@@ -777,14 +758,6 @@ async function buildEverything() {
   console.log(Stats.printResults());
   if (!forcePrettyOutput) {
     Stats.saveResults();
-  }
-
-  if (shouldExtractErrors) {
-    console.warn(
-      '\nWarning: this build was created with --extract-errors enabled.\n' +
-        'this will result in extremely slow builds and should only be\n' +
-        'used when the error map needs to be rebuilt.\n'
-    );
   }
 }
 

@@ -1,3 +1,11 @@
+## 4.3.0
+
+* Support ESLint 8. ([@MichaelDeBoey](https://github.com/MichaelDeBoey) in [#22248](https://github.com/facebook/react/pull/22248))
+* Fix a crash with an empty effect. ([@ChrisRu](https://github.com/ChrisRu) in [#20385](https://github.com/facebook/react/pull/20385))
+* Improve the error message. ([@callmetwan](https://github.com/callmetwan) in [#20692](https://github.com/facebook/react/pull/20692))
+* Handle optional chained methods as dependency. ([@AriPerkkio](https://github.com/AriPerkkio) in [#20247](https://github.com/facebook/react/pull/20247))
+* Assume the new `useTransition` signature in the rule. ([@rickhanlonii](https://github.com/rickhanlonii) in [#20976](https://github.com/facebook/react/pull/20976))
+
 ## 4.2.0
 
 * No changes, this was an automated release together with React 17.
@@ -71,4 +79,4 @@
 
 ## 1.x
 
-The 1.x releases aren’t noted in this changelog, but you can find them in the [commit history](https://github.com/facebook/react/commits/master/packages/eslint-plugin-react-hooks).
+The 1.x releases aren’t noted in this changelog, but you can find them in the [commit history](https://github.com/facebook/react/commits/main/packages/eslint-plugin-react-hooks).

@@ -17,8 +17,58 @@ import type {
   RendererID,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const BATCH_DURATION = 100;
+
+// This message specifies the version of the DevTools protocol currently supported by the backend,
+// as well as the earliest NPM version (e.g. "4.13.0") that protocol is supported by on the frontend.
+// This enables an older frontend to display an upgrade message to users for a newer, unsupported backend.
+export type BridgeProtocol = {|
+  // Version supported by the current frontend/backend.
+  version: number,
+
+  // NPM version range that also supports this version.
+  // Note that 'maxNpmVersion' is only set when the version is bumped.
+  minNpmVersion: string,
+  maxNpmVersion: string | null,
+|};
+
+// Bump protocol version whenever a backwards breaking change is made
+// in the messages sent between BackendBridge and FrontendBridge.
+// This mapping is embedded in both frontend and backend builds.
+//
+// The backend protocol will always be the latest entry in the BRIDGE_PROTOCOL array.
+//
+// When an older frontend connects to a newer backend,
+// the backend can send the minNpmVersion and the frontend can display an NPM upgrade prompt.
+//
+// When a newer frontend connects with an older protocol version,
+// the frontend can use the embedded minNpmVersion/maxNpmVersion values to display a downgrade prompt.
+export const BRIDGE_PROTOCOL: Array<BridgeProtocol> = [
+  // This version technically never existed,
+  // but a backwards breaking change was added in 4.11,
+  // so the safest guess to downgrade the frontend would be to version 4.10.
+  {
+    version: 0,
+    minNpmVersion: '"<4.11.0"',
+    maxNpmVersion: '"<4.11.0"',
+  },
+  {
+    version: 1,
+    minNpmVersion: '4.13.0',
+    maxNpmVersion: '4.21.0',
+  },
+  // Version 2 adds a StrictMode-enabled and supports-StrictMode bits to add-root operation.
+  {
+    version: 2,
+    minNpmVersion: '4.22.0',
+    maxNpmVersion: null,
+  },
+];
+
+export const currentBridgeProtocol: BridgeProtocol =
+  BRIDGE_PROTOCOL[BRIDGE_PROTOCOL.length - 1];
 
 type ElementAndRendererID = {|id: number, rendererID: RendererID|};
 
@@ -72,6 +122,11 @@ type OverrideValueAtPath = {|
   value: any,
 |};
 
+type OverrideError = {|
+  ...ElementAndRendererID,
+  forceError: boolean,
+|};
+
 type OverrideSuspense = {|
   ...ElementAndRendererID,
   forceFallback: boolean,
@@ -89,6 +144,7 @@ type ViewAttributeSourceParams = {|
 
 type InspectElementParams = {|
   ...ElementAndRendererID,
+  forceFullData: boolean,
   path: Array<number | string> | null,
   requestID: number,
 |};
@@ -116,12 +172,26 @@ type UpdateConsolePatchSettingsParams = {|
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
   showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
+  browserTheme: BrowserTheme,
+|};
+
+type SavedPreferencesParams = {|
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+  componentFilters: Array<ComponentFilter>,
+  showInlineWarningsAndErrors: boolean,
+  hideConsoleLogsInStrictMode: boolean,
 |};
 
 export type BackendEvents = {|
+  bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
+  fastRefreshScheduled: [],
+  getSavedPreferences: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
+  isSynchronousXHRSupported: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
   overrideComponentFilters: [Array<ComponentFilter>],
@@ -149,17 +219,20 @@ type FrontendEvents = {|
   clearWarningsForFiberID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
+  getBridgeProtocol: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
+  overrideError: [OverrideError],
   overrideSuspense: [OverrideSuspense],
   overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
   renamePath: [RenamePath],
+  savedPreferences: [SavedPreferencesParams],
   selectFiber: [number],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
@@ -186,7 +259,7 @@ type FrontendEvents = {|
   // but the new frontend still dispatches them (in case older backends are listening to them instead).
   //
   // Note that this approach does no support the combination of a newer backend with an older frontend.
-  // It would be more work to suppot both approaches (and not run handlers twice)
+  // It would be more work to support both approaches (and not run handlers twice)
   // so I chose to support the more likely/common scenario (and the one more difficult for an end user to "fix").
   overrideContext: [OverrideValue],
   overrideHookState: [OverrideHookState],
@@ -214,7 +287,9 @@ class Bridge<
 
     this._wallUnlisten =
       wall.listen((message: Message) => {
-        (this: any).emit(message.event, message.payload);
+        if (message && message.event) {
+          (this: any).emit(message.event, message.payload);
+        }
       }) || null;
 
     // Temporarily support older standalone front-ends sending commands to newer embedded backends.

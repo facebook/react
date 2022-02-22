@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'shared/invariant';
-
 const instanceCache = new Map();
 const instanceProps = new Map();
 
@@ -30,7 +28,11 @@ function getTagFromInstance(inst) {
     nativeInstance = nativeInstance.canonical;
     tag = nativeInstance._nativeTag;
   }
-  invariant(tag, 'All native instances should have a tag.');
+
+  if (!tag) {
+    throw new Error('All native instances should have a tag.');
+  }
+
   return nativeInstance;
 }
 

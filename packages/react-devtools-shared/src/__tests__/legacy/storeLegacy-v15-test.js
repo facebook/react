@@ -509,4 +509,15 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('5: collapse root');
     });
   });
+
+  describe('StrictMode compliance', () => {
+    it('should mark all elements as strict mode compliant', () => {
+      const App = () => null;
+
+      const container = document.createElement('div');
+      act(() => ReactDOM.render(<App />, container));
+
+      expect(store.getElementAtIndex(0).isStrictModeNonCompliant).toBe(false);
+    });
+  });
 });

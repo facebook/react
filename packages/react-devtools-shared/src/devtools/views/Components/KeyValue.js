@@ -8,12 +8,8 @@
  */
 
 import * as React from 'react';
-import {
-  unstable_useTransition as useTransition,
-  useContext,
-  useRef,
-  useState,
-} from 'react';
+import {useTransition, useContext, useRef, useState} from 'react';
+import {OptionsContext} from '../context';
 import EditableName from './EditableName';
 import EditableValue from './EditableValue';
 import NewArrayValue from './NewArrayValue';
@@ -28,7 +24,9 @@ import {parseHookPathForEdit} from './utils';
 import styles from './KeyValue.css';
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+import isArray from 'react-devtools-shared/src/isArray';
 import {InspectedElementContext} from './InspectedElementContext';
+import {PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE} from './constants';
 
 import type {InspectedElement} from './types';
 import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
@@ -48,6 +46,7 @@ type KeyValueProps = {|
   element: Element,
   hidden: boolean,
   hookID?: ?number,
+  hookName?: ?string,
   inspectedElement: InspectedElement,
   isDirectChildOfAnArray?: boolean,
   name: string,
@@ -70,12 +69,18 @@ export default function KeyValue({
   isDirectChildOfAnArray,
   hidden,
   hookID,
+  hookName,
   name,
   path,
   pathRoot,
   store,
   value,
 }: KeyValueProps) {
+  const {readOnly: readOnlyGlobalFlag} = useContext(OptionsContext);
+  canDeletePaths = !readOnlyGlobalFlag && canDeletePaths;
+  canEditValues = !readOnlyGlobalFlag && canEditValues;
+  canRenamePaths = !readOnlyGlobalFlag && canRenamePaths;
+
   const {id} = inspectedElement;
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -84,13 +89,13 @@ export default function KeyValue({
   const {inspectPaths} = useContext(InspectedElementContext);
 
   let isInspectable = false;
-  let isReadOnly = false;
+  let isReadOnlyBasedOnMetadata = false;
   if (value !== null && typeof value === 'object') {
     isInspectable = value[meta.inspectable] && value[meta.size] !== 0;
-    isReadOnly = value[meta.readonly];
+    isReadOnlyBasedOnMetadata = value[meta.readonly];
   }
 
-  const [startInspectPathsTransition, isInspectPathsPending] = useTransition();
+  const [isInspectPathsPending, startInspectPathsTransition] = useTransition();
   const toggleIsOpen = () => {
     if (isOpen) {
       setIsOpen(false);
@@ -207,7 +212,12 @@ export default function KeyValue({
         <DeleteToggle name={name} deletePath={deletePath} path={path} />
       );
     } else {
-      renderedName = <span className={styles.Name}>{name}</span>;
+      renderedName = (
+        <span className={styles.Name}>
+          {name}
+          {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+        </span>
+      );
     }
   } else if (canRenameTheCurrentPath) {
     renderedName = (
@@ -220,7 +230,12 @@ export default function KeyValue({
       />
     );
   } else {
-    renderedName = <span className={styles.Name}>{name}</span>;
+    renderedName = (
+      <span className={styles.Name}>
+        {name}
+        {!!hookName && <span className={styles.HookName}>({hookName})</span>}
+      </span>
+    );
   }
 
   let children = null;
@@ -234,6 +249,16 @@ export default function KeyValue({
       displayValue = 'null';
     } else if (value === undefined) {
       displayValue = 'undefined';
+    }
+
+    let shouldDisplayValueAsLink = false;
+    if (
+      dataType === 'string' &&
+      PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE.some(protocolPrefix =>
+        value.startsWith(protocolPrefix),
+      )
+    ) {
+      shouldDisplayValueAsLink = true;
     }
 
     children = (
@@ -252,6 +277,14 @@ export default function KeyValue({
             path={path}
             value={value}
           />
+        ) : shouldDisplayValueAsLink ? (
+          <a
+            className={styles.Link}
+            href={value}
+            target="_blank"
+            rel="noopener noreferrer">
+            {displayValue}
+          </a>
         ) : (
           <span className={styles.Value}>{displayValue}</span>
         )}
@@ -295,7 +328,7 @@ export default function KeyValue({
       );
     }
   } else {
-    if (Array.isArray(value)) {
+    if (isArray(value)) {
       const hasChildren = value.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
@@ -304,9 +337,9 @@ export default function KeyValue({
           key={index}
           alphaSort={alphaSort}
           bridge={bridge}
-          canDeletePaths={canDeletePaths && !isReadOnly}
-          canEditValues={canEditValues && !isReadOnly}
-          canRenamePaths={canRenamePaths && !isReadOnly}
+          canDeletePaths={canDeletePaths && !isReadOnlyBasedOnMetadata}
+          canEditValues={canEditValues && !isReadOnlyBasedOnMetadata}
+          canRenamePaths={canRenamePaths && !isReadOnlyBasedOnMetadata}
           canRenamePathsAtDepth={canRenamePathsAtDepth}
           depth={depth + 1}
           element={element}
@@ -322,7 +355,7 @@ export default function KeyValue({
         />
       ));
 
-      if (canEditValues && !isReadOnly) {
+      if (canEditValues && !isReadOnlyBasedOnMetadata) {
         children.push(
           <NewArrayValue
             key="NewKeyValue"
@@ -378,9 +411,9 @@ export default function KeyValue({
           key={key}
           alphaSort={alphaSort}
           bridge={bridge}
-          canDeletePaths={canDeletePaths && !isReadOnly}
-          canEditValues={canEditValues && !isReadOnly}
-          canRenamePaths={canRenamePaths && !isReadOnly}
+          canDeletePaths={canDeletePaths && !isReadOnlyBasedOnMetadata}
+          canEditValues={canEditValues && !isReadOnlyBasedOnMetadata}
+          canRenamePaths={canRenamePaths && !isReadOnlyBasedOnMetadata}
           canRenamePathsAtDepth={canRenamePathsAtDepth}
           depth={depth + 1}
           element={element}
@@ -395,7 +428,7 @@ export default function KeyValue({
         />
       ));
 
-      if (canEditValues && !isReadOnly) {
+      if (canEditValues && !isReadOnlyBasedOnMetadata) {
         children.push(
           <NewKeyValue
             key="NewKeyValue"

@@ -149,6 +149,12 @@ function ComponentWithMissingKey({children}) {
   return [<div />];
 }
 
+function ComponentWithSymbolWarning() {
+  console.warn('this is a symbol', Symbol('foo'));
+  console.error('this is a symbol', Symbol.for('bar'));
+  return null;
+}
+
 export default function ErrorsAndWarnings() {
   const [count, setCount] = useState(0);
   const handleClick = () => setCount(count + 1);
@@ -176,6 +182,7 @@ export default function ErrorsAndWarnings() {
       <ReallyLongErrorMessageThatWillCauseTextToBeTruncated />
       <DuplicateWarningsAndErrors />
       <MultipleWarningsAndErrors />
+      <ComponentWithSymbolWarning />
     </Fragment>
   );
 }

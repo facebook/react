@@ -44,7 +44,7 @@ const expectChildren = function(container, children) {
     } else {
       expect(textNode != null).toBe(true);
       expect(textNode.nodeType).toBe(3);
-      expect(textNode.data).toBe('' + children);
+      expect(textNode.data).toBe(String(children));
     }
   } else {
     let mountIndex = 0;
@@ -53,9 +53,12 @@ const expectChildren = function(container, children) {
       const child = children[i];
 
       if (typeof child === 'string') {
+        if (child === '') {
+          continue;
+        }
         textNode = outerNode.childNodes[mountIndex];
         expect(textNode.nodeType).toBe(3);
-        expect(textNode.data).toBe('' + child);
+        expect(textNode.data).toBe(child);
         mountIndex++;
       } else {
         const elementDOMNode = outerNode.childNodes[mountIndex];
@@ -83,7 +86,7 @@ describe('ReactMultiChildText', () => {
         true, [],
         0, '0',
         1.2, '1.2',
-        '', '',
+        '', [],
         'foo', 'foo',
 
         [], [],
@@ -93,7 +96,7 @@ describe('ReactMultiChildText', () => {
         [true], [],
         [0], ['0'],
         [1.2], ['1.2'],
-        [''], [''],
+        [''], [],
         ['foo'], ['foo'],
         [<div />], [<div />],
 

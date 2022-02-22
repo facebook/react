@@ -7,7 +7,6 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
 import {
   getInstanceFromNode,
   getFiberCurrentPropsFromNode,
@@ -27,11 +26,14 @@ function restoreStateOfTarget(target: Node) {
     // Unmounted
     return;
   }
-  invariant(
-    typeof restoreImpl === 'function',
-    'setRestoreImplementation() needs to be called to handle a target for controlled ' +
-      'events. This error is likely caused by a bug in React. Please file an issue.',
-  );
+
+  if (typeof restoreImpl !== 'function') {
+    throw new Error(
+      'setRestoreImplementation() needs to be called to handle a target for controlled ' +
+        'events. This error is likely caused by a bug in React. Please file an issue.',
+    );
+  }
+
   const stateNode = internalInstance.stateNode;
   // Guard against Fiber being unmounted.
   if (stateNode) {

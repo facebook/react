@@ -17,17 +17,32 @@
       </p>
     </div>
     <script src="../../build/node_modules/react/umd/react.development.js"></script>
-    <script src="../../build/node_modules/react-dom/umd/react-dom-unstable-fizz.browser.development.js"></script>
+    <script src="../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <script type="text/babel">
-      let stream = ReactDOMFizzServer.renderToReadableStream(<body>Success</body>);
-      let response = new Response(stream, {
-        headers: {'Content-Type': 'text/html'},
-      });
-      display(response);
+      async function render() {
+        let controller = new AbortController();
+        let response;
+        try {
+          let stream = await ReactDOMServer.renderToReadableStream(
+            <html>
+              <body>Success</body>
+            </html>,
+            {
+              signal: controller.signal,
+            }
+          );
+          response = new Response(stream, {
+            headers: {'Content-Type': 'text/html'},
+          });
+        } catch (x) {
+          response = new Response('<!doctype><p>Error</p>', {
+            status: 500,
+            headers: {'Content-Type': 'text/html'},
+          });
+        }
 
-      async function display(responseToDisplay) {
-        let blob = await responseToDisplay.blob();
+        let blob = await response.blob();
         let url = URL.createObjectURL(blob);
         let iframe = document.createElement('iframe');
         iframe.src = url;
@@ -35,6 +50,7 @@
         container.innerHTML = '';
         container.appendChild(iframe);
       }
+      render();
     </script>
   </body>
 </html>

@@ -6,7 +6,7 @@
  */
 
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
-import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 
 export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;
@@ -36,14 +36,14 @@ if (__DEV__) {
     const dispatchListeners = event._dispatchListeners;
     const dispatchInstances = event._dispatchInstances;
 
-    const listenersIsArr = Array.isArray(dispatchListeners);
+    const listenersIsArr = isArray(dispatchListeners);
     const listenersLen = listenersIsArr
       ? dispatchListeners.length
       : dispatchListeners
       ? 1
       : 0;
 
-    const instancesIsArr = Array.isArray(dispatchInstances);
+    const instancesIsArr = isArray(dispatchInstances);
     const instancesLen = instancesIsArr
       ? dispatchInstances.length
       : dispatchInstances
@@ -78,7 +78,7 @@ export function executeDispatchesInOrder(event) {
   if (__DEV__) {
     validateEventDispatches(event);
   }
-  if (Array.isArray(dispatchListeners)) {
+  if (isArray(dispatchListeners)) {
     for (let i = 0; i < dispatchListeners.length; i++) {
       if (event.isPropagationStopped()) {
         break;
@@ -106,7 +106,7 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
   if (__DEV__) {
     validateEventDispatches(event);
   }
-  if (Array.isArray(dispatchListeners)) {
+  if (isArray(dispatchListeners)) {
     for (let i = 0; i < dispatchListeners.length; i++) {
       if (event.isPropagationStopped()) {
         break;
@@ -149,10 +149,11 @@ export function executeDirectDispatch(event) {
   }
   const dispatchListener = event._dispatchListeners;
   const dispatchInstance = event._dispatchInstances;
-  invariant(
-    !Array.isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `event`.',
-  );
+
+  if (isArray(dispatchListener)) {
+    throw new Error('executeDirectDispatch(...): Invalid `event`.');
+  }
+
   event.currentTarget = dispatchListener
     ? getNodeFromInstance(dispatchInstance)
     : null;

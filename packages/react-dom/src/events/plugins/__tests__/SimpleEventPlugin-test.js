@@ -13,7 +13,7 @@ describe('SimpleEventPlugin', function() {
   let React;
   let ReactDOM;
   let Scheduler;
-  let TestUtils;
+  let act;
 
   let onClick;
   let container;
@@ -40,7 +40,6 @@ describe('SimpleEventPlugin', function() {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
-    TestUtils = require('react-dom/test-utils');
 
     onClick = jest.fn();
   });
@@ -237,12 +236,13 @@ describe('SimpleEventPlugin', function() {
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
+
+      act = require('jest-react').act;
     });
 
-    // @gate experimental
-    it('flushes pending interactive work before extracting event handler', () => {
+    it('flushes pending interactive work before exiting event handler', async () => {
       container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       document.body.appendChild(container);
 
       let button;
@@ -288,21 +288,18 @@ describe('SimpleEventPlugin', function() {
       }
 
       // Click the button to trigger the side-effect
-      click();
+      await act(async () => click());
       expect(Scheduler).toHaveYielded([
         // The handler fired
         'Side-effect',
-        // but the component did not re-render yet, because it's async
+        // The component re-rendered synchronously, even in concurrent mode.
+        'render button: disabled',
       ]);
 
       // Click the button again
       click();
       expect(Scheduler).toHaveYielded([
-        // Before handling this second click event, the previous interactive
-        // update is flushed
-        'render button: disabled',
-        // The event handler was removed from the button, so there's no second
-        // side-effect
+        // The event handler was removed from the button, so there's no effect.
       ]);
 
       // The handler should not fire again no matter how many times we
@@ -315,10 +312,12 @@ describe('SimpleEventPlugin', function() {
       expect(Scheduler).toFlushAndYield([]);
     });
 
-    // @gate experimental
+    // NOTE: This test was written for the old behavior of discrete updates,
+    // where they would be async, but flushed early if another discrete update
+    // was dispatched.
     it('end result of many interactive updates is deterministic', async () => {
       container = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(container);
+      const root = ReactDOM.createRoot(container);
       document.body.appendChild(container);
 
       let button;
@@ -358,137 +357,22 @@ describe('SimpleEventPlugin', function() {
       }
 
       // Click the button a single time
-      click();
-      // The counter should not have updated yet because it's async
-      expect(button.textContent).toEqual('Count: 0');
+      await act(async () => click());
+      // The counter should update synchronously, even in concurrent mode.
+      expect(button.textContent).toEqual('Count: 1');
 
       // Click the button many more times
-      await TestUtils.act(async () => {
-        click();
-        click();
-        click();
-        click();
-        click();
-        click();
-      });
+      await act(async () => click());
+      await act(async () => click());
+      await act(async () => click());
+      await act(async () => click());
+      await act(async () => click());
+      await act(async () => click());
 
       // Flush the remaining work
       Scheduler.unstable_flushAll();
       // The counter should equal the total number of clicks
       expect(button.textContent).toEqual('Count: 7');
-    });
-
-    // @gate experimental
-    it('flushes discrete updates in order', async () => {
-      container = document.createElement('div');
-      document.body.appendChild(container);
-
-      let button;
-      class Button extends React.Component {
-        state = {lowPriCount: 0};
-        render() {
-          const text = `High-pri count: ${this.props.highPriCount}, Low-pri count: ${this.state.lowPriCount}`;
-          Scheduler.unstable_yieldValue(text);
-          return (
-            <button
-              ref={el => (button = el)}
-              onClick={() => {
-                React.unstable_startTransition(() => {
-                  this.setState(state => ({
-                    lowPriCount: state.lowPriCount + 1,
-                  }));
-                });
-              }}>
-              {text}
-            </button>
-          );
-        }
-      }
-
-      class Wrapper extends React.Component {
-        state = {highPriCount: 0};
-        render() {
-          return (
-            <div
-              onClick={
-                // Intentionally not using the updater form here, to test
-                // that updates are serially processed.
-                () => {
-                  this.setState({highPriCount: this.state.highPriCount + 1});
-                }
-              }>
-              <Button highPriCount={this.state.highPriCount} />
-            </div>
-          );
-        }
-      }
-
-      // Initial mount
-      const root = ReactDOM.unstable_createRoot(container);
-      root.render(<Wrapper />);
-      expect(Scheduler).toFlushAndYield([
-        'High-pri count: 0, Low-pri count: 0',
-      ]);
-      expect(button.textContent).toEqual('High-pri count: 0, Low-pri count: 0');
-
-      function click() {
-        const event = new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-        });
-        Object.defineProperty(event, 'timeStamp', {
-          value: 0,
-        });
-        button.dispatchEvent(event);
-      }
-
-      // Click the button a single time
-      click();
-      // Nothing should flush on the first click.
-      expect(Scheduler).toHaveYielded([]);
-      // Click again. This will force the previous discrete update to flush. But
-      // only the high-pri count will increase.
-      click();
-      expect(Scheduler).toHaveYielded(['High-pri count: 1, Low-pri count: 0']);
-      expect(button.textContent).toEqual('High-pri count: 1, Low-pri count: 0');
-
-      // Click the button many more times
-      click();
-      click();
-      click();
-      click();
-      click();
-      click();
-
-      // Flush the remaining work.
-      expect(Scheduler).toHaveYielded([
-        'High-pri count: 2, Low-pri count: 0',
-        'High-pri count: 3, Low-pri count: 0',
-        'High-pri count: 4, Low-pri count: 0',
-        'High-pri count: 5, Low-pri count: 0',
-        'High-pri count: 6, Low-pri count: 0',
-        'High-pri count: 7, Low-pri count: 0',
-      ]);
-
-      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
-        // Flush the microtask queue
-        await null;
-
-        // At the end, both counters should equal the total number of clicks
-        expect(Scheduler).toHaveYielded([
-          'High-pri count: 8, Low-pri count: 0',
-        ]);
-        expect(Scheduler).toFlushAndYield([
-          'High-pri count: 8, Low-pri count: 8',
-        ]);
-      } else {
-        // At the end, both counters should equal the total number of clicks
-        expect(Scheduler).toFlushAndYield([
-          'High-pri count: 8, Low-pri count: 0',
-          'High-pri count: 8, Low-pri count: 8',
-        ]);
-      }
-      expect(button.textContent).toEqual('High-pri count: 8, Low-pri count: 8');
     });
   });
 
