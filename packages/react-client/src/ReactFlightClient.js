@@ -346,7 +346,7 @@ export function parseModelTuple(
       return createElement(tuple[1], tuple[2], tuple[3]);
     case REACT_PROVIDER_TYPE:
       return createElement(
-        getOrCreateServerContext((tuple[1]: any)).Provider,
+        getOrCreateServerContext((tuple[1]: any))._ServerProvider,
         tuple[2],
         tuple[3],
       );

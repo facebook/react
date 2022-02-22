@@ -72,6 +72,18 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         // This type check is for Flow only.
         Dispatcher.useCacheRefresh();
       }
+      if (typeof Dispatcher.useServerContext === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useServerContext(({_currentValue: null}: any));
+      }
+      if (typeof Dispatcher.useServerContextsForRefetch === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useServerContextsForRefetch();
+      }
+      if (typeof Dispatcher.useServerContextsForSSR === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useServerContextsForSSR();
+      }
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useInsertionEffect(() => {});
       Dispatcher.useEffect(() => {});
@@ -130,6 +142,23 @@ function useServerContext<T: ServerContextJSONValue>(
     value: context._currentValue,
   });
   return context._currentValue;
+}
+
+function useServerContextsForSSR() {
+  hookLog.push({
+    primitive: 'ServerContextsForSSR',
+    stackError: new Error(),
+    value: null,
+  });
+  return () => [];
+}
+function useServerContextsForRefetch() {
+  hookLog.push({
+    primitive: 'ServerContextsForRefetch',
+    stackError: new Error(),
+    value: null,
+  });
+  return () => [];
 }
 
 function useState<S>(
@@ -359,6 +388,8 @@ const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useServerContext,
+  useServerContextsForRefetch,
+  useServerContextsForSSR,
   useState,
   useTransition,
   useMutableSource,

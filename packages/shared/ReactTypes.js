@@ -84,9 +84,12 @@ export type ServerContextJSONValue =
   | $ReadOnlyArray<ServerContextJSONValue>
   | {+[key: string]: ServerContextJSONValue};
 
+export type ServerContextValuesArray = Array<[string, ServerContextJSONValue]>;
+
 export type ReactServerContext<T: ServerContextJSONValue> = {
   $$typeof: Symbol | number,
   Provider: ReactServerProviderType<T>,
+  _ServerProvider: ReactServerProviderType<T>,
   _defaultValue: T,
   __currentValue: T,
   __currentValue2: T,

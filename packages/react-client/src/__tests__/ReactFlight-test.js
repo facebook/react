@@ -627,5 +627,81 @@ describe('ReactFlight', () => {
         </>,
       );
     });
+
+    // @gate enableServerContext
+    it('supports useServerContextsForRefetch and useServerContextsForSSR', async () => {
+      const ServerContext = React.createServerContext(
+        'ServerContext',
+        'default',
+      );
+
+      function Foo() {
+        return (
+          <>
+            <ServerContext.Provider value="hi this is server outer">
+              <ServerContext.Provider value="hi this is server">
+                <Bar value="" />
+              </ServerContext.Provider>
+              <ServerContext.Provider value="hi this is server2">
+                <Bar value="2" />
+              </ServerContext.Provider>
+              <Bar value="outer" />
+            </ServerContext.Provider>
+            <ServerContext.Provider value="hi this is server outer2">
+              <Bar value="outer2" />
+            </ServerContext.Provider>
+            <Bar value="default" />
+          </>
+        );
+      }
+      const refetchCallbacks = [];
+      const ssrCallbacks = [];
+      function ClientBaz() {
+        const context = React.useServerContext(ServerContext);
+        refetchCallbacks.push(React.useServerContextsForRefetch());
+        ssrCallbacks.push(React.useServerContextsForSSR());
+        return <span>{context}</span>;
+      }
+      function ClientBar({value}) {
+        return (
+          <ServerContext.Provider
+            value={'hi this is client' + (value ? ' ' + value : '')}>
+            <ClientBaz />
+          </ServerContext.Provider>
+        );
+      }
+      const Bar = moduleReference(ClientBar);
+
+      const transport = ReactNoopFlightServer.render(<Foo />);
+      act(() => {
+        ServerContext._currentRenderer = null;
+        ServerContext._currentRenderer2 = null;
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
+      });
+
+      expect(ReactNoop).toMatchRenderedOutput(
+        <>
+          <span>hi this is client</span>
+          <span>hi this is client 2</span>
+          <span>hi this is client outer</span>
+          <span>hi this is client outer2</span>
+          <span>hi this is client default</span>
+        </>,
+      );
+      expect(refetchCallbacks.map(re => re())).toEqual([
+        [['ServerContext', 'hi this is server']],
+        [['ServerContext', 'hi this is server2']],
+        [['ServerContext', 'hi this is server outer']],
+        [['ServerContext', 'hi this is server outer2']],
+        [], // Server provided no value so this means default value
+      ]);
+      expect(ssrCallbacks.map(ssr => ssr())).toEqual([
+        [['ServerContext', 'hi this is client']],
+        [['ServerContext', 'hi this is client 2']],
+        [['ServerContext', 'hi this is client outer']],
+        [['ServerContext', 'hi this is client outer2']],
+        [['ServerContext', 'hi this is client default']],
+      ]);
+    });
   });
 });

@@ -256,12 +256,20 @@ function useServerContext<T: ServerContextJSONValue>(
   context: ReactServerContext<T>,
 ): T {
   if (__DEV__) {
-    currentHookNameInDev = 'useContext';
+    currentHookNameInDev = 'useServerContext';
   }
   resolveCurrentlyRenderingComponent();
   const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   return context[threadID];
+}
+
+function useServerContextsForRefetch() {
+  throw new Error('Not implemented.');
+}
+
+function useServerContextsForSSR() {
+  throw new Error('Not implemented.');
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
@@ -548,6 +556,8 @@ export const Dispatcher: DispatcherType = {
   useRef,
   useState,
   useServerContext,
+  useServerContextsForRefetch,
+  useServerContextsForSSR,
   useInsertionEffect,
   useLayoutEffect,
   useCallback,

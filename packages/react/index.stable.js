@@ -42,6 +42,8 @@ export {
   useReducer,
   useRef,
   useServerContext,
+  useServerContextsForSSR,
+  useServerContextsForRefetch,
   useState,
   useSyncExternalStore,
   useTransition,

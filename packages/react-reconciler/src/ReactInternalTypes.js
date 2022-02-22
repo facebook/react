@@ -13,6 +13,7 @@ import type {
   ReactContext,
   ReactServerContext,
   ServerContextJSONValue,
+  ServerContextValuesArray,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
   MutableSourceVersion,
@@ -47,7 +48,9 @@ export type HookType =
   | 'useSyncExternalStore'
   | 'useId'
   | 'useCacheRefresh'
-  | 'useServerContext';
+  | 'useServerContext'
+  | 'useServerContextsForRefetch'
+  | 'useServerContextsForSSR';
 
 export type ContextDependency<T: any> = {
   context: ReactContext<T> | ReactServerContext<T>,
@@ -326,6 +329,8 @@ export type Dispatcher = {|
   useServerContext?: <T: ServerContextJSONValue>(
     context: ReactServerContext<T>,
   ) => T,
+  useServerContextsForRefetch?: () => () => ServerContextValuesArray,
+  useServerContextsForSSR?: () => () => ServerContextValuesArray,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,

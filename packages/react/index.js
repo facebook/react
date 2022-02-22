@@ -74,6 +74,8 @@ export {
   useMemo,
   useMutableSource,
   useServerContext,
+  useServerContextsForSSR,
+  useServerContextsForRefetch,
   useSyncExternalStore,
   useReducer,
   useRef,

@@ -55,6 +55,7 @@ export function createServerContext<T: ServerContextJSONValue>(
 function _createServerContext<T: ServerContextJSONValue>(
   globalName: string,
   defaultValue: T,
+  isServer?: boolean,
 ): ReactServerContext<T> {
   const context: ReactServerContext<T> = {
     $$typeof: REACT_SERVER_CONTEXT_TYPE,
@@ -111,10 +112,16 @@ function _createServerContext<T: ServerContextJSONValue>(
     _definitionLoaded: false,
     // These are circular
     Provider: (null: any),
+    _ServerProvider: (null: any),
     displayName: globalName,
   };
 
   context.Provider = {
+    $$typeof: REACT_PROVIDER_TYPE,
+    _context: context,
+  };
+
+  context._ServerProvider = {
     $$typeof: REACT_PROVIDER_TYPE,
     _context: context,
   };
@@ -137,6 +144,7 @@ export function getOrCreateServerContext(globalName: string, value: any) {
     globalServerContextRegistry[globalName] = _createServerContext(
       globalName,
       value === undefined ? DEFAULT_PLACEHOLDER : value,
+      true,
     );
   }
   return globalServerContextRegistry[globalName];

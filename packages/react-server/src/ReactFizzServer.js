@@ -26,6 +26,11 @@ import type {
 import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
+import type {
+  ReactServerContext,
+  ServerContextJSONValue,
+} from 'shared/ReactTypes';
+import {getOrCreateServerContext} from './ReactServerContext';
 
 import {
   scheduleWork,
@@ -70,7 +75,6 @@ import {
 } from './ReactFizzContext';
 import {
   readContext,
-  rootContextSnapshot,
   switchContext,
   getActiveContext,
   pushProvider,
@@ -232,6 +236,7 @@ export function createRequest(
   onError: void | ((error: mixed) => void),
   onCompleteAll: void | (() => void),
   onCompleteShell: void | (() => void),
+  context?: Array<[string, ServerContextJSONValue]>,
 ): Request {
   const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
@@ -268,11 +273,17 @@ export function createRequest(
     rootSegment,
     abortSet,
     emptyContextObject,
-    rootContextSnapshot,
+    createRootContext(context),
     emptyTreeContext,
   );
   pingedTasks.push(rootTask);
   return request;
+}
+
+function createRootContext(
+  reqContext?: Array<[string, ServerContextJSONValue]>,
+) {
+  return importServerContexts(reqContext);
 }
 
 function pingTask(request: Request, task: Task): void {
@@ -1963,4 +1974,19 @@ export function abort(request: Request): void {
     logRecoverableError(request, error);
     fatalError(request, error);
   }
+}
+
+function importServerContexts(
+  contexts?: Array<[string, ServerContextJSONValue]>,
+) {
+  const registry: {[name: string]: ReactServerContext<any>} = {};
+  if (contexts) {
+    for (let i = 0; i < contexts.length; i++) {
+      const [name, value] = contexts[i];
+      const context = getOrCreateServerContext(name, value);
+      pushProvider(context, value);
+      registry[name] = context;
+    }
+  }
+  return getActiveContext();
 }

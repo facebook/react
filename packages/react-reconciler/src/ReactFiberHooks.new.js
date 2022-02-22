@@ -14,6 +14,7 @@ import type {
   ReactContext,
   ReactServerContext,
   ServerContextJSONValue,
+  ServerContextValuesArray,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';
@@ -63,6 +64,10 @@ import {
   higherEventPriority,
 } from './ReactEventPriorities.new';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
+import {
+  readServerContextsForSSR,
+  readServerContextsForRefetch,
+} from './ReactFiberServerContext.new';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
   LayoutStatic as LayoutStaticEffect,
@@ -2395,6 +2400,50 @@ function updateServerContext<T: ServerContextJSONValue>(
   return readContext(context);
 }
 
+function _readServerContextsForSSR() {
+  const _currentlyRenderingFiber = currentlyRenderingFiber;
+  return () => readServerContextsForSSR(_currentlyRenderingFiber);
+}
+function mountServerContextsForSSR(): () => ServerContextValuesArray {
+  if (!enableServerContext) {
+    throw new Error('Not implemented.');
+  }
+  currentHookNameInDev = 'useServerContextsForSSR';
+  mountHookTypesDev();
+  return _readServerContextsForSSR();
+}
+
+function updateServerContextsForSSR(): () => ServerContextValuesArray {
+  if (!enableServerContext) {
+    throw new Error('Not implemented.');
+  }
+  currentHookNameInDev = 'useServerContextsForSSR';
+  updateHookTypesDev();
+  return _readServerContextsForSSR();
+}
+
+function _readServerContextsForRefetch() {
+  const _currentlyRenderingFiber = currentlyRenderingFiber;
+  return () => readServerContextsForRefetch(_currentlyRenderingFiber);
+}
+function mountServerContextsForRefetch(): () => ServerContextValuesArray {
+  if (!enableServerContext) {
+    throw new Error('Not implemented.');
+  }
+  currentHookNameInDev = 'useServerContextsForRefetch';
+  mountHookTypesDev();
+  return _readServerContextsForRefetch();
+}
+
+function updateServerContextsForRefetch(): () => ServerContextValuesArray {
+  if (!enableServerContext) {
+    throw new Error('Not implemented.');
+  }
+  currentHookNameInDev = 'useServerContextsForRefetch';
+  updateHookTypesDev();
+  return _readServerContextsForRefetch();
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -2425,6 +2474,8 @@ if (enableCache) {
 
 if (enableServerContext) {
   (ContextOnlyDispatcher: Dispatcher).useServerContext = throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useServerContextsForRefetch = throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useServerContextsForSSR = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -2456,6 +2507,8 @@ if (enableCache) {
 }
 if (enableServerContext) {
   (HooksDispatcherOnMount: Dispatcher).useServerContext = readContext;
+  (HooksDispatcherOnMount: Dispatcher).useServerContextsForRefetch = _readServerContextsForRefetch;
+  (HooksDispatcherOnMount: Dispatcher).useServerContextsForSSR = _readServerContextsForSSR;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -2487,6 +2540,8 @@ if (enableCache) {
 }
 if (enableServerContext) {
   (HooksDispatcherOnUpdate: Dispatcher).useServerContext = readContext;
+  (HooksDispatcherOnUpdate: Dispatcher).useServerContextsForRefetch = _readServerContextsForRefetch;
+  (HooksDispatcherOnUpdate: Dispatcher).useServerContextsForSSR = _readServerContextsForSSR;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -2518,6 +2573,8 @@ if (enableCache) {
 }
 if (enableServerContext) {
   (HooksDispatcherOnRerender: Dispatcher).useServerContext = readContext;
+  (HooksDispatcherOnRerender: Dispatcher).useServerContextsForRefetch = _readServerContextsForRefetch;
+  (HooksDispatcherOnRerender: Dispatcher).useServerContextsForSSR = _readServerContextsForSSR;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2696,6 +2753,8 @@ if (__DEV__) {
   }
   if (enableServerContext) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useServerContext = mountServerContext;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useServerContextsForRefetch = mountServerContextsForRefetch;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useServerContextsForSSR = mountServerContextsForSSR;
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -2841,6 +2900,8 @@ if (__DEV__) {
   }
   if (enableServerContext) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useServerContext = updateServerContext;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useServerContextsForRefetch = updateServerContextsForRefetch;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useServerContextsForSSR = updateServerContextsForSSR;
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2986,9 +3047,8 @@ if (__DEV__) {
   }
   if (enableServerContext) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useServerContext = updateServerContext;
-  }
-
-  if (!enableServerContext) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useServerContextsForRefetch = updateServerContextsForRefetch;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useServerContextsForSSR = updateServerContextsForSSR;
   }
 
   HooksDispatcherOnRerenderInDEV = {
@@ -3135,6 +3195,8 @@ if (__DEV__) {
   }
   if (enableServerContext) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useServerContext = updateServerContext;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useServerContextsForRefetch = updateServerContextsForRefetch;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useServerContextsForSSR = updateServerContextsForSSR;
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -3310,6 +3372,24 @@ if (__DEV__) {
       mountHookTypesDev();
       return readContext(context);
     };
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useServerContextsForRefetch = (): (() => ServerContextValuesArray) => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContextsForRefetch';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return _readServerContextsForRefetch();
+    };
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useServerContextsForSSR = (): (() => ServerContextValuesArray) => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContextsForSSR';
+      warnInvalidHookAccess();
+      mountHookTypesDev();
+      return _readServerContextsForSSR();
+    };
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -3483,6 +3563,24 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);
+    };
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useServerContextsForRefetch = (): (() => ServerContextValuesArray) => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContextsForRefetch';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return _readServerContextsForRefetch();
+    };
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useServerContextsForSSR = (): (() => ServerContextValuesArray) => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContextsForSSR';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return _readServerContextsForSSR();
     };
   }
 
@@ -3658,6 +3756,24 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return readContext(context);
+    };
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useServerContextsForRefetch = (): (() => ServerContextValuesArray) => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContextsForRefetch';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return _readServerContextsForRefetch();
+    };
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useServerContextsForSSR = (): (() => ServerContextValuesArray) => {
+      if (!enableServerContext) {
+        throw new Error('Not implemented.');
+      }
+      currentHookNameInDev = 'useServerContextsForSSR';
+      warnInvalidHookAccess();
+      updateHookTypesDev();
+      return _readServerContextsForSSR();
     };
   }
 }

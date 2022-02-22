@@ -2181,4 +2181,47 @@ describe('ReactDOMFizzServer', () => {
     // UI looks normal
     expect(container.textContent).toEqual('AB');
   });
+
+  it('supports ServerContext', async () => {
+    const ServerContext = React.createServerContext('ServerContext', 'default');
+
+    function Foo() {
+      return (
+        <>
+          <ServerContext.Provider value="hi this is server outer">
+            <ServerContext.Provider value="hi this is server">
+              <Bar />
+            </ServerContext.Provider>
+            <ServerContext.Provider value="hi this is server2">
+              <Bar />
+            </ServerContext.Provider>
+            <Bar />
+          </ServerContext.Provider>
+          <ServerContext.Provider value="hi this is server outer2">
+            <Bar />
+          </ServerContext.Provider>
+          <Bar />
+        </>
+      );
+    }
+    function Bar() {
+      const context = React.useServerContext(ServerContext);
+      return <span>{context}</span>;
+    }
+
+    await act(async () => {
+      ServerContext._currentRenderer = null;
+      ServerContext._currentRenderer2 = null;
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual([
+      <span>hi this is server</span>,
+      <span>hi this is server2</span>,
+      <span>hi this is server outer</span>,
+      <span>hi this is server outer2</span>,
+      <span>default</span>,
+    ]);
+  });
 });

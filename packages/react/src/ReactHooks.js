@@ -201,6 +201,17 @@ export function useServerContext<T: ServerContextJSONValue>(
   return dispatcher.useServerContext(Context);
 }
 
+export function useServerContextsForSSR() {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useServerContextsForSSR();
+}
+export function useServerContextsForRefetch() {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useServerContextsForRefetch();
+}
+
 export function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
