@@ -35,6 +35,20 @@ function readContext<T: ServerContextJSONValue>(
   return readContextImpl(((context: any): ReactServerContext<any>));
 }
 
+function useServerContextsForRefetch() {
+  return () => {
+    // This hook shouldn't be called on the server
+    throw new Error('Not implemented.');
+  };
+}
+
+function useServerContextsForSSR() {
+  return () => {
+    // This hook shouldn't be called on the server
+    throw new Error('Not implemented.');
+  };
+}
+
 export const Dispatcher: DispatcherType = {
   useMemo<T>(nextCreate: () => T): T {
     return nextCreate();
@@ -77,6 +91,8 @@ export const Dispatcher: DispatcherType = {
     }
     return readContextImpl(context);
   },
+  useServerContextsForRefetch,
+  useServerContextsForSSR,
   useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;

@@ -549,10 +549,26 @@ function useCacheRefresh(): <T>(?() => T, ?T) => void {
 
 function noop(): void {}
 
+function useServerContextsForRefetch() {
+  return () => {
+    // This hook shouldn't be called on the server
+    throw new Error('Not implemented.');
+  };
+}
+
+function useServerContextsForSSR() {
+  return () => {
+    // This hook shouldn't be called on the server
+    throw new Error('Not implemented.');
+  };
+}
+
 export const Dispatcher: DispatcherType = {
   readContext,
   useContext,
   useServerContext,
+  useServerContextsForRefetch,
+  useServerContextsForSSR,
   useMemo,
   useReducer,
   useRef,
