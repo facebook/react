@@ -790,6 +790,10 @@ export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSED) {
     return;
   }
+  if (request.destination !== null) {
+    // We're already flowing.
+    return;
+  }
   request.destination = destination;
   try {
     flushCompletedChunks(request, destination);
