@@ -25,6 +25,27 @@ describe('ReactDOMServerHydration', () => {
     Scheduler = require('scheduler');
   });
 
+  it('Should not add <div> after <p> on hydrate ', () => {
+    const TestComponent = () => (
+      <p>
+        <div />
+      </p>
+    );
+
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+
+    try {
+      const lastMarkup = ReactDOMServer.renderToString(<TestComponent />);
+      element.innerHTML = lastMarkup;
+
+      ReactDOM.hydrate(<TestComponent />, element);
+      expect(element.innerHTML).toBe(lastMarkup);
+    } finally {
+      document.body.removeChild(element);
+    }
+  });
+
   it('should have the correct mounting behavior (new hydrate API)', () => {
     let mountCount = 0;
     let numClicks = 0;
