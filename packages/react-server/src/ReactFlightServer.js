@@ -20,7 +20,7 @@ import type {
 import {
   scheduleWork,
   beginWriting,
-  writeChunk,
+  writeChunkAndReturn,
   completeWriting,
   flushBuffered,
   close,
@@ -732,7 +732,8 @@ function flushCompletedChunks(
     for (; i < moduleChunks.length; i++) {
       request.pendingChunks--;
       const chunk = moduleChunks[i];
-      if (!writeChunk(destination, chunk)) {
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
         request.destination = null;
         i++;
         break;
@@ -745,7 +746,8 @@ function flushCompletedChunks(
     for (; i < jsonChunks.length; i++) {
       request.pendingChunks--;
       const chunk = jsonChunks[i];
-      if (!writeChunk(destination, chunk)) {
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
         request.destination = null;
         i++;
         break;
@@ -760,7 +762,8 @@ function flushCompletedChunks(
     for (; i < errorChunks.length; i++) {
       request.pendingChunks--;
       const chunk = errorChunks[i];
-      if (!writeChunk(destination, chunk)) {
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
         request.destination = null;
         i++;
         break;

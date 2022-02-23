@@ -30,6 +30,7 @@ import type {
 
 import {
   writeChunk,
+  writeChunkAndReturn,
   stringToChunk,
   stringToPrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
@@ -1427,11 +1428,14 @@ export function writeCompletedRoot(
   responseState: ResponseState,
 ): boolean {
   const bootstrapChunks = responseState.bootstrapChunks;
-  let result = true;
-  for (let i = 0; i < bootstrapChunks.length; i++) {
-    result = writeChunk(destination, bootstrapChunks[i]);
+  let i = 0;
+  for (; i < bootstrapChunks.length - 1; i++) {
+    writeChunk(destination, bootstrapChunks[i]);
   }
-  return result;
+  if (i < bootstrapChunks.length) {
+    return writeChunkAndReturn(destination, bootstrapChunks[i]);
+  }
+  return true;
 }
 
 // Structural Nodes
@@ -1450,7 +1454,7 @@ export function writePlaceholder(
   writeChunk(destination, responseState.placeholderPrefix);
   const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
-  return writeChunk(destination, placeholder2);
+  return writeChunkAndReturn(destination, placeholder2);
 }
 
 // Suspense boundaries are encoded as comments.
@@ -1480,7 +1484,7 @@ export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, startCompletedSuspenseBoundary);
+  return writeChunkAndReturn(destination, startCompletedSuspenseBoundary);
 }
 export function writeStartPendingSuspenseBoundary(
   destination: Destination,
@@ -1496,31 +1500,31 @@ export function writeStartPendingSuspenseBoundary(
   }
 
   writeChunk(destination, id);
-  return writeChunk(destination, startPendingSuspenseBoundary2);
+  return writeChunkAndReturn(destination, startPendingSuspenseBoundary2);
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, startClientRenderedSuspenseBoundary);
+  return writeChunkAndReturn(destination, startClientRenderedSuspenseBoundary);
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, endSuspenseBoundary);
+  return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndPendingSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, endSuspenseBoundary);
+  return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
   responseState: ResponseState,
 ): boolean {
-  return writeChunk(destination, endSuspenseBoundary);
+  return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 
 const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');
@@ -1571,25 +1575,25 @@ export function writeStartSegment(
       writeChunk(destination, startSegmentHTML);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentHTML2);
+      return writeChunkAndReturn(destination, startSegmentHTML2);
     }
     case SVG_MODE: {
       writeChunk(destination, startSegmentSVG);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentSVG2);
+      return writeChunkAndReturn(destination, startSegmentSVG2);
     }
     case MATHML_MODE: {
       writeChunk(destination, startSegmentMathML);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentMathML2);
+      return writeChunkAndReturn(destination, startSegmentMathML2);
     }
     case HTML_TABLE_MODE: {
       writeChunk(destination, startSegmentTable);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentTable2);
+      return writeChunkAndReturn(destination, startSegmentTable2);
     }
     // TODO: For the rest of these, there will be extra wrapper nodes that never
     // get deleted from the document. We need to delete the table too as part
@@ -1599,19 +1603,19 @@ export function writeStartSegment(
       writeChunk(destination, startSegmentTableBody);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentTableBody2);
+      return writeChunkAndReturn(destination, startSegmentTableBody2);
     }
     case HTML_TABLE_ROW_MODE: {
       writeChunk(destination, startSegmentTableRow);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentTableRow2);
+      return writeChunkAndReturn(destination, startSegmentTableRow2);
     }
     case HTML_COLGROUP_MODE: {
       writeChunk(destination, startSegmentColGroup);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentColGroup2);
+      return writeChunkAndReturn(destination, startSegmentColGroup2);
     }
     default: {
       throw new Error('Unknown insertion mode. This is a bug in React.');
@@ -1625,25 +1629,25 @@ export function writeEndSegment(
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
     case HTML_MODE: {
-      return writeChunk(destination, endSegmentHTML);
+      return writeChunkAndReturn(destination, endSegmentHTML);
     }
     case SVG_MODE: {
-      return writeChunk(destination, endSegmentSVG);
+      return writeChunkAndReturn(destination, endSegmentSVG);
     }
     case MATHML_MODE: {
-      return writeChunk(destination, endSegmentMathML);
+      return writeChunkAndReturn(destination, endSegmentMathML);
     }
     case HTML_TABLE_MODE: {
-      return writeChunk(destination, endSegmentTable);
+      return writeChunkAndReturn(destination, endSegmentTable);
     }
     case HTML_TABLE_BODY_MODE: {
-      return writeChunk(destination, endSegmentTableBody);
+      return writeChunkAndReturn(destination, endSegmentTableBody);
     }
     case HTML_TABLE_ROW_MODE: {
-      return writeChunk(destination, endSegmentTableRow);
+      return writeChunkAndReturn(destination, endSegmentTableRow);
     }
     case HTML_COLGROUP_MODE: {
-      return writeChunk(destination, endSegmentColGroup);
+      return writeChunkAndReturn(destination, endSegmentColGroup);
     }
     default: {
       throw new Error('Unknown insertion mode. This is a bug in React.');
@@ -1790,7 +1794,7 @@ export function writeCompletedSegmentInstruction(
   writeChunk(destination, completeSegmentScript2);
   writeChunk(destination, responseState.placeholderPrefix);
   writeChunk(destination, formattedID);
-  return writeChunk(destination, completeSegmentScript3);
+  return writeChunkAndReturn(destination, completeSegmentScript3);
 }
 
 const completeBoundaryScript1Full = stringToPrecomputedChunk(
@@ -1827,7 +1831,7 @@ export function writeCompletedBoundaryInstruction(
   writeChunk(destination, completeBoundaryScript2);
   writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
-  return writeChunk(destination, completeBoundaryScript3);
+  return writeChunkAndReturn(destination, completeBoundaryScript3);
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
@@ -1858,5 +1862,5 @@ export function writeClientRenderBoundaryInstruction(
   }
 
   writeChunk(destination, boundaryID);
-  return writeChunk(destination, clientRenderScript2);
+  return writeChunkAndReturn(destination, clientRenderScript2);
 }

@@ -26,6 +26,13 @@ export function beginWriting(destination: Destination) {}
 export function writeChunk(
   destination: Destination,
   chunk: PrecomputedChunk | Chunk,
+): void {
+  destination.enqueue(chunk);
+}
+
+export function writeChunkAndReturn(
+  destination: Destination,
+  chunk: PrecomputedChunk | Chunk,
 ): boolean {
   destination.enqueue(chunk);
   return destination.desiredSize > 0;
