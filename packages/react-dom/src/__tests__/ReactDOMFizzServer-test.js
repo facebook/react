@@ -2182,6 +2182,7 @@ describe('ReactDOMFizzServer', () => {
     expect(container.textContent).toEqual('AB');
   });
 
+  // @gate enableServerContext
   it('supports ServerContext', async () => {
     const ServerContext = React.createServerContext('ServerContext', 'default');
 
