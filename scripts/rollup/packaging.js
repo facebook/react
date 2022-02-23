@@ -152,6 +152,7 @@ function filterOutEntrypoints(name) {
   let jsonPath = `build/node_modules/${name}/package.json`;
   let packageJSON = JSON.parse(readFileSync(jsonPath));
   let files = packageJSON.files;
+  let exportsJSON = packageJSON.exports;
   if (!Array.isArray(files)) {
     throw new Error('expected all package.json files to contain a files field');
   }
@@ -181,7 +182,6 @@ function filterOutEntrypoints(name) {
       unlinkSync(`build/node_modules/${name}/${filename}`);
       changed = true;
       // Remove it from the exports field too if it exists.
-      const exportsJSON = packageJSON.exports;
       if (exportsJSON) {
         if (filename === 'index.js') {
           delete exportsJSON['.'];
@@ -189,6 +189,15 @@ function filterOutEntrypoints(name) {
           delete exportsJSON['./' + filename.replace(/\.js$/, '')];
         }
       }
+    }
+
+    // We only export the source directory so Jest and Rollup can access them
+    // during local development and at build time. The files don't exist in the
+    // public builds, so we don't need the export entry, either.
+    const sourceWildcardExport = './src/*';
+    if (exportsJSON && exportsJSON[sourceWildcardExport]) {
+      delete exportsJSON[sourceWildcardExport];
+      changed = true;
     }
   }
   if (changed) {
