@@ -16,7 +16,6 @@ import type {
   ReactContext,
   StartTransitionOptions,
   ReactServerContext,
-  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 
 import type {ResponseState} from './ReactServerFormatConfig';
@@ -264,16 +263,6 @@ function readContext<T: any>(
 function useContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     currentHookNameInDev = 'useContext';
-  }
-  resolveCurrentlyRenderingComponent();
-  return readContextImpl(context);
-}
-
-function useServerContext<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
-): T {
-  if (__DEV__) {
-    currentHookNameInDev = 'useServerContext';
   }
   resolveCurrentlyRenderingComponent();
   return readContextImpl(context);
@@ -556,7 +545,6 @@ function noop(): void {}
 export const Dispatcher: DispatcherType = {
   readContext,
   useContext,
-  useServerContext,
   useMemo,
   useReducer,
   useRef,

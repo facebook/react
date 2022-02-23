@@ -55,7 +55,6 @@ export {
   useMutableSource as unstable_useMutableSource,
   useReducer,
   useRef,
-  useServerContext,
   useState,
   useSyncExternalStore,
   useTransition,

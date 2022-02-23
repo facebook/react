@@ -318,7 +318,7 @@ describe('ReactFlight', () => {
         'hello from server',
       );
       function Foo() {
-        const context = React.useServerContext(ServerContext);
+        const context = React.useContext(ServerContext);
         return <div>{context}</div>;
       }
 
@@ -349,7 +349,7 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useServerContext(ServerContext);
+        const context = React.useContext(ServerContext);
         return context;
       }
 
@@ -390,7 +390,7 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useServerContext(ServerContext);
+        const context = React.useContext(ServerContext);
         return <span>{context}</span>;
       }
 
@@ -445,7 +445,7 @@ describe('ReactFlight', () => {
           throw promise;
         }
         Scheduler.unstable_yieldValue('rendered');
-        const context = React.useServerContext(ServerContext);
+        const context = React.useContext(ServerContext);
         return context;
       }
 
@@ -479,7 +479,7 @@ describe('ReactFlight', () => {
 
       function ClientBar() {
         Scheduler.unstable_yieldValue('ClientBar');
-        const context = React.useServerContext(ServerContext);
+        const context = React.useContext(ServerContext);
         return <span>{context}</span>;
       }
 
@@ -523,7 +523,7 @@ describe('ReactFlight', () => {
         'default',
       );
       function Bar() {
-        return <span>{React.useServerContext(ServerContext)}</span>;
+        return <span>{React.useContext(ServerContext)}</span>;
       }
       const transport = ReactNoopFlightServer.render(<Bar />, {
         context: [['ServerContext', 'Override']],
@@ -557,7 +557,7 @@ describe('ReactFlight', () => {
 
       function ClientBaz() {
         const context = inlineContextInitialization();
-        const value = React.useServerContext(context);
+        const value = React.useContext(context);
         return <div>{value}</div>;
       }
 
@@ -567,7 +567,7 @@ describe('ReactFlight', () => {
         return (
           <article>
             <div>
-              {React.useServerContext(inlineLazyServerContextInitialization())}
+              {React.useContext(inlineLazyServerContextInitialization())}
             </div>
             <Baz />
           </article>

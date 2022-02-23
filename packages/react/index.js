@@ -74,7 +74,6 @@ export {
   useLayoutEffect,
   useMemo,
   useMutableSource,
-  useServerContext,
   useSyncExternalStore,
   useReducer,
   useRef,

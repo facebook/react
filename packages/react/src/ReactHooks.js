@@ -8,8 +8,6 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
-import {enableServerContext} from 'shared/ReactFeatureFlags';
-import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {
   MutableSource,
   MutableSourceGetSnapshotFn,
@@ -188,21 +186,6 @@ export function useMutableSource<Source, Snapshot>(
 ): Snapshot {
   const dispatcher = resolveDispatcher();
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
-}
-
-export function useServerContext<T: ServerContextJSONValue>(
-  Context: ReactServerContext<T>,
-): T {
-  if (enableServerContext) {
-    if (Context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
-      throw new Error(
-        'useServerContext expects a context created with React.createServerContext',
-      );
-    }
-  }
-  const dispatcher = resolveDispatcher();
-  // $FlowFixMe This is unstable, thus optional
-  return dispatcher.useServerContext(Context);
 }
 
 export function useSyncExternalStore<T>(

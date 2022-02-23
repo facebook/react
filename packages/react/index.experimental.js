@@ -49,7 +49,6 @@ export {
   useMemo,
   useReducer,
   useRef,
-  useServerContext,
   useState,
   useSyncExternalStore,
   useTransition,

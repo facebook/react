@@ -123,17 +123,6 @@ function useContext<T>(context: ReactContext<T>): T {
   return context._currentValue;
 }
 
-function useServerContext<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
-): T {
-  hookLog.push({
-    primitive: 'ServerContext',
-    stackError: new Error(),
-    value: context._currentValue,
-  });
-  return context._currentValue;
-}
-
 function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
@@ -363,7 +352,6 @@ const Dispatcher: DispatcherType = {
   useMemo,
   useReducer,
   useRef,
-  useServerContext,
   useState,
   useTransition,
   useMutableSource,
