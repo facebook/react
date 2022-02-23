@@ -9,7 +9,10 @@
 
 import type {Container} from './ReactDOMHostConfig';
 import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  FiberRoot,
+  TransitionTracingCallbacks,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
 
@@ -25,6 +28,7 @@ export type CreateRootOptions = {
   unstable_concurrentUpdatesByDefault?: boolean,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
+  transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
@@ -56,6 +60,7 @@ import {
 
 import {
   createContainer,
+  createHydrationContainer,
   updateContainer,
   findHostInstanceWithNoPortals,
   registerMutableSourceForHydration,
@@ -63,7 +68,22 @@ import {
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {ConcurrentRoot} from 'react-reconciler/src/ReactRootTags';
-import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
+import {
+  allowConcurrentByDefault,
+  disableCommentsAsDOMContainers,
+} from 'shared/ReactFeatureFlags';
+
+/* global reportError */
+const defaultOnRecoverableError =
+  typeof reportError === 'function'
+    ? // In modern browsers, reportError will dispatch an error event,
+      // emulating an uncaught JavaScript error.
+      reportError
+    : (error: mixed) => {
+        // In older browsers and test environments, fallback to console.error.
+        // eslint-disable-next-line react-internal/no-production-logging, react-internal/warning-args
+        console.error(error);
+      };
 
 function ReactDOMRoot(internalRoot: FiberRoot) {
   this._internalRoot = internalRoot;
@@ -136,7 +156,7 @@ export function createRoot(
   container: Container,
   options?: CreateRootOptions,
 ): RootType {
-  if (!isValidContainerLegacy(container)) {
+  if (!isValidContainer(container)) {
     throw new Error('createRoot(...): Target container is not a DOM element.');
   }
 
@@ -145,7 +165,9 @@ export function createRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
-  let onRecoverableError = null;
+  let onRecoverableError = defaultOnRecoverableError;
+  let transitionCallbacks = null;
+
   if (options !== null && options !== undefined) {
     if (__DEV__) {
       if ((options: any).hydrate) {
@@ -169,6 +191,9 @@ export function createRoot(
     if (options.onRecoverableError !== undefined) {
       onRecoverableError = options.onRecoverableError;
     }
+    if (options.transitionCallbacks !== undefined) {
+      transitionCallbacks = options.transitionCallbacks;
+    }
   }
 
   const root = createContainer(
@@ -180,6 +205,7 @@ export function createRoot(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
+    transitionCallbacks,
   );
   markContainerAsRoot(root.current, container);
 
@@ -220,7 +246,7 @@ export function hydrateRoot(
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
-  let onRecoverableError = null;
+  let onRecoverableError = defaultOnRecoverableError;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -239,15 +265,17 @@ export function hydrateRoot(
     }
   }
 
-  const root = createContainer(
+  const root = createHydrationContainer(
+    initialChildren,
     container,
     ConcurrentRoot,
-    true, // hydrate
     hydrationCallbacks,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
+    // TODO(luna) Support hydration later
+    null,
   );
   markContainerAsRoot(root.current, container);
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
@@ -260,9 +288,6 @@ export function hydrateRoot(
     }
   }
 
-  // Render the initial children
-  updateContainer(initialChildren, root, null, null);
-
   return new ReactDOMHydrationRoot(root);
 }
 
@@ -271,7 +296,10 @@ export function isValidContainer(node: any): boolean {
     node &&
     (node.nodeType === ELEMENT_NODE ||
       node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE)
+      node.nodeType === DOCUMENT_FRAGMENT_NODE ||
+      (!disableCommentsAsDOMContainers &&
+        node.nodeType === COMMENT_NODE &&
+        (node: any).nodeValue === ' react-mount-point-unstable '))
   );
 }
 

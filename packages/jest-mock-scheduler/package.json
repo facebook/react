@@ -25,7 +25,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "cjs/"
   ]

@@ -27,6 +27,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
   REACT_CACHE_TYPE,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
@@ -83,6 +84,8 @@ export default function getComponentNameFromType(type: mixed): string | null {
       return 'SuspenseList';
     case REACT_CACHE_TYPE:
       return 'Cache';
+    case REACT_TRACING_MARKER_TYPE:
+      return 'TracingMarker';
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {

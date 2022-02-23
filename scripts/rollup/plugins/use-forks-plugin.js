@@ -30,15 +30,19 @@ let resolveCache = new Map();
 function useForks(forks) {
   let resolvedForks = new Map();
   Object.keys(forks).forEach(srcModule => {
+    // Fork paths are relative to the project root. They must include the full
+    // path, including the extension. We intentionally don't use Node's module
+    // resolution algorithm because 1) require.resolve doesn't work with ESM
+    // modules, and 2) the behavior is easier to predict.
     const targetModule = forks[srcModule];
     resolvedForks.set(
-      require.resolve(srcModule),
+      path.resolve(process.cwd(), srcModule),
       // targetModule could be a string (a file path),
       // or an error (which we'd throw if it gets used).
       // Don't try to "resolve" errors, but cache
       // resolved file paths.
       typeof targetModule === 'string'
-        ? require.resolve(targetModule)
+        ? path.resolve(process.cwd(), targetModule)
         : targetModule
     );
   });

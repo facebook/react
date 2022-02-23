@@ -19,6 +19,15 @@ let SuspenseList;
 let act;
 let IdleEventPriority;
 
+function normalizeCodeLocInfo(strOrErr) {
+  if (strOrErr && strOrErr.replace) {
+    return strOrErr.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+      return '\n    in ' + name + ' (at **)';
+    });
+  }
+  return strOrErr;
+}
+
 function dispatchMouseEvent(to, from) {
   if (!to) {
     to = null;
@@ -240,6 +249,12 @@ describe('ReactDOMServerPartialHydration', () => {
 
   // @gate enableClientRenderFallbackOnHydrationMismatch
   it('falls back to client rendering boundary on mismatch', async () => {
+    // We can't use the toErrorDev helper here because this is async.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
     let client = false;
     let suspend = false;
     let resolve;
@@ -276,70 +291,87 @@ describe('ReactDOMServerPartialHydration', () => {
         </Suspense>
       );
     }
-    const finalHTML = ReactDOMServer.renderToString(<App />);
-    const container = document.createElement('div');
-    container.innerHTML = finalHTML;
-    expect(Scheduler).toHaveYielded([
-      'Hello',
-      'Component',
-      'Component',
-      'Component',
-      'Component',
-    ]);
+    try {
+      const finalHTML = ReactDOMServer.renderToString(<App />);
+      const container = document.createElement('div');
+      container.innerHTML = finalHTML;
+      expect(Scheduler).toHaveYielded([
+        'Hello',
+        'Component',
+        'Component',
+        'Component',
+        'Component',
+      ]);
 
-    expect(container.innerHTML).toBe(
-      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
-    );
+      expect(container.innerHTML).toBe(
+        '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+      );
 
-    suspend = true;
-    client = true;
+      suspend = true;
+      client = true;
 
-    ReactDOM.hydrateRoot(container, <App />, {
-      onRecoverableError(error) {
-        Scheduler.unstable_yieldValue(error.message);
-      },
-    });
-    expect(Scheduler).toFlushAndYield([
-      'Suspend',
-      'Component',
-      'Component',
-      'Component',
-      'Component',
-    ]);
-    jest.runAllTimers();
+      ReactDOM.hydrateRoot(container, <App />, {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      });
+      expect(Scheduler).toFlushAndYield([
+        'Suspend',
+        'Component',
+        'Component',
+        'Component',
+        'Component',
+      ]);
+      jest.runAllTimers();
 
-    // Unchanged
-    expect(container.innerHTML).toBe(
-      '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
-    );
+      // Unchanged
+      expect(container.innerHTML).toBe(
+        '<!--$-->Hello<div>Component</div><div>Component</div><div>Component</div><div>Component</div><!--/$-->',
+      );
 
-    suspend = false;
-    resolve();
-    await promise;
+      suspend = false;
+      resolve();
+      await promise;
+      expect(Scheduler).toFlushAndYield([
+        // first pass, mismatches at end
+        'Hello',
+        'Component',
+        'Component',
+        'Component',
+        'Component',
 
-    expect(Scheduler).toFlushAndYield([
-      // first pass, mismatches at end
-      'Hello',
-      'Component',
-      'Component',
-      'Component',
-      'Component',
+        // second pass as client render
+        'Hello',
+        'Component',
+        'Component',
+        'Component',
+        'Component',
 
-      // second pass as client render
-      'Hello',
-      'Component',
-      'Component',
-      'Component',
-      'Component',
+        // Hydration mismatch is logged
+        'Hydration failed because the initial UI does not match what was rendered on the server.',
+        'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
+      ]);
 
-      // Hydration mismatch is logged
-      'An error occurred during hydration. The server HTML was replaced with client content',
-    ]);
+      // Client rendered - suspense comment nodes removed
+      expect(container.innerHTML).toBe(
+        'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
+      );
 
-    // Client rendered - suspense comment nodes removed
-    expect(container.innerHTML).toBe(
-      'Hello<div>Component</div><div>Component</div><div>Component</div><article>Mismatch</article>',
-    );
+      if (__DEV__) {
+        expect(mockError.mock.calls[0]).toEqual([
+          'Warning: Expected server HTML to contain a matching <%s> in <%s>.%s',
+          'div',
+          'div',
+          '\n' +
+            '    in div (at **)\n' +
+            '    in Component (at **)\n' +
+            '    in Suspense (at **)\n' +
+            '    in App (at **)',
+        ]);
+      }
+    } finally {
+      console.error = originalConsoleError;
+    }
   });
 
   it('calls the hydration callbacks after hydration or deletion', async () => {
@@ -401,8 +433,11 @@ describe('ReactDOMServerPartialHydration', () => {
       onDeleted(node) {
         deleted.push(node);
       },
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
     });
-    Scheduler.unstable_flushAll();
+    expect(Scheduler).toFlushAndYield([]);
 
     expect(hydrated.length).toBe(0);
     expect(deleted.length).toBe(0);
@@ -422,6 +457,12 @@ describe('ReactDOMServerPartialHydration', () => {
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
+    expect(Scheduler).toHaveYielded([
+      'This Suspense boundary received an update before it finished ' +
+        'hydrating. This caused the boundary to switch to client rendering. ' +
+        'The usual way to fix this is to wrap the original update ' +
+        'in startTransition.',
+    ]);
 
     expect(hydrated.length).toBe(1);
     expect(deleted.length).toBe(1);
@@ -476,7 +517,11 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <App hasB={false} />);
+        ReactDOM.hydrateRoot(container, <App hasB={false} />, {
+          onRecoverableError(error) {
+            Scheduler.unstable_yieldValue(error.message);
+          },
+        });
       });
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
 
@@ -486,6 +531,10 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.innerHTML).not.toContain('<span>B</span>');
 
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+      expect(Scheduler).toHaveYielded([
+        'There was an error while hydrating this Suspense boundary. ' +
+          'Switched to client rendering.',
+      ]);
       expect(ref.current).not.toBe(span);
     } else {
       expect(ref.current).toBe(span);
@@ -493,21 +542,14 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   it('recovers with client render when server rendered additional nodes at suspense root after unsuspending', async () => {
-    spyOnDev(console, 'error');
-    const ref = React.createRef();
-    function App({hasB}) {
-      return (
-        <div>
-          <Suspense fallback="Loading...">
-            <Suspender />
-            <span ref={ref}>A</span>
-            {hasB ? <span>B</span> : null}
-          </Suspense>
-          <div>Sibling</div>
-        </div>
-      );
-    }
+    // We can't use the toErrorDev helper here because this is async.
+    const originalConsoleError = console.error;
+    const mockError = jest.fn();
+    console.error = (...args) => {
+      mockError(...args.map(normalizeCodeLocInfo));
+    };
 
+    const ref = React.createRef();
     let shouldSuspend = false;
     let resolve;
     const promise = new Promise(res => {
@@ -522,37 +564,61 @@ describe('ReactDOMServerPartialHydration', () => {
       }
       return <></>;
     }
+    function App({hasB}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Suspender />
+            <span ref={ref}>A</span>
+            {hasB ? <span>B</span> : null}
+          </Suspense>
+          <div>Sibling</div>
+        </div>
+      );
+    }
+    try {
+      const finalHTML = ReactDOMServer.renderToString(<App hasB={true} />);
 
-    const finalHTML = ReactDOMServer.renderToString(<App hasB={true} />);
+      const container = document.createElement('div');
+      container.innerHTML = finalHTML;
 
-    const container = document.createElement('div');
-    container.innerHTML = finalHTML;
+      const span = container.getElementsByTagName('span')[0];
 
-    const span = container.getElementsByTagName('span')[0];
+      expect(container.innerHTML).toContain('<span>A</span>');
+      expect(container.innerHTML).toContain('<span>B</span>');
+      expect(ref.current).toBe(null);
 
-    expect(container.innerHTML).toContain('<span>A</span>');
-    expect(container.innerHTML).toContain('<span>B</span>');
-    expect(ref.current).toBe(null);
+      shouldSuspend = true;
+      act(() => {
+        ReactDOM.hydrateRoot(container, <App hasB={false} />);
+      });
 
-    shouldSuspend = true;
-    act(() => {
-      ReactDOM.hydrateRoot(container, <App hasB={false} />);
-    });
+      resolve();
+      await promise;
+      Scheduler.unstable_flushAll();
+      await null;
+      jest.runAllTimers();
 
-    // await expect(async () => {
-    resolve();
-    await promise;
-    Scheduler.unstable_flushAll();
-    await null;
-    jest.runAllTimers();
-    // }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
-
-    expect(container.innerHTML).toContain('<span>A</span>');
-    expect(container.innerHTML).not.toContain('<span>B</span>');
-    if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
-      expect(ref.current).not.toBe(span);
-    } else {
-      expect(ref.current).toBe(span);
+      expect(container.innerHTML).toContain('<span>A</span>');
+      expect(container.innerHTML).not.toContain('<span>B</span>');
+      if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
+        expect(ref.current).not.toBe(span);
+      } else {
+        expect(ref.current).toBe(span);
+      }
+      if (__DEV__) {
+        expect(mockError).toHaveBeenCalledWith(
+          'Warning: Did not expect server HTML to contain a <%s> in <%s>.%s',
+          'span',
+          'div',
+          '\n' +
+            '    in Suspense (at **)\n' +
+            '    in div (at **)\n' +
+            '    in App (at **)',
+        );
+      }
+    } finally {
+      console.error = originalConsoleError;
     }
   });
 
@@ -594,8 +660,8 @@ describe('ReactDOMServerPartialHydration', () => {
     }).toErrorDev('Did not expect server HTML to contain a <span> in <div>');
     if (gate(flags => flags.enableClientRenderFallbackOnHydrationMismatch)) {
       expect(Scheduler).toHaveYielded([
-        'An error occurred during hydration. The server HTML was replaced ' +
-          'with client content',
+        'Hydration failed because the initial UI does not match what was rendered on the server.',
+        'There was an error while hydrating this Suspense boundary. Switched to client rendering.',
       ]);
     }
 
@@ -1039,6 +1105,11 @@ describe('ReactDOMServerPartialHydration', () => {
     const root = ReactDOM.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
+      {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      },
     );
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1049,6 +1120,12 @@ describe('ReactDOMServerPartialHydration', () => {
     root.render(<App text="Hi" className="hi" />);
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
+    expect(Scheduler).toHaveYielded([
+      'This Suspense boundary received an update before it finished ' +
+        'hydrating. This caused the boundary to switch to client ' +
+        'rendering. The usual way to fix this is to wrap the original ' +
+        'update in startTransition.',
+    ]);
 
     // Flushing now should delete the existing content and show the fallback.
 
@@ -1114,6 +1191,11 @@ describe('ReactDOMServerPartialHydration', () => {
     const root = ReactDOM.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
+      {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      },
     );
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1127,6 +1209,12 @@ describe('ReactDOMServerPartialHydration', () => {
     // Flushing now should delete the existing content and show the fallback.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
+    expect(Scheduler).toHaveYielded([
+      'This Suspense boundary received an update before it finished ' +
+        'hydrating. This caused the boundary to switch to client rendering. ' +
+        'The usual way to fix this is to wrap the original update ' +
+        'in startTransition.',
+    ]);
 
     expect(container.getElementsByTagName('span').length).toBe(1);
     expect(ref.current).toBe(span);
@@ -1188,6 +1276,11 @@ describe('ReactDOMServerPartialHydration', () => {
     const root = ReactDOM.hydrateRoot(
       container,
       <App text="Hello" className="hello" />,
+      {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      },
     );
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1209,6 +1302,12 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     resolve();
     await promise;
+    expect(Scheduler).toHaveYielded([
+      'This Suspense boundary received an update before it finished ' +
+        'hydrating. This caused the boundary to switch to client rendering. ' +
+        'The usual way to fix this is to wrap the original update ' +
+        'in startTransition.',
+    ]);
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1497,6 +1596,11 @@ describe('ReactDOMServerPartialHydration', () => {
       <Context.Provider value={{text: 'Hello', className: 'hello'}}>
         <App />
       </Context.Provider>,
+      {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      },
     );
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -1513,6 +1617,12 @@ describe('ReactDOMServerPartialHydration', () => {
     // Flushing now should delete the existing content and show the fallback.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
+    expect(Scheduler).toHaveYielded([
+      'This Suspense boundary received an update before it finished ' +
+        'hydrating. This caused the boundary to switch to client rendering. ' +
+        'The usual way to fix this is to wrap the original update ' +
+        'in startTransition.',
+    ]);
 
     expect(container.getElementsByTagName('span').length).toBe(0);
     expect(ref.current).toBe(null);
@@ -1570,8 +1680,15 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />);
-    Scheduler.unstable_flushAll();
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(Scheduler).toFlushAndYield([
+      'The server could not finish this Suspense boundary, likely due to ' +
+        'an error during server rendering. Switched to client rendering.',
+    ]);
     jest.runAllTimers();
 
     expect(container.textContent).toBe('Hello');
@@ -1625,8 +1742,15 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />);
-    Scheduler.unstable_flushAll();
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(Scheduler).toFlushAndYield([
+      'The server could not finish this Suspense boundary, likely due to ' +
+        'an error during server rendering. Switched to client rendering.',
+    ]);
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -1685,8 +1809,15 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // On the client we have the data available quickly for some reason.
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />);
-    Scheduler.unstable_flushAll();
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(Scheduler).toFlushAndYield([
+      'The server could not finish this Suspense boundary, likely due to ' +
+        'an error during server rendering. Switched to client rendering.',
+    ]);
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -1918,6 +2049,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(b.textContent).toBe('B');
 
     const root = ReactDOM.hydrateRoot(container, <App />);
+
     // Increase hydration priority to higher than "offscreen".
     root.unstable_scheduleHydration(b);
 
@@ -1925,14 +2057,8 @@ describe('ReactDOMServerPartialHydration', () => {
 
     await act(async () => {
       if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          root.render(<App />);
-        });
-
         expect(Scheduler).toFlushAndYieldThrough(['Before', 'After']);
       } else {
-        root.render(<App />);
-
         expect(Scheduler).toFlushAndYieldThrough(['Before']);
         // This took a long time to render.
         Scheduler.unstable_advanceTime(1000);
@@ -1993,10 +2119,17 @@ describe('ReactDOMServerPartialHydration', () => {
     const container = document.createElement('div');
     container.innerHTML = html;
 
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
 
     suspend = true;
-    Scheduler.unstable_flushAll();
+    expect(Scheduler).toFlushAndYield([
+      'The server could not finish this Suspense boundary, likely due to ' +
+        'an error during server rendering. Switched to client rendering.',
+    ]);
 
     // We haven't hydrated the second child but the placeholder is still in the list.
     expect(container.textContent).toBe('ALoading B');
@@ -2051,8 +2184,15 @@ describe('ReactDOMServerPartialHydration', () => {
     const span = container.getElementsByTagName('span')[1];
 
     suspend = false;
-    ReactDOM.hydrateRoot(container, <App />);
-    Scheduler.unstable_flushAll();
+    ReactDOM.hydrateRoot(container, <App />, {
+      onRecoverableError(error) {
+        Scheduler.unstable_yieldValue(error.message);
+      },
+    });
+    expect(Scheduler).toFlushAndYield([
+      'The server could not finish this Suspense boundary, likely due to ' +
+        'an error during server rendering. Switched to client rendering.',
+    ]);
     jest.runAllTimers();
 
     expect(ref.current).toBe(span);
@@ -2150,6 +2290,11 @@ describe('ReactDOMServerPartialHydration', () => {
       <ClassName.Provider value={'hello'}>
         <App text="Hello" />
       </ClassName.Provider>,
+      {
+        onRecoverableError(error) {
+          Scheduler.unstable_yieldValue(error.message);
+        },
+      },
     );
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
@@ -2169,6 +2314,12 @@ describe('ReactDOMServerPartialHydration', () => {
     // This will force all expiration times to flush.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
+    expect(Scheduler).toHaveYielded([
+      'This Suspense boundary received an update before it finished ' +
+        'hydrating. This caused the boundary to switch to client rendering. ' +
+        'The usual way to fix this is to wrap the original update ' +
+        'in startTransition.',
+    ]);
 
     // This will now be a new span because we weren't able to hydrate before
     const newSpan = container.getElementsByTagName('span')[0];
@@ -3179,17 +3330,21 @@ describe('ReactDOMServerPartialHydration', () => {
         });
       });
     }).toErrorDev(
-      'Warning: An error occurred during hydration. ' +
-        'The server HTML was replaced with client content in <div>.',
-      {withoutStack: true},
+      [
+        'Warning: An error occurred during hydration. ' +
+          'The server HTML was replaced with client content in <div>.',
+        'Warning: Expected server HTML to contain a matching <span> in <div>.\n' +
+          '    in span (at **)\n' +
+          '    in App (at **)',
+      ],
+      {withoutStack: 1},
     );
     expect(Scheduler).toHaveYielded([
-      'Log recoverable error: An error occurred during hydration. The server ' +
-        'HTML was replaced with client content',
+      'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
       // TODO: There were multiple mismatches in a single container. Should
       // we attempt to de-dupe them?
-      'Log recoverable error: An error occurred during hydration. The server ' +
-        'HTML was replaced with client content',
+      'Log recoverable error: Hydration failed because the initial UI does not match what was rendered on the server.',
+      'Log recoverable error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
     ]);
 
     // We show fallback state when mismatch happens at root

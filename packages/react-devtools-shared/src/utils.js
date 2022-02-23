@@ -22,7 +22,10 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
-import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
+import {
+  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_TRACING_MARKER_TYPE as TracingMarker,
+} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -684,6 +687,8 @@ export function getDisplayNameForReactElement(
       return 'Suspense';
     case SuspenseList:
       return 'SuspenseList';
+    case TracingMarker:
+      return 'TracingMarker';
     default:
       const {type} = element;
       if (typeof type === 'string') {

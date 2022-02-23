@@ -24,7 +24,6 @@ export const {
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
-  skipUnmountedBoundaries,
   createRootStrictEffectsByDefault,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
@@ -73,6 +72,10 @@ export const enableLazyElements = true;
 export const enableCache = true;
 
 export const disableJavaScriptURLs = true;
+
+// TODO: www currently relies on this feature. It's disabled in open source.
+// Need to remove it.
+export const disableCommentsAsDOMContainers = false;
 
 export const disableModulePatternComponents = true;
 
