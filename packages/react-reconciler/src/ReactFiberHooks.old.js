@@ -109,7 +109,6 @@ import {
   entangleTransitions as entangleLegacyQueueTransitions,
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
-import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 import {getTreeId} from './ReactFiberTreeContext.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
@@ -1992,11 +1991,7 @@ function startTransition(setPending, callback) {
 
     ReactCurrentBatchConfig.transition = prevTransition;
     if (__DEV__) {
-      if (
-        prevTransition === null &&
-        warnOnSubscriptionInsideStartTransition &&
-        currentTransition._updatedFibers
-      ) {
+      if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
         if (updatedFibersCount > 10) {
           console.warn(
