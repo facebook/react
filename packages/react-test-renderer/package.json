@@ -19,7 +19,6 @@
   },
   "homepage": "https://reactjs.org/",
   "dependencies": {
-    "object-assign": "^4.1.1",
     "react-is": "^17.0.3",
     "react-shallow-renderer": "^16.13.1",
     "scheduler": "^0.20.1"

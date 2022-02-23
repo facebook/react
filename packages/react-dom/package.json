@@ -18,7 +18,6 @@
   "homepage": "https://reactjs.org/",
   "dependencies": {
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.1",
     "scheduler": "^0.20.1"
   },
   "peerDependencies": {

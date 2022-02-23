@@ -36,38 +36,6 @@ const __EXPERIMENTAL__ =
 // algorithm because 1) require.resolve doesn't work with ESM modules, and 2)
 // the behavior is easier to predict.
 const forks = Object.freeze({
-  // Optimization: for UMDs, use a version that we can inline into the React bundle.
-  // Use that from all other bundles.
-
-  // NOTE: This is hard-coded to the main entry point of the (third-party)
-  // object-assign package.
-  './node_modules/object-assign/index.js': (
-    bundleType,
-    entry,
-    dependencies
-  ) => {
-    if (
-      bundleType !== UMD_DEV &&
-      bundleType !== UMD_PROD &&
-      bundleType !== UMD_PROFILING
-    ) {
-      // It's only relevant for UMD bundles since that's where the duplication
-      // happens. Other bundles just require('object-assign') anyway.
-      return null;
-    }
-    if (entry === 'react' || entry === 'react/src/ReactSharedSubset.js') {
-      // Use the forked version that uses ES modules instead of CommonJS.
-      return './packages/shared/forks/object-assign.inline-umd.js';
-    }
-    if (dependencies.indexOf('react') === -1) {
-      // We can only apply the optimizations to bundle that depend on React
-      // because we read assign() from an object exposed on React internals.
-      return null;
-    }
-    // We can use the fork that reads the secret export!
-    return './packages/shared/forks/object-assign.umd.js';
-  },
-
   // NOTE: This is hard-coded to the main entry point of the (third-party)
   // react-shallow-renderer package.
   './node_modules/react-shallow-renderer/index.js': () => {
