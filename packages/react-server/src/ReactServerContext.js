@@ -55,7 +55,6 @@ export function createServerContext<T: ServerContextJSONValue>(
 function _createServerContext<T: ServerContextJSONValue>(
   globalName: string,
   defaultValue: T,
-  isServer?: boolean,
 ): ReactServerContext<T> {
   const context: ReactServerContext<T> = {
     $$typeof: REACT_SERVER_CONTEXT_TYPE,
@@ -144,7 +143,6 @@ export function getOrCreateServerContext(globalName: string, value: any) {
     globalServerContextRegistry[globalName] = _createServerContext(
       globalName,
       value === undefined ? DEFAULT_PLACEHOLDER : value,
-      true,
     );
   }
   return globalServerContextRegistry[globalName];
