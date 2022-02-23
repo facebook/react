@@ -402,4 +402,22 @@ describe('ReactDOMRoot', () => {
         'already rendering.',
     );
   });
+
+  // @gate disableCommentsAsDOMContainers
+  it('errors if container is a comment node', () => {
+    // This is an old feature used by www. Disabled in the open source build.
+    const div = document.createElement('div');
+    div.innerHTML = '<!-- react-mount-point-unstable -->';
+    const commentNode = div.childNodes[0];
+
+    expect(() => ReactDOM.createRoot(commentNode)).toThrow(
+      'createRoot(...): Target container is not a DOM element.',
+    );
+    expect(() => ReactDOM.hydrateRoot(commentNode)).toThrow(
+      'hydrateRoot(...): Target container is not a DOM element.',
+    );
+
+    // Still works in the legacy API
+    ReactDOM.render(<div />, commentNode);
+  });
 });

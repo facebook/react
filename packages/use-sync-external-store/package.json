@@ -10,7 +10,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "index.native.js",
     "with-selector.js",

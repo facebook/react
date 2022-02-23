@@ -54,6 +54,13 @@ describe('Stylex plugin utils', () => {
         "sources": Array [],
       }
     `);
+
+    expect(getStyleXData([undefined])).toMatchInlineSnapshot(`
+      Object {
+        "resolvedStyles": Object {},
+        "sources": Array [],
+      }
+    `);
   });
 
   it('should support simple style objects', () => {

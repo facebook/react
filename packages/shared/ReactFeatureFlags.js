@@ -68,6 +68,10 @@ export const enableSchedulerDebugging = false;
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
+// Disable support for comment nodes as React DOM containers. Only supported
+// by www builds.
+export const disableCommentsAsDOMContainers = true;
+
 // Experimental Scope support.
 export const enableScopeAPI = false;
 
@@ -116,12 +120,6 @@ export const disableNativeComponentFrames = false;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
-
-// Errors that are thrown while unmounting (or after in the case of passive effects)
-// should bypass any error boundaries that are also unmounting (or have unmounted)
-// and be handled by the nearest still-mounted boundary.
-// If there are no still-mounted boundaries, the errors should be rethrown.
-export const skipUnmountedBoundaries = false;
 
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.

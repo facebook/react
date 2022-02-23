@@ -16,6 +16,7 @@ import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 import {
   createContainer as createContainer_old,
+  createHydrationContainer as createHydrationContainer_old,
   updateContainer as updateContainer_old,
   batchedUpdates as batchedUpdates_old,
   deferredUpdates as deferredUpdates_old,
@@ -53,6 +54,7 @@ import {
 
 import {
   createContainer as createContainer_new,
+  createHydrationContainer as createHydrationContainer_new,
   updateContainer as updateContainer_new,
   batchedUpdates as batchedUpdates_new,
   deferredUpdates as deferredUpdates_new,
@@ -91,6 +93,9 @@ import {
 export const createContainer = enableNewReconciler
   ? createContainer_new
   : createContainer_old;
+export const createHydrationContainer = enableNewReconciler
+  ? createHydrationContainer_new
+  : createHydrationContainer_old;
 export const updateContainer = enableNewReconciler
   ? updateContainer_new
   : updateContainer_old;

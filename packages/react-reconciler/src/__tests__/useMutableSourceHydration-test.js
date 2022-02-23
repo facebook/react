@@ -35,15 +35,6 @@ describe('useMutableSourceHydration', () => {
       React.useMutableSource || React.unstable_useMutableSource;
   });
 
-  function dispatchAndSetCurrentEvent(el, event) {
-    try {
-      window.event = event;
-      el.dispatchEvent(event);
-    } finally {
-      window.event = undefined;
-    }
-  }
-
   const defaultGetSnapshot = source => source.value;
   const defaultSubscribe = (source, callback) => source.subscribe(callback);
 
@@ -288,6 +279,9 @@ describe('useMutableSourceHydration', () => {
       'Log error: Cannot read from mutable source during the current ' +
         'render without tearing. This may be a bug in React. Please file ' +
         'an issue.',
+      'Log error: There was an error while hydrating. Because the error ' +
+        'happened outside of a Suspense boundary, the entire root will ' +
+        'switch to client rendering.',
     ]);
     expect(source.listenerCount).toBe(2);
   });
@@ -378,81 +372,9 @@ describe('useMutableSourceHydration', () => {
       'Log error: Cannot read from mutable source during the current ' +
         'render without tearing. This may be a bug in React. Please file ' +
         'an issue.',
+      'Log error: There was an error while hydrating. Because the error ' +
+        'happened outside of a Suspense boundary, the entire root will ' +
+        'switch to client rendering.',
     ]);
-  });
-
-  // @gate !enableSyncDefaultUpdates
-  // @gate enableUseMutableSource
-  it('should detect a tear during a higher priority interruption', () => {
-    const source = createSource('one');
-    const mutableSource = createMutableSource(source, param => param.version);
-
-    function Unrelated({flag}) {
-      Scheduler.unstable_yieldValue(flag);
-      return flag;
-    }
-
-    function TestComponent({flag}) {
-      return (
-        <>
-          <Unrelated flag={flag} />
-          <Component
-            label="a"
-            getSnapshot={defaultGetSnapshot}
-            mutableSource={mutableSource}
-            subscribe={defaultSubscribe}
-          />
-        </>
-      );
-    }
-
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-
-    const htmlString = ReactDOMServer.renderToString(
-      <TestComponent flag={1} />,
-    );
-    container.innerHTML = htmlString;
-    expect(Scheduler).toHaveYielded([1, 'a:one']);
-    expect(source.listenerCount).toBe(0);
-
-    expect(() => {
-      act(() => {
-        let root;
-        if (gate(flags => flags.enableSyncDefaultUpdates)) {
-          React.startTransition(() => {
-            root = ReactDOM.hydrateRoot(container, <TestComponent flag={1} />, {
-              mutableSources: [mutableSource],
-            });
-          });
-        } else {
-          root = ReactDOM.hydrateRoot(container, <TestComponent flag={1} />, {
-            mutableSources: [mutableSource],
-          });
-        }
-        expect(Scheduler).toFlushAndYieldThrough([1]);
-
-        // Render an update which will be higher priority than the hydration.
-        // We can do this by scheduling the update inside a mouseover event.
-        const arbitraryElement = document.createElement('div');
-        const mouseOverEvent = document.createEvent('MouseEvents');
-        mouseOverEvent.initEvent('mouseover', true, true);
-        arbitraryElement.addEventListener('mouseover', () => {
-          root.render(<TestComponent flag={2} />);
-        });
-        dispatchAndSetCurrentEvent(arbitraryElement, mouseOverEvent);
-
-        expect(Scheduler).toFlushAndYieldThrough([2]);
-        source.value = 'two';
-      });
-    }).toErrorDev(
-      'Warning: Text content did not match. Server: "1" Client: "2"',
-    );
-    expect(source.listenerCount).toBe(1);
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      expect(Scheduler).toHaveYielded([2, 'a:two']);
-    } else {
-      expect(Scheduler).toHaveYielded(['a:two']);
-    }
   });
 });

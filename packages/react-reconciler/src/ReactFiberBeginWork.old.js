@@ -65,6 +65,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -97,6 +98,7 @@ import {
   enableSuspenseLayoutEffectSemantics,
   enableSchedulingProfiler,
   enablePersistentOffscreenHostContainer,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -202,6 +204,7 @@ import {
   resetHydrationState,
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
+  queueHydrationError,
 } from './ReactFiberHydrationContext.old';
 import {
   adoptClassInstance,
@@ -227,9 +230,6 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   pushRenderLanes,
-  getExecutionContext,
-  RetryAfterError,
-  NoContext,
 } from './ReactFiberWorkLoop.old';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {
@@ -238,7 +238,7 @@ import {
   pushRootCachePool,
   CacheContext,
   getSuspendedCachePool,
-  restoreSpawnedCachePool,
+  pushSpawnedCachePool,
   getOffscreenDeferredCachePool,
 } from './ReactFiberCacheComponent.old';
 import {createCapturedValue} from './ReactCapturedValue';
@@ -639,11 +639,6 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
-  // If this is not null, this is a cache pool that was carried over from the
-  // previous render. We will push this to the cache pool context so that we can
-  // resume in-flight requests.
-  let spawnedCachePool: SpawnedCachePool | null = null;
-
   if (
     nextProps.mode === 'hidden' ||
     nextProps.mode === 'unstable-defer-without-hiding'
@@ -656,8 +651,16 @@ function updateOffscreenComponent(
         cachePool: null,
       };
       workInProgress.memoizedState = nextState;
+      if (enableCache) {
+        // push the cache pool even though we're going to bail out
+        // because otherwise there'd be a context mismatch
+        if (current !== null) {
+          pushSpawnedCachePool(workInProgress, null);
+        }
+      }
       pushRenderLanes(workInProgress, renderLanes);
     } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+      let spawnedCachePool: SpawnedCachePool | null = null;
       // We're hidden, and we're not rendering at Offscreen. We will bail out
       // and resume this tree later.
       let nextBaseLanes;
@@ -667,9 +670,6 @@ function updateOffscreenComponent(
         if (enableCache) {
           // Save the cache pool so we can resume later.
           spawnedCachePool = getOffscreenDeferredCachePool();
-          // We don't need to push to the cache pool because we're about to
-          // bail out. There won't be a context mismatch because we only pop
-          // the cache pool if `updateQueue` is non-null.
         }
       } else {
         nextBaseLanes = renderLanes;
@@ -685,6 +685,14 @@ function updateOffscreenComponent(
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
+      if (enableCache) {
+        // push the cache pool even though we're going to bail out
+        // because otherwise there'd be a context mismatch
+        if (current !== null) {
+          pushSpawnedCachePool(workInProgress, null);
+        }
+      }
+
       // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
       pushRenderLanes(workInProgress, nextBaseLanes);
@@ -705,19 +713,6 @@ function updateOffscreenComponent(
       // This is the second render. The surrounding visible content has already
       // committed. Now we resume rendering the hidden tree.
 
-      if (enableCache && prevState !== null) {
-        // If the render that spawned this one accessed the cache pool, resume
-        // using the same cache. Unless the parent changed, since that means
-        // there was a refresh.
-        const prevCachePool = prevState.cachePool;
-        if (prevCachePool !== null) {
-          spawnedCachePool = restoreSpawnedCachePool(
-            workInProgress,
-            prevCachePool,
-          );
-        }
-      }
-
       // Rendering at offscreen, so we can clear the base lanes.
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
@@ -727,6 +722,14 @@ function updateOffscreenComponent(
       // Push the lanes that were skipped when we bailed out.
       const subtreeRenderLanes =
         prevState !== null ? prevState.baseLanes : renderLanes;
+      if (enableCache && current !== null) {
+        // If the render that spawned this one accessed the cache pool, resume
+        // using the same cache. Unless the parent changed, since that means
+        // there was a refresh.
+        const prevCachePool = prevState !== null ? prevState.cachePool : null;
+        pushSpawnedCachePool(workInProgress, prevCachePool);
+      }
+
       pushRenderLanes(workInProgress, subtreeRenderLanes);
     }
   } else {
@@ -742,12 +745,7 @@ function updateOffscreenComponent(
         // using the same cache. Unless the parent changed, since that means
         // there was a refresh.
         const prevCachePool = prevState.cachePool;
-        if (prevCachePool !== null) {
-          spawnedCachePool = restoreSpawnedCachePool(
-            workInProgress,
-            prevCachePool,
-          );
-        }
+        pushSpawnedCachePool(workInProgress, prevCachePool);
       }
 
       // Since we're not hidden anymore, reset the state
@@ -757,14 +755,17 @@ function updateOffscreenComponent(
       // special to do. Need to push to the stack regardless, though, to avoid
       // a push/pop misalignment.
       subtreeRenderLanes = renderLanes;
+
+      if (enableCache) {
+        // If the render that spawned this one accessed the cache pool, resume
+        // using the same cache. Unless the parent changed, since that means
+        // there was a refresh.
+        if (current !== null) {
+          pushSpawnedCachePool(workInProgress, null);
+        }
+      }
     }
     pushRenderLanes(workInProgress, subtreeRenderLanes);
-  }
-
-  if (enableCache) {
-    // If we have a cache pool from a previous render attempt, then this will be
-    // non-null. We use this to infer whether to push/pop the cache context.
-    workInProgress.updateQueue = spawnedCachePool;
   }
 
   if (enablePersistentOffscreenHostContainer && supportsPersistence) {
@@ -895,6 +896,21 @@ function updateCacheComponent(
         propagateContextChange(workInProgress, CacheContext, renderLanes);
       }
     }
+  }
+
+  const nextChildren = workInProgress.pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
+
+// This should only be called if the name changes
+function updateTracingMarkerComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  if (!enableTransitionTracing) {
+    return null;
   }
 
   const nextChildren = workInProgress.pendingProps.children;
@@ -2061,6 +2077,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
 
     const nextPrimaryChildren = nextProps.children;
     const nextFallbackChildren = nextProps.fallback;
+
     if (showFallback) {
       const fallbackFragment = mountSuspenseFallbackChildren(
         workInProgress,
@@ -2135,6 +2152,10 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
               current,
               workInProgress,
               renderLanes,
+              new Error(
+                'There was an error while hydrating this Suspense boundary. ' +
+                  'Switched to client rendering.',
+              ),
             );
           } else if (
             (workInProgress.memoizedState: null | SuspenseState) !== null
@@ -2521,7 +2542,19 @@ function retrySuspenseComponentWithoutHydrating(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
+  recoverableError: Error | null,
 ) {
+  // Falling back to client rendering. Because this has performance
+  // implications, it's considered a recoverable error, even though the user
+  // likely won't observe anything wrong with the UI.
+  //
+  // The error is passed in as an argument to enforce that every caller provide
+  // a custom message, or explicitly opt out (currently the only path that opts
+  // out is legacy mode; every concurrent path provides an error).
+  if (recoverableError !== null) {
+    queueHydrationError(recoverableError);
+  }
+
   // This will add the old fiber to the deletion list
   reconcileChildFibers(workInProgress, current.child, null, renderLanes);
 
@@ -2633,19 +2666,15 @@ function updateDehydratedSuspenseComponent(
   // but after we've already committed once.
   warnIfHydrating();
 
-  if ((getExecutionContext() & RetryAfterError) !== NoContext) {
-    return retrySuspenseComponentWithoutHydrating(
-      current,
-      workInProgress,
-      renderLanes,
-    );
-  }
-
   if ((workInProgress.mode & ConcurrentMode) === NoMode) {
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
       renderLanes,
+      // TODO: When we delete legacy mode, we should make this error argument
+      // required — every concurrent mode path that causes hydration to
+      // de-opt to client rendering should have an error message.
+      null,
     );
   }
 
@@ -2657,6 +2686,14 @@ function updateDehydratedSuspenseComponent(
       current,
       workInProgress,
       renderLanes,
+      // TODO: The server should serialize the error message so we can log it
+      // here on the client. Or, in production, a hash/id that corresponds to
+      // the error.
+      new Error(
+        'The server could not finish this Suspense boundary, likely ' +
+          'due to an error during server rendering. Switched to ' +
+          'client rendering.',
+      ),
     );
   }
 
@@ -2715,6 +2752,12 @@ function updateDehydratedSuspenseComponent(
       current,
       workInProgress,
       renderLanes,
+      new Error(
+        'This Suspense boundary received an update before it finished ' +
+          'hydrating. This caused the boundary to switch to client rendering. ' +
+          'The usual way to fix this is to wrap the original update ' +
+          'in startTransition.',
+      ),
     );
   } else if (isSuspenseInstancePending(suspenseInstance)) {
     // This component is still pending more data from the server, so we can't hydrate its
@@ -3902,6 +3945,16 @@ function beginWork(
     case CacheComponent: {
       if (enableCache) {
         return updateCacheComponent(current, workInProgress, renderLanes);
+      }
+      break;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        return updateTracingMarkerComponent(
+          current,
+          workInProgress,
+          renderLanes,
+        );
       }
       break;
     }

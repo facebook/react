@@ -27,7 +27,6 @@
   "files": [
     "LICENSE",
     "README.md",
-    "build-info.json",
     "index.js",
     "profiling.js",
     "server.js",
@@ -38,6 +37,22 @@
     "cjs/",
     "umd/"
   ],
+  "exports": {
+    ".": "./index.js",
+    "./server": {
+      "deno": "./server.browser.js",
+      "worker": "./server.browser.js",
+      "browser": "./server.browser.js",
+      "default": "./server.node.js"
+    },
+    "./server.browser": "./server.browser.js",
+    "./server.node": "./server.node.js",
+    "./profiling": "./profiling.js",
+    "./test-utils": "./test-utils.js",
+    "./unstable_testing": "./unstable_testing.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
   "browser": {
     "./server.js": "./server.browser.js"
   },

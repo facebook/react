@@ -37,6 +37,7 @@ type Options = {|
   bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   onCompleteShell?: () => void,
+  onErrorShell?: () => void,
   onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
 |};
@@ -63,6 +64,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     options ? options.onError : undefined,
     options ? options.onCompleteAll : undefined,
     options ? options.onCompleteShell : undefined,
+    options ? options.onErrorShell : undefined,
   );
 }
 

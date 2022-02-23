@@ -168,6 +168,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should error the stream when an error is thrown at the root', async () => {
     const reportedErrors = [];
+    const reportedShellErrors = [];
     const {writable, output, completed} = getTestWritable();
     const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
@@ -177,6 +178,9 @@ describe('ReactDOMFizzServer', () => {
       {
         onError(x) {
           reportedErrors.push(x);
+        },
+        onErrorShell(x) {
+          reportedShellErrors.push(x);
         },
       },
     );
@@ -190,11 +194,13 @@ describe('ReactDOMFizzServer', () => {
     expect(output.result).toBe('');
     // This type of error is reported to the error callback too.
     expect(reportedErrors).toEqual([theError]);
+    expect(reportedShellErrors).toEqual([theError]);
   });
 
   // @gate experimental
   it('should error the stream when an error is thrown inside a fallback', async () => {
     const reportedErrors = [];
+    const reportedShellErrors = [];
     const {writable, output, completed} = getTestWritable();
     const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
@@ -207,6 +213,9 @@ describe('ReactDOMFizzServer', () => {
         onError(x) {
           reportedErrors.push(x);
         },
+        onErrorShell(x) {
+          reportedShellErrors.push(x);
+        },
       },
     );
     pipe(writable);
@@ -216,11 +225,13 @@ describe('ReactDOMFizzServer', () => {
     expect(output.error).toBe(theError);
     expect(output.result).toBe('');
     expect(reportedErrors).toEqual([theError]);
+    expect(reportedShellErrors).toEqual([theError]);
   });
 
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
+    const reportedShellErrors = [];
     const {writable, output, completed} = getTestWritable();
     const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
       <div>
@@ -233,6 +244,9 @@ describe('ReactDOMFizzServer', () => {
         onError(x) {
           reportedErrors.push(x);
         },
+        onErrorShell(x) {
+          reportedShellErrors.push(x);
+        },
       },
     );
     pipe(writable);
@@ -243,6 +257,7 @@ describe('ReactDOMFizzServer', () => {
     expect(output.result).toContain('Loading');
     // While no error is reported to the stream, the error is reported to the callback.
     expect(reportedErrors).toEqual([theError]);
+    expect(reportedShellErrors).toEqual([]);
   });
 
   // @gate experimental

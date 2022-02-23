@@ -31,21 +31,23 @@ describe('ReactDOMTestSelectors', () => {
     jest.resetModules();
 
     React = require('react');
-
-    const ReactDOM = require('react-dom/testing');
     act = React.unstable_act;
-    createComponentSelector = ReactDOM.createComponentSelector;
-    createHasPseudoClassSelector = ReactDOM.createHasPseudoClassSelector;
-    createRoleSelector = ReactDOM.createRoleSelector;
-    createTextSelector = ReactDOM.createTextSelector;
-    createTestNameSelector = ReactDOM.createTestNameSelector;
-    findAllNodes = ReactDOM.findAllNodes;
-    findBoundingRects = ReactDOM.findBoundingRects;
-    focusWithin = ReactDOM.focusWithin;
-    getFindAllNodesFailureDescription =
-      ReactDOM.getFindAllNodesFailureDescription;
-    observeVisibleRects = ReactDOM.observeVisibleRects;
-    render = ReactDOM.render;
+
+    if (__EXPERIMENTAL__ || global.__WWW__) {
+      const ReactDOM = require('react-dom/unstable_testing');
+      createComponentSelector = ReactDOM.createComponentSelector;
+      createHasPseudoClassSelector = ReactDOM.createHasPseudoClassSelector;
+      createRoleSelector = ReactDOM.createRoleSelector;
+      createTextSelector = ReactDOM.createTextSelector;
+      createTestNameSelector = ReactDOM.createTestNameSelector;
+      findAllNodes = ReactDOM.findAllNodes;
+      findBoundingRects = ReactDOM.findBoundingRects;
+      focusWithin = ReactDOM.focusWithin;
+      getFindAllNodesFailureDescription =
+        ReactDOM.getFindAllNodesFailureDescription;
+      observeVisibleRects = ReactDOM.observeVisibleRects;
+      render = ReactDOM.render;
+    }
 
     container = document.createElement('div');
     document.body.appendChild(container);

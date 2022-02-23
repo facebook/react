@@ -59,6 +59,7 @@ export {
   unstable_LegacyHidden,
   unstable_Offscreen,
   unstable_Scope,
+  unstable_TracingMarker,
   unstable_getCacheSignal,
   unstable_getCacheForType,
   unstable_useCacheRefresh,

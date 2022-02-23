@@ -253,7 +253,7 @@ type BaseFiberRootProperties = {|
   // a reference to.
   identifierPrefix: string,
 
-  onRecoverableError: null | ((error: mixed) => void),
+  onRecoverableError: (error: mixed) => void,
 |};
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
@@ -274,6 +274,60 @@ type SuspenseCallbackOnlyFiberRootProperties = {|
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
 |};
 
+export type TransitionTracingCallbacks = {
+  onTransitionStart?: (transitionName: string, startTime: number) => void,
+  onTransitionProgress?: (
+    transitionName: string,
+    startTime: number,
+    currentTime: number,
+    pending: Array<{name: null | string}>,
+  ) => void,
+  onTransitionIncomplete?: (
+    transitionName: string,
+    startTime: number,
+    deletions: Array<{
+      type: string,
+      name?: string,
+      newName?: string,
+      endTime: number,
+    }>,
+  ) => void,
+  onTransitionComplete?: (
+    transitionName: string,
+    startTime: number,
+    endTime: number,
+  ) => void,
+  onMarkerProgress?: (
+    transitionName: string,
+    marker: string,
+    startTime: number,
+    currentTime: number,
+    pending: Array<{name: null | string}>,
+  ) => void,
+  onMarkerIncomplete?: (
+    transitionName: string,
+    marker: string,
+    startTime: number,
+    deletions: Array<{
+      type: string,
+      name?: string,
+      newName?: string,
+      endTime: number,
+    }>,
+  ) => void,
+  onMarkerComplete?: (
+    transitionName: string,
+    marker: string,
+    startTime: number,
+    endTime: number,
+  ) => void,
+};
+
+// The following fields are only used in transition tracing in Profile builds
+type TransitionTracingOnlyFiberRootProperties = {|
+  transitionCallbacks: null | TransitionTracingCallbacks,
+|};
+
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
 // The types are defined separately within this file to ensure they stay in sync.
@@ -281,6 +335,7 @@ export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
   ...UpdaterTrackingOnlyFiberRootProperties,
+  ...TransitionTracingOnlyFiberRootProperties,
   ...
 };
 
