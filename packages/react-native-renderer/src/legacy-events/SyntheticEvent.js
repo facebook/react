@@ -7,6 +7,8 @@
 
 /* eslint valid-typeof: 0 */
 
+import assign from 'shared/assign';
+
 const EVENT_POOL_SIZE = 10;
 
 /**
@@ -110,7 +112,7 @@ function SyntheticEvent(
   return this;
 }
 
-Object.assign(SyntheticEvent.prototype, {
+assign(SyntheticEvent.prototype, {
   preventDefault: function() {
     this.defaultPrevented = true;
     const event = this.nativeEvent;
@@ -236,11 +238,11 @@ SyntheticEvent.extend = function(Interface) {
   function Class() {
     return Super.apply(this, arguments);
   }
-  Object.assign(prototype, Class.prototype);
+  assign(prototype, Class.prototype);
   Class.prototype = prototype;
   Class.prototype.constructor = Class;
 
-  Class.Interface = Object.assign({}, Super.Interface, Interface);
+  Class.Interface = assign({}, Super.Interface, Interface);
   Class.extend = Super.extend;
   addEventPoolingTo(Class);
 

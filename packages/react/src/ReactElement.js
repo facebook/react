@@ -7,6 +7,7 @@
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import assign from 'shared/assign';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
@@ -492,7 +493,7 @@ export function cloneElement(element, config, children) {
   let propName;
 
   // Original props are copied
-  const props = Object.assign({}, element.props);
+  const props = assign({}, element.props);
 
   // Reserved names are extracted
   let key = element.key;

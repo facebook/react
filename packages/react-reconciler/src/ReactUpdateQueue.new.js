@@ -112,6 +112,8 @@ import {
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook.new';
 
+import assign from 'shared/assign';
+
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of
   // transition -> event time on the root.
@@ -442,7 +444,7 @@ function getStateFromUpdate<State>(
         return prevState;
       }
       // Merge the partial state and the previous state.
-      return Object.assign({}, prevState, partialState);
+      return assign({}, prevState, partialState);
     }
     case ForceUpdate: {
       hasForceUpdate = true;
