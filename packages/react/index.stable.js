@@ -21,7 +21,6 @@ export {
   createContext,
   createElement,
   createFactory,
-  createMutableSource as unstable_createMutableSource,
   createRef,
   forwardRef,
   isValidElement,
