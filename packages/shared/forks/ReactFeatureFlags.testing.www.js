@@ -40,7 +40,6 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const disableModulePatternComponents = true;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
-export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;

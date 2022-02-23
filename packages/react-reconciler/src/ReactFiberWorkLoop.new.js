@@ -31,7 +31,6 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableStrictEffects,
   enableUpdaterTracking,
-  warnOnSubscriptionInsideStartTransition,
   enableCache,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -397,11 +396,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   const isTransition = requestCurrentTransition() !== NoTransition;
   if (isTransition) {
-    if (
-      __DEV__ &&
-      warnOnSubscriptionInsideStartTransition &&
-      ReactCurrentBatchConfig.transition !== null
-    ) {
+    if (__DEV__ && ReactCurrentBatchConfig.transition !== null) {
       const transition = ReactCurrentBatchConfig.transition;
       if (!transition._updatedFibers) {
         transition._updatedFibers = new Set();

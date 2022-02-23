@@ -24,7 +24,6 @@ export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
 export const enableSyncDefaultUpdates = __VARIANT__;
 export const consoleManagedByDevToolsDuringStrictMode = __VARIANT__;
-export const warnOnSubscriptionInsideStartTransition = __VARIANT__;
 export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = __VARIANT__;
 export const enableClientRenderFallbackOnHydrationMismatch = __VARIANT__;
 

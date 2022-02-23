@@ -8,7 +8,6 @@
  */
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
-import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 
 export function startTransition(scope: () => void) {
   const prevTransition = ReactCurrentBatchConfig.transition;
@@ -24,11 +23,7 @@ export function startTransition(scope: () => void) {
     ReactCurrentBatchConfig.transition = prevTransition;
 
     if (__DEV__) {
-      if (
-        prevTransition === null &&
-        warnOnSubscriptionInsideStartTransition &&
-        currentTransition._updatedFibers
-      ) {
+      if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
         if (updatedFibersCount > 10) {
           console.warn(

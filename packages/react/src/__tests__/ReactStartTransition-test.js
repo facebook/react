@@ -27,7 +27,6 @@ describe('ReactStartTransition', () => {
     useTransition = React.useTransition;
   });
 
-  // @gate warnOnSubscriptionInsideStartTransition || !__DEV__
   it('Warns if a suspicious number of fibers are updated inside startTransition', () => {
     const subs = new Set();
     const useUserSpaceSubscription = () => {
