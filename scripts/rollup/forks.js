@@ -55,7 +55,7 @@ const forks = Object.freeze({
       // happens. Other bundles just require('object-assign') anyway.
       return null;
     }
-    if (entry === 'react' || entry === 'react/unstable-shared-subset') {
+    if (entry === 'react' || entry === 'react/src/ReactSharedSubset.js') {
       // Use the forked version that uses ES modules instead of CommonJS.
       return './packages/shared/forks/object-assign.inline-umd.js';
     }
@@ -82,7 +82,7 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (entry === 'react' || entry === 'react/unstable-shared-subset') {
+    if (entry === 'react' || entry === 'react/src/ReactSharedSubset.js') {
       return './packages/react/src/ReactSharedInternals.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {

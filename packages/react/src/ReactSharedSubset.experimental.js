@@ -37,4 +37,4 @@ export {
   useMutableSource as unstable_useMutableSource,
   useTransition,
   version,
-} from './src/React';
+} from './React';
