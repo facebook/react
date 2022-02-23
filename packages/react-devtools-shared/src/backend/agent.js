@@ -20,11 +20,11 @@ import {
   sessionStorageRemoveItem,
   sessionStorageSetItem,
 } from 'react-devtools-shared/src/storage';
-import setupHighlighter from './views/Highlighter';
 import {
-  initialize as setupTraceUpdates,
-  toggleEnabled as setTraceUpdatesEnabled,
-} from './views/TraceUpdates';
+  setupHighlighter,
+  setupTraceUpdates,
+  setTraceUpdatesEnabled,
+} from './views/Highlighter';
 import {patch as patchConsole} from './console';
 import {currentBridgeProtocol} from 'react-devtools-shared/src/bridge';
 
