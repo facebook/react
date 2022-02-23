@@ -7,70 +7,70 @@
  * @flow strict
  */
 
-// Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
-// This prevents e.g. <img src=""> from making an unnecessary HTTP request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = false;
+// -----------------------------------------------------------------------------
+// Land or remove (zero effort)
+//
+// Flags that can likely be deleted or landed without consequences
+// -----------------------------------------------------------------------------
 
-// Adds verbose console logging for e.g. state updates, suspense, and work loop stuff.
-// Intended to enable React core members to more easily debug scheduling issues in DEV builds.
-export const enableDebugTracing = false;
-
-// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
-// for an experimental timeline tool.
-export const enableSchedulingProfiler = __PROFILE__;
-
-// Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in StrictLegacyMode.
-export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
-
-// Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
-// this feature flag only impacts StrictEffectsMode.
-export const enableStrictEffects = __DEV__;
-
-// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
-// If FALSE, these trees will be StrictLegacyMode.
-export const createRootStrictEffectsByDefault = false;
-
-// To preserve the "Pause on caught exceptions" behavior of the debugger, we
-// replay the begin phase of a failed component inside invokeGuardedCallback.
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
-// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
-export const warnAboutDeprecatedLifecycles = true;
-
-// Gather advanced timing metrics for Profiler subtrees.
-export const enableProfilerTimer = __PROFILE__;
-
-// Record durations for commit and passive effects phases.
-export const enableProfilerCommitHooks = __PROFILE__;
-
-// Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
-export const enableProfilerNestedUpdatePhase = __PROFILE__;
-
-// Profiler API accepts a function to be called when a nested update is scheduled.
-// This callback accepts the component type (class instance or function) the update is scheduled for.
-export const enableProfilerNestedUpdateScheduledHook = false;
-
-// Track which Fiber(s) schedule render work.
-export const enableUpdaterTracking = __PROFILE__;
-
-// SSR experiments
+export const warnOnSubscriptionInsideStartTransition = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
-
-// Flight experiments
+export const warnAboutDeprecatedLifecycles = true;
 export const enableLazyElements = true;
-export const enableCache = __EXPERIMENTAL__;
+export const enableComponentStackLocations = true;
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const warnUnstableRenderSubtreeIntoContainer = false;
+export const enablePersistentOffscreenHostContainer = false;
 
-// Only used in www builds.
+// -----------------------------------------------------------------------------
+// Land or remove (moderate effort)
+//
+// Flags that can be probably deleted or landed, but might require extra effort
+// like migrating internal callers or performance testing.
+// -----------------------------------------------------------------------------
+
+// Destroy layout effects for components that are hidden because something
+// suspended in an update and recreate them when they are shown again (after the
+// suspended boundary has resolved). Note that this should be an uncommon use
+// case and can be avoided by using the transition API.
+//
+// TODO: Finish rolling out in www
+export const enableSuspenseLayoutEffectSemantics = true;
+
+// TODO: Finish rolling out in www
+export const enableClientRenderFallbackOnHydrationMismatch = true;
+
+// TODO: Need to review this code one more time before landing
+export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
+
+// Recoil still uses useMutableSource in www, need to delete
+export const enableUseMutableSource = false;
+
+// Not sure if www still uses this. We don't have a replacement but whatever we
+// replace it with will likely be different than what's already there, so we
+// probably should just delete it as long as nothing in www relies on it.
 export const enableSchedulerDebugging = false;
 
-// Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = false;
+// Need to remove didTimeout argument from Scheduler before landing
+export const disableSchedulerTimeoutInWorkLoop = false;
 
-// Disable support for comment nodes as React DOM containers. Only supported
-// by www builds.
-export const disableCommentsAsDOMContainers = true;
+// -----------------------------------------------------------------------------
+// Slated for removal in the future (significant effort)
+//
+// These are experiments that didn't work out, and never shipped, but we can't
+// delete from the codebase until we migrate internal callers.
+// -----------------------------------------------------------------------------
+
+// Add a callback property to suspense to notify which promises are currently
+// in the update queue. This allows reporting and tracing of what is causing
+// the user to see a loading state.
+//
+// Also allows hydration callbacks to fire when a dehydrated boundary gets
+// hydrated or deleted.
+//
+// This will eventually be replaced by the Transition Tracing proposal.
+export const enableSuspenseCallback = false;
 
 // Experimental Scope support.
 export const enableScopeAPI = false;
@@ -78,48 +78,31 @@ export const enableScopeAPI = false;
 // Experimental Create Event Handle API.
 export const enableCreateEventHandleAPI = false;
 
-// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-
-// We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
-// Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
-
-// Add a callback property to suspense to notify which promises are currently
-// in the update queue. This allows reporting and tracing of what is causing
-// the user to see a loading state.
-// Also allows hydration callbacks to fire when a dehydrated boundary gets
-// hydrated or deleted.
-export const enableSuspenseCallback = false;
-
-// Part of the simplification of React.createElement so we can eventually move
-// from React.createElement to React.jsx
-// https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAboutDefaultPropsOnFunctionComponents = false;
-
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-
-export const enableTrustedTypesIntegration = false;
-
-// Enables a warning when trying to spread a 'key' to an element;
-// a deprecated pattern we want to get rid of in the future
-export const warnAboutSpreadingKeyToJSX = false;
-
-export const warnOnSubscriptionInsideStartTransition = false;
-
-export const enableSuspenseAvoidThisFallback = false;
-export const enableSuspenseAvoidThisFallbackFizz = false;
-
-export const enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay = true;
-
-export const enableClientRenderFallbackOnHydrationMismatch = true;
-
-export const enableComponentStackLocations = true;
-
+// This controls whether you get the `.old` modules or the `.new` modules in
+// the react-reconciler package.
 export const enableNewReconciler = false;
 
-export const disableNativeComponentFrames = false;
+// Support legacy Primer support on internal FB www
+export const enableLegacyFBSupport = false;
 
-// Internal only.
-export const enableGetInspectorDataForInstanceInProduction = false;
+// -----------------------------------------------------------------------------
+// Ongoing experiments
+//
+// These are features that we're either actively exploring or are reasonably
+// likely to include in an upcoming release.
+// -----------------------------------------------------------------------------
+
+export const enableCache = __EXPERIMENTAL__;
+
+export const enableTransitionTracing = false;
+
+// No known bugs, but needs performance testing
+export const enableLazyContextPropagation = false;
+
+// Enables unstable_avoidThisFallback feature in Fiber
+export const enableSuspenseAvoidThisFallback = false;
+// Enables unstable_avoidThisFallback feature in Fizz
+export const enableSuspenseAvoidThisFallbackFizz = false;
 
 // When a node is unmounted, recurse into the Fiber subtree and clean out
 // references. Each level cleans up more fiber fields than the previous level.
@@ -134,10 +117,65 @@ export const enableGetInspectorDataForInstanceInProduction = false;
 // aggressiveness.
 export const deletedTreeCleanUpLevel = 3;
 
-// Destroy layout effects for components that are hidden because something suspended in an update
-// and recreate them when they are shown again (after the suspended boundary has resolved).
-// Note that this should be an uncommon use case and can be avoided by using the transition API.
-export const enableSuspenseLayoutEffectSemantics = true;
+// -----------------------------------------------------------------------------
+// Chopping Block
+//
+// Planned feature deprecations and breaking changes. Sorted roughly in order of
+// when we we plan to enable them.
+// -----------------------------------------------------------------------------
+
+// This flag enables Strict Effects by default. We're not turning this on until
+// after 18 because it requires migration work. Recommendation is to use
+// <StrictMode /> to gradually upgrade components.
+// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
+// If FALSE, these trees will be StrictLegacyMode.
+export const createRootStrictEffectsByDefault = false;
+
+export const disableModulePatternComponents = false;
+
+export const disableLegacyContext = false;
+
+export const enableUseRefAccessWarning = false;
+
+// Enables time slicing for updates that aren't wrapped in startTransition.
+export const enableSyncDefaultUpdates = true;
+
+// Adds an opt-in to time slicing for updates that aren't wrapped in
+// startTransition. Only relevant when enableSyncDefaultUpdates is disabled.
+export const allowConcurrentByDefault = false;
+
+// Updates that occur in the render phase are not officially supported. But when
+// they do occur, we defer them to a subsequent render by picking a lane that's
+// not currently rendering. We treat them the same as if they came from an
+// interleaved event. Remove this flag once we have migrated to the
+// new behavior.
+// NOTE: Not sure if we'll end up doing this or not.
+export const deferRenderPhaseUpdateToNextBatch = false;
+
+// -----------------------------------------------------------------------------
+// React DOM Chopping Block
+//
+// Similar to main Chopping Block but only flags related to React DOM. These are
+// grouped because we will likely batch all of them into a single major release.
+// -----------------------------------------------------------------------------
+
+// Disable support for comment nodes as React DOM containers. Already disabled
+// in open source, but www codebase still relies on it. Need to remove.
+export const disableCommentsAsDOMContainers = true;
+
+// Disable javascript: URL strings in href for XSS protection.
+export const disableJavaScriptURLs = false;
+
+export const enableTrustedTypesIntegration = false;
+
+// Prevent the value and checked attributes from syncing with their related
+// DOM properties
+export const disableInputAttributeSyncing = false;
+
+// Filter certain DOM attributes (e.g. src, href) if their values are empty
+// strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
+// request for certain browsers.
+export const enableFilterEmptyStringAttributesDOM = false;
 
 // Changes the behavior for rendering custom elements in both server rendering
 // and client rendering, mostly to allow JSX attributes to apply to the custom
@@ -145,51 +183,74 @@ export const enableSuspenseLayoutEffectSemantics = true;
 // https://github.com/facebook/react/issues/11347
 export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 
-// --------------------------
-// Future APIs to be deprecated
-// --------------------------
-
-// Prevent the value and checked attributes from syncing
-// with their related DOM properties
-export const disableInputAttributeSyncing = false;
-
-export const warnAboutStringRefs = false;
-
-export const disableLegacyContext = false;
-
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
 
-export const disableModulePatternComponents = false;
+// -----------------------------------------------------------------------------
+// JSX Chopping Block
+//
+// Similar to main Chopping Block but only flags related to JSX. These are
+// grouped because we will likely batch all of them into a single major release.
+// -----------------------------------------------------------------------------
 
-// We should remove this flag once the above flag becomes enabled
-export const warnUnstableRenderSubtreeIntoContainer = false;
+// New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 
-// Support legacy Primer support on internal FB www
-export const enableLegacyFBSupport = false;
+// Part of the simplification of React.createElement so we can eventually move
+// from React.createElement to React.jsx
+// https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
+export const warnAboutDefaultPropsOnFunctionComponents = false; // deprecate later, not 18.0
 
-// Updates that occur in the render phase are not officially supported. But when
-// they do occur, we defer them to a subsequent render by picking a lane that's
-// not currently rendering. We treat them the same as if they came from an
-// interleaved event. Remove this flag once we have migrated to the
-// new behavior.
-export const deferRenderPhaseUpdateToNextBatch = false;
+// Enables a warning when trying to spread a 'key' to an element;
+// a deprecated pattern we want to get rid of in the future
+export const warnAboutSpreadingKeyToJSX = false;
 
-export const enableUseRefAccessWarning = false;
+export const warnAboutStringRefs = false;
 
-export const disableSchedulerTimeoutInWorkLoop = false;
+// -----------------------------------------------------------------------------
+// Debugging and DevTools
+// -----------------------------------------------------------------------------
 
-export const enableLazyContextPropagation = false;
+// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
+// for an experimental timeline tool.
+export const enableSchedulingProfiler = __PROFILE__;
 
-export const enableSyncDefaultUpdates = true;
+// Helps identify side effects in render-phase lifecycle hooks and setState
+// reducers by double invoking them in StrictLegacyMode.
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
-export const allowConcurrentByDefault = false;
+// Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
+// this feature flag only impacts StrictEffectsMode.
+export const enableStrictEffects = __DEV__;
 
-export const enablePersistentOffscreenHostContainer = false;
+// To preserve the "Pause on caught exceptions" behavior of the debugger, we
+// replay the begin phase of a failed component inside invokeGuardedCallback.
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
+
+// Gather advanced timing metrics for Profiler subtrees.
+export const enableProfilerTimer = __PROFILE__;
+
+// Record durations for commit and passive effects phases.
+export const enableProfilerCommitHooks = __PROFILE__;
+
+// Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
+
+// Adds verbose console logging for e.g. state updates, suspense, and work loop
+// stuff. Intended to enable React core members to more easily debug scheduling
+// issues in DEV builds.
+export const enableDebugTracing = false;
+
+// Track which Fiber(s) schedule render work.
+export const enableUpdaterTracking = __PROFILE__;
+
+// Only enabled in RN, related to enableComponentStackLocations
+export const disableNativeComponentFrames = false;
+
+// Internal only.
+export const enableGetInspectorDataForInstanceInProduction = false;
+
+// Profiler API accepts a function to be called when a nested update is scheduled.
+// This callback accepts the component type (class instance or function) the update is scheduled for.
+export const enableProfilerNestedUpdateScheduledHook = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
-
-// Only enabled in www builds
-export const enableUseMutableSource = false;
-
-export const enableTransitionTracing = false;
