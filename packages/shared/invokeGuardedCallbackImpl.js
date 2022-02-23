@@ -6,7 +6,7 @@
  *
  * @flow
  */
-
+import hasOwnProperty from 'shared/hasOwnProperty';
 function invokeGuardedCallbackProd<A, B, C, D, E, F, Context>(
   name: string | null,
   func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
@@ -123,13 +123,13 @@ if (__DEV__) {
         // in the stack.
         fakeNode.removeEventListener(evtType, callCallback, false);
 
-        // We check for window.hasOwnProperty('event') to prevent the
+        // We check for hasOwnProperty.call(window,'event') to prevent the
         // window.event assignment in both IE <= 10 as they throw an error
         // "Member not found" in strict mode, and in Firefox which does not
         // support window.event.
         if (
           typeof window.event !== 'undefined' &&
-          window.hasOwnProperty('event')
+          hasOwnProperty.call(window, 'event')
         ) {
           window.event = windowEvent;
         }
