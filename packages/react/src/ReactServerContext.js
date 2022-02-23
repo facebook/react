@@ -72,7 +72,7 @@ function _createServerContext<T: ServerContextJSONValue>(
         if (context._definitionLoaded) {
           return (context: any)._defaultValue;
         } else {
-          // If the definition hasn't loaded then we know `useServerContext` is not
+          // If the definition hasn't loaded then we know `useContext` is not
           // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
           // because it won't actually be returned to a component
         }
@@ -90,7 +90,7 @@ function _createServerContext<T: ServerContextJSONValue>(
         if (context._definitionLoaded) {
           return (context: any)._defaultValue;
         } else {
-          // If the definition hasn't loaded then we know `useServerContext` is not
+          // If the definition hasn't loaded then we know `useContext` is not
           // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
           // because it won't actually be returned to a component
         }

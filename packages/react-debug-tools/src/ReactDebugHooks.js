@@ -14,7 +14,6 @@ import type {
   ReactContext,
   ReactServerContext,
   ReactProviderType,
-  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -115,17 +114,6 @@ function readContext<T: any>(
 function useContext<T>(context: ReactContext<T>): T {
   hookLog.push({
     primitive: 'Context',
-    stackError: new Error(),
-    value: context._currentValue,
-  });
-  return context._currentValue;
-}
-
-function useServerContext<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
-): T {
-  hookLog.push({
-    primitive: 'ServerContext',
     stackError: new Error(),
     value: context._currentValue,
   });
@@ -358,7 +346,6 @@ const Dispatcher: DispatcherType = {
   useMemo,
   useReducer,
   useRef,
-  useServerContext,
   useState,
   useTransition,
   useMutableSource,

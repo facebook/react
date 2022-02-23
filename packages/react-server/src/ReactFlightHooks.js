@@ -69,14 +69,6 @@ export const Dispatcher: DispatcherType = {
   useEffect: (unsupportedHook: any),
   useId: (unsupportedHook: any),
   useMutableSource: (unsupportedHook: any),
-  useServerContext: function useServerContext<T: ServerContextJSONValue>(
-    context: ReactServerContext<T>,
-  ): T {
-    if (!currentCache) {
-      throw new Error('useServerContext is only supported while rendering.');
-    }
-    return readContextImpl(context);
-  },
   useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;

@@ -12,7 +12,6 @@ import type {
   RefObject,
   ReactContext,
   ReactServerContext,
-  ServerContextJSONValue,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
   MutableSourceVersion,
@@ -46,8 +45,7 @@ export type HookType =
   | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useId'
-  | 'useCacheRefresh'
-  | 'useServerContext';
+  | 'useCacheRefresh';
 
 export type ContextDependency<T: any> = {
   context: ReactContext<T> | ReactServerContext<T>,
@@ -378,9 +376,6 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
-  useServerContext?: <T: ServerContextJSONValue>(
-    context: ReactServerContext<T>,
-  ) => T,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,

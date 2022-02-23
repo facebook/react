@@ -12,8 +12,6 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactServerContext,
-  ServerContextJSONValue,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
@@ -33,7 +31,6 @@ import {
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
-  enableServerContext,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -2382,28 +2379,6 @@ function getCacheForType<T>(resourceType: () => T): T {
   return cacheForType;
 }
 
-function mountServerContext<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
-): T {
-  if (!enableServerContext) {
-    throw new Error('Not implemented.');
-  }
-  currentHookNameInDev = 'useServerContext';
-  mountHookTypesDev();
-  return readContext(context);
-}
-
-function updateServerContext<T: ServerContextJSONValue>(
-  context: ReactServerContext<T>,
-): T {
-  if (!enableServerContext) {
-    throw new Error('Not implemented.');
-  }
-  currentHookNameInDev = 'useServerContext';
-  updateHookTypesDev();
-  return readContext(context);
-}
-
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -2430,10 +2405,6 @@ if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).getCacheSignal = getCacheSignal;
   (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
   (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
-}
-
-if (enableServerContext) {
-  (ContextOnlyDispatcher: Dispatcher).useServerContext = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -2463,10 +2434,6 @@ if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
-if (enableServerContext) {
-  (HooksDispatcherOnMount: Dispatcher).useServerContext = readContext;
-}
-
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
 
@@ -2493,9 +2460,6 @@ if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
-}
-if (enableServerContext) {
-  (HooksDispatcherOnUpdate: Dispatcher).useServerContext = readContext;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -2524,9 +2488,6 @@ if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).getCacheSignal = getCacheSignal;
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
   (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
-}
-if (enableServerContext) {
-  (HooksDispatcherOnRerender: Dispatcher).useServerContext = readContext;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2703,9 +2664,6 @@ if (__DEV__) {
       return mountRefresh();
     };
   }
-  if (enableServerContext) {
-    (HooksDispatcherOnMountInDEV: Dispatcher).useServerContext = mountServerContext;
-  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
@@ -2847,9 +2805,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountRefresh();
     };
-  }
-  if (enableServerContext) {
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useServerContext = updateServerContext;
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2993,12 +2948,6 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
-  if (enableServerContext) {
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useServerContext = updateServerContext;
-  }
-
-  if (!enableServerContext) {
-  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
@@ -3141,9 +3090,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateRefresh();
     };
-  }
-  if (enableServerContext) {
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useServerContext = updateServerContext;
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -3300,24 +3246,8 @@ if (__DEV__) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
       currentHookNameInDev = 'useCacheRefresh';
-      updateHookTypesDev();
-      return mountRefresh();
-    };
-  }
-
-  if (enableServerContext) {
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useServerContext = <
-      T: ServerContextJSONValue,
-    >(
-      context: ReactServerContext<T>,
-    ): T => {
-      if (!enableServerContext) {
-        throw new Error('Not implemented.');
-      }
-      currentHookNameInDev = 'useServerContext';
-      warnInvalidHookAccess();
       mountHookTypesDev();
-      return readContext(context);
+      return mountRefresh();
     };
   }
 
@@ -3479,21 +3409,6 @@ if (__DEV__) {
       return updateRefresh();
     };
   }
-  if (enableServerContext) {
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useServerContext = <
-      T: ServerContextJSONValue,
-    >(
-      context: ReactServerContext<T>,
-    ): T => {
-      if (!enableServerContext) {
-        throw new Error('Not implemented.');
-      }
-      currentHookNameInDev = 'useServerContext';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return readContext(context);
-    };
-  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
@@ -3652,21 +3567,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
-    };
-  }
-  if (enableServerContext) {
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useServerContext = <
-      T: ServerContextJSONValue,
-    >(
-      context: ReactServerContext<T>,
-    ): T => {
-      if (!enableServerContext) {
-        throw new Error('Not implemented.');
-      }
-      currentHookNameInDev = 'useServerContext';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return readContext(context);
     };
   }
 }
