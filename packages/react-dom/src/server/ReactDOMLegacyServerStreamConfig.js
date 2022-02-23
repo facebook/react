@@ -28,6 +28,13 @@ let prevWasCommentSegmenter = false;
 export function writeChunk(
   destination: Destination,
   chunk: Chunk | PrecomputedChunk,
+): void {
+  writeChunkAndReturn(destination, chunk);
+}
+
+export function writeChunkAndReturn(
+  destination: Destination,
+  chunk: Chunk | PrecomputedChunk,
 ): boolean {
   if (prevWasCommentSegmenter) {
     prevWasCommentSegmenter = false;

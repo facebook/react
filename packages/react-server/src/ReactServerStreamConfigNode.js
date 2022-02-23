@@ -43,6 +43,14 @@ export function beginWriting(destination: Destination) {
 export function writeChunk(
   destination: Destination,
   chunk: Chunk | PrecomputedChunk,
+): void {
+  const nodeBuffer = ((chunk: any): Buffer | string); // close enough
+  destination.write(nodeBuffer);
+}
+
+export function writeChunkAndReturn(
+  destination: Destination,
+  chunk: Chunk | PrecomputedChunk,
 ): boolean {
   const nodeBuffer = ((chunk: any): Buffer | string); // close enough
   return destination.write(nodeBuffer);

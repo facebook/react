@@ -31,6 +31,7 @@ import {
   scheduleWork,
   beginWriting,
   writeChunk,
+  writeChunkAndReturn,
   completeWriting,
   flushBuffered,
   close,
@@ -1615,8 +1616,11 @@ function flushSubtree(
         r = flushSegment(request, destination, nextChild);
       }
       // Finally just write all the remaining chunks
-      for (; chunkIdx < chunks.length; chunkIdx++) {
-        r = writeChunk(destination, chunks[chunkIdx]);
+      for (; chunkIdx < chunks.length - 1; chunkIdx++) {
+        writeChunk(destination, chunks[chunkIdx]);
+      }
+      if (chunkIdx < chunks.length) {
+        r = writeChunkAndReturn(destination, chunks[chunkIdx]);
       }
       return r;
     }
