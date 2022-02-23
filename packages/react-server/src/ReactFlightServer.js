@@ -45,6 +45,7 @@ import {
   popProvider,
   switchContext,
   getActiveContext,
+  rootContextSnapshot,
 } from './ReactFlightNewContext';
 
 import {
@@ -863,6 +864,8 @@ export function startFlowing(request: Request, destination: Destination): void {
 function importServerContexts(
   contexts?: Array<[string, ServerContextJSONValue]>,
 ) {
+  const prevContext = getActiveContext();
+  switchContext(rootContextSnapshot);
   const registry: {[name: string]: ReactServerContext<any>} = {};
   if (contexts) {
     for (let i = 0; i < contexts.length; i++) {
@@ -872,5 +875,7 @@ function importServerContexts(
       registry[name] = context;
     }
   }
-  return getActiveContext();
+  const importedContext = getActiveContext();
+  switchContext(prevContext);
+  return importedContext;
 }
