@@ -81,14 +81,13 @@ export default function getListeners(
     const eventListeners =
       stateNode.canonical._eventListeners[registrationName];
     const requestedPhaseIsCapture = phase === 'captured';
-    for (let i = 0; i < eventListeners.length; i++) {
-      const listenerObj = eventListeners[i];
 
+    eventListeners.forEach((listenerObj) => {
       // Make sure phase of listener matches requested phase
       const isCaptureEvent =
         listenerObj.options.capture != null && listenerObj.options.capture;
       if (isCaptureEvent !== requestedPhaseIsCapture) {
-        continue;
+        return;
       }
 
       // Only call once?
@@ -120,7 +119,7 @@ export default function getListeners(
       } else {
         listeners.push(listenerObj.listener);
       }
-    }
+    });
   }
 
   return listeners;
