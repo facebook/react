@@ -78,8 +78,8 @@ function SyntheticEvent(
   this._dispatchInstances = null;
 
   // React Native Event polyfill - enable Event proxying calls to SyntheticEvent
-  if (event.setSyntheticEvent) {
-    event.setSyntheticEvent(this);
+  if (nativeEvent.setSyntheticEvent) {
+    nativeEvent.setSyntheticEvent(this);
   }
 
   const Interface = this.constructor.Interface;
