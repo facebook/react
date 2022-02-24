@@ -114,13 +114,17 @@ function accumulateDispatches(
     const registrationName = event.dispatchConfig.registrationName;
     // Since we "do not look for phased registration names", that
     // should be the same as "bubbled" here, for all intents and purposes...?
-    const listener = getListener(inst, registrationName, 'bubbled', !!event.dispatchConfig.isCustomEvent);
-    if (listener) {
+    const listeners = getListener(inst, registrationName, 'bubbled', !!event.dispatchConfig.isCustomEvent);
+    if (listeners) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
-        listener,
+        listeners,
       );
-      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+      // we need an inst for every listener
+      var insts = listeners.map(() => {
+          return inst;
+      });
+      event._dispatchInstances = accumulateInto(event._dispatchInstances, insts);
     }
   }
 }
