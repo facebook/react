@@ -32,8 +32,7 @@ export let REACT_OFFSCREEN_TYPE = 0xeae2;
 export let REACT_LEGACY_HIDDEN_TYPE = 0xeae3;
 export let REACT_CACHE_TYPE = 0xeae4;
 export let REACT_TRACING_MARKER_TYPE = 0xeae5;
-export let REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED =
-  '!__$$defaultValueNotLoaded';
+export let REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = 0xeae6;
 
 if (typeof Symbol === 'function' && Symbol.for) {
   const symbolFor = Symbol.for;

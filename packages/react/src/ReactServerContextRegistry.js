@@ -1,5 +1,5 @@
 import type {ReactServerContext} from 'shared/ReactTypes';
 
-export const globalServerContextRegistry: {
+export const ContextRegistry: {
   [globalName: string]: ReactServerContext<any>,
 } = {};

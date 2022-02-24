@@ -13,7 +13,7 @@ import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
 import ReactCurrentBatchConfig from '../ReactCurrentBatchConfig';
 import {enableServerContext} from 'shared/ReactFeatureFlags';
-import {globalServerContextRegistry} from '../ReactServerContextRegistry';
+import {ContextRegistry} from '../ReactServerContextRegistry';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
@@ -36,7 +36,7 @@ if (__DEV__) {
 }
 
 if (enableServerContext) {
-  ReactSharedInternals.globalServerContextRegistry = globalServerContextRegistry;
+  ReactSharedInternals.ContextRegistry = ContextRegistry;
 }
 
 export default ReactSharedInternals;
