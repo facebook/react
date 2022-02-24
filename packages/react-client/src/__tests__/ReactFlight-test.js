@@ -18,7 +18,7 @@ let ReactNoopFlightClient;
 let ErrorBoundary;
 let NoErrorExpected;
 let Scheduler;
-let globalServerContextRegistry;
+let ContextRegistry;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -32,8 +32,7 @@ describe('ReactFlight', () => {
     Scheduler = require('scheduler');
     const ReactSharedInternals =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-    globalServerContextRegistry =
-      ReactSharedInternals.globalServerContextRegistry;
+    ContextRegistry = ReactSharedInternals.ContextRegistry;
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -631,7 +630,7 @@ describe('ReactFlight', () => {
 
       expect(ClientContext).toBe(undefined);
       act(() => {
-        delete globalServerContextRegistry.ServerContext;
+        delete ContextRegistry.ServerContext;
         ServerContext._currentRenderer = null;
         ServerContext._currentRenderer2 = null;
         const serverModel = ReactNoopFlightClient.read(transport);

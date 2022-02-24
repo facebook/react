@@ -22,8 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {enableServerContext} from 'shared/ReactFeatureFlags';
 
-const globalServerContextRegistry =
-  ReactSharedInternals.globalServerContextRegistry;
+const ContextRegistry = ReactSharedInternals.ContextRegistry;
 
 export function createServerContext<T: ServerContextJSONValue>(
   globalName: string,
@@ -33,8 +32,8 @@ export function createServerContext<T: ServerContextJSONValue>(
     throw new Error('Not implemented.');
   }
   let context;
-  if (globalServerContextRegistry[globalName]) {
-    context = globalServerContextRegistry[globalName];
+  if (ContextRegistry[globalName]) {
+    context = ContextRegistry[globalName];
     if (
       context._defaultValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
     ) {
@@ -43,7 +42,7 @@ export function createServerContext<T: ServerContextJSONValue>(
       throw new Error(`ServerContext: ${globalName} already defined`);
     }
   } else {
-    context = globalServerContextRegistry[globalName] = _createServerContext(
+    context = ContextRegistry[globalName] = _createServerContext(
       globalName,
       defaultValue,
     );
@@ -85,7 +84,7 @@ function _createServerContext<T: ServerContextJSONValue>(
     context._currentRenderer = null;
     context._currentRenderer2 = null;
   }
-  globalServerContextRegistry[globalName] = context;
+  ContextRegistry[globalName] = context;
   return context;
 }
 
@@ -95,11 +94,11 @@ function _createServerContext<T: ServerContextJSONValue>(
 // if thats the case and when the definition loads it will  set the correct
 // default value.
 export function getOrCreateServerContext(globalName: string) {
-  if (!globalServerContextRegistry[globalName]) {
-    globalServerContextRegistry[globalName] = _createServerContext(
+  if (!ContextRegistry[globalName]) {
+    ContextRegistry[globalName] = _createServerContext(
       globalName,
       REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
     );
   }
-  return globalServerContextRegistry[globalName];
+  return ContextRegistry[globalName];
 }
