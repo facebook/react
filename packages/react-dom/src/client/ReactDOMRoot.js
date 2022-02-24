@@ -15,6 +15,7 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import {queueExplicitHydrationTarget} from '../events/ReactDOMEventReplaying';
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -174,6 +175,20 @@ export function createRoot(
         console.warn(
           'hydrate through createRoot is deprecated. Use ReactDOM.hydrateRoot(container, <App />) instead.',
         );
+      } else {
+        if (
+          typeof options === 'object' &&
+          options !== null &&
+          (options: any).$$typeof === REACT_ELEMENT_TYPE
+        ) {
+          console.error(
+            'You passed a JSX element to createRoot. You probably meant to ' +
+              'call root.render instead. ' +
+              'Example usage:\n\n' +
+              '  let root = createRoot(domContainer);\n' +
+              '  root.render(<App />);',
+          );
+        }
       }
     }
     if (options.unstable_strictMode === true) {
@@ -236,6 +251,15 @@ export function hydrateRoot(
   }
 
   warnIfReactDOMContainerInDEV(container);
+
+  if (__DEV__) {
+    if (initialChildren === undefined) {
+      console.error(
+        'Must provide initial children as second argument to hydrateRoot. ' +
+          'Example usage: hydrateRoot(domContainer, <App />)',
+      );
+    }
+  }
 
   // For now we reuse the whole bag of options since they contain
   // the hydration callbacks.
