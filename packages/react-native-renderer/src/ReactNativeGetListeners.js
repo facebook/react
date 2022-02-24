@@ -81,7 +81,7 @@ export default function getListeners(
     const eventListeners =
       stateNode.canonical._eventListeners[registrationName];
     const requestedPhaseIsCapture = phase === 'captured';
-    for (let i = 0; i < eventListeners.length; i++) {
+    for (var i = 0; i < eventListeners.length; i++) {
       const listenerObj = eventListeners[i];
 
       // Make sure phase of listener matches requested phase
