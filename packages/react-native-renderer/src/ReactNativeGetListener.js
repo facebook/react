@@ -43,8 +43,13 @@ export default function getListener(
   const listeners = [];
 
   const stateNode = inst.stateNode;
+
+  if (stateNode === null) {
+    return listeners;
+  }
+
   // If null: Work in progress (ex: onload events in incremental mode).
-  if (stateNode !== null && !isCustomEvent) {
+  if (!isCustomEvent) {
     const props = getFiberCurrentPropsFromNode(stateNode);
     if (props === null) {
       // Work in progress.
