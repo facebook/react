@@ -95,6 +95,9 @@ export default function getListeners(
       // If so, we ensure that it's only called once by setting a flag
       // and by removing it from eventListeners once it is called (but only
       // when it's actually been executed).
+      if (listeners === null) {
+        listeners = [];
+      }
       if (listenerObj.options.once) {
         listeners.push(function() {
           const args = Array.prototype.slice.call(arguments);
@@ -115,9 +118,6 @@ export default function getListeners(
           );
         });
       } else {
-        if (listeners === null) {
-          listeners = [];
-        }
         listeners.push(listenerObj.listener);
       }
     }
