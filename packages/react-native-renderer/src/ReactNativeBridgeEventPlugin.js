@@ -15,7 +15,7 @@ import type {PropagationPhases} from './legacy-events/PropagationPhases';
 // Module provided by RN:
 import {CustomEvent, ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
-import getListener from './ReactNativeGetListener';
+import getListeners from './ReactNativeGetListeners';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
@@ -27,10 +27,10 @@ const {
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
-function listenerAtPhase(inst, event, propagationPhase: PropagationPhases, isCustomEvent: boolean) {
+function listenersAtPhase(inst, event, propagationPhase: PropagationPhases, isCustomEvent: boolean) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(inst, registrationName, propagationPhase, isCustomEvent);
+  return getListeners(inst, registrationName, propagationPhase, isCustomEvent);
 }
 
 function accumulateDirectionalDispatches(inst, phase, event) {
@@ -39,7 +39,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       console.error('Dispatching inst must not be null');
     }
   }
-  const listeners = listenerAtPhase(inst, event, phase, event instanceof CustomEvent);
+  const listeners = listenersAtPhase(inst, event, phase, event instanceof CustomEvent);
   if (listeners && listeners.length > 0) {
     event._dispatchListeners = accumulateInto(
       event._dispatchListeners,
@@ -115,7 +115,7 @@ function accumulateDispatches(
     const registrationName = event.dispatchConfig.registrationName;
     // Since we "do not look for phased registration names", that
     // should be the same as "bubbled" here, for all intents and purposes...?
-    const listeners = getListener(inst, registrationName, 'bubbled', !!event.dispatchConfig.isCustomEvent);
+    const listeners = getListeners(inst, registrationName, 'bubbled', !!event.dispatchConfig.isCustomEvent);
     if (listeners) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
