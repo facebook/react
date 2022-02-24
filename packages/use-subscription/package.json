@@ -14,9 +14,6 @@
     "cjs/"
   ],
   "license": "MIT",
-  "dependencies": {
-    "object-assign": "^4.1.1"
-  },
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0"
   },
