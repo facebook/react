@@ -194,9 +194,14 @@ const ReactNativeBridgeEventPlugin = {
     if (bubbleDispatchConfig || customEventConfig) {
       // All CustomEvents go through two-phase dispatching, even if they
       // are non-bubbling events, which is why we put the `bubbles` param
-      // in
+      // in the config for CustomEvents only.
+      // CustomEvents are not emitted to prop handler functions ever.
+      // Native two-phase events will be emitted to prop handler functions
+      // and to HostComponent event listeners.
       accumulateTwoPhaseDispatches(event);
     } else if (directDispatchConfig) {
+      // Direct dispatched events do not go to HostComponent EventEmitters,
+      // they *only* go to the prop function handlers.
       accumulateDirectDispatches(event);
     } else {
       return null;

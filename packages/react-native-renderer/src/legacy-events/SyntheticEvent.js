@@ -77,6 +77,11 @@ function SyntheticEvent(
   this._dispatchListeners = null;
   this._dispatchInstances = null;
 
+  // React Native Event polyfill - enable Event proxying calls to SyntheticEvent
+  if (event.setSyntheticEvent) {
+    event.setSyntheticEvent(this);
+  }
+
   const Interface = this.constructor.Interface;
   for (const propName in Interface) {
     if (!Interface.hasOwnProperty(propName)) {
@@ -118,18 +123,33 @@ Object.assign(SyntheticEvent.prototype, {
       return;
     }
 
+    // React Native Event polyfill - disable recursion
+    if (event.setSyntheticEvent) {
+      event.setSyntheticEvent(null);
+    }
+
     if (event.preventDefault) {
       event.preventDefault();
     } else if (typeof event.returnValue !== 'unknown') {
       event.returnValue = false;
     }
     this.isDefaultPrevented = functionThatReturnsTrue;
+
+    // React Native Event polyfill - reenable Event proxying calls to SyntheticEvent
+    if (event.setSyntheticEvent) {
+      event.setSyntheticEvent(this);
+    }
   },
 
   stopPropagation: function() {
     const event = this.nativeEvent;
     if (!event) {
       return;
+    }
+
+    // React Native Event polyfill - disable recursion
+    if (event.setSyntheticEvent) {
+      event.setSyntheticEvent(null);
     }
 
     if (event.stopPropagation) {
@@ -144,6 +164,11 @@ Object.assign(SyntheticEvent.prototype, {
     }
 
     this.isPropagationStopped = functionThatReturnsTrue;
+
+    // React Native Event polyfill - reenable Event proxying calls to SyntheticEvent
+    if (event.setSyntheticEvent) {
+      event.setSyntheticEvent(this);
+    }
   },
 
   /**
