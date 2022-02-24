@@ -39,13 +39,14 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       console.error('Dispatching inst must not be null');
     }
   }
-  const listener = listenerAtPhase(inst, event, phase, event instanceof CustomEvent);
-  if (listener) {
+  const listeners = listenerAtPhase(inst, event, phase, event instanceof CustomEvent);
+  if (listeners && listeners.length > 0) {
     event._dispatchListeners = accumulateInto(
       event._dispatchListeners,
-      listener,
+      listeners,
     );
-    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    const insts = listeners.map(() => { return inst; });
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, insts);
   }
 }
 
@@ -120,7 +121,7 @@ function accumulateDispatches(
         event._dispatchListeners,
         listeners,
       );
-      // we need an inst for every listener
+      // an inst for every listener
       var insts = listeners.map(() => {
           return inst;
       });
