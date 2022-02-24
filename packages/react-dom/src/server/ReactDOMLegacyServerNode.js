@@ -93,6 +93,11 @@ function renderToNodeStream(
   children: ReactNodeList,
   options?: ServerOptions,
 ): Readable {
+  if (__DEV__) {
+    console.error(
+      'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+    );
+  }
   return renderToNodeStreamImpl(children, options, false);
 }
 
