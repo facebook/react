@@ -75,14 +75,16 @@ export default function getListeners(
     stateNode.canonical._eventListeners[registrationName] &&
     stateNode.canonical._eventListeners[registrationName].length > 0
   ) {
-    var toRemove = [];
-    for (var listenerObj of stateNode.canonical._eventListeners[
-      registrationName
-    ]) {
+    const eventListeners =
+      stateNode.canonical._eventListeners[registrationName];
+    const requestedPhaseIsCapture = phase === 'captured';
+    for (let i = 0; i < eventListeners.length; i++) {
+      const listenerObj = eventListeners[i];
+
       // Make sure phase of listener matches requested phase
       const isCaptureEvent =
         listenerObj.options.capture != null && listenerObj.options.capture;
-      if (isCaptureEvent !== (phase === 'captured')) {
+      if (isCaptureEvent !== requestedPhaseIsCapture) {
         continue;
       }
 
@@ -92,7 +94,7 @@ export default function getListeners(
       // when it's actually been executed).
       if (listenerObj.options.once) {
         listeners.push(function() {
-          var args = Array.prototype.slice.call(arguments);
+          const args = Array.prototype.slice.call(arguments);
 
           // Guard against function being called more than once in
           // case there are somehow multiple in-flight references to

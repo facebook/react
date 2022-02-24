@@ -155,7 +155,7 @@ function accumulateDispatches(
         listeners,
       );
       // an inst for every listener
-      var insts = listeners.map(() => {
+      const insts = listeners.map(() => {
         return inst;
       });
       event._dispatchInstances = accumulateInto(
