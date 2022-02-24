@@ -206,6 +206,20 @@ function attemptResolveElement(
       }
       case REACT_PROVIDER_TYPE: {
         pushProvider(type._context, props.value);
+        if (__DEV__) {
+          const extraKeys = Object.keys(props).filter(value => {
+            if (value === 'children' || value === 'value') {
+              return false;
+            }
+            return true;
+          });
+          if (extraKeys.length !== 0) {
+            throw new Error(
+              'ServerContext can only have a value prop and children. Found: ' +
+                JSON.stringify(extraKeys),
+            );
+          }
+        }
         return [
           REACT_PROVIDER_TYPE,
           type._context.displayName,
@@ -415,6 +429,9 @@ function isReactElement(value: mixed) {
   );
 }
 
+let insideContextProps = null;
+let isInsideContextValue = false;
+
 export function resolveModelToJSON(
   request: Request,
   parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
@@ -446,6 +463,19 @@ export function resolveModelToJSON(
       throw new Error(
         'React Lazy Components are not yet supported on the server.',
       );
+  }
+
+  if (__DEV__) {
+    if (parent[0] === REACT_PROVIDER_TYPE && key === '3') {
+      insideContextProps = value;
+    } else if (insideContextProps === parent && key === 'value') {
+      isInsideContextValue = true;
+    } else if (insideContextProps === parent && key === 'children') {
+      isInsideContextValue = false;
+    }
+    if (isReactElement(value) && isInsideContextValue) {
+      throw new Error('React elements are not allowed in ServerContext');
+    }
   }
 
   // Resolve server components.
@@ -491,6 +521,10 @@ export function resolveModelToJSON(
     parent[0] === REACT_PROVIDER_TYPE
   ) {
     popProvider((value: any));
+    if (__DEV__) {
+      insideContextProps = null;
+      isInsideContextValue = false;
+    }
     return (undefined: any);
   }
 
@@ -870,7 +904,7 @@ function importServerContexts(
   if (contexts) {
     for (let i = 0; i < contexts.length; i++) {
       const [name, value] = contexts[i];
-      const context = getOrCreateServerContext(name, value);
+      const context = getOrCreateServerContext(name);
       pushProvider(context, value);
       registry[name] = context;
     }

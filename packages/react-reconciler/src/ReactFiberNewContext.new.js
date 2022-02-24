@@ -49,6 +49,7 @@ import {
   enableSuspenseServerRenderer,
   enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
+import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -136,9 +137,17 @@ export function popProvider(
   const currentValue = valueCursor.current;
   pop(valueCursor, providerFiber);
   if (isPrimaryRenderer) {
-    context._currentValue = currentValue;
+    if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      context._currentValue = ((context: any): ReactServerContext<any>)._defaultValue;
+    } else {
+      context._currentValue = currentValue;
+    }
   } else {
-    context._currentValue2 = currentValue;
+    if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      context._currentValue2 = ((context: any): ReactServerContext<any>)._defaultValue;
+    } else {
+      context._currentValue2 = currentValue;
+    }
   }
 }
 

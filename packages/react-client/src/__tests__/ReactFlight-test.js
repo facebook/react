@@ -364,6 +364,38 @@ describe('ReactFlight', () => {
     });
 
     // @gate enableServerContext
+    it('errors if you try passing JSX through ServerContext value', () => {
+      const ServerContext = React.createServerContext('ServerContext', {
+        foo: {
+          bar: <span>hi this is default</span>,
+        },
+      });
+
+      function Foo() {
+        return (
+          <div>
+            <ServerContext.Provider
+              value={{
+                foo: {
+                  bar: <span>hi this is server</span>,
+                },
+              }}>
+              <Bar />
+            </ServerContext.Provider>
+          </div>
+        );
+      }
+      function Bar() {
+        const context = React.useContext(ServerContext);
+        return context.foo.bar;
+      }
+
+      expect(() => {
+        ReactNoopFlightServer.render(<Foo />);
+      }).toErrorDev('React elements are not allowed in ServerContext');
+    });
+
+    // @gate enableServerContext
     it('propagates ServerContext and cleansup providers in flight', () => {
       const ServerContext = React.createServerContext(
         'ServerContext',
@@ -595,9 +627,7 @@ describe('ReactFlight', () => {
         );
       }
 
-      const transport = ReactNoopFlightServer.render(<ServerApp />, {
-        context: [['ServerContext', 'Override']],
-      });
+      const transport = ReactNoopFlightServer.render(<ServerApp />);
 
       expect(ClientContext).toBe(undefined);
       act(() => {
@@ -615,12 +645,7 @@ describe('ReactFlight', () => {
             <div>test</div>
           </article>
           <article>
-            <div>Override</div>
-
-            {/** In practice this would also be Override because the */}
-            {/** server context sent up to the server would be around this*/}
-            {/** tree. For this test we didn't do that though so it uses the */}
-            {/** real default */}
+            <div>default</div>
             <div>default</div>
           </article>
           <div>default</div>

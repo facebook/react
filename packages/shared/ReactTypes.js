@@ -88,8 +88,6 @@ export type ReactServerContext<T: ServerContextJSONValue> = {
   $$typeof: Symbol | number,
   Provider: ReactServerProviderType<T>,
   _defaultValue: T,
-  __currentValue: T,
-  __currentValue2: T,
   _currentValue: T,
   _currentValue2: T,
   _currentRenderer?: Object | null,
