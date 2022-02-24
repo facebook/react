@@ -35,7 +35,7 @@ import {
   diffHydratedProperties,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
-  warnForUnmatchedText,
+  checkForUnmatchedText,
   warnForDeletedHydratableElement,
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
@@ -70,6 +70,9 @@ import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
+
+// TODO: Remove this deep import when we delete the legacy root API
+import {ConcurrentMode, NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 export type Type = string;
 export type Props = {
@@ -795,12 +798,19 @@ export function hydrateInstance(
   } else {
     parentNamespace = ((hostContext: any): HostContextProd);
   }
+
+  // TODO: Temporary hack to check if we're in a concurrent root. We can delete
+  // when the legacy root API is removed.
+  const isConcurrentMode =
+    ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
+
   return diffHydratedProperties(
     instance,
     type,
     props,
     parentNamespace,
     rootContainerInstance,
+    isConcurrentMode,
   );
 }
 
@@ -810,7 +820,13 @@ export function hydrateTextInstance(
   internalInstanceHandle: Object,
 ): boolean {
   precacheFiberNode(internalInstanceHandle, textInstance);
-  return diffHydratedText(textInstance, text);
+
+  // TODO: Temporary hack to check if we're in a concurrent root. We can delete
+  // when the legacy root API is removed.
+  const isConcurrentMode =
+    ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
+
+  return diffHydratedText(textInstance, text, isConcurrentMode);
 }
 
 export function hydrateSuspenseInstance(
@@ -906,10 +922,9 @@ export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,
   text: string,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__) {
-    warnForUnmatchedText(textInstance, text);
-  }
+  checkForUnmatchedText(textInstance.nodeValue, text, isConcurrentMode);
 }
 
 export function didNotMatchHydratedTextInstance(
@@ -918,9 +933,10 @@ export function didNotMatchHydratedTextInstance(
   parentInstance: Instance,
   textInstance: TextInstance,
   text: string,
+  isConcurrentMode: boolean,
 ) {
-  if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForUnmatchedText(textInstance, text);
+  if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+    checkForUnmatchedText(textInstance.nodeValue, text, isConcurrentMode);
   }
 }
 

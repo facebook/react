@@ -3361,4 +3361,77 @@ describe('ReactDOMServerPartialHydration', () => {
       '<div>1</div><span>client</span><div>2</div>',
     );
   });
+
+  // @gate enableClientRenderFallbackOnHydrationMismatch
+  it("falls back to client rendering when there's a text mismatch (direct text child)", async () => {
+    function DirectTextChild({text}) {
+      return <div>{text}</div>;
+    }
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(
+      <DirectTextChild text="good" />,
+    );
+    expect(() => {
+      act(() => {
+        ReactDOM.hydrateRoot(container, <DirectTextChild text="bad" />, {
+          onRecoverableError(error) {
+            Scheduler.unstable_yieldValue(error.message);
+          },
+        });
+      });
+    }).toErrorDev(
+      [
+        'Text content did not match. Server: "good" Client: "bad"',
+        'An error occurred during hydration. The server HTML was replaced with ' +
+          'client content in <div>.',
+      ],
+      {withoutStack: 1},
+    );
+    expect(Scheduler).toHaveYielded([
+      'Text content does not match server-rendered HTML.',
+      'There was an error while hydrating. Because the error happened outside ' +
+        'of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
+  });
+
+  // @gate enableClientRenderFallbackOnHydrationMismatch
+  it("falls back to client rendering when there's a text mismatch (text child with siblings)", async () => {
+    function Sibling() {
+      return 'Sibling';
+    }
+
+    function TextChildWithSibling({text}) {
+      return (
+        <div>
+          <Sibling />
+          {text}
+        </div>
+      );
+    }
+    const container2 = document.createElement('div');
+    container2.innerHTML = ReactDOMServer.renderToString(
+      <TextChildWithSibling text="good" />,
+    );
+    expect(() => {
+      act(() => {
+        ReactDOM.hydrateRoot(container2, <TextChildWithSibling text="bad" />, {
+          onRecoverableError(error) {
+            Scheduler.unstable_yieldValue(error.message);
+          },
+        });
+      });
+    }).toErrorDev(
+      [
+        'Text content did not match. Server: "good" Client: "bad"',
+        'An error occurred during hydration. The server HTML was replaced with ' +
+          'client content in <div>.',
+      ],
+      {withoutStack: 1},
+    );
+    expect(Scheduler).toHaveYielded([
+      'Text content does not match server-rendered HTML.',
+      'There was an error while hydrating. Because the error happened outside ' +
+        'of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
+  });
 });

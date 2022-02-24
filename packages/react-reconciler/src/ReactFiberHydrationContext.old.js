@@ -447,35 +447,38 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   const textInstance: TextInstance = fiber.stateNode;
   const textContent: string = fiber.memoizedProps;
   const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
-  if (__DEV__) {
-    if (shouldUpdate) {
-      // We assume that prepareToHydrateHostTextInstance is called in a context where the
-      // hydration parent is the parent host component of this host text.
-      const returnFiber = hydrationParentFiber;
-      if (returnFiber !== null) {
-        switch (returnFiber.tag) {
-          case HostRoot: {
-            const parentContainer = returnFiber.stateNode.containerInfo;
-            didNotMatchHydratedContainerTextInstance(
-              parentContainer,
-              textInstance,
-              textContent,
-            );
-            break;
-          }
-          case HostComponent: {
-            const parentType = returnFiber.type;
-            const parentProps = returnFiber.memoizedProps;
-            const parentInstance = returnFiber.stateNode;
-            didNotMatchHydratedTextInstance(
-              parentType,
-              parentProps,
-              parentInstance,
-              textInstance,
-              textContent,
-            );
-            break;
-          }
+  if (shouldUpdate) {
+    // We assume that prepareToHydrateHostTextInstance is called in a context where the
+    // hydration parent is the parent host component of this host text.
+    const returnFiber = hydrationParentFiber;
+    if (returnFiber !== null) {
+      const isConcurrentMode = (returnFiber.mode & ConcurrentMode) !== NoMode;
+      switch (returnFiber.tag) {
+        case HostRoot: {
+          const parentContainer = returnFiber.stateNode.containerInfo;
+          didNotMatchHydratedContainerTextInstance(
+            parentContainer,
+            textInstance,
+            textContent,
+            // TODO: Delete this argument when we remove the legacy root API.
+            isConcurrentMode,
+          );
+          break;
+        }
+        case HostComponent: {
+          const parentType = returnFiber.type;
+          const parentProps = returnFiber.memoizedProps;
+          const parentInstance = returnFiber.stateNode;
+          didNotMatchHydratedTextInstance(
+            parentType,
+            parentProps,
+            parentInstance,
+            textInstance,
+            textContent,
+            // TODO: Delete this argument when we remove the legacy root API.
+            isConcurrentMode,
+          );
+          break;
         }
       }
     }
