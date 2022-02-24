@@ -80,7 +80,6 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import assign from 'shared/assign';
 import hasOwnProperty from 'shared/hasOwnProperty';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
@@ -564,7 +563,7 @@ function resolve(
         }
 
         if (partialState != null) {
-          inst.state = assign({}, inst.state, partialState);
+          inst.state = Object.assign({}, inst.state, partialState);
         }
       }
     } else {
@@ -696,9 +695,9 @@ function resolve(
             if (partialState != null) {
               if (dontMutate) {
                 dontMutate = false;
-                nextState = assign({}, nextState, partialState);
+                nextState = Object.assign({}, nextState, partialState);
               } else {
-                assign(nextState, partialState);
+                Object.assign(nextState, partialState);
               }
             }
           }
@@ -746,7 +745,7 @@ function resolve(
         }
       }
       if (childContext) {
-        context = assign({}, context, childContext);
+        context = Object.assign({}, context, childContext);
       }
     }
   }
@@ -1193,7 +1192,7 @@ class ReactDOMServerRenderer {
             const nextChildren = [
               React.createElement(
                 elementType.type,
-                assign({ref: element.ref}, element.props),
+                Object.assign({ref: element.ref}, element.props),
               ),
             ];
             const frame: Frame = {
@@ -1292,7 +1291,7 @@ class ReactDOMServerRenderer {
             const nextChildren = [
               React.createElement(
                 result,
-                assign({ref: element.ref}, element.props),
+                Object.assign({ref: element.ref}, element.props),
               ),
             ];
             const frame: Frame = {
@@ -1414,7 +1413,7 @@ class ReactDOMServerRenderer {
         }
       }
 
-      props = assign(
+      props = Object.assign(
         {
           type: undefined,
         },
@@ -1486,7 +1485,7 @@ class ReactDOMServerRenderer {
       if (__DEV__) {
         checkFormFieldValueStringCoercion(initialValue);
       }
-      props = assign({}, props, {
+      props = Object.assign({}, props, {
         value: undefined,
         children: '' + initialValue,
       });
@@ -1532,7 +1531,7 @@ class ReactDOMServerRenderer {
       }
       this.currentSelectValue =
         props.value != null ? props.value : props.defaultValue;
-      props = assign({}, props, {
+      props = Object.assign({}, props, {
         value: undefined,
       });
     } else if (tag === 'option') {
@@ -1578,7 +1577,7 @@ class ReactDOMServerRenderer {
           selected = '' + selectValue === value;
         }
 
-        props = assign(
+        props = Object.assign(
           {
             selected: undefined,
           },

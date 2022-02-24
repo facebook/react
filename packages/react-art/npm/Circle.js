@@ -17,7 +17,7 @@
 
 'use strict';
 
-var assign = Object.assign;
+var assign = require('object-assign');
 var PropTypes = require('prop-types');
 var React = require('react');
 var ReactART = require('react-art');

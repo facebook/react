@@ -17,7 +17,6 @@ import {
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
-import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
 const didWarnAboutNoopUpdateForComponent = {};
@@ -162,7 +161,7 @@ function applyDerivedStateFromProps(
   const newState =
     partialState === null || partialState === undefined
       ? prevState
-      : assign({}, prevState, partialState);
+      : Object.assign({}, prevState, partialState);
   return newState;
 }
 
@@ -603,9 +602,9 @@ function processUpdateQueue(
         if (partialState != null) {
           if (dontMutate) {
             dontMutate = false;
-            nextState = assign({}, nextState, partialState);
+            nextState = Object.assign({}, nextState, partialState);
           } else {
-            assign(nextState, partialState);
+            Object.assign(nextState, partialState);
           }
         }
       }

@@ -9,7 +9,6 @@
 
 /* eslint valid-typeof: 0 */
 
-import assign from 'shared/assign';
 import getEventCharCode from './getEventCharCode';
 
 type EventInterfaceType = {
@@ -79,7 +78,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
     return this;
   }
 
-  assign(SyntheticBaseEvent.prototype, {
+  Object.assign(SyntheticBaseEvent.prototype, {
     preventDefault: function() {
       this.defaultPrevented = true;
       const event = this.nativeEvent;

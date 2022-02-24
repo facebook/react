@@ -8,6 +8,7 @@ const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
+const path = require('path');
 const resolve = require('rollup-plugin-node-resolve');
 const fs = require('fs');
 const argv = require('minimist')(process.argv.slice(2));
@@ -126,8 +127,6 @@ const babelPlugins = [
   '@babel/plugin-transform-parameters',
   // TODO: Remove array destructuring from the source. Requires runtime.
   ['@babel/plugin-transform-destructuring', {loose: true, useBuiltIns: true}],
-  // Transform Object spread to shared/assign
-  require('../babel/transform-object-assign'),
 ];
 
 const babelToES5Plugins = [
@@ -178,7 +177,22 @@ function getBabelConfig(
     options.plugins.push(require('../error-codes/transform-error-messages'));
   }
 
-  return options;
+  switch (bundleType) {
+    case UMD_DEV:
+    case UMD_PROD:
+    case UMD_PROFILING:
+    case NODE_DEV:
+    case NODE_PROD:
+    case NODE_PROFILING:
+      return Object.assign({}, options, {
+        plugins: options.plugins.concat([
+          // Use object-assign polyfill in open source
+          path.resolve('./scripts/babel/transform-object-assign-require'),
+        ]),
+      });
+    default:
+      return options;
+  }
 }
 
 function getRollupOutputOptions(

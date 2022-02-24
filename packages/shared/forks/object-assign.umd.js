@@ -7,6 +7,8 @@
  * @flow
  */
 
-const assign = Object.assign;
+import * as React from 'react';
 
-export default assign;
+const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+export default ReactInternals.assign;

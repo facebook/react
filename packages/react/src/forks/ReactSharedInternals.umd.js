@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import assign from 'object-assign';
 import * as Scheduler from 'scheduler';
 import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
 import ReactCurrentActQueue from '../ReactCurrentActQueue';
@@ -18,6 +19,8 @@ const ReactSharedInternals = {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
   ReactCurrentBatchConfig,
+  // Used by renderers to avoid bundling object-assign twice in UMD bundles:
+  assign,
 
   // Re-export the schedule API(s) for UMD bundles.
   // This avoids introducing a dependency on a new UMD global in a minor update,
