@@ -226,6 +226,7 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   pushRenderLanes,
+  getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.old';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {
@@ -1334,6 +1335,10 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       // The root cache refreshed.
       propagateContextChange(workInProgress, CacheContext, renderLanes);
     }
+  }
+
+  if (enableTransitionTracing) {
+    workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
   }
 
   // Caution: React DevTools currently depends on this property
@@ -3495,11 +3500,14 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   switch (workInProgress.tag) {
     case HostRoot:
       pushHostRootContext(workInProgress);
+      const root: FiberRoot = workInProgress.stateNode;
       if (enableCache) {
-        const root: FiberRoot = workInProgress.stateNode;
         const cache: Cache = current.memoizedState.cache;
         pushCacheProvider(workInProgress, cache);
         pushRootCachePool(root);
+      }
+      if (enableTransitionTracing) {
+        workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
       }
       resetHydrationState();
       break;

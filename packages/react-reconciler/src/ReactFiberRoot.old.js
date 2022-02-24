@@ -13,6 +13,8 @@ import type {
   TransitionTracingCallbacks,
 } from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
+import type {Cache} from './ReactFiberCacheComponent.old';
+import type {Transitions} from './ReactFiberTracingMarkerComponent.old';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
@@ -34,6 +36,12 @@ import {
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 import {createCache, retainCache} from './ReactFiberCacheComponent.old';
+
+export type RootState = {
+  element: any,
+  cache: Cache | null,
+  transitions: Transitions | null,
+};
 
 function FiberRootNode(
   containerInfo,
@@ -85,6 +93,10 @@ function FiberRootNode(
 
   if (enableTransitionTracing) {
     this.transitionCallbacks = null;
+    const transitionLanesMap = (this.transitionLanes = []);
+    for (let i = 0; i < TotalLanes; i++) {
+      transitionLanesMap.push(null);
+    }
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -165,14 +177,17 @@ export function createFiberRoot(
     // retained separately.
     root.pooledCache = initialCache;
     retainCache(initialCache);
-    const initialState = {
+    const initialState: RootState = {
       element: null,
       cache: initialCache,
+      transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
-    const initialState = {
+    const initialState: RootState = {
       element: null,
+      cache: null,
+      transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   }

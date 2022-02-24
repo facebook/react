@@ -8,6 +8,10 @@
  */
 
 import type {FiberRoot} from './ReactInternalTypes';
+import type {
+  Transition,
+  Transitions,
+} from './ReactFiberTracingMarkerComponent.old';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -20,6 +24,7 @@ import {
   enableSchedulingProfiler,
   enableUpdaterTracking,
   allowConcurrentByDefault,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -791,6 +796,78 @@ export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
         }
       });
       updaters.clear();
+    }
+
+    lanes &= ~lane;
+  }
+}
+
+export function addTransitionToLanesMap(
+  root: FiberRoot,
+  transition: Transition,
+  lane: Lane,
+) {
+  if (enableTransitionTracing) {
+    const transitionLanesMap = root.transitionLanes;
+    const index = laneToIndex(lane);
+    let transitions = transitionLanesMap[index];
+    if (transitions === null) {
+      transitions = [];
+    }
+    transitions.push(transition);
+
+    transitionLanesMap[index] = transitions;
+  }
+}
+
+export function getTransitionsForLanes(
+  root: FiberRoot,
+  lanes: Lane | Lanes,
+): Transitions | null {
+  if (!enableTransitionTracing) {
+    return null;
+  }
+
+  const transitionsForLanes = [];
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+    const transitions = root.transitionLanes[index];
+    if (transitions !== null) {
+      transitions.forEach(transition => {
+        transitionsForLanes.push(transition);
+      });
+    }
+
+    lanes &= ~lane;
+  }
+
+  if (transitionsForLanes.length === 0) {
+    return null;
+  }
+
+  return transitionsForLanes;
+}
+
+export function clearTransitionsForLanes(root: FiberRoot, lanes: Lane | Lanes) {
+  if (!enableTransitionTracing) {
+    return;
+  }
+
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const transitions = root.transitionLanes[index];
+    if (transitions !== null) {
+      root.transitionLanes[index] = null;
+    } else {
+      if (__DEV__) {
+        console.error(
+          'React Bug: transition lanes accessed out of bounds index: %s',
+          index.toString(),
+        );
+      }
     }
 
     lanes &= ~lane;

@@ -14,6 +14,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 
 import type {ResponseState} from './ReactServerFormatConfig';
@@ -505,7 +506,10 @@ function unsupportedStartTransition() {
   throw new Error('startTransition cannot be called during server rendering.');
 }
 
-function useTransition(): [boolean, (callback: () => void) => void] {
+function useTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   resolveCurrentlyRenderingComponent();
   return [false, unsupportedStartTransition];
 }

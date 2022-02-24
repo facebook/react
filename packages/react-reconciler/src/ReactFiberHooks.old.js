@@ -12,6 +12,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
@@ -31,6 +32,7 @@ import {
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -110,6 +112,7 @@ import {
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 import {getTreeId} from './ReactFiberTreeContext.old';
+import {now} from './Scheduler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1967,7 +1970,7 @@ function rerenderDeferredValue<T>(value: T): T {
   return prevValue;
 }
 
-function startTransition(setPending, callback) {
+function startTransition(setPending, callback, options) {
   const previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority),
@@ -1978,6 +1981,13 @@ function startTransition(setPending, callback) {
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = {};
   const currentTransition = ReactCurrentBatchConfig.transition;
+
+  if (enableTransitionTracing) {
+    if (options !== undefined && options.name !== undefined) {
+      ReactCurrentBatchConfig.transition.name = options.name;
+      ReactCurrentBatchConfig.transition.startTime = now();
+    }
+  }
 
   if (__DEV__) {
     ReactCurrentBatchConfig.transition._updatedFibers = new Set();
@@ -1990,6 +2000,7 @@ function startTransition(setPending, callback) {
     setCurrentUpdatePriority(previousPriority);
 
     ReactCurrentBatchConfig.transition = prevTransition;
+
     if (__DEV__) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
@@ -2006,7 +2017,10 @@ function startTransition(setPending, callback) {
   }
 }
 
-function mountTransition(): [boolean, (() => void) => void] {
+function mountTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending, setPending] = mountState(false);
   // The `start` method never changes.
   const start = startTransition.bind(null, setPending);
@@ -2015,14 +2029,20 @@ function mountTransition(): [boolean, (() => void) => void] {
   return [isPending, start];
 }
 
-function updateTransition(): [boolean, (() => void) => void] {
+function updateTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending] = updateState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
   return [isPending, start];
 }
 
-function rerenderTransition(): [boolean, (() => void) => void] {
+function rerenderTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending] = rerenderState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
