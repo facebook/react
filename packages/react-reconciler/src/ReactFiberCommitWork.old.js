@@ -133,7 +133,8 @@ import {
   markCommitTimeOfFallback,
   enqueuePendingPassiveProfilerEffect,
   restorePendingUpdaters,
-  addCallbackToPendingTransitionCallbacks,
+  addTransitionStartCallbackToPendingTransition,
+  addTransitionCompleteCallbackToPendingTransition,
 } from './ReactFiberWorkLoop.old';
 import {
   NoFlags as NoHookEffect,
@@ -158,10 +159,6 @@ import {
   onCommitUnmount,
 } from './ReactFiberDevToolsHook.old';
 import {releaseCache, retainCache} from './ReactFiberCacheComponent.old';
-import {
-  TransitionStart,
-  TransitionComplete,
-} from './ReactFiberTracingMarkerComponent.old';
 import {clearTransitionsForLanes} from './ReactFiberLane.old';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
@@ -2219,24 +2216,22 @@ function commitMutationEffectsOnFiber(
       case HostRoot: {
         const state = finishedWork.memoizedState;
         const transitions = state.transitions;
-        if (transitions != null) {
+        if (transitions !== null) {
           transitions.forEach(transition => {
             // TODO(luna) Do we want to log TransitionStart in the startTransition callback instead?
-            addCallbackToPendingTransitionCallbacks({
-              type: TransitionStart,
+            addTransitionStartCallbackToPendingTransition({
               transitionName: transition.name,
               startTime: transition.startTime,
             });
 
-            addCallbackToPendingTransitionCallbacks({
-              type: TransitionComplete,
+            addTransitionCompleteCallbackToPendingTransition({
               transitionName: transition.name,
               startTime: transition.startTime,
             });
           });
 
           clearTransitionsForLanes(root, lanes);
-          state.transitions.clear();
+          state.transitions = null;
         }
       }
     }

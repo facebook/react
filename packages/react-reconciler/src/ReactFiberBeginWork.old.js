@@ -137,7 +137,6 @@ import {
   mergeLanes,
   getBumpedLaneForHydration,
   pickArbitraryLane,
-  getTransitionsForLanes,
 } from './ReactFiberLane.old';
 import {
   ConcurrentMode,
@@ -227,6 +226,7 @@ import {
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
   pushRenderLanes,
+  getWorkInProgressTransitions,
 } from './ReactFiberWorkLoop.old';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {
@@ -1338,10 +1338,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   }
 
   if (enableTransitionTracing) {
-    workInProgress.memoizedState.transitions = getTransitionsForLanes(
-      root,
-      renderLanes,
-    );
+    workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
   }
 
   // Caution: React DevTools currently depends on this property
@@ -3510,10 +3507,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
         pushRootCachePool(root);
       }
       if (enableTransitionTracing) {
-        workInProgress.memoizedState.transitions = getTransitionsForLanes(
-          root,
-          renderLanes,
-        );
+        workInProgress.memoizedState.transitions = getWorkInProgressTransitions();
       }
       resetHydrationState();
       break;

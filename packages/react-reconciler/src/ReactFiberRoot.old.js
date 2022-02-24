@@ -39,8 +39,8 @@ import {createCache, retainCache} from './ReactFiberCacheComponent.old';
 
 export type RootState = {
   element: any,
-  cache?: Cache | null,
-  transitions?: Transitions | null,
+  cache: Cache | null,
+  transitions: Transitions | null,
 };
 
 function FiberRootNode(
@@ -95,7 +95,7 @@ function FiberRootNode(
     this.transitionCallbacks = null;
     const transitionLanesMap = (this.transitionLanes = []);
     for (let i = 0; i < TotalLanes; i++) {
-      transitionLanesMap.push(new Set());
+      transitionLanesMap.push(null);
     }
   }
 
@@ -180,11 +180,14 @@ export function createFiberRoot(
     const initialState: RootState = {
       element: null,
       cache: initialCache,
+      transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
     const initialState: RootState = {
       element: null,
+      cache: null,
+      transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   }

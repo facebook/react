@@ -9,8 +9,19 @@
 
 import type {TransitionTracingCallbacks} from './ReactInternalTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
 
 export type SuspenseInfo = {name: string | null};
+
+export type TransitionObject = {
+  transitionName: string,
+  startTime: number,
+};
+
+export type PendingTransitionCallbacks = {
+  transitionStart: Array<TransitionObject> | null,
+  transitionComplete: Array<TransitionObject> | null,
+};
 
 export type Transition = {
   name: string,
@@ -23,15 +34,7 @@ export type BatchConfigTransition = {
   _updatedFibers?: Set<Fiber>,
 };
 
-export type Transitions = Set<Transition> | null;
-
-export type TransitionCallbackObject = {|
-  type: TransitionCallback,
-  transitionName: string,
-  startTime: number,
-  markerName?: string,
-  pendingBoundaries?: Array<SuspenseInfo>,
-|};
+export type Transitions = Array<Transition> | null;
 
 export type TransitionCallback = 0 | 1;
 
@@ -39,31 +42,36 @@ export const TransitionStart = 0;
 export const TransitionComplete = 1;
 
 export function processTransitionCallbacks(
-  pendingTransitions: Array<TransitionCallbackObject>,
+  pendingTransitions: PendingTransitionCallbacks,
   endTime: number,
   callbacks: TransitionTracingCallbacks,
 ): void {
-  pendingTransitions.forEach(transition => {
-    switch (transition.type) {
-      case TransitionStart: {
-        if (callbacks.onTransitionStart != null) {
-          callbacks.onTransitionStart(
-            transition.transitionName,
-            transition.startTime,
-          );
-        }
-        break;
+  if (enableTransitionTracing) {
+    if (pendingTransitions !== null) {
+      const transitionStart = pendingTransitions.transitionStart;
+      if (transitionStart !== null) {
+        transitionStart.forEach(transition => {
+          if (callbacks.onTransitionStart != null) {
+            callbacks.onTransitionStart(
+              transition.transitionName,
+              transition.startTime,
+            );
+          }
+        });
       }
-      case TransitionComplete: {
-        if (callbacks.onTransitionComplete != null) {
-          callbacks.onTransitionComplete(
-            transition.transitionName,
-            transition.startTime,
-            endTime,
-          );
-        }
-        break;
+
+      const transitionComplete = pendingTransitions.transitionComplete;
+      if (transitionComplete !== null) {
+        transitionComplete.forEach(transition => {
+          if (callbacks.onTransitionComplete != null) {
+            callbacks.onTransitionComplete(
+              transition.transitionName,
+              transition.startTime,
+              endTime,
+            );
+          }
+        });
       }
     }
-  });
+  }
 }

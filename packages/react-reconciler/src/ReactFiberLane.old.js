@@ -810,17 +810,13 @@ export function addTransitionToLanesMap(
   if (enableTransitionTracing) {
     const transitionLanesMap = root.transitionLanes;
     const index = laneToIndex(lane);
-    const transitions = transitionLanesMap[index];
-    if (transitions !== null) {
-      transitions.add(transition);
-    } else {
-      if (__DEV__) {
-        console.error(
-          'React Bug: transition lanes accessed out of bounds index: %s',
-          index.toString(),
-        );
-      }
+    let transitions = transitionLanesMap[index];
+    if (transitions === null) {
+      transitions = [];
     }
+    transitions.push(transition);
+
+    transitionLanesMap[index] = transitions;
   }
 }
 
@@ -832,25 +828,22 @@ export function getTransitionsForLanes(
     return null;
   }
 
-  const transitionsForLanes = new Set();
+  const transitionsForLanes = [];
   while (lanes > 0) {
     const index = laneToIndex(lanes);
     const lane = 1 << index;
     const transitions = root.transitionLanes[index];
     if (transitions !== null) {
       transitions.forEach(transition => {
-        transitionsForLanes.add(transition);
+        transitionsForLanes.push(transition);
       });
-    } else {
-      if (__DEV__) {
-        console.error(
-          'React Bug: transition lanes accessed out of bounds index: %s',
-          index.toString(),
-        );
-      }
     }
 
     lanes &= ~lane;
+  }
+
+  if (transitionsForLanes.length === 0) {
+    return null;
   }
 
   return transitionsForLanes;
@@ -867,7 +860,7 @@ export function clearTransitionsForLanes(root: FiberRoot, lanes: Lane | Lanes) {
 
     const transitions = root.transitionLanes[index];
     if (transitions !== null) {
-      transitions.clear();
+      root.transitionLanes[index] = null;
     } else {
       if (__DEV__) {
         console.error(

@@ -15,7 +15,11 @@ import type {StackCursor} from './ReactFiberStack.new';
 import type {Flags} from './ReactFiberFlags';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 import type {EventPriority} from './ReactEventPriorities.new';
-import type {TransitionCallbackObject} from './ReactFiberTracingMarkerComponent.new';
+import type {
+  PendingTransitionCallbacks,
+  TransitionObject,
+  Transitions,
+} from './ReactFiberTracingMarkerComponent.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -141,6 +145,7 @@ import {
   addFiberToLanesMap,
   movePendingFibersToMemoized,
   addTransitionToLanesMap,
+  getTransitionsForLanes,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
@@ -317,16 +322,48 @@ let workInProgressRootRenderTargetTime: number = Infinity;
 // suspense heuristics and opt out of rendering more content.
 const RENDER_TIMEOUT_MS = 500;
 
-let currentPendingTransitionCallbacks: Array<TransitionCallbackObject> | null = null;
-export function addCallbackToPendingTransitionCallbacks(
-  callbackObj: TransitionCallbackObject,
+let workInProgressTransitions: Transitions | null = null;
+export function getWorkInProgressTransitions() {
+  return workInProgressTransitions;
+}
+
+let currentPendingTransitionCallbacks: PendingTransitionCallbacks | null = null;
+
+export function addTransitionStartCallbackToPendingTransition(
+  transition: TransitionObject,
 ) {
   if (enableTransitionTracing) {
     if (currentPendingTransitionCallbacks === null) {
-      currentPendingTransitionCallbacks = [];
+      currentPendingTransitionCallbacks = {
+        transitionStart: [],
+        transitionComplete: null,
+      };
     }
 
-    currentPendingTransitionCallbacks.push(callbackObj);
+    if (currentPendingTransitionCallbacks.transitionStart === null) {
+      currentPendingTransitionCallbacks.transitionStart = [];
+    }
+
+    currentPendingTransitionCallbacks.transitionStart.push(transition);
+  }
+}
+
+export function addTransitionCompleteCallbackToPendingTransition(
+  transition: TransitionObject,
+) {
+  if (enableTransitionTracing) {
+    if (currentPendingTransitionCallbacks === null) {
+      currentPendingTransitionCallbacks = {
+        transitionStart: null,
+        transitionComplete: [],
+      };
+    }
+
+    if (currentPendingTransitionCallbacks.transitionComplete === null) {
+      currentPendingTransitionCallbacks.transitionComplete = [];
+    }
+
+    currentPendingTransitionCallbacks.transitionComplete.push(transition);
   }
 }
 
@@ -1648,6 +1685,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
       }
     }
 
+    workInProgressTransitions = getTransitionsForLanes(root, lanes);
     prepareFreshStack(root, lanes);
   }
 
@@ -1732,6 +1770,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
       }
     }
 
+    workInProgressTransitions = getTransitionsForLanes(root, lanes);
     resetRenderTimer();
     prepareFreshStack(root, lanes);
   }
