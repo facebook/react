@@ -2456,7 +2456,7 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate enableServerContext
+  // @gate enableServerContext && experimental
   it('supports ServerContext', async () => {
     const {getOrCreateServerContext} = require('react/src/ReactServerContext');
     const ServerContext = getOrCreateServerContext('ServerContext');
