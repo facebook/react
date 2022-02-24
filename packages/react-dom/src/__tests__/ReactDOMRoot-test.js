@@ -51,6 +51,37 @@ describe('ReactDOMRoot', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
+  it('warn if a container is passed to root.render(...)', async () => {
+    function App() {
+      return 'Child';
+    }
+
+    const root = ReactDOM.createRoot(container);
+    expect(() => root.render(<App />, {})).toErrorDev(
+      'You passed a second argument to root.render(...) but it only accepts ' +
+        'one argument.',
+      {
+        withoutStack: true,
+      },
+    );
+  });
+
+  it('warn if a container is passed to root.render(...)', async () => {
+    function App() {
+      return 'Child';
+    }
+
+    const root = ReactDOM.createRoot(container);
+    expect(() => root.render(<App />, container)).toErrorDev(
+      'You passed a container to the second argument of root.render(...). ' +
+        "You don't need to pass it again since you already passed it to create " +
+        'the root.',
+      {
+        withoutStack: true,
+      },
+    );
+  });
+
   it('warns if a callback parameter is provided to unmount', () => {
     const callback = jest.fn();
     const root = ReactDOM.createRoot(container);
