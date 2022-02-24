@@ -569,7 +569,13 @@ describe('ReactDOMServer', () => {
   describe('renderToNodeStream', () => {
     it('should generate simple markup', () => {
       const SuccessfulElement = React.createElement(() => <img />);
-      const response = ReactDOMServer.renderToNodeStream(SuccessfulElement);
+      let response;
+      expect(() => {
+        response = ReactDOMServer.renderToNodeStream(SuccessfulElement);
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
       expect(response.read().toString()).toMatch(new RegExp('<img' + '/>'));
     });
 
@@ -577,7 +583,13 @@ describe('ReactDOMServer', () => {
       const FailingElement = React.createElement(() => {
         throw new Error('An Error');
       });
-      const response = ReactDOMServer.renderToNodeStream(FailingElement);
+      let response;
+      expect(() => {
+        response = ReactDOMServer.renderToNodeStream(FailingElement);
+      }).toErrorDev(
+        'renderToNodeStream is deprecated. Use renderToPipeableStream instead.',
+        {withoutStack: true},
+      );
       return new Promise(resolve => {
         response.once('error', () => {
           resolve();
