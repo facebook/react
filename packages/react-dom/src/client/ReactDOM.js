@@ -39,10 +39,7 @@ import {
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
-import {
-  warnUnstableRenderSubtreeIntoContainer,
-  enableNewReconciler,
-} from 'shared/ReactFeatureFlags';
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -72,8 +69,6 @@ setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 setGetCurrentUpdatePriority(getCurrentUpdatePriority);
 setAttemptHydrationAtPriority(runWithPriority);
-
-let didWarnAboutUnstableRenderSubtreeIntoContainer = false;
 
 if (__DEV__) {
   if (
@@ -121,19 +116,6 @@ function renderSubtreeIntoContainer(
   containerNode: Container,
   callback: ?Function,
 ) {
-  if (__DEV__) {
-    if (
-      warnUnstableRenderSubtreeIntoContainer &&
-      !didWarnAboutUnstableRenderSubtreeIntoContainer
-    ) {
-      didWarnAboutUnstableRenderSubtreeIntoContainer = true;
-      console.warn(
-        'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated ' +
-          'and will be removed in a future major release. Consider using ' +
-          'React Portals instead.',
-      );
-    }
-  }
   return unstable_renderSubtreeIntoContainer(
     parentComponent,
     element,
