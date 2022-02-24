@@ -169,6 +169,7 @@ describe('useMutableSourceHydration', () => {
   });
 
   // @gate enableUseMutableSource
+  // @gate enableClientRenderFallbackOnHydrationMismatch
   it('should detect a tear before hydrating a component', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -204,9 +205,18 @@ describe('useMutableSourceHydration', () => {
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Text content did not match. Server: "only:one" Client: "only:two"',
+      [
+        'Warning: Text content did not match. Server: "only:one" Client: "only:two"',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+      ],
+      {withoutStack: 1},
     );
-    expect(Scheduler).toHaveYielded(['only:two']);
+    expect(Scheduler).toHaveYielded([
+      'only:two',
+      'only:two',
+      'Log error: Text content does not match server-rendered HTML.',
+      'Log error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
+    ]);
     expect(source.listenerCount).toBe(1);
   });
 
