@@ -47,7 +47,6 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = false;
-export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
