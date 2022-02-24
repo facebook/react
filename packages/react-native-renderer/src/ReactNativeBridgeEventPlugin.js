@@ -13,7 +13,10 @@ import SyntheticEvent from './legacy-events/SyntheticEvent';
 import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 // Module provided by RN:
-import {CustomEvent, ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {
+  CustomEvent,
+  ReactNativeViewConfigRegistry,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
 import getListeners from './ReactNativeGetListeners';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
@@ -27,7 +30,12 @@ const {
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
-function listenersAtPhase(inst, event, propagationPhase: PropagationPhases, isCustomEvent: boolean) {
+function listenersAtPhase(
+  inst,
+  event,
+  propagationPhase: PropagationPhases,
+  isCustomEvent: boolean,
+) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListeners(inst, registrationName, propagationPhase, isCustomEvent);
@@ -39,13 +47,20 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       console.error('Dispatching inst must not be null');
     }
   }
-  const listeners = listenersAtPhase(inst, event, phase, event instanceof CustomEvent);
+  const listeners = listenersAtPhase(
+    inst,
+    event,
+    phase,
+    event instanceof CustomEvent,
+  );
   if (listeners && listeners.length > 0) {
     event._dispatchListeners = accumulateInto(
       event._dispatchListeners,
       listeners,
     );
-    const insts = listeners.map(() => { return inst; });
+    const insts = listeners.map(() => {
+      return inst;
+    });
     event._dispatchInstances = accumulateInto(event._dispatchInstances, insts);
   }
 }
@@ -68,7 +83,12 @@ function getParent(inst) {
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-export function traverseTwoPhase(inst: Object, fn: Function, arg: Function, bubbles: boolean) {
+export function traverseTwoPhase(
+  inst: Object,
+  fn: Function,
+  arg: Function,
+  bubbles: boolean,
+) {
   const path = [];
   while (inst) {
     path.push(inst);
@@ -91,9 +111,17 @@ function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     // bubbles is only set on the dispatchConfig for custom events.
     // The `event` param here at this point is a SyntheticEvent, not an Event or CustomEvent.
-    const bubbles = event.dispatchConfig.isCustomEvent === true ? (!!event.dispatchConfig.bubbles) : true;
+    const bubbles =
+      event.dispatchConfig.isCustomEvent === true
+        ? !!event.dispatchConfig.bubbles
+        : true;
 
-    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event, bubbles);
+    traverseTwoPhase(
+      event._targetInst,
+      accumulateDirectionalDispatches,
+      event,
+      bubbles,
+    );
   }
 }
 
@@ -115,7 +143,12 @@ function accumulateDispatches(
     const registrationName = event.dispatchConfig.registrationName;
     // Since we "do not look for phased registration names", that
     // should be the same as "bubbled" here, for all intents and purposes...?
-    const listeners = getListeners(inst, registrationName, 'bubbled', !!event.dispatchConfig.isCustomEvent);
+    const listeners = getListeners(
+      inst,
+      registrationName,
+      'bubbled',
+      !!event.dispatchConfig.isCustomEvent,
+    );
     if (listeners) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
@@ -123,9 +156,12 @@ function accumulateDispatches(
       );
       // an inst for every listener
       var insts = listeners.map(() => {
-          return inst;
+        return inst;
       });
-      event._dispatchInstances = accumulateInto(event._dispatchInstances, insts);
+      event._dispatchInstances = accumulateInto(
+        event._dispatchInstances,
+        insts,
+      );
     }
   }
 }
@@ -178,9 +214,9 @@ const ReactNativeBridgeEventPlugin = {
         phasedRegistrationNames: {
           bubbled: topLevelType,
           // $FlowFixMe
-          captured: topLevelType + 'Capture'
-        }
-      }
+          captured: topLevelType + 'Capture',
+        },
+      };
     }
 
     if (!bubbleDispatchConfig && !directDispatchConfig && !customEventConfig) {

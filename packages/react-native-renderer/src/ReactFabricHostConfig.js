@@ -117,7 +117,13 @@ if (registerEventHandler) {
   registerEventHandler(dispatchEvent);
 }
 
-type InternalEventListeners = { [string]: {| listener: EventListener, options: EventListenerOptions, invalidated: boolean |}[] };
+type InternalEventListeners = {
+  [string]: {|
+    listener: EventListener,
+    options: EventListenerOptions,
+    invalidated: boolean,
+  |}[],
+};
 
 /**
  * This is used for refs on host components.
@@ -230,7 +236,11 @@ class ReactFabricHostComponent {
   // Deviations from spec/TODOs:
   // (1) listener must currently be a function, we do not support EventListener objects yet.
   // (2) we do not support the `signal` option / AbortSignal yet
-  addEventListener_unstable(eventType: string, listener: EventListener, options: EventListenerOptions | boolean) {
+  addEventListener_unstable(
+    eventType: string,
+    listener: EventListener,
+    options: EventListenerOptions | boolean,
+  ) {
     if (typeof eventType !== 'string') {
       throw new Error('addEventListener_unstable eventType must be a string');
     }
@@ -239,8 +249,10 @@ class ReactFabricHostComponent {
     }
 
     // The third argument is either boolean indicating "captures" or an object.
-    const optionsObj = (typeof options === 'object' && options !== null ? options : {});
-    const capture = (typeof options === 'boolean' ? options : (optionsObj.capture)) || false;
+    const optionsObj =
+      typeof options === 'object' && options !== null ? options : {};
+    const capture =
+      (typeof options === 'boolean' ? options : optionsObj.capture) || false;
     const once = optionsObj.once || false;
     const passive = optionsObj.passive || false;
     const signal = null; // TODO: implement signal/AbortSignal
@@ -262,19 +274,25 @@ class ReactFabricHostComponent {
         capture: capture,
         once: once,
         passive: passive,
-        signal: signal
-      }
+        signal: signal,
+      },
     });
   }
 
   // See https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener
-  removeEventListener_unstable(eventType: string, listener: EventListener, options: EventListenerRemoveOptions | boolean) {
+  removeEventListener_unstable(
+    eventType: string,
+    listener: EventListener,
+    options: EventListenerRemoveOptions | boolean,
+  ) {
     // eventType and listener must be referentially equal to be removed from the listeners
     // data structure, but in "options" we only check the `capture` flag, according to spec.
     // That means if you add the same function as a listener with capture set to true and false,
     // you must also call removeEventListener twice with capture set to true/false.
-    const optionsObj = (typeof options === 'object' && options !== null ? options : {});
-    const capture = (typeof options === 'boolean' ? options : (optionsObj.capture)) || false;
+    const optionsObj =
+      typeof options === 'object' && options !== null ? options : {};
+    const capture =
+      (typeof options === 'boolean' ? options : optionsObj.capture) || false;
 
     // If there are no event listeners or named event listeners, we can bail early - our
     // job is already done.
@@ -288,9 +306,12 @@ class ReactFabricHostComponent {
     }
 
     eventListeners[eventType] = namedEventListeners.filter(listenerObj => {
-      return !(listenerObj.listener === listener && listenerObj.options.capture === capture);
+      return !(
+        listenerObj.listener === listener &&
+        listenerObj.options.capture === capture
+      );
     });
-  };
+  }
 }
 
 // eslint-disable-next-line no-unused-expressions

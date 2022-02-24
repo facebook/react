@@ -69,11 +69,19 @@ export default function getListeners(
   }
 
   // Get imperative event listeners for this event
-  if (stateNode.canonical && stateNode.canonical._eventListeners && stateNode.canonical._eventListeners[registrationName] && stateNode.canonical._eventListeners[registrationName].length > 0) {
+  if (
+    stateNode.canonical &&
+    stateNode.canonical._eventListeners &&
+    stateNode.canonical._eventListeners[registrationName] &&
+    stateNode.canonical._eventListeners[registrationName].length > 0
+  ) {
     var toRemove = [];
-    for (var listenerObj of stateNode.canonical._eventListeners[registrationName]) {
+    for (var listenerObj of stateNode.canonical._eventListeners[
+      registrationName
+    ]) {
       // Make sure phase of listener matches requested phase
-      const isCaptureEvent = listenerObj.options.capture != null && listenerObj.options.capture;
+      const isCaptureEvent =
+        listenerObj.options.capture != null && listenerObj.options.capture;
       if (isCaptureEvent !== (phase === 'captured')) {
         continue;
       }
@@ -83,7 +91,7 @@ export default function getListeners(
       // and by removing it from eventListeners once it is called (but only
       // when it's actually been executed).
       if (listenerObj.options.once) {
-        listeners.push(function () {
+        listeners.push(function() {
           var args = Array.prototype.slice.call(arguments);
 
           // Guard against function being called more than once in
@@ -95,7 +103,11 @@ export default function getListeners(
           }
 
           // Remove from the event listener once it's been called
-          stateNode.canonical.removeEventListener_unstable(registrationName, listenerObj.listener, listenerObj.capture);
+          stateNode.canonical.removeEventListener_unstable(
+            registrationName,
+            listenerObj.listener,
+            listenerObj.capture,
+          );
         });
       } else {
         listeners.push(listenerObj.listener);
