@@ -199,6 +199,7 @@ const ReactNativeBridgeEventPlugin = {
     const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     const directDispatchConfig = customDirectEventTypes[topLevelType];
     let customEventConfig = null;
+    console.log('what is CustomEvent?', CustomEvent);
     if (nativeEvent instanceof CustomEvent) {
       // $FlowFixMe
       if (topLevelType.indexOf('on') !== 0) {
