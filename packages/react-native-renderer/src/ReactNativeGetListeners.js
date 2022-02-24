@@ -39,8 +39,8 @@ export default function getListeners(
   // for a specific event on a node. Thus, we accumulate all of the listeners,
   // including the props listener, and return a function that calls them all in
   // order, starting with the handler prop and then the listeners in order.
-  // We still return a single function or null.
-  const listeners = [];
+  // We return either a non-empty array or null.
+  let listeners = null;
 
   const stateNode = inst.stateNode;
 
@@ -64,6 +64,9 @@ export default function getListeners(
     }
 
     if (listener) {
+      if (listeners === null) {
+        listeners = [];
+      }
       listeners.push(listener);
     }
   }
@@ -112,13 +115,12 @@ export default function getListeners(
           );
         });
       } else {
+        if (listeners === null) {
+          listeners = [];
+        }
         listeners.push(listenerObj.listener);
       }
     }
-  }
-
-  if (listeners.length === 0) {
-    return null;
   }
 
   return listeners;
