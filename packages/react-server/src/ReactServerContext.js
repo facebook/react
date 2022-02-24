@@ -10,6 +10,7 @@
 import {
   REACT_PROVIDER_TYPE,
   REACT_SERVER_CONTEXT_TYPE,
+  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
 } from 'shared/ReactSymbols';
 
 import type {
@@ -23,11 +24,6 @@ import {enableServerContext} from 'shared/ReactFeatureFlags';
 
 const globalServerContextRegistry =
   ReactSharedInternals.globalServerContextRegistry;
-
-let DEFAULT_PLACEHOLDER;
-if (enableServerContext) {
-  DEFAULT_PLACEHOLDER = globalServerContextRegistry.__defaultValue;
-}
 
 export function createServerContext<T: ServerContextJSONValue>(
   globalName: string,
@@ -43,9 +39,18 @@ export function createServerContext<T: ServerContextJSONValue>(
     );
   }
   const context = globalServerContextRegistry[globalName];
-  if (!context._definitionLoaded) {
-    context._definitionLoaded = true;
+  if (context._defaultValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
     context._defaultValue = defaultValue;
+    if (
+      context._currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+    ) {
+      context._currentValue = defaultValue;
+    }
+    if (
+      context._currentValue2 === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+    ) {
+      context._currentValue2 = defaultValue;
+    }
   } else {
     throw new Error(`ServerContext: ${globalName} already defined`);
   }
@@ -63,47 +68,10 @@ function _createServerContext<T: ServerContextJSONValue>(
     // there to be two concurrent renderers at most: React Native (primary) and
     // Fabric (secondary); React DOM (primary) and React ART (secondary).
     // Secondary renderers store their context values on separate fields.
-    __currentValue: defaultValue,
-    __currentValue2: defaultValue,
+    _currentValue: defaultValue,
+    _currentValue2: defaultValue,
 
-    get _currentValue() {
-      const value = context.__currentValue;
-      if (value === DEFAULT_PLACEHOLDER) {
-        if (context._definitionLoaded) {
-          return (context: any)._defaultValue;
-        } else {
-          // If the definition hasn't loaded then we know `useContext` is not
-          // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
-          // because it won't actually be returned to a component
-        }
-      }
-      return value;
-    },
-
-    set _currentValue(value) {
-      context.__currentValue = value;
-    },
-
-    get _currentValue2() {
-      const value = context.__currentValue2;
-      if (value === DEFAULT_PLACEHOLDER) {
-        if (context._definitionLoaded) {
-          return (context: any)._defaultValue;
-        } else {
-          // If the definition hasn't loaded then we know `useContext` is not
-          // being called, in this case we'll just return the DEFAULT_PLACEHOLDER
-          // because it won't actually be returned to a component
-        }
-        return (undefined: any);
-      }
-      return value;
-    },
-
-    set _currentValue2(value) {
-      context.__currentValue2 = value;
-    },
-
-    _defaultValue: (undefined: any),
+    _defaultValue: defaultValue,
 
     // Used to track how many concurrent renderers this context currently
     // supports within in a single renderer. Such as parallel server rendering.
@@ -132,11 +100,11 @@ function _createServerContext<T: ServerContextJSONValue>(
 // definition is loaded on the server. We'll create it with a null default value
 // if thats the case and when the definition loads it will  set the correct
 // default value.
-export function getOrCreateServerContext(globalName: string, value: any) {
+export function getOrCreateServerContext(globalName: string) {
   if (!globalServerContextRegistry[globalName]) {
     globalServerContextRegistry[globalName] = _createServerContext(
       globalName,
-      value === undefined ? DEFAULT_PLACEHOLDER : value,
+      REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
     );
   }
   return globalServerContextRegistry[globalName];

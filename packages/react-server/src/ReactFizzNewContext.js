@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 import type {ReactContext, ReactServerContext} from 'shared/ReactTypes';
 
 import {isPrimaryRenderer} from './ReactServerFormatConfig';
@@ -246,7 +247,14 @@ export function popProvider<T: any>(
     }
   }
   if (isPrimaryRenderer) {
-    prevSnapshot.context._currentValue = prevSnapshot.parentValue;
+    const value = prevSnapshot.parentValue;
+    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      prevSnapshot.context._currentValue =
+        // $FlowExpectedError - Effectively refined context to ServerContext
+        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+    } else {
+      prevSnapshot.context._currentValue = value;
+    }
     if (__DEV__) {
       if (
         context._currentRenderer !== undefined &&
@@ -261,7 +269,14 @@ export function popProvider<T: any>(
       context._currentRenderer = rendererSigil;
     }
   } else {
-    prevSnapshot.context._currentValue2 = prevSnapshot.parentValue;
+    const value = prevSnapshot.parentValue;
+    if (value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
+      prevSnapshot.context._currentValue2 =
+        // $FlowExpectedError - Effectively refined context to ServerContext
+        (prevSnapshot.context: ReactServerContext<any>)._defaultValue;
+    } else {
+      prevSnapshot.context._currentValue2 = value;
+    }
     if (__DEV__) {
       if (
         context._currentRenderer2 !== undefined &&

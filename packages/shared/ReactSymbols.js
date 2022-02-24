@@ -32,6 +32,8 @@ export let REACT_OFFSCREEN_TYPE = 0xeae2;
 export let REACT_LEGACY_HIDDEN_TYPE = 0xeae3;
 export let REACT_CACHE_TYPE = 0xeae4;
 export let REACT_TRACING_MARKER_TYPE = 0xeae5;
+export let REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED =
+  '!__$$defaultValueNotLoaded';
 
 if (typeof Symbol === 'function' && Symbol.for) {
   const symbolFor = Symbol.for;
@@ -54,6 +56,9 @@ if (typeof Symbol === 'function' && Symbol.for) {
   REACT_LEGACY_HIDDEN_TYPE = symbolFor('react.legacy_hidden');
   REACT_CACHE_TYPE = symbolFor('react.cache');
   REACT_TRACING_MARKER_TYPE = symbolFor('react.tracing_marker');
+  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = symbolFor(
+    'react.server_context.defaultValue',
+  );
 }
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
