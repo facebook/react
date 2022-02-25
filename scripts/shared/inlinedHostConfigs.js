@@ -70,8 +70,8 @@ module.exports = [
     shortName: 'dom-vite',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
-      'react-dom/src/server/ReactDOMFizzServerNode',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/ReactDOMFizzServerNode.js',
       'react-server-dom-vite/writer.node.server',
       'react-server-dom-vite',
     ],
@@ -93,14 +93,14 @@ module.exports = [
     shortName: 'dom-browser-vite',
     entryPoints: [
       'react-dom',
-      'react-dom/testing',
+      'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser',
       'react-server-dom-vite/writer.browser.server',
       'react-server-dom-vite',
     ],
     paths: [
       'react-dom',
-      'react-dom/testing',
+      'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-server-dom-vite',
       'react-server-dom-vite/writer.browser.server',
