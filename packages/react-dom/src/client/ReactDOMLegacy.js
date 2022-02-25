@@ -102,6 +102,11 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
+function noopOnRecoverableError() {
+  // This isn't reachable because onRecoverableError isn't called in the
+  // legacy API.
+}
+
 function legacyCreateRootFromDOMContainer(
   container: Container,
   forceHydrate: boolean,
@@ -122,6 +127,8 @@ function legacyCreateRootFromDOMContainer(
     false, // isStrictMode
     false, // concurrentUpdatesByDefaultOverride,
     '', // identifierPrefix
+    noopOnRecoverableError, // onRecoverableError
+    null, // transitionCallbacks
   );
   markContainerAsRoot(root.current, container);
 
@@ -309,6 +316,15 @@ export function unstable_renderSubtreeIntoContainer(
   containerNode: Container,
   callback: ?Function,
 ) {
+  if (__DEV__) {
+    console.error(
+      'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported ' +
+        'in React 18. Consider using a portal instead. Until you switch to ' +
+        "the createRoot API, your app will behave as if it's running React " +
+        '17. Learn more: https://reactjs.org/link/switch-to-createroot',
+    );
+  }
+
   if (!isValidContainerLegacy(containerNode)) {
     throw new Error('Target container is not a DOM element.');
   }

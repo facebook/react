@@ -7,8 +7,9 @@
  * @flow
  */
 
-import assign from 'object-assign';
 import {getElementDimensions, getNestedBoundingClientRect} from '../utils';
+
+const assign = Object.assign;
 
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 import type {Rect} from '../utils';

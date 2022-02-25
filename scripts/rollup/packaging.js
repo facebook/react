@@ -139,7 +139,11 @@ let entryPointsToHasBundle = new Map();
 for (const bundle of Bundles.bundles) {
   let hasBundle = entryPointsToHasBundle.get(bundle.entry);
   if (!hasBundle) {
-    entryPointsToHasBundle.set(bundle.entry, bundle.bundleTypes.length > 0);
+    const hasNonFBBundleTypes = bundle.bundleTypes.some(
+      type =>
+        type !== FB_WWW_DEV && type !== FB_WWW_PROD && type !== FB_WWW_PROFILING
+    );
+    entryPointsToHasBundle.set(bundle.entry, hasNonFBBundleTypes);
   }
 }
 
@@ -148,6 +152,7 @@ function filterOutEntrypoints(name) {
   let jsonPath = `build/node_modules/${name}/package.json`;
   let packageJSON = JSON.parse(readFileSync(jsonPath));
   let files = packageJSON.files;
+  let exportsJSON = packageJSON.exports;
   if (!Array.isArray(files)) {
     throw new Error('expected all package.json files to contain a files field');
   }
@@ -175,6 +180,23 @@ function filterOutEntrypoints(name) {
       files.splice(i, 1);
       i--;
       unlinkSync(`build/node_modules/${name}/${filename}`);
+      changed = true;
+      // Remove it from the exports field too if it exists.
+      if (exportsJSON) {
+        if (filename === 'index.js') {
+          delete exportsJSON['.'];
+        } else {
+          delete exportsJSON['./' + filename.replace(/\.js$/, '')];
+        }
+      }
+    }
+
+    // We only export the source directory so Jest and Rollup can access them
+    // during local development and at build time. The files don't exist in the
+    // public builds, so we don't need the export entry, either.
+    const sourceWildcardExport = './src/*';
+    if (exportsJSON && exportsJSON[sourceWildcardExport]) {
+      delete exportsJSON[sourceWildcardExport];
       changed = true;
     }
   }

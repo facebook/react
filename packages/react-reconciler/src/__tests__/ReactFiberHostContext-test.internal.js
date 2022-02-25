@@ -76,6 +76,7 @@ describe('ReactFiberHostContext', () => {
       null,
       false,
       '',
+      null,
     );
     act(() => {
       Renderer.updateContainer(
@@ -139,6 +140,7 @@ describe('ReactFiberHostContext', () => {
       null,
       false,
       '',
+      null,
     );
     act(() => {
       Renderer.updateContainer(

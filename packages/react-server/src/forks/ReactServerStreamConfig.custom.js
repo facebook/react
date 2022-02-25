@@ -32,6 +32,7 @@ export opaque type Chunk = mixed; // eslint-disable-line no-undef
 export const scheduleWork = $$$hostConfig.scheduleWork;
 export const beginWriting = $$$hostConfig.beginWriting;
 export const writeChunk = $$$hostConfig.writeChunk;
+export const writeChunkAndReturn = $$$hostConfig.writeChunkAndReturn;
 export const completeWriting = $$$hostConfig.completeWriting;
 export const flushBuffered = $$$hostConfig.flushBuffered;
 export const close = $$$hostConfig.close;

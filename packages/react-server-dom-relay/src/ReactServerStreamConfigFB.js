@@ -28,6 +28,13 @@ export function beginWriting(destination: Destination) {}
 export function writeChunk(
   destination: Destination,
   chunk: Chunk | PrecomputedChunk,
+): void {
+  destination.buffer += chunk;
+}
+
+export function writeChunkAndReturn(
+  destination: Destination,
+  chunk: Chunk | PrecomputedChunk,
 ): boolean {
   destination.buffer += chunk;
   return true;

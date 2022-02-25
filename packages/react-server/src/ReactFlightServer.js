@@ -20,7 +20,7 @@ import type {
 import {
   scheduleWork,
   beginWriting,
-  writeChunk,
+  writeChunkAndReturn,
   completeWriting,
   flushBuffered,
   close,
@@ -421,7 +421,7 @@ export function resolveModelToJSON(
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
       } else {
-        reportError(request, x);
+        logRecoverableError(request, x);
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
         // once it gets rendered.
@@ -604,7 +604,7 @@ export function resolveModelToJSON(
   );
 }
 
-function reportError(request: Request, error: mixed): void {
+function logRecoverableError(request: Request, error: mixed): void {
   const onError = request.onError;
   onError(error);
 }
@@ -687,7 +687,7 @@ function retrySegment(request: Request, segment: Segment): void {
       x.then(ping, ping);
       return;
     } else {
-      reportError(request, x);
+      logRecoverableError(request, x);
       // This errored, we need to serialize this error to the
       emitErrorChunk(request, segment.id, x);
     }
@@ -711,7 +711,7 @@ function performWork(request: Request): void {
       flushCompletedChunks(request, request.destination);
     }
   } catch (error) {
-    reportError(request, error);
+    logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
@@ -732,7 +732,8 @@ function flushCompletedChunks(
     for (; i < moduleChunks.length; i++) {
       request.pendingChunks--;
       const chunk = moduleChunks[i];
-      if (!writeChunk(destination, chunk)) {
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
         request.destination = null;
         i++;
         break;
@@ -745,7 +746,8 @@ function flushCompletedChunks(
     for (; i < jsonChunks.length; i++) {
       request.pendingChunks--;
       const chunk = jsonChunks[i];
-      if (!writeChunk(destination, chunk)) {
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
         request.destination = null;
         i++;
         break;
@@ -760,7 +762,8 @@ function flushCompletedChunks(
     for (; i < errorChunks.length; i++) {
       request.pendingChunks--;
       const chunk = errorChunks[i];
-      if (!writeChunk(destination, chunk)) {
+      const keepWriting: boolean = writeChunkAndReturn(destination, chunk);
+      if (!keepWriting) {
         request.destination = null;
         i++;
         break;
@@ -790,11 +793,15 @@ export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSED) {
     return;
   }
+  if (request.destination !== null) {
+    // We're already flowing.
+    return;
+  }
   request.destination = destination;
   try {
     flushCompletedChunks(request, destination);
   } catch (error) {
-    reportError(request, error);
+    logRecoverableError(request, error);
     fatalError(request, error);
   }
 }

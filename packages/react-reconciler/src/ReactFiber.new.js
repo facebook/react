@@ -25,6 +25,7 @@ import {
   enableScopeAPI,
   enableSyncDefaultUpdates,
   allowConcurrentByDefault,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   supportsPersistence,
@@ -56,6 +57,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
@@ -91,6 +93,7 @@ import {
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_CACHE_TYPE,
+  REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 
 export type {Fiber};
@@ -521,6 +524,11 @@ export function createFiberFromTypeAndProps(
           return createFiberFromCache(pendingProps, mode, lanes, key);
         }
       // eslint-disable-next-line no-fallthrough
+      case REACT_TRACING_MARKER_TYPE:
+        if (enableTransitionTracing) {
+          return createFiberFromTracingMarker(pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -742,6 +750,18 @@ export function createFiberFromCache(
 ) {
   const fiber = createFiber(CacheComponent, pendingProps, key, mode);
   fiber.elementType = REACT_CACHE_TYPE;
+  fiber.lanes = lanes;
+  return fiber;
+}
+
+export function createFiberFromTracingMarker(
+  pendingProps: any,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+) {
+  const fiber = createFiber(TracingMarkerComponent, pendingProps, key, mode);
+  fiber.elementType = REACT_TRACING_MARKER_TYPE;
   fiber.lanes = lanes;
   return fiber;
 }

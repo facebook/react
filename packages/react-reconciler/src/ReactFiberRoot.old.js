@@ -7,8 +7,14 @@
  * @flow
  */
 
-import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {
+  FiberRoot,
+  SuspenseHydrationCallbacks,
+  TransitionTracingCallbacks,
+} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
+import type {Cache} from './ReactFiberCacheComponent.old';
+import type {Transitions} from './ReactFiberTracingMarkerComponent.old';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
@@ -25,12 +31,25 @@ import {
   enableProfilerCommitHooks,
   enableProfilerTimer,
   enableUpdaterTracking,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
 import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 import {createCache, retainCache} from './ReactFiberCacheComponent.old';
 
-function FiberRootNode(containerInfo, tag, hydrate, identifierPrefix) {
+export type RootState = {
+  element: any,
+  cache: Cache | null,
+  transitions: Transitions | null,
+};
+
+function FiberRootNode(
+  containerInfo,
+  tag,
+  hydrate,
+  identifierPrefix,
+  onRecoverableError,
+) {
   this.tag = tag;
   this.containerInfo = containerInfo;
   this.pendingChildren = null;
@@ -57,6 +76,7 @@ function FiberRootNode(containerInfo, tag, hydrate, identifierPrefix) {
   this.entanglements = createLaneMap(NoLanes);
 
   this.identifierPrefix = identifierPrefix;
+  this.onRecoverableError = onRecoverableError;
 
   if (enableCache) {
     this.pooledCache = null;
@@ -69,6 +89,14 @@ function FiberRootNode(containerInfo, tag, hydrate, identifierPrefix) {
 
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
+  }
+
+  if (enableTransitionTracing) {
+    this.transitionCallbacks = null;
+    const transitionLanesMap = (this.transitionLanes = []);
+    for (let i = 0; i < TotalLanes; i++) {
+      transitionLanesMap.push(null);
+    }
   }
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -103,16 +131,27 @@ export function createFiberRoot(
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
   isStrictMode: boolean,
   concurrentUpdatesByDefaultOverride: null | boolean,
+  // TODO: We have several of these arguments that are conceptually part of the
+  // host config, but because they are passed in at runtime, we have to thread
+  // them through the root constructor. Perhaps we should put them all into a
+  // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix: string,
+  onRecoverableError: null | ((error: mixed) => void),
+  transitionCallbacks: null | TransitionTracingCallbacks,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(
     containerInfo,
     tag,
     hydrate,
     identifierPrefix,
+    onRecoverableError,
   ): any);
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;
+  }
+
+  if (enableTransitionTracing) {
+    root.transitionCallbacks = transitionCallbacks;
   }
 
   // Cyclic construction. This cheats the type system right now because
@@ -138,14 +177,17 @@ export function createFiberRoot(
     // retained separately.
     root.pooledCache = initialCache;
     retainCache(initialCache);
-    const initialState = {
+    const initialState: RootState = {
       element: null,
       cache: initialCache,
+      transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {
-    const initialState = {
+    const initialState: RootState = {
       element: null,
+      cache: null,
+      transitions: null,
     };
     uninitializedFiber.memoizedState = initialState;
   }

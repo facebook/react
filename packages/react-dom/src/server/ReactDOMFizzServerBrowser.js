@@ -32,7 +32,6 @@ type Options = {|
   bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onCompleteShell?: () => void,
   onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
 |};
@@ -40,46 +39,52 @@ type Options = {|
 function renderToReadableStream(
   children: ReactNodeList,
   options?: Options,
-): ReadableStream {
-  const request = createRequest(
-    children,
-    createResponseState(
-      options ? options.identifierPrefix : undefined,
-      options ? options.nonce : undefined,
-      options ? options.bootstrapScriptContent : undefined,
-      options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined,
-    ),
-    createRootFormatContext(options ? options.namespaceURI : undefined),
-    options ? options.progressiveChunkSize : undefined,
-    options ? options.onError : undefined,
-    options ? options.onCompleteAll : undefined,
-    options ? options.onCompleteShell : undefined,
-  );
-  if (options && options.signal) {
-    const signal = options.signal;
-    const listener = () => {
-      abort(request);
-      signal.removeEventListener('abort', listener);
-    };
-    signal.addEventListener('abort', listener);
-  }
-  const stream = new ReadableStream({
-    start(controller) {
-      startWork(request);
-    },
-    pull(controller) {
-      // Pull is called immediately even if the stream is not passed to anything.
-      // That's buffering too early. We want to start buffering once the stream
-      // is actually used by something so we can give it the best result possible
-      // at that point.
-      if (stream.locked) {
-        startFlowing(request, controller);
-      }
-    },
-    cancel(reason) {},
+): Promise<ReadableStream> {
+  return new Promise((resolve, reject) => {
+    function onCompleteShell() {
+      const stream = new ReadableStream({
+        pull(controller) {
+          // Pull is called immediately even if the stream is not passed to anything.
+          // That's buffering too early. We want to start buffering once the stream
+          // is actually used by something so we can give it the best result possible
+          // at that point.
+          if (stream.locked) {
+            startFlowing(request, controller);
+          }
+        },
+        cancel(reason) {},
+      });
+      resolve(stream);
+    }
+    function onErrorShell(error: mixed) {
+      reject(error);
+    }
+    const request = createRequest(
+      children,
+      createResponseState(
+        options ? options.identifierPrefix : undefined,
+        options ? options.nonce : undefined,
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+      ),
+      createRootFormatContext(options ? options.namespaceURI : undefined),
+      options ? options.progressiveChunkSize : undefined,
+      options ? options.onError : undefined,
+      options ? options.onCompleteAll : undefined,
+      onCompleteShell,
+      onErrorShell,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      const listener = () => {
+        abort(request);
+        signal.removeEventListener('abort', listener);
+      };
+      signal.addEventListener('abort', listener);
+    }
+    startWork(request);
   });
-  return stream;
 }
 
 export {renderToReadableStream, ReactVersion as version};

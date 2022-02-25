@@ -587,6 +587,33 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     );
   });
 
+  test('getSnapshot can return NaN without infinite loop warning', async () => {
+    const store = createExternalStore('not a number');
+
+    function App() {
+      const value = useSyncExternalStore(store.subscribe, () =>
+        parseInt(store.getState(), 10),
+      );
+      return <Text text={value} />;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    // Initial render that reads a snapshot of NaN. This is OK because we use
+    // Object.is algorithm to compare values.
+    await act(() => root.render(<App />));
+    expect(container.textContent).toEqual('NaN');
+
+    // Update to real number
+    await act(() => store.set(123));
+    expect(container.textContent).toEqual('123');
+
+    // Update back to NaN
+    await act(() => store.set('not a number'));
+    expect(container.textContent).toEqual('NaN');
+  });
+
   describe('extra features implemented in user-space', () => {
     // The selector implementation uses the lazy ref initialization pattern
     // @gate !(enableUseRefAccessWarning && __DEV__)

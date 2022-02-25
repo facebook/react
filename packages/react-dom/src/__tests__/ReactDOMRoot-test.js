@@ -51,6 +51,37 @@ describe('ReactDOMRoot', () => {
     expect(callback).not.toHaveBeenCalled();
   });
 
+  it('warn if a container is passed to root.render(...)', async () => {
+    function App() {
+      return 'Child';
+    }
+
+    const root = ReactDOM.createRoot(container);
+    expect(() => root.render(<App />, {})).toErrorDev(
+      'You passed a second argument to root.render(...) but it only accepts ' +
+        'one argument.',
+      {
+        withoutStack: true,
+      },
+    );
+  });
+
+  it('warn if a container is passed to root.render(...)', async () => {
+    function App() {
+      return 'Child';
+    }
+
+    const root = ReactDOM.createRoot(container);
+    expect(() => root.render(<App />, container)).toErrorDev(
+      'You passed a container to the second argument of root.render(...). ' +
+        "You don't need to pass it again since you already passed it to create " +
+        'the root.',
+      {
+        withoutStack: true,
+      },
+    );
+  });
+
   it('warns if a callback parameter is provided to unmount', () => {
     const callback = jest.fn();
     const root = ReactDOM.createRoot(container);
@@ -400,6 +431,47 @@ describe('ReactDOMRoot', () => {
     }).toErrorDev(
       'Attempted to synchronously unmount a root while React was ' +
         'already rendering.',
+    );
+  });
+
+  // @gate disableCommentsAsDOMContainers
+  it('errors if container is a comment node', () => {
+    // This is an old feature used by www. Disabled in the open source build.
+    const div = document.createElement('div');
+    div.innerHTML = '<!-- react-mount-point-unstable -->';
+    const commentNode = div.childNodes[0];
+
+    expect(() => ReactDOM.createRoot(commentNode)).toThrow(
+      'createRoot(...): Target container is not a DOM element.',
+    );
+    expect(() => ReactDOM.hydrateRoot(commentNode)).toThrow(
+      'hydrateRoot(...): Target container is not a DOM element.',
+    );
+
+    // Still works in the legacy API
+    ReactDOM.render(<div />, commentNode);
+  });
+
+  it('warn if no children passed to hydrateRoot', async () => {
+    expect(() =>
+      ReactDOM.hydrateRoot(container),
+    ).toErrorDev(
+      'Must provide initial children as second argument to hydrateRoot.',
+      {withoutStack: true},
+    );
+  });
+
+  it('warn if JSX passed to createRoot', async () => {
+    function App() {
+      return 'Child';
+    }
+
+    expect(() => ReactDOM.createRoot(container, <App />)).toErrorDev(
+      'You passed a JSX element to createRoot. You probably meant to call ' +
+        'root.render instead',
+      {
+        withoutStack: true,
+      },
     );
   });
 });

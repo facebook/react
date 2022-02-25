@@ -72,6 +72,7 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import {
   enableTrustedTypesIntegration,
   enableCustomElementPropertySupport,
+  enableClientRenderFallbackOnHydrationMismatch,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -93,13 +94,11 @@ let warnedUnknownTags;
 let suppressHydrationWarning;
 
 let validatePropertiesInDevelopment;
-let warnForTextDifference;
 let warnForPropDifference;
 let warnForExtraAttributes;
 let warnForInvalidEventListener;
 let canDiffStyleForHydrationWarning;
 
-let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
@@ -132,45 +131,6 @@ if (__DEV__) {
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
   canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
-
-  // HTML parsing normalizes CR and CRLF to LF.
-  // It also can turn \u0000 into \uFFFD inside attributes.
-  // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
-  // If we have a mismatch, it might be caused by that.
-  // We will still patch up in this case but not fire the warning.
-  const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
-  const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
-
-  normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
-    if (__DEV__) {
-      checkHtmlStringCoercion(markup);
-    }
-    const markupString =
-      typeof markup === 'string' ? markup : '' + (markup: any);
-    return markupString
-      .replace(NORMALIZE_NEWLINES_REGEX, '\n')
-      .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
-  };
-
-  warnForTextDifference = function(
-    serverText: string,
-    clientText: string | number,
-  ) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
-    const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
-    if (normalizedServerText === normalizedClientText) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    console.error(
-      'Text content did not match. Server: "%s" Client: "%s"',
-      normalizedServerText,
-      normalizedClientText,
-    );
-  };
 
   warnForPropDifference = function(
     propName: string,
@@ -246,6 +206,53 @@ if (__DEV__) {
     testElement.innerHTML = html;
     return testElement.innerHTML;
   };
+}
+
+// HTML parsing normalizes CR and CRLF to LF.
+// It also can turn \u0000 into \uFFFD inside attributes.
+// https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+// If we have a mismatch, it might be caused by that.
+// We will still patch up in this case but not fire the warning.
+const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
+
+function normalizeMarkupForTextOrAttribute(markup: mixed): string {
+  if (__DEV__) {
+    checkHtmlStringCoercion(markup);
+  }
+  const markupString = typeof markup === 'string' ? markup : '' + (markup: any);
+  return markupString
+    .replace(NORMALIZE_NEWLINES_REGEX, '\n')
+    .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
+}
+
+export function checkForUnmatchedText(
+  serverText: string,
+  clientText: string | number,
+  isConcurrentMode: boolean,
+) {
+  const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
+  const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
+  if (normalizedServerText === normalizedClientText) {
+    return;
+  }
+
+  if (__DEV__) {
+    if (!didWarnInvalidHydration) {
+      didWarnInvalidHydration = true;
+      console.error(
+        'Text content did not match. Server: "%s" Client: "%s"',
+        normalizedServerText,
+        normalizedClientText,
+      );
+    }
+  }
+
+  if (isConcurrentMode && enableClientRenderFallbackOnHydrationMismatch) {
+    // In concurrent roots, we throw when there's a text mismatch and revert to
+    // client rendering, up to the nearest Suspense boundary.
+    throw new Error('Text content does not match server-rendered HTML.');
+  }
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -858,6 +865,7 @@ export function diffHydratedProperties(
   rawProps: Object,
   parentNamespace: string,
   rootContainerElement: Element | Document,
+  isConcurrentMode: boolean,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
@@ -972,15 +980,23 @@ export function diffHydratedProperties(
       // TODO: Should we use domElement.firstChild.nodeValue to compare?
       if (typeof nextProp === 'string') {
         if (domElement.textContent !== nextProp) {
-          if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+          if (!suppressHydrationWarning) {
+            checkForUnmatchedText(
+              domElement.textContent,
+              nextProp,
+              isConcurrentMode,
+            );
           }
           updatePayload = [CHILDREN, nextProp];
         }
       } else if (typeof nextProp === 'number') {
         if (domElement.textContent !== '' + nextProp) {
-          if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+          if (!suppressHydrationWarning) {
+            checkForUnmatchedText(
+              domElement.textContent,
+              nextProp,
+              isConcurrentMode,
+            );
           }
           updatePayload = [CHILDREN, '' + nextProp];
         }
@@ -1165,15 +1181,13 @@ export function diffHydratedProperties(
   return updatePayload;
 }
 
-export function diffHydratedText(textNode: Text, text: string): boolean {
+export function diffHydratedText(
+  textNode: Text,
+  text: string,
+  isConcurrentMode: boolean,
+): boolean {
   const isDifferent = textNode.nodeValue !== text;
   return isDifferent;
-}
-
-export function warnForUnmatchedText(textNode: Text, text: string) {
-  if (__DEV__) {
-    warnForTextDifference(textNode.nodeValue, text);
-  }
 }
 
 export function warnForDeletedHydratableElement(

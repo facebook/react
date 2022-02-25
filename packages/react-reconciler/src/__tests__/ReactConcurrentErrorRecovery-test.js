@@ -398,4 +398,138 @@ describe('ReactConcurrentErrorRecovery', () => {
     // Now we can show the error boundary that's wrapped around B.
     expect(root).toMatchRenderedOutput('Oops!B2');
   });
+
+  // @gate enableCache
+  test('suspending in the shell (outside a Suspense boundary) should not throw, warn, or log during a transition', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    // The initial render suspends without a Suspense boundary. Since it's
+    // wrapped in startTransition, it suspends instead of erroring.
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      startTransition(() => {
+        root.render(<AsyncText text="Async" />);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Suspend! [Async]']);
+    expect(root).toMatchRenderedOutput(null);
+
+    // This also works if the suspended component is wrapped with an error
+    // boundary. (This is only interesting because when a component suspends
+    // outside of a transition, we throw an error, which can be captured by
+    // an error boundary.
+    await act(async () => {
+      startTransition(() => {
+        root.render(
+          <ErrorBoundary>
+            <AsyncText text="Async" />
+          </ErrorBoundary>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Suspend! [Async]']);
+    expect(root).toMatchRenderedOutput(null);
+
+    // Continues rendering once data resolves
+    await act(async () => {
+      resolveText('Async');
+    });
+    expect(Scheduler).toHaveYielded(['Async']);
+    expect(root).toMatchRenderedOutput('Async');
+  });
+
+  // @gate enableCache
+  test(
+    'errors during a suspended transition at the shell should not force ' +
+      'fallbacks to display (error then suspend)',
+    async () => {
+      // This is similar to the earlier test for errors that occur during
+      // a refresh transition. Suspending in the shell is conceptually the same
+      // as a refresh, but they have slightly different implementation paths.
+
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error) {
+          return {error};
+        }
+        render() {
+          if (this.state.error !== null) {
+            return (
+              <Text text={'Caught an error: ' + this.state.error.message} />
+            );
+          }
+          return this.props.children;
+        }
+      }
+
+      function Throws() {
+        throw new Error('Oops!');
+      }
+
+      // Suspend and throw in the same transition
+      const root = ReactNoop.createRoot();
+      await act(async () => {
+        startTransition(() => {
+          root.render(
+            <ErrorBoundary>
+              <AsyncText text="Async" />
+              <Throws />
+            </ErrorBoundary>,
+          );
+        });
+      });
+      expect(Scheduler).toHaveYielded([
+        'Suspend! [Async]',
+        // TODO: Ideally we would skip this second render pass to render the
+        // error UI, since it's not going to commit anyway. The same goes for
+        // Suspense fallbacks during a refresh transition.
+        'Caught an error: Oops!',
+      ]);
+      // The render suspended without committing or surfacing the error.
+      expect(root).toMatchRenderedOutput(null);
+
+      // Try the reverse order, too: throw then suspend
+      await act(async () => {
+        startTransition(() => {
+          root.render(
+            <ErrorBoundary>
+              <Throws />
+              <AsyncText text="Async" />
+            </ErrorBoundary>,
+          );
+        });
+      });
+      expect(Scheduler).toHaveYielded([
+        'Suspend! [Async]',
+        'Caught an error: Oops!',
+      ]);
+      expect(root).toMatchRenderedOutput(null);
+
+      await act(async () => {
+        await resolveText('Async');
+      });
+
+      expect(Scheduler).toHaveYielded([
+        'Async',
+        'Caught an error: Oops!',
+
+        // Try recovering from the error by rendering again synchronously
+        'Async',
+        'Caught an error: Oops!',
+      ]);
+
+      expect(root).toMatchRenderedOutput('Caught an error: Oops!');
+    },
+  );
 });

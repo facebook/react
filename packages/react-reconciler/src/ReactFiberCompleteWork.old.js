@@ -28,7 +28,7 @@ import type {
 } from './ReactFiberSuspenseComponent.old';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
+import type {Cache} from './ReactFiberCacheComponent.old';
 import {
   enableClientRenderFallbackOnHydrationMismatch,
   enableSuspenseAvoidThisFallback,
@@ -62,6 +62,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   CacheComponent,
+  TracingMarkerComponent,
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
@@ -131,6 +132,7 @@ import {
   resetHydrationState,
   getIsHydrating,
   hasUnhydratedTailNodes,
+  upgradeHydrationErrorsToRecoverable,
 } from './ReactFiberHydrationContext.old';
 import {
   enableSuspenseCallback,
@@ -140,6 +142,7 @@ import {
   enableCache,
   enableSuspenseLayoutEffectSemantics,
   enablePersistentOffscreenHostContainer,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 import {
   renderDidSuspend,
@@ -864,8 +867,8 @@ function completeWork(
         popRootCachePool(fiberRoot, renderLanes);
 
         let previousCache: Cache | null = null;
-        if (workInProgress.alternate !== null) {
-          previousCache = workInProgress.alternate.memoizedState.cache;
+        if (current !== null) {
+          previousCache = current.memoizedState.cache;
         }
         const cache: Cache = workInProgress.memoizedState.cache;
         if (cache !== previousCache) {
@@ -1099,6 +1102,12 @@ function completeWork(
             return null;
           }
         }
+
+        // Successfully completed this tree. If this was a forced client render,
+        // there may have been recoverable errors during first hydration
+        // attempt. If so, add them to a queue so we can log them in the
+        // commit phase.
+        upgradeHydrationErrorsToRecoverable();
       }
 
       if ((workInProgress.flags & DidCapture) !== NoFlags) {
@@ -1526,11 +1535,11 @@ function completeWork(
       if (enableCache) {
         let previousCache: Cache | null = null;
         if (
-          workInProgress.alternate !== null &&
-          workInProgress.alternate.memoizedState !== null &&
-          workInProgress.alternate.memoizedState.cachePool !== null
+          current !== null &&
+          current.memoizedState !== null &&
+          current.memoizedState.cachePool !== null
         ) {
-          previousCache = workInProgress.alternate.memoizedState.cachePool.pool;
+          previousCache = current.memoizedState.cachePool.pool;
         }
         let cache: Cache | null = null;
         if (
@@ -1543,8 +1552,7 @@ function completeWork(
           // Run passive effects to retain/release the cache.
           workInProgress.flags |= Passive;
         }
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
+        if (current !== null) {
           popCachePool(workInProgress);
         }
       }
@@ -1554,8 +1562,8 @@ function completeWork(
     case CacheComponent: {
       if (enableCache) {
         let previousCache: Cache | null = null;
-        if (workInProgress.alternate !== null) {
-          previousCache = workInProgress.alternate.memoizedState.cache;
+        if (current !== null) {
+          previousCache = current.memoizedState.cache;
         }
         const cache: Cache = workInProgress.memoizedState.cache;
         if (cache !== previousCache) {
@@ -1564,8 +1572,15 @@ function completeWork(
         }
         popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);
-        return null;
       }
+      return null;
+    }
+    case TracingMarkerComponent: {
+      if (enableTransitionTracing) {
+        // Bubble subtree flags before so we can set the flag property
+        bubbleProperties(workInProgress);
+      }
+      return null;
     }
   }
 

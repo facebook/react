@@ -16,6 +16,7 @@ import {getToStringValue, toString} from './ToStringValue';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {updateValueIfChanged} from './inputValueTracking';
 import getActiveElement from './getActiveElement';
+import assign from 'shared/assign';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
@@ -62,7 +63,7 @@ export function getHostProps(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
 
-  const hostProps = Object.assign({}, props, {
+  const hostProps = assign({}, props, {
     defaultChecked: undefined,
     defaultValue: undefined,
     value: undefined,

@@ -8,7 +8,6 @@
     "directory": "packages/react-server-native-relay"
   },
   "dependencies": {
-    "object-assign": "^4.1.1",
     "scheduler": "^0.11.0"
   },
   "peerDependencies": {

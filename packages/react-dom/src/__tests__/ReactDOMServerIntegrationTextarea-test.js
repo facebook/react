@@ -49,6 +49,12 @@ describe('ReactDOMServerIntegrationTextarea', () => {
     expect(e.value).toBe('foo');
   });
 
+  itRenders('a textarea with a value of undefined', async render => {
+    const e = await render(<textarea value={undefined} />);
+    expect(e.getAttribute('value')).toBe(null);
+    expect(e.value).toBe('');
+  });
+
   itRenders('a textarea with a value and readOnly', async render => {
     const e = await render(<textarea value="foo" readOnly={true} />);
     // textarea DOM elements don't have a value **attribute**, the text is

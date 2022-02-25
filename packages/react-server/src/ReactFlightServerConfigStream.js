@@ -124,6 +124,7 @@ export {
   flushBuffered,
   beginWriting,
   writeChunk,
+  writeChunkAndReturn,
   completeWriting,
   close,
   closeWithError,

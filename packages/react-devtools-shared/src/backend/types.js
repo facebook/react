@@ -53,6 +53,7 @@ export type WorkTagMap = {|
   SimpleMemoComponent: WorkTag,
   SuspenseComponent: WorkTag,
   SuspenseListComponent: WorkTag,
+  TracingMarkerComponent: WorkTag,
   YieldComponent: WorkTag,
 |};
 

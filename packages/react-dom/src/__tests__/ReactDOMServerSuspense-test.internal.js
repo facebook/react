@@ -187,7 +187,7 @@ describe('ReactDOMServerSuspense', () => {
           1,
         );
       },
-      'Add a <Suspense fallback=...> component higher in the tree',
+      'A component suspended while responding to synchronous input.',
     );
 
     itThrowsWhenRendering(
@@ -200,7 +200,7 @@ describe('ReactDOMServerSuspense', () => {
           1,
         );
       },
-      'Add a <Suspense fallback=...> component higher in the tree',
+      'A component suspended while responding to synchronous input.',
     );
   }
 

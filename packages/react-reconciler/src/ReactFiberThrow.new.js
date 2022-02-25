@@ -62,6 +62,7 @@ import {
 } from './ReactFiberSuspenseContext.new';
 import {
   renderDidError,
+  renderDidSuspendDelayIfPossible,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
@@ -78,8 +79,12 @@ import {
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
+  includesSyncLane,
 } from './ReactFiberLane.new';
-import {getIsHydrating} from './ReactFiberHydrationContext.new';
+import {
+  getIsHydrating,
+  queueHydrationError,
+} from './ReactFiberHydrationContext.new';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -162,12 +167,7 @@ function createClassErrorUpdate(
   return update;
 }
 
-function attachWakeableListeners(
-  suspenseBoundary: Fiber,
-  root: FiberRoot,
-  wakeable: Wakeable,
-  lanes: Lanes,
-) {
+function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes) {
   // Attach a ping listener
   //
   // The data might resolve before we have a chance to commit the fallback. Or,
@@ -180,34 +180,39 @@ function attachWakeableListeners(
   //
   // We only need to do this in concurrent mode. Legacy Suspense always
   // commits fallbacks synchronously, so there are no pings.
-  if (suspenseBoundary.mode & ConcurrentMode) {
-    let pingCache = root.pingCache;
-    let threadIDs;
-    if (pingCache === null) {
-      pingCache = root.pingCache = new PossiblyWeakMap();
+  let pingCache = root.pingCache;
+  let threadIDs;
+  if (pingCache === null) {
+    pingCache = root.pingCache = new PossiblyWeakMap();
+    threadIDs = new Set();
+    pingCache.set(wakeable, threadIDs);
+  } else {
+    threadIDs = pingCache.get(wakeable);
+    if (threadIDs === undefined) {
       threadIDs = new Set();
       pingCache.set(wakeable, threadIDs);
-    } else {
-      threadIDs = pingCache.get(wakeable);
-      if (threadIDs === undefined) {
-        threadIDs = new Set();
-        pingCache.set(wakeable, threadIDs);
-      }
-    }
-    if (!threadIDs.has(lanes)) {
-      // Memoize using the thread ID to prevent redundant listeners.
-      threadIDs.add(lanes);
-      const ping = pingSuspendedRoot.bind(null, root, wakeable, lanes);
-      if (enableUpdaterTracking) {
-        if (isDevToolsPresent) {
-          // If we have pending work still, restore the original updaters
-          restorePendingUpdaters(root, lanes);
-        }
-      }
-      wakeable.then(ping, ping);
     }
   }
+  if (!threadIDs.has(lanes)) {
+    // Memoize using the thread ID to prevent redundant listeners.
+    threadIDs.add(lanes);
+    const ping = pingSuspendedRoot.bind(null, root, wakeable, lanes);
+    if (enableUpdaterTracking) {
+      if (isDevToolsPresent) {
+        // If we have pending work still, restore the original updaters
+        restorePendingUpdaters(root, lanes);
+      }
+    }
+    wakeable.then(ping, ping);
+  }
+}
 
+function attachRetryListener(
+  suspenseBoundary: Fiber,
+  root: FiberRoot,
+  wakeable: Wakeable,
+  lanes: Lanes,
+) {
   // Retry listener
   //
   // If the fallback does commit, we need to attach a different type of
@@ -467,24 +472,43 @@ function throwException(
         root,
         rootRenderLanes,
       );
-      attachWakeableListeners(
-        suspenseBoundary,
-        root,
-        wakeable,
-        rootRenderLanes,
-      );
+      // We only attach ping listeners in concurrent mode. Legacy Suspense always
+      // commits fallbacks synchronously, so there are no pings.
+      if (suspenseBoundary.mode & ConcurrentMode) {
+        attachPingListener(root, wakeable, rootRenderLanes);
+      }
+      attachRetryListener(suspenseBoundary, root, wakeable, rootRenderLanes);
       return;
     } else {
-      // No boundary was found. Fallthrough to error mode.
-      // TODO: We should never call getComponentNameFromFiber in production.
-      // Log a warning or something to prevent us from accidentally bundling it.
-      value = new Error(
-        (getComponentNameFromFiber(sourceFiber) || 'A React component') +
-          ' suspended while rendering, but no fallback UI was specified.\n' +
-          '\n' +
-          'Add a <Suspense fallback=...> component higher in the tree to ' +
-          'provide a loading indicator or placeholder to display.',
+      // No boundary was found. Unless this is a sync update, this is OK.
+      // We can suspend and wait for more data to arrive.
+
+      if (!includesSyncLane(rootRenderLanes)) {
+        // This is not a sync update. Suspend. Since we're not activating a
+        // Suspense boundary, this will unwind all the way to the root without
+        // performing a second pass to render a fallback. (This is arguably how
+        // refresh transitions should work, too, since we're not going to commit
+        // the fallbacks anyway.)
+        //
+        // This case also applies to initial hydration.
+        attachPingListener(root, wakeable, rootRenderLanes);
+        renderDidSuspendDelayIfPossible();
+        return;
+      }
+
+      // This is a sync/discrete update. We treat this case like an error
+      // because discrete renders are expected to produce a complete tree
+      // synchronously to maintain consistency with external state.
+      const uncaughtSuspenseError = new Error(
+        'A component suspended while responding to synchronous input. This ' +
+          'will cause the UI to be replaced with a loading indicator. To ' +
+          'fix, updates that suspend should be wrapped ' +
+          'with startTransition.',
       );
+
+      // If we're outside a transition, fall through to the regular error path.
+      // The error will be caught by the nearest suspense boundary.
+      value = uncaughtSuspenseError;
     }
   } else {
     // This is a regular error, not a Suspense wakeable.
@@ -507,6 +531,10 @@ function throwException(
           root,
           rootRenderLanes,
         );
+
+        // Even though the user may not be affected by this error, we should
+        // still log it so it can be fixed.
+        queueHydrationError(value);
         return;
       }
     } else {
@@ -517,7 +545,7 @@ function throwException(
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
-  renderDidError();
+  renderDidError(value);
 
   value = createCapturedValue(value, sourceFiber);
   let workInProgress = returnFiber;

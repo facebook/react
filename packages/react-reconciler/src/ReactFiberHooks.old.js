@@ -12,6 +12,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
@@ -31,6 +32,7 @@ import {
   enableLazyContextPropagation,
   enableSuspenseLayoutEffectSemantics,
   enableUseMutableSource,
+  enableTransitionTracing,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -109,8 +111,8 @@ import {
   entangleTransitions as entangleLegacyQueueTransitions,
 } from './ReactUpdateQueue.old';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
-import {warnOnSubscriptionInsideStartTransition} from 'shared/ReactFeatureFlags';
 import {getTreeId} from './ReactFiberTreeContext.old';
+import {now} from './Scheduler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1290,7 +1292,8 @@ function mountSyncExternalStore<T>(
     nextSnapshot = getSnapshot();
     if (__DEV__) {
       if (!didWarnUncachedGetSnapshot) {
-        if (nextSnapshot !== getSnapshot()) {
+        const cachedSnapshot = getSnapshot();
+        if (!is(nextSnapshot, cachedSnapshot)) {
           console.error(
             'The result of getSnapshot should be cached to avoid an infinite loop',
           );
@@ -1362,7 +1365,8 @@ function updateSyncExternalStore<T>(
   const nextSnapshot = getSnapshot();
   if (__DEV__) {
     if (!didWarnUncachedGetSnapshot) {
-      if (nextSnapshot !== getSnapshot()) {
+      const cachedSnapshot = getSnapshot();
+      if (!is(nextSnapshot, cachedSnapshot)) {
         console.error(
           'The result of getSnapshot should be cached to avoid an infinite loop',
         );
@@ -1928,7 +1932,7 @@ function mountDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = mountState(value);
   mountEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    ReactCurrentBatchConfig.transition = {};
     try {
       setValue(value);
     } finally {
@@ -1942,7 +1946,7 @@ function updateDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = updateState(value);
   updateEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    ReactCurrentBatchConfig.transition = {};
     try {
       setValue(value);
     } finally {
@@ -1956,7 +1960,7 @@ function rerenderDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = rerenderState(value);
   updateEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    ReactCurrentBatchConfig.transition = {};
     try {
       setValue(value);
     } finally {
@@ -1966,7 +1970,7 @@ function rerenderDeferredValue<T>(value: T): T {
   return prevValue;
 }
 
-function startTransition(setPending, callback) {
+function startTransition(setPending, callback, options) {
   const previousPriority = getCurrentUpdatePriority();
   setCurrentUpdatePriority(
     higherEventPriority(previousPriority, ContinuousEventPriority),
@@ -1975,20 +1979,31 @@ function startTransition(setPending, callback) {
   setPending(true);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
+  ReactCurrentBatchConfig.transition = {};
+  const currentTransition = ReactCurrentBatchConfig.transition;
+
+  if (enableTransitionTracing) {
+    if (options !== undefined && options.name !== undefined) {
+      ReactCurrentBatchConfig.transition.name = options.name;
+      ReactCurrentBatchConfig.transition.startTime = now();
+    }
+  }
+
+  if (__DEV__) {
+    ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+  }
+
   try {
     setPending(false);
     callback();
   } finally {
     setCurrentUpdatePriority(previousPriority);
+
     ReactCurrentBatchConfig.transition = prevTransition;
+
     if (__DEV__) {
-      if (
-        prevTransition !== 1 &&
-        warnOnSubscriptionInsideStartTransition &&
-        ReactCurrentBatchConfig._updatedFibers
-      ) {
-        const updatedFibersCount = ReactCurrentBatchConfig._updatedFibers.size;
+      if (prevTransition === null && currentTransition._updatedFibers) {
+        const updatedFibersCount = currentTransition._updatedFibers.size;
         if (updatedFibersCount > 10) {
           console.warn(
             'Detected a large number of updates inside startTransition. ' +
@@ -1996,13 +2011,16 @@ function startTransition(setPending, callback) {
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        ReactCurrentBatchConfig._updatedFibers.clear();
+        currentTransition._updatedFibers.clear();
       }
     }
   }
 }
 
-function mountTransition(): [boolean, (() => void) => void] {
+function mountTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending, setPending] = mountState(false);
   // The `start` method never changes.
   const start = startTransition.bind(null, setPending);
@@ -2011,14 +2029,20 @@ function mountTransition(): [boolean, (() => void) => void] {
   return [isPending, start];
 }
 
-function updateTransition(): [boolean, (() => void) => void] {
+function updateTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending] = updateState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
   return [isPending, start];
 }
 
-function rerenderTransition(): [boolean, (() => void) => void] {
+function rerenderTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   const [isPending] = rerenderState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
@@ -2048,19 +2072,19 @@ function mountId(): string {
     const treeId = getTreeId();
 
     // Use a captial R prefix for server-generated ids.
-    id = identifierPrefix + 'R:' + treeId;
+    id = ':' + identifierPrefix + 'R' + treeId + ':';
 
     // Unless this is the first id at this level, append a number at the end
     // that represents the position of this useId hook among all the useId
     // hooks for this fiber.
     const localId = localIdCounter++;
     if (localId > 0) {
-      id += ':' + localId.toString(32);
+      id += localId.toString(32) + ':';
     }
   } else {
     // Use a lowercase r prefix for client-generated ids.
     const globalClientId = globalClientIdCounter++;
-    id = identifierPrefix + 'r:' + globalClientId.toString(32);
+    id = ':' + identifierPrefix + 'r' + globalClientId.toString(32) + ':';
   }
 
   hook.memoizedState = id;

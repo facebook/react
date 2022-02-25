@@ -14,7 +14,7 @@ module.exports = function autoImporter(babel) {
     if (state.id) {
       return state.id;
     }
-    state.id = helperModuleImports.addDefault(path, 'object-assign', {
+    state.id = helperModuleImports.addDefault(path, 'shared/assign', {
       nameHint: 'assign',
     });
     return state.id;
@@ -28,8 +28,8 @@ module.exports = function autoImporter(babel) {
 
     visitor: {
       CallExpression: function(path, file) {
-        if (file.filename.indexOf('object-assign') !== -1) {
-          // Don't replace Object.assign if we're transforming object-assign
+        if (file.filename.indexOf('shared/assign') !== -1) {
+          // Don't replace Object.assign if we're transforming shared/assign
           return;
         }
         if (path.get('callee').matchesPattern('Object.assign')) {
@@ -40,8 +40,8 @@ module.exports = function autoImporter(babel) {
       },
 
       MemberExpression: function(path, file) {
-        if (file.filename.indexOf('object-assign') !== -1) {
-          // Don't replace Object.assign if we're transforming object-assign
+        if (file.filename.indexOf('shared/assign') !== -1) {
+          // Don't replace Object.assign if we're transforming shared/assign
           return;
         }
         if (path.matchesPattern('Object.assign')) {

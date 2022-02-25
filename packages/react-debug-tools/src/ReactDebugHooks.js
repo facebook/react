@@ -13,6 +13,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
+  StartTransitionOptions,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -20,6 +21,7 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import ErrorStackParser from 'error-stack-parser';
+import assign from 'shared/assign';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   FunctionComponent,
@@ -290,7 +292,10 @@ function useSyncExternalStore<T>(
   return value;
 }
 
-function useTransition(): [boolean, (() => void) => void] {
+function useTransition(): [
+  boolean,
+  (callback: () => void, options?: StartTransitionOptions) => void,
+] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
@@ -720,7 +725,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
-    const props = Object.assign({}, baseProps);
+    const props = assign({}, baseProps);
     const defaultProps = Component.defaultProps;
     for (const propName in defaultProps) {
       if (props[propName] === undefined) {

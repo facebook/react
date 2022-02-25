@@ -35,6 +35,10 @@ export function crawlData(
 
   if (isArray(data)) {
     data.forEach(entry => {
+      if (entry == null) {
+        return;
+      }
+
       if (isArray(entry)) {
         crawlData(entry, sources, resolvedStyles);
       } else {

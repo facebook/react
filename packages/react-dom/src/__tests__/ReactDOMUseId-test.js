@@ -93,7 +93,11 @@ describe('useId', () => {
   }
 
   function normalizeTreeIdForTesting(id) {
-    const [serverClientPrefix, base32, hookIndex] = id.split(':');
+    const result = id.match(/:(R|r)(.*):(([0-9]*):)?/);
+    if (result === undefined) {
+      throw new Error('Invalid id format');
+    }
+    const [, serverClientPrefix, base32, hookIndex] = result;
     if (serverClientPrefix.endsWith('r')) {
       // Client ids aren't stable. For testing purposes, strip out the counter.
       return (
@@ -278,7 +282,7 @@ describe('useId', () => {
     // 'R:' prefix, and the first character after that, which may not correspond
     // to a complete set of 5 bits.
     //
-    // Example: R:clalalalalalalala...
+    // Example: :Rclalalalalalalala...:
     //
     // We can use this pattern to test large ids that exceed the bitwise
     // safe range (32 bits). The algorithm should theoretically support ids
@@ -313,8 +317,8 @@ describe('useId', () => {
 
     // Confirm that every id matches the expected pattern
     for (let i = 0; i < divs.length; i++) {
-      // Example: R:clalalalalalalala...
-      expect(divs[i].id).toMatch(/^R:.(((al)*a?)((la)*l?))*$/);
+      // Example: :Rclalalalalalalala...:
+      expect(divs[i].id).toMatch(/^:R.(((al)*a?)((la)*l?))*:$/);
     }
   });
 
@@ -338,7 +342,7 @@ describe('useId', () => {
       <div
         id="container"
       >
-        R:0, R:0:1, R:0:2
+        :R0:, :R0:1:, :R0:2:
         <!-- -->
       </div>
     `);
@@ -364,7 +368,7 @@ describe('useId', () => {
       <div
         id="container"
       >
-        R:0
+        :R0:
         <!-- -->
       </div>
     `);
@@ -603,10 +607,10 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          custom-prefix-R:1
+          :custom-prefix-R1:
         </div>
         <div>
-          custom-prefix-R:2
+          :custom-prefix-R2:
         </div>
       </div>
     `);
@@ -620,13 +624,13 @@ describe('useId', () => {
         id="container"
       >
         <div>
-          custom-prefix-R:1
+          :custom-prefix-R1:
         </div>
         <div>
-          custom-prefix-R:2
+          :custom-prefix-R2:
         </div>
         <div>
-          custom-prefix-r:0
+          :custom-prefix-r0:
         </div>
       </div>
     `);

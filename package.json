@@ -77,7 +77,6 @@
     "minimist": "^1.2.3",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
-    "object-assign": "^4.1.1",
     "pacote": "^10.3.0",
     "prettier": "1.19.1",
     "prop-types": "^15.6.2",
