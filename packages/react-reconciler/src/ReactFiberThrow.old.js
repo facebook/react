@@ -83,6 +83,7 @@ import {
 } from './ReactFiberLane.old';
 import {
   getIsHydrating,
+  markDidSuspendWhileHydratingDEV,
   queueHydrationError,
 } from './ReactFiberHydrationContext.old';
 
@@ -513,6 +514,8 @@ function throwException(
   } else {
     // This is a regular error, not a Suspense wakeable.
     if (getIsHydrating() && sourceFiber.mode & ConcurrentMode) {
+      markDidSuspendWhileHydratingDEV();
+
       const suspenseBoundary = getNearestSuspenseBoundaryToCapture(returnFiber);
       // If the error was thrown during hydration, we may be able to recover by
       // discarding the dehydrated content and switching to a client render.

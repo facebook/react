@@ -302,6 +302,72 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('#23331: does not warn about hydration mismatches if something suspended in an earlier sibling', async () => {
+    const makeApp = () => {
+      let resolve;
+      const imports = new Promise(r => {
+        resolve = () => r({default: () => <span id="async">async</span>});
+      });
+      const Lazy = React.lazy(() => imports);
+
+      const App = () => (
+        <div>
+          <Suspense fallback={<span>Loading...</span>}>
+            <Lazy />
+            <span id="after">after</span>
+          </Suspense>
+        </div>
+      );
+
+      return [App, resolve];
+    };
+
+    // Server-side
+    const [App, resolve] = makeApp();
+    await act(async () => {
+      const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span>Loading...</span>
+      </div>,
+    );
+    await act(async () => {
+      resolve();
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span id="async">async</span>
+        <span id="after">after</span>
+      </div>,
+    );
+
+    // Client-side
+    const [HydrateApp, hydrateResolve] = makeApp();
+    await act(async () => {
+      ReactDOM.hydrateRoot(container, <HydrateApp />);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span id="async">async</span>
+        <span id="after">after</span>
+      </div>,
+    );
+
+    await act(async () => {
+      hydrateResolve();
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <span id="async">async</span>
+        <span id="after">after</span>
+      </div>,
+    );
+  });
+
+  // @gate experimental
   it('should support nonce scripts', async () => {
     CSPnonce = 'R4nd0m';
     try {
