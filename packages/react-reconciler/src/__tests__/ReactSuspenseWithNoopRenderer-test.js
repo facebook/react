@@ -1011,9 +1011,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.flushSync(() => {
         ReactNoop.render(<AsyncText text="Async" />);
       });
-    }).toThrow(
-      'AsyncText suspended while rendering, but no fallback UI was specified.',
-    );
+    }).toThrow('A component suspended while responding to synchronous input.');
   });
 
   // @gate enableCache

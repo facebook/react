@@ -409,5 +409,6 @@
   "421": "There was an error while hydrating this Suspense boundary. Switched to client rendering.",
   "422": "There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.",
   "423": "This root received an early update, before anything was able hydrate. Switched the entire root to client rendering.",
-  "424": "Text content does not match server-rendered HTML."
+  "424": "Text content does not match server-rendered HTML.",
+  "425": "A component suspended while responding to synchronous input. This will cause the UI to be replaced with a loading indicator. To fix, updates that suspend should be wrapped with startTransition."
 }
