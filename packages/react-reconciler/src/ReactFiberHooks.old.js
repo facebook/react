@@ -2072,19 +2072,19 @@ function mountId(): string {
     const treeId = getTreeId();
 
     // Use a captial R prefix for server-generated ids.
-    id = identifierPrefix + 'R:' + treeId;
+    id = ':' + identifierPrefix + 'R' + treeId + ':';
 
     // Unless this is the first id at this level, append a number at the end
     // that represents the position of this useId hook among all the useId
     // hooks for this fiber.
     const localId = localIdCounter++;
     if (localId > 0) {
-      id += ':' + localId.toString(32);
+      id += localId.toString(32) + ':';
     }
   } else {
     // Use a lowercase r prefix for client-generated ids.
     const globalClientId = globalClientIdCounter++;
-    id = identifierPrefix + 'r:' + globalClientId.toString(32);
+    id = ':' + identifierPrefix + 'r' + globalClientId.toString(32) + ':';
   }
 
   hook.memoizedState = id;

@@ -130,7 +130,7 @@ export function createResponseState(
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
     boundaryPrefix: idPrefix + 'B:',
-    idPrefix: idPrefix + 'R:',
+    idPrefix: idPrefix,
     nextSuspenseID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
@@ -242,13 +242,13 @@ export function makeId(
 ): string {
   const idPrefix = responseState.idPrefix;
 
-  let id = idPrefix + treeId;
+  let id = ':' + idPrefix + 'R' + treeId + ':';
 
   // Unless this is the first id at this level, append a number at the end
   // that represents the position of this useId hook among all the useId
   // hooks for this fiber.
   if (localId > 0) {
-    id += ':' + localId.toString(32);
+    id += localId.toString(32) + ':';
   }
 
   return id;
