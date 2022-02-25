@@ -84,6 +84,7 @@ import {queueRecoverableErrors} from './ReactFiberWorkLoop.new';
 let hydrationParentFiber: null | Fiber = null;
 let nextHydratableInstance: null | HydratableInstance = null;
 let isHydrating: boolean = false;
+let didSuspend: boolean = false;
 
 // Hydration errors that were thrown inside this boundary
 let hydrationErrors: Array<mixed> | null = null;
@@ -95,6 +96,12 @@ function warnIfHydrating() {
         'We should not be hydrating here. This is a bug in React. Please file a bug.',
       );
     }
+  }
+}
+
+export function markDidSuspendWhileHydratingDEV() {
+  if (__DEV__) {
+    didSuspend = true;
   }
 }
 
@@ -110,6 +117,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   hydrationParentFiber = fiber;
   isHydrating = true;
   hydrationErrors = null;
+  didSuspend = false;
   return true;
 }
 
@@ -127,6 +135,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   hydrationParentFiber = fiber;
   isHydrating = true;
   hydrationErrors = null;
+  didSuspend = false;
   if (treeContext !== null) {
     restoreSuspendedTreeContext(fiber, treeContext);
   }
@@ -185,6 +194,13 @@ function deleteHydratableInstance(
 
 function warnNonhydratedInstance(returnFiber: Fiber, fiber: Fiber) {
   if (__DEV__) {
+    if (didSuspend) {
+      // Inside a boundary that already suspended. We're currently rendering the
+      // siblings of a suspended node. The mismatch may be due to the missing
+      // data, so it's probably a false positive.
+      return;
+    }
+
     switch (returnFiber.tag) {
       case HostRoot: {
         const parentContainer = returnFiber.stateNode.containerInfo;
@@ -418,6 +434,7 @@ function prepareToHydrateHostInstance(
   }
 
   const instance: Instance = fiber.stateNode;
+  const shouldWarnIfMismatchDev = !didSuspend;
   const updatePayload = hydrateInstance(
     instance,
     fiber.type,
@@ -425,6 +442,7 @@ function prepareToHydrateHostInstance(
     rootContainerInstance,
     hostContext,
     fiber,
+    shouldWarnIfMismatchDev,
   );
   // TODO: Type this specific to this type of component.
   fiber.updateQueue = (updatePayload: any);
@@ -446,7 +464,13 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
 
   const textInstance: TextInstance = fiber.stateNode;
   const textContent: string = fiber.memoizedProps;
-  const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
+  const shouldWarnIfMismatchDev = !didSuspend;
+  const shouldUpdate = hydrateTextInstance(
+    textInstance,
+    textContent,
+    fiber,
+    shouldWarnIfMismatchDev,
+  );
   if (shouldUpdate) {
     // We assume that prepareToHydrateHostTextInstance is called in a context where the
     // hydration parent is the parent host component of this host text.
@@ -616,6 +640,7 @@ function resetHydrationState(): void {
   hydrationParentFiber = null;
   nextHydratableInstance = null;
   isHydrating = false;
+  didSuspend = false;
 }
 
 export function upgradeHydrationErrorsToRecoverable(): void {

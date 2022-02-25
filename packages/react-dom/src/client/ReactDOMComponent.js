@@ -230,6 +230,7 @@ export function checkForUnmatchedText(
   serverText: string,
   clientText: string | number,
   isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
 ) {
   const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
   const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
@@ -237,14 +238,16 @@ export function checkForUnmatchedText(
     return;
   }
 
-  if (__DEV__) {
-    if (!didWarnInvalidHydration) {
-      didWarnInvalidHydration = true;
-      console.error(
-        'Text content did not match. Server: "%s" Client: "%s"',
-        normalizedServerText,
-        normalizedClientText,
-      );
+  if (shouldWarnDev) {
+    if (__DEV__) {
+      if (!didWarnInvalidHydration) {
+        didWarnInvalidHydration = true;
+        console.error(
+          'Text content did not match. Server: "%s" Client: "%s"',
+          normalizedServerText,
+          normalizedClientText,
+        );
+      }
     }
   }
 
@@ -866,6 +869,7 @@ export function diffHydratedProperties(
   parentNamespace: string,
   rootContainerElement: Element | Document,
   isConcurrentMode: boolean,
+  shouldWarnDev: boolean,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
@@ -985,6 +989,7 @@ export function diffHydratedProperties(
               domElement.textContent,
               nextProp,
               isConcurrentMode,
+              shouldWarnDev,
             );
           }
           updatePayload = [CHILDREN, nextProp];
@@ -996,6 +1001,7 @@ export function diffHydratedProperties(
               domElement.textContent,
               nextProp,
               isConcurrentMode,
+              shouldWarnDev,
             );
           }
           updatePayload = [CHILDREN, '' + nextProp];
@@ -1011,6 +1017,7 @@ export function diffHydratedProperties(
         }
       }
     } else if (
+      shouldWarnDev &&
       __DEV__ &&
       // Convince Flow we've calculated it (it's DEV-only in this method.)
       typeof isCustomComponentTag === 'boolean'
@@ -1142,10 +1149,12 @@ export function diffHydratedProperties(
   }
 
   if (__DEV__) {
-    // $FlowFixMe - Should be inferred as not undefined.
-    if (extraAttributeNames.size > 0 && !suppressHydrationWarning) {
+    if (shouldWarnDev) {
       // $FlowFixMe - Should be inferred as not undefined.
-      warnForExtraAttributes(extraAttributeNames);
+      if (extraAttributeNames.size > 0 && !suppressHydrationWarning) {
+        // $FlowFixMe - Should be inferred as not undefined.
+        warnForExtraAttributes(extraAttributeNames);
+      }
     }
   }
 

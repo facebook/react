@@ -302,7 +302,7 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
-  it('should asynchronously load a lazy component with sibling after', async () => {
+  it('#23331: does not warn about hydration mismatches if something suspended in an earlier sibling', async () => {
     const makeApp = () => {
       let resolve;
       const imports = new Promise(r => {
@@ -310,10 +310,6 @@ describe('ReactDOMFizzServer', () => {
       });
       const Lazy = React.lazy(() => imports);
 
-      // Test passes if you change:
-      // <span id="after">after</span>
-      // to:
-      // <Suspense fallback={null}><span id="after">after</span></Suspense>
       const App = () => (
         <div>
           <Suspense fallback={<span>Loading...</span>}>
@@ -351,16 +347,8 @@ describe('ReactDOMFizzServer', () => {
     const [HydrateApp, hydrateResolve] = makeApp();
     await act(async () => {
       ReactDOM.hydrateRoot(container, <HydrateApp />);
-      // Throws after flushAll:
-      // Warning: Prop `id` did not match. Server: "async" Client: "after"
-      //     at span
-      //     at Suspense
-      //     at div
-      //     at App
-      Scheduler.unstable_flushAll();
     });
 
-    // nb: Honestly not really sure whether this should expect "loading..." or "async"
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <span id="async">async</span>

@@ -786,6 +786,7 @@ export function hydrateInstance(
   rootContainerInstance: Container,
   hostContext: HostContext,
   internalInstanceHandle: Object,
+  shouldWarnDev: boolean,
 ): null | Array<mixed> {
   precacheFiberNode(internalInstanceHandle, instance);
   // TODO: Possibly defer this until the commit phase where all the events
@@ -811,6 +812,7 @@ export function hydrateInstance(
     parentNamespace,
     rootContainerInstance,
     isConcurrentMode,
+    shouldWarnDev,
   );
 }
 
@@ -818,6 +820,7 @@ export function hydrateTextInstance(
   textInstance: TextInstance,
   text: string,
   internalInstanceHandle: Object,
+  shouldWarnDev: boolean,
 ): boolean {
   precacheFiberNode(internalInstanceHandle, textInstance);
 
@@ -924,7 +927,13 @@ export function didNotMatchHydratedContainerTextInstance(
   text: string,
   isConcurrentMode: boolean,
 ) {
-  checkForUnmatchedText(textInstance.nodeValue, text, isConcurrentMode);
+  const shouldWarnDev = true;
+  checkForUnmatchedText(
+    textInstance.nodeValue,
+    text,
+    isConcurrentMode,
+    shouldWarnDev,
+  );
 }
 
 export function didNotMatchHydratedTextInstance(
@@ -936,7 +945,13 @@ export function didNotMatchHydratedTextInstance(
   isConcurrentMode: boolean,
 ) {
   if (parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    checkForUnmatchedText(textInstance.nodeValue, text, isConcurrentMode);
+    const shouldWarnDev = true;
+    checkForUnmatchedText(
+      textInstance.nodeValue,
+      text,
+      isConcurrentMode,
+      shouldWarnDev,
+    );
   }
 }
 
