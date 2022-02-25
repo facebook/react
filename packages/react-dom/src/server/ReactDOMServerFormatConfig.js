@@ -1001,7 +1001,17 @@ function pushStartTextArea(
     target.push(leadingNewline);
   }
 
-  return value;
+  // ToString and push directly instead of recurse over children.
+  // We don't really support complex children in the value anyway.
+  // This also currently avoids a trailing comment node which breaks textarea.
+  if (value !== null) {
+    if (__DEV__) {
+      checkAttributeStringCoercion(value, 'value');
+    }
+    target.push(stringToChunk(encodeHTMLTextNode('' + value)));
+  }
+
+  return null;
 }
 
 function pushSelfClosing(
