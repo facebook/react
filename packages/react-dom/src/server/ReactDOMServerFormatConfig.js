@@ -242,16 +242,16 @@ export function makeId(
 ): string {
   const idPrefix = responseState.idPrefix;
 
-  let id = ':' + idPrefix + 'R' + treeId + ':';
+  let id = ':' + idPrefix + 'R' + treeId;
 
   // Unless this is the first id at this level, append a number at the end
   // that represents the position of this useId hook among all the useId
   // hooks for this fiber.
   if (localId > 0) {
-    id += localId.toString(32) + ':';
+    id += 'H' + localId.toString(32);
   }
 
-  return id;
+  return id + ':';
 }
 
 function encodeHTMLTextNode(text: string): string {

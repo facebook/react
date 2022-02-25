@@ -93,7 +93,7 @@ describe('useId', () => {
   }
 
   function normalizeTreeIdForTesting(id) {
-    const result = id.match(/:(R|r)(.*):(([0-9]*):)?/);
+    const result = id.match(/:(R|r)([a-z0-9]*)(H([0-9]*))?:/);
     if (result === undefined) {
       throw new Error('Invalid id format');
     }
@@ -342,7 +342,7 @@ describe('useId', () => {
       <div
         id="container"
       >
-        :R0:, :R0:1:, :R0:2:
+        :R0:, :R0H1:, :R0H2:
         <!-- -->
       </div>
     `);
