@@ -213,8 +213,10 @@ const ReactNativeBridgeEventPlugin = {
         bubbles: nativeEvent.bubbles,
         phasedRegistrationNames: {
           bubbled: topLevelType,
-          // $FlowFixMe
-          captured: topLevelType + 'Capture',
+          // Unlike with the props-based handlers, capture events are registered
+          // to the HostComponent event emitter with the same name but a flag indicating
+          // that the handler is for the capture phase.
+          captured: topLevelType,
         },
       };
     }
