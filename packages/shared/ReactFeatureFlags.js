@@ -28,6 +28,10 @@ export const enablePersistentOffscreenHostContainer = false;
 // like migrating internal callers or performance testing.
 // -----------------------------------------------------------------------------
 
+// This rolled out to 10% public in www, so we should be able to land, but some
+// internal tests need to be updated. The open source behavior is correct.
+export const skipUnmountedBoundaries = true;
+
 // Destroy layout effects for components that are hidden because something
 // suspended in an update and recreate them when they are shown again (after the
 // suspended boundary has resolved). Note that this should be an uncommon use

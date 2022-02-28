@@ -47,6 +47,7 @@ export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
+export const skipUnmountedBoundaries = true;
 export const deletedTreeCleanUpLevel = 3;
 export const enableSuspenseLayoutEffectSemantics = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
