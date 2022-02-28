@@ -10,11 +10,12 @@
 import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 import SyntheticEvent from './legacy-events/SyntheticEvent';
+import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import accumulateInto from './legacy-events/accumulateInto';
-import getListener from './ReactNativeGetListener';
+import getListeners from './ReactNativeGetListeners';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
@@ -26,10 +27,10 @@ const {
 // Start of inline: the below functions were inlined from
 // EventPropagator.js, as they deviated from ReactDOM's newer
 // implementations.
-function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
+function listenersAtPhase(inst, event, propagationPhase: PropagationPhases) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(inst, registrationName);
+  return getListeners(inst, registrationName, propagationPhase);
 }
 
 function accumulateDirectionalDispatches(inst, phase, event) {
@@ -38,13 +39,16 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       console.error('Dispatching inst must not be null');
     }
   }
-  const listener = listenerAtPhase(inst, event, phase);
-  if (listener) {
+  const listeners = listenersAtPhase(inst, event, phase);
+  if (listeners && listeners.length > 0) {
     event._dispatchListeners = accumulateInto(
       event._dispatchListeners,
-      listener,
+      listeners,
     );
-    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    const insts = listeners.map(() => {
+      return inst;
+    });
+    event._dispatchInstances = accumulateInto(event._dispatchInstances, insts);
   }
 }
 
@@ -103,13 +107,20 @@ function accumulateDispatches(
 ): void {
   if (inst && event && event.dispatchConfig.registrationName) {
     const registrationName = event.dispatchConfig.registrationName;
-    const listener = getListener(inst, registrationName);
-    if (listener) {
+    const listeners = getListeners(inst, registrationName, 'bubbled');
+    if (listeners) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
-        listener,
+        listeners,
       );
-      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+      // an inst for every listener
+      const insts = listeners.map(() => {
+        return inst;
+      });
+      event._dispatchInstances = accumulateInto(
+        event._dispatchInstances,
+        insts,
+      );
     }
   }
 }
@@ -130,7 +141,6 @@ function accumulateDirectDispatches(events: ?(Array<Object> | Object)) {
 }
 
 // End of inline
-type PropagationPhases = 'bubbled' | 'captured';
 
 const ReactNativeBridgeEventPlugin = {
   eventTypes: {},
