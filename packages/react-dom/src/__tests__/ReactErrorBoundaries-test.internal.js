@@ -42,6 +42,7 @@ describe('ReactErrorBoundaries', () => {
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    ReactFeatureFlags.skipUnmountedBoundaries = true;
     ReactDOM = require('react-dom');
     React = require('react');
     act = require('jest-react').act;
