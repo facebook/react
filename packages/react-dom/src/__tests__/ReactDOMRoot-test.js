@@ -39,6 +39,26 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
   });
 
+  it('warns if you import createRoot from react-dom', async () => {
+    expect(() => ReactDOM.createRoot(container)).toErrorDev(
+      'You are importing createRoot from "react-dom" which is not supported. ' +
+        'You should instead import it from "react-dom/client".',
+      {
+        withoutStack: true,
+      },
+    );
+  });
+
+  it('warns if you import hydrateRoot from react-dom', async () => {
+    expect(() => ReactDOM.hydrateRoot(container, null)).toErrorDev(
+      'You are importing hydrateRoot from "react-dom" which is not supported. ' +
+        'You should instead import it from "react-dom/client".',
+      {
+        withoutStack: true,
+      },
+    );
+  });
+
   it('warns if a callback parameter is provided to render', () => {
     const callback = jest.fn();
     const root = ReactDOMClient.createRoot(container);
