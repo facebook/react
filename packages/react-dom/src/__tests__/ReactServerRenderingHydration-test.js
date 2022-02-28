@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 
@@ -21,6 +22,7 @@ describe('ReactDOMServerHydration', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
   });
@@ -403,7 +405,7 @@ describe('ReactDOMServerHydration', () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOM.hydrateRoot(container, <div />);
+    const root = ReactDOMClient.hydrateRoot(container, <div />);
     Scheduler.unstable_flushAll();
     root.render(null);
     Scheduler.unstable_flushAll();

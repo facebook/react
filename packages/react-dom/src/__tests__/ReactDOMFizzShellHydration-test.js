@@ -9,7 +9,7 @@
 
 let JSDOM;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let clientAct;
 let ReactDOMFizzServer;
@@ -27,7 +27,7 @@ describe('ReactDOMFizzShellHydration', () => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     clientAct = require('jest-react').act;
     ReactDOMFizzServer = require('react-dom/server');
@@ -180,7 +180,7 @@ describe('ReactDOMFizzShellHydration', () => {
 
     // Hydration suspends because the data for the shell hasn't loaded yet
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(Scheduler).toHaveYielded(['Suspend! [Shell]']);
     expect(div.current).toBe(null);
@@ -201,7 +201,7 @@ describe('ReactDOMFizzShellHydration', () => {
       return <AsyncText text="Shell" />;
     }
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await clientAct(async () => {
       root.render(<App />);
     });
@@ -232,7 +232,7 @@ describe('ReactDOMFizzShellHydration', () => {
 
     // Hydration suspends because the data for the shell hasn't loaded yet
     const root = await clientAct(async () => {
-      return ReactDOM.hydrateRoot(container, <App />, {
+      return ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
           Scheduler.unstable_yieldValue(error.message);
         },

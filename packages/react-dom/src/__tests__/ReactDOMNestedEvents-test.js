@@ -11,7 +11,7 @@
 
 describe('ReactDOMNestedEvents', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let act;
   let useState;
@@ -19,7 +19,7 @@ describe('ReactDOMNestedEvents', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('jest-react').act;
     useState = React.useState;
@@ -55,7 +55,7 @@ describe('ReactDOMNestedEvents', () => {
 
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     await act(async () => {
       root.render(<App />);

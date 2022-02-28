@@ -12,6 +12,7 @@
 let PropTypes;
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let act;
 
 describe('ReactES6Class', () => {
@@ -29,9 +30,10 @@ describe('ReactES6Class', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
     container = document.createElement('div');
-    root = ReactDOM.createRoot(container);
+    root = ReactDOMClient.createRoot(container);
     attachedListener = null;
     renderedName = null;
     Inner = class extends React.Component {
