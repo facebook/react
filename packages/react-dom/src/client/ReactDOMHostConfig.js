@@ -146,17 +146,6 @@ const STYLE = 'style';
 let eventsEnabled: ?boolean = null;
 let selectionInformation: null | SelectionInformation = null;
 
-function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
-  switch (type) {
-    case 'button':
-    case 'input':
-    case 'select':
-    case 'textarea':
-      return !!props.autoFocus;
-  }
-  return false;
-}
-
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 
 export function getRootHostContext(
@@ -307,7 +296,17 @@ export function finalizeInitialChildren(
   hostContext: HostContext,
 ): boolean {
   setInitialProperties(domElement, type, props, rootContainerInstance);
-  return shouldAutoFocusHostComponent(type, props);
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      return !!props.autoFocus;
+    case 'img':
+      return true;
+    default:
+      return false;
+  }
 }
 
 export function prepareUpdate(
@@ -428,12 +427,25 @@ export function commitMount(
   // does to implement the `autoFocus` attribute on the client). But
   // there are also other cases when this might happen (such as patching
   // up text content during hydration mismatch). So we'll check this again.
-  if (shouldAutoFocusHostComponent(type, newProps)) {
-    ((domElement: any):
-      | HTMLButtonElement
-      | HTMLInputElement
-      | HTMLSelectElement
-      | HTMLTextAreaElement).focus();
+  switch (type) {
+    case 'button':
+    case 'input':
+    case 'select':
+    case 'textarea':
+      if (newProps.autoFocus) {
+        ((domElement: any):
+          | HTMLButtonElement
+          | HTMLInputElement
+          | HTMLSelectElement
+          | HTMLTextAreaElement).focus();
+      }
+      return;
+    case 'img': {
+      if ((newProps: any).src) {
+        ((domElement: any): HTMLImageElement).src = ((domElement: any): HTMLImageElement).src;
+      }
+      return;
+    }
   }
 }
 
