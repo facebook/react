@@ -184,7 +184,7 @@ export function createRoot(
     if (__DEV__) {
       if ((options: any).hydrate) {
         console.warn(
-          'hydrate through createRoot is deprecated. Use ReactDOM.hydrateRoot(container, <App />) instead.',
+          'hydrate through createRoot is deprecated. Use ReactDOMClient.hydrateRoot(container, <App />) instead.',
         );
       } else {
         if (
@@ -369,12 +369,12 @@ function warnIfReactDOMContainerInDEV(container) {
     if (isContainerMarkedAsRoot(container)) {
       if (container._reactRootContainer) {
         console.error(
-          'You are calling ReactDOM.createRoot() on a container that was previously ' +
+          'You are calling ReactDOMClient.createRoot() on a container that was previously ' +
             'passed to ReactDOM.render(). This is not supported.',
         );
       } else {
         console.error(
-          'You are calling ReactDOM.createRoot() on a container that ' +
+          'You are calling ReactDOMClient.createRoot() on a container that ' +
             'has already been passed to createRoot() before. Instead, call ' +
             'root.render() on the existing root instead if you want to update it.',
         );

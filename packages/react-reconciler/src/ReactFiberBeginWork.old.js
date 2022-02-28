@@ -2628,7 +2628,7 @@ function mountDehydratedSuspenseComponent(
       console.error(
         'Cannot hydrate Suspense in legacy mode. Switch from ' +
           'ReactDOM.hydrate(element, container) to ' +
-          'ReactDOM.hydrateRoot(container, <App />)' +
+          'ReactDOMClient.hydrateRoot(container, <App />)' +
           '.render(element) or remove the Suspense components from ' +
           'the server rendered components.',
       );
