@@ -25,7 +25,7 @@ import {
 
 export function createRoot(
   container: Container,
-  options: CreateRootOptions,
+  options?: CreateRootOptions,
 ): RootType {
   if (__DEV__) {
     Internals.usingClientEntryPoint = true;
@@ -42,7 +42,7 @@ export function createRoot(
 export function hydrateRoot(
   container: Container,
   children: ReactNodeList,
-  options: HydrateRootOptions,
+  options?: HydrateRootOptions,
 ): RootType {
   if (__DEV__) {
     Internals.usingClientEntryPoint = true;

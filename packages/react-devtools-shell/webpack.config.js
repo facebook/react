@@ -61,6 +61,7 @@ const config = {
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-devtools-feature-flags': resolveFeatureFlags('shell'),
       'react-dom': resolve(builtModulesDir, 'react-dom/unstable_testing'),
+      'react-dom/client': resolve(builtModulesDir, 'react-dom/client'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },

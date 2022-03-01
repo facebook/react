@@ -11,9 +11,8 @@ import {createElement} from 'react';
 import {
   // $FlowFixMe Flow does not yet know about flushSync()
   flushSync,
-  // $FlowFixMe Flow does not yet know about createRoot()
-  createRoot,
-} from 'react-dom';
+} from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {
