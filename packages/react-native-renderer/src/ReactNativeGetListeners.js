@@ -75,7 +75,8 @@ export default function getListeners(
   // Events might not necessarily be noncompliant, but we currently have
   // no verification that /any/ events are compliant.
   // Thus, we prefix to ensure no collision with W3C event names.
-  const mangledImperativeRegistrationName = 'rn:' + registrationName;
+  const requestedPhaseIsCapture = phase === 'captured';
+  const mangledImperativeRegistrationName = requestedPhaseIsCapture ? 'rn:' + registrationName.replace(/Capture$/, '') : 'rn:' + registrationName;
 
   // Get imperative event listeners for this event
   if (
@@ -83,12 +84,10 @@ export default function getListeners(
     stateNode.canonical &&
     stateNode.canonical._eventListeners &&
     stateNode.canonical._eventListeners[mangledImperativeRegistrationName] &&
-    stateNode.canonical._eventListeners[mangledImperativeRegistrationName]
-      .length > 0
+    stateNode.canonical._eventListeners[mangledImperativeRegistrationName].length > 0
   ) {
     const eventListeners =
       stateNode.canonical._eventListeners[mangledImperativeRegistrationName];
-    const requestedPhaseIsCapture = phase === 'captured';
 
     eventListeners.forEach(listenerObj => {
       // Make sure phase of listener matches requested phase
