@@ -69,21 +69,24 @@ export default function getListeners(
     listeners.push(listener);
   }
 
+  // TODO: for now, all of these events get an `rn:` prefix to enforce
+  // that the user knows they're only getting non-W3C-compliant events
+  // through this imperative event API.
+  // Events might not necessarily be noncompliant, but we currently have
+  // no verification that /any/ events are compliant.
+  // Thus, we prefix to ensure no collision with W3C event names.
+  const mangledImperativeRegistrationName = 'rn:' + registrationName;
+
   // Get imperative event listeners for this event
   if (
     dispatchToImperativeListeners &&
     stateNode.canonical &&
     stateNode.canonical._eventListeners &&
-    stateNode.canonical._eventListeners[registrationName] &&
-    stateNode.canonical._eventListeners[registrationName].length > 0
+    stateNode.canonical._eventListeners[mangledImperativeRegistrationName] &&
+    stateNode.canonical._eventListeners[mangledImperativeRegistrationName].length > 0
   ) {
-    // TODO: for now, all of these events get an `rn:` prefix to enforce
-    // that the user knows they're only getting non-W3C-compliant events.
-    // Events might not necessarily be noncompliant, but we currently have
-    // no verification that /any/ events are compliant.
-    // Thus, we prefix to ensure no collision with W3C event names.
     const eventListeners =
-      stateNode.canonical._eventListeners['rn:' + registrationName];
+      stateNode.canonical._eventListeners[mangledImperativeRegistrationName];
     const requestedPhaseIsCapture = phase === 'captured';
 
     eventListeners.forEach(listenerObj => {
@@ -102,7 +105,7 @@ export default function getListeners(
         const args = Array.prototype.slice.call(arguments);
         const syntheticEvent = args[0];
 
-        const eventInst = new CustomEvent(registrationName, {
+        const eventInst = new CustomEvent(mangledImperativeRegistrationName, {
           detail: syntheticEvent.nativeEvent,
         });
         eventInst.isTrusted = true;
@@ -136,7 +139,7 @@ export default function getListeners(
 
           // Remove from the event listener once it's been called
           stateNode.canonical.removeEventListener_unstable(
-            registrationName,
+            mangledImperativeRegistrationName,
             listenerFnWrapper,
             listenerObj.capture,
           );
