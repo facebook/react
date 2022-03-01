@@ -10,9 +10,7 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 import {getFiberCurrentPropsFromNode} from './legacy-events/EventPluginUtils';
-import {
-  CustomEvent
-} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {CustomEvent} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 /**
  * Get a list of listeners for a specific event, in-order.
@@ -100,11 +98,13 @@ export default function getListeners(
       // all imperative event listeners in a function to unwrap the SyntheticEvent
       // and pass them an Event.
       // When this API is more stable and used more frequently, we can revisit.
-      const listenerFnWrapper = function () {
+      const listenerFnWrapper = function() {
         const args = Array.prototype.slice.call(arguments);
         const syntheticEvent = args[0];
 
-        const eventInst = new CustomEvent(registrationName, { detail: syntheticEvent.nativeEvent });
+        const eventInst = new CustomEvent(registrationName, {
+          detail: syntheticEvent.nativeEvent,
+        });
         eventInst.isTrusted = true;
         // setSyntheticEvent is present on the React Native Event shim.
         // It is used to forward method calls on Event to the underlying SyntheticEvent.
