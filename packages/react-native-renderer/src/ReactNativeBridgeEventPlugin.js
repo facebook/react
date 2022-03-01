@@ -18,6 +18,7 @@ import accumulateInto from './legacy-events/accumulateInto';
 import getListeners from './ReactNativeGetListeners';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import isArray from 'shared/isArray';
 
 const {
   customBubblingEventTypes,
@@ -33,6 +34,26 @@ function listenersAtPhase(inst, event, propagationPhase: PropagationPhases) {
   return getListeners(inst, registrationName, propagationPhase, true);
 }
 
+function accumulateListenersAndInstances(inst, event, listeners) {
+  const listenersLength = listeners
+    ? isArray(listeners)
+      ? listeners.length
+      : 1
+    : 0;
+  if (listenersLength > 0) {
+    event._dispatchListeners = accumulateInto(
+      event._dispatchListeners,
+      listeners,
+    );
+
+    // Avoid allocating additional arrays here
+    event._dispatchInstances = event._dispatchInstances || [];
+    for (let i = 0; i < listenersLength; i++) {
+      event._dispatchInstances.push(inst);
+    }
+  }
+}
+
 function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
     if (!inst) {
@@ -40,16 +61,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
     }
   }
   const listeners = listenersAtPhase(inst, event, phase);
-  if (listeners && listeners.length > 0) {
-    event._dispatchListeners = accumulateInto(
-      event._dispatchListeners,
-      listeners,
-    );
-    const insts = listeners.map(() => {
-      return inst;
-    });
-    event._dispatchInstances = accumulateInto(event._dispatchInstances, insts);
-  }
+  accumulateListenersAndInstances(inst, event, listeners);
 }
 
 function getParent(inst) {
@@ -108,20 +120,7 @@ function accumulateDispatches(
   if (inst && event && event.dispatchConfig.registrationName) {
     const registrationName = event.dispatchConfig.registrationName;
     const listeners = getListeners(inst, registrationName, 'bubbled', false);
-    if (listeners) {
-      event._dispatchListeners = accumulateInto(
-        event._dispatchListeners,
-        listeners,
-      );
-      // an inst for every listener
-      const insts = listeners.map(() => {
-        return inst;
-      });
-      event._dispatchInstances = accumulateInto(
-        event._dispatchInstances,
-        insts,
-      );
-    }
+    accumulateListenersAndInstances(inst, event, listeners);
   }
 }
 

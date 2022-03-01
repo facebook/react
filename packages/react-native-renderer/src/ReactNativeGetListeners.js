@@ -25,13 +25,16 @@ import {CustomEvent} from 'react-native/Libraries/ReactPrivate/ReactNativePrivat
  * Native system events emitted into React Native
  * will be emitted both to the prop handler function and to imperative event
  * listeners.
+ *
+ * This will either return null, a single Function without an array, or
+ * an array of 2+ items.
  */
 export default function getListeners(
   inst: Fiber,
   registrationName: string,
   phase: PropagationPhases,
   dispatchToImperativeListeners: boolean,
-): Array<Function> | null {
+): null | Function | Array<Function> {
   // Previously, there was only one possible listener for an event:
   // the onEventName property in props.
   // Now, it is also possible to have N listeners
@@ -62,13 +65,6 @@ export default function getListeners(
     );
   }
 
-  if (listener) {
-    if (listeners === null) {
-      listeners = [];
-    }
-    listeners.push(listener);
-  }
-
   // If there are no imperative listeners, early exit.
   if (
     !(
@@ -77,7 +73,7 @@ export default function getListeners(
       stateNode.canonical._eventListeners
     )
   ) {
-    return listeners;
+    return listener;
   }
 
   // TODO: for now, all of these events get an `rn:` prefix to enforce
@@ -130,6 +126,9 @@ export default function getListeners(
 
       if (listeners === null) {
         listeners = [];
+        if (listener) {
+          listeners.push(listener);
+        }
       }
 
       // Only call once?
@@ -159,7 +158,11 @@ export default function getListeners(
         listeners.push(listenerFnWrapper);
       }
     });
+
+    if (listeners != null) {
+      return listeners;
+    }
   }
 
-  return listeners;
+  return listener;
 }
