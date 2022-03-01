@@ -44,13 +44,10 @@ import {
 } from './ReactFiberContext.old';
 import {popProvider} from './ReactFiberNewContext.old';
 import {popRenderLanes} from './ReactFiberWorkLoop.old';
-import {
-  popCacheProvider,
-  popRootCachePool,
-  popCachePool,
-} from './ReactFiberCacheComponent.old';
+import {popCacheProvider} from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 import {popTreeContext} from './ReactFiberTreeContext.old';
+import {popRootTransition, popTransition} from './ReactFiberTransition.old';
 
 function unwindWork(
   current: Fiber | null,
@@ -84,7 +81,7 @@ function unwindWork(
     case HostRoot: {
       if (enableCache) {
         const root: FiberRoot = workInProgress.stateNode;
-        popRootCachePool(root, renderLanes);
+        popRootTransition(root, renderLanes);
 
         const cache: Cache = workInProgress.memoizedState.cache;
         popCacheProvider(workInProgress, cache);
@@ -158,7 +155,7 @@ function unwindWork(
       popRenderLanes(workInProgress);
       if (enableCache) {
         if (current !== null) {
-          popCachePool(workInProgress);
+          popTransition(workInProgress);
         }
       }
       return null;
@@ -194,7 +191,7 @@ function unwindInterruptedWork(
     case HostRoot: {
       if (enableCache) {
         const root: FiberRoot = interruptedWork.stateNode;
-        popRootCachePool(root, renderLanes);
+        popRootTransition(root, renderLanes);
 
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
@@ -226,7 +223,7 @@ function unwindInterruptedWork(
       popRenderLanes(interruptedWork);
       if (enableCache) {
         if (current !== null) {
-          popCachePool(interruptedWork);
+          popTransition(interruptedWork);
         }
       }
 

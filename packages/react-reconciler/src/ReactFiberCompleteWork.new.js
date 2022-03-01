@@ -162,12 +162,9 @@ import {
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
-import {
-  popCacheProvider,
-  popRootCachePool,
-  popCachePool,
-} from './ReactFiberCacheComponent.new';
+import {popCacheProvider} from './ReactFiberCacheComponent.new';
 import {popTreeContext} from './ReactFiberTreeContext.new';
+import {popRootTransition, popTransition} from './ReactFiberTransition.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -864,7 +861,7 @@ function completeWork(
     case HostRoot: {
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (enableCache) {
-        popRootCachePool(fiberRoot, renderLanes);
+        popRootTransition(fiberRoot, renderLanes);
 
         let previousCache: Cache | null = null;
         if (current !== null) {
@@ -1553,7 +1550,7 @@ function completeWork(
           workInProgress.flags |= Passive;
         }
         if (current !== null) {
-          popCachePool(workInProgress);
+          popTransition(workInProgress);
         }
       }
 
