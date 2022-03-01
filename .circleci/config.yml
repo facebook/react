@@ -201,7 +201,8 @@ jobs:
           path: ./build/devtools.tgz
 
   run_devtools_e2e_tests:
-    docker: *docker
+    docker:
+      - image: mcr.microsoft.com/playwright:focal
     environment: *environment
     steps:
       - checkout
@@ -215,8 +216,7 @@ jobs:
       - run:
           name: Playwright install deps
           command: |
-            npx playwright install
-            sudo npx playwright install-deps
+            npx playwright install-deps
       - run:
           environment:
             RELEASE_CHANNEL: experimental

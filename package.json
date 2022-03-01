@@ -78,6 +78,7 @@
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "pacote": "^10.3.0",
+    "playwright": "^1.19.2",
     "prettier": "1.19.1",
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",
