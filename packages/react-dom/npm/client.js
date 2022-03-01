@@ -1,6 +1,6 @@
 'use strict';
 
-var m = require('./');
+var m = require('react-dom');
 if (process.env.NODE_ENV === 'production') {
   exports.createRoot = m.createRoot;
   exports.hydrateRoot = m.hydrateRoot;
