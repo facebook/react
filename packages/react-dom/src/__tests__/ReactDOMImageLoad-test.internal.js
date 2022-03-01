@@ -18,6 +18,7 @@ let ReactDOMClient;
 let originalCreateElement;
 // let TextResource;
 // let textResourceShouldFail;
+let originalHTMLImageElementSrcDescriptor;
 
 let images = [];
 let onLoadSpy = null;
@@ -165,6 +166,11 @@ describe('ReactDOMImageLoad', () => {
       return element;
     };
 
+    originalHTMLImageElementSrcDescriptor = Object.getOwnPropertyDescriptor(
+      HTMLImageElement.prototype,
+      'src',
+    );
+
     Object.defineProperty(HTMLImageElement.prototype, 'src', {
       get() {
         return this.getAttribute('src');
@@ -179,6 +185,11 @@ describe('ReactDOMImageLoad', () => {
 
   afterEach(() => {
     document.createElement = originalCreateElement;
+    Object.defineProperty(
+      HTMLImageElement.prototype,
+      'src',
+      originalHTMLImageElementSrcDescriptor,
+    );
   });
 
   it('captures the load event if it happens before commit phase and replays it between layout and passive effects', async function() {
@@ -574,5 +585,49 @@ describe('ReactDOMImageLoad', () => {
       'b',
       'Committed',
     ]);
+  });
+
+  it('preserves the src property / attribute when triggering a potential new load event', () => {
+    // this test covers a regression identified in https://github.com/mui/material-ui/pull/31263
+    // where the resetting of the src property caused the property to change from relative to fully qualified
+
+    // make sure we are not using the patched src setter
+    Object.defineProperty(
+      HTMLImageElement.prototype,
+      'src',
+      originalHTMLImageElementSrcDescriptor,
+    );
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    React.startTransition(() =>
+      root.render(
+        <PhaseMarkers>
+          <Img onLoad={onLoadSpy} />
+          <Yield />
+          <Text text={'a'} />
+        </PhaseMarkers>,
+      ),
+    );
+
+    // render to yield to capture state of img src attribute and property before commit
+    expect(Scheduler).toFlushAndYieldThrough([
+      'render start',
+      'Img default',
+      'Yield',
+    ]);
+    const img = last(images);
+    const renderSrcProperty = img.src;
+    const renderSrcAttr = img.getAttribute('src');
+
+    // finish render and commit causing the src property to be rewritten
+    expect(Scheduler).toFlushAndYield(['a', 'last layout', 'last passive']);
+    const commitSrcProperty = img.src;
+    const commitSrcAttr = img.getAttribute('src');
+
+    // ensure attribute and properties agree
+    expect(renderSrcProperty).toBe(commitSrcProperty);
+    expect(renderSrcAttr).toBe(commitSrcAttr);
   });
 });

@@ -442,7 +442,7 @@ export function commitMount(
       return;
     case 'img': {
       if ((newProps: any).src) {
-        ((domElement: any): HTMLImageElement).src = ((domElement: any): HTMLImageElement).src;
+        ((domElement: any): HTMLImageElement).src = (newProps: any).src;
       }
       return;
     }
