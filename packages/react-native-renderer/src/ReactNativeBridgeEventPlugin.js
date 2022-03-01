@@ -30,7 +30,7 @@ const {
 function listenersAtPhase(inst, event, propagationPhase: PropagationPhases) {
   const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListeners(inst, registrationName, propagationPhase);
+  return getListeners(inst, registrationName, propagationPhase, true);
 }
 
 function accumulateDirectionalDispatches(inst, phase, event) {
@@ -107,7 +107,7 @@ function accumulateDispatches(
 ): void {
   if (inst && event && event.dispatchConfig.registrationName) {
     const registrationName = event.dispatchConfig.registrationName;
-    const listeners = getListeners(inst, registrationName, 'bubbled');
+    const listeners = getListeners(inst, registrationName, 'bubbled', false);
     if (listeners) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,

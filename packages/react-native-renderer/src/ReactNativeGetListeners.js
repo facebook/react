@@ -47,26 +47,25 @@ export default function getListeners(
   }
 
   // If null: Work in progress (ex: onload events in incremental mode).
-  if (!isCustomEvent) {
-    const props = getFiberCurrentPropsFromNode(stateNode);
-    if (props === null) {
-      // Work in progress.
-      return null;
-    }
-    const listener = props[registrationName];
+  const props = getFiberCurrentPropsFromNode(stateNode);
+  if (props === null) {
+    // Work in progress.
+    return null;
+  }
 
-    if (listener && typeof listener !== 'function') {
-      throw new Error(
-        `Expected \`${registrationName}\` listener to be a function, instead got a value of \`${typeof listener}\` type.`,
-      );
-    }
+  const listener = props[registrationName];
 
-    if (listener) {
-      if (listeners === null) {
-        listeners = [];
-      }
-      listeners.push(listener);
+  if (listener && typeof listener !== 'function') {
+    throw new Error(
+      `Expected \`${registrationName}\` listener to be a function, instead got a value of \`${typeof listener}\` type.`,
+    );
+  }
+
+  if (listener) {
+    if (listeners === null) {
+      listeners = [];
     }
+    listeners.push(listener);
   }
 
   // Get imperative event listeners for this event
@@ -103,6 +102,9 @@ export default function getListeners(
 
         const eventInst = new CustomEvent(registrationName, { detail: syntheticEvent.nativeEvent });
         eventInst.isTrusted = true;
+        // setSyntheticEvent is present on the React Native Event shim.
+        // It is used to forward method calls on Event to the underlying SyntheticEvent.
+        // $FlowFixMe
         eventInst.setSyntheticEvent(syntheticEvent);
 
         listenerObj.listener(eventInst);
