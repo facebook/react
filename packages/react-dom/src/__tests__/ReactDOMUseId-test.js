@@ -9,7 +9,7 @@
 
 let JSDOM;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let clientAct;
 let ReactDOMFizzServer;
@@ -29,7 +29,7 @@ describe('useId', () => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     clientAct = require('jest-react').act;
     ReactDOMFizzServer = require('react-dom/server');
@@ -136,7 +136,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -181,7 +181,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -220,7 +220,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -256,7 +256,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -311,7 +311,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     const divs = container.querySelectorAll('div');
 
@@ -335,7 +335,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     // We append a suffix to the end of the id to distinguish them
     expect(container).toMatchInlineSnapshot(`
@@ -362,7 +362,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -392,7 +392,7 @@ describe('useId', () => {
       pipe(writable);
     });
     await clientAct(async () => {
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     });
     expect(container).toMatchInlineSnapshot(`
       <div
@@ -443,7 +443,7 @@ describe('useId', () => {
     });
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
-      const root = ReactDOM.hydrateRoot(container, <App />);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
       expect(Scheduler).toFlushUntilNextPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
@@ -524,7 +524,7 @@ describe('useId', () => {
     });
     const dehydratedSpan = container.getElementsByTagName('span')[0];
     await clientAct(async () => {
-      const root = ReactDOM.hydrateRoot(container, <App />);
+      const root = ReactDOMClient.hydrateRoot(container, <App />);
       expect(Scheduler).toFlushUntilNextPaint([]);
       expect(container).toMatchInlineSnapshot(`
         <div
@@ -598,7 +598,7 @@ describe('useId', () => {
     });
     let root;
     await clientAct(async () => {
-      root = ReactDOM.hydrateRoot(container, <App />, {
+      root = ReactDOMClient.hydrateRoot(container, <App />, {
         identifierPrefix: 'custom-prefix-',
       });
     });

@@ -18,12 +18,17 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom/client',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer',
       'react-server-dom-webpack/writer.node.server',
       'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
       'react-interactions',
     ],
     isFlowTyped: true,
@@ -40,12 +45,17 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom/client',
       'react-dom/unstable_testing',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
     ],
     isFlowTyped: true,
     isServerSupported: true,

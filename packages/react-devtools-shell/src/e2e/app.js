@@ -4,6 +4,7 @@
 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as ReactDOMClient from 'react-dom/client';
 
 const container = document.createElement('div');
 
@@ -13,8 +14,7 @@ const container = document.createElement('div');
 // so that it can load things other than just ToDoList.
 const App = require('./apps/ListApp').default;
 
-// $FlowFixMe Flow doesn't know about createRoot() yet.
-const root = ReactDOM.createRoot(container);
+const root = ReactDOMClient.createRoot(container);
 root.render(<App />);
 
 // ReactDOM Test Selector APIs used by Playwright e2e tests

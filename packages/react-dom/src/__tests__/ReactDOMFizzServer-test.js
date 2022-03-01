@@ -13,7 +13,7 @@ let JSDOM;
 let Stream;
 let Scheduler;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
 let SuspenseList;
@@ -36,7 +36,7 @@ describe('ReactDOMFizzServer', () => {
     JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzServer = require('react-dom/server');
     }
@@ -346,7 +346,7 @@ describe('ReactDOMFizzServer', () => {
     // Client-side
     const [HydrateApp, hydrateResolve] = makeApp();
     await act(async () => {
-      ReactDOM.hydrateRoot(container, <HydrateApp />);
+      ReactDOMClient.hydrateRoot(container, <HydrateApp />);
     });
 
     expect(getVisibleChildren(container)).toEqual(
@@ -424,7 +424,7 @@ describe('ReactDOMFizzServer', () => {
     window.__INIT__ = function() {
       bootstrapped = true;
       // Attempt to hydrate the content.
-      ReactDOM.hydrateRoot(container, <App isClient={true} />, {
+      ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
         onRecoverableError(error) {
           Scheduler.unstable_yieldValue(error.message);
         },
@@ -538,7 +538,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Attempt to hydrate the content.
-    ReactDOM.hydrateRoot(container, <App isClient={true} />, {
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -611,7 +611,7 @@ describe('ReactDOMFizzServer', () => {
     window.__INIT__ = function() {
       bootstrapped = true;
       // Attempt to hydrate the content.
-      ReactDOM.hydrateRoot(container, <App />);
+      ReactDOMClient.hydrateRoot(container, <App />);
     };
 
     await act(async () => {
@@ -708,7 +708,7 @@ describe('ReactDOMFizzServer', () => {
     expect(loggedErrors).toEqual([]);
 
     // Attempt to hydrate the content.
-    ReactDOM.hydrateRoot(container, <App />);
+    ReactDOMClient.hydrateRoot(container, <App />);
     Scheduler.unstable_flushAll();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -779,7 +779,10 @@ describe('ReactDOMFizzServer', () => {
       pipe(writable);
     });
 
-    const root = ReactDOM.hydrateRoot(container, <App showMore={false} />);
+    const root = ReactDOMClient.hydrateRoot(
+      container,
+      <App showMore={false} />,
+    );
     Scheduler.unstable_flushAll();
 
     // We're not hydrated yet.
@@ -846,7 +849,7 @@ describe('ReactDOMFizzServer', () => {
     // We're still showing a fallback.
 
     // Attempt to hydrate the content.
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -1542,7 +1545,7 @@ describe('ReactDOMFizzServer', () => {
     // We're still showing a fallback.
 
     // Attempt to hydrate the content.
-    ReactDOM.hydrateRoot(container, <App isClient={true} />, {
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(error.message);
       },
@@ -1731,7 +1734,7 @@ describe('ReactDOMFizzServer', () => {
 
     let root;
     await act(async () => {
-      root = ReactDOM.hydrateRoot(container, <App isClient={false} />);
+      root = ReactDOMClient.hydrateRoot(container, <App isClient={false} />);
       Scheduler.unstable_flushAll();
       await jest.runAllTimers();
     });
@@ -1817,7 +1820,7 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(
           'Log recoverable error: ' + error.message,
@@ -1917,7 +1920,7 @@ describe('ReactDOMFizzServer', () => {
     });
     expect(Scheduler).toHaveYielded(['server']);
 
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(
           'Log recoverable error: ' + error.message,
@@ -2019,7 +2022,7 @@ describe('ReactDOMFizzServer', () => {
       // Hydrate the tree. Child will throw during hydration, but not when it
       // falls back to client rendering.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />, {
+      ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
           Scheduler.unstable_yieldValue(error.message);
         },
@@ -2110,7 +2113,7 @@ describe('ReactDOMFizzServer', () => {
       // Hydrate the tree. Child will throw during hydration, but not when it
       // falls back to client rendering.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />, {
+      ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
           Scheduler.unstable_yieldValue(error.message);
         },
@@ -2198,7 +2201,7 @@ describe('ReactDOMFizzServer', () => {
 
       // Hydrate the tree. Child will throw during render.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />, {
+      ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
           Scheduler.unstable_yieldValue(
             'Log recoverable error: ' + error.message,
@@ -2280,7 +2283,7 @@ describe('ReactDOMFizzServer', () => {
       // Hydrate the tree. Child will throw during hydration, but not when it
       // falls back to client rendering.
       isClient = true;
-      ReactDOM.hydrateRoot(container, <App />, {
+      ReactDOMClient.hydrateRoot(container, <App />, {
         onRecoverableError(error) {
           Scheduler.unstable_yieldValue(error.message);
         },
@@ -2349,7 +2352,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    const root = ReactDOM.createRoot(container, {
+    const root = ReactDOMClient.createRoot(container, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(
           'Logged a recoverable error: ' + error.message,
@@ -2431,7 +2434,7 @@ describe('ReactDOMFizzServer', () => {
     // Hydrate the tree. Child will throw during hydration, but not when it
     // falls back to client rendering.
     isClient = true;
-    ReactDOM.hydrateRoot(container, <App />, {
+    ReactDOMClient.hydrateRoot(container, <App />, {
       onRecoverableError(error) {
         Scheduler.unstable_yieldValue(
           'Logged recoverable error: ' + error.message,

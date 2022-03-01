@@ -256,7 +256,7 @@ export function hydrate(
     if (isModernRoot) {
       console.error(
         'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOM.createRoot(). This is not supported. ' +
+          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
           'Did you mean to call hydrateRoot(container, element)?',
       );
     }
@@ -296,7 +296,7 @@ export function render(
     if (isModernRoot) {
       console.error(
         'You are calling ReactDOM.render() on a container that was previously ' +
-          'passed to ReactDOM.createRoot(). This is not supported. ' +
+          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
           'Did you mean to call root.render(element)?',
       );
     }
@@ -356,7 +356,7 @@ export function unmountComponentAtNode(container: Container) {
     if (isModernRoot) {
       console.error(
         'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOM.createRoot(). This is not supported. Did you mean to call root.unmount()?',
+          'passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?',
       );
     }
   }

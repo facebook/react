@@ -11,6 +11,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
   let act;
   let React;
   let ReactDOM;
+  let ReactDOMClient;
 
   let ErrorBoundary;
   let NoError;
@@ -22,6 +23,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
     act = require('jest-react').act;
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
 
     ErrorBoundary = class extends React.Component {
       state = {error: null};
@@ -49,7 +51,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
     window.removeEventListener('error', windowOnError);
   });
 
-  describe('ReactDOM.createRoot', () => {
+  describe('ReactDOMClient.createRoot', () => {
     it('logs errors during event handlers', () => {
       spyOnDevAndProd(console, 'error');
 
@@ -64,7 +66,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         );
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       act(() => {
         root.render(<Foo />);
       });
@@ -150,7 +152,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         throw Error('Boom');
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       expect(() => {
         act(() => {
           root.render(<Foo />);
@@ -230,7 +232,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         throw Error('Boom');
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       act(() => {
         root.render(
           <ErrorBoundary>
@@ -315,7 +317,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       expect(() => {
         act(() => {
           root.render(<Foo />);
@@ -383,7 +385,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       act(() => {
         root.render(
           <ErrorBoundary>
@@ -453,7 +455,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       expect(() => {
         act(() => {
           root.render(<Foo />);
@@ -521,7 +523,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       act(() => {
         root.render(
           <ErrorBoundary>

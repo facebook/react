@@ -13,6 +13,7 @@ let React;
 let Scheduler;
 // let ReactCache;
 let ReactDOM;
+let ReactDOMClient;
 // let Suspense;
 let originalCreateElement;
 // let TextResource;
@@ -89,6 +90,7 @@ describe('ReactDOMImageLoad', () => {
     Scheduler = require('scheduler');
     // ReactCache = require('react-cache');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     // Suspense = React.Suspense;
 
     onLoadSpy = jest.fn(reactEvent => {
@@ -181,7 +183,7 @@ describe('ReactDOMImageLoad', () => {
 
   it('captures the load event if it happens before commit phase and replays it between layout and passive effects', async function() {
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     React.startTransition(() =>
       root.render(
@@ -221,7 +223,7 @@ describe('ReactDOMImageLoad', () => {
 
   it('captures the load event if it happens after commit phase and replays it', async function() {
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     React.startTransition(() =>
       root.render(
@@ -251,7 +253,7 @@ describe('ReactDOMImageLoad', () => {
 
   it('it replays the last load event when more than one fire before the end of the layout phase completes', async function() {
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function Base() {
       const [src, setSrc] = React.useState('a');
@@ -302,7 +304,7 @@ describe('ReactDOMImageLoad', () => {
 
   it('replays load events that happen in passive phase after the passive phase.', async function() {
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     root.render(
       <PhaseMarkers>
@@ -328,7 +330,7 @@ describe('ReactDOMImageLoad', () => {
 
   it('captures and suppresses the load event if it happens before passive effects and a cascading update causes the img to be removed', async function() {
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function ChildSuppressing({children}) {
       const [showChildren, update] = React.useState(true);
@@ -377,7 +379,7 @@ describe('ReactDOMImageLoad', () => {
 
   it('captures and suppresses the load event if it happens before passive effects and a cascading update causes the img to be removed, alternate', async function() {
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     function Switch({children}) {
       const [shouldShow, updateShow] = React.useState(true);
@@ -456,7 +458,7 @@ describe('ReactDOMImageLoad', () => {
   //   }
 
   //   const container = document.createElement('div');
-  //   const root = ReactDOM.createRoot(container);
+  //   const root = ReactDOMClient.createRoot(container);
 
   //   React.startTransition(() => root.render(<SuspendingWithImage />));
 
@@ -531,7 +533,7 @@ describe('ReactDOMImageLoad', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     root.render(<Base />);
 

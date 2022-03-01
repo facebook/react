@@ -1,5 +1,5 @@
 import React from 'react';
-import {hydrateRoot} from 'react-dom';
+import {hydrateRoot} from 'react-dom/client';
 
 import App from './components/App';
 

@@ -11,7 +11,7 @@
 
 describe('Timeline profiler', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let renderHelper;
   let renderRootHelper;
@@ -31,7 +31,7 @@ describe('Timeline profiler', () => {
     };
     renderRootHelper = element => {
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(element);
       const unmountFn = () => root.unmount();
       unmountFns.push(unmountFn);
@@ -39,7 +39,7 @@ describe('Timeline profiler', () => {
     };
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
     store = global.store;

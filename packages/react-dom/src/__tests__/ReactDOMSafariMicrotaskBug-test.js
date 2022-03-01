@@ -11,7 +11,7 @@
 
 let React;
 
-let ReactDOM;
+let ReactDOMClient;
 let act;
 
 describe('ReactDOMSafariMicrotaskBug-test', () => {
@@ -35,7 +35,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
     jest.resetModules();
     container = document.createElement('div');
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
 
     document.body.appendChild(container);
@@ -62,7 +62,7 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
         </div>
       );
     }
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<Foo />);
     });

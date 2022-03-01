@@ -13,6 +13,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactFreshRuntime;
 let Scheduler;
 let act;
@@ -28,6 +29,7 @@ describe('ReactFresh', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
       act = require('jest-react').act;
       createReactClass = require('create-react-class/factory')(
@@ -2437,7 +2439,7 @@ describe('ReactFresh', () => {
         };
       });
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;

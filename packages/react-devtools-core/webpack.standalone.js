@@ -64,6 +64,7 @@ module.exports = {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-devtools-feature-flags': resolveFeatureFlags(featureFlagTarget),
+      'react-dom/client': resolve(builtModulesDir, 'react-dom/client'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),

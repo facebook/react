@@ -10,7 +10,7 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let Scheduler;
 let act;
@@ -22,7 +22,7 @@ describe('useMutableSourceHydration', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
@@ -160,7 +160,7 @@ describe('useMutableSourceHydration', () => {
     expect(source.listenerCount).toBe(0);
 
     act(() => {
-      ReactDOM.hydrateRoot(container, <TestComponent />, {
+      ReactDOMClient.hydrateRoot(container, <TestComponent />, {
         mutableSources: [mutableSource],
       });
     });
@@ -195,7 +195,7 @@ describe('useMutableSourceHydration', () => {
 
     expect(() => {
       act(() => {
-        ReactDOM.hydrateRoot(container, <TestComponent />, {
+        ReactDOMClient.hydrateRoot(container, <TestComponent />, {
           mutableSources: [mutableSource],
           onRecoverableError(error) {
             Scheduler.unstable_yieldValue('Log error: ' + error.message);
@@ -256,7 +256,7 @@ describe('useMutableSourceHydration', () => {
       act(() => {
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
           React.startTransition(() => {
-            ReactDOM.hydrateRoot(container, <TestComponent />, {
+            ReactDOMClient.hydrateRoot(container, <TestComponent />, {
               mutableSources: [mutableSource],
               onRecoverableError(error) {
                 Scheduler.unstable_yieldValue('Log error: ' + error.message);
@@ -264,7 +264,7 @@ describe('useMutableSourceHydration', () => {
             });
           });
         } else {
-          ReactDOM.hydrateRoot(container, <TestComponent />, {
+          ReactDOMClient.hydrateRoot(container, <TestComponent />, {
             mutableSources: [mutableSource],
             onRecoverableError(error) {
               Scheduler.unstable_yieldValue('Log error: ' + error.message);
@@ -349,7 +349,7 @@ describe('useMutableSourceHydration', () => {
         );
         if (gate(flags => flags.enableSyncDefaultUpdates)) {
           React.startTransition(() => {
-            ReactDOM.hydrateRoot(container, fragment, {
+            ReactDOMClient.hydrateRoot(container, fragment, {
               mutableSources: [mutableSource],
               onRecoverableError(error) {
                 Scheduler.unstable_yieldValue('Log error: ' + error.message);
@@ -357,7 +357,7 @@ describe('useMutableSourceHydration', () => {
             });
           });
         } else {
-          ReactDOM.hydrateRoot(container, fragment, {
+          ReactDOMClient.hydrateRoot(container, fragment, {
             mutableSources: [mutableSource],
             onRecoverableError(error) {
               Scheduler.unstable_yieldValue('Log error: ' + error.message);

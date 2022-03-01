@@ -9,7 +9,7 @@
 
 describe('profiling HostRoot', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let legacyRender;
   let store: Store;
@@ -29,7 +29,7 @@ describe('profiling HostRoot', () => {
     store = global.store;
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
     effectDurations = [];
@@ -91,7 +91,7 @@ describe('profiling HostRoot', () => {
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => {
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       root.render(<App />);
     });
     utils.act(() => store.profilerStore.stopProfiling());
@@ -124,7 +124,7 @@ describe('profiling HostRoot', () => {
     }
 
     const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOMClient.createRoot(container);
 
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => root.render(<App />));

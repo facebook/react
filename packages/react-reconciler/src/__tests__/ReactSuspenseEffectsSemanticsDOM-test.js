@@ -10,7 +10,7 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let act;
 
 describe('ReactSuspenseEffectsSemanticsDOM', () => {
@@ -18,7 +18,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     act = require('jest-react').act;
   });
 
@@ -63,7 +63,7 @@ describe('ReactSuspenseEffectsSemanticsDOM', () => {
     }
 
     act(() => {
-      const root = ReactDOM.createRoot(document.createElement('div'));
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
       root.render(<App />);
     });
 

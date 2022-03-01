@@ -11,7 +11,11 @@ import type {Lane, Lanes} from './ReactFiberLane.old';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
 import type {EventPriority} from './ReactEventPriorities.old';
-import type {DevToolsProfilingHooks} from 'react-devtools-shared/src/backend/types';
+// import type {DevToolsProfilingHooks} from 'react-devtools-shared/src/backend/types';
+// TODO: This import doesn't work because the DevTools depend on the DOM version of React
+// and to properly type check against DOM React we can't also type check again non-DOM
+// React which this hook might be in.
+type DevToolsProfilingHooks = any;
 
 import {
   getLabelForLane,

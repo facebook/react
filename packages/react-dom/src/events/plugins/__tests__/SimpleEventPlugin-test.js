@@ -12,6 +12,7 @@
 describe('SimpleEventPlugin', function() {
   let React;
   let ReactDOM;
+  let ReactDOMClient;
   let Scheduler;
   let act;
 
@@ -39,6 +40,7 @@ describe('SimpleEventPlugin', function() {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
     onClick = jest.fn();
@@ -235,6 +237,7 @@ describe('SimpleEventPlugin', function() {
 
       React = require('react');
       ReactDOM = require('react-dom');
+      ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
 
       act = require('jest-react').act;
@@ -242,7 +245,7 @@ describe('SimpleEventPlugin', function() {
 
     it('flushes pending interactive work before exiting event handler', async () => {
       container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       document.body.appendChild(container);
 
       let button;
@@ -317,7 +320,7 @@ describe('SimpleEventPlugin', function() {
     // was dispatched.
     it('end result of many interactive updates is deterministic', async () => {
       container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOMClient.createRoot(container);
       document.body.appendChild(container);
 
       let button;

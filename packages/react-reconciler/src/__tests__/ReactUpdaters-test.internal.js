@@ -12,6 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactDOMClient;
 let Scheduler;
 let mockDevToolsHook;
 let allSchedulerTags;
@@ -90,6 +91,7 @@ describe('updaters', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
 
     act = require('jest-react').act;
@@ -209,7 +211,7 @@ describe('updaters', () => {
       return count;
     };
 
-    const root = ReactDOM.createRoot(document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(async () => {
       root.render(<Parent />);
       expect(Scheduler).toFlushAndYieldThrough([
@@ -354,7 +356,7 @@ describe('updaters', () => {
       throw new Error('Hello');
     };
 
-    const root = ReactDOM.createRoot(document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(async () => {
       root.render(<Parent shouldError={false} />);
     });
@@ -404,7 +406,7 @@ describe('updaters', () => {
       return null;
     };
 
-    const root = ReactDOM.createRoot(document.createElement('div'));
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     root.render(
       <React.Fragment>
         <SyncPriorityUpdater />
