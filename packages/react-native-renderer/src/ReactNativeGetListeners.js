@@ -69,6 +69,17 @@ export default function getListeners(
     listeners.push(listener);
   }
 
+  // If there are no imperative listeners, early exit.
+  if (
+    !(
+      dispatchToImperativeListeners &&
+      stateNode.canonical &&
+      stateNode.canonical._eventListeners
+    )
+  ) {
+    return listeners;
+  }
+
   // TODO: for now, all of these events get an `rn:` prefix to enforce
   // that the user knows they're only getting non-W3C-compliant events
   // through this imperative event API.
@@ -76,15 +87,15 @@ export default function getListeners(
   // no verification that /any/ events are compliant.
   // Thus, we prefix to ensure no collision with W3C event names.
   const requestedPhaseIsCapture = phase === 'captured';
-  const mangledImperativeRegistrationName = requestedPhaseIsCapture ? 'rn:' + registrationName.replace(/Capture$/, '') : 'rn:' + registrationName;
+  const mangledImperativeRegistrationName = requestedPhaseIsCapture
+    ? 'rn:' + registrationName.replace(/Capture$/, '')
+    : 'rn:' + registrationName;
 
   // Get imperative event listeners for this event
   if (
-    dispatchToImperativeListeners &&
-    stateNode.canonical &&
-    stateNode.canonical._eventListeners &&
     stateNode.canonical._eventListeners[mangledImperativeRegistrationName] &&
-    stateNode.canonical._eventListeners[mangledImperativeRegistrationName].length > 0
+    stateNode.canonical._eventListeners[mangledImperativeRegistrationName]
+      .length > 0
   ) {
     const eventListeners =
       stateNode.canonical._eventListeners[mangledImperativeRegistrationName];
