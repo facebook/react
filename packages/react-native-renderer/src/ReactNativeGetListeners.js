@@ -10,6 +10,9 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {PropagationPhases} from './legacy-events/PropagationPhases';
 
 import {getFiberCurrentPropsFromNode} from './legacy-events/EventPluginUtils';
+import {
+  CustomEvent
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 /**
  * Get a list of listeners for a specific event, in-order.
@@ -29,7 +32,7 @@ export default function getListeners(
   inst: Fiber,
   registrationName: string,
   phase: PropagationPhases,
-  isCustomEvent: boolean,
+  dispatchToImperativeListeners: boolean,
 ): Array<Function> | null {
   // Previously, there was only one possible listener for an event:
   // the onEventName property in props.
@@ -70,6 +73,7 @@ export default function getListeners(
 
   // Get imperative event listeners for this event
   if (
+    dispatchToImperativeListeners &&
     stateNode.canonical &&
     stateNode.canonical._eventListeners &&
     stateNode.canonical._eventListeners[registrationName] &&

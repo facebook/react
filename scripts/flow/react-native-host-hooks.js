@@ -138,6 +138,7 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     emit: (channel: string, event: RawEventEmitterEvent) => string,
     ...
   };
+  declare export var CustomEvent: CustomEvent;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {
