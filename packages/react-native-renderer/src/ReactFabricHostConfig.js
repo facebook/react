@@ -257,7 +257,7 @@ class ReactFabricHostComponent {
     const signal = null; // TODO: implement signal/AbortSignal
 
     const eventListeners: InternalEventListeners = this._eventListeners || {};
-    if (this._eventListeners === null) {
+    if (this._eventListeners == null) {
       this._eventListeners = eventListeners;
     }
 
