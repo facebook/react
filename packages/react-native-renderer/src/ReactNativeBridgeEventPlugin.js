@@ -47,9 +47,13 @@ function accumulateListenersAndInstances(inst, event, listeners) {
     );
 
     // Avoid allocating additional arrays here
-    event._dispatchInstances = event._dispatchInstances || [];
-    for (let i = 0; i < listenersLength; i++) {
-      event._dispatchInstances.push(inst);
+    if (event._dispatchInstances == null && listenersLength === 1) {
+      event._dispatchInstances = inst;
+    } else {
+      event._dispatchInstances = event._dispatchInstances || [];
+      for (let i = 0; i < listenersLength; i++) {
+        event._dispatchInstances.push(inst);
+      }
     }
   }
 }
