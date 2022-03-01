@@ -83,7 +83,8 @@ export default function getListeners(
     stateNode.canonical &&
     stateNode.canonical._eventListeners &&
     stateNode.canonical._eventListeners[mangledImperativeRegistrationName] &&
-    stateNode.canonical._eventListeners[mangledImperativeRegistrationName].length > 0
+    stateNode.canonical._eventListeners[mangledImperativeRegistrationName]
+      .length > 0
   ) {
     const eventListeners =
       stateNode.canonical._eventListeners[mangledImperativeRegistrationName];
