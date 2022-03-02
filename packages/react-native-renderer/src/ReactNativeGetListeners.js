@@ -117,10 +117,7 @@ export default function getListeners(
       // all imperative event listeners in a function to unwrap the SyntheticEvent
       // and pass them an Event.
       // When this API is more stable and used more frequently, we can revisit.
-      const listenerFnWrapper = function() {
-        const args = Array.prototype.slice.call(arguments);
-        const syntheticEvent = args[0];
-
+      const listenerFnWrapper = function(syntheticEvent) {
         const eventInst = new CustomEvent(mangledImperativeRegistrationName, {
           detail: syntheticEvent.nativeEvent,
         });
@@ -138,23 +135,21 @@ export default function getListeners(
       // and by removing it from eventListeners once it is called (but only
       // when it's actually been executed).
       if (listenerObj.options.once) {
-        listeners.push(function() {
-          const args = Array.prototype.slice.call(arguments);
-
-          // Guard against function being called more than once in
-          // case there are somehow multiple in-flight references to
-          // it being processed
-          if (!listenerObj.invalidated) {
-            listenerObj.listener.apply(null, args);
-            listenerObj.invalidated = true;
-          }
-
+        listeners.push(function(...args) {
           // Remove from the event listener once it's been called
           stateNode.canonical.removeEventListener_unstable(
             mangledImperativeRegistrationName,
             listenerFnWrapper,
             listenerObj.capture,
           );
+
+          // Guard against function being called more than once in
+          // case there are somehow multiple in-flight references to
+          // it being processed
+          if (!listenerObj.invalidated) {
+            listenerObj.invalidated = true;
+            listenerObj.listener(...args);
+          }
         });
       } else {
         listeners.push(listenerFnWrapper);
