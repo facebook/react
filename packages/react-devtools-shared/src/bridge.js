@@ -185,6 +185,7 @@ type SavedPreferencesParams = {|
 |};
 
 export type BackendEvents = {|
+  backendVersion: [string],
   bridgeProtocol: [BridgeProtocol],
   extensionBackendInitialized: [],
   fastRefreshScheduled: [],
@@ -219,6 +220,7 @@ type FrontendEvents = {|
   clearWarningsForFiberID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
+  getBackendVersion: [],
   getBridgeProtocol: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],

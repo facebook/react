@@ -85,6 +85,7 @@ export type Capabilities = {|
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
 export default class Store extends EventEmitter<{|
+  backendVersion: [],
   collapseNodesByDefault: [],
   componentFilters: [],
   error: [Error],
@@ -98,6 +99,10 @@ export default class Store extends EventEmitter<{|
   unsupportedBridgeProtocolDetected: [],
   unsupportedRendererVersionDetected: [],
 |}> {
+  // If the backend version is new enough to report its (NPM) version, this is it.
+  // This version may be displayed by the frontend for debugging purposes.
+  _backendVersion: string | null = null;
+
   _bridge: FrontendBridge;
 
   // Computed whenever _errorsAndWarnings Map changes.
@@ -264,6 +269,9 @@ export default class Store extends EventEmitter<{|
       bridge.addListener('bridgeProtocol', this.onBridgeProtocol);
       bridge.send('getBridgeProtocol');
     }
+
+    bridge.addListener('backendVersion', this.onBridgeBackendVersion);
+    bridge.send('getBackendVersion');
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -299,6 +307,10 @@ export default class Store extends EventEmitter<{|
         ),
       );
     }
+  }
+
+  get backendVersion(): string | null {
+    return this._backendVersion;
   }
 
   get collapseNodesByDefault(): boolean {
@@ -1333,6 +1345,7 @@ export default class Store extends EventEmitter<{|
       'unsupportedRendererVersion',
       this.onBridgeUnsupportedRendererVersion,
     );
+    bridge.removeListener('backendVersion', this.onBridgeBackendVersion);
     bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
 
     if (this._onBridgeProtocolTimeoutID !== null) {
@@ -1357,6 +1370,11 @@ export default class Store extends EventEmitter<{|
     this._unsupportedRendererVersionDetected = true;
 
     this.emit('unsupportedRendererVersionDetected');
+  };
+
+  onBridgeBackendVersion = (backendVersion: string) => {
+    this._backendVersion = backendVersion;
+    this.emit('backendVersion');
   };
 
   onBridgeProtocol = (bridgeProtocol: BridgeProtocol) => {
