@@ -223,9 +223,7 @@ function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-function readContext<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
-): T {
+function readContext<T: any>(context: ReactContext<T>): T {
   const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {

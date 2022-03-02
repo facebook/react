@@ -2539,7 +2539,7 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
-    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
+    readContext<T: any>(context: ReactContext<T>): T {
       return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2687,7 +2687,7 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
+    readContext<T: any>(context: ReactContext<T>): T {
       return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2829,7 +2829,7 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnUpdateInDEV = {
-    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
+    readContext<T: any>(context: ReactContext<T>): T {
       return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2971,7 +2971,7 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnRerenderInDEV = {
-    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
+    readContext<T: any>(context: ReactContext<T>): T {
       return readContext(context);
     },
 
@@ -3114,7 +3114,7 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
+    readContext<T: any>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
       return readContext(context);
     },
@@ -3273,7 +3273,7 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
+    readContext<T: any>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
       return readContext(context);
     },
@@ -3432,7 +3432,7 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T {
+    readContext<T: any>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
       return readContext(context);
     },

@@ -111,7 +111,7 @@ function collectFirstScopedNodeFromChildren(
 
 function collectNearestContextValues<T: any>(
   node: Fiber,
-  context: ReactContext<T> | ReactServerContext<T>,
+  context: ReactContext<T>,
   childContextValues: Array<T>,
 ): void {
   if (node.tag === ContextProvider && node.type._context === context) {
@@ -131,7 +131,7 @@ function collectNearestContextValues<T: any>(
 
 function collectNearestChildContextValues<T: any>(
   startingChild: Fiber | null,
-  context: ReactContext<T> | ReactServerContext<T>,
+  context: ReactContext<T>,
   childContextValues: Array<T>,
 ): void {
   let child = startingChild;
@@ -177,9 +177,7 @@ function containsNode(node: Object): boolean {
   return false;
 }
 
-function getChildContextValues<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
-): Array<T> {
+function getChildContextValues<T: any>(context: ReactContext<T>): Array<T> {
   const currentFiber = getInstanceFromScope(this);
   if (currentFiber === null) {
     return [];

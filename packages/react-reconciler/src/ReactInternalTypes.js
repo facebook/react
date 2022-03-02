@@ -50,7 +50,7 @@ export type HookType =
   | 'useCacheRefresh';
 
 export type ContextDependency<T: any> = {
-  context: ReactContext<T> | ReactServerContext<T>,
+  context: ReactContext<T>,
   next: ContextDependency<T> | null,
   memoizedValue: T,
   ...
@@ -343,7 +343,7 @@ type Dispatch<A> = A => void;
 export type Dispatcher = {|
   getCacheSignal?: () => AbortSignal,
   getCacheForType?: <T>(resourceType: () => T) => T,
-  readContext<T: any>(context: ReactContext<T> | ReactServerContext<T>): T,
+  readContext<T: any>(context: ReactContext<T>): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
     reducer: (S, A) => S,
