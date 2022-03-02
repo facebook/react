@@ -36,7 +36,12 @@ function renderToPipeableStream(
   options?: Options,
   context?: Array<[string, ServerContextJSONValue]>,
 ): Controls {
-  const request = createRequest(model, webpackMap, options, context);
+  const request = createRequest(
+    model,
+    webpackMap,
+    options ? options.onError : undefined,
+    context,
+  );
   let hasStartedFlowing = false;
   startWork(request);
   return {

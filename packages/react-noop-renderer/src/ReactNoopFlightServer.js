@@ -76,7 +76,7 @@ function render(
   const request = ReactNoopFlightServer.createRequest(
     model,
     bundlerConfig,
-    options,
+    options ? options.onError : undefined,
     context,
   );
   ReactNoopFlightServer.startWork(request);

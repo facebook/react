@@ -88,6 +88,16 @@ export function createServerContext<T: ServerContextJSONValue>(
   const context = ContextRegistry[globalName];
   if (context._defaultValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
     context._defaultValue = defaultValue;
+    if (
+      context._currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+    ) {
+      context._currentValue = defaultValue;
+    }
+    if (
+      context._currentValue2 === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
+    ) {
+      context._currentValue2 = defaultValue;
+    }
   } else if (wasDefined) {
     throw new Error(`ServerContext: ${globalName} already defined`);
   }

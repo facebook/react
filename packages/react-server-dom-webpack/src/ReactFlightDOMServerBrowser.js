@@ -27,7 +27,12 @@ function renderToReadableStream(
   options?: Options,
   context?: Array<[string, ServerContextJSONValue]>,
 ): ReadableStream {
-  const request = createRequest(model, webpackMap, options, context);
+  const request = createRequest(
+    model,
+    webpackMap,
+    options ? options.onError : undefined,
+    context,
+  );
   const stream = new ReadableStream({
     start(controller) {
       startWork(request);
