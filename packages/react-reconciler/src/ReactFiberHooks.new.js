@@ -12,7 +12,6 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactServerContext,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.new';

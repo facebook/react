@@ -8,11 +8,7 @@
  */
 
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {
-  ReactContext,
-  ReactServerContext,
-  ReactProviderType,
-} from 'shared/ReactTypes';
+import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
 import {
   REACT_CONTEXT_TYPE,

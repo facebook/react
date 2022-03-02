@@ -70,9 +70,12 @@ export function createServerContext<T: ServerContextJSONValue>(
         ({
           Consumer: {
             get() {
-              console.error(
-                'Consumer pattern is not supported by ReactServerContext',
-              );
+              if (!hasWarnedAboutUsingConsumer) {
+                console.error(
+                  'Consumer pattern is not supported by ReactServerContext',
+                );
+                hasWarnedAboutUsingConsumer = true;
+              }
               return null;
             },
           },

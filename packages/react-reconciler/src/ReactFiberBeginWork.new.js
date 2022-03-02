@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  ReactProviderType,
-  ReactContext,
-  ReactServerContext,
-} from 'shared/ReactTypes';
+import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {TypeOfMode} from './ReactTypeOfMode';

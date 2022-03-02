@@ -12,7 +12,6 @@ import type {
   ReactScopeInstance,
   ReactContext,
   ReactScopeQuery,
-  ReactServerContext,
 } from 'shared/ReactTypes';
 
 import {

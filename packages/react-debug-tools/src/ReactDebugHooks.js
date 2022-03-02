@@ -12,7 +12,6 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactServerContext,
   ReactProviderType,
 } from 'shared/ReactTypes';
 import type {
