@@ -88,14 +88,25 @@ export default function GeneralSettings(_: {||}) {
 
       <div className={styles.ReleaseNotes}>
         {showBackendVersion && (
-          <>
-            <Version label="backend" version={backendVersion} />
-            {', '}
-            <Version label="frontend" version={frontendVersion} />
-          </>
+          <div>
+            <ul className={styles.VersionsList}>
+              <li>
+                <Version
+                  label="DevTools backend version:"
+                  version={backendVersion}
+                />
+              </li>
+              <li>
+                <Version
+                  label="DevTools frontend version:"
+                  version={frontendVersion}
+                />
+              </li>
+            </ul>
+          </div>
         )}
         {!showBackendVersion && (
-          <Version label="DevTools version" version={frontendVersion} />
+          <Version label="DevTools version:" version={frontendVersion} />
         )}
       </div>
     </div>
