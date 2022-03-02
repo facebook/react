@@ -104,9 +104,7 @@ function getCacheForType<T>(resourceType: () => T): T {
   throw new Error('Not implemented.');
 }
 
-function readContext<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
-): T {
+function readContext<T: any>(context: ReactContext<T>): T {
   // For now we don't expose readContext usage in the hooks debugging info.
   return context._currentValue;
 }
@@ -676,16 +674,12 @@ export function inspectHooks<Props>(
   return buildTree(rootStack, readHookLog, includeHooksSource);
 }
 
-function setupContexts(
-  contextMap: Map<ReactContext<any> | ReactServerContext<any>, any>,
-  fiber: Fiber,
-) {
+function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
   let current = fiber;
   while (current) {
     if (current.tag === ContextProvider) {
       const providerType: ReactProviderType<any> = current.type;
-      const context: ReactContext<any> | ReactServerContext<any> =
-        providerType._context;
+      const context: ReactContext<any> = providerType._context;
       if (!contextMap.has(context)) {
         // Store the current value that we're going to restore later.
         contextMap.set(context, context._currentValue);
@@ -697,9 +691,7 @@ function setupContexts(
   }
 }
 
-function restoreContexts(
-  contextMap: Map<ReactContext<any> | ReactServerContext<any>, any>,
-) {
+function restoreContexts(contextMap: Map<ReactContext<any>, any>) {
   contextMap.forEach((value, context) => (context._currentValue = value));
 }
 

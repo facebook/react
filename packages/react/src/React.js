@@ -32,7 +32,6 @@ import {
   isValidElement,
 } from './ReactElement';
 import {createContext} from './ReactContext';
-import {createServerContext} from './ReactServerContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
@@ -62,6 +61,7 @@ import {
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
+import {createServerContext} from 'shared/ReactServerContext';
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {startTransition} from './ReactStartTransition';

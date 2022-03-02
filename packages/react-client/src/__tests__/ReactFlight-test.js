@@ -391,7 +391,9 @@ describe('ReactFlight', () => {
 
       expect(() => {
         ReactNoopFlightServer.render(<Foo />);
-      }).toErrorDev('React elements are not allowed in ServerContext');
+      }).toErrorDev('React elements are not allowed in ServerContext', {
+        withoutStack: true,
+      });
     });
 
     // @gate enableServerContext
@@ -556,9 +558,9 @@ describe('ReactFlight', () => {
       function Bar() {
         return <span>{React.useContext(ServerContext)}</span>;
       }
-      const transport = ReactNoopFlightServer.render(<Bar />, {
-        context: [['ServerContext', 'Override']],
-      });
+      const transport = ReactNoopFlightServer.render(<Bar />, {}, [
+        ['ServerContext', 'Override'],
+      ]);
 
       act(() => {
         const flightModel = ReactNoopFlightClient.read(transport);

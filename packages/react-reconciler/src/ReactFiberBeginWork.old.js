@@ -3217,8 +3217,7 @@ function updateContextProvider(
   renderLanes: Lanes,
 ) {
   const providerType: ReactProviderType<any> = workInProgress.type;
-  const context: ReactContext<any> | ReactServerContext<any> =
-    providerType._context;
+  const context: ReactContext<any> = providerType._context;
 
   const newProps = workInProgress.pendingProps;
   const oldProps = workInProgress.memoizedProps;

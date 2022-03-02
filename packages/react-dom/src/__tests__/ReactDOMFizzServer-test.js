@@ -2389,18 +2389,17 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate enableServerContext && experimental
   it('supports ServerContext', async () => {
-    const {getOrCreateServerContext} = require('react/src/ReactServerContext');
-    const ServerContext = getOrCreateServerContext('ServerContext');
-
-    let initialized = false;
+    let ServerContext;
     function inlineLazyServerContextInitialization() {
-      if (!initialized) {
-        initialized = true;
-        React.createServerContext('ServerContext', 'default');
+      if (!ServerContext) {
+        console.log({ServerContext});
+        ServerContext = React.createServerContext('ServerContext', 'default');
       }
+      return ServerContext;
     }
 
     function Foo() {
+      inlineLazyServerContextInitialization();
       return (
         <>
           <ServerContext.Provider value="hi this is server outer">
@@ -2420,14 +2419,11 @@ describe('ReactDOMFizzServer', () => {
       );
     }
     function Bar() {
-      const context = React.useContext(ServerContext);
-      inlineLazyServerContextInitialization();
+      const context = React.useContext(inlineLazyServerContextInitialization());
       return <span>{context}</span>;
     }
 
     await act(async () => {
-      ServerContext._currentRenderer = null;
-      ServerContext._currentRenderer2 = null;
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(<Foo />);
       pipe(writable);
     });

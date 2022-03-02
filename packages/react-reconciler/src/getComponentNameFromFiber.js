@@ -57,7 +57,7 @@ function getWrappedName(
 }
 
 // Keep in sync with shared/getComponentNameFromType
-function getContextName(type: ReactContext<any> | ReactServerContext<any>) {
+function getContextName(type: ReactContext<any>) {
   return type.displayName || 'Context';
 }
 
