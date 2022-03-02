@@ -14,7 +14,6 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactServerContext,
 } from 'shared/ReactTypes';
 import type PartialRenderer from './ReactPartialRenderer';
 

@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  ReactContext,
-  ReactServerContext,
-  ReactProviderType,
-} from 'shared/ReactTypes';
+import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
 import {
   FunctionComponent,

@@ -16,10 +16,7 @@ import type {
   ModuleKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
-import type {
-  ReactServerContext,
-  ServerContextJSONValue,
-} from 'shared/ReactTypes';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {
   scheduleWork,
@@ -55,14 +52,11 @@ import {
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_SERVER_CONTEXT_TYPE,
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
 } from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import isArray from 'shared/isArray';
-
-import {createServerContext} from 'react';
 
 type ReactJSONValue =
   | string
@@ -113,7 +107,6 @@ export type Options = {
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-const ContextRegistry = ReactSharedInternals.ContextRegistry;
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
