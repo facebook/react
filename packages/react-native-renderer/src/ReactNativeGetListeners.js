@@ -139,7 +139,7 @@ export default function getListeners(
           // Remove from the event listener once it's been called
           stateNode.canonical.removeEventListener_unstable(
             mangledImperativeRegistrationName,
-            listenerFnWrapper,
+            listenerObj.listener,
             listenerObj.capture,
           );
 
