@@ -2,6 +2,24 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
+## 4.24.0 (March 2, 2022)
+
+### Feature
+* Show DevTools backend and frontend versions in UI ([bvaughn](https://github.com/bvaughn) in [#23399](https://github.com/facebook/react/pull/23399))
+* Timeline profiler refactored to support reading basic profiling data directly from React ([bvaughn](https://github.com/bvaughn) in [#22529](https://github.com/facebook/react/issues/22529))
+
+#### Bugfix
+* Gracefully handle empty "xstyle" prop values ([lunaruan](https://github.com/lunaruan) in [#23279](https://github.com/facebook/react/pull/23279) and [bvaughn](https://github.com/bvaughn) in [#23190](https://github.com/facebook/react/pull/23190))
+* Add `<TracingMarker>` component boilerplate ([lunaruan](https://github.com/lunaruan) in [#23275](https://github.com/facebook/react/pull/23275))
+
+#### Misc
+* Remove object-assign polyfill ([sebmarkbage](https://github.com/sebmarkbage) in [#23351](https://github.com/facebook/react/pull/23351))
+
+#### Breaking change
+* Move createRoot/hydrateRoot to react-dom/client ([sebmarkbage](https://github.com/sebmarkbage) in [#23385](https://github.com/facebook/react/pull/23385)).
+
+Technically this is a breaking change for projects using `react-devtools-inline`, but since this package already depends on the _experimental_ release channel, we are going to include it in 4.24.
+
 ### 4.23.0
 January 24, 2022
 
