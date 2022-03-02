@@ -35,15 +35,6 @@ export default function getListeners(
   phase: PropagationPhases,
   dispatchToImperativeListeners: boolean,
 ): null | Function | Array<Function> {
-  // Previously, there was only one possible listener for an event:
-  // the onEventName property in props.
-  // Now, it is also possible to have N listeners
-  // for a specific event on a node. Thus, we accumulate all of the listeners,
-  // including the props listener, and return a function that calls them all in
-  // order, starting with the handler prop and then the listeners in order.
-  // We return either a non-empty array or null.
-  let listeners = null;
-
   const stateNode = inst.stateNode;
 
   if (stateNode === null) {
@@ -74,6 +65,24 @@ export default function getListeners(
     )
   ) {
     return listener;
+  }
+
+  // Below this is the de-optimized path.
+  // If you are using _eventListeners, we do not (yet)
+  // expect this to be as performant as the props-only path.
+  // If/when this becomes a bottleneck, it can be refactored
+  // to avoid unnecessary closures and array allocations.
+  //
+  // Previously, there was only one possible listener for an event:
+  // the onEventName property in props.
+  // Now, it is also possible to have N listeners
+  // for a specific event on a node. Thus, we accumulate all of the listeners,
+  // including the props listener, and return a function that calls them all in
+  // order, starting with the handler prop and then the listeners in order.
+  // We return either a non-empty array or null.
+  const listeners = [];
+  if (listener) {
+    listeners.push(listener);
   }
 
   // TODO: for now, all of these events get an `rn:` prefix to enforce
@@ -124,13 +133,6 @@ export default function getListeners(
         listenerObj.listener(eventInst);
       };
 
-      if (listeners === null) {
-        listeners = [];
-        if (listener) {
-          listeners.push(listener);
-        }
-      }
-
       // Only call once?
       // If so, we ensure that it's only called once by setting a flag
       // and by removing it from eventListeners once it is called (but only
@@ -158,11 +160,14 @@ export default function getListeners(
         listeners.push(listenerFnWrapper);
       }
     });
-
-    if (listeners != null) {
-      return listeners;
-    }
   }
 
-  return listener;
+  if (listeners.length === 0) {
+    return null;
+  }
+  if (listeners.length === 1) {
+    return listeners[0];
+  }
+
+  return listeners;
 }
