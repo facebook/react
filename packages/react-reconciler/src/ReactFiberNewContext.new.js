@@ -90,7 +90,7 @@ export function exitDisallowedContextReadInDEV(): void {
 
 export function pushProvider<T: any>(
   providerFiber: Fiber,
-  context: ReactContext<T> | ReactServerContext<T>,
+  context: ReactContext<T>,
   nextValue: T,
 ): void {
   if (isPrimaryRenderer) {
@@ -195,7 +195,7 @@ export function scheduleContextWorkOnParentPath(
 
 export function propagateContextChange<T: any>(
   workInProgress: Fiber,
-  context: ReactContext<T> | ReactServerContext<T>,
+  context: ReactContext<T>,
   renderLanes: Lanes,
 ): void {
   if (enableLazyContextPropagation) {
@@ -216,7 +216,7 @@ export function propagateContextChange<T: any>(
 
 function propagateContextChange_eager<T: any>(
   workInProgress: Fiber,
-  context: ReactContext<T> | ReactServerContext<T>,
+  context: ReactContext<T>,
   renderLanes: Lanes,
 ): void {
   // Only used by eager implementation
@@ -383,7 +383,7 @@ function propagateContextChanges<T: any>(
         const dependency = dep;
         const consumer = fiber;
         findContext: for (let i = 0; i < contexts.length; i++) {
-          const context: ReactContext<T> | ReactServerContext<T> = contexts[i];
+          const context: ReactContext<T> = contexts[i];
           // Check if the context matches.
           // TODO: Compare selected values to bail out early.
           if (dependency.context === context) {
@@ -653,9 +653,7 @@ export function prepareToReadContext(
   }
 }
 
-export function readContext<T: any>(
-  context: ReactContext<T> | ReactServerContext<T>,
-): T {
+export function readContext<T: any>(context: ReactContext<T>): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.

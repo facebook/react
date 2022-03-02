@@ -38,7 +38,7 @@ export type ReactProvider<T> = {
 
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
-  _context: ReactContext<T> | ReactServerContext<T>,
+  _context: ReactContext<T>,
   ...
 };
 
@@ -50,7 +50,7 @@ export type ReactServerProviderType<T: ServerContextJSONValue> = {
 
 export type ReactConsumer<T> = {
   $$typeof: Symbol | number,
-  type: ReactContext<T> | ReactServerContext<T>,
+  type: ReactContext<T>,
   key: null | string,
   ref: null,
   props: {

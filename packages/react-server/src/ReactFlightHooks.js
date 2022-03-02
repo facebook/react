@@ -16,9 +16,7 @@ import type {
 import {REACT_SERVER_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {readContext as readContextImpl} from './ReactFlightNewContext';
 
-function readContext<T: ServerContextJSONValue>(
-  context: ReactContext<T> | ReactServerContext<T>,
-): T {
+function readContext<T: ServerContextJSONValue>(context: ReactContext<T>): T {
   if (__DEV__) {
     if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
       console.error('Only ServerContext is supported in Flight');
