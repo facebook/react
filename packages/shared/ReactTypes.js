@@ -12,8 +12,8 @@ export type ReactNode =
   | ReactPortal
   | ReactText
   | ReactFragment
-  | ReactProvider<any, ReactContext<any>>
-  | ReactConsumer<any, ReactContext<any>>;
+  | ReactProvider<any>
+  | ReactConsumer<any>;
 
 export type ReactEmpty = null | void | boolean;
 

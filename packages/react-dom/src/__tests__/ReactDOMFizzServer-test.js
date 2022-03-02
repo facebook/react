@@ -2461,7 +2461,6 @@ describe('ReactDOMFizzServer', () => {
     let ServerContext;
     function inlineLazyServerContextInitialization() {
       if (!ServerContext) {
-        console.log({ServerContext});
         ServerContext = React.createServerContext('ServerContext', 'default');
       }
       return ServerContext;

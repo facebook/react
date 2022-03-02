@@ -16,7 +16,10 @@ import type {
   ModuleKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
-import type {ServerContextJSONValue} from 'shared/ReactTypes';
+import type {
+  ServerContextJSONValue,
+  ReactServerContext,
+} from 'shared/ReactTypes';
 
 import {
   scheduleWork,
@@ -120,11 +123,10 @@ const CLOSED = 2;
 export function createRequest(
   model: ReactModel,
   bundlerConfig: BundlerConfig,
-  options?: Options,
+  onError: void | ((error: mixed) => void),
   context?: Array<[string, ServerContextJSONValue]>,
 ): Request {
   const pingedSegments = [];
-  const onError = options ? options.onError : undefined;
   const request = {
     status: OPEN,
     fatalError: null,
@@ -211,7 +213,7 @@ function attemptResolveElement(
             return true;
           });
           if (extraKeys.length !== 0) {
-            throw new Error(
+            console.error(
               'ServerContext can only have a value prop and children. Found: ' +
                 JSON.stringify(extraKeys),
             );
@@ -219,7 +221,7 @@ function attemptResolveElement(
         }
         return [
           REACT_PROVIDER_TYPE,
-          type._context.displayName,
+          type._context._globalName,
           key,
           // Rely on __popProvider being serialized last to pop the provider.
           {...props, __popProvider$$: type._context},
@@ -513,6 +515,7 @@ export function resolveModelToJSON(
   }
 
   if (
+    value &&
     value.$$typeof === REACT_SERVER_CONTEXT_TYPE &&
     key === '__popProvider$$'
   ) {
@@ -894,18 +897,17 @@ export function startFlowing(request: Request, destination: Destination): void {
 function importServerContexts(
   contexts?: Array<[string, ServerContextJSONValue]>,
 ) {
-  const prevContext = getActiveContext();
-  switchContext(rootContextSnapshot);
-  const registry: {[name: string]: ReactServerContext<any>} = {};
   if (contexts) {
+    const prevContext = getActiveContext();
+    switchContext(rootContextSnapshot);
     for (let i = 0; i < contexts.length; i++) {
       const [name, value] = contexts[i];
       const context = getOrCreateServerContext(name);
       pushProvider(context, value);
-      registry[name] = context;
     }
+    const importedContext = getActiveContext();
+    switchContext(prevContext);
+    return importedContext;
   }
-  const importedContext = getActiveContext();
-  switchContext(prevContext);
-  return importedContext;
+  return rootContextSnapshot;
 }
