@@ -117,7 +117,7 @@ export default function getListeners(
       // all imperative event listeners in a function to unwrap the SyntheticEvent
       // and pass them an Event.
       // When this API is more stable and used more frequently, we can revisit.
-      const listenerFnWrapper = function(syntheticEvent) {
+      const listenerFnWrapper = function(syntheticEvent, ...args) {
         const eventInst = new CustomEvent(mangledImperativeRegistrationName, {
           detail: syntheticEvent.nativeEvent,
         });
@@ -127,7 +127,7 @@ export default function getListeners(
         // $FlowFixMe
         eventInst.setSyntheticEvent(syntheticEvent);
 
-        listenerObj.listener(eventInst);
+        listenerObj.listener(eventInst, ...args);
       };
 
       // Only call once?
