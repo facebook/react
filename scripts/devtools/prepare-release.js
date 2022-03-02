@@ -204,7 +204,7 @@ function updateChangelog(nextVersion, commitLog) {
     month: 'long',
     day: 'numeric',
   });
-  const header = `## ${nextVersion} (${dateString})`;
+  const header = `### ${nextVersion}\n${dateString}`;
 
   const newChangelog = `${beginning}${RELEASE_SCRIPT_TOKEN}\n\n${header}\n${commitLog}${end}`;
 

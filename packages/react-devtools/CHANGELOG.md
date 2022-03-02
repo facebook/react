@@ -2,9 +2,10 @@
 
 <!-- RELEASE_SCRIPT_TOKEN -->
 
-## 4.24.0 (March 2, 2022)
+### 4.24.0
+March 2, 2022
 
-### Feature
+#### Feature
 * Show DevTools backend and frontend versions in UI ([bvaughn](https://github.com/bvaughn) in [#23399](https://github.com/facebook/react/pull/23399))
 * Timeline profiler refactored to support reading basic profiling data directly from React ([bvaughn](https://github.com/bvaughn) in [#22529](https://github.com/facebook/react/issues/22529))
 
@@ -23,7 +24,7 @@ Technically this is a breaking change for projects using `react-devtools-inline`
 ### 4.23.0
 January 24, 2022
 
-### Feature
+#### Feature
 * DevTools: Only show StrictMode badge on root elements ([bvaughn](https://github.com/bvaughn) in [#23012](https://github.com/facebook/react/pull/23012))
 
 #### Bugfix
