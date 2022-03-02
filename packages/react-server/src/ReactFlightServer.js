@@ -16,10 +16,7 @@ import type {
   ModuleKey,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
-import type {
-  ServerContextJSONValue,
-  ReactServerContext,
-} from 'shared/ReactTypes';
+import type {ServerContextJSONValue} from 'shared/ReactTypes';
 
 import {
   scheduleWork,
@@ -214,8 +211,8 @@ function attemptResolveElement(
           });
           if (extraKeys.length !== 0) {
             console.error(
-              'ServerContext can only have a value prop and children. Found: ' +
-                JSON.stringify(extraKeys),
+              'ServerContext can only have a value prop and children. Found: %s',
+              JSON.stringify(extraKeys),
             );
           }
         }
