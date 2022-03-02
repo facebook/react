@@ -131,7 +131,7 @@ export function pushProvider<T: any>(
 }
 
 export function popProvider(
-  context: ReactContext<any> | ReactServerContext<any>,
+  context: ReactContext<any>,
   providerFiber: Fiber,
 ): void {
   const currentValue = valueCursor.current;
@@ -550,8 +550,7 @@ function propagateParentContextChanges(
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
         const providerType: ReactProviderType<any> = parent.type;
-        const context: ReactContext<any> | ReactServerContext<any> =
-          providerType._context;
+        const context: ReactContext<any> = providerType._context;
 
         const newProps = parent.pendingProps;
         const newValue = newProps.value;

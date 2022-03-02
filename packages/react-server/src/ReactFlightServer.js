@@ -38,7 +38,6 @@ import {
   isModuleReference,
 } from './ReactFlightServerConfig';
 
-import {getOrCreateServerContext} from './ReactServerContext';
 import {Dispatcher, getCurrentCache, setCurrentCache} from './ReactFlightHooks';
 import {
   pushProvider,
@@ -56,10 +55,14 @@ import {
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_SERVER_CONTEXT_TYPE,
+  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
 } from 'shared/ReactSymbols';
 
+import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import isArray from 'shared/isArray';
+
+import {createServerContext} from 'react';
 
 type ReactJSONValue =
   | string
@@ -105,12 +108,12 @@ export type Request = {
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
-export type RequestOptions = {
+export type Options = {
   onError?: (error: mixed) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
+const ContextRegistry = ReactSharedInternals.ContextRegistry;
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
@@ -124,7 +127,8 @@ const CLOSED = 2;
 export function createRequest(
   model: ReactModel,
   bundlerConfig: BundlerConfig,
-  options?: RequestOptions,
+  options?: Options,
+  context?: Array<[string, ServerContextJSONValue]>,
 ): Request {
   const pingedSegments = [];
   const onError = options ? options.onError : undefined;
@@ -148,8 +152,8 @@ export function createRequest(
     },
   };
   request.pendingChunks++;
-  const context = createRootContext(options ? options.context : undefined);
-  const rootSegment = createSegment(request, model, context);
+  const rootContext = createRootContext(context);
+  const rootSegment = createSegment(request, model, rootContext);
   pingedSegments.push(rootSegment);
   return request;
 }
@@ -224,8 +228,8 @@ function attemptResolveElement(
           REACT_PROVIDER_TYPE,
           type._context.displayName,
           key,
-          props,
-          type._context,
+          // Rely on __popProvider being serialized last to pop the provider.
+          {...props, __popProvider$$: type._context},
         ];
       }
     }
@@ -457,8 +461,6 @@ export function resolveModelToJSON(
   switch (value) {
     case REACT_ELEMENT_TYPE:
       return '$';
-    case REACT_PROVIDER_TYPE:
-      return '!';
     case REACT_LAZY_TYPE:
       throw new Error(
         'React Lazy Components are not yet supported on the server.',
@@ -473,13 +475,15 @@ export function resolveModelToJSON(
     } else if (insideContextProps === parent && key === 'children') {
       isInsideContextValue = false;
     }
-    if (isReactElement(value) && isInsideContextValue) {
-      throw new Error('React elements are not allowed in ServerContext');
-    }
   }
 
   // Resolve server components.
   while (isReactElement(value)) {
+    if (__DEV__) {
+      if (isInsideContextValue) {
+        console.error('React elements are not allowed in ServerContext');
+      }
+    }
     // TODO: Concatenate keys of parents onto children.
     const element: React$Element<any> = (value: any);
     try {
@@ -517,8 +521,7 @@ export function resolveModelToJSON(
 
   if (
     value.$$typeof === REACT_SERVER_CONTEXT_TYPE &&
-    key === '4' &&
-    parent[0] === REACT_PROVIDER_TYPE
+    key === '__popProvider$$'
   ) {
     popProvider((value: any));
     if (__DEV__) {

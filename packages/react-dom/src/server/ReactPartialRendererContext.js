@@ -44,7 +44,7 @@ function checkContextTypes(typeSpecs, values, location: string) {
 }
 
 export function validateContextBounds(
-  context: ReactContext<any> | ReactServerContext<any>,
+  context: ReactContext<any>,
   threadID: ThreadID,
 ) {
   // If we don't have enough slots in this context to store this threadID,

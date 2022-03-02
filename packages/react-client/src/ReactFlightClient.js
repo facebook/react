@@ -24,13 +24,13 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
-import {getOrCreateServerContext} from './ReactServerContext';
-
 import {
   REACT_LAZY_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_PROVIDER_TYPE,
 } from 'shared/ReactSymbols';
+
+import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 
 export type JSONValue =
   | number
@@ -323,11 +323,6 @@ export function parseModelString(
       // We create a React.lazy wrapper around any lazy values.
       // When passed into React, we'll know how to suspend on this.
       return createLazyChunkWrapper(chunk);
-    }
-    case '!': {
-      if (value === '!') {
-        return REACT_PROVIDER_TYPE;
-      }
     }
   }
   return value;

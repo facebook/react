@@ -12,8 +12,8 @@ export type ReactNode =
   | ReactPortal
   | ReactText
   | ReactFragment
-  | ReactProvider<any>
-  | ReactConsumer<any>;
+  | ReactProvider<any, ReactContext<any>>
+  | ReactConsumer<any, ReactContext<any>>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -25,7 +25,7 @@ export type ReactText = string | number;
 
 export type ReactProvider<T> = {
   $$typeof: Symbol | number,
-  type: ReactProviderType<T> | ReactServerProviderType<T>,
+  type: ReactProviderType<T>,
   key: null | string,
   ref: null,
   props: {
@@ -84,17 +84,10 @@ export type ServerContextJSONValue =
   | $ReadOnlyArray<ServerContextJSONValue>
   | {+[key: string]: ServerContextJSONValue};
 
-export type ReactServerContext<T: ServerContextJSONValue> = {
-  $$typeof: Symbol | number,
-  Provider: ReactServerProviderType<T>,
+export type ReactServerContext<T: ServerContextJSONValue> = ReactContext<T> & {
   _defaultValue: T,
-  _currentValue: T,
-  _currentValue2: T,
-  _currentRenderer?: Object | null,
-  _currentRenderer2?: Object | null,
-  _threadCount: number,
   _definitionLoaded: boolean,
-  +displayName: string,
+  _globalName: string,
   ...
 };
 
