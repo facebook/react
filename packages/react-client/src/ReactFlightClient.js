@@ -376,8 +376,6 @@ export function parseModelTuple(
       // TODO: Consider having React just directly accept these arrays as elements.
       // Or even change the ReactElement type to be an array.
       return createElement(tuple[1], tuple[2], tuple[3]);
-    case REACT_PROVIDER_TYPE:
-      return getOrCreateServerContext((tuple[1]: any)).Provider;
   }
   return value;
 }
