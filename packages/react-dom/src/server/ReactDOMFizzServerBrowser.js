@@ -32,23 +32,34 @@ type Options = {|
   bootstrapModules?: Array<string>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
 |};
+
+// TODO: Move to sub-classing ReadableStream.
+type ReactDOMServerReadableStream = ReadableStream & {
+  allReady: Promise<void>,
+};
 
 function renderToReadableStream(
   children: ReactNodeList,
   options?: Options,
-): Promise<ReadableStream> {
+): Promise<ReactDOMServerReadableStream> {
   return new Promise((resolve, reject) => {
+    let onCompleteAll;
+    const allReady = new Promise(res => {
+      onCompleteAll = res;
+    });
+
     function onCompleteShell() {
-      const stream = new ReadableStream({
+      const stream: ReactDOMServerReadableStream = (new ReadableStream({
         type: 'bytes',
         pull(controller) {
           startFlowing(request, controller);
         },
         cancel(reason) {},
-      });
+      }): any);
+      // TODO: Move to sub-classing ReadableStream.
+      stream.allReady = allReady;
       resolve(stream);
     }
     function onErrorShell(error: mixed) {
@@ -66,7 +77,7 @@ function renderToReadableStream(
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
-      options ? options.onCompleteAll : undefined,
+      onCompleteAll,
       onCompleteShell,
       onErrorShell,
     );
