@@ -209,4 +209,43 @@ describe('ReactDOMFizzServer', () => {
     const result = await readResult(stream);
     expect(result).toContain('Loading');
   });
+
+  // @gate experimental
+  it('should not continue rendering after the reader cancels', async () => {
+    let hasLoaded = false;
+    let resolve;
+    let isComplete = false;
+    let rendered = false;
+    const promise = new Promise(r => (resolve = r));
+    function Wait() {
+      if (!hasLoaded) {
+        throw promise;
+      }
+      rendered = true;
+      return 'Done';
+    }
+    const stream = await ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <Wait /> />
+        </Suspense>
+      </div>,
+    );
+
+    stream.allReady.then(() => (isComplete = true));
+
+    expect(rendered).toBe(false);
+    expect(isComplete).toBe(false);
+
+    const reader = stream.getReader();
+    reader.cancel();
+
+    hasLoaded = true;
+    resolve();
+
+    await jest.runAllTimers();
+
+    expect(rendered).toBe(false);
+    expect(isComplete).toBe(true);
+  });
 });

@@ -58,7 +58,9 @@ function renderToReadableStream(
         pull(controller) {
           startFlowing(request, controller);
         },
-        cancel(reason) {},
+        cancel(reason) {
+          abort(request);
+        },
       }): any);
       // TODO: Move to sub-classing ReadableStream.
       stream.allReady = allReady;
