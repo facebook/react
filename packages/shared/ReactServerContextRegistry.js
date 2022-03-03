@@ -9,7 +9,7 @@
 
 import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {createServerContext} from './ReactServerContext';
+import {createServerContext} from 'react';
 
 const ContextRegistry = ReactSharedInternals.ContextRegistry;
 
