@@ -45,9 +45,11 @@ function renderToReadableStream(
   options?: Options,
 ): Promise<ReactDOMServerReadableStream> {
   return new Promise((resolve, reject) => {
+    let onFatalError;
     let onCompleteAll;
-    const allReady = new Promise(res => {
+    const allReady = new Promise((res, rej) => {
       onCompleteAll = res;
+      onFatalError = rej;
     });
 
     function onCompleteShell() {
@@ -80,6 +82,7 @@ function renderToReadableStream(
       onCompleteAll,
       onCompleteShell,
       onErrorShell,
+      onFatalError,
     );
     if (options && options.signal) {
       const signal = options.signal;
