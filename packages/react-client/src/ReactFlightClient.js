@@ -87,6 +87,7 @@ type ErroredChunk = {
 type SomeChunk<T> =
   | PendingChunk
   | ResolvedModelChunk
+  | ResolvedProviderChunk
   | ResolvedModuleChunk<T>
   | InitializedChunk<T>
   | ErroredChunk;
