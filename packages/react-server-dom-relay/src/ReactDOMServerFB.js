@@ -92,4 +92,16 @@ function hasFinished(stream: Stream): boolean {
   return stream.destination.done;
 }
 
-export {renderToStream, renderNextChunk, hasFinished, abortStream};
+function debug(stream: Stream): any {
+  const request = stream.request;
+  return {
+    pendingRootTasks: request.pendingRootTasks,
+    clientRenderedBoundaries: request.clientRenderedBoundaries.length,
+    completedBoundaries: request.completedBoundaries.length,
+    partialBoundaries: request.partialBoundaries.length,
+    allPendingTasks: request.allPendingTasks,
+    pingTasks: request.pingedTasks.length,
+  };
+}
+
+export {renderToStream, renderNextChunk, hasFinished, abortStream, debug};
